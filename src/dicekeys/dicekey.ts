@@ -279,6 +279,11 @@ export function rotateDiceKey<F extends Face = Face>(
   );
 }
 
+const removeOrientations = <F extends Face = Face>(
+  diceKey: DiceKey<F>,
+): DiceKey => DiceKey<F>(diceKey.map( face => ({...face, orientationAsLowercaseLetterTRBL: "?"})));
+
+
 const FaceRotationsNonStationary = [1, 2, 3] as const;
 export function rotateToRotationIndependentForm<F extends Face = Face>(
   diceKey: DiceKey<Face>,
@@ -314,3 +319,4 @@ DiceKey.toHumanReadableForm = DiceKeyInHumanReadableForm;
 DiceKey.rotate = rotateDiceKey;
 DiceKey.rotateToRotationIndependentForm = rotateToRotationIndependentForm;
 DiceKey.toStringOf25Triples = DiceKeyInHumanReadableForm;
+DiceKey.removeOrientations = removeOrientations;
