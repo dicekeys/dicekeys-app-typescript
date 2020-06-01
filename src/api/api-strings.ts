@@ -31,6 +31,36 @@ const unseal = {
 } as const;
 
 
+export const Commands = (() => {
+  const getAuthToken = "getAuthToken";
+  const generateSignature = "generateSignature";
+  const getSealingKey = "getSealingKey";
+  const getSecret = "getSecret";
+  const getSignatureVerificationKey = "getSignatureVerificationKey";
+  const getSigningKey = "getSigningKey";
+  const getSymmetricKey = "getSymmetricKey";
+  const getUnsealingKey = "getUnsealingKey";
+  const sealWithSymmetricKey = "sealWithSymmetricKey";
+  const unsealWithSymmetricKey = "unsealWithSymmetricKey";
+  const unsealWithUnsealingKey = "unsealWithUnsealingKey";
+  return {
+    getAuthToken,
+    generateSignature,
+    getSealingKey,
+    getSecret,
+    getSignatureVerificationKey,
+    getSigningKey,
+    getSymmetricKey,
+    getUnsealingKey,
+    sealWithSymmetricKey,
+    unsealWithSymmetricKey,
+    unsealWithUnsealingKey,
+   } as const;
+})();
+export type Command = keyof typeof Commands;
+export const isCommand = (str: string | undefined): str is Command =>
+  str != null && str in Commands;
+
 export const Inputs = {
   COMMON: {
     requestId,
@@ -38,6 +68,8 @@ export const Inputs = {
     respondTo,
     authToken,
   } as const,
+
+  withDerivationOptions,
 
   // For URL-based APIs, the command name and the https uri to respond to
   generateSignature: {

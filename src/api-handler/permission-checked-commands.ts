@@ -27,7 +27,7 @@ import { DiceKeyAppState } from "./app-state-dicekey";
  *
  * The caller is responsible for catching exceptions
  */
-class PermissionCheckedCommands {
+export class PermissionCheckedCommands {
   constructor(
     private permissionCheckedSeedAccessor: PermissionCheckedSeedAccessor,
     private seededCryptoModule: SeededCryptoModuleWithHelpers
