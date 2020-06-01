@@ -96,7 +96,7 @@ export class PermissionCheckedSeedAccessor{
     packagedSealedMessage: PackagedSealedMessage,
     type: DerivableObjectName
    ): Promise<string> => {
-    this.permissionChecks.throwIfUnsealingInstructionsViolatedAsync(packagedSealedMessage.unsealingInstructions)
+    await this.permissionChecks.throwIfUnsealingInstructionsViolatedAsync(packagedSealedMessage.unsealingInstructions)
     return await  this.getSeedOrThrowIfClientNotAuthorizedAsync(
       packagedSealedMessage.derivationOptionsJson, type
     )
