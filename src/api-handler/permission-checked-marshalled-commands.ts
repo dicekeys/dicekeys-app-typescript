@@ -1,5 +1,5 @@
 import {
-  SeededCryptoModuleWithHelpers
+  SeededCryptoModuleWithHelpers, SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js"
 import {
   PermissionCheckedSeedAccessor,
@@ -64,6 +64,24 @@ export class PermissionCheckedMarshalledCommands {
       requestUsersConsent,
     )
     this.api = new PermissionCheckedCommands(permissionCheckedSeedAccessor, seededCryptoModule);
+  }
+
+  static executeIfCommand = async (
+    loadDiceKey: () => Promise<DiceKey>,
+    requestUsersConsent: (
+      requestForUsersConsent: RequestForUsersConsent
+    ) => Promise<UsersConsentResponse>
+  ) => {
+    const seededCryptoModule = await SeededCryptoModulePromise;
+    const command = new PermissionCheckedMarshalledCommands(
+      seededCryptoModule,
+      new URL(window.location.href),
+      loadDiceKey, requestUsersConsent
+    );
+    if (command.isCommand()) {
+      command.execute();
+    }
+    
   }
 
 
@@ -234,6 +252,11 @@ export class PermissionCheckedMarshalledCommands {
     } catch (e) {
       this.sendException(e)
     }
+  }
+
+  public isCommand = () => {
+    const command = this.unmarshallRequiredStringParameter(ApiStrings.Inputs.COMMON.command);
+    return command && command in ApiStrings.Commands;
   }
 
   public execute = () => {
