@@ -1,9 +1,9 @@
 
 export const base64Encode = (unencoded: Uint8Array) =>
-  new Buffer(unencoded || '').toString('base64')
+  Buffer.from(unencoded || '').toString('base64')
 
 export const base64Decode = (encoded: string): Buffer =>
-  new Buffer(encoded || '', 'base64')
+  Buffer.from(encoded || '', 'base64')
 
 export const urlSafeBase64Encode = (unencoded: Uint8Array) =>
   base64Encode(unencoded)

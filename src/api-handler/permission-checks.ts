@@ -15,7 +15,7 @@ export class ClientUriNotAuthorizedException extends Error {
   }
 }
 
-export class ClientMayNotRetrieveKeyException extends Error {}
+export class UserDeclinedToAuthorizeOperation extends Error {}
 
 /**
  * Abstract away all permissions checks for the DiceKeys API
@@ -77,7 +77,7 @@ export class ApiPermissionChecks {
     const {requireUsersConsent} = unsealingInstructions;
     if (!requireUsersConsent) return;
     if ((await this.requestUsersConsent(requireUsersConsent)) !== UsersConsentResponse.Allow) {
-      throw new ClientMayNotRetrieveKeyException("Operation declined by user")
+      throw new UserDeclinedToAuthorizeOperation("Operation declined by user")
     }
   }
   

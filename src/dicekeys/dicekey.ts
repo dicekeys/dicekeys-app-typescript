@@ -72,7 +72,7 @@ export class DiceKeyLettersRepeatedAndAbsentException extends InvalidDiceKeyExce
   }
 }
 
-const validateDiceKey = (diceKey: readonly Face[]): diceKey is DiceKey => {
+const validateDiceKey = (diceKey: readonly Face[], requireOneOfEachLetter: boolean = false): diceKey is DiceKey => {
   if (diceKey.length !== NumberOfFacesInKey) {
     throw new Error("Invalid key length");
   }
@@ -96,7 +96,7 @@ const validateDiceKey = (diceKey: readonly Face[]): diceKey is DiceKey => {
       absentLetters.delete(letter);
     }
   });
-  if (absentLetters.size > 0 || repeatedLetters.size > 0) {
+  if (requireOneOfEachLetter && (absentLetters.size > 0 || repeatedLetters.size > 0)) {
     const repeatedLettersWithPositions = Array.from(repeatedLetters).map( letter => [
       letter, 
       diceKey.reduce( ( result, d, index) => {
@@ -153,7 +153,8 @@ export const DiceKeyInHumanReadableForm = (diceKey: DiceKey): DiceKeyInHumanRead
   ).join("") as DiceKeyInHumanReadableForm
 
 const diceKeyFromHumanReadableForm = (
-  humanReadableForm: DiceKeyInHumanReadableForm
+  humanReadableForm: DiceKeyInHumanReadableForm,
+  requireOneOfEachLetter: boolean = false 
 ): DiceKey<Face> => {
   if (typeof(humanReadableForm) !== "string" || humanReadableForm.length !== 75) {
     throw new InvalidDiceKeyException("Invalid human-readable-form string length");
@@ -173,7 +174,7 @@ const diceKeyFromHumanReadableForm = (
     };
     return faceAndOrientation;
   }) as readonly Face[] as DiceKey;
-  validateDiceKey(diceKey);
+  validateDiceKey(diceKey, requireOneOfEachLetter);
   return diceKey;
 }
 

@@ -7,6 +7,7 @@ import {
 import {
   SeededCryptoModuleWithHelpers
 } from "@dicekeys/seeded-crypto-js";
+import {randomBytes} from "crypto"
 
 const minutesToMs = 60 * 1000;
 
@@ -43,16 +44,20 @@ export class EncryptedAppStateStore {
   }
 
   private createKeySeed = (): string => {
-    const newKeySeedBytes = new Uint8Array(20);
-    window.crypto.getRandomValues(newKeySeedBytes);
-    return urlSafeBase64Encode(newKeySeedBytes);
+    if (window && window.crypto) {
+      const newKeySeedBytes = new Uint8Array(20);
+      crypto.getRandomValues(newKeySeedBytes);
+      return urlSafeBase64Encode(newKeySeedBytes);
+    } else {
+      return urlSafeBase64Encode((randomBytes(20)));
+    }
   }
 
   private getSessionKeySeedCookie = (
     expireAfterMinutesUnused: number = this.expireAfterMinutesUnused
   ): string => {
     const cookiePrefix = this.keySeedCookieName + "=";
-    const cookieRead = document.cookie
+    const cookieRead = (document.cookie || "")
       .split(';')
       .map(c => c.trim())
       .filter(cookie => {
@@ -125,7 +130,7 @@ export class EncryptedAppStateStore {
     const symmetricKey = this.seededCryptoModule.SymmetricKey.deriveFromSeed(this.getOrCreateSessionKeySeedCookie(), "");
     try {
       const plaintextBuffer = symmetricKey.unsealCiphertext(ciphertext, "");
-      const plaintextBufferJson = new Buffer(plaintextBuffer).toString('utf8');
+      const plaintextBufferJson = Buffer.from(plaintextBuffer).toString('utf8');
       const result = JSON.parse(plaintextBufferJson) as T;
       return result;
     } finally {
