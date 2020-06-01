@@ -5,27 +5,18 @@ import {
   DiceKey
 } from "../dicekeys/dicekey";
 import {
-  AuthenticationRequirements,
   RequestForUsersConsent,
-  UnsealingInstructions,
   UsersConsentResponse
 } from "../api/unsealing-instructions";
 import {
-  DerivableObjectNames,
   DerivationOptions,
   DerivableObjectName
 } from "../api/derivation-options";
 import {
-  PackagedSealedMessage,
-  Secret,
-  SealingKey,
-  SignatureVerificationKey,
-  SigningKey,
-  SymmetricKey,
-  UnsealingKey
+  PackagedSealedMessage
 } from "@dicekeys/seeded-crypto-js";
 import {
-  diceKeyAppStateStore
+  DiceKeyAppState
 } from "./app-state-dicekey"
 
 export class ClientMayNotRetrieveKeyException extends Error {
@@ -57,10 +48,14 @@ export class PermissionCheckedSeedAccessor{
       )
   }
 
-  private getDiceKeyAsync = async (): Promise<DiceKey> =>
-    diceKeyAppStateStore.diceKey ||
-    diceKeyAppStateStore.setDiceKey( await this.loadDiceKey() )
-
+  private getDiceKeyAsync = async (): Promise<DiceKey> => {
+    const appState = await DiceKeyAppState.instancePromise;
+    if (appState.diceKey)
+      return appState.diceKey;
+    const diceKey = await this.loadDiceKey();
+    appState.diceKey = diceKey;
+    return diceKey;
+  }
 
   /**
    * Request a seed generated from the user's DiceKey and salted by the

@@ -14,6 +14,7 @@ import {
 import {
   PermissionCheckedSeedAccessor
 } from "./permission-checked-seed-accessor";
+import { DiceKeyAppState } from "./app-state-dicekey";
 
 /**
  * Implements the server-side API calls and the necessary permission checks,
@@ -33,7 +34,7 @@ class PermissionCheckedCommands {
   ) {}
 
   public getAuthToken = (respondToUrl: string): string =>
-    AuthenticationTokens.add(respondToUrl);
+    DiceKeyAppState.instance!!.addAuthenticationToken(respondToUrl);
 
   /**
    * Implement [DiceKeysIntentApiClient.getSecret] with the necessary permissions checks
