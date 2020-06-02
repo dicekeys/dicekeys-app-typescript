@@ -26,15 +26,6 @@ import {JSDOM} from "jsdom";
 
 describe("PermissionCheckedCommandsInstrumentedTest", () => {
 
-  // beforeEach( () => {
-  //     const jsdom = new JSDOM("<html></html>", {
-  //       url: "https://example.com/"
-  //     });
-  //     global.localStorage = jsdom.window.localStorage;
-  //     global.document = jsdom.window.document;
-  //   }
-  // );
-
   const diceKey = DiceKey.fromHumanReadableForm(
     "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
   )
