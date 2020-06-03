@@ -36,15 +36,20 @@ describe("EndToEndUrlApiTests", () => {
     new Promise<UsersConsentResponse>( (respond) => respond(response) );
   const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
 
-  const getMockClient = (seededCryptoModule: SeededCryptoModuleWithHelpers): Api => {
+  const defaultRequestUrl = "https://client.app/";
+
+  const getMockClient = (
+    seededCryptoModule: SeededCryptoModuleWithHelpers,
+    requestUrlBase: string = defaultRequestUrl,
+    respondToUrl: string = requestUrlBase,
+    usersResponseToConsentRequest: UsersConsentResponse = UsersConsentResponse.Allow
+  ): Api => {
     const mockClient = new UrlApi(
-      seededCryptoModule,
-      "https://client.app/",
-      "https://client.app/",
+      seededCryptoModule, requestUrlBase, respondToUrl,
       /* transmit method  */
       (requestUri) => {
         const mockServerApi = new UrlPermissionCheckedMarshalledCommands(
-          seededCryptoModule, requestUri, loadDiceKey, requestUsersConsentWillApprove,
+          seededCryptoModule, requestUri, loadDiceKey, requestUsersConsent(usersResponseToConsentRequest),
           (result) => mockClient.handleResult(result)
         );
         mockServerApi.execute();
@@ -53,8 +58,8 @@ describe("EndToEndUrlApiTests", () => {
   }
 
 
-  const apiUrlString = "https://ThisUriIsNotEventUsedBecauseWeAreMocking/";
-  const respondToUrlString = "https://myapp.ThisUriIsNotEventUsedBecauseWeAreMocking/apiresponse/";
+  // const apiUrlString = "https://ThisUriIsNotEventUsedBecauseWeAreMocking/";
+  // const respondToUrlString = "https://myapp.ThisUriIsNotEventUsedBecauseWeAreMocking/apiresponse/";
 
   // const api : Api get() {
   //   var mockedWebApi : DiceKeysWebApiClient? = null
@@ -114,7 +119,7 @@ describe("EndToEndUrlApiTests", () => {
     const client = getMockClient(await SeededCryptoModulePromise);
     const derivationOptions = DerivationOptions({
       requireAuthenticationHandshake: true,
-      urlPrefixesAllowed: [respondToUrlString],
+      urlPrefixesAllowed: [defaultRequestUrl],
       lengthInBytes: 13
     });
     const secret = await client.getSecret(JSON.stringify(derivationOptions));
