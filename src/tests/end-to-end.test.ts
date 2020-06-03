@@ -39,7 +39,7 @@ describe("EndToEndUrlApiTests", () => {
   const getMockClient = (seededCryptoModule: SeededCryptoModuleWithHelpers): Api => {
     const mockClient = new UrlApi(
       seededCryptoModule,
-      "https://example.com/",
+      "https://client.app/",
       "https://client.app/",
       /* transmit method  */
       (requestUri) => {
@@ -83,40 +83,42 @@ describe("EndToEndUrlApiTests", () => {
 
   });
 
-  // @Test
-  // fun signAndVerify() { runBlocking {
-  //   val sig = api.generateSignature(derivationOptionsJson, testMessageByteArray)
-  //   val signatureVerificationKey = api.getSignatureVerificationKey(derivationOptionsJson)
-  //   Assert.assertArrayEquals(signatureVerificationKey.keyBytes, sig.signatureVerificationKey.keyBytes)
-  //   Assert.assertTrue(signatureVerificationKey.verifySignature(testMessageByteArray, sig.signature))
-  //   Assert.assertFalse(signatureVerificationKey.verifySignature(ByteArray(0), sig.signature))
-  // }}
+  test("fun signAndVerify", async () => {
+    const client = getMockClient(await SeededCryptoModulePromise);
+    const sig = await client.generateSignature(derivationOptionsJson, testMessageByteArray)
+    const signatureVerificationKey = await client.getSignatureVerificationKey(derivationOptionsJson)
+    expect(signatureVerificationKey.signatureVerificationKeyBytes).toStrictEqual(sig.signatureVerificationKey.signatureVerificationKeyBytes);
+    expect(signatureVerificationKey.verify(testMessageByteArray, sig.signature)).toBeTruthy();
+    expect(signatureVerificationKey.verify(Uint8Array.from([0]), sig.signature)).toBeFalsy();
+  });
 
-  // @Test
-  // fun asymmetricSealAndUnseal() { runBlocking {
-  //   val publicKey = api.getSealingKey(derivationOptionsJson)
-  //   val packagedSealedPkMessage = publicKey.seal(testMessageByteArray, """{
-  //          |  "requireUsersConsent": {
-  //          |     "question": "Do you want use \"8fsd8pweDmqed\" as your SpoonerMail account password and remove your current password?",
-  //          |     "actionButtonLabels": {
-  //          |         "allow": "Make my password \"8fsd8pweDmqed\"",
-  //          |         "deny": "No"
-  //          |     }
-  //          |  }
-  //          |}""".trimMargin())
-  //   val plaintext = api.unsealWithUnsealingKey(packagedSealedPkMessage)
-  //   Assert.assertArrayEquals(plaintext, testMessageByteArray)
-  // }}
+  test("fun asymmetricSealAndUnseal", async () => {
+    const client = getMockClient(await SeededCryptoModulePromise);
+    const publicKey = await client.getSealingKey(derivationOptionsJson);
+    const unsealingInstructionsJson = JSON.stringify({
+      "requireUsersConsent": {
+          "question": "Do you want use \"8fsd8pweDmqed\" as your SpoonerMail account password and remove your current password?",
+          "actionButtonLabels": {
+              "allow": "Make my password \"8fsd8pweDmqed\"",
+              "deny": "No"
+          }
+      }
+    });
+    const packagedSealedPkMessage = publicKey.sealWithInstructions(testMessageByteArray, unsealingInstructionsJson);
+    const plaintext = await client.unsealWithUnsealingKey(packagedSealedPkMessage)
+    expect(plaintext).toStrictEqual(testMessageByteArray);
+    expect(packagedSealedPkMessage.unsealingInstructions).toBe(unsealingInstructionsJson);
+  });
 
-  // @Test
-  // fun getSecretWithHandshake() { runBlocking {
-  //   val derivationOptions = ApiDerivationOptions().apply {
-  //     requireAuthenticationHandshake = true
-  //     urlPrefixesAllowed = listOf(respondToUrlString)
-  //     lengthInBytes = 13
-  //   }
-  //   val secret = api.getSecret(derivationOptions.toJson())
-  //   Assert.assertEquals(13, secret.secretBytes.size)
-  // }}
+  test("getSecretWithHandshake", async () => {
+    const client = getMockClient(await SeededCryptoModulePromise);
+    const derivationOptions = DerivationOptions({
+      requireAuthenticationHandshake: true,
+      urlPrefixesAllowed: [respondToUrlString],
+      lengthInBytes: 13
+    });
+    const secret = await client.getSecret(JSON.stringify(derivationOptions));
+    expect(secret.secretBytes.length).toBe(13);
+  });
 
 });
