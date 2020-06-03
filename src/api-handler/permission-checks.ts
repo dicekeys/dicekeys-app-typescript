@@ -28,11 +28,12 @@ export class UserDeclinedToAuthorizeOperation extends Error {}
  */
 export class ApiPermissionChecks {
   constructor(
-      private readonly replyToUrl: string,
-      private readonly handshakeAuthenticatedUrl: string | undefined,
+      private readonly origin: string,
       private readonly requestUsersConsent: (
           requestForUsersConsent: RequestForUsersConsent
-        ) => Promise<UsersConsentResponse>
+        ) => Promise<UsersConsentResponse>,
+      private protocolMayRequireHandshakes: boolean = false,
+      private handshakeAuthenticatedUrl?: string,  
   ) {}
 
   doesClientMeetAuthenticationRequirements = (
@@ -43,7 +44,7 @@ export class ApiPermissionChecks {
         // If the prefix appears in the URL associated with the authentication token
         (this.handshakeAuthenticatedUrl != null && this.handshakeAuthenticatedUrl.startsWith(prefix)) ||
         // Or no handshake is required and the replyUrl starts with the prefix
-        (!requireAuthenticationHandshake && this.replyToUrl.startsWith(prefix))
+        ((!this.protocolMayRequireHandshakes || !requireAuthenticationHandshake) && this.origin.startsWith(prefix))
       )
           
     
@@ -53,7 +54,9 @@ export class ApiPermissionChecks {
     if (!this.doesClientMeetAuthenticationRequirements(authenticationRequirements)) {
       // The client application id does not start with any of the specified prefixes
       throw new ClientUriNotAuthorizedException(
-        authenticationRequirements?.requireAuthenticationHandshake ? (this.handshakeAuthenticatedUrl || "") : this.replyToUrl,
+        authenticationRequirements?.requireAuthenticationHandshake && this.protocolMayRequireHandshakes ?
+          (this.handshakeAuthenticatedUrl || "") :
+          this.origin,
         authenticationRequirements?.urlPrefixesAllowed || [])
     }
   }

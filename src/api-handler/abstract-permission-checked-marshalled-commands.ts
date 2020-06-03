@@ -9,9 +9,6 @@ import {
 } from "./permission-checked-commands"
 import * as ApiStrings from "../api/api-strings";
 import {
-  DiceKeyAppState
-} from "./app-state-dicekey"
-import {
   DiceKey
 } from "../dicekeys/dicekey";
 import {
@@ -43,36 +40,31 @@ export class InvalidDiceKeysCommandException extends Error {
  */
 export abstract class PermissionCheckedMarshalledCommands {
   private successResults: [string, string | Uint8Array][] = []
-
-  constructor(
-    private seededCryptoModule: SeededCryptoModuleWithHelpers,
-    private loadDiceKey: () => Promise<DiceKey>,
-    private requestUsersConsent: (
-      requestForUsersConsent: RequestForUsersConsent
-    ) => Promise<UsersConsentResponse>,
-  ) {}
-
   /**
    * The api abstracts away the lower levels of the API and access to the
    * underlying cryptographic seed, so that this module never has to import
    * the seed itself.
-   * 
-   * We ned to instantiate the API lazily, after the constructor,
-   * to ensure the unmarshalling method used by the this.respondTo getter
-   * has been initialized.
    */
-  private _api: PermissionCheckedCommands | undefined;
-  private get api(): PermissionCheckedCommands {
-    if (!this._api) {
-      const permissionCheckedSeedAccessor = new PermissionCheckedSeedAccessor(
-        this.respondTo,
-        this.handshakeAuthenticatedUrl,
-        this.loadDiceKey,
-        this.requestUsersConsent,
-      )
-      this._api = new PermissionCheckedCommands(permissionCheckedSeedAccessor, this.seededCryptoModule);
-    }
-    return this._api!;
+  private readonly api: PermissionCheckedCommands;
+
+  constructor(
+    private seededCryptoModule: SeededCryptoModuleWithHelpers,
+    private origin: string,
+    private loadDiceKey: () => Promise<DiceKey>,
+    private requestUsersConsent: (
+      requestForUsersConsent: RequestForUsersConsent
+    ) => Promise<UsersConsentResponse>,
+    private protocolMayRequireHandshakes: boolean,
+    private handshakeAuthenticatedUrl: string = ""
+  ) {
+    const permissionCheckedSeedAccessor = new PermissionCheckedSeedAccessor(
+      origin,
+      loadDiceKey,
+      requestUsersConsent,
+      protocolMayRequireHandshakes,
+      handshakeAuthenticatedUrl
+    )
+    this.api = new PermissionCheckedCommands(permissionCheckedSeedAccessor, this.seededCryptoModule);
   }
 
 
@@ -91,18 +83,6 @@ export abstract class PermissionCheckedMarshalledCommands {
     this.successResults.push([
       responseParameterName, value]);
     return this;
-  }
-
-  protected get respondTo(): string {
-    return this.unmarshallStringParameter(ApiStrings.Inputs.COMMON.respondTo)
-  }
-
-  private get authTokenFieldFromUri(): string | undefined {
-    return this.unmarshallOptionalStringParameter(ApiStrings.Inputs.COMMON.authToken);
-  }
-
-  private get handshakeAuthenticatedUrl(): string | undefined {
-    return this.authTokenFieldFromUri && DiceKeyAppState.instance!.getUrlForAuthenticationToken(this.authTokenFieldFromUri);
   }
 
   protected abstract sendResponse(response: [string, string | Uint8Array][]): any;

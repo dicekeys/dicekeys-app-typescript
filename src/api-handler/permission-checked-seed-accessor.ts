@@ -34,17 +34,19 @@ export class PermissionCheckedSeedAccessor{
   private readonly permissionChecks: ApiPermissionChecks;
 
   constructor(
-    respondToUrl: string,
-    handshakeAuthenticatedUrl: string | undefined,
+    origin: string,
     private loadDiceKey: () => Promise<DiceKey>,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
-    ) => Promise<UsersConsentResponse>
+      ) => Promise<UsersConsentResponse>,
+    protocolMayRequireHandshakes: boolean = false,
+    handshakeAuthenticatedUrl?: string
   ) {
     this.permissionChecks = new ApiPermissionChecks(
-        respondToUrl,
-        handshakeAuthenticatedUrl,
-        requestUsersConsent
+        origin,
+        requestUsersConsent,
+        protocolMayRequireHandshakes,
+        handshakeAuthenticatedUrl
       )
   }
 

@@ -42,7 +42,7 @@ describe("PermissionCheckedCommandsInstrumentedTest", () => {
   ) => 
     new PermissionCheckedCommands(
       new PermissionCheckedSeedAccessor(
-        url, undefined, loadDiceKey, requestUsersConsent(usersConsentResponse)
+        url, loadDiceKey, requestUsersConsent(usersConsentResponse)
       ),
       await SeededCryptoModulePromise
     );

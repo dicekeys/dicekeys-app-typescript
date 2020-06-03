@@ -15,6 +15,10 @@ import {
   urlSafeBase64Decode,
   urlSafeBase64Encode
 } from "../api/encodings"
+import { Inputs } from "../api/api-strings";
+import {
+  DiceKeyAppState
+} from "./app-state-dicekey"
 
 /**
  * Wrap the [PermissionCheckedCommands] to unmarshall parameters from the
@@ -33,7 +37,25 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
     ) => Promise<UsersConsentResponse>,
     private transmitResponse: (response: URL) => any = (response: URL) => this.defaultTransmitResponse(response)
   ) {    
-    super(seededCryptoModule, loadDiceKey, requestUsersConsent);
+    super(
+      seededCryptoModule,
+      // The origin of a URL-protocol request is the origin you are replying to
+      // (though this may be supplemented with an url authenticated by an auth token)
+      requestUrl.searchParams.get(Inputs.COMMON.respondTo) ?? "",
+      // A function to load in the user's dicekey, async so as to allow the user time to
+      // scan it in if necessary
+      loadDiceKey,
+      // A function that triggers a request for the user's consent.
+      requestUsersConsent,
+      // Since the URL protocol cannot authenticate the source of a request, it offers
+      // the handshake option to increase confidence in the identity of a requester.
+      // (it can always know to what address it is sending responses, just not know
+      //  where requests are coming from.)
+      true,
+      // The client-authenticated origin associated with an auth token
+      (requestUrl.searchParams.get(Inputs.COMMON.authToken) &&
+        DiceKeyAppState.instance!.getUrlForAuthenticationToken(requestUrl.searchParams.get(Inputs.COMMON.authToken)!)) ?? ""
+    );
   }
 
   protected unmarshallOptionalStringParameter = (parameterName: string): string | undefined => {
@@ -53,13 +75,18 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
     window.location.replace(response.toString());
   }
 
-  protected sendResponse = (response: [string, string][]) => {
-    if (!this.respondTo) {
+  protected sendResponse = (response: [string, string | Uint8Array][]) => {
+    const respondTo = this.unmarshallStringParameter(Inputs.COMMON.respondTo);
+    if (!respondTo) {
       return;
     }
-    const responseUrl = new URL(this.respondTo);
+    const responseUrl = new URL(respondTo);
     response.forEach( ([name, value]) => {
-      responseUrl.searchParams.append(name, value);
+      responseUrl.searchParams.append(name,
+        typeof value === "string" ?
+          value :
+          urlSafeBase64Encode(value)
+        );
     });
     this.transmitResponse(responseUrl)
   }

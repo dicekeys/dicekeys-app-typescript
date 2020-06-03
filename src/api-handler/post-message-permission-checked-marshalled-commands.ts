@@ -13,11 +13,7 @@ import {
 } from "./abstract-permission-checked-marshalled-commands"
 
 /**
- * Wrap the [PermissionCheckedCommands] to unmarshall parameters from the
- * Android Intents (e.g. via `getStringExtra` or `getByteArrayExtra`) and then
- * marshall the Api call's result into a result intent (e.g. via `putExtra`).
- *
- *  The caller is responsible for catching exceptions and marshalling them
+ * 
  */
 export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCheckedMarshalledCommands {
   constructor(
@@ -29,7 +25,7 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
     ) => Promise<UsersConsentResponse>,
     private transmitResponse: (response: object) => any = (response: object) => this.defaultTransmitResponse(response)
   ) {
-    super(seededCryptoModule, loadDiceKey, requestUsersConsent);
+    super(seededCryptoModule, request.origin, loadDiceKey, requestUsersConsent, false);
   }
 
   protected unmarshallOptionalStringParameter = (parameterName: string): string | undefined => {
@@ -50,14 +46,14 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
     window.postMessage(response, this.request.origin)
   }
 
-  protected sendResponse = (response: [string, string][]) => {
+  protected sendResponse = (response: [string, string | Uint8Array][]) => {
     const responseObj =
-    response.reduce( (responseObj, [name, value]) => {
-        responseObj[name] = value;
-        return responseObj;
-      },
-      {} as {[name: string]: string}
-    );
+      response.reduce( (responseObj, [name, value]) => {
+          responseObj[name] = value;
+          return responseObj;
+        },
+        {} as {[name: string]: string | Uint8Array}
+      );
     this.transmitResponse(responseObj)
   }
 

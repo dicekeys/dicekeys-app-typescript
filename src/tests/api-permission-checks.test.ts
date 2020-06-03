@@ -13,12 +13,12 @@ describe ("ApiPermissionChecksInstrumentedTest", () => {
 
   test ("isClientAuthorizedInFaceOfRestrictionsMostlyHarmless", () => {
 
-    expect(new ApiPermissionChecks("https://example.com/", undefined, requestUsersConsent(UsersConsentResponse.Allow))
+    expect(new ApiPermissionChecks("https://example.com/", requestUsersConsent(UsersConsentResponse.Allow))
       .doesClientMeetAuthenticationRequirements({
         urlPrefixesAllowed: ["https://example.com/", "https://other.com/"]
     })).toBe(true);
 
-    expect(new ApiPermissionChecks("https://example.comspoof/", undefined, requestUsersConsent(UsersConsentResponse.Allow))
+    expect(new ApiPermissionChecks("https://example.comspoof/", requestUsersConsent(UsersConsentResponse.Allow))
       .doesClientMeetAuthenticationRequirements({
         urlPrefixesAllowed: ["https://example.com/", "https://other.com/"]
     })).toBe(false);
@@ -27,7 +27,7 @@ describe ("ApiPermissionChecksInstrumentedTest", () => {
 
   test("preventsLengthExtensionAttack", () => {
     expect(() => {
-      new ApiPermissionChecks("https://example.comspoof/", undefined, requestUsersConsent(UsersConsentResponse.Allow))
+      new ApiPermissionChecks("https://example.comspoof/", requestUsersConsent(UsersConsentResponse.Allow))
         .throwIfClientNotAuthorized({
           urlPrefixesAllowed: ["example.com/", "com.other/"]
       });
@@ -36,7 +36,7 @@ describe ("ApiPermissionChecksInstrumentedTest", () => {
 
   test("throwsIfAndroidPackagePrefixesNotSet", () => {
     expect( () => {
-      new ApiPermissionChecks("https://example.com", undefined, requestUsersConsent(UsersConsentResponse.Allow))
+      new ApiPermissionChecks("https://example.com", requestUsersConsent(UsersConsentResponse.Allow))
       .throwIfClientNotAuthorized({
         urlPrefixesAllowed: ["https://someplaceotherthanhere.com/"]
       });
