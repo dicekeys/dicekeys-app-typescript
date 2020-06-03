@@ -22,7 +22,9 @@ import {
   PermissionCheckedSeedAccessor, ClientMayNotRetrieveKeyException
 } from "../api-handler/permission-checked-seed-accessor"
 import { DerivationOptions } from "../api/derivation-options";
-import {JSDOM} from "jsdom";
+import {
+  stringToUtf8ByteArray
+} from "../api/encodings";
 
 describe("PermissionCheckedCommandsInstrumentedTest", () => {
 
@@ -53,7 +55,7 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
           JSON.stringify({
          urlPrefixesAllowed: ["https://example.com/"]
           } as DerivationOptions),
-          Buffer.from("The secret ingredient is sarcasm.", "utf-8"),
+          stringToUtf8ByteArray("The secret ingredient is sarcasm."),
           JSON.stringify({
           } as UnsealingInstructions)
         )
@@ -66,7 +68,7 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
         (await getPermissionCheckedCommands("https://example.comspoof/"))
         .unsealWithSymmetricKey(
           new (await SeededCryptoModulePromise).PackagedSealedMessage(
-            Buffer.from(""),
+            stringToUtf8ByteArray(""),
             JSON.stringify({urlPrefixesAllowed: ["https://example.com/"]}),
             "{}"
           ))
@@ -78,7 +80,7 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
     const permissionCheckedCommands = await
       getPermissionCheckedCommands("https://example.comspoof/", UsersConsentResponse.Deny);
     const packagedSealedMessage = new seededCryptoModule.PackagedSealedMessage(
-      Buffer.from(""),
+      stringToUtf8ByteArray(""),
       JSON.stringify({urlPrefixesAllowed: ["https://example.com/"]} as DerivationOptions),
       JSON.stringify({} as UnsealingInstructions)
     );
@@ -95,7 +97,7 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
     const permissionCheckedCommands = await
       getPermissionCheckedCommands("https://example.com/", UsersConsentResponse.Deny);
     const packagedSealedMessage = new seededCryptoModule.PackagedSealedMessage(
-      Buffer.from(""),
+      stringToUtf8ByteArray(""),
       JSON.stringify({urlPrefixesAllowed: ["https://example.com/"]} as DerivationOptions),
       JSON.stringify({requireUsersConsent: {question: "howdy", actionButtonLabels: {allow: "a", decline: "d"}}} as UnsealingInstructions)
     );

@@ -1,9 +1,6 @@
 import {
-  urlSafeBase64Encode, urlSafeBase64Decode
-} from "../api/base64"
-import {
-  DiceKey
-} from "../dicekeys/dicekey";
+  urlSafeBase64Encode, urlSafeBase64Decode, utf8ByteArrayToString
+} from "../api/encodings"
 import {
   SeededCryptoModuleWithHelpers
 } from "@dicekeys/seeded-crypto-js";
@@ -44,7 +41,7 @@ export class EncryptedAppStateStore {
   }
 
   private createKeySeed = (): string => {
-    if (window && window.crypto) {
+    if (global.window && window.crypto) {
       const newKeySeedBytes = new Uint8Array(20);
       crypto.getRandomValues(newKeySeedBytes);
       return urlSafeBase64Encode(newKeySeedBytes);
@@ -130,7 +127,7 @@ export class EncryptedAppStateStore {
     const symmetricKey = this.seededCryptoModule.SymmetricKey.deriveFromSeed(this.getOrCreateSessionKeySeedCookie(), "");
     try {
       const plaintextBuffer = symmetricKey.unsealCiphertext(ciphertext, "");
-      const plaintextBufferJson = Buffer.from(plaintextBuffer).toString('utf8');
+      const plaintextBufferJson = utf8ByteArrayToString(plaintextBuffer);
       const result = JSON.parse(plaintextBufferJson) as T;
       return result;
     } finally {

@@ -10,7 +10,7 @@ import {
 import {
   urlSafeBase64Decode,
   urlSafeBase64Encode
-} from "../api/base64"
+} from "../api/encodings"
 import * as ApiStrings from "../api/api-strings";
 import {
   DiceKeyAppState
@@ -25,12 +25,12 @@ import {
 
 const toJsonThenDelete = <T extends {toJson: () => string, delete: () => void}>(obj: T): string => {
   try {
-    return obj.toJson();
+    const result = obj.toJson();
+    return result;
   } finally {
     obj.delete();
   }
 }
-
 
 export class InvalidDiceKeysCommandException extends Error {
   constructor(candidateCommand: string) {
@@ -45,65 +45,61 @@ export class InvalidDiceKeysCommandException extends Error {
  *
  *  The caller is responsible for catching exceptions and marshalling them
  */
-export class PermissionCheckedMarshalledCommands {
-  private readonly api: PermissionCheckedCommands;
+export abstract class PermissionCheckedMarshalledCommands {
   private successResults: [string, string][] = []
 
   constructor(
     private seededCryptoModule: SeededCryptoModuleWithHelpers,
-    private requestUrl: URL,
-    loadDiceKey: () => Promise<DiceKey>,
-    requestUsersConsent: (
+    private loadDiceKey: () => Promise<DiceKey>,
+    private requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
-    ) => Promise<UsersConsentResponse>
-  ) {
-    const permissionCheckedSeedAccessor = new PermissionCheckedSeedAccessor(
-      this.respondTo!,
-      this.handshakeAuthenticatedUrl,
-      loadDiceKey,
-      requestUsersConsent,
-    )
-    this.api = new PermissionCheckedCommands(permissionCheckedSeedAccessor, seededCryptoModule);
-  }
+    ) => Promise<UsersConsentResponse>,
+  ) {}
 
-  static executeIfCommand = async (
-    loadDiceKey: () => Promise<DiceKey>,
-    requestUsersConsent: (
-      requestForUsersConsent: RequestForUsersConsent
-    ) => Promise<UsersConsentResponse>
-  ) => {
-    const seededCryptoModule = await SeededCryptoModulePromise;
-    const command = new PermissionCheckedMarshalledCommands(
-      seededCryptoModule,
-      new URL(window.location.href),
-      loadDiceKey, requestUsersConsent
-    );
-    if (command.isCommand()) {
-      command.execute();
+  /**
+   * The api abstracts away the lower levels of the API and access to the
+   * underlying cryptographic seed, so that this module never has to import
+   * the seed itself.
+   * 
+   * We ned to instantiate the API lazily, after the constructor,
+   * to ensure the unmarshalling method used by the this.respondTo getter
+   * has been initialized.
+   */
+  private _api: PermissionCheckedCommands | undefined;
+  private get api(): PermissionCheckedCommands {
+    if (!this._api) {
+      const permissionCheckedSeedAccessor = new PermissionCheckedSeedAccessor(
+        this.respondTo,
+        this.handshakeAuthenticatedUrl,
+        this.loadDiceKey,
+        this.requestUsersConsent,
+      )
+      this._api = new PermissionCheckedCommands(permissionCheckedSeedAccessor, this.seededCryptoModule);
     }
-    
+    return this._api!;
   }
 
-
-  protected unmarshallStringParameter = (parameterName: string): string | undefined => {
-    const valueStringOrNull = this.requestUrl.searchParams.get(parameterName);
-    if (valueStringOrNull == null) {
+  protected defaultSendResponse = (response: [string, string][]) => {
+    if (!this.respondTo) {
       return;
     }
-    return valueStringOrNull;
+    const newUrl = new URL(this.respondTo);
+    response.forEach( ([name, value]) => {
+      newUrl.searchParams.append(name, value);
+    });
+    window.location.replace(newUrl.toString());
   }
 
-  protected unmarshallRequiredStringParameter = (parameterName: string) : string =>
-    this.unmarshallStringParameter(parameterName)!!
+  protected abstract unmarshallOptionalStringParameter(parameterName: string): string | undefined;
 
-  protected unmarshallBinaryParameter = (parameterName: string): Buffer | undefined => {
+  protected unmarshallStringParameter = (parameterName: string) : string =>
+    this.unmarshallOptionalStringParameter(parameterName) ?? 
+      (() => { throw new Error("Missing parameter"); })()
+
+  protected unmarshallBinaryParameter = (parameterName: string): Uint8Array => {
     const base64Value  = this.unmarshallStringParameter(parameterName);
-    if (base64Value == null) return;
     return urlSafeBase64Decode(base64Value);
-  }
-    
-  private unmarshallRequiredBinaryParameter = (parameterName: string) : Buffer =>
-    this.unmarshallBinaryParameter(parameterName)!!
+  }    
 
   protected marshallResult = (
     responseParameterName: string,
@@ -118,39 +114,30 @@ export class PermissionCheckedMarshalledCommands {
     return this;
   }
 
-  private get respondTo(): string | undefined {
+  protected get respondTo(): string {
     return this.unmarshallStringParameter(ApiStrings.Inputs.COMMON.respondTo)
   }
 
   private get authTokenFieldFromUri(): string | undefined {
-    return this.unmarshallStringParameter(ApiStrings.Inputs.COMMON.authToken);
+    return this.unmarshallOptionalStringParameter(ApiStrings.Inputs.COMMON.authToken);
   }
 
   private get handshakeAuthenticatedUrl(): string | undefined {
     return this.authTokenFieldFromUri && DiceKeyAppState.instance!.getUrlForAuthenticationToken(this.authTokenFieldFromUri);
   }
 
-  protected sendResponse = (response: [string, string][]) => {
-    if (!this.respondTo) {
-      return;
-    }
-    const newUrl = new URL(this.respondTo);
-    response.forEach( ([name, value]) => {
-      newUrl.searchParams.append(name, value);
-    });
-    window.location.replace(newUrl.toString());
-  }
+  protected abstract sendResponse(response: [string, string][]): any;
 
-  protected sendSuccess = () => {
+  protected sendSuccess = (): void => {
     this.marshallResult(
       ApiStrings.Outputs.COMMON.requestId,
-      this.unmarshallRequiredStringParameter(ApiStrings.Inputs.COMMON.requestId)
+      this.unmarshallStringParameter(ApiStrings.Inputs.COMMON.requestId)
     );
     this.sendResponse(this.successResults);
   }
 
-  sendException = (e: Error) => {
-    const requestId = this.unmarshallStringParameter(ApiStrings.Outputs.COMMON.requestId) || "";
+  sendException = (e: Error): void => {
+    const requestId = this.unmarshallOptionalStringParameter(ApiStrings.Outputs.COMMON.requestId) || "";
     const exceptionName: string = (e instanceof Error) ? e.name : "unknown";
     const exceptionMessage: string = (e instanceof Error) ? e.message : "unknown";
     this.sendResponse([
@@ -161,11 +148,11 @@ export class PermissionCheckedMarshalledCommands {
   }
 
   private getCommonDerivationOptionsJsonParameter = () : string =>
-    this.unmarshallRequiredStringParameter((ApiStrings.Inputs.withDerivationOptions.derivationOptionsJson))
+    this.unmarshallStringParameter((ApiStrings.Inputs.withDerivationOptions.derivationOptionsJson))
 
   private getAuthToken = async (): Promise<void> => this.marshallResult(
     ApiStrings.Outputs.getAuthToken.authToken,
-    this.api.getAuthToken(this.unmarshallRequiredStringParameter(ApiStrings.Inputs.COMMON.respondTo))
+    this.api.getAuthToken(this.unmarshallStringParameter(ApiStrings.Inputs.COMMON.respondTo))
   ).sendSuccess()
 
   private getSecret = async (): Promise<void> => this.marshallResult(
@@ -177,33 +164,59 @@ export class PermissionCheckedMarshalledCommands {
       ApiStrings.Outputs.sealWithSymmetricKey.packagedSealedMessage,
       toJsonThenDelete(await this.api.sealWithSymmetricKey(
         this.getCommonDerivationOptionsJsonParameter(),
-        this.unmarshallRequiredBinaryParameter(ApiStrings.Inputs.sealWithSymmetricKey.plaintext),
-        this.unmarshallStringParameter(ApiStrings.Inputs.sealWithSymmetricKey.unsealingInstructions)
+        this.unmarshallBinaryParameter(ApiStrings.Inputs.sealWithSymmetricKey.plaintext),
+        this.unmarshallOptionalStringParameter(ApiStrings.Inputs.sealWithSymmetricKey.unsealingInstructions)
       ))
     ).sendSuccess()
 
-  private unsealWithSymmetricKey = async (): Promise<void> => this.marshallResult(
-      ApiStrings.Outputs.unsealWithSymmetricKey.plaintext,
-      await this.api.unsealWithSymmetricKey(
-        this.seededCryptoModule.PackagedSealedMessage.fromJson(
-          this.unmarshallRequiredStringParameter(ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage)
-      )
-    )).sendSuccess()
+  // private unsealWithSymmetricKey = async (): Promise<void> => this.marshallResult(
+  //     ApiStrings.Outputs.unsealWithSymmetricKey.plaintext,
+  //     await this.api.unsealWithSymmetricKey(
+  //       this.seededCryptoModule.PackagedSealedMessage.fromJson(
+  //         this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage)
+  //     )
+  //   )).sendSuccess()
+  private unsealWithSymmetricKey = async (): Promise<void> => {
+    const json = this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage);
+    const packagedSealedMessage = this.seededCryptoModule.PackagedSealedMessage.fromJson(json);
+    try {
+      return this.marshallResult(
+        ApiStrings.Outputs.unsealWithSymmetricKey.plaintext,
+        await this.api.unsealWithSymmetricKey(
+        packagedSealedMessage
+      )).sendSuccess()
+    } finally {
+      packagedSealedMessage.delete()
+    }
+  }
 
   private getSealingKey = async (): Promise<void> => this.marshallResult(
       ApiStrings.Outputs.getSealingKey.sealingKey,
       toJsonThenDelete(await this.api.getSealingKey(this.getCommonDerivationOptionsJsonParameter()))
     ).sendSuccess()
 
-  private unsealWithUnsealingKey = async (): Promise<void> => this.marshallResult(
-      ApiStrings.Outputs.unsealWithUnsealingKey.plaintext,
-      await this.api.unsealWithUnsealingKey(
-        this.seededCryptoModule.PackagedSealedMessage.fromJson(
-          this.unmarshallRequiredStringParameter(ApiStrings.Inputs.unsealWithUnsealingKey.packagedSealedMessage)
-        )
-      )
-    ).sendSuccess()
-
+  // private unsealWithUnsealingKey = async (): Promise<void> => this.marshallResult(
+  //     ApiStrings.Outputs.unsealWithUnsealingKey.plaintext,
+  //     await this.api.unsealWithUnsealingKey(
+  //       this.seededCryptoModule.PackagedSealedMessage.fromJson(
+  //         this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithUnsealingKey.packagedSealedMessage)
+  //       )
+  //     )
+  //   ).sendSuccess()
+  private unsealWithUnsealingKey = async (): Promise<void> => {
+    const json = this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage);
+    const packagedSealedMessage = this.seededCryptoModule.PackagedSealedMessage.fromJson(json);
+    try {
+      return this.marshallResult(
+        ApiStrings.Outputs.unsealWithUnsealingKey.plaintext,
+        await this.api.unsealWithUnsealingKey(
+        packagedSealedMessage
+      )).sendSuccess()
+    } finally {
+      packagedSealedMessage.delete();
+    }
+  }
+  
   private getSignatureVerificationKey = async (): Promise<void> => this.marshallResult(
       ApiStrings.Outputs.getSignatureVerificationKey.signatureVerificationKey,
       toJsonThenDelete(await this.api.getSignatureVerificationKey(this.getCommonDerivationOptionsJsonParameter()))
@@ -212,7 +225,7 @@ export class PermissionCheckedMarshalledCommands {
   private generateSignature = async (): Promise<void> => {
     const [signature, signatureVerificationKey] = await this.api.generateSignature(
       this.getCommonDerivationOptionsJsonParameter(),
-      this.unmarshallRequiredBinaryParameter(ApiStrings.Inputs.generateSignature.message)
+      this.unmarshallBinaryParameter(ApiStrings.Inputs.generateSignature.message)
     );
     try {
       this.marshallResult(
@@ -255,12 +268,12 @@ export class PermissionCheckedMarshalledCommands {
   }
 
   public isCommand = () => {
-    const command = this.unmarshallRequiredStringParameter(ApiStrings.Inputs.COMMON.command);
+    const command = this.unmarshallStringParameter(ApiStrings.Inputs.COMMON.command);
     return command && command in ApiStrings.Commands;
   }
 
   public execute = () => {
-    const command = this.unmarshallRequiredStringParameter(ApiStrings.Inputs.COMMON.command);
+    const command = this.unmarshallStringParameter(ApiStrings.Inputs.COMMON.command);
     this.executeCommand(command);
   }
 

@@ -16,12 +16,15 @@ import {
 import {
   PermissionCheckedCommands
 } from "../api-handler/permission-checked-commands";
-import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
+import { SeededCryptoModulePromise, SeededCryptoModuleWithHelpers } from "@dicekeys/seeded-crypto-js";
 import {
   PermissionCheckedSeedAccessor, ClientMayNotRetrieveKeyException
 } from "../api-handler/permission-checked-seed-accessor"
 import { DerivationOptions } from "../api/derivation-options";
-import { PermissionCheckedMarshalledCommands } from "../api-handler/permission-checked-marshalled-commands";
+import { UrlPermissionCheckedMarshalledCommands } from "../api-handler/url-permission-checked-marshalled-commands";
+import { UrlApi } from "../api/url-api";
+import { Api } from "../api/abstract-api";
+import { stringToUtf8ByteArray } from "../api/encodings";
 
 describe("EndToEndUrlApiTests", () => {
   const diceKey = DiceKey.fromHumanReadableForm(
@@ -33,15 +36,25 @@ describe("EndToEndUrlApiTests", () => {
     new Promise<UsersConsentResponse>( (respond) => respond(response) );
   const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
 
-  const mockApiServerCall = async (
-    requestUri: URL,
-    sendResponse: (url: URL) => void
-  ) => new PermissionCheckedMarshalledCommands(
-    await SeededCryptoModulePromise, requestUri, loadDiceKey, requestUsersConsentWillApprove
-  )
+  const getMockClient = (seededCryptoModule: SeededCryptoModuleWithHelpers): Api => {
+    const mockClient = new UrlApi(
+      seededCryptoModule,
+      "https://example.com/",
+      "https://client.app/",
+      /* transmit method  */
+      (requestUri) => {
+        const mockServerApi = new UrlPermissionCheckedMarshalledCommands(
+          seededCryptoModule, requestUri, loadDiceKey, requestUsersConsentWillApprove,
+          (result) => mockClient.handleResult(result)
+        );
+        mockServerApi.execute();
+      });
+    return mockClient;
+  }
 
-  // const apiUrlString = "https://ThisUriIsNotEventUsedBecauseWeAreMocking/";
-  // const respondToUrlString = "https://myapp.ThisUriIsNotEventUsedBecauseWeAreMocking/apiresponse/";
+
+  const apiUrlString = "https://ThisUriIsNotEventUsedBecauseWeAreMocking/";
+  const respondToUrlString = "https://myapp.ThisUriIsNotEventUsedBecauseWeAreMocking/apiresponse/";
 
   // const api : Api get() {
   //   var mockedWebApi : DiceKeysWebApiClient? = null
@@ -54,23 +67,21 @@ describe("EndToEndUrlApiTests", () => {
   //   return mockedWebApi!!
   // }
 
-  // private val derivationOptionsJson = "{}"
-  // private val testMessage = "The secret ingredient is dihydrogen monoxide"
-  // private val testMessageByteArray = testMessage.toByteArray(Charsets.UTF_8)
+  const derivationOptionsJson = "{}";
+  const testMessage = "The secret ingredient is dihydrogen monoxide";
+  const testMessageByteArray = stringToUtf8ByteArray(testMessage);
 
-  // @Test
-  // fun symmetricKeySealAndUnseal()
-  // {
+  test("symmetricKeySealAndUnseal", async () => {
+    const client = getMockClient(await SeededCryptoModulePromise);
+    const packagedSealedMessage = await client.sealWithSymmetricKey(
+      derivationOptionsJson,
+      testMessageByteArray
+    );
+    const plaintext = await client.unsealWithSymmetricKey(packagedSealedMessage);
+    // expect(testMessageByteArray).toEqual(plaintext);
+    packagedSealedMessage.delete();
 
-  //   runBlocking {
-  //     val packagedSealedMessage = api.sealWithSymmetricKey(
-  //       derivationOptionsJson,
-  //       testMessageByteArray
-  //     )
-  //     val plaintext = api.unsealWithSymmetricKey(packagedSealedMessage)
-  //     Assert.assertArrayEquals(plaintext, testMessageByteArray)
-  //   }
-  // }
+  });
 
   // @Test
   // fun signAndVerify() { runBlocking {

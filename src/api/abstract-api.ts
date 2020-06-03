@@ -20,77 +20,43 @@ import {
   GenerateSignatureResult
 } from "../api/generate-signature-result";
 import {
-  AuthenticationRequirements
-} from "./derivation-options";
-import { urlSafeBase64Decode, urlSafeBase64Encode } from "./base64";
-import { SeededCryptoModulePromise, SeededCryptoModuleWithHelpers } from "@dicekeys/seeded-crypto-js";
-import { UnsealingInstructions } from "./unsealing-instructions";
+  urlSafeBase64Encode
+} from "./encodings";
+import {
+  SeededCryptoModuleWithHelpers
+} from "@dicekeys/seeded-crypto-js";
+import {
+  UnsealingInstructions
+} from "./unsealing-instructions";
+import {
+  randomBytes
+} from "crypto";
 
-class Api {
+export interface UnmsarshallerForResponse {
+  getOptionalStringParameter: (name: string) => string | undefined;
+  getStringParameter: (name: string) => string;
+  getBinaryParameter: (name: string) => Uint8Array;
+}
+
+export abstract class Api {
   constructor(
     private seededCryptoModule: SeededCryptoModuleWithHelpers,
-    private requestUrlBase: string,
-    private respondToUrl: string
   ) {}
 
-  private pendingCallResolveFunctions = new Map<string, (url: URL) => any>();
-
-  protected call = async <T>(
+  protected abstract call: <T>(
     command: Command,
     authTokenRequired: boolean,
     parameters: [string, string | Uint8Array | {toJson: () => string} ][],
-    processResponse: (responseUrl: URL) => T
-  ) : Promise<T> => {
-    const requestId = "fixme";
-    const requestUrl = new URL(this.requestUrlBase);
-    requestUrl.searchParams.set(Inputs.COMMON.requestId, requestId);
-    requestUrl.searchParams.set(Inputs.COMMON.respondTo, this.respondToUrl);
-    requestUrl.searchParams.set(Inputs.COMMON.command, command);
-    if (authTokenRequired) {
-      const authToken = await this.getAuthToken();
-      requestUrl.searchParams.set(Inputs.COMMON.authToken, authToken);
-    }
-    parameters.forEach( ([name, value]) =>
-      requestUrl.searchParams.set(
-        name,
-        (typeof value === "string") ?
-          value :
-          "toJson" in value ?
-            value.toJson() :
-            urlSafeBase64Encode(value)
-    ));
-    const urlPromise = new Promise<URL>( (resolve) => this.pendingCallResolveFunctions.set(requestId, resolve));
-    // handle parameters here
-    /// issue call here.
-    // FIXME
-    //     window.location.assign(requestUrl.)    
-    const url = await urlPromise;
-    return processResponse(url);
-  }
+    processResponse: (unmarshallerForResponse: UnmsarshallerForResponse) => T
+  ) => Promise<T>;
 
-  private authTokenParameterIfRequired = async (
-    authenticationRequirements: AuthenticationRequirements
-  ): Promise<[string, string][]> =>
-    authenticationRequirements.requireAuthenticationHandshake ?
-    [
-      [Inputs.COMMON.authToken, await this.getAuthToken()]
-    ] :
-    []
-
-
-  /**
-   * Activities and Fragments that use this API should implement onActivityResult and
-   * and call handleOnActivityResult with the data/intent (third parameter) received.
-   * Doing so allows this class to process results returned to the activity/fragment
-   * and then call the appropriate callback functions when an API call has either
-   * succeeded or failed.
-   */
-  handleResult = (result: URL) => {
-    const requestId = result.searchParams.get(Outputs.COMMON.requestId);
-    if (requestId && this.pendingCallResolveFunctions.has(requestId)) {
-      const resolveFn = this.pendingCallResolveFunctions.get(requestId);
-      this.pendingCallResolveFunctions.delete(requestId);
-      resolveFn!(result);
+  protected generateRequestId = (): string => {
+    if (global.window && window.crypto) {
+      const randomBytes = new Uint8Array(20);
+      crypto.getRandomValues(randomBytes);
+      return urlSafeBase64Encode(randomBytes);
+    } else {
+      return urlSafeBase64Encode((randomBytes(20)));
     }
   }
 
@@ -98,13 +64,13 @@ class Api {
    * Deferrable API (the one we actually implement, rather than wrap)
    */
   private authToken?: string;
-  private getAuthToken = async (forceReload: boolean = false): Promise<string> => {
+  protected getAuthToken = async (forceReload: boolean = false): Promise<string> => {
     if (forceReload || !this.authToken) {
       this.authToken = await this.call(
         Commands.getAuthToken,
         false,
         [],
-        url => url.searchParams.get(Outputs.getAuthToken.authToken)!
+        p => p.getStringParameter(Outputs.getAuthToken.authToken)
       );
     }
     return this.authToken!;
@@ -125,10 +91,10 @@ class Api {
       [Inputs.generateSignature.derivationOptionsJson, derivationOptionsJson],
       [Inputs.generateSignature.message, message]
     ],
-    url => {
-      const signature = urlSafeBase64Decode(url.searchParams.get(Outputs.generateSignature.signature)!)
+    p => {
+      const signature = p.getBinaryParameter(Outputs.generateSignature.signature)
       const signatureVerificationKey = this.seededCryptoModule.SignatureVerificationKey.fromJson(
-        url.searchParams.get(Outputs.generateSignature.signatureVerificationKey)!);
+        p.getStringParameter(Outputs.generateSignature.signatureVerificationKey));
       return {
         signature,
         signatureVerificationKey
@@ -148,7 +114,7 @@ class Api {
     [
       [Inputs.getSecret.derivationOptionsJson, derivationOptionsJson]
     ],
-    url => this.seededCryptoModule.Secret.fromJson(url.searchParams.get(Outputs.getSecret.secret)!)
+    p => this.seededCryptoModule.Secret.fromJson(p.getStringParameter(Outputs.getSecret.secret))
   );
 
   /**
@@ -166,7 +132,7 @@ class Api {
     [ 
       [Inputs.getUnsealingKey.derivationOptionsJson, derivationOptionsJson ]
     ],
-    url => this.seededCryptoModule.UnsealingKey.fromJson(url.searchParams.get(Outputs.getUnsealingKey.unsealingKey)!)
+    p => this.seededCryptoModule.UnsealingKey.fromJson(p.getStringParameter(Outputs.getUnsealingKey.unsealingKey))
   );
 
 
@@ -185,7 +151,7 @@ class Api {
       [ 
         [Inputs.getUnsealingKey.derivationOptionsJson, derivationOptionsJson ]
       ],
-        url => this.seededCryptoModule.SymmetricKey.fromJson(url.searchParams.get(Outputs.getSymmetricKey.symmetricKey)!)
+        p => this.seededCryptoModule.SymmetricKey.fromJson(p.getStringParameter(Outputs.getSymmetricKey.symmetricKey))
     );
  
     /**
@@ -203,7 +169,7 @@ class Api {
       [ 
         [Inputs.getUnsealingKey.derivationOptionsJson, derivationOptionsJson ]
       ],
-        url => this.seededCryptoModule.SigningKey.fromJson(url.searchParams.get(Outputs.getSigningKey.signingKey)!)
+        p => this.seededCryptoModule.SigningKey.fromJson(p.getStringParameter(Outputs.getSigningKey.signingKey))
     );
 
 
@@ -220,7 +186,7 @@ class Api {
       [ 
         [Inputs.getUnsealingKey.derivationOptionsJson, derivationOptionsJson ]
       ],
-        url => this.seededCryptoModule.SealingKey.fromJson(url.searchParams.get(Outputs.getSealingKey.sealingKey)!)
+        p => this.seededCryptoModule.SealingKey.fromJson(p.getStringParameter(Outputs.getSealingKey.sealingKey))
     );
 
 
@@ -242,7 +208,7 @@ class Api {
         UnsealingInstructions(packagedSealedMessage.unsealingInstructions).requireAuthenticationHandshake!!
       ),
       [ [ Inputs.unsealWithUnsealingKey.packagedSealedMessage, packagedSealedMessage ]],
-      url => urlSafeBase64Decode(url.searchParams.get((Outputs.unsealWithUnsealingKey.plaintext))!)
+      p => p.getBinaryParameter(Outputs.unsealWithUnsealingKey.plaintext)
     );
 
     /**
@@ -257,7 +223,7 @@ class Api {
     sealWithSymmetricKey = (
       derivationOptionsJson: string,
       plaintext: Uint8Array,
-      unsealingInstructions: string
+      unsealingInstructions: string = ""
     ): Promise<PackagedSealedMessage> =>
       this.call(
         Commands.sealWithSymmetricKey, 
@@ -267,8 +233,8 @@ class Api {
           [Inputs.sealWithSymmetricKey.plaintext, plaintext],
           [Inputs.sealWithSymmetricKey.unsealingInstructions, unsealingInstructions]  
         ],
-        url => this.seededCryptoModule.PackagedSealedMessage.fromJson(
-          url.searchParams.get(Outputs.sealWithSymmetricKey.packagedSealedMessage)!)
+        p => this.seededCryptoModule.PackagedSealedMessage.fromJson(
+          p.getStringParameter(Outputs.sealWithSymmetricKey.packagedSealedMessage))
       );
 
     /**
@@ -284,7 +250,7 @@ class Api {
     unsealWithSymmetricKey = (
       packagedSealedMessage: PackagedSealedMessage
     ): Promise<Uint8Array> => this.call(
-      Commands.unsealWithUnsealingKey,
+      Commands.unsealWithSymmetricKey,
       (
         DerivationOptions(packagedSealedMessage.derivationOptionsJson).requireAuthenticationHandshake!! ||
         UnsealingInstructions(packagedSealedMessage.unsealingInstructions).requireAuthenticationHandshake!!
@@ -292,7 +258,7 @@ class Api {
       [
         [Inputs.unsealWithSymmetricKey.packagedSealedMessage, packagedSealedMessage ]
       ],
-      url => urlSafeBase64Decode(url.searchParams.get(Outputs.unsealWithSymmetricKey.plaintext)!)
+      p => p.getBinaryParameter(Outputs.unsealWithSymmetricKey.plaintext)
     )
     
     /**
@@ -307,8 +273,8 @@ class Api {
       [
         [Inputs.getSignatureVerificationKey.derivationOptionsJson, derivationOptionsJson]
       ],
-      url => this.seededCryptoModule.SignatureVerificationKey.fromJson(
-        url.searchParams.get(Outputs.getSignatureVerificationKey.signatureVerificationKey)!)
+      p => this.seededCryptoModule.SignatureVerificationKey.fromJson(
+        p.getStringParameter(Outputs.getSignatureVerificationKey.signatureVerificationKey))
     );
 
 }

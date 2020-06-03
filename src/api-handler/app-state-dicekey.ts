@@ -8,7 +8,7 @@ import {
   SeededCryptoModuleWithHelpers,
   SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js";
-import { urlSafeBase64Encode } from "../api/base64";
+import { urlSafeBase64Encode } from "../api/encodings";
 import {randomBytes} from "crypto";
 
 const defaultAppStageExpirationTimeInMinutes = 30;
@@ -35,7 +35,7 @@ export class DiceKeyAppState extends EncryptedAppStateStore {
   
   addAuthenticationToken = (respondToUrl: string): string => {
     const authToken: string = ((): string => {
-      if (window && window.crypto) {
+      if (global.window && window.crypto) {
         const randomBytes = new Uint8Array(20);
         crypto.getRandomValues(randomBytes);
         return urlSafeBase64Encode(randomBytes);

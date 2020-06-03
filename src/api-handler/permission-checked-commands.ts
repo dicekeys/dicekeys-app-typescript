@@ -51,18 +51,39 @@ export class PermissionCheckedCommands {
   /**
    * Implement [DiceKeysIntentApiClient.sealWithSymmetricKey] with the necessary permissions checks
    */
-  public sealWithSymmetricKey = async (
+  // public sealWithSymmetricKey = async (
+  //   derivationOptionsJson: string,
+  //   plaintext: Uint8Array,
+  //   unsealingInstructions?: string
+  // ): Promise<PackagedSealedMessage> =>
+  // this.seededCryptoModule.SymmetricKey.sealWithInstructions(
+  //   plaintext,
+  //   unsealingInstructions ?? "",
+  //   await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
+  //       derivationOptionsJson,
+  //       DerivableObjectNames.SymmetricKey
+  //   ),
+  //   derivationOptionsJson
+  // );
+  public sealWithSymmetricKey = (
     derivationOptionsJson: string,
     plaintext: Uint8Array,
     unsealingInstructions?: string
   ): Promise<PackagedSealedMessage> =>
-  this.seededCryptoModule.SymmetricKey.deriveFromSeed(
-      await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
-        derivationOptionsJson,
-        DerivableObjectNames.SymmetricKey
-      ),
-      derivationOptionsJson
-    ).sealWithInstructions(plaintext, unsealingInstructions || "")
+    this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
+      derivationOptionsJson,
+      DerivableObjectNames.SymmetricKey
+    ).then( seedString => {
+      const isOk = (typeof plaintext === "string" || (plaintext instanceof Uint8Array));
+      console.log("isOk", isOk, plaintext.constructor.name);
+      return this.seededCryptoModule.SymmetricKey.sealWithInstructions(
+        plaintext,
+        unsealingInstructions ?? "",
+        seedString,
+        derivationOptionsJson
+      )
+    }
+    );
 
   /**
    * Implement [DiceKeysIntentApiClient.unsealWithSymmetricKey] with the necessary permissions checks
