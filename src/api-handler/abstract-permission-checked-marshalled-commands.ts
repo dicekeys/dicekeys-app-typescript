@@ -7,10 +7,6 @@ import {
 import {
   PermissionCheckedCommands
 } from "./permission-checked-commands"
-import {
-  urlSafeBase64Decode,
-  urlSafeBase64Encode
-} from "../api/encodings"
 import * as ApiStrings from "../api/api-strings";
 import {
   DiceKeyAppState
@@ -46,7 +42,7 @@ export class InvalidDiceKeysCommandException extends Error {
  *  The caller is responsible for catching exceptions and marshalling them
  */
 export abstract class PermissionCheckedMarshalledCommands {
-  private successResults: [string, string][] = []
+  private successResults: [string, string | Uint8Array][] = []
 
   constructor(
     private seededCryptoModule: SeededCryptoModuleWithHelpers,
@@ -79,38 +75,21 @@ export abstract class PermissionCheckedMarshalledCommands {
     return this._api!;
   }
 
-  protected defaultSendResponse = (response: [string, string][]) => {
-    if (!this.respondTo) {
-      return;
-    }
-    const newUrl = new URL(this.respondTo);
-    response.forEach( ([name, value]) => {
-      newUrl.searchParams.append(name, value);
-    });
-    window.location.replace(newUrl.toString());
-  }
 
   protected abstract unmarshallOptionalStringParameter(parameterName: string): string | undefined;
+  protected abstract unmarshallBinaryParameter(parameterName: string): Uint8Array;
 
   protected unmarshallStringParameter = (parameterName: string) : string =>
     this.unmarshallOptionalStringParameter(parameterName) ?? 
       (() => { throw new Error("Missing parameter"); })()
 
-  protected unmarshallBinaryParameter = (parameterName: string): Uint8Array => {
-    const base64Value  = this.unmarshallStringParameter(parameterName);
-    return urlSafeBase64Decode(base64Value);
-  }    
 
   protected marshallResult = (
     responseParameterName: string,
     value: string | Uint8Array
   ): PermissionCheckedMarshalledCommands => {
     this.successResults.push([
-      responseParameterName,
-      typeof value === "string" ?
-        value :
-        urlSafeBase64Encode(value)
-    ]);
+      responseParameterName, value]);
     return this;
   }
 
@@ -126,7 +105,7 @@ export abstract class PermissionCheckedMarshalledCommands {
     return this.authTokenFieldFromUri && DiceKeyAppState.instance!.getUrlForAuthenticationToken(this.authTokenFieldFromUri);
   }
 
-  protected abstract sendResponse(response: [string, string][]): any;
+  protected abstract sendResponse(response: [string, string | Uint8Array][]): any;
 
   protected sendSuccess = (): void => {
     this.marshallResult(

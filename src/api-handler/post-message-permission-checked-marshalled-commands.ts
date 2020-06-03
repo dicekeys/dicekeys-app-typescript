@@ -11,10 +11,6 @@ import {
 import {
   PermissionCheckedMarshalledCommands
 } from "./abstract-permission-checked-marshalled-commands"
-import {
-  urlSafeBase64Decode,
-  urlSafeBase64Encode
-} from "../api/encodings"
 
 /**
  * Wrap the [PermissionCheckedCommands] to unmarshall parameters from the
@@ -23,63 +19,64 @@ import {
  *
  *  The caller is responsible for catching exceptions and marshalling them
  */
-export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMarshalledCommands {
+export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCheckedMarshalledCommands {
   constructor(
     seededCryptoModule: SeededCryptoModuleWithHelpers,
-    protected requestUrl: URL,
+    protected request: MessageEvent,
     loadDiceKey: () => Promise<DiceKey>,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
     ) => Promise<UsersConsentResponse>,
-    private transmitResponse: (response: URL) => any = (response: URL) => this.defaultTransmitResponse(response)
-  ) {    
+    private transmitResponse: (response: object) => any = (response: object) => this.defaultTransmitResponse(response)
+  ) {
     super(seededCryptoModule, loadDiceKey, requestUsersConsent);
   }
 
   protected unmarshallOptionalStringParameter = (parameterName: string): string | undefined => {
-    const valueStringOrNull = this.requestUrl.searchParams.get(parameterName);
-    if (valueStringOrNull == null) {
-      return;
-    }
-    return valueStringOrNull;
+    const value = typeof (this.request?.data) === "object" && this.request?.data[parameterName];
+    return (typeof value) === "string" ? value : undefined;
   }
-
   protected unmarshallBinaryParameter = (parameterName: string): Uint8Array => {
-    const base64Value  = this.unmarshallStringParameter(parameterName);
-    return urlSafeBase64Decode(base64Value);
+    const value = typeof (this.request?.data) === "object" && this.request?.data[parameterName];
+    return ((typeof value) === "object" && (value instanceof Uint8Array)) ?
+      value :
+      (() => { throw new Error("Missing parameter"); })();
   }
 
-  private defaultTransmitResponse = (response: URL): any => {
-    window.location.replace(response.toString());
+  private defaultTransmitResponse = (response: object): any => {
+    /**
+     * Transmit the response back to the origin it came from
+     */
+    window.postMessage(response, this.request.origin)
   }
 
   protected sendResponse = (response: [string, string][]) => {
-    if (!this.respondTo) {
-      return;
-    }
-    const responseUrl = new URL(this.respondTo);
-    response.forEach( ([name, value]) => {
-      responseUrl.searchParams.append(name, value);
-    });
-    this.transmitResponse(responseUrl)
+    const responseObj =
+    response.reduce( (responseObj, [name, value]) => {
+        responseObj[name] = value;
+        return responseObj;
+      },
+      {} as {[name: string]: string}
+    );
+    this.transmitResponse(responseObj)
   }
 
   static executeIfCommand = async (
     loadDiceKey: () => Promise<DiceKey>,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
-    ) => Promise<UsersConsentResponse>
+    ) => Promise<UsersConsentResponse>,
+    messageEvent: MessageEvent
   ) => {
     const seededCryptoModule = await SeededCryptoModulePromise;
-    const command = new UrlPermissionCheckedMarshalledCommands(
+    const command = new PostMessagePermissionCheckedMarshalledCommands(
       seededCryptoModule,
-      new URL(window.location.href),
+      messageEvent,
       loadDiceKey, requestUsersConsent
     );
     if (command.isCommand()) {
       command.execute();
     }    
   }
-
 
 }
