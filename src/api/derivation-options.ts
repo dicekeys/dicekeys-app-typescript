@@ -116,7 +116,7 @@ export const DerivationOptions = (
   const derivationOptions = 
     (typeof derivationOptionsAsObjectOrJson === "object" && derivationOptionsAsObjectOrJson != null) ?
       derivationOptionsAsObjectOrJson :
-      JSON.parse(derivationOptionsAsObjectOrJson || "{}") as DerivationOptions;
+      JSON.parse(derivationOptionsAsObjectOrJson ?? "{}") as DerivationOptions;
   if (typeRequiredByOperation && derivationOptions.type && derivationOptions.type !== typeRequiredByOperation) {
     throw new InvalidDerivationOptionsTypeFieldException(typeRequiredByOperation, derivationOptions.type);
   }

@@ -19,20 +19,19 @@ export class UrlApi extends Api {
   private pendingCallResolveFunctions = new Map<string, {resolve: (url: URL) => any, reject: (err: any) => any}>();
 
   constructor(
-    seededCryptoModule: SeededCryptoModuleWithHelpers,
     private requestUrlBase: string,
     private respondToUrl: string,
     private transmitRequest: (request: URL) => any
   ) {
-    super(seededCryptoModule);
+    super();
   }
 
   protected call = async <T>(
     command: Command,
     authTokenRequired: boolean,
     parameters: [string, string | Uint8Array | {toJson: () => string} ][],
-    processResponse: (unmarshallerForResponse: UnmsarshallerForResponse) => T
-  ) : Promise<T> => {
+    processResponse: (unmarshallerForResponse: UnmsarshallerForResponse) => T | Promise<T>
+  ): Promise<T> => {
     const requestId = this.generateRequestId();
     const requestUrl = new URL(this.requestUrlBase);
     requestUrl.searchParams.set(Inputs.COMMON.requestId, requestId);
@@ -63,7 +62,7 @@ export class UrlApi extends Api {
         (() => { throw new Error(`Missing parameter ${name}`); } )();
     const getBinaryParameter = (name: string): Uint8Array =>
       urlSafeBase64Decode(getStringParameter(name));
-    return processResponse({
+    return await processResponse({
       getOptionalStringParameter, getStringParameter, getBinaryParameter
     });
   }

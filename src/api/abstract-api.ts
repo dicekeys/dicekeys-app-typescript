@@ -23,7 +23,7 @@ import {
   urlSafeBase64Encode
 } from "./encodings";
 import {
-  SeededCryptoModuleWithHelpers
+  SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js";
 import {
   UnsealingInstructions
@@ -39,15 +39,13 @@ export interface UnmsarshallerForResponse {
 }
 
 export abstract class Api {
-  constructor(
-    private seededCryptoModule: SeededCryptoModuleWithHelpers,
-  ) {}
+  constructor() {}
 
   protected abstract call: <T>(
     command: Command,
     authTokenRequired: boolean,
     parameters: [string, string | Uint8Array | {toJson: () => string} ][],
-    processResponse: (unmarshallerForResponse: UnmsarshallerForResponse) => T
+    processResponse: (unmarshallerForResponse: UnmsarshallerForResponse) => T | Promise<T>
   ) => Promise<T>;
 
   protected generateRequestId = (): string => {
@@ -70,7 +68,7 @@ export abstract class Api {
         Commands.getAuthToken,
         false,
         [],
-        p => p.getStringParameter(Outputs.getAuthToken.authToken)
+        async (p) => p.getStringParameter(Outputs.getAuthToken.authToken)
       );
     }
     return this.authToken!;
@@ -91,9 +89,9 @@ export abstract class Api {
       [Inputs.generateSignature.derivationOptionsJson, derivationOptionsJson],
       [Inputs.generateSignature.message, message]
     ],
-    p => {
+    async p => {
       const signature = p.getBinaryParameter(Outputs.generateSignature.signature)
-      const signatureVerificationKey = this.seededCryptoModule.SignatureVerificationKey.fromJson(
+      const signatureVerificationKey = (await SeededCryptoModulePromise).SignatureVerificationKey.fromJson(
         p.getStringParameter(Outputs.generateSignature.signatureVerificationKey));
       return {
         signature,
@@ -114,7 +112,7 @@ export abstract class Api {
     [
       [Inputs.getSecret.derivationOptionsJson, derivationOptionsJson]
     ],
-    p => this.seededCryptoModule.Secret.fromJson(p.getStringParameter(Outputs.getSecret.secret))
+    async (p) => (await SeededCryptoModulePromise).Secret.fromJson(p.getStringParameter(Outputs.getSecret.secret))
   );
 
   /**
@@ -132,7 +130,7 @@ export abstract class Api {
     [ 
       [Inputs.getUnsealingKey.derivationOptionsJson, derivationOptionsJson ]
     ],
-    p => this.seededCryptoModule.UnsealingKey.fromJson(p.getStringParameter(Outputs.getUnsealingKey.unsealingKey))
+    async (p) => (await SeededCryptoModulePromise).UnsealingKey.fromJson(p.getStringParameter(Outputs.getUnsealingKey.unsealingKey))
   );
 
 
@@ -151,7 +149,7 @@ export abstract class Api {
       [ 
         [Inputs.getUnsealingKey.derivationOptionsJson, derivationOptionsJson ]
       ],
-        p => this.seededCryptoModule.SymmetricKey.fromJson(p.getStringParameter(Outputs.getSymmetricKey.symmetricKey))
+        async (p) => (await SeededCryptoModulePromise).SymmetricKey.fromJson(p.getStringParameter(Outputs.getSymmetricKey.symmetricKey))
     );
  
     /**
@@ -169,7 +167,7 @@ export abstract class Api {
       [ 
         [Inputs.getUnsealingKey.derivationOptionsJson, derivationOptionsJson ]
       ],
-        p => this.seededCryptoModule.SigningKey.fromJson(p.getStringParameter(Outputs.getSigningKey.signingKey))
+        async (p) => (await SeededCryptoModulePromise).SigningKey.fromJson(p.getStringParameter(Outputs.getSigningKey.signingKey))
     );
 
 
@@ -186,7 +184,7 @@ export abstract class Api {
       [ 
         [Inputs.getUnsealingKey.derivationOptionsJson, derivationOptionsJson ]
       ],
-        p => this.seededCryptoModule.SealingKey.fromJson(p.getStringParameter(Outputs.getSealingKey.sealingKey))
+        async (p) => (await SeededCryptoModulePromise).SealingKey.fromJson(p.getStringParameter(Outputs.getSealingKey.sealingKey))
     );
 
 
@@ -208,7 +206,7 @@ export abstract class Api {
         UnsealingInstructions(packagedSealedMessage.unsealingInstructions).requireAuthenticationHandshake!!
       ),
       [ [ Inputs.unsealWithUnsealingKey.packagedSealedMessage, packagedSealedMessage ]],
-      p => p.getBinaryParameter(Outputs.unsealWithUnsealingKey.plaintext)
+      async (p) => p.getBinaryParameter(Outputs.unsealWithUnsealingKey.plaintext)
     );
 
     /**
@@ -233,7 +231,7 @@ export abstract class Api {
           [Inputs.sealWithSymmetricKey.plaintext, plaintext],
           [Inputs.sealWithSymmetricKey.unsealingInstructions, unsealingInstructions]  
         ],
-        p => this.seededCryptoModule.PackagedSealedMessage.fromJson(
+        async (p) => (await SeededCryptoModulePromise).PackagedSealedMessage.fromJson(
           p.getStringParameter(Outputs.sealWithSymmetricKey.packagedSealedMessage))
       );
 
@@ -258,7 +256,7 @@ export abstract class Api {
       [
         [Inputs.unsealWithSymmetricKey.packagedSealedMessage, packagedSealedMessage ]
       ],
-      p => p.getBinaryParameter(Outputs.unsealWithSymmetricKey.plaintext)
+      async (p) => p.getBinaryParameter(Outputs.unsealWithSymmetricKey.plaintext)
     )
     
     /**
@@ -273,7 +271,7 @@ export abstract class Api {
       [
         [Inputs.getSignatureVerificationKey.derivationOptionsJson, derivationOptionsJson]
       ],
-      p => this.seededCryptoModule.SignatureVerificationKey.fromJson(
+      async (p) => (await SeededCryptoModulePromise).SignatureVerificationKey.fromJson(
         p.getStringParameter(Outputs.getSignatureVerificationKey.signatureVerificationKey))
     );
 

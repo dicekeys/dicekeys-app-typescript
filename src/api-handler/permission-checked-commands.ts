@@ -6,7 +6,8 @@ import {
   SigningKey,
   SymmetricKey,
   UnsealingKey,
-  SeededCryptoModuleWithHelpers
+  SeededCryptoModuleWithHelpers,
+  SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js";
 import {
   DerivableObjectNames, DerivationOptions
@@ -30,7 +31,6 @@ import { DiceKeyAppState } from "./app-state-dicekey";
 export class PermissionCheckedCommands {
   constructor(
     private permissionCheckedSeedAccessor: PermissionCheckedSeedAccessor,
-    private seededCryptoModule: SeededCryptoModuleWithHelpers
   ) {}
 
   public getAuthToken = (respondToUrl: string): string =>
@@ -40,7 +40,7 @@ export class PermissionCheckedCommands {
    * Implement [DiceKeysIntentApiClient.getSecret] with the necessary permissions checks
    */
   public getSecret = async (derivationOptionsJson: string): Promise<Secret> =>
-    this.seededCryptoModule.Secret.deriveFromSeed(
+    (await SeededCryptoModulePromise).Secret.deriveFromSeed(
       await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
         derivationOptionsJson,
         DerivableObjectNames.Secret
@@ -56,7 +56,7 @@ export class PermissionCheckedCommands {
   //   plaintext: Uint8Array,
   //   unsealingInstructions?: string
   // ): Promise<PackagedSealedMessage> =>
-  // this.seededCryptoModule.SymmetricKey.sealWithInstructions(
+  // (await SeededCryptoModulePromise).SymmetricKey.sealWithInstructions(
   //   plaintext,
   //   unsealingInstructions ?? "",
   //   await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
@@ -73,10 +73,10 @@ export class PermissionCheckedCommands {
     this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
       derivationOptionsJson,
       DerivableObjectNames.SymmetricKey
-    ).then( seedString => {
+    ).then( async seedString => {
       const isOk = (typeof plaintext === "string" || (plaintext instanceof Uint8Array));
       console.log("isOk", isOk, plaintext.constructor.name);
-      return this.seededCryptoModule.SymmetricKey.sealWithInstructions(
+      return (await SeededCryptoModulePromise).SymmetricKey.sealWithInstructions(
         plaintext,
         unsealingInstructions ?? "",
         seedString,
@@ -90,7 +90,7 @@ export class PermissionCheckedCommands {
    */
   public unsealWithSymmetricKey = async (
     packagedSealedMessage: PackagedSealedMessage
-  ) : Promise<Uint8Array> => this.seededCryptoModule.SymmetricKey.unseal(
+  ) : Promise<Uint8Array> => (await SeededCryptoModulePromise).SymmetricKey.unseal(
       packagedSealedMessage,
       await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedToUnsealAsync(
         packagedSealedMessage,
@@ -104,7 +104,7 @@ export class PermissionCheckedCommands {
   public getSealingKey = async (
     derivationOptionsJson: string
   ) : Promise<SealingKey> =>
-    this.seededCryptoModule.UnsealingKey.deriveFromSeed(
+    (await SeededCryptoModulePromise).UnsealingKey.deriveFromSeed(
       await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
         derivationOptionsJson,
         DerivableObjectNames.UnsealingKey
@@ -117,7 +117,7 @@ export class PermissionCheckedCommands {
    */
   public getUnsealingKey = async (
     derivationOptionsJson: string
-  ) : Promise<UnsealingKey> => this.seededCryptoModule.UnsealingKey.deriveFromSeed(
+  ) : Promise<UnsealingKey> => (await SeededCryptoModulePromise).UnsealingKey.deriveFromSeed(
     await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientsMayNotRetrieveKeysOrThisClientNotAuthorizedAsync(
       derivationOptionsJson,
       DerivableObjectNames.UnsealingKey
@@ -130,7 +130,7 @@ export class PermissionCheckedCommands {
    */
   public getSigningKey = async (
     derivationOptionsJson: string
-  ) : Promise<SigningKey> => this.seededCryptoModule.SigningKey.deriveFromSeed(
+  ) : Promise<SigningKey> => (await SeededCryptoModulePromise).SigningKey.deriveFromSeed(
     await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientsMayNotRetrieveKeysOrThisClientNotAuthorizedAsync(
       derivationOptionsJson,
       DerivableObjectNames.SigningKey
@@ -143,7 +143,7 @@ export class PermissionCheckedCommands {
    */
   public getSymmetricKey = async (
     derivationOptionsJson: string
-  ) : Promise<SymmetricKey> => this.seededCryptoModule.SymmetricKey.deriveFromSeed(
+  ) : Promise<SymmetricKey> => (await SeededCryptoModulePromise).SymmetricKey.deriveFromSeed(
     await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientsMayNotRetrieveKeysOrThisClientNotAuthorizedAsync(
       derivationOptionsJson,
       DerivableObjectNames.SymmetricKey
@@ -157,7 +157,7 @@ export class PermissionCheckedCommands {
   public getSignatureVerificationKey = async (
     derivationOptionsJson: string
   ) : Promise<SignatureVerificationKey> =>
-    this.seededCryptoModule.SigningKey.deriveFromSeed(
+    (await SeededCryptoModulePromise).SigningKey.deriveFromSeed(
       await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
         derivationOptionsJson,
         DerivableObjectNames.SigningKey
@@ -171,7 +171,7 @@ export class PermissionCheckedCommands {
   public unsealWithUnsealingKey = async (
     packagedSealedMessage: PackagedSealedMessage
   ) : Promise<Uint8Array> =>
-    this.seededCryptoModule.UnsealingKey.deriveFromSeed(
+    (await SeededCryptoModulePromise).UnsealingKey.deriveFromSeed(
         await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedToUnsealAsync(
           packagedSealedMessage,
           DerivableObjectNames.UnsealingKey
@@ -186,7 +186,7 @@ export class PermissionCheckedCommands {
     derivationOptionsJson: string,
     message: Uint8Array
   ): Promise<[Uint8Array, SignatureVerificationKey]> => {
-    const signingKey = this.seededCryptoModule.SigningKey.deriveFromSeed(
+    const signingKey = (await SeededCryptoModulePromise).SigningKey.deriveFromSeed(
       await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
           derivationOptionsJson,
           DerivableObjectNames.SigningKey

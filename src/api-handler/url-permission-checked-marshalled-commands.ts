@@ -29,7 +29,6 @@ import {
  */
 export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMarshalledCommands {
   constructor(
-    seededCryptoModule: SeededCryptoModuleWithHelpers,
     protected requestUrl: URL,
     loadDiceKey: () => Promise<DiceKey>,
     requestUsersConsent: (
@@ -38,7 +37,6 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
     private transmitResponse: (response: URL) => any = (response: URL) => this.defaultTransmitResponse(response)
   ) {    
     super(
-      seededCryptoModule,
       // The origin of a URL-protocol request is the origin you are replying to
       // (though this may be supplemented with an url authenticated by an auth token)
       requestUrl.searchParams.get(Inputs.COMMON.respondTo) ?? "",
@@ -91,15 +89,13 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
     this.transmitResponse(responseUrl)
   }
 
-  static executeIfCommand = async (
+  static executeIfCommand = (
     loadDiceKey: () => Promise<DiceKey>,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
     ) => Promise<UsersConsentResponse>
   ) => {
-    const seededCryptoModule = await SeededCryptoModulePromise;
     const command = new UrlPermissionCheckedMarshalledCommands(
-      seededCryptoModule,
       new URL(window.location.href),
       loadDiceKey, requestUsersConsent
     );

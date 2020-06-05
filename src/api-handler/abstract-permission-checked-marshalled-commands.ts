@@ -48,7 +48,6 @@ export abstract class PermissionCheckedMarshalledCommands {
   private readonly api: PermissionCheckedCommands;
 
   constructor(
-    private seededCryptoModule: SeededCryptoModuleWithHelpers,
     private origin: string,
     private loadDiceKey: () => Promise<DiceKey>,
     private requestUsersConsent: (
@@ -64,9 +63,8 @@ export abstract class PermissionCheckedMarshalledCommands {
       protocolMayRequireHandshakes,
       handshakeAuthenticatedUrl
     )
-    this.api = new PermissionCheckedCommands(permissionCheckedSeedAccessor, this.seededCryptoModule);
+    this.api = new PermissionCheckedCommands(permissionCheckedSeedAccessor);
   }
-
 
   protected abstract unmarshallOptionalStringParameter(parameterName: string): string | undefined;
   protected abstract unmarshallBinaryParameter(parameterName: string): Uint8Array;
@@ -131,13 +129,13 @@ export abstract class PermissionCheckedMarshalledCommands {
   // private unsealWithSymmetricKey = async (): Promise<void> => this.marshallResult(
   //     ApiStrings.Outputs.unsealWithSymmetricKey.plaintext,
   //     await this.api.unsealWithSymmetricKey(
-  //       this.seededCryptoModule.PackagedSealedMessage.fromJson(
+  //      (await SeededCryptoModulePromise).PackagedSealedMessage.fromJson(
   //         this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage)
   //     )
   //   )).sendSuccess()
   private unsealWithSymmetricKey = async (): Promise<void> => {
     const json = this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage);
-    const packagedSealedMessage = this.seededCryptoModule.PackagedSealedMessage.fromJson(json);
+    const packagedSealedMessage = (await SeededCryptoModulePromise).PackagedSealedMessage.fromJson(json);
     try {
       return this.marshallResult(
         ApiStrings.Outputs.unsealWithSymmetricKey.plaintext,
@@ -157,14 +155,14 @@ export abstract class PermissionCheckedMarshalledCommands {
   // private unsealWithUnsealingKey = async (): Promise<void> => this.marshallResult(
   //     ApiStrings.Outputs.unsealWithUnsealingKey.plaintext,
   //     await this.api.unsealWithUnsealingKey(
-  //       this.seededCryptoModule.PackagedSealedMessage.fromJson(
+  //      (await SeededCryptoModulePromise).PackagedSealedMessage.fromJson(
   //         this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithUnsealingKey.packagedSealedMessage)
   //       )
   //     )
   //   ).sendSuccess()
   private unsealWithUnsealingKey = async (): Promise<void> => {
     const json = this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage);
-    const packagedSealedMessage = this.seededCryptoModule.PackagedSealedMessage.fromJson(json);
+    const packagedSealedMessage =(await SeededCryptoModulePromise).PackagedSealedMessage.fromJson(json);
     try {
       return this.marshallResult(
         ApiStrings.Outputs.unsealWithUnsealingKey.plaintext,

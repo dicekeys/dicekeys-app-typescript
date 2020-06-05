@@ -36,21 +36,20 @@ describe("PermissionCheckedCommandsInstrumentedTest", () => {
   const requestUsersConsent = (response: UsersConsentResponse) => () =>
     new Promise<UsersConsentResponse>( (respond) => respond(response) );
 
-  const getPermissionCheckedCommands = async (
+  const getPermissionCheckedCommands = (
     url: string,
     usersConsentResponse: UsersConsentResponse = UsersConsentResponse.Allow
   ) => 
     new PermissionCheckedCommands(
       new PermissionCheckedSeedAccessor(
         url, loadDiceKey, requestUsersConsent(usersConsentResponse)
-      ),
-      await SeededCryptoModulePromise
+      )
     );
 
 test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
     await expect( async () => {
       await ( 
-        (await getPermissionCheckedCommands("https://example.comspoof/"))
+        getPermissionCheckedCommands("https://example.comspoof/")
         .sealWithSymmetricKey(
           JSON.stringify({
          urlPrefixesAllowed: ["https://example.com/"]
@@ -64,8 +63,8 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
 
   test("preventsLengthExtensionAttackOnASymmetricUnseal", async () => {
     await expect( async () => {
-      await ( 
-        (await getPermissionCheckedCommands("https://example.comspoof/"))
+      await (
+        getPermissionCheckedCommands("https://example.comspoof/")
         .unsealWithSymmetricKey(
           new (await SeededCryptoModulePromise).PackagedSealedMessage(
             stringToUtf8ByteArray(""),

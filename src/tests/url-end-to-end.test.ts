@@ -45,11 +45,11 @@ describe("EndToEndUrlApiTests", () => {
     usersResponseToConsentRequest: UsersConsentResponse = UsersConsentResponse.Allow
   ): Api => {
     const mockClient = new UrlApi(
-      seededCryptoModule, requestUrlBase, respondToUrl,
+      requestUrlBase, respondToUrl,
       /* transmit method  */
       (requestUri) => {
         const mockServerApi = new UrlPermissionCheckedMarshalledCommands(
-          seededCryptoModule, requestUri, loadDiceKey, requestUsersConsent(usersResponseToConsentRequest),
+          requestUri, loadDiceKey, requestUsersConsent(usersResponseToConsentRequest),
           (result) => mockClient.handleResult(result)
         );
         mockServerApi.execute();

@@ -1,7 +1,4 @@
 import {
-  SeededCryptoModuleWithHelpers, SeededCryptoModulePromise
-} from "@dicekeys/seeded-crypto-js"
-import {
   DiceKey
 } from "../dicekeys/dicekey";
 import {
@@ -17,7 +14,6 @@ import {
  */
 export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCheckedMarshalledCommands {
   constructor(
-    seededCryptoModule: SeededCryptoModuleWithHelpers,
     protected request: MessageEvent,
     loadDiceKey: () => Promise<DiceKey>,
     requestUsersConsent: (
@@ -25,7 +21,7 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
     ) => Promise<UsersConsentResponse>,
     private transmitResponse: (response: object) => any = (response: object) => this.defaultTransmitResponse(response)
   ) {
-    super(seededCryptoModule, request.origin, loadDiceKey, requestUsersConsent, false);
+    super(request.origin, loadDiceKey, requestUsersConsent, false);
   }
 
   protected unmarshallOptionalStringParameter = (parameterName: string): string | undefined => {
@@ -57,16 +53,14 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
     this.transmitResponse(responseObj)
   }
 
-  static executeIfCommand = async (
+  static executeIfCommand = (
     loadDiceKey: () => Promise<DiceKey>,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
     ) => Promise<UsersConsentResponse>,
     messageEvent: MessageEvent
   ) => {
-    const seededCryptoModule = await SeededCryptoModulePromise;
     const command = new PostMessagePermissionCheckedMarshalledCommands(
-      seededCryptoModule,
       messageEvent,
       loadDiceKey, requestUsersConsent
     );

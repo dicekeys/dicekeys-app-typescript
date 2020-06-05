@@ -89,15 +89,15 @@ export class FaceRead implements Partial<Face> {
   constructor(
     public readonly underline: Undoverline | undefined,
     public readonly overline: Undoverline | undefined,
-	public orientationAsLowercaseLetterTRBL: FaceOrientationLetterTrblOrUnknown,
+		public orientationAsLowercaseLetterTRBL: FaceOrientationLetterTrblOrUnknown,
     public readonly ocrLetterCharsFromMostToLeastLikely: string,
     public readonly ocrDigitCharsFromMostToLeastLikely: string,
 	public readonly center: Point
   ) {
     const ocrLetterRead = ocrLetterCharsFromMostToLeastLikely[0] as FaceLetter | undefined;
 		const ocrDigitRead = ocrDigitCharsFromMostToLeastLikely[0] as FaceDigit | undefined;
-		if (orientation != null) {
-			this.clockwise90DegreeRotationsFromUpright = Clockwise90DegreeRotationsFromUpright(orientation)
+		if (orientationAsLowercaseLetterTRBL != null) {
+			this.clockwise90DegreeRotationsFromUpright = Clockwise90DegreeRotationsFromUpright(orientationAsLowercaseLetterTRBL)
 		} else {
 			this.clockwise90DegreeRotationsFromUpright = 0;
 		}

@@ -5,17 +5,8 @@ import {
   DiceKey, DiceKeyInHumanReadableForm
 } from "../dicekeys/dicekey";
 import {
-  RequestForUsersConsent,
   UsersConsentResponse,
-  UnsealingInstructions
 } from "../api/unsealing-instructions";
-import {
-  ClientUriNotAuthorizedException,
-  UserDeclinedToAuthorizeOperation
-} from "../api-handler/permission-checks"
-import {
-  PermissionCheckedCommands
-} from "../api-handler/permission-checked-commands";
 import { SeededCryptoModulePromise, SeededCryptoModuleWithHelpers } from "@dicekeys/seeded-crypto-js";
 import {
   PermissionCheckedSeedAccessor, ClientMayNotRetrieveKeyException
@@ -44,7 +35,6 @@ describe("End-to-end API tests using the PostMessage API", () => {
     usersResponseToConsentRequest: UsersConsentResponse = UsersConsentResponse.Allow
   ): Api => {
     const mockClient = new PostMessageApi(
-      seededCryptoModule, requestOrigin, "request url would go here but is not used",
       /* transmit method  */
       (requestObject) => {
         const mockRequestMessageEvent = {
@@ -52,13 +42,13 @@ describe("End-to-end API tests using the PostMessage API", () => {
           data: requestObject
         } as MessageEvent;
         const mockServerApi = new PostMessagePermissionCheckedMarshalledCommands(
-          seededCryptoModule, mockRequestMessageEvent, loadDiceKey, requestUsersConsent(usersResponseToConsentRequest),
+          mockRequestMessageEvent, loadDiceKey, requestUsersConsent(usersResponseToConsentRequest),
           (data) => {
-            const mockResponseMessageEvent = {
+            const mockResponseMessageEvent: MessageEvent = {
               origin: requestOrigin,
               data
             } as MessageEvent;
-            mockClient.handleResult(mockResponseMessageEvent)
+            mockClient.handlePossibleResultMessage(mockResponseMessageEvent)
           });
         mockServerApi.execute();
       });

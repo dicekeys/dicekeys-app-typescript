@@ -1,0 +1,85 @@
+<svg 
+width="10mm" height="10mm" viewBox="0 0 10 10" style="background: rgba(0,0,0,0)" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<style>
+    @import url(https://fonts.googleapis.com/css?family=Inconsolata:700);
+</style>
+</defs>
+  <rect
+      width="9" height="9"  style="fill: #000030"
+  />
+  <g transform="translate(0.5, 0.5) scale(1)" id="gelementD1">
+  <rect
+    id="boundary_rectangle_for_face_D1"
+    y="0"
+    x="0"
+    rx="1.6"
+    ry="1.6"
+    height="8"
+    width="8"
+    style="fill:#ffffff;stroke:#000030;border-radius: 1.6px;stroke-width:0.45;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"/>
+  <rect
+    id="overline_rectangle_for_face_D1"
+    y="1.5"
+    x="1.5"
+    height="0.887097"
+    width="5"
+    style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0;"/>
+  <rect
+    id="underline_rectangle_for_face_D1"
+    y="5.612903"
+    x="1.5"
+    height="0.887097"
+    width="5"
+    style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;;stroke-width:0;"/>
+  <rect
+      id="bit_code_for_D1_underline_0"
+      y="5.854839"
+      x="1.782258"
+      height="0.403226"
+      width="0.403226"
+      style="fill:#ffffff;stroke:none;stroke-width:0;"/><rect
+      id="bit_code_for_D1_underline_4"
+      y="5.854839"
+      x="3.395162"
+      height="0.403226"
+      width="0.806452"
+      style="fill:#ffffff;stroke:none;stroke-width:0;"/><rect
+      id="bit_code_for_D1_underline_7"
+      y="5.854839"
+      x="4.60484"
+      height="0.403226"
+      width="0.403226"
+      style="fill:#ffffff;stroke:none;stroke-width:0;"/><rect
+      id="bit_code_for_D1_underline_9"
+      y="5.854839"
+      x="5.411292"
+      height="0.403226"
+      width="0.403226"
+      style="fill:#ffffff;stroke:none;stroke-width:0;"/><rect
+      id="bit_code_for_D1_overline_0"
+      y="1.741935"
+      x="1.782258"
+      height="0.403226"
+      width="1.612904"
+      style="fill:#ffffff;stroke:none;stroke-width:0;"/><rect
+      id="bit_code_for_D1_overline_8"
+      y="1.741935"
+      x="5.008066"
+      height="0.403226"
+      width="0.403226"
+      style="fill:#ffffff;stroke:none;stroke-width:0;"/>
+  <text
+  id="textfor_face_D1"
+  y="5.129032"
+  x="4"
+  style="font-family:Inconsolata;font-size:3.709677px;font-weight:700;letter-spacing:0.21875px;text-anchor:middle;text-align:center;line-height:1;writing-mode:lr-tb;fill:#000000;fill-opacity:1;"
+  >
+  <tspan
+    id="tspan_for_face_D1"
+  >D1</tspan>
+</text>
+</g>
+
+
+</svg>
