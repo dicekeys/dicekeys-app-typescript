@@ -74,8 +74,6 @@ export class PermissionCheckedCommands {
       derivationOptionsJson,
       DerivableObjectNames.SymmetricKey
     ).then( async seedString => {
-      const isOk = (typeof plaintext === "string" || (plaintext instanceof Uint8Array));
-      console.log("isOk", isOk, plaintext.constructor.name);
       return (await SeededCryptoModulePromise).SymmetricKey.sealWithInstructions(
         plaintext,
         unsealingInstructions ?? "",
