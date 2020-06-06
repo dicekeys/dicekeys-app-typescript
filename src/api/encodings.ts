@@ -3,21 +3,6 @@
  */
 import {TextDecoder, TextEncoder} from "util";
 
-// /**
-//  * Polyfill btoa and atob in node.
-//  */
-// if (typeof btoa === 'undefined') {
-//   global.btoa = function (str) {
-//     return new Buffer(str, 'binary').toString('base64');
-//   };
-// }
-// if (typeof atob === 'undefined') {
-//   global.atob = function (b64Encoded) {
-//     return new Buffer(b64Encoded, 'base64').toString('binary');
-//   };
-// }
-
-const decoder = new TextDecoder("utf-8");
 export const utf8ByteArrayToString: (byteArray: Uint8Array) => string =
   (Buffer && Buffer.from) ?
     ((byteArray: Uint8Array) => Buffer.from(byteArray).toString('utf-8')) :

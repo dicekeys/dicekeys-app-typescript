@@ -1,5 +1,5 @@
 export const Words_5_1024 = [
-    "abide",
+  "abide",
 	"acids",
 	"acre",
 	"acts",

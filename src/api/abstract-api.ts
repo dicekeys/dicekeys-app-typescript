@@ -48,7 +48,7 @@ export abstract class Api {
     processResponse: (unmarshallerForResponse: UnmsarshallerForResponse) => T | Promise<T>
   ) => Promise<T>;
 
-  protected generateRequestId = (): string => {
+  protected static readonly generateRequestId = (): string => {
     if (global.window && window.crypto) {
       const randomBytes = new Uint8Array(20);
       crypto.getRandomValues(randomBytes);

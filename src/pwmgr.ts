@@ -3,7 +3,7 @@ import {
   HtmlComponentConstructorOptions
 } from "./web-components/html-component"
 import {
-  PostMessageApi
+  DiceKeysPostMessageApi
 } from "./api/post-message-api"
 import { DerivationOptions } from "./api/derivation-options";
 
@@ -15,13 +15,13 @@ const pwmgrAppSecretDerivationOptionsJson = `{
 export class PasswordManagerSignin extends HtmlComponent {
   private apiWindow: Window | undefined;
 
-  private api = new PostMessageApi()
+  private api = new DiceKeysPostMessageApi()
 
   getPassword = async() => {
     const secret = await this.api.getSecret(pwmgrAppSecretDerivationOptionsJson);
     const {secretBytes} = secret;
     secret.delete();
-    
+
   }
   /**
    * The code supporting the dmeo page cannot until the WebAssembly module for the image

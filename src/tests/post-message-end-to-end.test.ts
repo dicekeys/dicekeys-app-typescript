@@ -8,12 +8,12 @@ import {
   UsersConsentResponse,
 } from "../api/unsealing-instructions";
 import { SeededCryptoModulePromise, SeededCryptoModuleWithHelpers } from "@dicekeys/seeded-crypto-js";
-import {
-  PermissionCheckedSeedAccessor, ClientMayNotRetrieveKeyException
-} from "../api-handler/permission-checked-seed-accessor"
 import { DerivationOptions } from "../api/derivation-options";
 import { PostMessagePermissionCheckedMarshalledCommands } from "../api-handler/post-message-permission-checked-marshalled-commands";
-import { PostMessageApi } from "../api/post-message-api";
+import {
+  DiceKeysPostMessageApi, 
+  forTestUseOnlyToCallHandlePossibleResultMessageDirectly
+} from "../api/post-message-api";
 import { Api } from "../api/abstract-api";
 import { stringToUtf8ByteArray } from "../api/encodings";
 
@@ -34,7 +34,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
     requestOrigin: string = defaultRequestOrigin,
     usersResponseToConsentRequest: UsersConsentResponse = UsersConsentResponse.Allow
   ): Api => {
-    const mockClient = new PostMessageApi(
+    const mockClient = new DiceKeysPostMessageApi(
       /* transmit method  */
       (requestObject) => {
         const mockRequestMessageEvent = {
@@ -48,7 +48,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
               origin: requestOrigin,
               data
             } as MessageEvent;
-            mockClient.handlePossibleResultMessage(mockResponseMessageEvent)
+            forTestUseOnlyToCallHandlePossibleResultMessageDirectly(mockResponseMessageEvent)
           });
         mockServerApi.execute();
       });

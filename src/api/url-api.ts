@@ -11,9 +11,6 @@ import {
   urlSafeBase64Decode,
   urlSafeBase64Encode
 } from "./encodings";
-import {
-  SeededCryptoModuleWithHelpers
-} from "@dicekeys/seeded-crypto-js";
 
 export class UrlApi extends Api {
   private pendingCallResolveFunctions = new Map<string, {resolve: (url: URL) => any, reject: (err: any) => any}>();
@@ -32,7 +29,7 @@ export class UrlApi extends Api {
     parameters: [string, string | Uint8Array | {toJson: () => string} ][],
     processResponse: (unmarshallerForResponse: UnmsarshallerForResponse) => T | Promise<T>
   ): Promise<T> => {
-    const requestId = this.generateRequestId();
+    const requestId = Api.generateRequestId();
     const requestUrl = new URL(this.requestUrlBase);
     requestUrl.searchParams.set(Inputs.COMMON.requestId, requestId);
     requestUrl.searchParams.set(Inputs.COMMON.respondTo, this.respondToUrl);
