@@ -14,7 +14,7 @@ import {
 const runDemo = async() => {
     // Start by constructing the class that implements the page's functionality\
     const body = document.body;
-    const diceKey = await new ReadDiceKey(document.body).promise;
+    const diceKey = await loadDiceKey();
     new DisplayDiceKeyCanvas(document.body, {}, diceKey);
 
     const hrf = DiceKey.toHumanReadableForm(diceKey);
@@ -54,16 +54,10 @@ const requestUsersConsent = async (
 
 SeededCryptoModulePromise.then( seededCryptoModule => {
   const handleApiMessageEvent = (messageEvent: MessageEvent) => {
-
-    const sendResponse = (data: object) => {
-      postMessage(data, messageEvent.origin);
-    }
-
     const serverApi = new PostMessagePermissionCheckedMarshalledCommands(
       messageEvent,
       loadDiceKey,
-      requestUsersConsent,
-      sendResponse
+      requestUsersConsent
     );
     serverApi.execute();
   };

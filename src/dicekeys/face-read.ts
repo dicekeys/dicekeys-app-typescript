@@ -19,10 +19,10 @@ import { hammingDistance } from "./bit-operations";
  */
 const majorityOfThree = <T>(
   a: T, b: T, c: T
-): T => 
-  (b == c) ? b : 
-  (a != null) ? a : 
-  (b != null) ? b : c;
+): T | undefined => 
+	(a === b || a == c) ? a : 
+	(b === c) ? b : 
+	undefined;
 
 export class FaceHasTooManyErrorsException extends Error {
   constructor(public faceRead: FaceRead) {
@@ -194,7 +194,7 @@ export class FaceRead implements Partial<Face> {
     Undoverline.fromJsonUnderlineObject(j.underline),
     Undoverline.fromJsonOverlineObject(j.overline),
 	  j.orientationAsLowercaseLetterTRBL,
-    j.ocrDigitCharsFromMostToLeastLikely,
+    j.ocrLetterCharsFromMostToLeastLikely,
     j.ocrDigitCharsFromMostToLeastLikely,
   	j.center
   );

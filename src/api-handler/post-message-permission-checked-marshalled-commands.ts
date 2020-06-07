@@ -21,7 +21,7 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
     ) => Promise<UsersConsentResponse>,
     private transmitResponse: (response: object) => any = (response: object) => this.defaultTransmitResponse(response)
   ) {
-    super(request.origin, loadDiceKey, requestUsersConsent, false);
+    super(request.origin + "/", loadDiceKey, requestUsersConsent, false);
   }
 
   protected unmarshallOptionalStringParameter = (parameterName: string): string | undefined => {
@@ -39,7 +39,7 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
     /**
      * Transmit the response back to the origin it came from
      */
-    window.postMessage(response, this.request.origin)
+    ( this.request.source as {postMessage: (m: any, origin: string) => unknown})!.postMessage(response, this.request.origin);
   }
 
   protected sendResponse = (response: [string, string | Uint8Array][]) => {
