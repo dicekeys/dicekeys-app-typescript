@@ -1,6 +1,9 @@
 import {
-  SeededCryptoModuleWithHelpers, SeededCryptoModulePromise
+  SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js"
+import {
+  Exceptions
+} from "@dicekeys/dicekeys-api-js";
 import {
   PermissionCheckedSeedAccessor,
 } from "./permission-checked-seed-accessor";
@@ -71,7 +74,7 @@ export abstract class PermissionCheckedMarshalledCommands {
 
   protected unmarshallStringParameter = (parameterName: string) : string =>
     this.unmarshallOptionalStringParameter(parameterName) ?? 
-      (() => { throw new Error("Missing parameter"); })()
+      (() => { throw Exceptions.MissingParameter.create(parameterName); })()
 
 
   protected marshallResult = (

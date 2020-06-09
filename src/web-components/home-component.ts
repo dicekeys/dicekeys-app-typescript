@@ -1,4 +1,7 @@
 import {
+  Exceptions
+} from "@dicekeys/dicekeys-api-js"
+import {
   HtmlComponent,
   HtmlComponentConstructorOptions,
   HtmlComponentOptions
@@ -27,7 +30,7 @@ export const loadDiceKeyAsync = async (): Promise<DiceKey> => {
             resolve(diceKey);
         })
         .userCancelledEvent.on( () => reject( 
-          new Error("No DiceKey read")
+          Exceptions.UserCancelledLoadingDiceKey.create()
         ))
     });
     loadDiceKeyPromise.finally( () => { loadDiceKeyPromise = undefined; } )

@@ -13,6 +13,9 @@ import {
 import {
   HomeComponent, loadDiceKeyPromise, loadDiceKeyAsync
 } from "./web-components/home-component";
+import {
+  ConfirmationDialog
+} from "./web-components/confirmation-dialog";
 
 const render = async() => {
   // Start by constructing the class that implements the page's functionality
@@ -26,6 +29,10 @@ const render = async() => {
     } else if (loadDiceKeyPromise) {
       try {
         await loadDiceKeyPromise;
+        await requestUsersConsent({question: "So, like, is this okay?", actionButtonLabels: {
+          allow: "It's all good.",
+          decline: "Hell to the NO!"
+        }});
       } catch (e) {
         // Ignore user cancellations for now
       }
@@ -53,11 +60,12 @@ import {
 } from "./state/app-state-dicekey";
 
 const requestUsersConsent = async (
-  request: RequestForUsersConsent
-): Promise<UsersConsentResponse> => {
-  // FIXME -- not yet implemented.
-  return UsersConsentResponse.Deny;
-}
+  requestForUsersConsent: RequestForUsersConsent
+) => new Promise<UsersConsentResponse>( (resolve, reject) =>
+  new ConfirmationDialog().attach({requestForUsersConsent})
+    .allowChosenEvent.on( () => resolve(UsersConsentResponse.Allow) )
+    .declineChosenEvent.on( () => resolve(UsersConsentResponse.Deny) )
+);
 
 window.addEventListener("load", () => {
   // Add a message listener

@@ -1,5 +1,5 @@
 import {
-  HtmlComponentConstructorOptions, HtmlComponent, HtmlComponentOptions, CompoonentEvent
+  HtmlComponentConstructorOptions, HtmlComponent, HtmlComponentOptions, ComponentEvent
 } from "./html-component";
 import {
   Face,
@@ -190,12 +190,12 @@ export class DisplayDiceKeyCanvas extends HtmlComponent {
   
     this.forgetDiceKeyButton.addEventListener("click", () => {
       DiceKeyAppState.instance?.eraseDiceKey();
-      this.detach();
       this.forgetEvent.send();
+      this.detach();
     });
     return this;
   }
 
-  public forgetEvent = new CompoonentEvent(this);
+  public forgetEvent = new ComponentEvent(this);
 
 };

@@ -3,7 +3,8 @@ import {
 } from "../dicekeys/dicekey";
 import {
   RequestForUsersConsent,
-  UsersConsentResponse
+  UsersConsentResponse,
+  Exceptions
 } from "@dicekeys/dicekeys-api-js";
 import {
   PermissionCheckedMarshalledCommands
@@ -32,7 +33,7 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
     const value = typeof (this.request?.data) === "object" && this.request?.data[parameterName];
     return ((typeof value) === "object" && (value instanceof Uint8Array)) ?
       value :
-      (() => { throw new Error("Missing parameter"); })();
+      (() => { throw Exceptions.MissingParameter.create(parameterName); })();
   }
 
   private defaultTransmitResponse = (response: object): any => {

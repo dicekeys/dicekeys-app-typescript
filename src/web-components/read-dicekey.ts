@@ -1,5 +1,5 @@
 import {
-  HtmlComponent, HtmlComponentConstructorOptions, HtmlComponentOptions, CompoonentEvent
+  HtmlComponent, HtmlComponentConstructorOptions, HtmlComponentOptions, ComponentEvent
 } from "./html-component"
 import "regenerator-runtime/runtime";
 import {
@@ -70,8 +70,8 @@ export class ReadDiceKey extends HtmlComponent<DiceKey> {
     this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
   }
 
-  public readonly diceKeyLoadedEvent = new CompoonentEvent<[DiceKey], ReadDiceKey>(this);
-  public readonly userCancelledEvent = new CompoonentEvent(this);
+  public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], ReadDiceKey>(this);
+  public readonly userCancelledEvent = new ComponentEvent(this);
 
   attach(options: HtmlComponentOptions = {}) {
     super.attach(options);
@@ -87,23 +87,23 @@ export class ReadDiceKey extends HtmlComponent<DiceKey> {
     this.frameWorker.addEventListener( "message", this.handleMessage );
 
     this.cancelButton.addEventListener("click", () => {
-      this.detach();
       this.userCancelledEvent.send();
+      this.detach();
     })
 
     return this;
   }
 
   detach() {
-    super.detach();
     this.mediaStream?.getTracks().forEach(track => track.stop() );
     this.frameWorker.removeEventListener( "message", this.handleMessage );
+    super.detach();
     return this;
   }
   
   destroy() {
-    this.detach();
     this.frameWorker.postMessage({action: "terminateSession", sessionId: this.cameraSessionId} as TerminateSessionRequest);
+    this.detach();
     setTimeout( () => this.frameWorker.terminate(), 1000);
     // If there's an existing stream, terminate it
   }
@@ -306,9 +306,8 @@ export class ReadDiceKey extends HtmlComponent<DiceKey> {
         .map( faceRead => faceRead.toFace() )
       );
       DiceKeyAppState.instance!.diceKey = diceKey;
-      this.detach();
       this.diceKeyLoadedEvent.send(diceKey);
-
+      this.detach();
     } else {
         setTimeout(this.startProcessingNewCameraFrame, 0)
       }
