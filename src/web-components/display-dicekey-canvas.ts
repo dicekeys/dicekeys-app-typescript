@@ -1,5 +1,5 @@
 import {
-  HtmlComponentConstructorOptions, HtmlComponent, HtmlComponentOptions
+  HtmlComponentConstructorOptions, HtmlComponent, HtmlComponentOptions, CompoonentEvent
 } from "./html-component";
 import {
   Face,
@@ -12,7 +12,9 @@ import {
 import {letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes, FaceWithUndoverlineCodes, UndoverlineCodes, getUndoverlineCodes} from "../dicekeys/undoverline-tables";
 import {FaceDimensionsFractional} from "../dicekeys/face-dimensions";
 import { DiceKey } from "../dicekeys/dicekey";
-import { DiceKeyAppState } from "../api-handler/app-state-dicekey";
+import {
+  DiceKeyAppState
+} from "../state/app-state-dicekey";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
@@ -151,7 +153,7 @@ export const renderDiceKey = (
 
 
 /**
- * This class implements the demo page.
+ * This class implements the component that displays DiceKeys.
  */
 export class DisplayDiceKeyCanvas extends HtmlComponent {
   private static readonly forgetDiceKeyButtonId = "forget-dicekey-button";
@@ -189,12 +191,11 @@ export class DisplayDiceKeyCanvas extends HtmlComponent {
     this.forgetDiceKeyButton.addEventListener("click", () => {
       DiceKeyAppState.instance?.eraseDiceKey();
       this.detach();
-      this.sendForgetEvent();
+      this.forgetEvent.send();
     });
     return this;
   }
 
-  onForget = this.onFactory("forget");
-  private sendForgetEvent = this.trigger("forget");
+  public forgetEvent = new CompoonentEvent(this);
 
 };

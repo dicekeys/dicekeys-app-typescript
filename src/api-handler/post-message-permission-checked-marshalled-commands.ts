@@ -15,13 +15,13 @@ import {
 export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCheckedMarshalledCommands {
   constructor(
     protected request: MessageEvent,
-    loadDiceKey: () => PromiseLike<DiceKey> | DiceKey,
+    loadDiceKeyAsync: () => PromiseLike<DiceKey>,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
     ) => Promise<UsersConsentResponse>,
     private transmitResponse: (response: object) => any = (response: object) => this.defaultTransmitResponse(response)
   ) {
-    super(request.origin + "/", loadDiceKey, requestUsersConsent, false);
+    super(request.origin + "/", loadDiceKeyAsync, requestUsersConsent, false);
   }
 
   protected unmarshallOptionalStringParameter = (parameterName: string): string | undefined => {
@@ -54,7 +54,7 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
   }
 
   static executeIfCommand = (
-    loadDiceKey: () => Promise<DiceKey>,
+    loadDiceKeyAsync: () => Promise<DiceKey>,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
     ) => Promise<UsersConsentResponse>,
@@ -62,7 +62,7 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
   ) => {
     const command = new PostMessagePermissionCheckedMarshalledCommands(
       messageEvent,
-      loadDiceKey, requestUsersConsent
+      loadDiceKeyAsync, requestUsersConsent
     );
     if (command.isCommand()) {
       command.execute();

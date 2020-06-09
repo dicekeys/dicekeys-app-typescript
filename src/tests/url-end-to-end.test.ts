@@ -22,7 +22,7 @@ describe("EndToEndUrlApiTests", () => {
     "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
   )
 
-  const loadDiceKey = () => new Promise<DiceKey>( resolve => resolve(diceKey));
+  const loadDiceKeyAsync = () => Promise.resolve(diceKey);
   const requestUsersConsent = (response: UsersConsentResponse) => () =>
     new Promise<UsersConsentResponse>( (respond) => respond(response) );
   const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
@@ -40,7 +40,7 @@ describe("EndToEndUrlApiTests", () => {
       /* transmit method  */
       (requestUri) => {
         const mockServerApi = new UrlPermissionCheckedMarshalledCommands(
-          requestUri, loadDiceKey, requestUsersConsent(usersResponseToConsentRequest),
+          requestUri, loadDiceKeyAsync, requestUsersConsent(usersResponseToConsentRequest),
           (result) => mockClient.handleResult(result)
         );
         mockServerApi.execute();

@@ -49,7 +49,7 @@ export abstract class PermissionCheckedMarshalledCommands {
 
   constructor(
     private origin: string,
-    loadDiceKey: () => PromiseLike<DiceKey> | DiceKey,
+    loadDiceKeyAsync: () => PromiseLike<DiceKey>,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
     ) => Promise<UsersConsentResponse>,
@@ -58,7 +58,7 @@ export abstract class PermissionCheckedMarshalledCommands {
   ) {
     const permissionCheckedSeedAccessor = new PermissionCheckedSeedAccessor(
       origin,
-      loadDiceKey,
+      loadDiceKeyAsync,
       requestUsersConsent,
       protocolMayRequireHandshakes,
       handshakeAuthenticatedUrl

@@ -18,7 +18,7 @@ import { stringToUtf8ByteArray } from "../api/encodings";
 const diceKey = DiceKey.fromHumanReadableForm(
   "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
 );
-const loadDiceKey = () => new Promise<DiceKey>( resolve => resolve(diceKey));
+const loadDiceKeyAsync = () => Promise.resolve(diceKey);;
 const requestUsersConsent = (response: UsersConsentResponse) => () =>
   new Promise<UsersConsentResponse>( (respond) => respond(response) );
 const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
@@ -37,7 +37,7 @@ const mockTransmitRequestFunction = (
             origin: requestOrigin,
             data: requestObject
           } as MessageEvent,
-          loadDiceKey,requestUsersConsent(usersResponseToConsentRequest),
+          loadDiceKeyAsync,requestUsersConsent(usersResponseToConsentRequest),
           (data) => {
             const mockResponseMessageEvent: MessageEvent = {
               origin: requestOrigin,
@@ -72,7 +72,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
     "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
   )
 
-  const loadDiceKey = () => new Promise<DiceKey>( resolve => resolve(diceKey));
+  const loadDiceKeyAsync = () => Promise.resolve(diceKey);
   const requestUsersConsent = (response: UsersConsentResponse) => () =>
     new Promise<UsersConsentResponse>( (respond) => respond(response) );
   const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);

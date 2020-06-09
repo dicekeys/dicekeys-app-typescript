@@ -32,7 +32,7 @@ describe("PermissionCheckedCommandsInstrumentedTest", () => {
     "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
   )
 
-  const loadDiceKey = () => new Promise<DiceKey>( resolve => resolve(diceKey));
+  const loadDiceKeyAsync = () => new Promise<DiceKey>( resolve => resolve(diceKey));
   const requestUsersConsent = (response: UsersConsentResponse) => () =>
     new Promise<UsersConsentResponse>( (respond) => respond(response) );
 
@@ -42,7 +42,7 @@ describe("PermissionCheckedCommandsInstrumentedTest", () => {
   ) => 
     new PermissionCheckedCommands(
       new PermissionCheckedSeedAccessor(
-        url, loadDiceKey, requestUsersConsent(usersConsentResponse)
+        url, loadDiceKeyAsync, requestUsersConsent(usersConsentResponse)
       )
     );
 

@@ -18,7 +18,7 @@ import {
  } from "@dicekeys/dicekeys-api-js";
 import {
   DiceKeyAppState
-} from "./app-state-dicekey"
+} from "../state/app-state-dicekey"
 
 const {Inputs} = ApiStrings;
 
@@ -32,7 +32,7 @@ const {Inputs} = ApiStrings;
 export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMarshalledCommands {
   constructor(
     protected requestUrl: URL,
-    loadDiceKey: () => Promise<DiceKey>,
+    loadDiceKeyAsync: () => Promise<DiceKey>,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
     ) => Promise<UsersConsentResponse>,
@@ -44,7 +44,7 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
       requestUrl.searchParams.get(Inputs.COMMON.respondTo) ?? "",
       // A function to load in the user's dicekey, async so as to allow the user time to
       // scan it in if necessary
-      loadDiceKey,
+      loadDiceKeyAsync,
       // A function that triggers a request for the user's consent.
       requestUsersConsent,
       // Since the URL protocol cannot authenticate the source of a request, it offers
@@ -92,14 +92,14 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
   }
 
   static executeIfCommand = (
-    loadDiceKey: () => Promise<DiceKey>,
+    loadDiceKeyAsync: () => Promise<DiceKey>,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
     ) => Promise<UsersConsentResponse>
   ) => {
     const command = new UrlPermissionCheckedMarshalledCommands(
       new URL(window.location.href),
-      loadDiceKey, requestUsersConsent
+      loadDiceKeyAsync, requestUsersConsent
     );
     if (command.isCommand()) {
       command.execute();

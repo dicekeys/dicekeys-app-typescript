@@ -1,5 +1,5 @@
 import {
-  HtmlComponent, HtmlComponentConstructorOptions, HtmlComponentOptions
+  HtmlComponent, HtmlComponentConstructorOptions, HtmlComponentOptions, CompoonentEvent
 } from "./html-component"
 import "regenerator-runtime/runtime";
 import {
@@ -10,7 +10,7 @@ import {
 } from "../dicekeys/dicekey";
 import { 
   DiceKeyAppState
-} from "../api-handler/app-state-dicekey";
+} from "../state/app-state-dicekey";
 
 import {
     ProcessFrameRequest,
@@ -32,15 +32,20 @@ const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints =>
  * This class implements the demo page.
  */
 export class ReadDiceKey extends HtmlComponent<DiceKey> {
-  private readonly frameWorker: Worker;
+  private static readonly overlayCanvasId = "overlay-canvas";
+  private static readonly cancelButtonId = "cancel-button";
+  private static readonly playerId = "player";
+  private static readonly cameraSelectionMenuId = "camera-selection-menu";
+  private get cameraSelectionMenu() {return document.getElementById(ReadDiceKey.cameraSelectionMenuId) as HTMLSelectElement;}
+  private get cancelButton() {return document.getElementById(ReadDiceKey.cancelButtonId) as HTMLInputElement;}
+  private get overlayCanvas() {return document.getElementById(ReadDiceKey.overlayCanvasId) as HTMLCanvasElement;}
+  private get overlayCanvasCtx() {return this.overlayCanvas.getContext("2d")!};
+  private get player() {return document.getElementById(ReadDiceKey.playerId) as HTMLVideoElement;}
   private captureCanvas?: HTMLCanvasElement;
   private captureCanvasCtx?: CanvasRenderingContext2D;
-  private overlayCanvas?: HTMLCanvasElement;
-  private overlayCanvasCtx?: CanvasRenderingContext2D ;
-  private player?: HTMLVideoElement;
-  private cameraSelectionMenu?: HTMLSelectElement;
-  private mediaStream: MediaStream | undefined;
+  private mediaStream?: MediaStream;
   private cameraSessionId?: string;
+  private readonly frameWorker: Worker;
   
   /**
    * The code supporting the dmeo page cannot until the WebAssembly module for the image
@@ -52,27 +57,27 @@ export class ReadDiceKey extends HtmlComponent<DiceKey> {
   ) {
     super({...options,
       html: `
-      <canvas id="overlay-canvas" class="overlay"></canvas>
+      <canvas id="${ReadDiceKey.overlayCanvasId}" class="overlay"></canvas>
       <div class="content">
-        <video id="player" controls autoplay></video>
+        <video id="${ReadDiceKey.playerId}" controls autoplay></video>
       </div>
-      <select id="camera-selection-menu"></select>
+      <select id="${ReadDiceKey.cameraSelectionMenuId}"></select>
+      <input id="${ReadDiceKey.cancelButtonId}" type="button" value="Cancel"/>
       `
     });
+    this.captureCanvas = document.createElement("canvas") as HTMLCanvasElement;
+    this.captureCanvasCtx = this.captureCanvas.getContext("2d")!;
     this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
   }
+
+  public readonly diceKeyLoadedEvent = new CompoonentEvent<[DiceKey], ReadDiceKey>(this);
+  public readonly userCancelledEvent = new CompoonentEvent(this);
 
   attach(options: HtmlComponentOptions = {}) {
     super.attach(options);
 
     // Bind to HTML
-    this.captureCanvas = document.createElement("canvas") as HTMLCanvasElement;
-    this.captureCanvasCtx = this.captureCanvas.getContext("2d")!;
-    this.overlayCanvas = document.getElementById("overlay-canvas") as HTMLCanvasElement;
-    this.overlayCanvasCtx = this.overlayCanvas.getContext("2d")!;
-    this.player = document.getElementById('player') as HTMLVideoElement;
     this.player.style.setProperty("display", "none");
-    this.cameraSelectionMenu = document.getElementById('camera-selection-menu') as HTMLSelectElement;
     this.cameraSelectionMenu.style.setProperty("display", "none");
     this.mediaStream = undefined;
     this.cameraSessionId = Math.random().toString() + Math.random().toString();
@@ -80,13 +85,17 @@ export class ReadDiceKey extends HtmlComponent<DiceKey> {
     // Start out with the default camera
     this.updateCamera();
     this.frameWorker.addEventListener( "message", this.handleMessage );
-    // Start processing frames from the camera
-    //this.startProcessingNewCameraFrame();
+
+    this.cancelButton.addEventListener("click", () => {
+      this.detach();
+      this.userCancelledEvent.send();
+    })
+
     return this;
   }
 
-  detach(diceKey?: DiceKey) {
-    super.detach(diceKey);
+  detach() {
+    super.detach();
     this.mediaStream?.getTracks().forEach(track => track.stop() );
     this.frameWorker.removeEventListener( "message", this.handleMessage );
     return this;
@@ -103,29 +112,29 @@ export class ReadDiceKey extends HtmlComponent<DiceKey> {
   handleMessage = (message: MessageEvent) => {
     if (!this.readyReceived && "action" in message.data && message.data.action === "workerReady" ) {
       this.readyReceived = true;
-      this.onReady();
+      this.onWorkerReady();
     } else if ("action" in message.data && message.data.action == "process") {
       this.handleProcessedCameraFrame(message.data as ProcessFrameResponse)
     }
   }
 
-  onReady = () => {
+  onWorkerReady = () => {
     this.startProcessingNewCameraFrame();
   }
 
-  // "user" (faces the user) | "environment" (away from user)
-  getBestCamera = (facingMode: "user" | "environment") => {
-    const sizes = [480, 576, 720, 768, 800, 900, 1000, 1080, 1200, 1440, 2160] as const;
-    for (var size of sizes) {
-      const defaultVideoConstraints: MediaStreamConstraints = {
-        audio: false,
-        video: {
-          width: { ideal: 1024, min: size },
-          height: { ideal: 1024, min: size },
-          facingMode
-       }};
-    }
-  }
+  // // "user" (faces the user) | "environment" (away from user)
+  // getBestCamera = (facingMode: "user" | "environment") => {
+  //   const sizes = [480, 576, 720, 768, 800, 900, 1000, 1080, 1200, 1440, 2160] as const;
+  //   for (var size of sizes) {
+  //     const defaultVideoConstraints: MediaStreamConstraints = {
+  //       audio: false,
+  //       video: {
+  //         width: { ideal: 1024, min: size },
+  //         height: { ideal: 1024, min: size },
+  //         facingMode
+  //      }};
+  //   }
+  // }
 
 
   defaultVideoConstraints: MediaStreamConstraints = {video: {
@@ -278,17 +287,16 @@ export class ReadDiceKey extends HtmlComponent<DiceKey> {
   handleProcessedCameraFrame = (response: ProcessFrameResponse) => {
     const {width, height, overlayImageBuffer, diceKeyReadJson, isFinished} = response;
     // Ensure the overlay canvas is the same size as the captured canvas
-    if (this.overlayCanvas!.width != width || this.overlayCanvas!.height != height) {
-      [this.overlayCanvas!.width, this.overlayCanvas!.height] = [width, height];
-      this.overlayCanvasCtx = this.overlayCanvas!.getContext("2d")!;
+    if (this.overlayCanvas.width != width || this.overlayCanvas.height != height) {
+      [this.overlayCanvas.width, this.overlayCanvas.height] = [width, height];
       // Ensure the overlay is lined up with the video frame
       const {left, top} = this.player!.getBoundingClientRect()
-      this.overlayCanvas!.style.setProperty("left", left.toString());
-      this.overlayCanvas!.style.setProperty("top", top.toString());
+      this.overlayCanvas.style.setProperty("left", left.toString());
+      this.overlayCanvas.style.setProperty("top", top.toString());
     }        
-    const overlayImageData = this.overlayCanvasCtx!.getImageData(0, 0, width, height);
+    const overlayImageData = this.overlayCanvasCtx.getImageData(0, 0, width, height);
     overlayImageData.data.set(new Uint8Array(overlayImageBuffer));
-    this.overlayCanvasCtx!.putImageData(overlayImageData, 0, 0);
+    this.overlayCanvasCtx.putImageData(overlayImageData, 0, 0);
 
     if (isFinished) {
 
@@ -298,7 +306,8 @@ export class ReadDiceKey extends HtmlComponent<DiceKey> {
         .map( faceRead => faceRead.toFace() )
       );
       DiceKeyAppState.instance!.diceKey = diceKey;
-      this.detach(diceKey);
+      this.detach();
+      this.diceKeyLoadedEvent.send(diceKey);
 
     } else {
         setTimeout(this.startProcessingNewCameraFrame, 0)

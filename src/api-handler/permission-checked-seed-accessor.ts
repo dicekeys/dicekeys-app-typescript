@@ -15,7 +15,7 @@ import {
 } from "@dicekeys/seeded-crypto-js";
 import {
   DiceKeyAppState
-} from "./app-state-dicekey"
+} from "../state/app-state-dicekey"
 
 export class ClientMayNotRetrieveKeyException extends Error {
   constructor(public readonly type: DerivableObjectName) {
@@ -33,7 +33,7 @@ export class PermissionCheckedSeedAccessor{
 
   constructor(
     origin: string,
-    private loadDiceKey: () => PromiseLike<DiceKey> | DiceKey,
+    private loadDiceKeyAsync: () => PromiseLike<DiceKey>,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
       ) => Promise<UsersConsentResponse>,
@@ -62,7 +62,7 @@ export class PermissionCheckedSeedAccessor{
     const derivationOptions = DerivationOptions(derivationOptionsObjectOrJson, derivableObjectType);
 
     this.permissionChecks.throwIfClientNotAuthorized(derivationOptions)
-    const diceKey = await this.loadDiceKey();
+    const diceKey = await this.loadDiceKeyAsync();
     const preCanonicalDiceKey: DiceKey =  (derivationOptions.excludeOrientationOfFaces) ?
       DiceKey.removeOrientations(diceKey) :
       diceKey;

@@ -11,62 +11,8 @@ import {
   DiceKey
 } from "./dicekeys/dicekey";
 import {
-  HtmlComponent, HtmlComponentConstructorOptions, HtmlComponentOptions
-} from "./web-components/html-component"
-
-class NoDiceKey extends HtmlComponent {
-  static loadDiceKeyButtonId = "load-dice-key-button";
-  private loadDiceKeyButton: HTMLButtonElement | undefined;
-
-  public static instance: NoDiceKey | undefined;
-  
-  /**
-   * The code supporting the dmeo page cannot until the WebAssembly module for the image
-   * processor has been loaded. Pass the module to wire up the page with this class.
-   * @param module The web assembly module that implements the DiceKey image processing.
-   */
-  private constructor(
-    options: HtmlComponentConstructorOptions = {}
-  ) {
-    super({...options,
-      html: `
-      <input id="${NoDiceKey.loadDiceKeyButtonId}" type="button" value="Scan your DiceKey"/>
-    `});
-    NoDiceKey.instance = this;
-  }
-
-  attach(options: HtmlComponentOptions = {}) {
-    super.attach(options);
-    // Bind to HTML
-    this.loadDiceKeyButton = document.getElementById(NoDiceKey.loadDiceKeyButtonId) as HTMLButtonElement;
-
-    this.loadDiceKeyButton.addEventListener("click", () => {
-      loadDiceKey();
-    });
-    return this;
-  }
-
-  public static create(
-    options: HtmlComponentConstructorOptions = {}
-  ): NoDiceKey {
-    if (NoDiceKey.instance) {
-      return NoDiceKey.instance;
-    } else {
-      NoDiceKey.instance = new NoDiceKey(options);
-      return NoDiceKey.instance;
-    }
-  }
-
-  public static attach(
-    options: HtmlComponentConstructorOptions = {}
-  ): NoDiceKey {
-    NoDiceKey.create(options);
-    NoDiceKey.instance?.attach();
-    return NoDiceKey.instance!;
-  }
-
-
-}
+  HomeComponent, loadDiceKeyPromise, loadDiceKeyAsync
+} from "./web-components/home-component";
 
 const render = async() => {
   // Start by constructing the class that implements the page's functionality
@@ -76,13 +22,17 @@ const render = async() => {
     const diceKey = DiceKeyAppState.instance!.diceKey;
     if (diceKey) {
       await new Promise( resolve => 
-        (new DisplayDiceKeyCanvas({parentElement: body}, diceKey)).attach().onDetach( resolve ));
+        (new DisplayDiceKeyCanvas({parentElement: body}, diceKey)).attach().detachEvent.on( resolve ));
     } else if (loadDiceKeyPromise) {
-      await loadDiceKeyPromise;
+      try {
+        await loadDiceKeyPromise;
+      } catch (e) {
+        // Ignore user cancellations for now
+      }
       // The load dicekey interface is currently being displayed.
     } else {
       await new Promise( resolve => 
-        NoDiceKey.attach({parentElement: body}).onDetach( resolve ) ); 
+        HomeComponent.attach({parentElement: body}).detachEvent.on( resolve ) ); 
     }
   }
 }
@@ -100,27 +50,7 @@ import {
 } from "@dicekeys/dicekeys-api-js";
 import { 
   DiceKeyAppState
-} from "./api-handler/app-state-dicekey";
-
-var loadDiceKeyPromise: Promise<DiceKey> | undefined;
-const loadDiceKey = (): Promise<DiceKey> | DiceKey => {
-  var diceKey = DiceKeyAppState.instance?.diceKey;
-  if (!diceKey) {
-    if (!loadDiceKeyPromise) {
-      loadDiceKeyPromise = new Promise( (resolve, reject) => {
-        new ReadDiceKey({parentElement: document.body}).attach().onDetach( () => {
-          DiceKeyAppState.instance?.diceKey ?
-            resolve(DiceKeyAppState.instance?.diceKey) :
-            reject(new Error("No DiceKey read"));
-        }); 
-      });
-      loadDiceKeyPromise.finally( () => { loadDiceKeyPromise = undefined; } )
-      NoDiceKey.instance?.detach();
-    }
-    return loadDiceKeyPromise;
-  }
-  return diceKey!;
-}
+} from "./state/app-state-dicekey";
 
 const requestUsersConsent = async (
   request: RequestForUsersConsent
@@ -135,7 +65,7 @@ window.addEventListener("load", () => {
     SeededCryptoModulePromise.then( async seededCryptoModule => {
         const serverApi = new PostMessagePermissionCheckedMarshalledCommands(
         messageEvent,
-        loadDiceKey,
+        loadDiceKeyAsync,
         requestUsersConsent
       );
       if (serverApi.isCommand()) {

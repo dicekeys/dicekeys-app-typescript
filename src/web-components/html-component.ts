@@ -1,4 +1,26 @@
 
+export class CompoonentEvent<ARGS extends any[] = [], CHAIN = any> {
+  private callbacks = new Set<(...args: ARGS)=> any>();
+  constructor(private chainObject: CHAIN) {}
+  
+  on = (callback: (...args: ARGS) => any) => {
+      this.callbacks.add(callback);
+      return this.chainObject;
+  }
+
+  remove = (callback: (...args: ARGS) => any) => {
+    this.callbacks.delete(callback);
+    return this.chainObject;
+  }
+
+  send = (...args: ARGS) => {
+    for (const callback of this.callbacks) {
+      callback(...args);
+    }
+    return this.chainObject;
+  }
+};
+
 export interface HtmlComponentOptions {
   nodeToInsertThisComponentBefore?: Node;
   parentElement?: HTMLElement;
@@ -43,34 +65,12 @@ export class HtmlComponent<T = void> {
     return this;
   }
 
-  public detach(t?: T) {
+  public detach() {
     this.parentElement?.removeChild(this.containerElement);
-    this.sendDetachEvent(t);
+    this.detachEvent.send();
     return this;
   }
 
-  private onFactoryCallbacks = new Map<string, Set<any>>();
-  onFactory = (name: string) => <T = void>(callback: (t: T)=> any) => {
-    if (!this.onFactoryCallbacks.has(name)) {
-      this.onFactoryCallbacks.set(name, new Set<(t: T)=> any>());
-    }
-    this.onFactoryCallbacks.get(name)!.add(callback);
-  }
-
-  trigger(name: string): () => void;
-  trigger<T>(name: string): (t?: T) => void;
-  trigger(name: string) {
-    return (t: T) => {
-      const callbacks = this.onFactoryCallbacks.get(name) as Set<(t: T) => any> | undefined;
-      if (callbacks) {
-        for (const callback of callbacks) {
-          callback(t);
-        }
-      }
-    }
-  }
-
-  public onDetach = this.onFactory("detach");
-  private sendDetachEvent = this.trigger<T>("detach");
+  public readonly detachEvent = new CompoonentEvent(this);
 
 }

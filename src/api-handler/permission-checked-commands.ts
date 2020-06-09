@@ -14,7 +14,7 @@ import {
 import {
   PermissionCheckedSeedAccessor
 } from "./permission-checked-seed-accessor";
-import { DiceKeyAppState } from "./app-state-dicekey";
+import { DiceKeyAppState } from "../state/app-state-dicekey";
 
 /**
  * Implements the server-side API calls and the necessary permission checks,
