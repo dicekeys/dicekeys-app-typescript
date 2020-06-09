@@ -16,24 +16,24 @@ import {
 export var loadDiceKeyPromise: Promise<DiceKey> | undefined;
 export const loadDiceKeyAsync = async (): Promise<DiceKey> => {
   var diceKey = (await DiceKeyAppState.instancePromise).diceKey;
-  if (!diceKey) {
-    if (!loadDiceKeyPromise) {
-      loadDiceKeyPromise = new Promise( (resolve, reject) => {
-        new ReadDiceKey({parentElement: document.body}).attach()
-          .diceKeyLoadedEvent.on( (diceKey) => {
-             DiceKeyAppState.instance!.diceKey = diceKey;
-             resolve(diceKey);
-          })
-          .userCancelledEvent.on( () => reject( 
-            new Error("No DiceKey read")
-          ))
-      });
-      loadDiceKeyPromise.finally( () => { loadDiceKeyPromise = undefined; } )
-      HomeComponent.instance?.detach();
-    }
-    return await loadDiceKeyPromise;
+  if (diceKey) {
+    return diceKey;
   }
-  return diceKey!;
+  if (!loadDiceKeyPromise) {
+    loadDiceKeyPromise = new Promise( (resolve, reject) => {
+      new ReadDiceKey({parentElement: document.body}).attach()
+        .diceKeyLoadedEvent.on( (diceKey) => {
+            DiceKeyAppState.instance!.diceKey = diceKey;
+            resolve(diceKey);
+        })
+        .userCancelledEvent.on( () => reject( 
+          new Error("No DiceKey read")
+        ))
+    });
+    loadDiceKeyPromise.finally( () => { loadDiceKeyPromise = undefined; } )
+    HomeComponent.instance?.detach();
+  }
+  return await loadDiceKeyPromise;
 }
 
 export class HomeComponent extends HtmlComponent {
@@ -62,8 +62,12 @@ export class HomeComponent extends HtmlComponent {
     // Bind to HTML
     this.loadDiceKeyButton = document.getElementById(HomeComponent.loadDiceKeyButtonId) as HTMLButtonElement;
 
-    this.loadDiceKeyButton.addEventListener("click", () => {
-      loadDiceKeyAsync();
+    this.loadDiceKeyButton.addEventListener("click", async () => {
+      try {
+        await loadDiceKeyAsync();
+      } catch (e) {
+        // We don't care if the user cancelled, so ignore exceptions
+      }
     });
     return this;
   }
