@@ -6,12 +6,10 @@ import {
 } from "../dicekeys/dicekey";
 import {
   RequestForUsersConsent,
-  UsersConsentResponse
-} from "../api/unsealing-instructions";
-import {
+  UsersConsentResponse,
   DerivationOptions,
-  DerivableObjectName
-} from "../api/derivation-options";
+  DerivableObjectName,
+} from "@dicekeys/dicekeys-api-js";
 import {
   PackagedSealedMessage
 } from "@dicekeys/seeded-crypto-js";
@@ -35,7 +33,7 @@ export class PermissionCheckedSeedAccessor{
 
   constructor(
     origin: string,
-    private loadDiceKey: () => Promise<DiceKey>,
+    private loadDiceKey: () => PromiseLike<DiceKey> | DiceKey,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
       ) => Promise<UsersConsentResponse>,
@@ -48,15 +46,6 @@ export class PermissionCheckedSeedAccessor{
         protocolMayRequireHandshakes,
         handshakeAuthenticatedUrl
       )
-  }
-
-  private getDiceKeyAsync = async (): Promise<DiceKey> => {
-    const appState = await DiceKeyAppState.instancePromise;
-    if (appState.diceKey)
-      return appState.diceKey;
-    const diceKey = await this.loadDiceKey();
-    appState.diceKey = diceKey;
-    return diceKey;
   }
 
   /**
@@ -73,7 +62,7 @@ export class PermissionCheckedSeedAccessor{
     const derivationOptions = DerivationOptions(derivationOptionsObjectOrJson, derivableObjectType);
 
     this.permissionChecks.throwIfClientNotAuthorized(derivationOptions)
-    const diceKey = await this.getDiceKeyAsync();
+    const diceKey = await this.loadDiceKey();
     const preCanonicalDiceKey: DiceKey =  (derivationOptions.excludeOrientationOfFaces) ?
       DiceKey.removeOrientations(diceKey) :
       diceKey;

@@ -2,36 +2,15 @@
  * @jest-environment jsdom
  */
 import {
-  TransmitRequestFunction,
-  ApiMessage
-} from "../api/post-message-api-factory";
-import {
-  UnmsarshallerForResponse,
-  generateRequestId,
-  // API function factories
-  generateSignatureFactory,
-  getSealingKeyFactory,
-  getSecretFactory,
-  getSignatureVerificationKeyFactory,
-  getSigningKeyFactory,
-  getSymmetricKeyFactory,
-  getUnsealingKeyFactory,
-  sealWithSymmetricKeyFactory,
-  unsealWithSymmetricKeyFactory,
-  unsealWithUnsealingKeyFactory
-} from "../api/api-factory"
-import {
-  postMessageApiCallFactory
-} from "../api/post-message-api-factory";
+  ApiFactory,
+  PostMessageApiFactory,
+  UsersConsentResponse,
+  DerivationOptions,
+} from "@dicekeys/dicekeys-api-js"
 
  import {
   DiceKey, DiceKeyInHumanReadableForm
 } from "../dicekeys/dicekey";
-import {
-  UsersConsentResponse,
-} from "../api/unsealing-instructions";
-import { SeededCryptoModulePromise, SeededCryptoModuleWithHelpers } from "@dicekeys/seeded-crypto-js";
-import { DerivationOptions } from "../api/derivation-options";
 import { PostMessagePermissionCheckedMarshalledCommands } from "../api-handler/post-message-permission-checked-marshalled-commands";
 import { Api } from "../api/abstract-api";
 import { stringToUtf8ByteArray } from "../api/encodings";
@@ -49,7 +28,7 @@ const defaultRequestOrigin = "https://client.app/";
 const mockTransmitRequestFunction = (
   requestOrigin: string = defaultRequestOrigin,
   usersResponseToConsentRequest: UsersConsentResponse = UsersConsentResponse.Allow
-): TransmitRequestFunction =>
+): PostMessageApiFactory.TransmitRequestFunction =>
   (requestObject) => {
     return new Promise<MessageEvent>( (resolve, reject) => {
       try {
@@ -73,17 +52,19 @@ const mockTransmitRequestFunction = (
     });
   };
 
-const defaultTestCall = postMessageApiCallFactory(mockTransmitRequestFunction(defaultRequestOrigin, UsersConsentResponse.Allow));
-const generateSignature = generateSignatureFactory(defaultTestCall);
-const getSealingKey = getSealingKeyFactory(defaultTestCall);
-const getSecret = getSecretFactory(defaultTestCall);
-const getSignatureVerificationKey = getSignatureVerificationKeyFactory(defaultTestCall);
-const getSigningKey = getSigningKeyFactory(defaultTestCall);
-const getSymmetricKey = getSymmetricKeyFactory(defaultTestCall);
-const getUnsealingKey = getUnsealingKeyFactory(defaultTestCall);
-const sealWithSymmetricKey = sealWithSymmetricKeyFactory(defaultTestCall);
-const unsealWithSymmetricKey = unsealWithSymmetricKeyFactory(defaultTestCall);
-const unsealWithUnsealingKey = unsealWithUnsealingKeyFactory(defaultTestCall);
+const defaultTestCall = PostMessageApiFactory.postMessageApiCallFactory(
+  mockTransmitRequestFunction(defaultRequestOrigin, UsersConsentResponse.Allow)
+);
+const generateSignature = ApiFactory.generateSignatureFactory(defaultTestCall);
+const getSealingKey = ApiFactory.getSealingKeyFactory(defaultTestCall);
+const getSecret = ApiFactory.getSecretFactory(defaultTestCall);
+const getSignatureVerificationKey = ApiFactory.getSignatureVerificationKeyFactory(defaultTestCall);
+const getSigningKey = ApiFactory.getSigningKeyFactory(defaultTestCall);
+const getSymmetricKey = ApiFactory.getSymmetricKeyFactory(defaultTestCall);
+const getUnsealingKey = ApiFactory.getUnsealingKeyFactory(defaultTestCall);
+const sealWithSymmetricKey = ApiFactory.sealWithSymmetricKeyFactory(defaultTestCall);
+const unsealWithSymmetricKey = ApiFactory.unsealWithSymmetricKeyFactory(defaultTestCall);
+const unsealWithUnsealingKey = ApiFactory.unsealWithUnsealingKeyFactory(defaultTestCall);
 
 
 describe("End-to-end API tests using the PostMessage API", () => {

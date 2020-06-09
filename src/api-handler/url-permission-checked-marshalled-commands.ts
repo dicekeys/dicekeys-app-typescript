@@ -5,20 +5,22 @@ import {
   DiceKey
 } from "../dicekeys/dicekey";
 import {
-  RequestForUsersConsent,
-  UsersConsentResponse
-} from "../api/unsealing-instructions";
-import {
   PermissionCheckedMarshalledCommands
 } from "./abstract-permission-checked-marshalled-commands"
 import {
   urlSafeBase64Decode,
   urlSafeBase64Encode
 } from "../api/encodings"
-import { Inputs } from "../api/api-strings";
+import {
+  RequestForUsersConsent,
+  UsersConsentResponse,
+  ApiStrings
+ } from "@dicekeys/dicekeys-api-js";
 import {
   DiceKeyAppState
 } from "./app-state-dicekey"
+
+const {Inputs} = ApiStrings;
 
 /**
  * Wrap the [PermissionCheckedCommands] to unmarshall parameters from the

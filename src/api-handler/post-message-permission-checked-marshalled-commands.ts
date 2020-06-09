@@ -4,7 +4,7 @@ import {
 import {
   RequestForUsersConsent,
   UsersConsentResponse
-} from "../api/unsealing-instructions";
+} from "@dicekeys/dicekeys-api-js";
 import {
   PermissionCheckedMarshalledCommands
 } from "./abstract-permission-checked-marshalled-commands"
@@ -15,7 +15,7 @@ import {
 export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCheckedMarshalledCommands {
   constructor(
     protected request: MessageEvent,
-    loadDiceKey: () => Promise<DiceKey>,
+    loadDiceKey: () => PromiseLike<DiceKey> | DiceKey,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
     ) => Promise<UsersConsentResponse>,

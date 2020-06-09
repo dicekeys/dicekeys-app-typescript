@@ -6,12 +6,11 @@ import {
   SigningKey,
   SymmetricKey,
   UnsealingKey,
-  SeededCryptoModuleWithHelpers,
   SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js";
 import {
   DerivableObjectNames, DerivationOptions
-} from "../api/derivation-options";
+} from "@dicekeys/dicekeys-api-js";
 import {
   PermissionCheckedSeedAccessor
 } from "./permission-checked-seed-accessor";

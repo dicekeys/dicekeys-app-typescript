@@ -1,14 +1,12 @@
 import {
   HtmlComponent,
-  HtmlComponentConstructorOptions
+  HtmlComponentConstructorOptions,
+  HtmlComponentOptions
 } from "./web-components/html-component"
 import {
-  getSecret
-} from "./api/post-message-api"
-import {
+  getSecret,
   secretTo10BitWords
-} from "./api/secret-to-words"
-import { DerivationOptions } from "./api/derivation-options";
+} from "@dicekeys/dicekeys-api-js"
 
 const pwmgrAppSecretDerivationOptionsJson =
   `{"type": "Secret", "urlPrefixesAllowed": ["https://pwmgr.app/"]}`;
@@ -37,19 +35,24 @@ export class PasswordManagerSignin extends HtmlComponent {
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    parentElement: HTMLElement,
     options: HtmlComponentConstructorOptions = {},
   ) {
-    super(parentElement, `
+    super({...options,
+      html: `
     <input id="${passwordFieldId}" type="text" size="60"/>
     <input id="${getPasswordFromDiceKeyButtonId}" type="button" value="Generate password from DiceKey"/>
-    `, options);
+    `});
+  }
+
+  attach(options: HtmlComponentOptions = {}) {
+    super.attach(options);
     this.getPasswordFromDiceKeyButton.addEventListener("click", () => this.getPasswordFromDiceKey() );
+    return this;
   }
 };
 
 window.addEventListener("load", () => {
-  new PasswordManagerSignin(document.getElementById("password-form-container")!);
+  new PasswordManagerSignin({parentElement: document.getElementById("password-form-container")!}).attach();
 });
 
 window.addEventListener("message", (messageEvent) =>

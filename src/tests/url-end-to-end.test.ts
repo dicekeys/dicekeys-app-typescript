@@ -5,22 +5,13 @@ import {
   DiceKey, DiceKeyInHumanReadableForm
 } from "../dicekeys/dicekey";
 import {
-  RequestForUsersConsent,
+  SeededCryptoModulePromise,
+  SeededCryptoModuleWithHelpers
+} from "@dicekeys/seeded-crypto-js";
+import {
   UsersConsentResponse,
-  UnsealingInstructions
-} from "../api/unsealing-instructions";
-import {
-  ClientUriNotAuthorizedException,
-  UserDeclinedToAuthorizeOperation
-} from "../api-handler/permission-checks"
-import {
-  PermissionCheckedCommands
-} from "../api-handler/permission-checked-commands";
-import { SeededCryptoModulePromise, SeededCryptoModuleWithHelpers } from "@dicekeys/seeded-crypto-js";
-import {
-  PermissionCheckedSeedAccessor, ClientMayNotRetrieveKeyException
-} from "../api-handler/permission-checked-seed-accessor"
-import { DerivationOptions } from "../api/derivation-options";
+  DerivationOptions
+} from "@dicekeys/dicekeys-api-js";
 import { UrlPermissionCheckedMarshalledCommands } from "../api-handler/url-permission-checked-marshalled-commands";
 import { UrlApi } from "../api/url-api";
 import { Api } from "../api/abstract-api";

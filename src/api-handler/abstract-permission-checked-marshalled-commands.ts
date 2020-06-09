@@ -7,14 +7,14 @@ import {
 import {
   PermissionCheckedCommands
 } from "./permission-checked-commands"
-import * as ApiStrings from "../api/api-strings";
 import {
   DiceKey
 } from "../dicekeys/dicekey";
 import {
+  ApiStrings,
   RequestForUsersConsent,
   UsersConsentResponse
-} from "../api/unsealing-instructions";
+} from "@dicekeys/dicekeys-api-js";
 
 const toJsonThenDelete = <T extends {toJson: () => string, delete: () => void}>(obj: T): string => {
   try {
@@ -49,12 +49,12 @@ export abstract class PermissionCheckedMarshalledCommands {
 
   constructor(
     private origin: string,
-    private loadDiceKey: () => Promise<DiceKey>,
-    private requestUsersConsent: (
+    loadDiceKey: () => PromiseLike<DiceKey> | DiceKey,
+    requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
     ) => Promise<UsersConsentResponse>,
-    private protocolMayRequireHandshakes: boolean,
-    private handshakeAuthenticatedUrl: string = ""
+    protocolMayRequireHandshakes: boolean,
+    handshakeAuthenticatedUrl: string = ""
   ) {
     const permissionCheckedSeedAccessor = new PermissionCheckedSeedAccessor(
       origin,
@@ -126,13 +126,6 @@ export abstract class PermissionCheckedMarshalledCommands {
       ))
     ).sendSuccess()
 
-  // private unsealWithSymmetricKey = async (): Promise<void> => this.marshallResult(
-  //     ApiStrings.Outputs.unsealWithSymmetricKey.plaintext,
-  //     await this.api.unsealWithSymmetricKey(
-  //      (await SeededCryptoModulePromise).PackagedSealedMessage.fromJson(
-  //         this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage)
-  //     )
-  //   )).sendSuccess()
   private unsealWithSymmetricKey = async (): Promise<void> => {
     const json = this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage);
     const packagedSealedMessage = (await SeededCryptoModulePromise).PackagedSealedMessage.fromJson(json);
@@ -152,14 +145,7 @@ export abstract class PermissionCheckedMarshalledCommands {
       toJsonThenDelete(await this.api.getSealingKey(this.getCommonDerivationOptionsJsonParameter()))
     ).sendSuccess()
 
-  // private unsealWithUnsealingKey = async (): Promise<void> => this.marshallResult(
-  //     ApiStrings.Outputs.unsealWithUnsealingKey.plaintext,
-  //     await this.api.unsealWithUnsealingKey(
-  //      (await SeededCryptoModulePromise).PackagedSealedMessage.fromJson(
-  //         this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithUnsealingKey.packagedSealedMessage)
-  //       )
-  //     )
-  //   ).sendSuccess()
+
   private unsealWithUnsealingKey = async (): Promise<void> => {
     const json = this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage);
     const packagedSealedMessage =(await SeededCryptoModulePromise).PackagedSealedMessage.fromJson(json);
@@ -229,9 +215,9 @@ export abstract class PermissionCheckedMarshalledCommands {
     return command && command in ApiStrings.Commands;
   }
 
-  public execute = () => {
+  public execute = (): Promise<void> | undefined  => {
     const command = this.unmarshallStringParameter(ApiStrings.Inputs.COMMON.command);
-    this.executeCommand(command);
+    return this.executeCommand(command);
   }
 
 }

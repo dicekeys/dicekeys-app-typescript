@@ -8,8 +8,9 @@
 import {
   RequestForUsersConsent,
   UsersConsentResponse,
-  UnsealingInstructions
-} from "../api/unsealing-instructions";
+  UnsealingInstructions,
+  DerivationOptions
+} from "@dicekeys/dicekeys-api-js";
 import {
   ClientUriNotAuthorizedException,
   UserDeclinedToAuthorizeOperation
@@ -21,7 +22,6 @@ import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import {
   PermissionCheckedSeedAccessor, ClientMayNotRetrieveKeyException
 } from "../api-handler/permission-checked-seed-accessor"
-import { DerivationOptions } from "../api/derivation-options";
 import {
   stringToUtf8ByteArray
 } from "../api/encodings";

@@ -1,7 +1,7 @@
 import {
   RequestForUsersConsent,
   UsersConsentResponse
-} from "../api/unsealing-instructions";
+} from "@dicekeys/dicekeys-api-js";
 import {
   ApiPermissionChecks,
   ClientUriNotAuthorizedException

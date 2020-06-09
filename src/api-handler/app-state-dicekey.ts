@@ -28,6 +28,9 @@ export class DiceKeyAppState extends EncryptedAppStateStore {
   public set diceKey(value: DiceKey | undefined) {
     this.setEncryptedField<DiceKey | undefined>(DiceKeyAppState.diceKeyFieldName, value);
   }
+  public eraseDiceKey() {
+    this.removeEncryptedField(DiceKeyAppState.diceKeyFieldName);
+  }
 
   private static authenticationFieldName = (authenticationToken: string) =>
     `authenticationToken:${authenticationToken}`;

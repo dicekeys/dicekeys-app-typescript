@@ -4,7 +4,7 @@ import {
   RequestForUsersConsent,
   UnsealingInstructions,
   UsersConsentResponse
-} from "../api/unsealing-instructions";
+} from "@dicekeys/dicekeys-api-js";
 
 export class ClientUriNotAuthorizedException extends Error {
   constructor(

@@ -1,5 +1,5 @@
 import {
-  HtmlComponentConstructorOptions, HtmlComponent
+  HtmlComponentConstructorOptions, HtmlComponent, HtmlComponentOptions
 } from "./html-component";
 import {
   Face,
@@ -12,6 +12,7 @@ import {
 import {letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes, FaceWithUndoverlineCodes, UndoverlineCodes, getUndoverlineCodes} from "../dicekeys/undoverline-tables";
 import {FaceDimensionsFractional} from "../dicekeys/face-dimensions";
 import { DiceKey } from "../dicekeys/dicekey";
+import { DiceKeyAppState } from "../api-handler/app-state-dicekey";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
@@ -153,25 +154,47 @@ export const renderDiceKey = (
  * This class implements the demo page.
  */
 export class DisplayDiceKeyCanvas extends HtmlComponent {
-  private readonly diceKeyDisplayCanvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
-  
+  private static readonly forgetDiceKeyButtonId = "forget-dicekey-button";
+  private forgetDiceKeyButton?: HTMLButtonElement;
+  private static diceKeyDisplayCanvasId = "dicekey-display-canvas";
+  private diceKeyDisplayCanvas?: HTMLCanvasElement;
+  private ctx?: CanvasRenderingContext2D;
+
+
   /**
    * The code supporting the dmeo page cannot until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    parentElement: HTMLElement,
     options: HtmlComponentConstructorOptions = {},
     private diceKey: DiceKey
   ) {
-    super(parentElement, `<canvas id="DiceKeyDisplayCanvas" height="640", width="640">/`, options);
+    super({...options,
+      html: `
+      <canvas id="${DisplayDiceKeyCanvas.diceKeyDisplayCanvasId}" height="640", width="640"></canvas>
+      <input id="${DisplayDiceKeyCanvas.forgetDiceKeyButtonId}" type="button" value="Forget Dicekey"/>
+    `});
+  }
 
+  attach(options: HtmlComponentOptions = {}) {
+    super.attach(options);
     // Bind to HTML
-    this.diceKeyDisplayCanvas = document.getElementById("DiceKeyDisplayCanvas") as HTMLCanvasElement;
+    this.forgetDiceKeyButton = document.getElementById(DisplayDiceKeyCanvas.forgetDiceKeyButtonId) as HTMLButtonElement;
+    this.diceKeyDisplayCanvas = document.getElementById(DisplayDiceKeyCanvas.diceKeyDisplayCanvasId) as HTMLCanvasElement;
     this.ctx = this.diceKeyDisplayCanvas.getContext("2d")!;
 
     renderDiceKey(this.ctx, this.diceKey);
+  
+    this.forgetDiceKeyButton.addEventListener("click", () => {
+      DiceKeyAppState.instance?.eraseDiceKey();
+      this.detach();
+      this.sendForgetEvent();
+    });
+    return this;
   }
+
+  onForget = this.onFactory("forget");
+  private sendForgetEvent = this.trigger("forget");
+
 };

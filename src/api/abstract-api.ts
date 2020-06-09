@@ -8,17 +8,11 @@ import {
   UnsealingKey
 } from "@dicekeys/seeded-crypto-js";
 import {
-  Inputs,
-  Outputs,
-  Command,
-  Commands
-} from "./api-strings";
-import {
-  DerivationOptions
-} from "./derivation-options"
-import {
-  GenerateSignatureResult
-} from "../api/generate-signature-result";
+  ApiStrings,
+  DerivationOptions,
+  GenerateSignatureResult,
+  UnsealingInstructions
+} from "@dicekeys/dicekeys-api-js";
 import {
   urlSafeBase64Encode
 } from "./encodings";
@@ -26,11 +20,14 @@ import {
   SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js";
 import {
-  UnsealingInstructions
-} from "./unsealing-instructions";
-import {
   randomBytes
 } from "crypto";
+
+const {
+  Inputs,
+  Outputs,
+  Commands,
+} = ApiStrings;
 
 export interface UnmsarshallerForResponse {
   getOptionalStringParameter: (name: string) => string | undefined;
@@ -42,7 +39,7 @@ export abstract class Api {
   constructor() {}
 
   protected abstract call: <T>(
-    command: Command,
+    command: ApiStrings.Command,
     authTokenRequired: boolean,
     parameters: [string, string | Uint8Array | {toJson: () => string} ][],
     processResponse: (unmarshallerForResponse: UnmsarshallerForResponse) => T | Promise<T>

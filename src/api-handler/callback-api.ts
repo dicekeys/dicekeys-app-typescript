@@ -9,7 +9,7 @@ import {
 } from "@dicekeys/seeded-crypto-js";
 import {
   GenerateSignatureResult
-} from "../api/generate-signature-result";
+} from "@dicekeys/dicekeys-api-js";
 
 interface Callback<T> {
   onComplete(result: T): void

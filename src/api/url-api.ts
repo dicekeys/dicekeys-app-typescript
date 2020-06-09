@@ -3,14 +3,17 @@ import {
   UnmsarshallerForResponse
 } from "./abstract-api"
 import {
-  Inputs,
-  Outputs,
-  Command,
-} from "./api-strings";
+  ApiStrings
+} from "@dicekeys/dicekeys-api-js"
 import {
   urlSafeBase64Decode,
   urlSafeBase64Encode
 } from "./encodings";
+
+const {
+  Inputs,
+  Outputs
+} = ApiStrings;
 
 export class UrlApi extends Api {
   private pendingCallResolveFunctions = new Map<string, {resolve: (url: URL) => any, reject: (err: any) => any}>();
@@ -24,7 +27,7 @@ export class UrlApi extends Api {
   }
 
   protected call = async <T>(
-    command: Command,
+    command: ApiStrings.Command,
     authTokenRequired: boolean,
     parameters: [string, string | Uint8Array | {toJson: () => string} ][],
     processResponse: (unmarshallerForResponse: UnmsarshallerForResponse) => T | Promise<T>

@@ -3,7 +3,7 @@ import {
 } from "@dicekeys/seeded-crypto-js"
 import {
   secretTo10BitWords
-} from "../api/secret-to-words";
+} from "@dicekeys/dicekeys-api-js";
 
 
 describe("Secret to words", () => {
