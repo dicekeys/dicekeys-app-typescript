@@ -74,14 +74,6 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
     );
   }
 
-  protected serializeSeededCryptoObject<
-    T extends SeededCryptoObject
-  >(
-    obj: T
-  ) {
-    return  obj.toJsObject();
-  }
-
   private defaultTransmitResponse = (response: object): any => {
     /**
      * Transmit the response back to the origin it came from
@@ -91,22 +83,6 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
 
   protected sendResponse = () => {
     this.transmitResponse(this.response)
-  }
-
-  static executeIfCommand = (
-    loadDiceKeyAsync: () => Promise<DiceKey>,
-    requestUsersConsent: (
-      requestForUsersConsent: RequestForUsersConsent
-    ) => Promise<UsersConsentResponse>,
-    messageEvent: MessageEvent
-  ) => {
-    const command = new PostMessagePermissionCheckedMarshalledCommands(
-      messageEvent,
-      loadDiceKeyAsync, requestUsersConsent
-    );
-    if (command.isCommand()) {
-      command.execute();
-    }    
   }
 
 }

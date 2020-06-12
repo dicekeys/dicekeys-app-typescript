@@ -128,20 +128,4 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
     this.transmitResponse(responseUrl)
   }
 
-  static executeIfCommand = (
-    loadDiceKeyAsync: () => Promise<DiceKey>,
-    requestUsersConsent: (
-      requestForUsersConsent: RequestForUsersConsent
-    ) => Promise<UsersConsentResponse>
-  ) => {
-    const command = new UrlPermissionCheckedMarshalledCommands(
-      new URL(window.location.href),
-      loadDiceKeyAsync, requestUsersConsent
-    );
-    if (command.isCommand()) {
-      command.execute();
-    }    
-  }
-
-
 }

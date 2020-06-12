@@ -76,6 +76,9 @@ describe("End-to-end API tests using the PostMessage API", () => {
   const defaultRequestOrigin = "https://client.app/";
 
   const derivationOptionsJson = "{}";
+  const derivationOptionsForProtectedKeysJson = JSON.stringify(DerivationOptions({
+    clientMayRetrieveKey: true
+  }));
   const testMessage = "The secret ingredient is dihydrogen monoxide";
   const testMessageByteArray = stringToUtf8ByteArray(testMessage);
 
@@ -87,10 +90,18 @@ describe("End-to-end API tests using the PostMessage API", () => {
     const plaintext = await unsealWithSymmetricKey(packagedSealedMessage);
     expect(plaintext).toStrictEqual(testMessageByteArray);
 //    packagedSealedMessage.delete();
-
   });
 
-  test("signAndVerify", async () => {
+  
+  test("Local symmetric key seal and remote unseal", async () => {
+    const symmetricKeyFields = await getSymmetricKey(derivationOptionsForProtectedKeysJson);
+    const symmetricKey = (await SeededCryptoModulePromise).SymmetricKey.fromJsObject(symmetricKeyFields);
+    const packagedSealedMessage = symmetricKey.seal(testMessageByteArray);
+    const plaintext = await unsealWithSymmetricKey(packagedSealedMessage);
+    expect(plaintext).toStrictEqual(testMessageByteArray);
+  });
+
+  test("Remote sign and verify", async () => {
     const sig = await generateSignature(derivationOptionsJson, testMessageByteArray)
     const signatureVerificationKeyFields = await getSignatureVerificationKey(derivationOptionsJson)
     const signatureVerificationKey = (await SeededCryptoModulePromise)
@@ -98,6 +109,19 @@ describe("End-to-end API tests using the PostMessage API", () => {
     expect(signatureVerificationKey.signatureVerificationKeyBytes).toStrictEqual(sig.signatureVerificationKey.signatureVerificationKeyBytes);
     expect(signatureVerificationKey.verify(testMessageByteArray, sig.signature)).toBeTruthy();
     expect(signatureVerificationKey.verify(Uint8Array.from([0]), sig.signature)).toBeFalsy();
+    signatureVerificationKey.delete();
+  });
+
+  
+  test("Local sign and verify", async () => {
+    const signingKeyFields = await getSigningKey(derivationOptionsForProtectedKeysJson);
+    const signingKey = (await SeededCryptoModulePromise).SigningKey.fromJsObject(signingKeyFields);
+    const signature = signingKey.generateSignature(testMessageByteArray);
+    const signatureVerificationKeyFields = await getSignatureVerificationKey(derivationOptionsForProtectedKeysJson)
+    const signatureVerificationKey = (await SeededCryptoModulePromise)
+      .SignatureVerificationKey.fromJsObject(signatureVerificationKeyFields);
+    expect(signatureVerificationKey.verify(testMessageByteArray, signature)).toBeTruthy();
+    expect(signatureVerificationKey.verify(Uint8Array.from([0]), signature)).toBeFalsy();
     signatureVerificationKey.delete();
   });
 
@@ -118,6 +142,27 @@ describe("End-to-end API tests using the PostMessage API", () => {
     expect(plaintext).toStrictEqual(testMessageByteArray);
     expect(packagedSealedPkMessage.unsealingInstructions).toBe(unsealingInstructionsJson);
   });
+
+  
+  test("Local Asymmetric Seal And Unseal", async () => {
+    const UnsealingKeyFields = await getUnsealingKey(derivationOptionsForProtectedKeysJson);
+    const unsealingKey = (await SeededCryptoModulePromise).UnsealingKey.fromJsObject(UnsealingKeyFields);
+    const sealingKey = unsealingKey.getSealingKey();
+    const unsealingInstructionsJson = JSON.stringify({
+      "requireUsersConsent": {
+          "question": "Do you want use \"8fsd8pweDmqed\" as your SpoonerMail account password and remove your current password?",
+          "actionButtonLabels": {
+              "allow": "Make my password \"8fsd8pweDmqed\"",
+              "deny": "No"
+          }
+      }
+    });
+    const packagedSealedPkMessage = sealingKey.sealWithInstructions(testMessageByteArray, unsealingInstructionsJson);
+    const plaintext = unsealingKey.unseal(packagedSealedPkMessage);
+    expect(plaintext).toStrictEqual(testMessageByteArray);
+    expect(packagedSealedPkMessage.unsealingInstructions).toBe(unsealingInstructionsJson);
+  });
+
 
   test("getSecretWithHandshake", async () => {
     const derivationOptions = DerivationOptions({
