@@ -1,5 +1,4 @@
 import {
-  RequestForUsersConsent,
   UsersConsentResponse
 } from "@dicekeys/dicekeys-api-js";
 import {

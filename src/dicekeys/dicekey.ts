@@ -3,10 +3,11 @@ import {randomBytes} from "crypto";
 import {
   FaceLetter, FaceLetters, InvalidFaceLetterException,
   FaceDigit, InvalidFaceDigitException,
-  Face, InvalidFaceRotationException,
+  Face,
+  //InvalidFaceRotationException,
   Clockwise90DegreeRotationsFromUpright,
-  FaceOrientationLetterTrbl,
-  ValidFaceOrientationLetterTrbl,
+  // FaceOrientationLetterTrbl,
+  // ValidFaceOrientationLetterTrbl,
   FaceOrientationLetterTrblOrUnknown,
   InvalidFaceOrientationLettersTrblOrUnknownException,
   FaceOrientationLettersTrbl
@@ -160,7 +161,6 @@ const diceKeyFromHumanReadableForm = (
     throw new InvalidDiceKeyException("Invalid human-readable-form string length");
   }
   const diceKey: DiceKey = FacePositions.map( position => {
-    const base = position * 3;
     const [
       letter,
       digitString,

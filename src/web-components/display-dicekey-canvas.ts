@@ -9,7 +9,11 @@ import {
 import {
   Point
 } from "../dicekeys/undoverline"
-import {letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes, FaceWithUndoverlineCodes, UndoverlineCodes, getUndoverlineCodes} from "../dicekeys/undoverline-tables";
+import {
+  letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes,
+  // FaceWithUndoverlineCodes,
+  UndoverlineCodes, getUndoverlineCodes
+} from "../dicekeys/undoverline-tables";
 import {FaceDimensionsFractional} from "../dicekeys/face-dimensions";
 import { DiceKey } from "../dicekeys/dicekey";
 import {

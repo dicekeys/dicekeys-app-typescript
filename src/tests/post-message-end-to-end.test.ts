@@ -12,8 +12,8 @@ import {
   DiceKey, DiceKeyInHumanReadableForm
 } from "../dicekeys/dicekey";
 import { PostMessagePermissionCheckedMarshalledCommands } from "../api-handler/post-message-permission-checked-marshalled-commands";
-import { Api } from "../api/abstract-api";
 import { stringToUtf8ByteArray } from "../api/encodings";
+import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 
 const diceKey = DiceKey.fromHumanReadableForm(
   "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
@@ -21,7 +21,6 @@ const diceKey = DiceKey.fromHumanReadableForm(
 const loadDiceKeyAsync = () => Promise.resolve(diceKey);;
 const requestUsersConsent = (response: UsersConsentResponse) => () =>
   new Promise<UsersConsentResponse>( (respond) => respond(response) );
-const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
 
 const defaultRequestOrigin = "https://client.app/";
 
@@ -68,14 +67,11 @@ const unsealWithUnsealingKey = ApiFactory.unsealWithUnsealingKeyFactory(defaultT
 
 
 describe("End-to-end API tests using the PostMessage API", () => {
-  const diceKey = DiceKey.fromHumanReadableForm(
-    "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
-  )
 
-  const loadDiceKeyAsync = () => Promise.resolve(diceKey);
-  const requestUsersConsent = (response: UsersConsentResponse) => () =>
-    new Promise<UsersConsentResponse>( (respond) => respond(response) );
-  const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
+//  const loadDiceKeyAsync = () => Promise.resolve(diceKey);
+//  const requestUsersConsent = (response: UsersConsentResponse) => () =>
+//    new Promise<UsersConsentResponse>( (respond) => respond(response) );
+ // const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
 
   const defaultRequestOrigin = "https://client.app/";
 
@@ -89,21 +85,25 @@ describe("End-to-end API tests using the PostMessage API", () => {
       testMessageByteArray
     );
     const plaintext = await unsealWithSymmetricKey(packagedSealedMessage);
-    // expect(testMessageByteArray).toEqual(plaintext);
-    packagedSealedMessage.delete();
+    expect(plaintext).toStrictEqual(testMessageByteArray);
+//    packagedSealedMessage.delete();
 
   });
 
   test("signAndVerify", async () => {
     const sig = await generateSignature(derivationOptionsJson, testMessageByteArray)
-    const signatureVerificationKey = await getSignatureVerificationKey(derivationOptionsJson)
+    const signatureVerificationKeyFields = await getSignatureVerificationKey(derivationOptionsJson)
+    const signatureVerificationKey = (await SeededCryptoModulePromise)
+      .SignatureVerificationKey.fromJsObject(signatureVerificationKeyFields);
     expect(signatureVerificationKey.signatureVerificationKeyBytes).toStrictEqual(sig.signatureVerificationKey.signatureVerificationKeyBytes);
     expect(signatureVerificationKey.verify(testMessageByteArray, sig.signature)).toBeTruthy();
     expect(signatureVerificationKey.verify(Uint8Array.from([0]), sig.signature)).toBeFalsy();
+    signatureVerificationKey.delete();
   });
 
   test("asymmetricSealAndUnseal", async () => {
-    const publicKey = await getSealingKey(derivationOptionsJson);
+    const sealingKeyFields = await getSealingKey(derivationOptionsJson);
+    const sealingKey = (await SeededCryptoModulePromise).SealingKey.fromJsObject(sealingKeyFields);
     const unsealingInstructionsJson = JSON.stringify({
       "requireUsersConsent": {
           "question": "Do you want use \"8fsd8pweDmqed\" as your SpoonerMail account password and remove your current password?",
@@ -113,7 +113,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
           }
       }
     });
-    const packagedSealedPkMessage = publicKey.sealWithInstructions(testMessageByteArray, unsealingInstructionsJson);
+    const packagedSealedPkMessage = sealingKey.sealWithInstructions(testMessageByteArray, unsealingInstructionsJson);
     const plaintext = await unsealWithUnsealingKey(packagedSealedPkMessage)
     expect(plaintext).toStrictEqual(testMessageByteArray);
     expect(packagedSealedPkMessage.unsealingInstructions).toBe(unsealingInstructionsJson);

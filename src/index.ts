@@ -1,15 +1,6 @@
 import {
-  ReadDiceKey
-} from "./web-components/read-dicekey";
-import {
   DisplayDiceKeyCanvas
 } from "./web-components/display-dicekey-canvas";
-import {
-  SeededCryptoModulePromise
-} from "@dicekeys/seeded-crypto-js"
-import {
-  DiceKey
-} from "./dicekeys/dicekey";
 import {
   HomeComponent, loadDiceKeyPromise, loadDiceKeyAsync
 } from "./web-components/home-component";
@@ -20,7 +11,7 @@ import {
 const render = async() => {
   // Start by constructing the class that implements the page's functionality
   const body = document.body;
-  const state = await DiceKeyAppState.instancePromise;
+  await DiceKeyAppState.instancePromise;
   while (true) {
     const diceKey = DiceKeyAppState.instance!.diceKey;
     if (diceKey) {
@@ -61,7 +52,7 @@ import {
 
 const requestUsersConsent = async (
   requestForUsersConsent: RequestForUsersConsent
-) => new Promise<UsersConsentResponse>( (resolve, reject) =>
+) => new Promise<UsersConsentResponse>( (resolve, _reject) =>
   new ConfirmationDialog().attach({requestForUsersConsent})
     .allowChosenEvent.on( () => resolve(UsersConsentResponse.Allow) )
     .declineChosenEvent.on( () => resolve(UsersConsentResponse.Deny) )
@@ -69,8 +60,7 @@ const requestUsersConsent = async (
 
 window.addEventListener("load", () => {
   // Add a message listener
-  const handleApiMessageEvent = (messageEvent: MessageEvent) => {
-    SeededCryptoModulePromise.then( async seededCryptoModule => {
+  const handleApiMessageEvent = async (messageEvent: MessageEvent) => {
         const serverApi = new PostMessagePermissionCheckedMarshalledCommands(
         messageEvent,
         loadDiceKeyAsync,
@@ -84,10 +74,9 @@ window.addEventListener("load", () => {
           const windowOpener = window.opener;// window.open("", windowName);
           windowOpener?.focus();
         }
-        // FIXME -- temporary test
+        // FIXME -- formalize rules for timeout, when to keep window open
         setTimeout( () => window.close(), 3000);
       }
-    });
   };
   window.addEventListener("message", handleApiMessageEvent );
   // Let the parent know we're ready for messages. // FIXME document in API

@@ -1,5 +1,5 @@
 import {
-  Exceptions,
+//  Exceptions,
   RequestForUsersConsent
 } from "@dicekeys/dicekeys-api-js";
 import {

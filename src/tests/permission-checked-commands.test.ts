@@ -6,7 +6,6 @@
   DiceKey, DiceKeyInHumanReadableForm
 } from "../dicekeys/dicekey";
 import {
-  RequestForUsersConsent,
   UsersConsentResponse,
   UnsealingInstructions,
   DerivationOptions
@@ -109,7 +108,6 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
   });
 
   test("preventAccessToSealingKeyIfNotAuthorizedByDerivationOptions", async () => {
-    const seededCryptoModule = await SeededCryptoModulePromise;
     const permissionCheckedCommands = await
       getPermissionCheckedCommands("https://example.com/", UsersConsentResponse.Deny);
     await expect( async () => await permissionCheckedCommands.getUnsealingKey(
@@ -118,7 +116,6 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
   });
 
   test("allowsAccessToSealingKeyIfNotAuthorizedByDerivationOptions", async () => {
-    const seededCryptoModule = await SeededCryptoModulePromise;
     const permissionCheckedCommands = await
       getPermissionCheckedCommands("https://example.com/", UsersConsentResponse.Deny);
     const unsealingKey = await permissionCheckedCommands.getUnsealingKey(

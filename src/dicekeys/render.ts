@@ -7,7 +7,10 @@ import {
 import {
   Point
 } from "./undoverline"
-import {letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes, FaceWithUndoverlineCodes, UndoverlineCodes, getUndoverlineCodes} from "./undoverline-tables";
+import {
+  letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes,
+  //FaceWithUndoverlineCodes,
+  UndoverlineCodes, getUndoverlineCodes} from "./undoverline-tables";
 import {FaceDimensionsFractional} from "./face-dimensions";
 import { DiceKey } from "./dicekey";
 export const FontFamily = "Inconsolata";
@@ -71,7 +74,7 @@ export class DiceKeyRenderContext {
     const dieLeft = center.x - 0.5 * this.linearScaling;
     const dieTop = center.y - 0.5 * this.linearScaling;
     const undoverlineLeft = dieLeft + this.linearScaling * FaceDimensionsFractional.undoverlineLeftEdge;
-    const undoverlineRight = undoverlineLeft + this.linearScaling * FaceDimensionsFractional.undoverlineLength;
+    //const undoverlineRight = undoverlineLeft + this.linearScaling * FaceDimensionsFractional.undoverlineLength;
     const firstDotLeft = dieLeft + this.linearScaling * FaceDimensionsFractional.undoverlineFirstDotLeftEdge ;
     const {underlineCode, overlineCode} = getUndoverlineCodes(face);
 

@@ -20,10 +20,11 @@ export class PasswordManagerSignin extends HtmlComponent {
 
   getPasswordFromDiceKey = async() => {
     try {
-      const secret = await getSecret(pwmgrAppSecretDerivationOptionsJson);
-      const secretAs13Words = secretTo10BitWords(secret.secretBytes, {wordsNeeded: 13});
+      const secretFields = await getSecret(pwmgrAppSecretDerivationOptionsJson);
+      const secretAs13Words = secretTo10BitWords(secretFields.secretBytes, {wordsNeeded: 13});
       this.passwordTextElement.value = secretAs13Words.join(" ");
-      secret.delete();
+      // const secret = (await SeededCryptoModulePromise).Secret.fromJsObject(secretFields);
+      // secret.delete();
     } catch (e) {
       alert(`Could not use your DiceKey to generate your password: ${e.message}`)
     }

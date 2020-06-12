@@ -1,11 +1,9 @@
 import {
-  SeededCryptoModuleWithHelpers, SeededCryptoModulePromise
-} from "@dicekeys/seeded-crypto-js"
-import {
   DiceKey
 } from "../dicekeys/dicekey";
 import {
-  PermissionCheckedMarshalledCommands
+  PermissionCheckedMarshalledCommands,
+  SeededCryptoObject
 } from "./abstract-permission-checked-marshalled-commands"
 import {
   urlSafeBase64Decode,
@@ -14,12 +12,15 @@ import {
 import {
   RequestForUsersConsent,
   UsersConsentResponse,
-  ApiStrings
+  ApiStrings,
+  SeededCryptoJsObject
  } from "@dicekeys/dicekeys-api-js";
 import {
   DiceKeyAppState
 } from "../state/app-state-dicekey"
-
+import {
+  SeededCryptoSerializableObjectStatics
+} from "@dicekeys/seeded-crypto-js";
 const {Inputs} = ApiStrings;
 
 /**
@@ -30,6 +31,8 @@ const {Inputs} = ApiStrings;
  *  The caller is responsible for catching exceptions and marshalling them
  */
 export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMarshalledCommands {
+  protected response = new Map<string, string>();
+
   constructor(
     protected requestUrl: URL,
     loadDiceKeyAsync: () => Promise<DiceKey>,
@@ -37,7 +40,7 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
       requestForUsersConsent: RequestForUsersConsent
     ) => Promise<UsersConsentResponse>,
     private transmitResponse: (response: URL) => any = (response: URL) => this.defaultTransmitResponse(response)
-  ) {    
+  ) {
     super(
       // The origin of a URL-protocol request is the origin you are replying to
       // (though this may be supplemented with an url authenticated by an auth token)
@@ -58,6 +61,24 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
     );
   }
 
+  protected clearMarshalledResults() {
+    this.response.clear();
+  }
+
+  protected marshallResult(
+    responseParameterName: string,
+    value: string | Uint8Array | SeededCryptoObject
+  ): PermissionCheckedMarshalledCommands {
+    this.response.set(responseParameterName,
+      (typeof value === "string") ?
+        value :
+      (value instanceof Uint8Array) ?
+        urlSafeBase64Encode(value) :
+        value.toJson()
+    );
+    return this;
+  }
+
   protected unmarshallOptionalStringParameter = (parameterName: string): string | undefined => {
     const valueStringOrNull = this.requestUrl.searchParams.get(parameterName);
     if (valueStringOrNull == null) {
@@ -71,22 +92,38 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
     return urlSafeBase64Decode(base64Value);
   }
 
+  protected unmarshallSeededCryptoObject<
+    FIELDS extends SeededCryptoJsObject,
+    OBJECT extends SeededCryptoObject
+  >(
+    objStatic: SeededCryptoSerializableObjectStatics<FIELDS, OBJECT>,
+    parameterName: string
+  ): OBJECT {
+    return objStatic.fromJson(
+    this.unmarshallStringParameter(parameterName)
+    )
+  }
+
+  protected serializeSeededCryptoObject<
+    T extends SeededCryptoObject
+  >(
+    obj: T
+  ) {
+    return  obj.toJson();
+  }
+
   private defaultTransmitResponse = (response: URL): any => {
     window.location.replace(response.toString());
   }
 
-  protected sendResponse = (response: [string, string | Uint8Array][]) => {
+  protected sendResponse = () => {
     const respondTo = this.unmarshallStringParameter(Inputs.COMMON.respondTo);
     if (!respondTo) {
       return;
     }
     const responseUrl = new URL(respondTo);
-    response.forEach( ([name, value]) => {
-      responseUrl.searchParams.append(name,
-        typeof value === "string" ?
-          value :
-          urlSafeBase64Encode(value)
-        );
+    [...this.response.entries()].forEach( ([name, value]) => {
+      responseUrl.searchParams.append(name,value);
     });
     this.transmitResponse(responseUrl)
   }

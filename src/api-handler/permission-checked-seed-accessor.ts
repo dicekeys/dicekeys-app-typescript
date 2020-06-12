@@ -13,9 +13,6 @@ import {
 import {
   PackagedSealedMessage
 } from "@dicekeys/seeded-crypto-js";
-import {
-  DiceKeyAppState
-} from "../state/app-state-dicekey"
 
 export class ClientMayNotRetrieveKeyException extends Error {
   constructor(public readonly type: DerivableObjectName) {

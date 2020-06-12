@@ -22,14 +22,16 @@ export interface UndoverlineJson {
 }
 
 export const PointJsonKeys = ["x", "y"] as const;
-const testPointJsonKeys: readonly (keyof Point)[] = PointJsonKeys;
 
 export const LineJsonKeys = ["start", "end"] as const;
-const testLineJsonKeys: readonly (keyof Line)[] = LineJsonKeys;
 
 export const UndoverlineJsonKeys = ["line", "code"] as const;
-const testUndoverlineJsonKeys: readonly (keyof UndoverlineJson)[] = UndoverlineJsonKeys;
-
+(()=> {
+  const testPointJsonKeys: readonly (keyof Point)[] = PointJsonKeys;
+  const testLineJsonKeys: readonly (keyof Line)[] = LineJsonKeys;
+  const testUndoverlineJsonKeys: readonly (keyof UndoverlineJson)[] = UndoverlineJsonKeys;
+  console.log(testPointJsonKeys, testLineJsonKeys, testUndoverlineJsonKeys)
+})
 
 export class Undoverline implements UndoverlineJson {
   constructor(

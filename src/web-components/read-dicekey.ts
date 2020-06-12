@@ -31,7 +31,7 @@ const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints =>
 /**
  * This class implements the demo page.
  */
-export class ReadDiceKey extends HtmlComponent<DiceKey> {
+export class ReadDiceKey extends HtmlComponent {
   private static readonly overlayCanvasId = "overlay-canvas";
   private static readonly cancelButtonId = "cancel-button";
   private static readonly playerId = "player";
@@ -155,7 +155,10 @@ export class ReadDiceKey extends HtmlComponent<DiceKey> {
     oldMediaStream?.getTracks().forEach(track => track.stop() );
     // Now set the new stream
     this.mediaStream = newStream;
-    const {deviceId, height, width, facingMode, aspectRatio, frameRate} = this.mediaStream?.getVideoTracks()[0]?.getSettings();
+    const {
+      deviceId, height, width,
+      // facingMode, aspectRatio, frameRate
+    } = this.mediaStream?.getVideoTracks()[0]?.getSettings();
     this.camerasDeviceId = deviceId;
     this.player!.style.removeProperty("display");
     this.player!.srcObject = this.mediaStream = newStream;
@@ -239,7 +242,7 @@ export class ReadDiceKey extends HtmlComponent<DiceKey> {
     this.cameraSelectionMenu!.value = this.camerasDeviceId || "";
     this.cameraSelectionMenu!.style.removeProperty("display");
     // Handle user selection of cameras
-    this.cameraSelectionMenu!.addEventListener("change", (event) =>
+    this.cameraSelectionMenu!.addEventListener("change", (_event) =>
       // The deviceID of the camera was stored in the value name of the option,
       // so it can be retrieved from the value field fo the select element
       this.updateCameraForDevice(this.cameraSelectionMenu!.value) );

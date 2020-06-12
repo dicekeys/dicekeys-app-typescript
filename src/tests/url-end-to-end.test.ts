@@ -5,10 +5,6 @@ import {
   DiceKey, DiceKeyInHumanReadableForm
 } from "../dicekeys/dicekey";
 import {
-  SeededCryptoModulePromise,
-  SeededCryptoModuleWithHelpers
-} from "@dicekeys/seeded-crypto-js";
-import {
   UsersConsentResponse,
   DerivationOptions
 } from "@dicekeys/dicekeys-api-js";
@@ -25,12 +21,11 @@ describe("EndToEndUrlApiTests", () => {
   const loadDiceKeyAsync = () => Promise.resolve(diceKey);
   const requestUsersConsent = (response: UsersConsentResponse) => () =>
     new Promise<UsersConsentResponse>( (respond) => respond(response) );
-  const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
+  // const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
 
   const defaultRequestUrl = "https://client.app/";
 
   const getMockClient = (
-    seededCryptoModule: SeededCryptoModuleWithHelpers,
     requestUrlBase: string = defaultRequestUrl,
     respondToUrl: string = requestUrlBase,
     usersResponseToConsentRequest: UsersConsentResponse = UsersConsentResponse.Allow
@@ -68,19 +63,19 @@ describe("EndToEndUrlApiTests", () => {
   const testMessageByteArray = stringToUtf8ByteArray(testMessage);
 
   test("symmetricKeySealAndUnseal", async () => {
-    const client = getMockClient(await SeededCryptoModulePromise);
+    const client = getMockClient();
     const packagedSealedMessage = await client.sealWithSymmetricKey(
       derivationOptionsJson,
       testMessageByteArray
     );
     const plaintext = await client.unsealWithSymmetricKey(packagedSealedMessage);
-    // expect(testMessageByteArray).toEqual(plaintext);
+    expect(plaintext).toEqual(testMessageByteArray);
     packagedSealedMessage.delete();
 
   });
 
   test("fun signAndVerify", async () => {
-    const client = getMockClient(await SeededCryptoModulePromise);
+    const client = getMockClient();
     const sig = await client.generateSignature(derivationOptionsJson, testMessageByteArray)
     const signatureVerificationKey = await client.getSignatureVerificationKey(derivationOptionsJson)
     expect(signatureVerificationKey.signatureVerificationKeyBytes).toStrictEqual(sig.signatureVerificationKey.signatureVerificationKeyBytes);
@@ -89,7 +84,7 @@ describe("EndToEndUrlApiTests", () => {
   });
 
   test("fun asymmetricSealAndUnseal", async () => {
-    const client = getMockClient(await SeededCryptoModulePromise);
+    const client = getMockClient();
     const publicKey = await client.getSealingKey(derivationOptionsJson);
     const unsealingInstructionsJson = JSON.stringify({
       "requireUsersConsent": {
@@ -107,7 +102,7 @@ describe("EndToEndUrlApiTests", () => {
   });
 
   test("getSecretWithHandshake", async () => {
-    const client = getMockClient(await SeededCryptoModulePromise);
+    const client = getMockClient();
     const derivationOptions = DerivationOptions({
       requireAuthenticationHandshake: true,
       urlPrefixesAllowed: [defaultRequestUrl],

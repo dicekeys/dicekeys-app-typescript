@@ -8,7 +8,6 @@ import {
   Undoverline,
   UndoverlineJson,
   Point,
-  Line
 } from "./undoverline";
 import { hammingDistance } from "./bit-operations";
 
@@ -44,9 +43,12 @@ export interface FaceReadJson {
 	"orientationAsLowercaseLetterTRBL",
 	"ocrLetterCharsFromMostToLeastLikely", "ocrDigitCharsFromMostToLeastLikely",
 	"center"
-  ] as const;
-  const testFaceReadJsonKeys: readonly (keyof FaceReadJson)[] = FaceReadJsonKeys;
-  
+	] as const;
+	(() => {
+		const testFaceReadJsonKeys: readonly (keyof FaceReadJson)[] = FaceReadJsonKeys;
+		return testFaceReadJsonKeys;
+	})();
+
   interface UndoverlineBitMismatch {
 	type: 'undoverline-bit-mismatch';
 	location: "underline" | "overline";

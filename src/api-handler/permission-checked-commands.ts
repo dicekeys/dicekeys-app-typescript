@@ -9,7 +9,7 @@ import {
   SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js";
 import {
-  DerivableObjectNames, DerivationOptions
+  DerivableObjectNames
 } from "@dicekeys/dicekeys-api-js";
 import {
   PermissionCheckedSeedAccessor

@@ -1,5 +1,5 @@
 import {
-  Secret, SeededCryptoModulePromise
+  SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js"
 import {
   secretTo10BitWords

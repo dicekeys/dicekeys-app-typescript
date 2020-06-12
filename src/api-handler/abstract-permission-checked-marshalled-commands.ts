@@ -1,9 +1,16 @@
 import {
+  PackagedSealedMessage,
+  Secret,
+  SymmetricKey,
+  UnsealingKey, SealingKey,
+  SigningKey, SignatureVerificationKey,
+  PackagedSealedMessageStatic,
+  SecretStatic,
+  SymmetricKeyStatic,
+  UnsealingKeyStatic, SealingKeyStatic,
+  SigningKeyStatic, SignatureVerificationKeyStatic,
   SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js"
-import {
-  Exceptions
-} from "@dicekeys/dicekeys-api-js";
 import {
   PermissionCheckedSeedAccessor,
 } from "./permission-checked-seed-accessor";
@@ -15,18 +22,38 @@ import {
 } from "../dicekeys/dicekey";
 import {
   ApiStrings,
+  Exceptions,
   RequestForUsersConsent,
+  SeededCryptoJsObject,
   UsersConsentResponse
 } from "@dicekeys/dicekeys-api-js";
+import {
+  SeededCryptoSerializableObjectStatics
+} from "@dicekeys/seeded-crypto-js";
 
-const toJsonThenDelete = <T extends {toJson: () => string, delete: () => void}>(obj: T): string => {
-  try {
-    const result = obj.toJson();
-    return result;
-  } finally {
-    obj.delete();
-  }
-}
+export type SeededCryptoObject =
+  PackagedSealedMessage |
+  Secret |
+  SymmetricKey |
+  UnsealingKey | SealingKey |
+  SigningKey | SignatureVerificationKey;
+(() => {
+  // Code here only for typing to test that there's a member of 
+  // SeededCryptoObject implements an interface in SeededCryptoJsObject
+  const seededCryptoObject = undefined as unknown as SeededCryptoObject;
+  const testThatAllSeededCryptoObjectsHaveJsEquivalaents: SeededCryptoJsObject = seededCryptoObject;
+  console.log(testThatAllSeededCryptoObjectsHaveJsEquivalaents);
+})
+export type SeededCryptoObjectStatic =
+  PackagedSealedMessageStatic |
+  SecretStatic |
+  SymmetricKeyStatic |
+  UnsealingKeyStatic | SealingKeyStatic |
+  SigningKeyStatic | SignatureVerificationKeyStatic;
+
+// export type ResponseParameterValue = string | Uint8Array | SeededCryptoJsObject
+// export type ResponseParameterNameValuePairs = [string,  ResponseParameterValue][];
+
 
 export class InvalidDiceKeysCommandException extends Error {
   constructor(candidateCommand: string) {
@@ -42,7 +69,7 @@ export class InvalidDiceKeysCommandException extends Error {
  *  The caller is responsible for catching exceptions and marshalling them
  */
 export abstract class PermissionCheckedMarshalledCommands {
-  private successResults: [string, string | Uint8Array][] = []
+//  private successResults: ResponseParameterNameValuePairs = []
   /**
    * The api abstracts away the lower levels of the API and access to the
    * underlying cryptographic seed, so that this module never has to import
@@ -51,7 +78,7 @@ export abstract class PermissionCheckedMarshalledCommands {
   private readonly api: PermissionCheckedCommands;
 
   constructor(
-    private origin: string,
+    origin: string,
     loadDiceKeyAsync: () => PromiseLike<DiceKey>,
     requestUsersConsent: (
       requestForUsersConsent: RequestForUsersConsent
@@ -69,42 +96,70 @@ export abstract class PermissionCheckedMarshalledCommands {
     this.api = new PermissionCheckedCommands(permissionCheckedSeedAccessor);
   }
 
-  protected abstract unmarshallOptionalStringParameter(parameterName: string): string | undefined;
-  protected abstract unmarshallBinaryParameter(parameterName: string): Uint8Array;
+  protected abstract unmarshallOptionalStringParameter(
+    parameterName: string
+  ): string | undefined;
+  protected abstract unmarshallBinaryParameter(
+    parameterName: string
+  ): Uint8Array;
+  protected abstract unmarshallSeededCryptoObject<
+    FIELDS extends SeededCryptoJsObject,
+    OBJECT extends SeededCryptoObject
+  >(
+    objStatic: SeededCryptoSerializableObjectStatics<FIELDS, OBJECT>,
+    parameterName: string
+  ): OBJECT;
+
 
   protected unmarshallStringParameter = (parameterName: string) : string =>
     this.unmarshallOptionalStringParameter(parameterName) ?? 
       (() => { throw Exceptions.MissingParameter.create(parameterName); })()
 
 
-  protected marshallResult = (
+  protected abstract marshallResult(
     responseParameterName: string,
-    value: string | Uint8Array
+    value: string | Uint8Array | SeededCryptoObject
+  ): PermissionCheckedMarshalledCommands;
+  protected abstract clearMarshalledResults(): void;
+  //  => {
+  //   this.successResults.push([
+  //     responseParameterName, value]);
+  //   return this;
+  // }
+
+  marshallSeededCryptoObjectResultThenDeleteIt = <T extends SeededCryptoObject>(
+    responseParameterName: string,
+    obj: T
   ): PermissionCheckedMarshalledCommands => {
-    this.successResults.push([
-      responseParameterName, value]);
-    return this;
+    try {
+      return this.marshallResult(responseParameterName, obj);
+    } finally {
+      obj.delete();
+    }
   }
 
-  protected abstract sendResponse(response: [string, string | Uint8Array][]): any;
+
+
+
+  protected abstract sendResponse(): void;
 
   protected sendSuccess = (): void => {
     this.marshallResult(
       ApiStrings.Outputs.COMMON.requestId,
       this.unmarshallStringParameter(ApiStrings.Inputs.COMMON.requestId)
     );
-    this.sendResponse(this.successResults);
+    this.sendResponse();
   }
 
   sendException = (e: Error): void => {
     const requestId = this.unmarshallOptionalStringParameter(ApiStrings.Outputs.COMMON.requestId) || "";
     const exceptionName: string = (e instanceof Error) ? e.name : "unknown";
     const exceptionMessage: string = (e instanceof Error) ? e.message : "unknown";
-    this.sendResponse([
-      [ApiStrings.Outputs.COMMON.requestId, requestId],
-      [ApiStrings.Outputs.COMMON.exception, exceptionName],
-      [ApiStrings.Outputs.COMMON.exceptionMessage, exceptionMessage]
-    ]);
+    this.clearMarshalledResults();
+    this.marshallResult(ApiStrings.Outputs.COMMON.requestId, requestId);
+    this.marshallResult(ApiStrings.Outputs.COMMON.exception, exceptionName);
+    this.marshallResult(ApiStrings.Outputs.COMMON.exceptionMessage, exceptionMessage);
+    this.sendResponse();
   }
 
   private getCommonDerivationOptionsJsonParameter = () : string =>
@@ -115,23 +170,26 @@ export abstract class PermissionCheckedMarshalledCommands {
     this.api.getAuthToken(this.unmarshallStringParameter(ApiStrings.Inputs.COMMON.respondTo))
   ).sendSuccess()
 
-  private getSecret = async (): Promise<void> => this.marshallResult(
-    ApiStrings.Outputs.getSecret.secret,
-    toJsonThenDelete(await this.api.getSecret(this.getCommonDerivationOptionsJsonParameter()))
+  private getSecret = async (): Promise<void> => this.marshallSeededCryptoObjectResultThenDeleteIt(
+      ApiStrings.Outputs.getSecret.secret,
+      await this.api.getSecret(this.getCommonDerivationOptionsJsonParameter())
     ).sendSuccess()
 
-  private sealWithSymmetricKey = async (): Promise<void> => this.marshallResult(
+  private sealWithSymmetricKey = async (): Promise<void> =>
+    this.marshallSeededCryptoObjectResultThenDeleteIt(
       ApiStrings.Outputs.sealWithSymmetricKey.packagedSealedMessage,
-      toJsonThenDelete(await this.api.sealWithSymmetricKey(
+      await this.api.sealWithSymmetricKey(
         this.getCommonDerivationOptionsJsonParameter(),
         this.unmarshallBinaryParameter(ApiStrings.Inputs.sealWithSymmetricKey.plaintext),
         this.unmarshallOptionalStringParameter(ApiStrings.Inputs.sealWithSymmetricKey.unsealingInstructions)
-      ))
+      )
     ).sendSuccess()
 
   private unsealWithSymmetricKey = async (): Promise<void> => {
-    const json = this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage);
-    const packagedSealedMessage = (await SeededCryptoModulePromise).PackagedSealedMessage.fromJson(json);
+    const packagedSealedMessage = this.unmarshallSeededCryptoObject(
+      (await SeededCryptoModulePromise).PackagedSealedMessage,
+      ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage
+    );
     try {
       return this.marshallResult(
         ApiStrings.Outputs.unsealWithSymmetricKey.plaintext,
@@ -143,29 +201,32 @@ export abstract class PermissionCheckedMarshalledCommands {
     }
   }
 
-  private getSealingKey = async (): Promise<void> => this.marshallResult(
+  private getSealingKey = async (): Promise<void> =>
+    this.marshallSeededCryptoObjectResultThenDeleteIt(
       ApiStrings.Outputs.getSealingKey.sealingKey,
-      toJsonThenDelete(await this.api.getSealingKey(this.getCommonDerivationOptionsJsonParameter()))
+      await this.api.getSealingKey(this.getCommonDerivationOptionsJsonParameter())
     ).sendSuccess()
 
 
   private unsealWithUnsealingKey = async (): Promise<void> => {
-    const json = this.unmarshallStringParameter(ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage);
-    const packagedSealedMessage =(await SeededCryptoModulePromise).PackagedSealedMessage.fromJson(json);
+    const packagedSealedMessage = this.unmarshallSeededCryptoObject(
+      (await SeededCryptoModulePromise).PackagedSealedMessage,
+      ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage
+    );
     try {
       return this.marshallResult(
         ApiStrings.Outputs.unsealWithUnsealingKey.plaintext,
         await this.api.unsealWithUnsealingKey(
-        packagedSealedMessage
+          packagedSealedMessage
       )).sendSuccess()
     } finally {
       packagedSealedMessage.delete();
     }
   }
   
-  private getSignatureVerificationKey = async (): Promise<void> => this.marshallResult(
+  private getSignatureVerificationKey = async (): Promise<void> => this.marshallSeededCryptoObjectResultThenDeleteIt(
       ApiStrings.Outputs.getSignatureVerificationKey.signatureVerificationKey,
-      toJsonThenDelete(await this.api.getSignatureVerificationKey(this.getCommonDerivationOptionsJsonParameter()))
+      await this.api.getSignatureVerificationKey(this.getCommonDerivationOptionsJsonParameter())
     ).sendSuccess()
 
   private generateSignature = async (): Promise<void> => {
@@ -178,27 +239,30 @@ export abstract class PermissionCheckedMarshalledCommands {
         ApiStrings.Outputs.generateSignature.signature, signature
       ).marshallResult(
           ApiStrings.Outputs.generateSignature.signatureVerificationKey,
-          signatureVerificationKey.toJson()
+          signatureVerificationKey
       ).sendSuccess()
     } finally {
       signatureVerificationKey.delete();
     }
   }
 
-  private getUnsealingKey = async (): Promise<void> => this.marshallResult(
-    ApiStrings.Outputs.getUnsealingKey.unsealingKey,
-    toJsonThenDelete(await this.api.getUnsealingKey(this.getCommonDerivationOptionsJsonParameter()))
-  ).sendSuccess()
+  private getUnsealingKey = async (): Promise<void> =>
+    this.marshallSeededCryptoObjectResultThenDeleteIt(
+      ApiStrings.Outputs.getUnsealingKey.unsealingKey,
+      await this.api.getUnsealingKey(this.getCommonDerivationOptionsJsonParameter())
+    ).sendSuccess()
 
-  private getSigningKey = async (): Promise<void> => this.marshallResult(
-    ApiStrings.Outputs.getSigningKey.signingKey,
-    toJsonThenDelete(await this.api.getSigningKey(this.getCommonDerivationOptionsJsonParameter()))
-  ).sendSuccess()
+  private getSigningKey = async (): Promise<void> =>
+    this.marshallSeededCryptoObjectResultThenDeleteIt(
+      ApiStrings.Outputs.getSigningKey.signingKey,
+      await this.api.getSigningKey(this.getCommonDerivationOptionsJsonParameter())
+    ).sendSuccess()
 
-  private getSymmetricKey = async (): Promise<void> => this.marshallResult(
-    ApiStrings.Outputs.getSymmetricKey.symmetricKey,
-    toJsonThenDelete(await this.api.getSymmetricKey(this.getCommonDerivationOptionsJsonParameter()))
-  ).sendSuccess()
+  private getSymmetricKey = async (): Promise<void> =>
+    this.marshallSeededCryptoObjectResultThenDeleteIt(
+      ApiStrings.Outputs.getSymmetricKey.symmetricKey,
+      await this.api.getSymmetricKey(this.getCommonDerivationOptionsJsonParameter())
+    ).sendSuccess()
 
   protected executeCommand = (command: string) => {
     try {
@@ -209,7 +273,8 @@ export abstract class PermissionCheckedMarshalledCommands {
           throw new InvalidDiceKeysCommandException(command);
       }
     } catch (e) {
-      this.sendException(e)
+      this.sendException(e);
+      return;
     }
   }
 

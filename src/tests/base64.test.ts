@@ -23,6 +23,7 @@ describe("Encodings", () => {
     const b64 = urlSafeBase64Encode(array);
 
     const copyOfArray = urlSafeBase64Decode(b64);
+    expect(copyOfArray).toStrictEqual(array);
 
   });
 

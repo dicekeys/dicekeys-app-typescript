@@ -50,7 +50,7 @@ export  interface HtmlComponentConstructorOptions extends HtmlComponentOptions {
   containerElement?: HTMLElement;
 }
 
-export class HtmlComponent<T = void> {
+export class HtmlComponent {
   public readonly containerElement: HTMLElement;
   public parentElement: HTMLElement | undefined;
 
