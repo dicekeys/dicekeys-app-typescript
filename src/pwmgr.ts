@@ -15,8 +15,12 @@ const passwordFieldId = "password-field" as const;
 const getPasswordFromDiceKeyButtonId = "get-password-from-dicekey-button" as const;
 
 export class PasswordManagerSignin extends HtmlComponent {
-  private passwordTextElement = document.getElementById(passwordFieldId) as HTMLInputElement;
-  private getPasswordFromDiceKeyButton = document.getElementById("get-password-from-dicekey-button") as HTMLButtonElement;
+  private get passwordTextElement(): HTMLInputElement {
+    return document.getElementById(passwordFieldId) as HTMLInputElement;
+  }
+  private get getPasswordFromDiceKeyButton() {
+    return document.getElementById("get-password-from-dicekey-button") as HTMLButtonElement;
+  }
 
   getPasswordFromDiceKey = async() => {
     try {

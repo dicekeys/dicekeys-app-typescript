@@ -20,10 +20,10 @@ const render = async() => {
     } else if (loadDiceKeyPromise) {
       try {
         await loadDiceKeyPromise;
-        await requestUsersConsent({question: "So, like, is this okay?", actionButtonLabels: {
-          allow: "It's all good.",
-          decline: "Hell to the NO!"
-        }});
+        // await requestUsersConsent({question: "So, like, is this okay?", actionButtonLabels: {
+        //   allow: "It's all good.",
+        //   decline: "Hell to the NO!"
+        // }});
       } catch (e) {
         // Ignore user cancellations for now
       }
@@ -75,7 +75,7 @@ window.addEventListener("load", () => {
           windowOpener?.focus();
         }
         // FIXME -- formalize rules for timeout, when to keep window open
-        setTimeout( () => window.close(), 3000);
+        setTimeout( () => window.close(), 2000);
       }
   };
   window.addEventListener("message", handleApiMessageEvent );
