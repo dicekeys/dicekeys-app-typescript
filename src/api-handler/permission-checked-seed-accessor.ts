@@ -1,12 +1,10 @@
 import {
   ApiPermissionChecks
-} from "./permission-checks";
+} from "./api-permission-checks";
 import {
   DiceKey
 } from "../dicekeys/dicekey";
 import {
-  RequestForUsersConsent,
-  UsersConsentResponse,
   DerivationOptions,
   DerivableObjectName,
 } from "@dicekeys/dicekeys-api-js";
@@ -26,24 +24,16 @@ export class ClientMayNotRetrieveKeyException extends Error {
  * going through the permission checks.
  */
 export class PermissionCheckedSeedAccessor{
-  private readonly permissionChecks: ApiPermissionChecks;
-
   constructor(
-    origin: string,
-    private loadDiceKeyAsync: () => PromiseLike<DiceKey>,
-    requestUsersConsent: (
-      requestForUsersConsent: RequestForUsersConsent
-      ) => Promise<UsersConsentResponse>,
-    protocolMayRequireHandshakes: boolean = false,
-    handshakeAuthenticatedUrl?: string
-  ) {
-    this.permissionChecks = new ApiPermissionChecks(
-        origin,
-        requestUsersConsent,
-        protocolMayRequireHandshakes,
-        handshakeAuthenticatedUrl
-      )
-  }
+    private readonly permissionChecks: ApiPermissionChecks,
+    // origin: string,
+    private loadDiceKeyAsync: () => PromiseLike<DiceKey>
+    // requestUsersConsent: (
+    //   requestForUsersConsent: RequestForUsersConsent
+    //   ) => Promise<UsersConsentResponse>,
+    // protocolMayRequireHandshakes: boolean = false,
+    // handshakeAuthenticatedUrl?: string
+  ) {}
 
   /**
    * Request a seed generated from the user's DiceKey and salted by the

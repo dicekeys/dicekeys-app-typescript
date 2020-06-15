@@ -23,7 +23,8 @@ describe("EndToEndUrlApiTests", () => {
     new Promise<UsersConsentResponse>( (respond) => respond(response) );
   // const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
 
-  const defaultRequestUrl = "https://client.app/";
+  const defaultRequestHost = "client.app";
+  const defaultRequestUrl = `https://${defaultRequestHost}`;
 
   const getMockClient = (
     requestUrlBase: string = defaultRequestUrl,
@@ -105,7 +106,7 @@ describe("EndToEndUrlApiTests", () => {
     const client = getMockClient();
     const derivationOptions = DerivationOptions({
       requireAuthenticationHandshake: true,
-      urlPrefixesAllowed: [defaultRequestUrl],
+      allow: [{host: defaultRequestHost}],
       lengthInBytes: 13
     });
     const secret = await client.getSecret(JSON.stringify(derivationOptions));

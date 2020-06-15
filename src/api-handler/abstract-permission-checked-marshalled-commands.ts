@@ -23,13 +23,14 @@ import {
 import {
   ApiStrings,
   Exceptions,
-  RequestForUsersConsent,
   SeededCryptoJsObject,
-  UsersConsentResponse
 } from "@dicekeys/dicekeys-api-js";
 import {
   SeededCryptoSerializableObjectStatics
 } from "@dicekeys/seeded-crypto-js";
+import {
+  ApiPermissionChecks
+} from "./api-permission-checks";
 
 export type SeededCryptoObject =
   PackagedSealedMessage |
@@ -78,20 +79,18 @@ export abstract class PermissionCheckedMarshalledCommands {
   private readonly api: PermissionCheckedCommands;
 
   constructor(
-    origin: string,
+    permissionChecks: ApiPermissionChecks,
+//    origin: string,
     loadDiceKeyAsync: () => PromiseLike<DiceKey>,
-    requestUsersConsent: (
-      requestForUsersConsent: RequestForUsersConsent
-    ) => Promise<UsersConsentResponse>,
-    protocolMayRequireHandshakes: boolean,
-    handshakeAuthenticatedUrl: string = ""
+    // requestUsersConsent: (
+    //   requestForUsersConsent: RequestForUsersConsent
+    // ) => Promise<UsersConsentResponse>,
+    // protocolMayRequireHandshakes: boolean,
+    // handshakeAuthenticatedUrl: string = ""
   ) {
     const permissionCheckedSeedAccessor = new PermissionCheckedSeedAccessor(
-      origin,
-      loadDiceKeyAsync,
-      requestUsersConsent,
-      protocolMayRequireHandshakes,
-      handshakeAuthenticatedUrl
+      permissionChecks,
+      loadDiceKeyAsync
     )
     this.api = new PermissionCheckedCommands(permissionCheckedSeedAccessor);
   }

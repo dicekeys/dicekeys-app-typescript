@@ -13,7 +13,8 @@ import {
   RequestForUsersConsent,
   UsersConsentResponse,
   ApiStrings,
-  SeededCryptoJsObject
+  SeededCryptoJsObject,
+  Exceptions
  } from "@dicekeys/dicekeys-api-js";
 import {
   DiceKeyAppState
@@ -21,6 +22,9 @@ import {
 import {
   SeededCryptoSerializableObjectStatics
 } from "@dicekeys/seeded-crypto-js";
+import {
+  UrlApiPermissionChecks
+} from "./url-api-permission-checks";
 const {Inputs} = ApiStrings;
 
 /**
@@ -32,6 +36,7 @@ const {Inputs} = ApiStrings;
  */
 export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMarshalledCommands {
   protected response = new Map<string, string>();
+  protected readonly searchParams = URL
 
   constructor(
     protected requestUrl: URL,
@@ -42,22 +47,16 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
     private transmitResponse: (response: URL) => any = (response: URL) => this.defaultTransmitResponse(response)
   ) {
     super(
-      // The origin of a URL-protocol request is the origin you are replying to
-      // (though this may be supplemented with an url authenticated by an auth token)
-      requestUrl.searchParams.get(Inputs.COMMON.respondTo) ?? "",
-      // A function to load in the user's dicekey, async so as to allow the user time to
-      // scan it in if necessary
-      loadDiceKeyAsync,
-      // A function that triggers a request for the user's consent.
-      requestUsersConsent,
-      // Since the URL protocol cannot authenticate the source of a request, it offers
-      // the handshake option to increase confidence in the identity of a requester.
-      // (it can always know to what address it is sending responses, just not know
-      //  where requests are coming from.)
-      true,
-      // The client-authenticated origin associated with an auth token
-      (requestUrl.searchParams.get(Inputs.COMMON.authToken) &&
-        DiceKeyAppState.instance!.getUrlForAuthenticationToken(requestUrl.searchParams.get(Inputs.COMMON.authToken)!)) ?? ""
+      new UrlApiPermissionChecks(
+        requestUrl.searchParams.get(Inputs.COMMON.respondTo) ??
+          // Throw exception if no respondto field is passed
+          ( () => { throw new Exceptions.MissingParameter(`API missing ${Inputs.COMMON.respondTo} field`);} )(),
+        requestUsersConsent,
+        // If an authToken was passed, get the corresponding respondTo URL it authorizes
+        (requestUrl.searchParams.get(Inputs.COMMON.authToken) &&
+          DiceKeyAppState.instance!.getUrlForAuthenticationToken(requestUrl.searchParams.get(Inputs.COMMON.authToken)!)) ?? undefined
+      ),
+      loadDiceKeyAsync
     );
   }
 

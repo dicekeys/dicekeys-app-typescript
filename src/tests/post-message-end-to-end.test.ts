@@ -22,7 +22,8 @@ const loadDiceKeyAsync = () => Promise.resolve(diceKey);;
 const requestUsersConsent = (response: UsersConsentResponse) => () =>
   new Promise<UsersConsentResponse>( (respond) => respond(response) );
 
-const defaultRequestOrigin = "https://client.app/";
+const defaultRequestHost = "client.app";
+const defaultRequestOrigin = `https://${defaultRequestHost}`;
 
 const mockTransmitRequestFunction = (
   requestOrigin: string = defaultRequestOrigin,
@@ -72,8 +73,6 @@ describe("End-to-end API tests using the PostMessage API", () => {
 //  const requestUsersConsent = (response: UsersConsentResponse) => () =>
 //    new Promise<UsersConsentResponse>( (respond) => respond(response) );
  // const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
-
-  const defaultRequestOrigin = "https://client.app/";
 
   const derivationOptionsJson = "{}";
   const derivationOptionsForProtectedKeysJson = JSON.stringify(DerivationOptions({
@@ -167,7 +166,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
   test("getSecretWithHandshake", async () => {
     const derivationOptions = DerivationOptions({
       requireAuthenticationHandshake: true,
-      urlPrefixesAllowed: [defaultRequestOrigin],
+      allow: [{host: defaultRequestHost}],
       lengthInBytes: 13
     });
     const secret = await getSecret(JSON.stringify(derivationOptions));

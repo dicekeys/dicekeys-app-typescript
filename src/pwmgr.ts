@@ -9,7 +9,7 @@ import {
 } from "@dicekeys/dicekeys-api-js"
 
 const pwmgrAppSecretDerivationOptionsJson =
-  `{"type": "Secret", "urlPrefixesAllowed": ["https://pwmgr.app/"]}`;
+  `{"type": "Secret", "allow": [{host: "pwmgr.app"}]}`;
 
 const passwordFieldId = "password-field" as const;
 const getPasswordFromDiceKeyButtonId = "get-password-from-dicekey-button" as const;

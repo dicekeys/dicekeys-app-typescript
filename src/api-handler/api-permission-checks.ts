@@ -3,22 +3,16 @@ import {
   AuthenticationRequirements,
   RequestForUsersConsent,
   UnsealingInstructions,
-  UsersConsentResponse
+  UsersConsentResponse,
+  WebBasedApplicationIdentity,
+  Exceptions
 } from "@dicekeys/dicekeys-api-js";
 
-export class ClientUriNotAuthorizedException extends Error {
-  constructor(
-    public readonly url: string,
-    public readonly urlPrefixesAllowed: string[]
-  ) {
-    super(`Client at url ${url} does not start with prefix from list [${urlPrefixesAllowed.join(", ")}]`);
-  }
-}
-
-export class UserDeclinedToAuthorizeOperation extends Error {}
-
 /**
- * Abstract away all permissions checks for the DiceKeys API
+ * Permissions checks for the DiceKeys PostMessage API
+ * 
+ * The PostMessage API authenticates via the host alone.
+ * The URL API extends this class to check paths.
  *
  * @param requestUsersConsent You must pass this function, which is
  * called if a message must be shown to the user which will allow them to choose whether
@@ -28,40 +22,46 @@ export class UserDeclinedToAuthorizeOperation extends Error {}
  */
 export class ApiPermissionChecks {
   constructor(
-      private readonly origin: string,
+      protected readonly host: string,
       private readonly requestUsersConsent: (
           requestForUsersConsent: RequestForUsersConsent
         ) => Promise<UsersConsentResponse>,
-      private protocolMayRequireHandshakes: boolean = false,
-      private handshakeAuthenticatedUrl?: string,  
   ) {}
 
-  doesClientMeetAuthenticationRequirements = (
-      {urlPrefixesAllowed, requireAuthenticationHandshake}: AuthenticationRequirements
-    ): boolean =>
-      urlPrefixesAllowed == null ||
-      urlPrefixesAllowed.some( prefix =>
-        // If the prefix appears in the URL associated with the authentication token
-        (this.handshakeAuthenticatedUrl != null && this.handshakeAuthenticatedUrl.startsWith(prefix)) ||
-        // Or no handshake is required and the replyUrl starts with the prefix
-        ((!this.protocolMayRequireHandshakes || !requireAuthenticationHandshake) && this.origin.startsWith(prefix))
-      )
-          
-    
+  validateIdentity(id: WebBasedApplicationIdentity) {
+    const hostSpecified = id.host;
+    return hostSpecified.startsWith("*.") ?
+      // If prefix matching specified, match subdomains as well as the exact domain
+      (
+        // match subdomains such that sub.example.com satisfies *.example.com
+        // by testing for suffix ".example.com"
+        this.host.endsWith(hostSpecified.substr(1)) ||
+        // or if no subdomain (e.g. "example.com" satisfies "*.example.com")
+        // by testing exact match (e.g. both strings equal "example.com")
+        this.host === hostSpecified.substr(2)
+      ) :
+      // hostSpecified is for exact match (it doesn't start with *.)
+      this.host === hostSpecified;
+  }
+ 
+  public doesClientMeetAuthenticationRequirements(
+    {allow}: AuthenticationRequirements
+  ): boolean {
+    return allow == null ||
+    allow.some( (webBasedApplicationIdentity) => this.validateIdentity(webBasedApplicationIdentity) )
+  }
+
   throwIfClientNotAuthorized(
     authenticationRequirements: AuthenticationRequirements
   ): void {
     if (!this.doesClientMeetAuthenticationRequirements(authenticationRequirements)) {
       // The client application id does not start with any of the specified prefixes
-      throw new ClientUriNotAuthorizedException(
-        authenticationRequirements?.requireAuthenticationHandshake && this.protocolMayRequireHandshakes ?
-          (this.handshakeAuthenticatedUrl || "") :
-          this.origin,
-        authenticationRequirements?.urlPrefixesAllowed || [])
+      throw new Exceptions.ClientNotAuthorizedException(
+        `Client ${this.host} does not meet authentication requirements: ${JSON.stringify(authenticationRequirements)}`
+      );
     }
   }
   
-
   /**
    * Verify that UnsealingInstructions do not forbid the client from using
    * unsealing a message.  If the client is not authorized,
@@ -69,9 +69,9 @@ export class ApiPermissionChecks {
    *
    * @throws ClientNotAuthorizedException
    */
-  throwIfUnsealingInstructionsViolatedAsync = async (
+  async throwIfUnsealingInstructionsViolatedAsync(
     unsealingInstructionsAsObjectOrJson?: UnsealingInstructions | string
-  ): Promise<void> => {
+  ): Promise<void> {
     if (!unsealingInstructionsAsObjectOrJson)
       return;
     const unsealingInstructions = UnsealingInstructions(unsealingInstructionsAsObjectOrJson);
@@ -80,8 +80,7 @@ export class ApiPermissionChecks {
     const {requireUsersConsent} = unsealingInstructions;
     if (!requireUsersConsent) return;
     if ((await this.requestUsersConsent(requireUsersConsent)) !== UsersConsentResponse.Allow) {
-      throw new UserDeclinedToAuthorizeOperation("Operation declined by user")
+      throw new Exceptions.UserDeclinedToAuthorizeOperation("Operation declined by user")
     }
   }
-  
 }

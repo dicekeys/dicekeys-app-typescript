@@ -6,14 +6,11 @@
   DiceKey, DiceKeyInHumanReadableForm
 } from "../dicekeys/dicekey";
 import {
+  Exceptions,
   UsersConsentResponse,
   UnsealingInstructions,
   DerivationOptions
 } from "@dicekeys/dicekeys-api-js";
-import {
-  ClientUriNotAuthorizedException,
-  UserDeclinedToAuthorizeOperation
-} from "../api-handler/permission-checks"
 import {
   PermissionCheckedCommands
 } from "../api-handler/permission-checked-commands";
@@ -24,6 +21,9 @@ import {
 import {
   stringToUtf8ByteArray
 } from "../api/encodings";
+import {
+  ApiPermissionChecks
+} from "../api-handler/api-permission-checks";
 
 describe("PermissionCheckedCommandsInstrumentedTest", () => {
 
@@ -41,23 +41,26 @@ describe("PermissionCheckedCommandsInstrumentedTest", () => {
   ) => 
     new PermissionCheckedCommands(
       new PermissionCheckedSeedAccessor(
-        url, loadDiceKeyAsync, requestUsersConsent(usersConsentResponse)
-      )
-    );
+        new ApiPermissionChecks(new URL(url).host,
+        requestUsersConsent(usersConsentResponse)
+      ),
+      loadDiceKeyAsync
+    )
+  );
 
 test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
     await expect( async () => {
       await ( 
         getPermissionCheckedCommands("https://example.comspoof/")
         .sealWithSymmetricKey(
-          JSON.stringify({
-         urlPrefixesAllowed: ["https://example.com/"]
-          } as DerivationOptions),
+          JSON.stringify(DerivationOptions({
+            allow: [{host: "example.com"}]
+          })),
           stringToUtf8ByteArray("The secret ingredient is sarcasm."),
           JSON.stringify({
           } as UnsealingInstructions)
         )
-    )}).rejects.toThrow(ClientUriNotAuthorizedException);
+    )}).rejects.toThrow(Exceptions.ClientNotAuthorizedException);
   });
 
   test("preventsLengthExtensionAttackOnASymmetricUnseal", async () => {
@@ -67,10 +70,10 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
         .unsealWithSymmetricKey(
           new (await SeededCryptoModulePromise).PackagedSealedMessage(
             stringToUtf8ByteArray(""),
-            JSON.stringify({urlPrefixesAllowed: ["https://example.com/"]}),
+            JSON.stringify(DerivationOptions({allow: [{host: "example.com"}]})),
             "{}"
           ))
-    )}).rejects.toThrow(ClientUriNotAuthorizedException);
+    )}).rejects.toThrow(Exceptions.ClientNotAuthorizedException);
   });
 
   test("preventsLengthExtensionAttackOnASymmetricUnsealPostDecryptionOptions", async () => {
@@ -79,12 +82,12 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
       getPermissionCheckedCommands("https://example.comspoof/", UsersConsentResponse.Deny);
     const packagedSealedMessage = new seededCryptoModule.PackagedSealedMessage(
       stringToUtf8ByteArray(""),
-      JSON.stringify({urlPrefixesAllowed: ["https://example.com/"]} as DerivationOptions),
+      JSON.stringify(DerivationOptions({allow: [{host: "example.com"}]})),
       JSON.stringify({} as UnsealingInstructions)
     );
     try {
       await expect( async () => await permissionCheckedCommands.unsealWithSymmetricKey(packagedSealedMessage) )
-        .rejects.toThrow(ClientUriNotAuthorizedException);
+        .rejects.toThrow(Exceptions.ClientNotAuthorizedException);
     } finally {
       packagedSealedMessage.delete();
     }
@@ -96,12 +99,12 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
       getPermissionCheckedCommands("https://example.com/", UsersConsentResponse.Deny);
     const packagedSealedMessage = new seededCryptoModule.PackagedSealedMessage(
       stringToUtf8ByteArray(""),
-      JSON.stringify({urlPrefixesAllowed: ["https://example.com/"]} as DerivationOptions),
+      JSON.stringify(DerivationOptions({allow: [{host: "example.com"}]})),
       JSON.stringify({requireUsersConsent: {question: "howdy", actionButtonLabels: {allow: "a", decline: "d"}}} as UnsealingInstructions)
     );
     try {
       await expect( async () => await permissionCheckedCommands.unsealWithSymmetricKey(packagedSealedMessage) )
-        .rejects.toThrow(UserDeclinedToAuthorizeOperation);
+        .rejects.toThrow(Exceptions.UserDeclinedToAuthorizeOperation);
     } finally {
       packagedSealedMessage.delete();
     }
@@ -111,7 +114,7 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
     const permissionCheckedCommands = await
       getPermissionCheckedCommands("https://example.com/", UsersConsentResponse.Deny);
     await expect( async () => await permissionCheckedCommands.getUnsealingKey(
-      JSON.stringify({urlPrefixesAllowed: ["https://example.com/"]} as DerivationOptions)) )
+      JSON.stringify(DerivationOptions({allow: [{host: "example.com"}]}))) )
     .rejects.toThrow(ClientMayNotRetrieveKeyException);
   });
 
@@ -119,7 +122,7 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
     const permissionCheckedCommands = await
       getPermissionCheckedCommands("https://example.com/", UsersConsentResponse.Deny);
     const unsealingKey = await permissionCheckedCommands.getUnsealingKey(
-      JSON.stringify({urlPrefixesAllowed: ["https://example.com/"], clientMayRetrieveKey: true} as DerivationOptions));
+      JSON.stringify(DerivationOptions({allow: [{host: "example.com"}], clientMayRetrieveKey: true})));
     unsealingKey.delete();
   });
 

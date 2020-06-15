@@ -14,6 +14,9 @@ import {
 import {
   SeededCryptoSerializableObjectStatics
 } from "@dicekeys/seeded-crypto-js";
+import {
+  ApiPermissionChecks
+} from "./api-permission-checks";
 /**
  * 
  */
@@ -28,7 +31,15 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
     ) => Promise<UsersConsentResponse>,
     private transmitResponse: (response: object) => any = (response: object) => this.defaultTransmitResponse(response)
   ) {
-    super(request.origin + "/", loadDiceKeyAsync, requestUsersConsent, false);
+    super(
+      new ApiPermissionChecks(
+        request.origin.startsWith("https://") ?
+          request.origin.substr(8) :
+          ( () => {throw new Exceptions.ClientNotAuthorizedException("API requests must be sent via https://");} )(),
+          requestUsersConsent
+      ),
+      loadDiceKeyAsync
+    );
   }
 
   protected clearMarshalledResults() {

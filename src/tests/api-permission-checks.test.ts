@@ -1,10 +1,10 @@
 import {
-  UsersConsentResponse
+  UsersConsentResponse,
+  Exceptions
 } from "@dicekeys/dicekeys-api-js";
 import {
   ApiPermissionChecks,
-  ClientUriNotAuthorizedException
-} from "../api-handler/permission-checks"
+} from "../api-handler/api-permission-checks"
 
 describe ("ApiPermissionChecksInstrumentedTest", () => {
   const requestUsersConsent = (response: UsersConsentResponse) => () =>
@@ -12,34 +12,43 @@ describe ("ApiPermissionChecksInstrumentedTest", () => {
 
   test ("isClientAuthorizedInFaceOfRestrictionsMostlyHarmless", () => {
 
-    expect(new ApiPermissionChecks("https://example.com/", requestUsersConsent(UsersConsentResponse.Allow))
+    expect(new ApiPermissionChecks("example.com", requestUsersConsent(UsersConsentResponse.Allow))
       .doesClientMeetAuthenticationRequirements({
-        urlPrefixesAllowed: ["https://example.com/", "https://other.com/"]
+        allow: [{host: "example.com"}, {host: "other.com"}]
     })).toBe(true);
 
-    expect(new ApiPermissionChecks("https://example.comspoof/", requestUsersConsent(UsersConsentResponse.Allow))
+    expect(new ApiPermissionChecks("example.comspoof", requestUsersConsent(UsersConsentResponse.Allow))
       .doesClientMeetAuthenticationRequirements({
-        urlPrefixesAllowed: ["https://example.com/", "https://other.com/"]
+        allow: [{host: "example.com"}, {host: "other.com"}]
     })).toBe(false);
 
   });
 
-  test("preventsLengthExtensionAttack", () => {
+  test("Prevent suffix-extension attack", () => {
     expect(() => {
-      new ApiPermissionChecks("https://example.comspoof/", requestUsersConsent(UsersConsentResponse.Allow))
+      new ApiPermissionChecks("example.comspoof", requestUsersConsent(UsersConsentResponse.Allow))
         .throwIfClientNotAuthorized({
-          urlPrefixesAllowed: ["example.com/", "com.other/"]
+          allow: [{host: "example.com"}, {host: "com.other"}]
       });
-    }).toThrow(ClientUriNotAuthorizedException)
+    }).toThrow(Exceptions.ClientNotAuthorizedException)
   });
 
-  test("throwsIfAndroidPackagePrefixesNotSet", () => {
-    expect( () => {
-      new ApiPermissionChecks("https://example.com", requestUsersConsent(UsersConsentResponse.Allow))
-      .throwIfClientNotAuthorized({
-        urlPrefixesAllowed: ["https://someplaceotherthanhere.com/"]
+  test("Prevent prefix-extension attack", () => {
+    expect(() => {
+      new ApiPermissionChecks("prefixattackonexample.com", requestUsersConsent(UsersConsentResponse.Allow))
+        .throwIfClientNotAuthorized({
+          allow: [{host: "example.com"}]
       });
-    }).toThrow(ClientUriNotAuthorizedException);
+    }).toThrow(Exceptions.ClientNotAuthorizedException)
+  });
+
+  test("throws if wrong host", () => {
+    expect( () => {
+      new ApiPermissionChecks("example.com", requestUsersConsent(UsersConsentResponse.Allow))
+      .throwIfClientNotAuthorized({
+        allow: [{host: "someplaceotherthanhere.com"}]
+      });
+    }).toThrow(Exceptions.ClientNotAuthorizedException);
   });
   
 });
