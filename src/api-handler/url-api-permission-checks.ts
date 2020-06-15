@@ -57,7 +57,10 @@ validateIdentity(
       // we'll insert one assuming this was a user error.
       pathRequirement = "/" + pathRequirement;
     }
-    if (pathRequirement.endsWith("*")) {
+    if (pathRequirement.endsWith("/*")) {
+      return this.path === pathRequirement.substr(0, pathRequirement.length - 2) ||
+             this.path.startsWith(pathRequirement.substr(0, pathRequirement.length -1));
+    } else if (pathRequirement.endsWith("*")) {
       // The path reqquirement specifies a prefix, so test for a prefix match
       return this.path.startsWith(pathRequirement.substr(0, pathRequirement.length -1));
     } else {

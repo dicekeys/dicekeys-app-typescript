@@ -9,6 +9,38 @@ describe ("URL API Permissions", () => {
   const requestUsersConsent = (response: UsersConsentResponse) => () =>
     new Promise<UsersConsentResponse>( (respond) => respond(response) );
 
+  const casesFromDocumentation: [ string, [ boolean, string[] ][] ][] =
+  (
+    [
+      [
+        "/here/*",
+        [
+          [true, ["/here/and/there", "/here/", "/here"]],
+          [false, ["/hereandthere/", "/her", "/her/", "/thereandhere", "/thereandhere/"]]
+        ]
+      ],
+      [
+        "/here*",
+        [
+          [true, ["/here/and/there", "/here/", "/here", "/hereandthere/"]],
+          [false, ["/her", "/her/", "/thereandhere", "/thereandhere/"]]
+        ]
+      ]
+    ]
+  );
+  casesFromDocumentation.forEach(
+    ([pathRequired, casesForPathRequired]) =>
+      casesForPathRequired.forEach( ([expectedResult, testPathList]) => {
+        testPathList.forEach( (testPath) => {
+          test (`examples from documentation: required: "${pathRequired}", observed: "${testPath}" expecting ${expectedResult}"`, () => {
+      
+            expect(new UrlApiPermissionChecks(`https://example.com${testPath}`, requestUsersConsent(UsersConsentResponse.Allow))
+              .doesClientMeetAuthenticationRequirements({
+                allow: [ {host: "example.com", paths: [pathRequired] } ]
+            })).toBe(expectedResult);
+          });
+  })}));
+
   test ("Path prefix match", () => {
 
     expect(new UrlApiPermissionChecks("https://example.com/ourPathInTheMiddleOfOurStreet", requestUsersConsent(UsersConsentResponse.Allow))
