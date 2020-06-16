@@ -5,12 +5,16 @@ import {
 import {
   HtmlComponent,
   HtmlComponentConstructorOptions,
-  HtmlComponentOptions,
   ComponentEvent
 } from "./html-component";
 
 
-export class ConfirmationDialog extends HtmlComponent {
+interface ConfirmationDialogOptions extends HtmlComponentConstructorOptions {
+  requestForUsersConsent?: RequestForUsersConsent,
+  origin?: string
+};
+
+export class ConfirmationDialog extends HtmlComponent<ConfirmationDialogOptions> {
   static messageElementId = "message";
   static allowButtonId = "allow-button";
   static declineButtonId = "deny-button";
@@ -32,7 +36,7 @@ export class ConfirmationDialog extends HtmlComponent {
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    options: HtmlComponentConstructorOptions = {}
+    options: Partial<ConfirmationDialogOptions> = {}
   ) {
     super({
       ...options,
@@ -40,13 +44,13 @@ export class ConfirmationDialog extends HtmlComponent {
     });
   }
 
-  attach(options: HtmlComponentOptions & {
-    requestForUsersConsent: RequestForUsersConsent,
-    origin?: string
-  }) {
+  attach(options: Partial<ConfirmationDialogOptions> = {}) {
     super.attach(options);
-    
-    const {question, actionButtonLabels} = options.requestForUsersConsent;
+    const {requestForUsersConsent} = this.attachedOptions;
+    if (!requestForUsersConsent) {
+      return this; // Must have a request for user's consent in either constructor or attached
+    }
+    const {question, actionButtonLabels} = requestForUsersConsent;
     this.messageDiv.innerText = question;
     this.allowButton.value = actionButtonLabels.allow;
     this.declineButton.value = actionButtonLabels.decline;

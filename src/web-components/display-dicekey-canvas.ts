@@ -1,5 +1,5 @@
 import {
-  HtmlComponentConstructorOptions, HtmlComponent, HtmlComponentOptions, ComponentEvent
+  HtmlComponentConstructorOptions, HtmlComponent, ComponentEvent
 } from "./html-component";
 import {
   Face,
@@ -25,6 +25,45 @@ export const FontWeight = "700";
 export enum UndoverlineType {
   underline = "underline",
   overline = "overline",
+}
+
+// HTML5 round rect from
+// 
+/**
+ * Draws a rounded rectangle using the current state of the canvas.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x The top left x coordinate
+ * @param {number} y The top left y coordinate
+ * @param {number} width The width of the rectangle
+ * @param {number} height The height of the rectangle
+ * @param {number} radius The corner radius
+ * 
+ * from: https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
+ */
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number,
+  width: number,
+  height: number,
+  radius: number,
+  fill: boolean = false,
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+  if (fill) {
+    ctx.fill();
+  } else {
+    ctx.stroke();
+  }
 }
 
 const scaleSizes = (linearSizeOfFace: number, linearFractionOfCoverage: number) => {
@@ -58,6 +97,7 @@ const renderFaceForSizes = (sizes: Sizes) => (
   ctx: CanvasRenderingContext2D,
   face: Face,
   center: Point,
+  obscure: boolean = false
 ): void => {
   const dieLeft = center.x - 0.5 * sizes.linearScaling;
   const dieTop = center.y - 0.5 * sizes.linearScaling;
@@ -80,6 +120,10 @@ const renderFaceForSizes = (sizes: Sizes) => (
     ctx.fillStyle = "#000000";
     ctx.fillRect(undoverlineLeft, top, sizes.undoverlineLength, sizes.undoverlineHeight);
 
+    if (obscure) {
+      // Don't actually display data.
+      return;
+    }
     // Draw the white boxes representing the code in the [und|ov]erline
     // within the [und|ov]erline rectangle.
     ctx.fillStyle = "#FFFFFF";
@@ -95,17 +139,35 @@ const renderFaceForSizes = (sizes: Sizes) => (
     }
   }
 
+    // Draw the outline rectangle
+    ctx.strokeStyle = "#000000";
+    const sizeFromEdgeToEdge = sizes.linearSizeOfFace * 0.8;
+    roundRect(
+      ctx,
+      center.x - 0.5 * sizeFromEdgeToEdge, center.y - 0.5 * sizeFromEdgeToEdge,
+      sizeFromEdgeToEdge, sizeFromEdgeToEdge,
+      sizeFromEdgeToEdge / 6
+    );
+  
   // Rotate the canvas in counterclockwise before rendering, so that
   // when the rotation is restored (clockwise) the face will be in the
   // correct direction
   const rotateCanvasBy = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTRBL);
-  if (rotateCanvasBy !== 0) {
+  if (!obscure && rotateCanvasBy !== 0) {
 //        ctx.save();
       ctx.translate(+center.x, +center.y);
       ctx.rotate(rotateCanvasBy * Math.PI / 180);
       ctx.translate(-center.x, -center.y);
   }
 
+  // Render the underline and overline
+  renderUndoverline("underline", underlineCode);
+  renderUndoverline("overline", overlineCode);
+
+
+  if (obscure) {
+    return;
+  }  
   // Calculate the positions of the letter and digit
   // Letter is left of center
   const letterX = center.x - sizes.charXOffsetFromCenter;
@@ -119,9 +181,7 @@ const renderFaceForSizes = (sizes: Sizes) => (
   ctx.font = font;
   ctx.fillText(face.letter.toString(), letterX, textY)
   ctx.fillText(face.digit.toString(), digitX, textY)
-  // Render the underline and overline
-  renderUndoverline("underline", underlineCode);
-  renderUndoverline("overline", overlineCode);
+
 
   // Undo the rotation used to render the face
   if (rotateCanvasBy !== 0) {
@@ -135,7 +195,8 @@ const renderFaceForSizes = (sizes: Sizes) => (
 
 export const renderDiceKey = (
   ctx: CanvasRenderingContext2D,
-  diceKey: DiceKey
+  diceKey: DiceKey,
+  obscure: boolean = false
 ): void => {
   const {width, height} = ctx.canvas;
   const linearSize = Math.min(width, height);
@@ -145,21 +206,32 @@ export const renderDiceKey = (
   const sizes = scaleSizes(linearFaceSize, 5/8);
   const renderFace = renderFaceForSizes(sizes);
 
-  diceKey.forEach( (face, index) =>
+  const canonicalDiceKey = DiceKey.rotateToRotationIndependentForm(diceKey);
+
+
+  diceKey.forEach( (face, index) => {
+    // if obscuring, show only the top left and bottom right dice in canonical form.
+    const obscureThisDie = obscure &&
+      (face.letter !== canonicalDiceKey[0].letter || face.digit !== canonicalDiceKey[0].digit ) &&
+      (face.letter !== canonicalDiceKey[24].letter || face.digit !== canonicalDiceKey[24].digit );
     renderFace(ctx, face,
       {
         x: centerX + linearFaceSize * (-2 + (index % 5)),
-        y: centerY + linearFaceSize * (-2 + Math.floor(index / 5))
-      }
-  ));
+        y: centerY + linearFaceSize * (-2 + Math.floor(index / 5)),
+      },
+      obscureThisDie
+    );
+  });
 }
 
-
+interface DisplayDiceKeyCanvasOptions extends HtmlComponentConstructorOptions {
+  obscure?: boolean
+}
 
 /**
  * This class implements the component that displays DiceKeys.
  */
-export class DisplayDiceKeyCanvas extends HtmlComponent {
+export class DisplayDiceKeyCanvas extends HtmlComponent<DisplayDiceKeyCanvasOptions> {
   private static readonly forgetDiceKeyButtonId = "forget-dicekey-button";
   private forgetDiceKeyButton?: HTMLButtonElement;
   private static diceKeyDisplayCanvasId = "dicekey-display-canvas";
@@ -173,7 +245,7 @@ export class DisplayDiceKeyCanvas extends HtmlComponent {
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    options: HtmlComponentConstructorOptions = {},
+    options: DisplayDiceKeyCanvasOptions = {},
     private diceKey: DiceKey
   ) {
     super({...options,
@@ -183,14 +255,17 @@ export class DisplayDiceKeyCanvas extends HtmlComponent {
     `});
   }
 
-  attach(options: HtmlComponentOptions = {}) {
+  attach(
+    options: Partial<DisplayDiceKeyCanvasOptions> = {},
+  ) {
     super.attach(options);
     // Bind to HTML
     this.forgetDiceKeyButton = document.getElementById(DisplayDiceKeyCanvas.forgetDiceKeyButtonId) as HTMLButtonElement;
     this.diceKeyDisplayCanvas = document.getElementById(DisplayDiceKeyCanvas.diceKeyDisplayCanvasId) as HTMLCanvasElement;
     this.ctx = this.diceKeyDisplayCanvas.getContext("2d")!;
+    this.ctx.clearRect(0, 0, this.diceKeyDisplayCanvas.width, this.diceKeyDisplayCanvas.height);
 
-    renderDiceKey(this.ctx, this.diceKey);
+    renderDiceKey(this.ctx, this.diceKey, options.obscure);
   
     this.forgetDiceKeyButton.addEventListener("click", () => {
       DiceKeyAppState.instance?.eraseDiceKey();

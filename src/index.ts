@@ -16,7 +16,7 @@ const render = async() => {
     const diceKey = DiceKeyAppState.instance!.diceKey;
     if (diceKey) {
       await new Promise( resolve => 
-        (new DisplayDiceKeyCanvas({parentElement: body}, diceKey)).attach().detachEvent.on( resolve ));
+        (new DisplayDiceKeyCanvas({parentElement: body}, diceKey)).attach({obscure: false}).detachEvent.on( resolve ));
     } else if (loadDiceKeyPromise) {
       try {
         await loadDiceKeyPromise;

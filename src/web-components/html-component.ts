@@ -43,23 +43,23 @@ export interface HtmlComponentOptions {
   nodeToInsertThisComponentBefore?: Node;
   parentElement?: HTMLElement;
   html?: string;
-
 }
 
 export  interface HtmlComponentConstructorOptions extends HtmlComponentOptions {
   containerElement?: HTMLElement;
 }
 
-export class HtmlComponent {
+export class HtmlComponent<OPTIONS extends HtmlComponentConstructorOptions = HtmlComponentConstructorOptions> {
   public readonly containerElement: HTMLElement;
   public parentElement: HTMLElement | undefined;
+  protected attachedOptions: Partial<OPTIONS> = {};
 
   constructor(
-    protected readonly constructorOptions: HtmlComponentConstructorOptions = {}
+    protected readonly constructorOptions: Partial<OPTIONS> = {}
   ) {
     const {
       containerElement = document.createElement("div"),
-      html
+      html = ""
     } = constructorOptions;
     this.containerElement = containerElement;
     if (html) {
@@ -68,15 +68,15 @@ export class HtmlComponent {
   }
 
   public attach(
-    options: HtmlComponentOptions = {} 
+    options: Partial<OPTIONS> = {} as Partial<OPTIONS>
   ) {
-    const allOptions = {...this.constructorOptions, ...options};
+    this.attachedOptions = {...this.constructorOptions, ...options};
     const {
       parentElement = document.body,
       nodeToInsertThisComponentBefore = null
-    } = allOptions;
+    } = this.attachedOptions;
     if (options.html) {
-      this.containerElement.innerHTML = options.html; 
+      this.containerElement.innerHTML = options.html!;
     }
     this.parentElement = parentElement;
     this.parentElement.insertBefore(this.containerElement, nodeToInsertThisComponentBefore);

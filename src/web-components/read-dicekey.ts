@@ -1,5 +1,5 @@
 import {
-  HtmlComponent, HtmlComponentConstructorOptions, HtmlComponentOptions, ComponentEvent
+  HtmlComponent, HtmlComponentConstructorOptions, ComponentEvent
 } from "./html-component"
 import "regenerator-runtime/runtime";
 import {
@@ -27,11 +27,14 @@ const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints =>
   },
 });
 
+interface ReadDiceKeyOptions extends HtmlComponentConstructorOptions {
+  msDelayBetweenSuccessAndClosure?: number;
+}
 
 /**
  * This class implements the demo page.
  */
-export class ReadDiceKey extends HtmlComponent {
+export class ReadDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
   private static readonly overlayCanvasId = "overlay-canvas";
   private static readonly cancelButtonId = "cancel-button";
   private static readonly playerId = "player";
@@ -46,6 +49,7 @@ export class ReadDiceKey extends HtmlComponent {
   private mediaStream?: MediaStream;
   private cameraSessionId?: string;
   private readonly frameWorker: Worker;
+  private readonly msDelayBetweenSuccessAndClosure: number;
   
   /**
    * The code supporting the dmeo page cannot until the WebAssembly module for the image
@@ -53,7 +57,10 @@ export class ReadDiceKey extends HtmlComponent {
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    options: HtmlComponentConstructorOptions = {}
+    {
+      msDelayBetweenSuccessAndClosure = 500,
+      ...options
+    }: ReadDiceKeyOptions = {}
   ) {
     super({...options,
       html: `
@@ -65,6 +72,7 @@ export class ReadDiceKey extends HtmlComponent {
       <input id="${ReadDiceKey.cancelButtonId}" type="button" value="Cancel"/>
       `
     });
+    this.msDelayBetweenSuccessAndClosure = msDelayBetweenSuccessAndClosure;
     this.captureCanvas = document.createElement("canvas") as HTMLCanvasElement;
     this.captureCanvasCtx = this.captureCanvas.getContext("2d")!;
     this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
@@ -73,7 +81,7 @@ export class ReadDiceKey extends HtmlComponent {
   public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], ReadDiceKey>(this);
   public readonly userCancelledEvent = new ComponentEvent(this);
 
-  attach(options: HtmlComponentOptions = {}) {
+  attach(options: Partial<ReadDiceKeyOptions> = {}) {
     super.attach(options);
 
     // Bind to HTML
@@ -104,7 +112,7 @@ export class ReadDiceKey extends HtmlComponent {
   destroy() {
     this.frameWorker.postMessage({action: "terminateSession", sessionId: this.cameraSessionId} as TerminateSessionRequest);
     this.detach();
-    setTimeout( () => this.frameWorker.terminate(), 1000);
+    setTimeout( () => this.frameWorker.terminate(), this.msDelayBetweenSuccessAndClosure + 1000);
     // If there's an existing stream, terminate it
   }
 
@@ -121,21 +129,6 @@ export class ReadDiceKey extends HtmlComponent {
   onWorkerReady = () => {
     this.startProcessingNewCameraFrame();
   }
-
-  // // "user" (faces the user) | "environment" (away from user)
-  // getBestCamera = (facingMode: "user" | "environment") => {
-  //   const sizes = [480, 576, 720, 768, 800, 900, 1000, 1080, 1200, 1440, 2160] as const;
-  //   for (var size of sizes) {
-  //     const defaultVideoConstraints: MediaStreamConstraints = {
-  //       audio: false,
-  //       video: {
-  //         width: { ideal: 1024, min: size },
-  //         height: { ideal: 1024, min: size },
-  //         facingMode
-  //      }};
-  //   }
-  // }
-
 
   defaultVideoConstraints: MediaStreamConstraints = {video: {
     width: { ideal: 1024, min: 768 },
@@ -283,6 +276,7 @@ export class ReadDiceKey extends HtmlComponent {
     this.frameWorker.postMessage(request, transferrableObjectsWithinRequest);
   }
 
+  protected finishDelayInProgress: boolean = false;
   /**
    * Handle frames processed by the web worker, displaying the received
    * overlay image above the video image.
@@ -301,16 +295,19 @@ export class ReadDiceKey extends HtmlComponent {
     overlayImageData.data.set(new Uint8Array(overlayImageBuffer));
     this.overlayCanvasCtx.putImageData(overlayImageData, 0, 0);
 
-    if (isFinished) {
-
+    if (isFinished && !this.finishDelayInProgress) {
       const diceKey = DiceKey(
         (JSON.parse(diceKeyReadJson) as FaceReadJson[])
         .map( FaceRead.fromJson )
         .map( faceRead => faceRead.toFace() )
       );
       DiceKeyAppState.instance!.diceKey = diceKey;
-      this.diceKeyLoadedEvent.send(diceKey);
-      this.detach();
+      this.finishDelayInProgress = true;
+      setTimeout( () => {
+        this.diceKeyLoadedEvent.send(diceKey);
+        this.detach();
+        this.finishDelayInProgress = false;
+      }, this.msDelayBetweenSuccessAndClosure);
     } else {
         setTimeout(this.startProcessingNewCameraFrame, 0)
       }
