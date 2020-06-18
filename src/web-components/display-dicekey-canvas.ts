@@ -208,6 +208,7 @@ export const renderDiceKey = (
 
   const canonicalDiceKey = DiceKey.rotateToRotationIndependentForm(diceKey);
 
+  ctx.clearRect(0, 0, width, height);
 
   diceKey.forEach( (face, index) => {
     // if obscuring, show only the top left and bottom right dice in canonical form.
@@ -228,15 +229,25 @@ interface DisplayDiceKeyCanvasOptions extends HtmlComponentConstructorOptions {
   obscure?: boolean
 }
 
+const getObscureButtonValue = (obscure: boolean): string =>
+   obscure ? "Obscure" : "Reveal";
+  
 /**
  * This class implements the component that displays DiceKeys.
  */
 export class DisplayDiceKeyCanvas extends HtmlComponent<DisplayDiceKeyCanvasOptions> {
   private static readonly forgetDiceKeyButtonId = "forget-dicekey-button";
+  private static readonly toggleObscureButtonId = "toggle-obscure-state";
   private forgetDiceKeyButton?: HTMLButtonElement;
   private static diceKeyDisplayCanvasId = "dicekey-display-canvas";
   private diceKeyDisplayCanvas?: HTMLCanvasElement;
   private ctx?: CanvasRenderingContext2D;
+  protected obscure?: boolean;
+
+  protected get toggleObscureButton() {
+    return document.getElementById(DisplayDiceKeyCanvas.toggleObscureButtonId) as HTMLInputElement | undefined
+  }
+
 
 
   /**
@@ -252,8 +263,20 @@ export class DisplayDiceKeyCanvas extends HtmlComponent<DisplayDiceKeyCanvasOpti
       html: `
       <canvas id="${DisplayDiceKeyCanvas.diceKeyDisplayCanvasId}" height="640", width="640"></canvas>
       <input id="${DisplayDiceKeyCanvas.forgetDiceKeyButtonId}" type="button" value="Forget Dicekey"/>
+      <input id="${DisplayDiceKeyCanvas.toggleObscureButtonId}" type="button" />
     `});
+    
   }
+
+  setObscureState(obscure: boolean) {
+    this.obscure = obscure;
+    if (this.toggleObscureButton) {
+      this.toggleObscureButton.value = getObscureButtonValue(!obscure);
+    }
+    renderDiceKey(this.ctx!, this.diceKey, this.obscure);
+  }
+
+  toggleObscureState = () => this.setObscureState(!this.obscure);
 
   attach(
     options: Partial<DisplayDiceKeyCanvasOptions> = {},
@@ -263,10 +286,15 @@ export class DisplayDiceKeyCanvas extends HtmlComponent<DisplayDiceKeyCanvasOpti
     this.forgetDiceKeyButton = document.getElementById(DisplayDiceKeyCanvas.forgetDiceKeyButtonId) as HTMLButtonElement;
     this.diceKeyDisplayCanvas = document.getElementById(DisplayDiceKeyCanvas.diceKeyDisplayCanvasId) as HTMLCanvasElement;
     this.ctx = this.diceKeyDisplayCanvas.getContext("2d")!;
-    this.ctx.clearRect(0, 0, this.diceKeyDisplayCanvas.width, this.diceKeyDisplayCanvas.height);
+    if (options.obscure != null) {
+      this.setObscureState(this.attachedOptions.obscure ?? false);
+    } else {
+      renderDiceKey(this.ctx, this.diceKey, this.obscure);
+    }
 
-    renderDiceKey(this.ctx, this.diceKey, options.obscure);
-  
+ 
+    this.toggleObscureButton?.addEventListener("click", this.toggleObscureState );
+    
     this.forgetDiceKeyButton.addEventListener("click", () => {
       DiceKeyAppState.instance?.eraseDiceKey();
       this.forgetEvent.send();
