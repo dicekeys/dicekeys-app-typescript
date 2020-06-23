@@ -9,24 +9,33 @@ import {
   ComponentEvent
 } from "./component-event"
 
-interface ConfirmationDialogOptions {
+interface ConfirmOperationDialogOptions {
   requestForUsersConsent?: RequestForUsersConsent,
   origin?: string
 };
 
-export class ConfirmationDialog extends HtmlComponent<ConfirmationDialogOptions> {
+export class ConfirmOperationDialog extends HtmlComponent<ConfirmOperationDialogOptions> {
   static messageElementId = "message";
   static allowButtonId = "allow-button";
   static declineButtonId = "deny-button";
+
+  static hintInputTextFieldId = "hint-text";
+  static removeOrientationToggleId = "remove-orientation";
+  static strengtMessageTextId = "strength-message-text";
+  static closeWindowUponRespondingCheckboxId = "close-window-on-responding-checkbox";
+  static forgetDiceKeyAfterRespondingId = "remember-dicekey-after-responding-checkbox";
+  static rememberDiceKeyForDurationID =  "remember-dicekey-after-duration-checkbox";
+
+
   static html = `
     <div id=message></div>
-    <input type="button" id="${ConfirmationDialog.allowButtonId}"/>
-    <input type="button" id="${ConfirmationDialog.declineButtonId}"/>
+    <input type="button" id="${ConfirmOperationDialog.allowButtonId}"/>
+    <input type="button" id="${ConfirmOperationDialog.declineButtonId}"/>
 `
   
-  private get messageDiv(){return document.getElementById(ConfirmationDialog.messageElementId) as HTMLDivElement;}
-  private get allowButton(){return document.getElementById(ConfirmationDialog.allowButtonId) as HTMLInputElement;}
-  private get declineButton(){return document.getElementById(ConfirmationDialog.declineButtonId) as HTMLInputElement;}
+//  private get messageDiv(){return document.getElementById(ConfirmOperationDialog.messageElementId) as HTMLDivElement;}
+  private get allowButton(){return document.getElementById(ConfirmOperationDialog.allowButtonId) as HTMLInputElement;}
+  private get declineButton(){return document.getElementById(ConfirmOperationDialog.declineButtonId) as HTMLInputElement;}
   public allowChosenEvent = new ComponentEvent(this);
   public declineChosenEvent = new ComponentEvent(this);
 
@@ -36,20 +45,11 @@ export class ConfirmationDialog extends HtmlComponent<ConfirmationDialogOptions>
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    options: Partial<ConfirmationDialogOptions> = {},
+    options: Partial<ConfirmOperationDialogOptions> = {},
     parentComponent?: HtmlComponent
   ) {
     super(options, parentComponent);
-    this.addHtml(ConfirmationDialog.html);
-
-    const {requestForUsersConsent} = this.options;
-    if (!requestForUsersConsent) {
-      return this; // Must have a request for user's consent in either constructor or attached
-    }
-    const {question, actionButtonLabels} = requestForUsersConsent;
-    this.messageDiv.innerText = question;
-    this.allowButton.value = actionButtonLabels.allow;
-    this.declineButton.value = actionButtonLabels.decline;
+    this.addHtml(ConfirmOperationDialog.html);
 
     this.allowButton.addEventListener("click", () => {
       this.allowChosenEvent.send();

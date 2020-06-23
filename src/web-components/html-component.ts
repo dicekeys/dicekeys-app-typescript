@@ -1,95 +1,98 @@
+import {
+  ComponentEvent
+} from "./component-event";
 
-export class ComponentEvent<ARGS extends any[] = [], CHAIN = any> {
-  private static parentToEvents = new Map<any, Set<ComponentEvent>>();
-
-  public static removeAllEventListeners(parent: any) {
-    for (const event of ComponentEvent.parentToEvents.get(parent) ?? []) {
-      event.removeAll();
-    }
-  }
-
-  private callbacks = new Set<(...args: ARGS)=> any>();
-  constructor(private parent: CHAIN) {
-    // Track all of the events present on the parent component
-    if (!ComponentEvent.parentToEvents.has(parent)) {
-      ComponentEvent.parentToEvents.set(parent, new Set());
-    }
-    ComponentEvent.parentToEvents.get(parent)?.add(this);
-  }
-  
-  on = (callback: (...args: ARGS) => any) => {
-      this.callbacks.add(callback);
-      return this.parent;
-  }
-
-  remove = (callback: (...args: ARGS) => any) => {
-    this.callbacks.delete(callback);
-    return this.parent;
-  }
-
-  removeAll = () => {
-    this.callbacks.clear();
-  }
-
-  send = (...args: ARGS) => {
-    for (const callback of this.callbacks) {
-      callback(...args);
-    }
-    return this.parent;
-  }
-};
-
-export interface HtmlComponentOptions {
-  nodeToInsertThisComponentBefore?: Node;
-  parentElement?: HTMLElement;
-  html?: string;
-}
-
-export  interface HtmlComponentConstructorOptions extends HtmlComponentOptions {
-  containerElement?: HTMLElement;
-}
-
-export class HtmlComponent<OPTIONS extends HtmlComponentConstructorOptions = HtmlComponentConstructorOptions> {
-  public readonly containerElement: HTMLElement;
-  public parentElement: HTMLElement | undefined;
-  protected attachedOptions: Partial<OPTIONS> = {};
+export class HtmlComponent<
+  OPTIONS extends object = object,
+  TOP_LEVEL_ELEMENT extends HTMLElement = HTMLElement  
+> {
+  detachEvent = new ComponentEvent(this);
+  childComponents = new Set<HtmlComponent>();
 
   constructor(
-    protected readonly constructorOptions: Partial<OPTIONS> = {}
+    public readonly options: OPTIONS,
+    public readonly parentComponent?: HtmlComponent,
+    public readonly primaryElement: TOP_LEVEL_ELEMENT = document.createElement("div") as unknown as TOP_LEVEL_ELEMENT,
   ) {
-    const {
-      containerElement = document.createElement("div"),
-      html = ""
-    } = constructorOptions;
-    this.containerElement = containerElement;
-    if (html) {
-      this.containerElement.innerHTML = html;
-    }
+    this.detachEvent.on(() => this.remove());
+    parentComponent?.addChild(this);
+    this.renderSoon();
   }
 
-  public attach(
-    options: Partial<OPTIONS> = {} as Partial<OPTIONS>
-  ) {
-    this.attachedOptions = {...this.constructorOptions, ...options};
-    const {
-      parentElement = document.body,
-      nodeToInsertThisComponentBefore = null
-    } = this.attachedOptions;
-    if (options.html) {
-      this.containerElement.innerHTML = options.html!;
-    }
-    this.parentElement = parentElement;
-    this.parentElement.insertBefore(this.containerElement, nodeToInsertThisComponentBefore);
-    return this;
+  clear() {
+    // while (this.primaryElement.children.length > 0) {
+    //   this.primaryElement.removeChild(this.primaryElement.children[0]);
+    // }
+    this.primaryElement.innerHTML = "";
+    this.removeAllChildren();
   }
 
-  public detach() {
-    this.parentElement?.removeChild(this.containerElement);
+  render() {
+    this.clear();
+  }
+
+  private renderTimeout?: number | NodeJS.Timeout;
+  renderSoon() {
+    if (typeof this.renderTimeout !== "undefined") {
+      return;
+    }
+    this.renderTimeout = setTimeout( () => {
+      try {
+        this.render();
+      } finally {
+        this.renderTimeout = undefined;
+      }
+    }, 1);
+  }
+
+  private alreadyRemoved = false;
+  remove = (): boolean => {
+    if (this.alreadyRemoved) {
+      // No need to remove, so return false
+      return false;
+    }
+    // Make sure we only remove once;
+    this.alreadyRemoved = true;
+    // Send remove events to all children
+    this.removeAllChildren();
+    // Send remove event to parent
+    this.parentComponent?.removeChild(this);
+    // Send detach events
     this.detachEvent.send();
-    ComponentEvent.removeAllEventListeners(this);
-    return this;
+    // Give all events a 1000ms to fire, then remove all event listeners
+    setTimeout(() => { ComponentEvent.removeAllEventListeners(this) }, 1000);
+    //
+    return true;
   }
 
-  public readonly detachEvent = new ComponentEvent(this);
+  protected trackChild = (child: HtmlComponent) => {
+    this.childComponents.add(child);
+  }
+
+  protected removeChild = (child: HtmlComponent): boolean => {
+    if (this.childComponents.has(child)) {
+      this.childComponents.delete(child);
+      // Return true only if we had this child and the child had
+      // not already removed itself
+      return child.remove();
+    }
+    return false;
+  }
+
+  protected removeAllChildren = () => {
+    [...this.childComponents].forEach( child => this.removeChild(child) );
+  }
+
+  addHtml(html: string) {
+    this.primaryElement.innerHTML += html;
+  }
+
+  addChild<HTML_COMPONENT extends HtmlComponent>(
+    child: HTML_COMPONENT
+  ): HTML_COMPONENT {
+    this.trackChild(child);
+    this.primaryElement.appendChild(child.primaryElement);
+    return child;
+  }
 
 }

@@ -1,98 +1,42 @@
 import {
-  Exceptions
-} from "@dicekeys/dicekeys-api-js"
-import {
-  HtmlComponent,
-  HtmlComponentConstructorOptions,
-  HtmlComponentOptions
+  HtmlComponent
 } from "./html-component"
 import {
-  ReadDiceKey
-} from "./read-dicekey";
-import {
-  DiceKey
-} from "../dicekeys/dicekey";
-import {
-  DiceKeyAppState
-} from "../state/app-state-dicekey"
+  ComponentEvent
+} from "./component-event";
 
-export var loadDiceKeyPromise: Promise<DiceKey> | undefined;
-export const loadDiceKeyAsync = async (): Promise<DiceKey> => {
-  var diceKey = (await DiceKeyAppState.instancePromise).diceKey;
-  if (diceKey) {
-    return diceKey;
-  }
-  if (!loadDiceKeyPromise) {
-    loadDiceKeyPromise = new Promise( (resolve, reject) => {
-      new ReadDiceKey({parentElement: document.body}).attach()
-        .diceKeyLoadedEvent.on( (diceKey) => {
-            DiceKeyAppState.instance!.diceKey = diceKey;
-            resolve(diceKey);
-        })
-        .userCancelledEvent.on( () => reject( 
-          Exceptions.UserCancelledLoadingDiceKey.create()
-        ))
-    });
-    loadDiceKeyPromise.finally( () => { loadDiceKeyPromise = undefined; } )
-    HomeComponent.instance?.detach();
-  }
-  return await loadDiceKeyPromise;
-}
 
 export class HomeComponent extends HtmlComponent {
   static loadDiceKeyButtonId = "load-dice-key-button";
-  private loadDiceKeyButton: HTMLButtonElement | undefined;
+  private get loadDiceKeyButton(): HTMLButtonElement {
+    return document.getElementById(HomeComponent.loadDiceKeyButtonId) as HTMLButtonElement;
+  }
 
-  public static instance: HomeComponent | undefined;
+//  public static instance: HomeComponent | undefined;
   
+  public readonly loadDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);
+
   /**
    * The code supporting the dmeo page cannot until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */
-  private constructor(
-    options: HtmlComponentConstructorOptions = {}
+  constructor(
+    options: {} = {},
+    parentComponent?: HtmlComponent
   ) {
-    super({...options,
-      html: `
+    super(options, parentComponent);
+  }
+
+  render() {
+    super.render();
+    this.addHtml(`
       <input id="${HomeComponent.loadDiceKeyButtonId}" type="button" value="Scan your DiceKey"/>
-    `});
-    HomeComponent.instance = this;
+    `);
+//    HomeComponent.instance = this;
+
+    // Bind events
+    this.loadDiceKeyButton.addEventListener("click", this.loadDiceKeyButtonClicked.send);
   }
-
-  attach(options: HtmlComponentOptions = {}) {
-    super.attach(options);
-    // Bind to HTML
-    this.loadDiceKeyButton = document.getElementById(HomeComponent.loadDiceKeyButtonId) as HTMLButtonElement;
-
-    this.loadDiceKeyButton.addEventListener("click", async () => {
-      try {
-        await loadDiceKeyAsync();
-      } catch (e) {
-        // We don't care if the user cancelled, so ignore exceptions
-      }
-    });
-    return this;
-  }
-
-  public static create(
-    options: HtmlComponentConstructorOptions = {}
-  ): HomeComponent {
-    if (HomeComponent.instance) {
-      return HomeComponent.instance;
-    } else {
-      HomeComponent.instance = new HomeComponent(options);
-      return HomeComponent.instance;
-    }
-  }
-
-  public static attach(
-    options: HtmlComponentConstructorOptions = {}
-  ): HomeComponent {
-    HomeComponent.create(options);
-    HomeComponent.instance?.attach();
-    return HomeComponent.instance!;
-  }
-
 
 }

@@ -93,33 +93,61 @@ export class EncryptedAppStateStore {
     this.getSessionKeySeedCookie(expireAfterMinutesUnused);
   }
 
-  protected removeEncryptedField = (
+  protected removeField = (
     name: string
   ): void => {
     localStorage.removeItem(name);
   }
 
-  protected setEncryptedField = <T>(
+  protected setPlaintextStringField = (
     name: string,
-    value: T
+    value: string | undefined
   ): void => {
     if (value == null) {
-      return this.removeEncryptedField(name);
+      return this.removeField(name);
+    }
+    localStorage.setItem(name, value);
+  }
+
+  protected getPlaintextStringField = (
+    name: string
+  ): string | undefined => {
+    return localStorage.getItem(name) ?? undefined
+  }
+
+  protected setPlaintextField = <T>(
+    name: string,
+    value: T | undefined
+  ): void =>
+    this.setPlaintextStringField(name, value == null ? undefined : JSON.stringify(value));
+
+  protected getPlaintextField = <T>(
+    name: string
+  ): T | undefined => {
+    const value = localStorage.getItem(name);
+    return (typeof value === "string") ? JSON.parse(value) as T : undefined;
+  }
+
+  protected setEncryptedField = <T>(
+    name: string,
+    value: T | undefined
+  ): void => {
+    if (value == null) {
+      return this.removeField(name);
     }
     const symmetricKey = this.seededCryptoModule.SymmetricKey.deriveFromSeed(this.getOrCreateSessionKeySeedCookie(), "");
     try {
-      localStorage.setItem(name, urlSafeBase64Encode(symmetricKey.sealToCiphertextOnly(JSON.stringify(value))));
+      this.setPlaintextStringField(name, urlSafeBase64Encode(symmetricKey.sealToCiphertextOnly(JSON.stringify(value))));
     } finally {
       symmetricKey.delete();
     }
   }
 
-  
 
   protected getEncryptedField = <T>(
     name: string
   ): T | undefined => {
-    const base64EncryptedValue = localStorage.getItem(name);
+    const base64EncryptedValue = this.getPlaintextStringField(name);
     if (!base64EncryptedValue) return undefined;
     const keySeed = this.getSessionKeySeedCookie();
     if (!keySeed) return;

@@ -1,5 +1,8 @@
 import {
-  HtmlComponent, HtmlComponentConstructorOptions, ComponentEvent
+  ComponentEvent
+} from "./component-event"
+import {
+  HtmlComponent
 } from "./html-component"
 import "regenerator-runtime/runtime";
 import {
@@ -27,7 +30,7 @@ const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints =>
   },
 });
 
-interface ReadDiceKeyOptions extends HtmlComponentConstructorOptions {
+interface ReadDiceKeyOptions {
   msDelayBetweenSuccessAndClosure?: number;
 }
 
@@ -39,50 +42,57 @@ export class ReadDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
   private static readonly cancelButtonId = "cancel-button";
   private static readonly playerId = "player";
   private static readonly cameraSelectionMenuId = "camera-selection-menu";
+
   private get cameraSelectionMenu() {return document.getElementById(ReadDiceKey.cameraSelectionMenuId) as HTMLSelectElement;}
   private get cancelButton() {return document.getElementById(ReadDiceKey.cancelButtonId) as HTMLInputElement;}
   private get overlayCanvas() {return document.getElementById(ReadDiceKey.overlayCanvasId) as HTMLCanvasElement;}
   private get overlayCanvasCtx() {return this.overlayCanvas.getContext("2d")!};
   private get player() {return document.getElementById(ReadDiceKey.playerId) as HTMLVideoElement;}
+  
+  private readonly frameWorker: Worker;
+
   private captureCanvas?: HTMLCanvasElement;
   private captureCanvasCtx?: CanvasRenderingContext2D;
   private mediaStream?: MediaStream;
   private cameraSessionId?: string;
-  private readonly frameWorker: Worker;
-  private readonly msDelayBetweenSuccessAndClosure: number;
   
+  // Events
+  public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], ReadDiceKey>(this);
+  public readonly userCancelledEvent = new ComponentEvent(this);
+
+  public get msDelayBetweenSuccessAndClosure(): number {
+    return this.options.msDelayBetweenSuccessAndClosure == null ?
+      500 // Default delay of 500 seconds
+      :
+      this.options.msDelayBetweenSuccessAndClosure;
+  }
+
   /**
    * The code supporting the dmeo page cannot until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    {
-      msDelayBetweenSuccessAndClosure = 500,
-      ...options
-    }: ReadDiceKeyOptions = {}
+    public readonly parentComponent?: HtmlComponent,
+    options: ReadDiceKeyOptions = {}
   ) {
-    super({...options,
-      html: `
+    super(options, parentComponent);
+    this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
+  }
+
+  render() {
+    super.render();
+
+    this.addHtml(`
       <canvas id="${ReadDiceKey.overlayCanvasId}" class="overlay"></canvas>
       <div class="content">
         <video id="${ReadDiceKey.playerId}" controls autoplay></video>
       </div>
       <select id="${ReadDiceKey.cameraSelectionMenuId}"></select>
       <input id="${ReadDiceKey.cancelButtonId}" type="button" value="Cancel"/>
-      `
-    });
-    this.msDelayBetweenSuccessAndClosure = msDelayBetweenSuccessAndClosure;
+    `);
     this.captureCanvas = document.createElement("canvas") as HTMLCanvasElement;
     this.captureCanvasCtx = this.captureCanvas.getContext("2d")!;
-    this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
-  }
-
-  public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], ReadDiceKey>(this);
-  public readonly userCancelledEvent = new ComponentEvent(this);
-
-  attach(options: Partial<ReadDiceKeyOptions> = {}) {
-    super.attach(options);
 
     // Bind to HTML
     this.player.style.setProperty("display", "none");
@@ -96,24 +106,25 @@ export class ReadDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
 
     this.cancelButton.addEventListener("click", () => {
       this.userCancelledEvent.send();
-      this.detach();
+      this.remove();
     })
 
     return this;
   }
 
-  detach() {
+  remove = () => {
+    if (!super.remove) {
+      // This element has already been removed
+      return false;
+    }
+    // If there's an existing stream, terminate it
     this.mediaStream?.getTracks().forEach(track => track.stop() );
     this.frameWorker.removeEventListener( "message", this.handleMessage );
-    super.detach();
-    return this;
-  }
-  
-  destroy() {
     this.frameWorker.postMessage({action: "terminateSession", sessionId: this.cameraSessionId} as TerminateSessionRequest);
-    this.detach();
+
     setTimeout( () => this.frameWorker.terminate(), this.msDelayBetweenSuccessAndClosure + 1000);
-    // If there's an existing stream, terminate it
+    // remvoe successful
+    return true;
   }
 
   private readyReceived: boolean = false;
@@ -305,7 +316,7 @@ export class ReadDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
       this.finishDelayInProgress = true;
       setTimeout( () => {
         this.diceKeyLoadedEvent.send(diceKey);
-        this.detach();
+        this.remove();
         this.finishDelayInProgress = false;
       }, this.msDelayBetweenSuccessAndClosure);
     } else {
