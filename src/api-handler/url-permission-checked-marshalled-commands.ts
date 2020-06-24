@@ -10,8 +10,6 @@ import {
   urlSafeBase64Encode
 } from "../api/encodings"
 import {
-  RequestForUsersConsent,
-  UsersConsentResponse,
   ApiStrings,
   SeededCryptoJsObject,
   Exceptions
@@ -20,11 +18,13 @@ import {
   DiceKeyAppState
 } from "../state/app-state-dicekey"
 import {
-  SeededCryptoSerializableObjectStatics
+  SeededCryptoSerializableObjectStatics, SeededCryptoModuleWithHelpers
 } from "@dicekeys/seeded-crypto-js";
 import {
   UrlApiPermissionChecks
 } from "./url-api-permission-checks";
+import { RequestForUsersConsentFn } from "./api-permission-checks";
+import { GetUsersApprovalAndModificationOfDerivationOptions } from "./permission-checked-seed-accessor";
 const {Inputs} = ApiStrings;
 
 /**
@@ -40,13 +40,14 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
 
   constructor(
     protected requestUrl: URL,
+    seededCryptoModule: SeededCryptoModuleWithHelpers,
     loadDiceKeyAsync: () => Promise<DiceKey>,
-    requestUsersConsent: (
-      requestForUsersConsent: RequestForUsersConsent
-    ) => Promise<UsersConsentResponse>,
+    requestUsersConsent: RequestForUsersConsentFn,
+    confirmationFn: GetUsersApprovalAndModificationOfDerivationOptions,
     private transmitResponse: (response: URL) => any = (response: URL) => this.defaultTransmitResponse(response)
   ) {
     super(
+      seededCryptoModule,
       new UrlApiPermissionChecks(
         requestUrl.searchParams.get(Inputs.COMMON.respondTo) ??
           // Throw exception if no respondto field is passed
@@ -56,7 +57,8 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
         (requestUrl.searchParams.get(Inputs.COMMON.authToken) &&
           DiceKeyAppState.instance!.getUrlForAuthenticationToken(requestUrl.searchParams.get(Inputs.COMMON.authToken)!)) ?? undefined
       ),
-      loadDiceKeyAsync
+      loadDiceKeyAsync,
+      confirmationFn
     );
   }
 

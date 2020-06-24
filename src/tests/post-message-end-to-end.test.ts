@@ -14,13 +14,20 @@ import {
 import { PostMessagePermissionCheckedMarshalledCommands } from "../api-handler/post-message-permission-checked-marshalled-commands";
 import { stringToUtf8ByteArray } from "../api/encodings";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
+import { GetUsersApprovalAndModificationOfDerivationOptions } from "../api-handler/permission-checked-seed-accessor";
 
 const diceKey = DiceKey.fromHumanReadableForm(
   "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
 );
 const loadDiceKeyAsync = () => Promise.resolve(diceKey);;
 const requestUsersConsent = (response: UsersConsentResponse) => () =>
-  new Promise<UsersConsentResponse>( (respond) => respond(response) );
+  Promise.resolve(response);
+const userConfirmation: GetUsersApprovalAndModificationOfDerivationOptions = ({
+    derivationOptionsJson
+}) => Promise.resolve({
+  seedString: DiceKey.toSeedString(diceKey, DerivationOptions(derivationOptionsJson)),
+  derivationOptionsJson
+});
 
 const defaultRequestHost = "client.app";
 const defaultRequestOrigin = `https://${defaultRequestHost}`;
@@ -30,14 +37,17 @@ const mockTransmitRequestFunction = (
   usersResponseToConsentRequest: UsersConsentResponse = UsersConsentResponse.Allow
 ): PostMessageApiFactory.TransmitRequestFunction =>
   (requestObject) => {
-    return new Promise<MessageEvent>( (resolve, reject) => {
+    return new Promise<MessageEvent>( async (resolve, reject) => {
       try {
         const mockServerApi = new PostMessagePermissionCheckedMarshalledCommands(
           {
             origin: requestOrigin,
             data: requestObject
           } as MessageEvent,
-          loadDiceKeyAsync,requestUsersConsent(usersResponseToConsentRequest),
+          await SeededCryptoModulePromise,
+          loadDiceKeyAsync,
+          requestUsersConsent(usersResponseToConsentRequest),
+          userConfirmation,
           (data) => {
             const mockResponseMessageEvent: MessageEvent = {
               origin: requestOrigin,

@@ -6,10 +6,10 @@ import {
   SigningKey,
   SymmetricKey,
   UnsealingKey,
-  SeededCryptoModulePromise
+  SeededCryptoModuleWithHelpers
 } from "@dicekeys/seeded-crypto-js";
 import {
-  DerivableObjectNames
+  DerivableObjectNames, ApiStrings
 } from "@dicekeys/dicekeys-api-js";
 import {
   PermissionCheckedSeedAccessor
@@ -29,6 +29,7 @@ import { DiceKeyAppState } from "../state/app-state-dicekey";
  */
 export class PermissionCheckedCommands {
   constructor(
+    private seededCryptoModule: SeededCryptoModuleWithHelpers,
     private permissionCheckedSeedAccessor: PermissionCheckedSeedAccessor,
   ) {}
 
@@ -38,13 +39,14 @@ export class PermissionCheckedCommands {
   /**
    * Implement [DiceKeysIntentApiClient.getSecret] with the necessary permissions checks
    */
-  public getSecret = async (derivationOptionsJson: string): Promise<Secret> =>
-    (await SeededCryptoModulePromise).Secret.deriveFromSeed(
-      await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
-        derivationOptionsJson,
-        DerivableObjectNames.Secret
-      ),
-      derivationOptionsJson
+  public getSecret = async (originalDerivationOptionsJson: string): Promise<Secret> =>
+    this.permissionCheckedSeedAccessor.getSeedOrThrowIfNotAuthorizedAsync(
+      ApiStrings.Commands.getSecret,
+      originalDerivationOptionsJson,
+      DerivableObjectNames.Secret
+    ).then( async ({seedString, derivationOptionsJson}) =>
+      this.seededCryptoModule.Secret.deriveFromSeed(
+        seedString, derivationOptionsJson)
     )
 
   /**
@@ -55,7 +57,7 @@ export class PermissionCheckedCommands {
   //   plaintext: Uint8Array,
   //   unsealingInstructions?: string
   // ): Promise<PackagedSealedMessage> =>
-  // (await SeededCryptoModulePromise).SymmetricKey.sealWithInstructions(
+  // this.seededCryptoModule.SymmetricKey.sealWithInstructions(
   //   plaintext,
   //   unsealingInstructions ?? "",
   //   await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
@@ -65,21 +67,21 @@ export class PermissionCheckedCommands {
   //   derivationOptionsJson
   // );
   public sealWithSymmetricKey = (
-    derivationOptionsJson: string,
+    originalDerivationOptionsJson: string,
     plaintext: Uint8Array,
     unsealingInstructions?: string
   ): Promise<PackagedSealedMessage> =>
-    this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
-      derivationOptionsJson,
+    this.permissionCheckedSeedAccessor.getSeedOrThrowIfNotAuthorizedAsync(
+      ApiStrings.Commands.sealWithSymmetricKey,
+      originalDerivationOptionsJson,
       DerivableObjectNames.SymmetricKey
-    ).then( async seedString => {
-      return (await SeededCryptoModulePromise).SymmetricKey.sealWithInstructions(
+    ).then( ({seedString, derivationOptionsJson}) =>
+      this.seededCryptoModule.SymmetricKey.sealWithInstructions(
         plaintext,
         unsealingInstructions ?? "",
         seedString,
         derivationOptionsJson
       )
-    }
     );
 
   /**
@@ -87,11 +89,15 @@ export class PermissionCheckedCommands {
    */
   public unsealWithSymmetricKey = async (
     packagedSealedMessage: PackagedSealedMessage
-  ) : Promise<Uint8Array> => (await SeededCryptoModulePromise).SymmetricKey.unseal(
+  ) : Promise<Uint8Array> =>
+    this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedToUnsealAsync(
+      ApiStrings.Commands.unsealWithSymmetricKey,
       packagedSealedMessage,
-      await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedToUnsealAsync(
+      DerivableObjectNames.SymmetricKey
+    ).then( ({seedString}) =>
+      this.seededCryptoModule.SymmetricKey.unseal(
         packagedSealedMessage,
-        DerivableObjectNames.SymmetricKey
+        seedString
       )
     )
 
@@ -99,54 +105,66 @@ export class PermissionCheckedCommands {
    * Implement [DiceKeysIntentApiClient.getSealingKey] with the necessary permissions checks
    */
   public getSealingKey = async (
-    derivationOptionsJson: string
+    originalDerivationOptionsJson: string
   ) : Promise<SealingKey> =>
-    (await SeededCryptoModulePromise).UnsealingKey.deriveFromSeed(
-      await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
-        derivationOptionsJson,
-        DerivableObjectNames.UnsealingKey
-      ),
-      derivationOptionsJson
-    ).getSealingKey()
+    this.permissionCheckedSeedAccessor.getSeedOrThrowIfNotAuthorizedAsync(
+      ApiStrings.Commands.getSealingKey,
+      originalDerivationOptionsJson,
+      DerivableObjectNames.UnsealingKey
+    ).then( ({seedString, derivationOptionsJson}) =>
+      this.seededCryptoModule.UnsealingKey.deriveFromSeed(
+        seedString,
+        derivationOptionsJson
+      ).getSealingKey()
+    );
 
   /**
    * Implement [DiceKeysIntentApiClient.getUnsealingKey] with the necessary permissions checks
    */
   public getUnsealingKey = async (
-    derivationOptionsJson: string
-  ) : Promise<UnsealingKey> => (await SeededCryptoModulePromise).UnsealingKey.deriveFromSeed(
-    await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientsMayNotRetrieveKeysOrThisClientNotAuthorizedAsync(
-      derivationOptionsJson,
+    originalDerivationOptionsJson: string
+  ) : Promise<UnsealingKey> =>
+    this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientsMayNotRetrieveKeysOrThisClientNotAuthorizedAsync(
+      ApiStrings.Commands.getUnsealingKey,
+      originalDerivationOptionsJson,
       DerivableObjectNames.UnsealingKey
-    ),
-    derivationOptionsJson
-  )
+    ).then( ({seedString, derivationOptionsJson}) =>
+      this.seededCryptoModule.UnsealingKey.deriveFromSeed(
+        seedString, derivationOptionsJson
+      )
+    );
 
   /**
    * Implement [DiceKeysIntentApiClient.getSigningKey] with the necessary permissions checks
    */
   public getSigningKey = async (
-    derivationOptionsJson: string
-  ) : Promise<SigningKey> => (await SeededCryptoModulePromise).SigningKey.deriveFromSeed(
-    await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientsMayNotRetrieveKeysOrThisClientNotAuthorizedAsync(
-      derivationOptionsJson,
+    originalDerivationOptionsJson: string
+  ) : Promise<SigningKey> =>
+    this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientsMayNotRetrieveKeysOrThisClientNotAuthorizedAsync(
+      ApiStrings.Commands.getSigningKey,
+      originalDerivationOptionsJson,
       DerivableObjectNames.SigningKey
-    ),
-    derivationOptionsJson
-  )
+    ).then( ({seedString, derivationOptionsJson}) =>
+      this.seededCryptoModule.SigningKey.deriveFromSeed(
+        seedString, derivationOptionsJson
+      )
+    );
 
   /**
    * Implement [DiceKeysIntentApiClient.getSymmetricKey] with the necessary permissions checks
    */
   public getSymmetricKey = async (
-    derivationOptionsJson: string
-  ) : Promise<SymmetricKey> => (await SeededCryptoModulePromise).SymmetricKey.deriveFromSeed(
-    await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientsMayNotRetrieveKeysOrThisClientNotAuthorizedAsync(
-      derivationOptionsJson,
+    originalDerivationOptionsJson: string
+  ) : Promise<SymmetricKey> =>
+    this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientsMayNotRetrieveKeysOrThisClientNotAuthorizedAsync(
+      ApiStrings.Commands.getSymmetricKey,
+      originalDerivationOptionsJson,
       DerivableObjectNames.SymmetricKey
-    ),
-    derivationOptionsJson
-  )
+    ).then( ({seedString, derivationOptionsJson}) =>
+      this.seededCryptoModule.SymmetricKey.deriveFromSeed(
+        seedString, derivationOptionsJson
+      )
+    );
 
   /**
    * Implement [DiceKeysIntentApiClient.getSignatureVerificationKey] with the necessary permissions checks
@@ -154,42 +172,48 @@ export class PermissionCheckedCommands {
   public getSignatureVerificationKey = async (
     derivationOptionsJson: string
   ) : Promise<SignatureVerificationKey> =>
-    (await SeededCryptoModulePromise).SigningKey.deriveFromSeed(
-      await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
-        derivationOptionsJson,
-        DerivableObjectNames.SigningKey
-      ),
-      derivationOptionsJson
-    ).getSignatureVerificationKey()
+    this.permissionCheckedSeedAccessor.getSeedOrThrowIfNotAuthorizedAsync(
+      ApiStrings.Commands.getSignatureVerificationKey,
+      derivationOptionsJson,
+      DerivableObjectNames.SigningKey
+    ).then( ({seedString, derivationOptionsJson}) =>
+      this.seededCryptoModule.SigningKey.deriveFromSeed(
+        seedString,
+        derivationOptionsJson
+      ).getSignatureVerificationKey()
+    );
 
-  /**
+    /**
    * Implement [DiceKeysIntentApiClient.unsealWithUnsealingKey] with the necessary permissions checks
    */
   public unsealWithUnsealingKey = async (
     packagedSealedMessage: PackagedSealedMessage
   ) : Promise<Uint8Array> =>
-    (await SeededCryptoModulePromise).UnsealingKey.deriveFromSeed(
-        await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedToUnsealAsync(
-          packagedSealedMessage,
-          DerivableObjectNames.UnsealingKey
-        ),
-        packagedSealedMessage.derivationOptionsJson
+    this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedToUnsealAsync(
+      ApiStrings.Commands.unsealWithUnsealingKey,
+      packagedSealedMessage,
+      DerivableObjectNames.UnsealingKey
+    ).then( ({seedString}) =>
+      this.seededCryptoModule.UnsealingKey.deriveFromSeed(
+        seedString, packagedSealedMessage.derivationOptionsJson
       ).unseal(packagedSealedMessage)
+    );
 
   /**
    * Implement [DiceKeysIntentApiClient.generateSignature] with the necessary permissions checks
    */
   public generateSignature = async (
-    derivationOptionsJson: string,
+    originalDerivationOptionsJson: string,
     message: Uint8Array
-  ): Promise<[Uint8Array, SignatureVerificationKey]> => {
-    const signingKey = (await SeededCryptoModulePromise).SigningKey.deriveFromSeed(
-      await this.permissionCheckedSeedAccessor.getSeedOrThrowIfClientNotAuthorizedAsync(
-          derivationOptionsJson,
-          DerivableObjectNames.SigningKey
-        ),
-        derivationOptionsJson
-      );
-    return [ signingKey.generateSignature(message), signingKey.getSignatureVerificationKey()]
-  }
+  ): Promise<[Uint8Array, SignatureVerificationKey]> =>
+    this.permissionCheckedSeedAccessor.getSeedOrThrowIfNotAuthorizedAsync(
+      ApiStrings.Commands.generateSignature,
+      originalDerivationOptionsJson,
+      DerivableObjectNames.SigningKey
+    ).then( ({seedString, derivationOptionsJson}) => {
+      const signingKey = this.seededCryptoModule.SigningKey.deriveFromSeed(
+          seedString, derivationOptionsJson
+        );
+      return [ signingKey.generateSignature(message), signingKey.getSignatureVerificationKey()]
+    });
 }

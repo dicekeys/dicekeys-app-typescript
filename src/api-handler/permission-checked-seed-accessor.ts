@@ -2,9 +2,10 @@ import {
   ApiPermissionChecks
 } from "./api-permission-checks";
 import {
-  DiceKey
+  DiceKey, DiceKeyInHumanReadableForm
 } from "../dicekeys/dicekey";
 import {
+  ApiStrings,
   DerivationOptions,
   DerivableObjectName,
 } from "@dicekeys/dicekeys-api-js";
@@ -18,6 +19,25 @@ export class ClientMayNotRetrieveKeyException extends Error {
   }
 }
 
+export interface UsersApprovedSeedAndDerivationOptions {
+  seedString: DiceKeyInHumanReadableForm;
+  derivationOptionsJson: string;
+}
+
+export interface UsersApprovalAndModificationOfDerivationOptionsParameters {
+  command: ApiStrings.Command,
+  host: string,
+  diceKey: DiceKey,
+  derivationOptionsJson: string
+}
+
+export interface GetUsersApprovalAndModificationOfDerivationOptions {
+  (
+    parameters: UsersApprovalAndModificationOfDerivationOptionsParameters
+  ): Promise<UsersApprovedSeedAndDerivationOptions>
+}
+
+
 /**
  * This class abstracts away all permissions checks AND all access to the keySqr seed,
  * so that the only way the API which inherits from it can get to the seed is by
@@ -26,13 +46,8 @@ export class ClientMayNotRetrieveKeyException extends Error {
 export class PermissionCheckedSeedAccessor{
   constructor(
     private readonly permissionChecks: ApiPermissionChecks,
-    // origin: string,
-    private loadDiceKeyAsync: () => PromiseLike<DiceKey>
-    // requestUsersConsent: (
-    //   requestForUsersConsent: RequestForUsersConsent
-    //   ) => Promise<UsersConsentResponse>,
-    // protocolMayRequireHandshakes: boolean = false,
-    // handshakeAuthenticatedUrl?: string
+    private loadDiceKeyAsync: () => PromiseLike<DiceKey>,
+    private getUsersApprovalAndModificationOfDerivationOptions: GetUsersApprovalAndModificationOfDerivationOptions
   ) {}
 
   /**
@@ -42,20 +57,17 @@ export class PermissionCheckedSeedAccessor{
    * keyDerivationOptionsJson allow the client application with the
    * requester's package name to perform operations with this key.
    */
-  public getSeedOrThrowIfClientNotAuthorizedAsync = async (
-    derivationOptionsObjectOrJson: string | DerivationOptions | undefined,
+  public getSeedOrThrowIfNotAuthorizedAsync = async (
+    command: ApiStrings.Command,
+    derivationOptionsJson: string,
     derivableObjectType: DerivableObjectName
-  ): Promise<string> => {
-    const derivationOptions = DerivationOptions(derivationOptionsObjectOrJson, derivableObjectType);
-
-    this.permissionChecks.throwIfClientNotAuthorized(derivationOptions)
+  ): Promise<UsersApprovedSeedAndDerivationOptions> => {
+    this.permissionChecks.throwIfClientNotAuthorized(DerivationOptions(derivationOptionsJson, derivableObjectType))
     const diceKey = await this.loadDiceKeyAsync();
-    const preCanonicalDiceKey: DiceKey =  (derivationOptions.excludeOrientationOfFaces) ?
-      DiceKey.removeOrientations(diceKey) :
-      diceKey;
-    const canonicalDiceKey = DiceKey.rotateToRotationIndependentForm(preCanonicalDiceKey); 
-    const humanReadableForm = DiceKey.toHumanReadableForm(canonicalDiceKey);
-    return humanReadableForm;
+    const host = this.permissionChecks.host;
+    return await this.getUsersApprovalAndModificationOfDerivationOptions({
+      command, host, diceKey, derivationOptionsJson
+    });
   }
 
 
@@ -71,13 +83,17 @@ export class PermissionCheckedSeedAccessor{
    * requester's package name to perform operations with this key.
    */
   public getSeedOrThrowIfClientNotAuthorizedToUnsealAsync = async (
+    command: ApiStrings.Command,
     packagedSealedMessage: PackagedSealedMessage,
     type: DerivableObjectName
-   ): Promise<string> => {
-    await this.permissionChecks.throwIfUnsealingInstructionsViolatedAsync(packagedSealedMessage.unsealingInstructions)
-    return await  this.getSeedOrThrowIfClientNotAuthorizedAsync(
+   ): Promise<UsersApprovedSeedAndDerivationOptions> => {
+    const result = await this.getSeedOrThrowIfNotAuthorizedAsync(
+      command,
       packagedSealedMessage.derivationOptionsJson, type
-    )
+    );
+    await this.permissionChecks.throwIfUnsealingInstructionsViolatedAsync(packagedSealedMessage.unsealingInstructions);
+
+    return result;
   }
 
   /**
@@ -93,14 +109,13 @@ export class PermissionCheckedSeedAccessor{
    * if the derivationOptionsJson has `"clientMayRetrieveKey": true`.
    */
   public getSeedOrThrowIfClientsMayNotRetrieveKeysOrThisClientNotAuthorizedAsync = async (
-    derivationOptionsJson: DerivationOptions | string | undefined,
+    command: ApiStrings.Command,
+    derivationOptionsJson: string,
     type: DerivableObjectName
-  ) : Promise<string> => {
-    const derivationOptions = DerivationOptions(derivationOptionsJson);
-    const {clientMayRetrieveKey} = derivationOptions;
-    if (!clientMayRetrieveKey) {
+  ): Promise<UsersApprovedSeedAndDerivationOptions> => {
+    if (!DerivationOptions(derivationOptionsJson).clientMayRetrieveKey) {
       throw new ClientMayNotRetrieveKeyException(type)
     }
-    return await this.getSeedOrThrowIfClientNotAuthorizedAsync(derivationOptions, type)
+    return await this.getSeedOrThrowIfNotAuthorizedAsync(command, derivationOptionsJson, type)
   }
 }

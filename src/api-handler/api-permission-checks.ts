@@ -8,6 +8,12 @@ import {
   Exceptions
 } from "@dicekeys/dicekeys-api-js";
 
+export interface RequestForUsersConsentFn {
+  (
+    requestForUsersConsent: RequestForUsersConsent
+  ): Promise<UsersConsentResponse>
+};
+
 /**
  * Permissions checks for the DiceKeys PostMessage API
  * 
@@ -22,10 +28,8 @@ import {
  */
 export class ApiPermissionChecks {
   constructor(
-      protected readonly host: string,
-      private readonly requestUsersConsent: (
-          requestForUsersConsent: RequestForUsersConsent
-        ) => Promise<UsersConsentResponse>,
+    public readonly host: string,
+    private readonly requestUsersConsent: RequestForUsersConsentFn,
   ) {}
 
   validateIdentity(id: WebBasedApplicationIdentity) {

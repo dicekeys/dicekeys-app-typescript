@@ -5,13 +5,15 @@ import {
   DiceKey, DiceKeyInHumanReadableForm
 } from "../dicekeys/dicekey";
 import {
+  DerivationOptions,
   UsersConsentResponse,
-  DerivationOptions
 } from "@dicekeys/dicekeys-api-js";
 import { UrlPermissionCheckedMarshalledCommands } from "../api-handler/url-permission-checked-marshalled-commands";
 import { UrlApi } from "../api/url-api";
 import { Api } from "../api/abstract-api";
 import { stringToUtf8ByteArray } from "../api/encodings";
+import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
+import { GetUsersApprovalAndModificationOfDerivationOptions } from "../api-handler/permission-checked-seed-accessor";
 
 describe("EndToEndUrlApiTests", () => {
   const diceKey = DiceKey.fromHumanReadableForm(
@@ -20,8 +22,14 @@ describe("EndToEndUrlApiTests", () => {
 
   const loadDiceKeyAsync = () => Promise.resolve(diceKey);
   const requestUsersConsent = (response: UsersConsentResponse) => () =>
-    new Promise<UsersConsentResponse>( (respond) => respond(response) );
+    Promise.resolve(response);
   // const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
+  const userConfirmation: GetUsersApprovalAndModificationOfDerivationOptions = ({
+    derivationOptionsJson
+  }) => Promise.resolve({
+    seedString: DiceKey.toSeedString(diceKey, DerivationOptions(derivationOptionsJson)),
+    derivationOptionsJson
+  });
 
   const defaultRequestHost = "client.app";
   const defaultRequestUrl = `https://${defaultRequestHost}`;
@@ -34,9 +42,13 @@ describe("EndToEndUrlApiTests", () => {
     const mockClient = new UrlApi(
       requestUrlBase, respondToUrl,
       /* transmit method  */
-      (requestUri) => {
+      async (requestUri) => {
         const mockServerApi = new UrlPermissionCheckedMarshalledCommands(
-          requestUri, loadDiceKeyAsync, requestUsersConsent(usersResponseToConsentRequest),
+          requestUri,
+          await SeededCryptoModulePromise,
+          loadDiceKeyAsync,
+          requestUsersConsent(usersResponseToConsentRequest),
+          userConfirmation,
           (result) => mockClient.handleResult(result)
         );
         mockServerApi.execute();

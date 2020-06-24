@@ -19,6 +19,15 @@ export class HtmlComponent<
     this.renderSoon();
   }
 
+  /**
+   * Help build element accessors
+   */
+  protected getField = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T | undefined;
+  protected getInputField = (id: string) => this.getField<HTMLInputElement>(id);
+
+  /**
+   * Clear all sub-elements
+   */
   clear() {
     // while (this.primaryElement.children.length > 0) {
     //   this.primaryElement.removeChild(this.primaryElement.children[0]);
@@ -27,7 +36,7 @@ export class HtmlComponent<
     this.removeAllChildren();
   }
 
-  render() {
+  render(): void | Promise<void> {
     this.clear();
   }
 

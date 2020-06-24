@@ -16,13 +16,13 @@ import {
 } from "../api-handler/permission-checked-commands";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import {
-  PermissionCheckedSeedAccessor, ClientMayNotRetrieveKeyException
+  PermissionCheckedSeedAccessor, ClientMayNotRetrieveKeyException, GetUsersApprovalAndModificationOfDerivationOptions
 } from "../api-handler/permission-checked-seed-accessor"
 import {
   stringToUtf8ByteArray
 } from "../api/encodings";
 import {
-  ApiPermissionChecks
+  ApiPermissionChecks, RequestForUsersConsentFn
 } from "../api-handler/api-permission-checks";
 
 describe("PermissionCheckedCommandsInstrumentedTest", () => {
@@ -32,26 +32,32 @@ describe("PermissionCheckedCommandsInstrumentedTest", () => {
   )
 
   const loadDiceKeyAsync = () => new Promise<DiceKey>( resolve => resolve(diceKey));
-  const requestUsersConsent = (response: UsersConsentResponse) => () =>
-    new Promise<UsersConsentResponse>( (respond) => respond(response) );
-
-  const getPermissionCheckedCommands = (
+  const requestUsersConsent: (response: UsersConsentResponse) => RequestForUsersConsentFn =
+      (response: UsersConsentResponse) => () => Promise.resolve(response);
+  const userConfirmation: GetUsersApprovalAndModificationOfDerivationOptions = ({derivationOptionsJson}) => Promise.resolve({
+      seedString: DiceKey.toSeedString(diceKey, DerivationOptions(derivationOptionsJson)),
+      derivationOptionsJson
+    });
+  
+  const getPermissionCheckedCommands = async (
     url: string,
     usersConsentResponse: UsersConsentResponse = UsersConsentResponse.Allow
   ) => 
     new PermissionCheckedCommands(
+      await SeededCryptoModulePromise,
       new PermissionCheckedSeedAccessor(
         new ApiPermissionChecks(new URL(url).host,
         requestUsersConsent(usersConsentResponse)
       ),
-      loadDiceKeyAsync
+      loadDiceKeyAsync,
+      userConfirmation,
     )
   );
 
 test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
     await expect( async () => {
       await ( 
-        getPermissionCheckedCommands("https://example.comspoof/")
+        (await getPermissionCheckedCommands("https://example.comspoof/"))
         .sealWithSymmetricKey(
           JSON.stringify(DerivationOptions({
             allow: [{host: "example.com"}]
@@ -65,21 +71,20 @@ test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
 
   test("preventsLengthExtensionAttackOnASymmetricUnseal", async () => {
     await expect( async () => {
-      await (
-        getPermissionCheckedCommands("https://example.comspoof/")
+      await (await getPermissionCheckedCommands("https://example.comspoof/"))
         .unsealWithSymmetricKey(
           new (await SeededCryptoModulePromise).PackagedSealedMessage(
             stringToUtf8ByteArray(""),
             JSON.stringify(DerivationOptions({allow: [{host: "example.com"}]})),
             "{}"
           ))
-    )}).rejects.toThrow(Exceptions.ClientNotAuthorizedException);
+    }).rejects.toThrow(Exceptions.ClientNotAuthorizedException);
   });
 
   test("preventsLengthExtensionAttackOnASymmetricUnsealPostDecryptionOptions", async () => {
     const seededCryptoModule = await SeededCryptoModulePromise;
-    const permissionCheckedCommands = await
-      getPermissionCheckedCommands("https://example.comspoof/", UsersConsentResponse.Deny);
+    const permissionCheckedCommands =
+      await getPermissionCheckedCommands("https://example.comspoof/", UsersConsentResponse.Deny);
     const packagedSealedMessage = new seededCryptoModule.PackagedSealedMessage(
       stringToUtf8ByteArray(""),
       JSON.stringify(DerivationOptions({allow: [{host: "example.com"}]})),

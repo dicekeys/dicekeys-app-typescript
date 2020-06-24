@@ -9,10 +9,11 @@ import {
   SymmetricKeyStatic,
   UnsealingKeyStatic, SealingKeyStatic,
   SigningKeyStatic, SignatureVerificationKeyStatic,
-  SeededCryptoModulePromise
+  SeededCryptoModuleWithHelpers
 } from "@dicekeys/seeded-crypto-js"
 import {
   PermissionCheckedSeedAccessor,
+  GetUsersApprovalAndModificationOfDerivationOptions
 } from "./permission-checked-seed-accessor";
 import {
   PermissionCheckedCommands
@@ -79,20 +80,17 @@ export abstract class PermissionCheckedMarshalledCommands {
   private readonly api: PermissionCheckedCommands;
 
   constructor(
+    private seededCryptoModule: SeededCryptoModuleWithHelpers,
     permissionChecks: ApiPermissionChecks,
-//    origin: string,
     loadDiceKeyAsync: () => PromiseLike<DiceKey>,
-    // requestUsersConsent: (
-    //   requestForUsersConsent: RequestForUsersConsent
-    // ) => Promise<UsersConsentResponse>,
-    // protocolMayRequireHandshakes: boolean,
-    // handshakeAuthenticatedUrl: string = ""
+    confirmationFnAsync: GetUsersApprovalAndModificationOfDerivationOptions
   ) {
     const permissionCheckedSeedAccessor = new PermissionCheckedSeedAccessor(
       permissionChecks,
-      loadDiceKeyAsync
+      loadDiceKeyAsync,
+      confirmationFnAsync
     )
-    this.api = new PermissionCheckedCommands(permissionCheckedSeedAccessor);
+    this.api = new PermissionCheckedCommands(seededCryptoModule, permissionCheckedSeedAccessor);
   }
 
   protected abstract unmarshallOptionalStringParameter(
@@ -186,7 +184,7 @@ export abstract class PermissionCheckedMarshalledCommands {
 
   private unsealWithSymmetricKey = async (): Promise<void> => {
     const packagedSealedMessage = this.unmarshallSeededCryptoObject(
-      (await SeededCryptoModulePromise).PackagedSealedMessage,
+      this.seededCryptoModule.PackagedSealedMessage,
       ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage
     );
     try {
@@ -209,7 +207,7 @@ export abstract class PermissionCheckedMarshalledCommands {
 
   private unsealWithUnsealingKey = async (): Promise<void> => {
     const packagedSealedMessage = this.unmarshallSeededCryptoObject(
-      (await SeededCryptoModulePromise).PackagedSealedMessage,
+      this.seededCryptoModule.PackagedSealedMessage,
       ApiStrings.Inputs.unsealWithSymmetricKey.packagedSealedMessage
     );
     try {

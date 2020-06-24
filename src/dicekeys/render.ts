@@ -12,7 +12,6 @@ import {
   UndoverlineCodes, getUndoverlineCodes
 } from "../dicekeys/undoverline-tables";
 import {FaceDimensionsFractional} from "../dicekeys/face-dimensions";
-import { DiceKey } from "../dicekeys/dicekey";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
@@ -89,18 +88,19 @@ export function addUndoverlineCodes<T extends Face>(face: T): T & UndoverlineCod
 
 const renderFaceForSizes = (sizes: Sizes) => (
   ctx: CanvasRenderingContext2D,
-  face: Face,
+  face: Partial<Face>,
   center: Point,
   obscure: boolean = false
 ): void => {
   const dieLeft = center.x - 0.5 * sizes.linearScaling;
   const dieTop = center.y - 0.5 * sizes.linearScaling;
   const undoverlineLeft = dieLeft + sizes.linearScaling * FaceDimensionsFractional.undoverlineLeftEdge;
-  const firstDotLeft = dieLeft + sizes.linearScaling * FaceDimensionsFractional.undoverlineFirstDotLeftEdge ;
-  const {underlineCode, overlineCode} = getUndoverlineCodes(face);
+  const firstDotLeft = dieLeft + sizes.linearScaling * FaceDimensionsFractional.undoverlineFirstDotLeftEdge;
+  const {letter, digit, orientationAsLowercaseLetterTRBL = "?"} = face;
+  const {underlineCode, overlineCode} = (letter != null && digit != null ) ? getUndoverlineCodes({letter, digit}) : {underlineCode: undefined, overlineCode: undefined};
 
   // Draw an underline or overline
-  const renderUndoverline = (lineType: "underline" | "overline", code: number): void => {
+  const renderUndoverline = (lineType: "underline" | "overline", code: number | undefined): void => {
     const isOverline = lineType == "overline";
       // Calculate the coordinates of the black [und|ov]erline rectangle
       const fractionalTop =  isOverline ?
@@ -114,7 +114,7 @@ const renderFaceForSizes = (sizes: Sizes) => (
     ctx.fillStyle = "#000000";
     ctx.fillRect(undoverlineLeft, top, sizes.undoverlineLength, sizes.undoverlineHeight);
 
-    if (obscure) {
+    if (obscure || code == null) {
       // Don't actually display data.
       return;
     }
@@ -146,7 +146,7 @@ const renderFaceForSizes = (sizes: Sizes) => (
   // Rotate the canvas in counterclockwise before rendering, so that
   // when the rotation is restored (clockwise) the face will be in the
   // correct direction
-  const rotateCanvasBy = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTRBL);
+  const rotateCanvasBy = faceRotationLetterToClockwiseAngle(orientationAsLowercaseLetterTRBL);
   if (!obscure && rotateCanvasBy !== 0) {
 //        ctx.save();
       ctx.translate(+center.x, +center.y);
@@ -173,9 +173,12 @@ const renderFaceForSizes = (sizes: Sizes) => (
   ctx.textAlign = "center";
   const font = `${ FontWeight } ${ sizes.fontSize }px ${ FontFamily }, monospace`;
   ctx.font = font;
-  ctx.fillText(face.letter.toString(), letterX, textY)
-  ctx.fillText(face.digit.toString(), digitX, textY)
-
+  if (letter != null) {
+    ctx.fillText(letter.toString(), letterX, textY);
+  }
+  if (digit != null) {
+   ctx.fillText(digit.toString(), digitX, textY);
+  }
 
   // Undo the rotation used to render the face
   if (rotateCanvasBy !== 0) {
@@ -193,9 +196,11 @@ export const renderFaceFactory = (
   scaleSizes(linearSizeOfFace, linearFractionOfCoverage)
 );
 
+const obscureIndexes = new Set<number>([0, 4, 20, 24]);
+
 export const renderDiceKey = (
   ctx: CanvasRenderingContext2D,
-  diceKey: DiceKey,
+  diceKey: ReadonlyArray<Partial<Face>>,
   obscure: boolean = false
 ): void => {
   const {width, height} = ctx.canvas;
@@ -205,15 +210,11 @@ export const renderDiceKey = (
   const centerY = height / 2;
   const renderFace = renderFaceFactory(linearFaceSize);
 
-  const canonicalDiceKey = DiceKey.rotateToRotationIndependentForm(diceKey);
-
   ctx.clearRect(0, 0, width, height);
 
   diceKey.forEach( (face, index) => {
     // if obscuring, show only the top left and bottom right dice in canonical form.
-    const obscureThisDie = obscure &&
-      (face.letter !== canonicalDiceKey[0].letter || face.digit !== canonicalDiceKey[0].digit ) &&
-      (face.letter !== canonicalDiceKey[24].letter || face.digit !== canonicalDiceKey[24].digit );
+    const obscureThisDie = obscure && obscureIndexes.has(index);
     renderFace(ctx, face,
       {
         x: centerX + linearFaceSize * (-2 + (index % 5)),

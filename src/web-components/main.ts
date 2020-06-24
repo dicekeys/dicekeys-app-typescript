@@ -3,7 +3,8 @@ import {
 } from "./html-component"
 
 import {
-  UsersConsentResponse, RequestForUsersConsent
+  RequestForUsersConsent,
+  UsersConsentResponse,
 } from "@dicekeys/dicekeys-api-js";
 // import {
 //   ComponentEvent
@@ -17,6 +18,9 @@ import {
 import {
   ConfirmationDialog
 } from "./confirmation-dialog";
+import {
+  DerivationOptionsDialog
+} from "./derivation-options-dialog";
 import {
   Exceptions
 } from "@dicekeys/dicekeys-api-js"
@@ -35,34 +39,13 @@ import {
 import {
   PostMessagePermissionCheckedMarshalledCommands
 } from "../api-handler/post-message-permission-checked-marshalled-commands";
+import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
+import { RequestForUsersConsentFn } from "../api-handler/api-permission-checks";
+import {
+  GetUsersApprovalAndModificationOfDerivationOptions, UsersApprovalAndModificationOfDerivationOptionsParameters
+} from "../api-handler/permission-checked-seed-accessor";
+import { ProofOfPriorDerivation } from "../api-handler/mutate-derivation-options";
 
-
-
-
-// var loadDiceKeyPromise: Promise<DiceKey> | undefined;
-// const loadDiceKeyAsync = async (): Promise<DiceKey> => {
-//   var diceKey = (await DiceKeyAppState.instancePromise).diceKey;
-//   if (diceKey) {
-//     return diceKey;
-//   }
-//   if (!loadDiceKeyPromise) {
-//     loadDiceKeyPromise = new Promise( (resolve, reject) => {
-//       new ReadDiceKey({parentElement: document.body}).attach()
-//         .diceKeyLoadedEvent.on( (diceKey) => {
-//             DiceKeyAppState.instance!.diceKey = diceKey;
-//             resolve(diceKey);
-//         })
-//         .userCancelledEvent.on( () => reject( 
-//           Exceptions.UserCancelledLoadingDiceKey.create()
-//         ))
-//     });
-//     loadDiceKeyPromise.finally( () => { loadDiceKeyPromise = undefined; } )
-//     HomeComponent.instance?.detach();
-//   }
-//   return await loadDiceKeyPromise;
-// }
-
-//type PageAction = "home" | "scan" | "display" | "confirm";
 
 interface BodyOptions {
   appState: DiceKeyAppState;
@@ -77,15 +60,23 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
     super(options, undefined, document.body);
     const {appState} = options;
     this.appState = appState;
-//    this.action = action ?? "home";
-
     
-    // Add a message listener
-    const handleApiMessageEvent = async (messageEvent: MessageEvent) => {
-      const serverApi = new PostMessagePermissionCheckedMarshalledCommands(
+    window.addEventListener("message", messageEvent => this.handleApiMessageEvent(messageEvent) );
+    // Let the parent know we're ready for messages. // FIXME document in API
+    if (window.opener) {
+      // Using origin "*" is dangerous, but we allow it only to let the window
+      // that opened the app know that the window it opened had loaded.
+      window.opener?.postMessage("ready", "*");
+    }
+  }
+
+  handleApiMessageEvent = async (messageEvent: MessageEvent) => {
+    const serverApi = new PostMessagePermissionCheckedMarshalledCommands(
       messageEvent,
+      await SeededCryptoModulePromise,
       this.loadDiceKey,
-      this.requestUsersConsent
+      this.requestUsersConsent,
+      this.getUsersApprovalAndModificationOfDerivationOptions,
     );
     if (serverApi.isCommand()) {
       await serverApi.execute();
@@ -95,39 +86,37 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
         const windowOpener = window.opener;// window.open("", windowName);
         windowOpener?.focus();
       }
-      // FIXME -- formalize rules for timeout, when to keep window open
-      setTimeout( () => window.close(), 2000);
-        }
-    };
-    window.addEventListener("message", handleApiMessageEvent );
-    // Let the parent know we're ready for messages. // FIXME document in API
-    if (window.opener) {
-    // Using origin "*" is dangerous, but we allow it only to let the window
-    // that opened the app know that the window it opened had loaded.
-    window.opener?.postMessage("ready", "*");
     }
-  }
+  };
 
-  loadDiceKey = (): Promise<DiceKey> => {
+
+  loadDiceKey = async (): Promise<DiceKey> => {
+    const diceKey = DiceKeyAppState.instance?.diceKey;
+    if (diceKey) {
+      return diceKey;
+    }
     this.renderSoon(); 
-    return Step.loadDiceKey.start();
+    return await Step.loadDiceKey.start();
   }
 
-  requestUsersConsent = async (
+  requestUsersConsent: RequestForUsersConsentFn = (
     requestForUsersConsent: RequestForUsersConsent
   ) => {
     this.renderSoon();
     return Step.getUsersConsent.start(requestForUsersConsent);
   }
 
-  render() {
+  getUsersApprovalAndModificationOfDerivationOptions: GetUsersApprovalAndModificationOfDerivationOptions = (
+    parameters: UsersApprovalAndModificationOfDerivationOptionsParameters
+  ) => {
+    this.renderSoon();
+    return Step.getUsersApprovedDerivationOptions.start(parameters);
+  }
+
+  async render() {
     super.render();
     const diceKey = this.appState.diceKey;
-    if (diceKey) {
-      const displayCanvas = this.addChild(new DisplayDiceKeyCanvas({diceKey}));
-      displayCanvas.forgetEvent.on( () => this.renderSoon() );
-
-    } else if (Step.getUsersConsent.isInProgress) {
+    if (Step.getUsersConsent.isInProgress) {
       
       const confirmationDialog = this.addChild(
         new ConfirmationDialog({requestForUsersConsent: Step.getUsersConsent.options}, this)
@@ -137,6 +126,17 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
         .declineChosenEvent.on( () => Step.getUsersConsent.cancel(UsersConsentResponse.Deny) )
       Step.getUsersConsent.promise?.finally( () => this.renderSoon() );
 
+    } else if (Step.getUsersApprovedDerivationOptions.isInProgress) {
+      
+      this.addChild(
+        new DerivationOptionsDialog(
+          await ProofOfPriorDerivation.instancePromise,
+          Step.getUsersApprovedDerivationOptions.options,
+          this)
+      )
+      .userApprovedEvent.on( Step.getUsersApprovedDerivationOptions.complete )
+      .userCancelledEvent.on( Step.getUsersApprovedDerivationOptions.cancel )
+      Step.getUsersApprovedDerivationOptions.promise?.finally( this.renderSoon );
     } else if (Step.loadDiceKey.isInProgress) {
       const readDiceKey = this.addChild(new ReadDiceKey(this));
       readDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
@@ -144,6 +144,10 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
         new Exceptions.UserCancelledLoadingDiceKey()
       ));
       Step.loadDiceKey.promise?.finally( () => this.renderSoon() );
+
+    } else if (diceKey) {
+      const displayCanvas = this.addChild(new DisplayDiceKeyCanvas({diceKey}));
+      displayCanvas.forgetEvent.on( () => this.renderSoon() );
 
     } else {
       const homeComponent = this.addChild(new HomeComponent({}, this));

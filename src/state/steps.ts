@@ -4,8 +4,10 @@ import {
 import {
   RequestForUsersConsent, UsersConsentResponse
 } from "@dicekeys/dicekeys-api-js";
-
-/**
+import {
+  UsersApprovalAndModificationOfDerivationOptionsParameters,
+  UsersApprovedSeedAndDerivationOptions
+} from "../api-handler/permission-checked-seed-accessor";/**
  * Represent an application step that is awaiting completion as a promise
  * that returns a result when complete.
  */
@@ -116,3 +118,12 @@ export const loadDiceKey = new StepState<DiceKey, undefined>();
  * A step for obtaining user's consent.
  */
 export const getUsersConsent = new StepState<UsersConsentResponse, RequestForUsersConsent>();
+
+/**
+ * A step for the user modifying derivation options
+ */
+export const getUsersApprovedDerivationOptions =
+  new StepState<
+    UsersApprovedSeedAndDerivationOptions,
+    UsersApprovalAndModificationOfDerivationOptionsParameters
+  >();

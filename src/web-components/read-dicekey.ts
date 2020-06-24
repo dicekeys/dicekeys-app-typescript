@@ -107,9 +107,7 @@ export class ReadDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
     this.cancelButton.addEventListener("click", () => {
       this.userCancelledEvent.send();
       this.remove();
-    })
-
-    return this;
+    });
   }
 
   remove = () => {

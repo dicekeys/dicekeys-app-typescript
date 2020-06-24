@@ -12,6 +12,7 @@ import {
   InvalidFaceOrientationLettersTrblOrUnknownException,
   FaceOrientationLettersTrbl
 } from "./face";
+import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 
 
 export const NumberOfFacesInKey = 25;
@@ -312,6 +313,43 @@ export function rotateToRotationIndependentForm<F extends Face = Face>(
   }
   return rotationIndependentDiceKey;
 }
+
+const applyDerivationOptions = (
+  diceKey: DiceKey,
+  derivationOptions: DerivationOptions | string
+): DiceKey => {
+  return (DerivationOptions(derivationOptions).excludeOrientationOfFaces) ?
+    removeOrientations(diceKey) :
+    diceKey;
+}
+
+/**
+ * Create a seed string frmo a DiceKey and a set of derivation options.
+ * 
+ * If the derivation options specify `"excludeOrientationOfFaces": true`, then
+ * the first step will remove all orientations from the DiceKey.
+ * 
+ * The second step is to rotate the DiceKey to canonical orientation. Since
+ * that orientation is based on the sort order of the DiceKey's human-readable
+ * form, and since that human-readable form contains orientation characters,
+ * this step comes after the optional exclusion of orientations.
+ * 
+ * The last step is to turn the 25 dice into triples of letter, digit, orientation
+ * via the [toHumanReadableForm] function.
+ * 
+ * 
+ * @param diceKey 
+ * @param derivationOptions 
+ */
+const toSeedString = (
+  diceKey: DiceKey,
+  derivationOptionsObjectOrJson: DerivationOptions | string
+): DiceKeyInHumanReadableForm => {
+  const preCanonicalDiceKey: DiceKey = applyDerivationOptions(diceKey, derivationOptionsObjectOrJson);
+  const canonicalDiceKey = rotateToRotationIndependentForm(preCanonicalDiceKey); 
+  const humanReadableForm = DiceKeyInHumanReadableForm(canonicalDiceKey);
+  return humanReadableForm;
+}
   
 DiceKey.validate = validateDiceKey;
 DiceKey.fromRandom = getRandomDiceKey;
@@ -321,3 +359,6 @@ DiceKey.rotate = rotateDiceKey;
 DiceKey.rotateToRotationIndependentForm = rotateToRotationIndependentForm;
 DiceKey.toStringOf25Triples = DiceKeyInHumanReadableForm;
 DiceKey.removeOrientations = removeOrientations;
+DiceKey.toSeedString = toSeedString;
+DiceKey.applyDerivationOptions = applyDerivationOptions;
+

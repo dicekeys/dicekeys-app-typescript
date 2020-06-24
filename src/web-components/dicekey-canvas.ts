@@ -13,6 +13,7 @@ export const FontWeight = "700";
 
 
 export interface DiceKeyCanvasOptions {
+  size?: number,
   diceKey: DiceKey,
   obscure?: boolean
 }
@@ -37,6 +38,8 @@ export class DiceKeyCanvas extends HtmlComponent<DiceKeyCanvasOptions, HTMLCanva
     this.obscureStateChanged.send(value);
   }
 
+  private get size(): number { return this.options.size ?? 640 }
+
   /**
    * The code supporting the dmeo page cannot until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
@@ -47,8 +50,9 @@ export class DiceKeyCanvas extends HtmlComponent<DiceKeyCanvasOptions, HTMLCanva
     parentComponent?: HtmlComponent,
   ) {
     super(options, parentComponent, document.createElement("canvas"));
-    this.primaryElement.setAttribute("height", "640");
-    this.primaryElement.setAttribute("width", "640");
+    const sizeStr = this.size.toString();
+    this.primaryElement.setAttribute("height", sizeStr);
+    this.primaryElement.setAttribute("width", sizeStr);
     this.primaryElement.setAttribute("id", DiceKeyCanvas.diceKeyDisplayCanvasId);
   }
 

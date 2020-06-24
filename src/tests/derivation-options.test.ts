@@ -2,8 +2,7 @@ import {
   DerivationOptions
 } from "@dicekeys/dicekeys-api-js";
 import {
-  addProofOfPriorDerivation,
-  verifyProofOfPriorDerivation
+  ProofOfPriorDerivation
 } from "../api-handler/mutate-derivation-options";
 import {
   jsonStringifyWithSortedFieldOrder
@@ -21,31 +20,35 @@ const someDerivationOptions = DerivationOptions({
 describe ("Derivation options ", () => {
 
   test ("Should verify if unchanged", async () => {
-    const withProof = await addProofOfPriorDerivation(seedString, someDerivationOptions);
+    const proofOfDerivation = await ProofOfPriorDerivation.instancePromise;
+    const withProof = proofOfDerivation.addToDerivationOptionsJson(seedString, someDerivationOptions);
     const withProofAsObject = JSON.parse(withProof) as DerivationOptions;
     expect (typeof withProofAsObject.mutable).toBe("undefined");
-    expect(await verifyProofOfPriorDerivation(seedString, withProof)).toBe(true);
+    expect(proofOfDerivation.verify(seedString, withProof)).toBe(true);
   });
 
   test ("Should fail if no proof", async () => {
+    const proofOfDerivation = await ProofOfPriorDerivation.instancePromise;
     const withoutProof = jsonStringifyWithSortedFieldOrder(someDerivationOptions);
-    expect(await verifyProofOfPriorDerivation(seedString, withoutProof)).toBe(false);
+    expect(proofOfDerivation.verify(seedString, withoutProof)).toBe(false);
   });
 
   test ("Should fail if json changed", async () => {
-    const withProof = await addProofOfPriorDerivation(seedString, someDerivationOptions);
+    const proofOfDerivation = await ProofOfPriorDerivation.instancePromise;
+    const withProof = proofOfDerivation.addToDerivationOptionsJson(seedString, someDerivationOptions);
     const modified = withProof.replace("totally", "partially");
-    expect(await verifyProofOfPriorDerivation(seedString, modified)).toBe(false);
+    expect(proofOfDerivation.verify(seedString, modified)).toBe(false);
   });
   
   test ("Should fail if proof changed", async () => {
-    const withProof = await addProofOfPriorDerivation(seedString, someDerivationOptions);
+    const proofOfDerivation = await ProofOfPriorDerivation.instancePromise;
+    const withProof = proofOfDerivation.addToDerivationOptionsJson(seedString, someDerivationOptions);
     const withProofObj =JSON.parse(withProof) as DerivationOptions;
     // Move first five characters to the end.
     withProofObj.proofOfPriorDerivation =
       withProofObj.proofOfPriorDerivation!.substr(5) + withProofObj.proofOfPriorDerivation!.substr(0,5);
     const modified = jsonStringifyWithSortedFieldOrder(withProofObj);
-    expect(await verifyProofOfPriorDerivation(seedString, modified)).toBe(false);
+    expect(proofOfDerivation.verify(seedString, modified)).toBe(false);
   });
 
 });
