@@ -22,7 +22,7 @@ import {
 } from "../api-handler/permission-checked-seed-accessor";
 import {
   DiceKeyCanvas,
-  removeAllButCornerLettersFromDiceKey
+//  removeAllButCornerLettersFromDiceKey
 } from "./dicekey-canvas";
 
 export class DerivationOptionsDialog extends HtmlComponent<UsersApprovalAndModificationOfDerivationOptionsParameters> {
