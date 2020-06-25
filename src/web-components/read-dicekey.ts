@@ -73,17 +73,16 @@ export class ReadDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    public readonly parentComponent?: HtmlComponent,
     options: ReadDiceKeyOptions = {}
   ) {
-    super(options, parentComponent);
+    super(options);
     this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
   }
 
   render() {
     super.render();
 
-    this.addHtml(`
+    this.appendHtml(`
       <canvas id="${ReadDiceKey.overlayCanvasId}" class="overlay"></canvas>
       <div class="content">
         <video id="${ReadDiceKey.playerId}" controls autoplay></video>

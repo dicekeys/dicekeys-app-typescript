@@ -23,14 +23,13 @@ export class HomeComponent extends HtmlComponent {
    */
   constructor(
     options: {} = {},
-    parentComponent?: HtmlComponent
   ) {
-    super(options, parentComponent);
+    super(options);
   }
 
   render() {
     super.render();
-    this.addHtml(`
+    this.appendHtml(`
       <input id="${HomeComponent.loadDiceKeyButtonId}" type="button" value="Scan your DiceKey"/>
     `);
 //    HomeComponent.instance = this;

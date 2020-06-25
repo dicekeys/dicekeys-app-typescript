@@ -44,7 +44,7 @@ import { RequestForUsersConsentFn } from "../api-handler/api-permission-checks";
 import {
   GetUsersApprovalAndModificationOfDerivationOptions, UsersApprovalAndModificationOfDerivationOptionsParameters
 } from "../api-handler/permission-checked-seed-accessor";
-import { ProofOfPriorDerivation } from "../api-handler/mutate-derivation-options";
+import { ProofOfPriorDerivationModule } from "../api-handler/mutate-derivation-options";
 
 
 interface BodyOptions {
@@ -57,7 +57,7 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
 //  action: PageAction = "home";
 
   constructor(options: BodyOptions) {
-    super(options, undefined, document.body);
+    super(options, document.body);
     const {appState} = options;
     this.appState = appState;
     
@@ -119,7 +119,7 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
     if (Step.getUsersConsent.isInProgress) {
       
       const confirmationDialog = this.addChild(
-        new ConfirmationDialog({requestForUsersConsent: Step.getUsersConsent.options}, this)
+        new ConfirmationDialog({requestForUsersConsent: Step.getUsersConsent.options})
       );
       confirmationDialog
         .allowChosenEvent.on( () => Step.getUsersConsent.complete(UsersConsentResponse.Allow) )
@@ -130,15 +130,15 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
       
       this.addChild(
         new DerivationOptionsDialog(
-          await ProofOfPriorDerivation.instancePromise,
-          Step.getUsersApprovedDerivationOptions.options,
-          this)
+          await ProofOfPriorDerivationModule.instancePromise,
+          Step.getUsersApprovedDerivationOptions.options
+        )
       )
       .userApprovedEvent.on( Step.getUsersApprovedDerivationOptions.complete )
       .userCancelledEvent.on( Step.getUsersApprovedDerivationOptions.cancel )
       Step.getUsersApprovedDerivationOptions.promise?.finally( this.renderSoon );
     } else if (Step.loadDiceKey.isInProgress) {
-      const readDiceKey = this.addChild(new ReadDiceKey(this));
+      const readDiceKey = this.addChild(new ReadDiceKey());
       readDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
       readDiceKey.userCancelledEvent.on( () => Step.loadDiceKey.cancel(
         new Exceptions.UserCancelledLoadingDiceKey()
@@ -150,7 +150,7 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
       displayCanvas.forgetEvent.on( () => this.renderSoon() );
 
     } else {
-      const homeComponent = this.addChild(new HomeComponent({}, this));
+      const homeComponent = this.addChild(new HomeComponent());
       homeComponent.loadDiceKeyButtonClicked.on( () => {
         this.loadDiceKey();
       });

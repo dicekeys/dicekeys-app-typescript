@@ -36,11 +36,10 @@ export class ConfirmationDialog extends HtmlComponent<ConfirmationDialogOptions>
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    options: Partial<ConfirmationDialogOptions> = {},
-    parentComponent?: HtmlComponent
+    options: Partial<ConfirmationDialogOptions> = {}
   ) {
-    super(options, parentComponent);
-    this.addHtml(ConfirmationDialog.html);
+    super(options);
+    this.appendHtml(ConfirmationDialog.html);
 
     const {requestForUsersConsent} = this.options;
     if (!requestForUsersConsent) {

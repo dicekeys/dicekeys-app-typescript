@@ -186,6 +186,7 @@ const diceKeyFromHumanReadableForm = (
  * charCode.) 
  */
 export type DiceKey<F extends Face = Face> = ReadOnlyTupleOf25Items<F>;
+export type PartialDiceKey = ReadOnlyTupleOf25Items<Partial<Face>>
 /**
  * Construct a dice key either from a tuple of 25 ElemeentFace objects,
  * 25 indexes (which represent a element, face, and rotation), or from the

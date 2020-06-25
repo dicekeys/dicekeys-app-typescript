@@ -9,15 +9,37 @@ export class HtmlComponent<
   detachEvent = new ComponentEvent(this);
   childComponents = new Set<HtmlComponent>();
 
+  private static uniqueElementIdCounter: number = 0;
+
+  /**
+   * Generate a unique ID for a node
+   * @param nonUniqueName
+   */
+  uniqueNodeId = (nonUniqueName: string = "id"): string =>
+    `${nonUniqueName}::${(HtmlComponent.uniqueElementIdCounter++).toString()}`;
+  
   constructor(
     public readonly options: OPTIONS,
-    public readonly parentComponent?: HtmlComponent,
     public readonly primaryElement: TOP_LEVEL_ELEMENT = document.createElement("div") as unknown as TOP_LEVEL_ELEMENT,
   ) {
     this.detachEvent.on(() => this.remove());
-    parentComponent?.addChild(this);
     this.renderSoon();
   }
+
+  protected parentComponent?: HtmlComponent;
+  public get parent() { return this.parentComponent; }
+
+  /**
+   * Get the ID of the primary element.
+   * Like a defense attorney, one will be assigned if the element doesn't already have one.
+   */
+  public get primaryElementId(): string {
+    if (this.primaryElement.id == null || this.primaryElement.id.length === 0 ) {
+      this.primaryElement.id = this.uniqueNodeId(this.constructor.name);
+    }
+    return this.primaryElement.id;
+  }
+
 
   /**
    * Help build element accessors
@@ -36,11 +58,21 @@ export class HtmlComponent<
     this.removeAllChildren();
   }
 
+  /**
+   * Re-render this entire element.
+   * 
+   * Inherit and call super when extending to ensure old elements
+   * are cleared out before the render begins.
+   */
   render(): void | Promise<void> {
     this.clear();
   }
 
   private renderTimeout?: number | NodeJS.Timeout;
+  /**
+   * Kick off an element render operation soon
+   * (but not immediately, as constructors may need to finish first)
+   */
   renderSoon() {
     if (typeof this.renderTimeout !== "undefined") {
       return;
@@ -65,7 +97,9 @@ export class HtmlComponent<
     // Send remove events to all children
     this.removeAllChildren();
     // Send remove event to parent
-    this.parentComponent?.removeChild(this);
+    if (this.primaryElement.parentElement) {
+      this.primaryElement.remove();
+    }
     // Send detach events
     this.detachEvent.send();
     // Give all events a 1000ms to fire, then remove all event listeners
@@ -92,16 +126,60 @@ export class HtmlComponent<
     [...this.childComponents].forEach( child => this.removeChild(child) );
   }
 
-  addHtml(html: string) {
-    this.primaryElement.innerHTML += html;
+  /**
+   * Append HTML onto the primary element.
+   * 
+   * @param html 
+   */
+  appendHtml(html: string) {
+    // We can't simply add the HTML like this...
+    //   `this.primaryElement.innerHTML += html;`
+    // because that might mess up any existing children.
+
+    // So, we create a temporary div...
+    const div = document.createElement("div");
+    // insert the HTML we want to append to this element into the div instead
+    div.innerHTML = html;
+    // append the resulting nodes onto this element
+    // (_without_ touching any existing nodes, as innerHTML += would)
+    this.primaryElement.append(...div.childNodes);
+    // and then clean up that temporary div.
+    div.remove();
   }
 
+  /**
+   * Append a child component
+   * 
+   * @param child 
+   */
   addChild<HTML_COMPONENT extends HtmlComponent>(
     child: HTML_COMPONENT
   ): HTML_COMPONENT {
-    this.trackChild(child);
     this.primaryElement.appendChild(child.primaryElement);
+    this.trackChild(child);
+    child.parentComponent = this;
     return child;
   }
 
+  /**
+   * Create a child ement that can be replaced
+   */
+  replaceableChild = <HTML_COMPONENT extends HtmlComponent>() => {
+    var oldChild: HTML_COMPONENT | undefined = undefined;
+    const replace = (
+      child: HTML_COMPONENT
+    ): HTML_COMPONENT => {
+      if (oldChild != null && oldChild.primaryElement.parentNode != null && this.childComponents.has(oldChild)) {
+        oldChild.primaryElement.replaceWith(child.primaryElement);
+        oldChild.remove();
+      } else {
+        this.primaryElement.appendChild(child.primaryElement);
+      }
+      this.trackChild(child);
+      child.parentComponent = this;
+      oldChild = child;
+      return child;
+    }
+    return replace;
+  }
 }

@@ -4,38 +4,33 @@ import {
 import {
   renderDiceKey
 } from "../dicekeys/render";
-import {
-  ComponentEvent
-} from "./component-event";
-import { DiceKey } from "../dicekeys/dicekey";
+
+import { PartialDiceKey } from "../dicekeys/dicekey";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
 
 export interface DiceKeyCanvasOptions {
   size?: number,
-  diceKey: DiceKey,
-  obscure?: boolean
+  diceKey: PartialDiceKey
 }
+
+const cornerIndexes = new Set<number>([0, 4, 20, 24]);
+export const removeAllButCornerLettersFromDiceKey = (diceKey: PartialDiceKey): PartialDiceKey =>
+  diceKey.map( ({letter}, index) => ({
+    letter: cornerIndexes.has(index) ? letter : undefined,
+    digit: undefined,
+    orientationAsLowercaseLetterTRBL: undefined
+  })) as PartialDiceKey;
 
 /**
  * This class implements the component that displays DiceKeys.
  */
 export class DiceKeyCanvas extends HtmlComponent<DiceKeyCanvasOptions, HTMLCanvasElement> {
-  private static diceKeyDisplayCanvasId = "dicekey-display-canvas";
-  private get diceKeyDisplayCanvas(): HTMLCanvasElement {
-    return document.getElementById(DiceKeyCanvas.diceKeyDisplayCanvasId) as HTMLCanvasElement;
-  }
+  private get diceKeyDisplayCanvas(): HTMLCanvasElement { return this.primaryElement; }
 
   private get ctx(): CanvasRenderingContext2D {
     return this.diceKeyDisplayCanvas.getContext("2d")!; 
-  }
-  protected _obscure?: boolean;
-  public get obscure(): boolean { return !!this._obscure; };
-  readonly obscureStateChanged = new ComponentEvent<[boolean]>(this);
-  public set obscure(value: boolean) {
-    this._obscure = value;
-    this.obscureStateChanged.send(value);
   }
 
   private get size(): number { return this.options.size ?? 640 }
@@ -46,29 +41,17 @@ export class DiceKeyCanvas extends HtmlComponent<DiceKeyCanvasOptions, HTMLCanva
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    options: DiceKeyCanvasOptions,
-    parentComponent?: HtmlComponent,
+    options: DiceKeyCanvasOptions
   ) {
-    super(options, parentComponent, document.createElement("canvas"));
+    super(options, document.createElement("canvas"));
     const sizeStr = this.size.toString();
     this.primaryElement.setAttribute("height", sizeStr);
     this.primaryElement.setAttribute("width", sizeStr);
-    this.primaryElement.setAttribute("id", DiceKeyCanvas.diceKeyDisplayCanvasId);
   }
 
   render() {
     super.render();
-    this.addHtml(`
-      <canvas id="${DiceKeyCanvas.diceKeyDisplayCanvasId}" height="640", width="640"></canvas>
-    `);
-    this.obscure = !!this.options.obscure;
-    renderDiceKey(this.ctx, this.options.diceKey, this.obscure);
+    renderDiceKey(this.ctx, this.options.diceKey);
   }
 
-  setObscureState = (obscure: boolean) => {
-    this.obscure = obscure;
-    renderDiceKey(this.ctx!, this.options.diceKey, this.obscure);
-  }
-
-  toggleObscureState = () => this.setObscureState(!this.obscure);
 };

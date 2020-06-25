@@ -10,71 +10,77 @@ import {
 } from "./component-event"
 import {
   areDerivationOptionsMutable,
-  ProofOfPriorDerivation as ProofOfPriorDerivationModule
+  ProofOfPriorDerivationModule
 } from "../api-handler/mutate-derivation-options"
-import { DiceKey, DiceKeyInHumanReadableForm } from "../dicekeys/dicekey";
+import {
+  DiceKey,
+  DiceKeyInHumanReadableForm
+} from "../dicekeys/dicekey";
 import {
   UsersApprovalAndModificationOfDerivationOptionsParameters,
   UsersApprovedSeedAndDerivationOptions
 } from "../api-handler/permission-checked-seed-accessor";
-import { DiceKeyCanvas } from "./dicekey-canvas";
+import {
+  DiceKeyCanvas,
+  removeAllButCornerLettersFromDiceKey
+} from "./dicekey-canvas";
 
 export class DerivationOptionsDialog extends HtmlComponent<UsersApprovalAndModificationOfDerivationOptionsParameters> {
-  static messageElementId = "message";
-  static confirmSendResponseButtonId = "continue-button";
-  static cancelSendResponseButtonId = "cancel-button";
+  protected messageElementId = this.uniqueNodeId("message");
+  protected confirmSendResponseButtonId = this.uniqueNodeId("continue-button");
+  protected cancelSendResponseButtonId = this.uniqueNodeId("cancel-button");
 
-  static hintInputTextFieldId = "hint-text";
-  static removeOrientationToggleButtonId = "remove-orientation";
-  static strengtMessageTextId = "strength-message-text";
+  protected hintInputTextFieldId = this.uniqueNodeId("hint-text");
+  protected removeOrientationToggleButtonId = this.uniqueNodeId("remove-orientation");
+  protected strengtMessageTextId = this.uniqueNodeId("strength-message-text");
 
-  static closeWindowUponRespondingCheckboxId = "close-window-on-responding-checkbox";
-  static forgetDiceKeyAfterRespondingId = "remember-dicekey-after-responding-checkbox";
-  static rememberDiceKeyForDurationId =  "remember-dicekey-after-duration-checkbox";
+  protected closeWindowUponRespondingCheckboxId = this.uniqueNodeId("close-window-on-responding-checkbox");
+  protected forgetDiceKeyAfterRespondingId = this.uniqueNodeId("remember-dicekey-after-responding-checkbox");
+  protected rememberDiceKeyForDurationId = this.uniqueNodeId("remember-dicekey-after-duration-checkbox");
 
   public readonly derivationOptions: DerivationOptions;
 
-  static html = `
+  private html = `
     <div id=message></div>
     <div>
-      <div id="${DerivationOptionsDialog.strengtMessageTextId}"></div>
+      <div id="${this.strengtMessageTextId}"></div>
     </div>
     <div>
-      <label for="${DerivationOptionsDialog.hintInputTextFieldId}">Hint</label>
-      <input type="text" id="${DerivationOptionsDialog.hintInputTextFieldId}" size="60" />
+      <label for="${this.hintInputTextFieldId}">Hint</label>
+      <input type="text" id="${this.hintInputTextFieldId}" size="60" />
     </div>
     <div>
-      <label for="${DerivationOptionsDialog.removeOrientationToggleButtonId}">Remove orientations</label>
-      <input type="checkbox" id="${DerivationOptionsDialog.removeOrientationToggleButtonId}"/>
+      <label for="${this.removeOrientationToggleButtonId}">Remove orientations</label>
+      <input type="checkbox" id="${this.removeOrientationToggleButtonId}"/>
     </div>
     <div>
-      <label for="${DerivationOptionsDialog.rememberDiceKeyForDurationId}">Keep DiceKey in browser for</label>
-      <select rememberDiceKeyForDuration="${DerivationOptionsDialog.rememberDiceKeyForDurationId}">
+      <label for="${this.rememberDiceKeyForDurationId}">Keep DiceKey in browser for</label>
+      <select rememberDiceKeyForDuration="${this.rememberDiceKeyForDurationId}">
       </select>
     </div>
     <div>
-      <label for="${DerivationOptionsDialog.closeWindowUponRespondingCheckboxId}">Close this tab on continue</label>
-      <input type="checkbox" id="${DerivationOptionsDialog.closeWindowUponRespondingCheckboxId}"/>
+      <label for="${this.closeWindowUponRespondingCheckboxId}">Close this tab on continue</label>
+      <input type="checkbox" id="${this.closeWindowUponRespondingCheckboxId}"/>
     <div>
     <div>
-      <input type="button" id="${DerivationOptionsDialog.cancelSendResponseButtonId}" value="Cancel"/>
-      <input type="button" id="${DerivationOptionsDialog.confirmSendResponseButtonId}" value="Continue"/>
+      <input type="button" id="${this.cancelSendResponseButtonId}" value="Cancel"/>
+      <input type="button" id="${this.confirmSendResponseButtonId}" value="Continue"/>
     </div>
 `
 
 //  private get messageDiv(){return document.getElementById(ConfirmOperationDialog.messageElementId) as HTMLDivElement;}
-  private get continueButton() {return this.getInputField(DerivationOptionsDialog.confirmSendResponseButtonId)!; };
-  private get cancelButton() {return this.getInputField(DerivationOptionsDialog.cancelSendResponseButtonId)!; }
+  private get continueButton() {return this.getInputField(this.confirmSendResponseButtonId)!; };
+  private get cancelButton() {return this.getInputField(this.cancelSendResponseButtonId)!; }
  
-  private get hintInputTextField(){ return this.getInputField(DerivationOptionsDialog.hintInputTextFieldId)!; }
+  private get hintInputTextField(){ return this.getInputField(this.hintInputTextFieldId)!; }
   private get excludeOrientationToggleButton(){
-    return this.getInputField(DerivationOptionsDialog.removeOrientationToggleButtonId)!;
+    return this.getInputField(this.removeOrientationToggleButtonId)!;
   }
   private get strengthMessageText(){
-    return this.getField<HTMLDivElement>(DerivationOptionsDialog.strengtMessageTextId)!;
+    return this.getField<HTMLDivElement>(this.strengtMessageTextId)!;
   }
   private get closeWindowUponRespondingCheckbox(){
-    return this.getInputField(DerivationOptionsDialog.closeWindowUponRespondingCheckboxId)!;
+    return this.getInputField(this.closeWindowUponRespondingCheckboxId)!;
   }
   private get closeWindowUponResponding() {
     return this.closeWindowUponRespondingCheckbox.checked;
@@ -162,20 +168,31 @@ export class DerivationOptionsDialog extends HtmlComponent<UsersApprovalAndModif
   constructor(
     private proofOfPriorDerivationModule: ProofOfPriorDerivationModule,
     options: UsersApprovalAndModificationOfDerivationOptionsParameters,
-    parentComponent?: HtmlComponent,
     private hintPrefix: string = `Use a DiceKey with corner letters: `
   ) {
-    super(options, parentComponent);
+    super(options);
     this.derivationOptions = DerivationOptions(this.options.derivationOptionsJson);
+  }
+
+  private setDiceKeyCanvas = this.replaceableChild<DiceKeyCanvas>();
+  renderDiceKey = () => {
+    const diceKey = this.derivationOptions.excludeOrientationOfFaces ?
+      DiceKey.removeOrientations(this.diceKey) :
+      this.diceKey;
+
+      return this.setDiceKeyCanvas(new DiceKeyCanvas({
+        diceKey, // removeAllButCornerLettersFromDiceKey(diceKey),
+        size: 320
+      }));
   }
 
 
   render() {
     super.render();
 
-    this.addChild( new DiceKeyCanvas({diceKey: this.diceKey, size: 320 }) )
+    this.renderDiceKey();
 
-    this.addHtml(DerivationOptionsDialog.html);
+    this.appendHtml(this.html);
 
     this.continueButton.addEventListener("click", async () => {
       this.userApprovedEvent.send({
@@ -203,6 +220,7 @@ export class DerivationOptionsDialog extends HtmlComponent<UsersApprovalAndModif
       this.excludeOrientationToggleButton.addEventListener("click", () => {
         this.derivationOptions.excludeOrientationOfFaces = !this.derivationOptions.excludeOrientationOfFaces;
         this.strengthMessageText.textContent = this.strengthMessage;
+        this.renderDiceKey();
         return true;
       });
       this.hintInputTextField.addEventListener("change", () => {

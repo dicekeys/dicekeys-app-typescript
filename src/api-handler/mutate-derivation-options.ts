@@ -33,13 +33,13 @@ export const removeMutableFromDerivationOptions = (
 
 
 
-export class ProofOfPriorDerivation {
+export class ProofOfPriorDerivationModule {
   constructor(
     private seededCryptoModule: SeededCryptoModuleWithHelpers
   ) {}
 
-  public static readonly instancePromise: Promise<ProofOfPriorDerivation> =
-    (async () => new ProofOfPriorDerivation(await SeededCryptoModulePromise) )();
+  public static readonly instancePromise: Promise<ProofOfPriorDerivationModule> =
+    (async () => new ProofOfPriorDerivationModule(await SeededCryptoModulePromise) )();
 
   /**
  * Generate a proof that this seed has been used to derive a key

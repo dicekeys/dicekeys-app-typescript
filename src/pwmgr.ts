@@ -43,8 +43,8 @@ export class PasswordManagerSignin extends HtmlComponent {
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor() {
-    super({}, undefined, document.getElementById("password-form-container")!);
-    this.addHtml(`
+    super({}, document.getElementById("password-form-container")!);
+    this.appendHtml(`
       <input id="${passwordFieldId}" type="text" size="60"/>
       <input id="${getPasswordFromDiceKeyButtonId}" type="button" value="Generate password from DiceKey"/>
     `);

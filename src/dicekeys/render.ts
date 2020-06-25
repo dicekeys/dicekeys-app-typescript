@@ -12,6 +12,7 @@ import {
   UndoverlineCodes, getUndoverlineCodes
 } from "../dicekeys/undoverline-tables";
 import {FaceDimensionsFractional} from "../dicekeys/face-dimensions";
+import { PartialDiceKey } from "./dicekey";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
@@ -86,11 +87,13 @@ export function addUndoverlineCodes<T extends Face>(face: T): T & UndoverlineCod
   return Object.assign(face, {underlineCode, overlineCode});
 }
 
+const textShade = "#000000";
+const hiddenTextShade = "#B0B0B0";
+
 const renderFaceForSizes = (sizes: Sizes) => (
   ctx: CanvasRenderingContext2D,
   face: Partial<Face>,
-  center: Point,
-  obscure: boolean = false
+  center: Point
 ): void => {
   const dieLeft = center.x - 0.5 * sizes.linearScaling;
   const dieTop = center.y - 0.5 * sizes.linearScaling;
@@ -111,13 +114,9 @@ const renderFaceForSizes = (sizes: Sizes) => (
     const fractionalDotTop =  isOverline ?
       FaceDimensionsFractional.overlineDotTop : FaceDimensionsFractional.underlineDotTop;
     const undoverlineDotTop = dieTop + sizes.linearScaling * fractionalDotTop;
-    ctx.fillStyle = "#000000";
+    ctx.fillStyle = code != null && orientationAsLowercaseLetterTRBL !== "?" ? textShade : hiddenTextShade;
     ctx.fillRect(undoverlineLeft, top, sizes.undoverlineLength, sizes.undoverlineHeight);
 
-    if (obscure || code == null) {
-      // Don't actually display data.
-      return;
-    }
     // Draw the white boxes representing the code in the [und|ov]erline
     // within the [und|ov]erline rectangle.
     ctx.fillStyle = "#FFFFFF";
@@ -147,7 +146,7 @@ const renderFaceForSizes = (sizes: Sizes) => (
   // when the rotation is restored (clockwise) the face will be in the
   // correct direction
   const rotateCanvasBy = faceRotationLetterToClockwiseAngle(orientationAsLowercaseLetterTRBL);
-  if (!obscure && rotateCanvasBy !== 0) {
+  if (rotateCanvasBy !== 0) {
 //        ctx.save();
       ctx.translate(+center.x, +center.y);
       ctx.rotate(rotateCanvasBy * Math.PI / 180);
@@ -158,10 +157,6 @@ const renderFaceForSizes = (sizes: Sizes) => (
   renderUndoverline("underline", underlineCode);
   renderUndoverline("overline", overlineCode);
 
-
-  if (obscure) {
-    return;
-  }  
   // Calculate the positions of the letter and digit
   // Letter is left of center
   const letterX = center.x - sizes.charXOffsetFromCenter;
@@ -169,17 +164,14 @@ const renderFaceForSizes = (sizes: Sizes) => (
   const digitX = center.x + sizes.charXOffsetFromCenter;
   const textY = dieTop + FaceDimensionsFractional.textBaselineY * sizes.linearScaling
   // Render the letter and digit
-  ctx.fillStyle = "#000000"
   ctx.textAlign = "center";
   const font = `${ FontWeight } ${ sizes.fontSize }px ${ FontFamily }, monospace`;
   ctx.font = font;
-  if (letter != null) {
-    ctx.fillText(letter.toString(), letterX, textY);
-  }
-  if (digit != null) {
-   ctx.fillText(digit.toString(), digitX, textY);
-  }
-
+  ctx.fillStyle = letter != null ? textShade : hiddenTextShade;
+  ctx.fillText(letter != null ? letter.toString() : "Q", letterX, textY);
+  ctx.fillStyle = digit != null ? textShade : hiddenTextShade;
+  ctx.fillText(digit != null ? digit.toString() : "0", digitX, textY);
+  
   // Undo the rotation used to render the face
   if (rotateCanvasBy !== 0) {
 //        ctx.restore()
@@ -196,12 +188,10 @@ export const renderFaceFactory = (
   scaleSizes(linearSizeOfFace, linearFractionOfCoverage)
 );
 
-const obscureIndexes = new Set<number>([0, 4, 20, 24]);
 
 export const renderDiceKey = (
   ctx: CanvasRenderingContext2D,
-  diceKey: ReadonlyArray<Partial<Face>>,
-  obscure: boolean = false
+  diceKey: PartialDiceKey,
 ): void => {
   const {width, height} = ctx.canvas;
   const linearSize = Math.min(width, height);
@@ -214,13 +204,11 @@ export const renderDiceKey = (
 
   diceKey.forEach( (face, index) => {
     // if obscuring, show only the top left and bottom right dice in canonical form.
-    const obscureThisDie = obscure && obscureIndexes.has(index);
     renderFace(ctx, face,
       {
         x: centerX + linearFaceSize * (-2 + (index % 5)),
         y: centerY + linearFaceSize * (-2 + Math.floor(index / 5)),
-      },
-      obscureThisDie
+      }
     );
   });
 }
