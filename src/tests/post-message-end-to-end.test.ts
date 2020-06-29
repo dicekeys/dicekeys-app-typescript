@@ -14,15 +14,14 @@ import {
 import { PostMessagePermissionCheckedMarshalledCommands } from "../api-handler/post-message-permission-checked-marshalled-commands";
 import { stringToUtf8ByteArray } from "../api/encodings";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
-import { GetUsersApprovalAndModificationOfDerivationOptions } from "../api-handler/permission-checked-seed-accessor";
+import { GetUsersApprovalOfApiCommand } from "../api-handler/permission-checked-seed-accessor";
 
 const diceKey = DiceKey.fromHumanReadableForm(
   "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
 );
-const loadDiceKeyAsync = () => Promise.resolve(diceKey);;
 const requestUsersConsent = (response: UsersConsentResponse) => () =>
   Promise.resolve(response);
-const userConfirmation: GetUsersApprovalAndModificationOfDerivationOptions = ({
+const getUsersApprovalOfApiCommand: GetUsersApprovalOfApiCommand = ({
     derivationOptionsJson
 }) => Promise.resolve({
   seedString: DiceKey.toSeedString(diceKey, DerivationOptions(derivationOptionsJson)),
@@ -45,9 +44,8 @@ const mockTransmitRequestFunction = (
             data: requestObject
           } as MessageEvent,
           await SeededCryptoModulePromise,
-          loadDiceKeyAsync,
           requestUsersConsent(usersResponseToConsentRequest),
-          userConfirmation,
+          getUsersApprovalOfApiCommand,
           (data) => {
             const mockResponseMessageEvent: MessageEvent = {
               origin: requestOrigin,

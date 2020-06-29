@@ -13,14 +13,11 @@ import {
 } from "@dicekeys/seeded-crypto-js"
 import {
   PermissionCheckedSeedAccessor,
-  GetUsersApprovalAndModificationOfDerivationOptions
+  GetUsersApprovalOfApiCommand
 } from "./permission-checked-seed-accessor";
 import {
   PermissionCheckedCommands
 } from "./permission-checked-commands"
-import {
-  DiceKey
-} from "../dicekeys/dicekey";
 import {
   ApiStrings,
   Exceptions,
@@ -82,13 +79,11 @@ export abstract class PermissionCheckedMarshalledCommands {
   constructor(
     private seededCryptoModule: SeededCryptoModuleWithHelpers,
     permissionChecks: ApiPermissionChecks,
-    loadDiceKeyAsync: () => PromiseLike<DiceKey>,
-    confirmationFnAsync: GetUsersApprovalAndModificationOfDerivationOptions
+    getUsersApprovalOfApiCommand: GetUsersApprovalOfApiCommand
   ) {
     const permissionCheckedSeedAccessor = new PermissionCheckedSeedAccessor(
       permissionChecks,
-      loadDiceKeyAsync,
-      confirmationFnAsync
+      getUsersApprovalOfApiCommand
     )
     this.api = new PermissionCheckedCommands(seededCryptoModule, permissionCheckedSeedAccessor);
   }

@@ -243,6 +243,7 @@ const rotationIndexes5x5: {[rotation in Clockwise90DegreeRotationsFromUpright]: 
    ],
  };
 
+
 //  )
 type RotateFaceFn<F extends Face> = (
     f: F,
@@ -362,4 +363,5 @@ DiceKey.toStringOf25Triples = DiceKeyInHumanReadableForm;
 DiceKey.removeOrientations = removeOrientations;
 DiceKey.toSeedString = toSeedString;
 DiceKey.applyDerivationOptions = applyDerivationOptions;
-
+DiceKey.cornerIndexesClockwise = [0, 4, 24, 20] as const;
+DiceKey.cornerIndexeSet = new Set<number>(DiceKey.cornerIndexesClockwise);

@@ -1,7 +1,4 @@
 import {
-  DiceKey
-} from "../dicekeys/dicekey";
-import {
   Exceptions,
   SeededCryptoJsObject,
 } from "@dicekeys/dicekeys-api-js";
@@ -15,7 +12,7 @@ import {
 import {
   ApiPermissionChecks, RequestForUsersConsentFn
 } from "./api-permission-checks";
-import { GetUsersApprovalAndModificationOfDerivationOptions } from "./permission-checked-seed-accessor";
+import { GetUsersApprovalOfApiCommand } from "./permission-checked-seed-accessor";
 /**
  * 
  */
@@ -25,9 +22,8 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
   constructor(
     protected request: MessageEvent,
     seededCryptoModule: SeededCryptoModuleWithHelpers,
-    loadDiceKeyAsync: () => PromiseLike<DiceKey>,
     requestUsersConsent: RequestForUsersConsentFn,
-    confirmationFnAsync: GetUsersApprovalAndModificationOfDerivationOptions,
+    getUsersApprovalOfApiCommand: GetUsersApprovalOfApiCommand,
     private transmitResponse: (response: object) => any = (response: object) => this.defaultTransmitResponse(response)
   ) {
     super(
@@ -38,8 +34,7 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
           ( () => {throw new Exceptions.ClientNotAuthorizedException("API requests must be sent via https://");} )(),
           requestUsersConsent,
       ),
-      loadDiceKeyAsync,
-      confirmationFnAsync
+      getUsersApprovalOfApiCommand
     );
   }
 

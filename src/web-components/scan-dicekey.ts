@@ -37,17 +37,15 @@ interface ReadDiceKeyOptions {
 /**
  * This class implements the demo page.
  */
-export class ReadDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
+export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
   private static readonly overlayCanvasId = "overlay-canvas";
-  private static readonly cancelButtonId = "cancel-button";
   private static readonly playerId = "player";
   private static readonly cameraSelectionMenuId = "camera-selection-menu";
 
-  private get cameraSelectionMenu() {return document.getElementById(ReadDiceKey.cameraSelectionMenuId) as HTMLSelectElement;}
-  private get cancelButton() {return document.getElementById(ReadDiceKey.cancelButtonId) as HTMLInputElement;}
-  private get overlayCanvas() {return document.getElementById(ReadDiceKey.overlayCanvasId) as HTMLCanvasElement;}
+  private get cameraSelectionMenu() {return document.getElementById(ScanDiceKey.cameraSelectionMenuId) as HTMLSelectElement;}
+  private get overlayCanvas() {return document.getElementById(ScanDiceKey.overlayCanvasId) as HTMLCanvasElement;}
   private get overlayCanvasCtx() {return this.overlayCanvas.getContext("2d")!};
-  private get player() {return document.getElementById(ReadDiceKey.playerId) as HTMLVideoElement;}
+  private get player() {return document.getElementById(ScanDiceKey.playerId) as HTMLVideoElement;}
   
   private readonly frameWorker: Worker;
 
@@ -57,8 +55,7 @@ export class ReadDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
   private cameraSessionId?: string;
   
   // Events
-  public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], ReadDiceKey>(this);
-  public readonly userCancelledEvent = new ComponentEvent(this);
+  public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], ScanDiceKey>(this);
 
   public get msDelayBetweenSuccessAndClosure(): number {
     return this.options.msDelayBetweenSuccessAndClosure == null ?
@@ -81,14 +78,12 @@ export class ReadDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
 
   render() {
     super.render();
-
     this.appendHtml(`
-      <canvas id="${ReadDiceKey.overlayCanvasId}" class="overlay"></canvas>
+      <canvas id="${ScanDiceKey.overlayCanvasId}" class="overlay"></canvas>
       <div class="content">
-        <video id="${ReadDiceKey.playerId}" controls autoplay></video>
+        <video id="${ScanDiceKey.playerId}" controls autoplay></video>
       </div>
-      <select id="${ReadDiceKey.cameraSelectionMenuId}"></select>
-      <input id="${ReadDiceKey.cancelButtonId}" type="button" value="Cancel"/>
+      <select id="${ScanDiceKey.cameraSelectionMenuId}"></select>
     `);
     this.captureCanvas = document.createElement("canvas") as HTMLCanvasElement;
     this.captureCanvasCtx = this.captureCanvas.getContext("2d")!;
@@ -102,14 +97,9 @@ export class ReadDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
     // Start out with the default camera
     this.updateCamera();
     this.frameWorker.addEventListener( "message", this.handleMessage );
-
-    this.cancelButton.addEventListener("click", () => {
-      this.userCancelledEvent.send();
-      this.remove();
-    });
   }
 
-  remove = () => {
+  remove() {
     if (!super.remove()) {
       // This element has already been removed
       return false;
@@ -315,6 +305,7 @@ export class ReadDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
         this.diceKeyLoadedEvent.send(diceKey);
         this.remove();
         this.finishDelayInProgress = false;
+        this.parent?.renderSoon()
       }, this.msDelayBetweenSuccessAndClosure);
     } else {
         setTimeout(this.startProcessingNewCameraFrame, 0)

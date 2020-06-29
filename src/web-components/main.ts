@@ -19,8 +19,8 @@ import {
   ConfirmationDialog
 } from "./confirmation-dialog";
 import {
-  DerivationOptionsDialog
-} from "./derivation-options-dialog";
+  DisplayApiRequest
+} from "./display-api-request";
 import {
   Exceptions
 } from "@dicekeys/dicekeys-api-js"
@@ -42,7 +42,7 @@ import {
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { RequestForUsersConsentFn } from "../api-handler/api-permission-checks";
 import {
-  GetUsersApprovalAndModificationOfDerivationOptions, UsersApprovalAndModificationOfDerivationOptionsParameters
+  GetUsersApprovalOfApiCommand, ApiCommandParameters
 } from "../api-handler/permission-checked-seed-accessor";
 import { ProofOfPriorDerivationModule } from "../api-handler/mutate-derivation-options";
 
@@ -74,9 +74,8 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
     const serverApi = new PostMessagePermissionCheckedMarshalledCommands(
       messageEvent,
       await SeededCryptoModulePromise,
-      this.loadDiceKey,
       this.requestUsersConsent,
-      this.getUsersApprovalAndModificationOfDerivationOptions,
+      this.getUsersApprovalOfApiCommand,
     );
     if (serverApi.isCommand()) {
       await serverApi.execute();
@@ -106,11 +105,10 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
     return Step.getUsersConsent.start(requestForUsersConsent);
   }
 
-  getUsersApprovalAndModificationOfDerivationOptions: GetUsersApprovalAndModificationOfDerivationOptions = (
-    parameters: UsersApprovalAndModificationOfDerivationOptionsParameters
+  getUsersApprovalOfApiCommand: GetUsersApprovalOfApiCommand = (
+    parameters: ApiCommandParameters
   ) => {
-    this.renderSoon();
-    return Step.getUsersApprovedDerivationOptions.start(parameters);
+    return Step.apiCommand.start(parameters);
   }
 
   async render() {
@@ -126,17 +124,17 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
         .declineChosenEvent.on( () => Step.getUsersConsent.cancel(UsersConsentResponse.Deny) )
       Step.getUsersConsent.promise?.finally( () => this.renderSoon() );
 
-    } else if (Step.getUsersApprovedDerivationOptions.isInProgress) {
+    } else if (Step.apiCommand.isInProgress) {
       
       this.addChild(
-        new DerivationOptionsDialog(
+        new DisplayApiRequest(
           await ProofOfPriorDerivationModule.instancePromise,
-          Step.getUsersApprovedDerivationOptions.options
+          Step.apiCommand.options
         )
       )
-      .userApprovedEvent.on( Step.getUsersApprovedDerivationOptions.complete )
-      .userCancelledEvent.on( Step.getUsersApprovedDerivationOptions.cancel )
-      Step.getUsersApprovedDerivationOptions.promise?.finally( this.renderSoon );
+      .userApprovedEvent.on( Step.apiCommand.complete )
+      .userCancelledEvent.on( Step.apiCommand.cancel )
+      Step.apiCommand.promise?.finally( this.renderSoon );
     } else if (Step.loadDiceKey.isInProgress) {
       const readDiceKey = this.addChild(new ReadDiceKey());
       readDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );

@@ -12,7 +12,7 @@ import {
   UndoverlineCodes, getUndoverlineCodes
 } from "../dicekeys/undoverline-tables";
 import {FaceDimensionsFractional} from "../dicekeys/face-dimensions";
-import { PartialDiceKey } from "./dicekey";
+import { PartialDiceKey, DiceKey } from "./dicekey";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
@@ -90,11 +90,19 @@ export function addUndoverlineCodes<T extends Face>(face: T): T & UndoverlineCod
 const textShade = "#000000";
 const hiddenTextShade = "#B0B0B0";
 
+export interface DiceKeyRenderOptions {
+  hide21?: boolean;
+}
+
 const renderFaceForSizes = (sizes: Sizes) => (
   ctx: CanvasRenderingContext2D,
   face: Partial<Face>,
-  center: Point
+  center: Point,
+  index: number = 0,
+  {hide21 = false}: DiceKeyRenderOptions = {},
 ): void => {
+  const hideThisDie = hide21 && !DiceKey.cornerIndexeSet.has(index);
+
   const dieLeft = center.x - 0.5 * sizes.linearScaling;
   const dieTop = center.y - 0.5 * sizes.linearScaling;
   const undoverlineLeft = dieLeft + sizes.linearScaling * FaceDimensionsFractional.undoverlineLeftEdge;
@@ -114,7 +122,7 @@ const renderFaceForSizes = (sizes: Sizes) => (
     const fractionalDotTop =  isOverline ?
       FaceDimensionsFractional.overlineDotTop : FaceDimensionsFractional.underlineDotTop;
     const undoverlineDotTop = dieTop + sizes.linearScaling * fractionalDotTop;
-    ctx.fillStyle = code != null && orientationAsLowercaseLetterTRBL !== "?" ? textShade : hiddenTextShade;
+    ctx.fillStyle = code != null ? textShade : hiddenTextShade;
     ctx.fillRect(undoverlineLeft, top, sizes.undoverlineLength, sizes.undoverlineHeight);
 
     // Draw the white boxes representing the code in the [und|ov]erline
@@ -133,14 +141,19 @@ const renderFaceForSizes = (sizes: Sizes) => (
   }
 
   // Draw the outline rectangle
-  ctx.strokeStyle = "#000000";
+  ctx.fillStyle = ctx.strokeStyle = hideThisDie ? hiddenTextShade : textShade;
   const sizeFromEdgeToEdge = sizes.linearSizeOfFace * 0.8;
   roundRect(
     ctx,
     center.x - 0.5 * sizeFromEdgeToEdge, center.y - 0.5 * sizeFromEdgeToEdge,
     sizeFromEdgeToEdge, sizeFromEdgeToEdge,
-    sizeFromEdgeToEdge / 6
+    sizeFromEdgeToEdge / 6,
+    hideThisDie
   );
+
+  if (hideThisDie) {
+    return;
+  }
 
   // Rotate the canvas in counterclockwise before rendering, so that
   // when the rotation is restored (clockwise) the face will be in the
@@ -192,6 +205,7 @@ export const renderFaceFactory = (
 export const renderDiceKey = (
   ctx: CanvasRenderingContext2D,
   diceKey: PartialDiceKey,
+  options: DiceKeyRenderOptions = {}
 ): void => {
   const {width, height} = ctx.canvas;
   const linearSize = Math.min(width, height);
@@ -208,7 +222,9 @@ export const renderDiceKey = (
       {
         x: centerX + linearFaceSize * (-2 + (index % 5)),
         y: centerY + linearFaceSize * (-2 + Math.floor(index / 5)),
-      }
+      },
+      index,
+      options
     );
   });
 }

@@ -1,7 +1,4 @@
 import {
-  DiceKey
-} from "../dicekeys/dicekey";
-import {
   PermissionCheckedMarshalledCommands,
   SeededCryptoObject
 } from "./abstract-permission-checked-marshalled-commands"
@@ -24,7 +21,7 @@ import {
   UrlApiPermissionChecks
 } from "./url-api-permission-checks";
 import { RequestForUsersConsentFn } from "./api-permission-checks";
-import { GetUsersApprovalAndModificationOfDerivationOptions } from "./permission-checked-seed-accessor";
+import { GetUsersApprovalOfApiCommand } from "./permission-checked-seed-accessor";
 const {Inputs} = ApiStrings;
 
 /**
@@ -41,9 +38,8 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
   constructor(
     protected requestUrl: URL,
     seededCryptoModule: SeededCryptoModuleWithHelpers,
-    loadDiceKeyAsync: () => Promise<DiceKey>,
     requestUsersConsent: RequestForUsersConsentFn,
-    confirmationFn: GetUsersApprovalAndModificationOfDerivationOptions,
+    getUsersApprovalOfApiCommand: GetUsersApprovalOfApiCommand,
     private transmitResponse: (response: URL) => any = (response: URL) => this.defaultTransmitResponse(response)
   ) {
     super(
@@ -57,8 +53,7 @@ export class UrlPermissionCheckedMarshalledCommands extends PermissionCheckedMar
         (requestUrl.searchParams.get(Inputs.COMMON.authToken) &&
           DiceKeyAppState.instance!.getUrlForAuthenticationToken(requestUrl.searchParams.get(Inputs.COMMON.authToken)!)) ?? undefined
       ),
-      loadDiceKeyAsync,
-      confirmationFn
+      getUsersApprovalOfApiCommand
     );
   }
 

@@ -73,13 +73,15 @@ export class HtmlComponent<
    * Kick off an element render operation soon
    * (but not immediately, as constructors may need to finish first)
    */
-  renderSoon() {
-    if (typeof this.renderTimeout !== "undefined") {
+  renderSoon = () => {
+    if (typeof this.renderTimeout !== "undefined" || this.alreadyRemoved) {
       return;
     }
     this.renderTimeout = setTimeout( () => {
       try {
-        this.render();
+        if (!this.alreadyRemoved) {
+          this.render();
+        }
       } finally {
         this.renderTimeout = undefined;
       }
@@ -87,7 +89,7 @@ export class HtmlComponent<
   }
 
   private alreadyRemoved = false;
-  remove = (): boolean => {
+  remove(): boolean {
     if (this.alreadyRemoved) {
       // No need to remove, so return false
       return false;
@@ -105,6 +107,9 @@ export class HtmlComponent<
     // Give all events a 1000ms to fire, then remove all event listeners
     setTimeout(() => { ComponentEvent.removeAllEventListeners(this) }, 1000);
     //
+    if (this.parent) {
+      this.parent.renderSoon();
+    }
     return true;
   }
 
@@ -166,9 +171,9 @@ export class HtmlComponent<
    */
   replaceableChild = <HTML_COMPONENT extends HtmlComponent>() => {
     var oldChild: HTML_COMPONENT | undefined = undefined;
-    const replace = (
-      child: HTML_COMPONENT
-    ): HTML_COMPONENT => {
+    const replace = <ACTUAL_HTML_COMPONENT extends HTML_COMPONENT = HTML_COMPONENT>(
+      child: ACTUAL_HTML_COMPONENT
+    ): ACTUAL_HTML_COMPONENT => {
       if (oldChild != null && oldChild.primaryElement.parentNode != null && this.childComponents.has(oldChild)) {
         oldChild.primaryElement.replaceWith(child.primaryElement);
         oldChild.remove();

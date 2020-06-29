@@ -13,18 +13,17 @@ import { UrlApi } from "../api/url-api";
 import { Api } from "../api/abstract-api";
 import { stringToUtf8ByteArray } from "../api/encodings";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
-import { GetUsersApprovalAndModificationOfDerivationOptions } from "../api-handler/permission-checked-seed-accessor";
+import { GetUsersApprovalOfApiCommand } from "../api-handler/permission-checked-seed-accessor";
 
 describe("EndToEndUrlApiTests", () => {
   const diceKey = DiceKey.fromHumanReadableForm(
     "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
   )
 
-  const loadDiceKeyAsync = () => Promise.resolve(diceKey);
   const requestUsersConsent = (response: UsersConsentResponse) => () =>
     Promise.resolve(response);
   // const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
-  const userConfirmation: GetUsersApprovalAndModificationOfDerivationOptions = ({
+  const userConfirmation: GetUsersApprovalOfApiCommand = ({
     derivationOptionsJson
   }) => Promise.resolve({
     seedString: DiceKey.toSeedString(diceKey, DerivationOptions(derivationOptionsJson)),
@@ -46,7 +45,6 @@ describe("EndToEndUrlApiTests", () => {
         const mockServerApi = new UrlPermissionCheckedMarshalledCommands(
           requestUri,
           await SeededCryptoModulePromise,
-          loadDiceKeyAsync,
           requestUsersConsent(usersResponseToConsentRequest),
           userConfirmation,
           (result) => mockClient.handleResult(result)

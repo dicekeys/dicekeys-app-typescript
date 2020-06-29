@@ -2,7 +2,7 @@ import {
   ApiPermissionChecks
 } from "./api-permission-checks";
 import {
-  DiceKey, DiceKeyInHumanReadableForm
+  DiceKeyInHumanReadableForm
 } from "../dicekeys/dicekey";
 import {
   ApiStrings,
@@ -19,22 +19,21 @@ export class ClientMayNotRetrieveKeyException extends Error {
   }
 }
 
-export interface UsersApprovedSeedAndDerivationOptions {
+export interface SeedStringAndDerivationOptionsForApprovedApiCommand {
   seedString: DiceKeyInHumanReadableForm;
   derivationOptionsJson: string;
 }
 
-export interface UsersApprovalAndModificationOfDerivationOptionsParameters {
+export interface ApiCommandParameters {
   command: ApiStrings.Command,
   host: string,
-  diceKey: DiceKey,
   derivationOptionsJson: string
 }
 
-export interface GetUsersApprovalAndModificationOfDerivationOptions {
+export interface GetUsersApprovalOfApiCommand {
   (
-    parameters: UsersApprovalAndModificationOfDerivationOptionsParameters
-  ): Promise<UsersApprovedSeedAndDerivationOptions>
+    parameters: ApiCommandParameters
+  ): Promise<SeedStringAndDerivationOptionsForApprovedApiCommand>
 }
 
 
@@ -46,8 +45,7 @@ export interface GetUsersApprovalAndModificationOfDerivationOptions {
 export class PermissionCheckedSeedAccessor{
   constructor(
     private readonly permissionChecks: ApiPermissionChecks,
-    private loadDiceKeyAsync: () => PromiseLike<DiceKey>,
-    private getUsersApprovalAndModificationOfDerivationOptions: GetUsersApprovalAndModificationOfDerivationOptions
+    private getUsersApprovalOfApiCommand: GetUsersApprovalOfApiCommand
   ) {}
 
   /**
@@ -61,12 +59,11 @@ export class PermissionCheckedSeedAccessor{
     command: ApiStrings.Command,
     derivationOptionsJson: string,
     derivableObjectType: DerivableObjectName
-  ): Promise<UsersApprovedSeedAndDerivationOptions> => {
+  ): Promise<SeedStringAndDerivationOptionsForApprovedApiCommand> => {
     this.permissionChecks.throwIfClientNotAuthorized(DerivationOptions(derivationOptionsJson, derivableObjectType))
-    const diceKey = await this.loadDiceKeyAsync();
     const host = this.permissionChecks.host;
-    return await this.getUsersApprovalAndModificationOfDerivationOptions({
-      command, host, diceKey, derivationOptionsJson
+    return await this.getUsersApprovalOfApiCommand({
+      command, host, derivationOptionsJson
     });
   }
 
@@ -86,7 +83,7 @@ export class PermissionCheckedSeedAccessor{
     command: ApiStrings.Command,
     packagedSealedMessage: PackagedSealedMessage,
     type: DerivableObjectName
-   ): Promise<UsersApprovedSeedAndDerivationOptions> => {
+   ): Promise<SeedStringAndDerivationOptionsForApprovedApiCommand> => {
     const result = await this.getSeedOrThrowIfNotAuthorizedAsync(
       command,
       packagedSealedMessage.derivationOptionsJson, type
@@ -112,7 +109,7 @@ export class PermissionCheckedSeedAccessor{
     command: ApiStrings.Command,
     derivationOptionsJson: string,
     type: DerivableObjectName
-  ): Promise<UsersApprovedSeedAndDerivationOptions> => {
+  ): Promise<SeedStringAndDerivationOptionsForApprovedApiCommand> => {
     if (!DerivationOptions(derivationOptionsJson).clientMayRetrieveKey) {
       throw new ClientMayNotRetrieveKeyException(type)
     }

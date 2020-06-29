@@ -16,7 +16,7 @@ import {
 } from "../api-handler/permission-checked-commands";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import {
-  PermissionCheckedSeedAccessor, ClientMayNotRetrieveKeyException, GetUsersApprovalAndModificationOfDerivationOptions
+  PermissionCheckedSeedAccessor, ClientMayNotRetrieveKeyException, GetUsersApprovalOfApiCommand
 } from "../api-handler/permission-checked-seed-accessor"
 import {
   stringToUtf8ByteArray
@@ -31,10 +31,9 @@ describe("PermissionCheckedCommandsInstrumentedTest", () => {
     "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
   )
 
-  const loadDiceKeyAsync = () => new Promise<DiceKey>( resolve => resolve(diceKey));
   const requestUsersConsent: (response: UsersConsentResponse) => RequestForUsersConsentFn =
       (response: UsersConsentResponse) => () => Promise.resolve(response);
-  const userConfirmation: GetUsersApprovalAndModificationOfDerivationOptions = ({derivationOptionsJson}) => Promise.resolve({
+  const getUsersApprovalOfApiCommand: GetUsersApprovalOfApiCommand = ({derivationOptionsJson}) => Promise.resolve({
       seedString: DiceKey.toSeedString(diceKey, DerivationOptions(derivationOptionsJson)),
       derivationOptionsJson
     });
@@ -49,8 +48,7 @@ describe("PermissionCheckedCommandsInstrumentedTest", () => {
         new ApiPermissionChecks(new URL(url).host,
         requestUsersConsent(usersConsentResponse)
       ),
-      loadDiceKeyAsync,
-      userConfirmation,
+      getUsersApprovalOfApiCommand,
     )
   );
 
