@@ -20,6 +20,17 @@ import {
     ProcessFrameResponse,
     TerminateSessionRequest
 } from "../workers/dicekey-image-frame-worker"
+import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
+import {
+  Canvas,
+  Div,
+  H3,
+  MonospaceSpan,
+  Video,
+} from "./html-components";
+import {
+  describeHost
+} from "../phrasing/api";
 
 
 const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints => ({
@@ -32,20 +43,23 @@ const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints =>
 
 interface ReadDiceKeyOptions {
   msDelayBetweenSuccessAndClosure?: number;
+  host: string;
+  derivationOptions?: DerivationOptions;
 }
 
 /**
  * This class implements the demo page.
  */
 export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
-  private static readonly overlayCanvasId = "overlay-canvas";
-  private static readonly playerId = "player";
   private static readonly cameraSelectionMenuId = "camera-selection-menu";
 
   private get cameraSelectionMenu() {return document.getElementById(ScanDiceKey.cameraSelectionMenuId) as HTMLSelectElement;}
-  private get overlayCanvas() {return document.getElementById(ScanDiceKey.overlayCanvasId) as HTMLCanvasElement;}
-  private get overlayCanvasCtx() {return this.overlayCanvas.getContext("2d")!};
-  private get player() {return document.getElementById(ScanDiceKey.playerId) as HTMLVideoElement;}
+//  private get overlayCanvas() {return document.getElementById(ScanDiceKey.overlayCanvasId) as HTMLCanvasElement;}
+  private overlayCanvasComponent?: Canvas;
+  private get overlayCanvas() {return this.overlayCanvasComponent?.primaryElement};
+  private get overlayCanvasCtx() {return this.overlayCanvas?.getContext("2d")};
+  private videoComponent?: Video;
+  private get videoPlayer() {return this.videoComponent?.primaryElement}
   
   private readonly frameWorker: Worker;
 
@@ -70,7 +84,7 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    options: ReadDiceKeyOptions = {}
+    options: ReadDiceKeyOptions
   ) {
     super(options);
     this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
@@ -78,18 +92,50 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
 
   render() {
     super.render();
-    this.appendHtml(`
-      <canvas id="${ScanDiceKey.overlayCanvasId}" class="overlay"></canvas>
-      <div class="content">
-        <video id="${ScanDiceKey.playerId}" controls autoplay></video>
-      </div>
-      <select id="${ScanDiceKey.cameraSelectionMenuId}"></select>
-    `);
+    const {seedHint, cornerLetters} = this.options.derivationOptions || {};
+    const {host} = this.options;
+
+    if (seedHint) {
+      this.append(
+        H3().append(
+          "According to ",
+          describeHost(host),
+          ", you provided the following hint to identify your DiceKey: ",
+          MonospaceSpan().setInnerText(seedHint)
+        )
+      );
+    } else if (cornerLetters && cornerLetters.length === 4) {
+      this.append(
+        H3().append(
+          "According to ",
+          describeHost(host),
+          ", you previously used a DiceKey with the letters ",
+          MonospaceSpan().setInnerText(cornerLetters.substr(0, 3).split("").join(", ")),
+          ", and ",
+          MonospaceSpan().setInnerText(cornerLetters[3]),
+          " at each corner."
+        ),
+      );
+    }
+    //       <canvas id="${ScanDiceKey.overlayCanvasId}" class="overlay"></canvas>
+    //       <div class="content">
+    // <video id="${ScanDiceKey.playerId}" controls autoplay></video>
+    // </div>
+
+    this.append(
+      Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c ),
+      Div({class: "content"}).append(
+        Video().with( c => this.videoComponent = c ),
+      ),
+        `
+         <select id="${ScanDiceKey.cameraSelectionMenuId}"></select>
+      `
+    );
     this.captureCanvas = document.createElement("canvas") as HTMLCanvasElement;
     this.captureCanvasCtx = this.captureCanvas.getContext("2d")!;
 
     // Bind to HTML
-    this.player.style.setProperty("display", "none");
+    this.videoPlayer?.style.setProperty("display", "none");
     this.cameraSelectionMenu.style.setProperty("display", "none");
     this.mediaStream = undefined;
     this.cameraSessionId = Math.random().toString() + Math.random().toString();
@@ -151,11 +197,11 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
       // facingMode, aspectRatio, frameRate
     } = this.mediaStream?.getVideoTracks()[0]?.getSettings();
     this.camerasDeviceId = deviceId;
-    this.player!.style.removeProperty("display");
-    this.player!.srcObject = this.mediaStream = newStream;
+    this.videoPlayer!.style.removeProperty("display");
+    this.videoPlayer!.srcObject = this.mediaStream = newStream;
     if (height && width) {
-      this.player!.width = Math.min( width, 1024 );
-      this.player!.height = Math.min( height, 1024 );
+      this.videoPlayer!.width = Math.min( width, 1024 );
+      this.videoPlayer!.height = Math.min( height, 1024 );
     }
     this.updateCameraList();
     return newStream;
@@ -246,17 +292,17 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
    * which will call back to here.
    */
   startProcessingNewCameraFrame = () => {
-    if (this.player!.videoWidth == 0 || this.player!.videoHeight == 0) {
+    if (this.videoPlayer!.videoWidth == 0 || this.videoPlayer!.videoHeight == 0) {
         // There's no need to take action if there's no video
         setTimeout(this.startProcessingNewCameraFrame, 100);
         return;
     }
     // Ensure the capture canvas is the size of the video being retrieved
-    if (this.captureCanvas!.width != this.player!.videoWidth || this.captureCanvas!.height != this.player!.videoHeight) {
-        [this.captureCanvas!.width, this.captureCanvas!.height] = [this.player!.videoWidth, this.player!.videoHeight];
+    if (this.captureCanvas!.width != this.videoPlayer!.videoWidth || this.captureCanvas!.height != this.videoPlayer!.videoHeight) {
+        [this.captureCanvas!.width, this.captureCanvas!.height] = [this.videoPlayer!.videoWidth, this.videoPlayer!.videoHeight];
         this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
     }
-    this.captureCanvasCtx!.drawImage(this.player!, 0, 0);
+    this.captureCanvasCtx!.drawImage(this.videoPlayer!, 0, 0);
     const {width, height, data} = this.captureCanvasCtx!.getImageData(0, 0, this.captureCanvas!.width, this.captureCanvas!.height);
 
     // Ask the background worker to process the bitmap.
@@ -281,17 +327,20 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
    */
   handleProcessedCameraFrame = (response: ProcessFrameResponse) => {
     const {width, height, overlayImageBuffer, diceKeyReadJson, isFinished} = response;
-    // Ensure the overlay canvas is the same size as the captured canvas
-    if (this.overlayCanvas.width != width || this.overlayCanvas.height != height) {
-      [this.overlayCanvas.width, this.overlayCanvas.height] = [width, height];
-      // Ensure the overlay is lined up with the video frame
-      const {left, top} = this.player!.getBoundingClientRect()
-      this.overlayCanvas.style.setProperty("left", left.toString());
-      this.overlayCanvas.style.setProperty("top", top.toString());
-    }        
-    const overlayImageData = this.overlayCanvasCtx.getImageData(0, 0, width, height);
-    overlayImageData.data.set(new Uint8Array(overlayImageBuffer));
-    this.overlayCanvasCtx.putImageData(overlayImageData, 0, 0);
+    const {overlayCanvas} = this;
+    if (overlayCanvas) {
+      // Ensure the overlay canvas is the same size as the captured canvas
+      if (overlayCanvas.width != width || overlayCanvas.height != height) {
+        [overlayCanvas.width, overlayCanvas.height] = [width, height];
+        // Ensure the overlay is lined up with the video frame
+        const {left, top} = this.videoPlayer!.getBoundingClientRect()
+        overlayCanvas.style.setProperty("left", left.toString());
+        overlayCanvas.style.setProperty("top", top.toString());
+      }        
+      const overlayImageData = this.overlayCanvasCtx!.getImageData(0, 0, width, height);
+      overlayImageData.data.set(new Uint8Array(overlayImageBuffer));
+      this.overlayCanvasCtx?.putImageData(overlayImageData, 0, 0);
+    }
 
     if (isFinished && !this.finishDelayInProgress) {
       const diceKey = DiceKey(

@@ -20,7 +20,8 @@ window.addEventListener("load", () => {
           command: "getSecret",
           derivationOptionsJson: JSON.stringify(DerivationOptions({
             mutable: true,
-            excludeOrientationOfFaces: true
+            excludeOrientationOfFaces: true,
+            cornerLetters: "SWDC"
           }))
         }
       } as MessageEvent)

@@ -2,6 +2,10 @@ import {
   ComponentEvent
 } from "./component-event";
 
+export type AppendableItem = HtmlComponent | Node | string;
+export type AppendableItems = AppendableItem[];
+export type Appendable = AppendableItem | AppendableItems | Appendable[];
+
 export class HtmlComponent<
   OPTIONS extends object = object,
   TOP_LEVEL_ELEMENT extends HTMLElement = HTMLElement  
@@ -157,13 +161,38 @@ export class HtmlComponent<
    * 
    * @param child 
    */
-  addChild<HTML_COMPONENT extends HtmlComponent>(
+  appendChild<HTML_COMPONENT extends HtmlComponent>(
     child: HTML_COMPONENT
   ): HTML_COMPONENT {
     this.primaryElement.appendChild(child.primaryElement);
     this.trackChild(child);
     child.parentComponent = this;
     return child;
+  }
+
+  /*
+    Append a list of components, nodes, or HTML strings.
+  */
+  append(
+    ...items: Appendable[]
+  ) {
+    for (const child of items) {
+      if (Array.isArray(child)) {
+        this.append(...child);
+      } else if (typeof child === "string") {
+        this.appendHtml(child);
+      } else if (child instanceof HtmlComponent) {
+        this.appendChild(child);
+      } else {
+        this.primaryElement.append(child);
+      }
+    }
+    return this;
+  }
+
+  setInnerText(text: string) {
+    this.primaryElement.innerText = text;
+    return this;
   }
 
   /**

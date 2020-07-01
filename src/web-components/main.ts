@@ -19,8 +19,8 @@ import {
   ConfirmationDialog
 } from "./confirmation-dialog";
 import {
-  DisplayApiRequest
-} from "./display-api-request";
+  ApiRequest
+} from "./api-request";
 import {
   Exceptions
 } from "@dicekeys/dicekeys-api-js"
@@ -116,7 +116,7 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
     const diceKey = this.appState.diceKey;
     if (Step.getUsersConsent.isInProgress) {
       
-      const confirmationDialog = this.addChild(
+      const confirmationDialog = this.appendChild(
         new ConfirmationDialog({requestForUsersConsent: Step.getUsersConsent.options})
       );
       confirmationDialog
@@ -126,8 +126,8 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
 
     } else if (Step.apiCommand.isInProgress) {
       
-      this.addChild(
-        new DisplayApiRequest(
+      this.appendChild(
+        new ApiRequest(
           await ProofOfPriorDerivationModule.instancePromise,
           Step.apiCommand.options
         )
@@ -136,7 +136,7 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
       .userCancelledEvent.on( Step.apiCommand.cancel )
       Step.apiCommand.promise?.finally( this.renderSoon );
     } else if (Step.loadDiceKey.isInProgress) {
-      const readDiceKey = this.addChild(new ReadDiceKey());
+      const readDiceKey = this.appendChild(new ReadDiceKey());
       readDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
       readDiceKey.userCancelledEvent.on( () => Step.loadDiceKey.cancel(
         new Exceptions.UserCancelledLoadingDiceKey()
@@ -144,11 +144,11 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
       Step.loadDiceKey.promise?.finally( () => this.renderSoon() );
 
     } else if (diceKey) {
-      const displayCanvas = this.addChild(new DisplayDiceKeyCanvas({diceKey}));
+      const displayCanvas = this.appendChild(new DisplayDiceKeyCanvas({diceKey}));
       displayCanvas.forgetEvent.on( () => this.renderSoon() );
 
     } else {
-      const homeComponent = this.addChild(new HomeComponent());
+      const homeComponent = this.appendChild(new HomeComponent());
       homeComponent.loadDiceKeyButtonClicked.on( () => {
         this.loadDiceKey();
       });

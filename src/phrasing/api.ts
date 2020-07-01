@@ -2,6 +2,13 @@ import {
   ApiStrings,
   Exceptions
 } from "@dicekeys/dicekeys-api-js"
+import {
+  Appendable
+} from "../web-components/html-component";
+import {
+  MonospaceSpan,
+  Span,
+} from "../web-components/html-components";
 
 
 const knownHostSuffixes: [string, string][] = [
@@ -53,25 +60,31 @@ export const describeCommandsAction = (
   }
 }
 
-export const describeHost = (host: string): string => {
+export const describeHost = (host: string): Appendable => {
   const knownHost = getKnownHost(host);
   return (knownHost != null) ?
-    knownHost :
-    `The website at "${host}"`;
+      Span().with( e => e.primaryElement.style.setProperty("font-style", "italic") ).setInnerText(knownHost) :
+      // [//`The website at `,
+      MonospaceSpan().setInnerText(host)
+      //]
+  ;
 }
 
-export const describeCommand = (
+export const describeRequestChoice = (
   command: ApiStrings.Command,
   host: string,
   areDerivationOptionsSigned: boolean
 //  derivationOptionsObjOrJson: DerivationOptions | string
 //  const derivationOptions = DerivationOptions(derivationOptionsObjOrJson);
-): string => `${
-      describeHost(host)
-    } wants you to use your DiceKey to ${
-      describeCommandsAction(command, areDerivationOptionsSigned)
-    }.`;
+): Appendable => ([
+  "Allow ",
+  describeHost(host),
+  ` to use your DiceKey to ${describeCommandsAction(command, areDerivationOptionsSigned)}?`
+]);
 
-export const describeDiceKeyAccessRestritions = (host: string): string =>
-  `${describeHost(host)} will not get to see your DiceKey.`;
+
+export const describeDiceKeyAccessRestrictions = (host: string): Appendable => ([
+    describeHost(host),
+    ` will not see your DiceKey.`
+  ]);
 
