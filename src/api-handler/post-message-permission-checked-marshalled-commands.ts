@@ -58,6 +58,14 @@ export class PostMessagePermissionCheckedMarshalledCommands extends PermissionCh
     return (typeof value) === "string" ? value : undefined;
   }
 
+  protected unmarshallOptionalNumberParameter = (parameterName: string): number | undefined => {
+    const value = typeof (this.request?.data) === "object" && this.request?.data[parameterName];
+    if (typeof value === "string") {
+      return parseInt(value);
+    }
+    return;
+  }
+
   protected unmarshallBinaryParameter = (parameterName: string): Uint8Array => {
     const value = typeof (this.request?.data) === "object" && this.request?.data[parameterName];
     return ((typeof value) === "object" && (value instanceof Uint8Array)) ?

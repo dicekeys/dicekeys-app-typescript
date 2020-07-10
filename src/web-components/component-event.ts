@@ -8,7 +8,7 @@ export class ComponentEvent<ARGS extends any[] = [], CHAIN = any> {
   }
 
   private callbacks = new Set<(...args: ARGS)=> any>();
-  constructor(private parent: CHAIN) {
+  constructor(protected parent: CHAIN) {
     // Track all of the events present on the parent component
     if (!ComponentEvent.parentToEvents.has(parent)) {
       ComponentEvent.parentToEvents.set(parent, new Set());

@@ -3,11 +3,11 @@ import {
   DerivationOptions
 } from "@dicekeys/dicekeys-api-js";
 import {
-  HtmlComponent
+  Attributes,
+  HtmlComponent, Appendable
 } from "./html-component";
 import {
-  areDerivationOptionsMutable,
-  ProofOfPriorDerivationModule
+  areDerivationOptionsMutable, ProofOfPriorDerivationModule
 } from "../api-handler/mutate-derivation-options"
 import {
   DiceKey,
@@ -21,13 +21,22 @@ import {
 //  removeAllButCornerLettersFromDiceKey
 } from "./dicekey-canvas";
 import {
-  describeFrameOfReferenceForReallyBigNumber
-} from "../phrasing";
+//  describeFrameOfReferenceForReallyBigNumber,
+  describeHintPurpose
+} from "../phrasing/api";
 import { 
   Div,
   Label,
-  TextInput
+  TextInput,
+  A,
+  MonospaceSpan,
+  Span,
+  Checkbox,
+  RadioButton
 } from "./html-components";
+import {
+  DiceKeyAppState
+} from "../state";
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
@@ -43,36 +52,13 @@ import {
 // The hint does make it possible for others to know that you used the same  DcieKey for mutiple
 // accounts.
 
-export interface ApiResponseSettingsOptions extends ApiCommandParameters {
+export interface ApiResponseSettingsOptions extends ApiCommandParameters, Attributes {
   diceKey: DiceKey
 }
 
 export class ApiResponseSettings extends HtmlComponent<ApiResponseSettingsOptions> {
 
-  protected hintInputTextFieldId = this.uniqueNodeId("hint-text");
-  protected hintMessageId = this.uniqueNodeId("hint-message");
-  protected removeOrientationToggleButtonId = this.uniqueNodeId("remove-orientation");
-  // protected strengthMessageTextId = this.uniqueNodeId("strength-message-text");
-  // protected stregnthFrameOfReferenceTextId = this.uniqueNodeId("strehgth-frame-of-reference-text");
-
-  protected forgetDiceKeyAfterRespondingId = this.uniqueNodeId("remember-dicekey-after-responding-checkbox");
-  protected rememberDiceKeyForDurationId = this.uniqueNodeId("remember-dicekey-after-duration-checkbox");
-
   public readonly derivationOptions: DerivationOptions;
-
-//  private get messageDiv(){return document.getElementById(ConfirmOperationDialog.messageElementId) as HTMLDivElement;}
- 
-  // private get hintInputTextField(){ return this.getInputField(this.hintInputTextFieldId)!; }
-  private get hintMessage(){ return this.getField<HTMLDivElement>(this.hintMessageId)!; }
-  private get excludeOrientationToggleButton(){
-    return this.getInputField(this.removeOrientationToggleButtonId)!;
-  }
-  // private get strengthMessageText(){
-  //   return this.getField<HTMLDivElement>(this.strengthMessageTextId)!;
-  // }
-  // private get stregnthFrameOfReferenceText() {
-  //   return this.getField<HTMLDivElement>(this.stregnthFrameOfReferenceTextId)!;
-  // }
 
   private get diceKey(): DiceKey {
     return DiceKey.applyDerivationOptions(this.options.diceKey, this.derivationOptions);
@@ -93,32 +79,32 @@ export class ApiResponseSettings extends HtmlComponent<ApiResponseSettingsOption
   }
 
   
-  private get strength(): number {
-    const letterCount = 25; // FIXME - this.?.length || 0;
-    var fromLetters = 1;
-    for (var i=2; i <= letterCount; i++) fromLetters *= i;
-    const fromDigits = 6 ** 25;
-    const fromOrientations: number = 
-      this.derivationOptions.excludeOrientationOfFaces ? 1 :
-      4 ** 25;
-    return fromLetters * fromDigits * fromOrientations;
-  }
+  // private get strength(): number {
+  //   const letterCount = 25; // FIXME - this.?.length || 0;
+  //   var fromLetters = 1;
+  //   for (var i=2; i <= letterCount; i++) fromLetters *= i;
+  //   const fromDigits = 6 ** 25;
+  //   const fromOrientations: number = 
+  //     this.derivationOptions.excludeOrientationOfFaces ? 1 :
+  //     4 ** 25;
+  //   return fromLetters * fromDigits * fromOrientations;
+  // }
 
-  private get strengthMessage(): string {
-    // ",000" for US factor of 3, ".000" for jurisdctions that use that.
-    const zerosForThreeDecimalOrdersOfMagnitude = (1000).toLocaleString().substr(1);
+  // private get strengthMessage(): string {
+  //   // ",000" for US factor of 3, ".000" for jurisdctions that use that.
+  //   const zerosForThreeDecimalOrdersOfMagnitude = (1000).toLocaleString().substr(1);
 
-    var strength = this.strength;
-    const bits = Math.floor(Math.log2(strength));
-    var decimal: string = "";
-    while (strength > 1000000000) {
-      strength /= 10000;
-      decimal += zerosForThreeDecimalOrdersOfMagnitude;
-    }
-    decimal = Math.floor(strength).toLocaleString() + decimal;
+  //   var strength = this.strength;
+  //   const bits = Math.floor(Math.log2(strength));
+  //   var decimal: string = "";
+  //   while (strength > 1000000000) {
+  //     strength /= 10000;
+  //     decimal += zerosForThreeDecimalOrdersOfMagnitude;
+  //   }
+  //   decimal = Math.floor(strength).toLocaleString() + decimal;
 
-    return `Attakers must guess from ${decimal} possible values (${bits.toLocaleString()} bits of strength)`;
-  }
+  //   return `Attakers must guess from ${decimal} possible values (${bits.toLocaleString()} bits of strength)`;
+  // }
 
   public get derivationOptionsMutable(): boolean { return areDerivationOptionsMutable(this.derivationOptions); }
 
@@ -128,7 +114,7 @@ export class ApiResponseSettings extends HtmlComponent<ApiResponseSettingsOption
       return false;
     } 
     if (this.priorDerivationProvenCalculateOnlyOnce == null) {
-      this.priorDerivationProvenCalculateOnlyOnce = this.proofOfPriorDerivationModule.verify(
+      this.priorDerivationProvenCalculateOnlyOnce = ProofOfPriorDerivationModule.instance?.verify(
         this.seedString, this.derivationOptions
       );
     }
@@ -136,11 +122,11 @@ export class ApiResponseSettings extends HtmlComponent<ApiResponseSettingsOption
   }
 
   public get finalDerivationOptionsJson(): string {
-    if (!this.derivationOptionsMutable) {
+    if (!this.derivationOptionsMutable || !ProofOfPriorDerivationModule.instance) {
       // We weren't allowed to mutate the derivatio options so leave them unchanged
       return this.options.derivationOptionsJson
     } else {
-      return this.proofOfPriorDerivationModule.addToDerivationOptionsJson(this.seedString, this.derivationOptions)
+      return ProofOfPriorDerivationModule.instance.addToDerivationOptionsJson(this.seedString, this.derivationOptions)
     }
   }
  
@@ -150,7 +136,6 @@ export class ApiResponseSettings extends HtmlComponent<ApiResponseSettingsOption
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    private proofOfPriorDerivationModule: ProofOfPriorDerivationModule,
     options: ApiResponseSettingsOptions
 ) {
     super(options);
@@ -160,118 +145,106 @@ export class ApiResponseSettings extends HtmlComponent<ApiResponseSettingsOption
   hide21: boolean = true;
   private setDiceKeyCanvas = this.replaceableChild<DiceKeyCanvas>();
 
+  // animationTimeout: ReturnType<typeof setTimeout> | undefined;
+  // animateCloseBox () => {
+  //   this.animationTimeout = setTimeout
+  // }
+
   renderDiceKey = () => {
+//    const size = Math.min(window.innerWidth, window.innerHeight, 768);
     const diceKeyCanvas = this.setDiceKeyCanvas(new DiceKeyCanvas({
       diceKey: this.derivationOptions.excludeOrientationOfFaces ?
         DiceKey.removeOrientations(this.diceKey) :
         this.diceKey,
-      size: Math.min(window.innerWidth, window.innerHeight, 768),
+//      size,
+      diceBoxColor: "#000030",
       hide21: this.hide21,
       overlayMessage: {
-        message: "press to reveal",
+        message: "press to open box",
         fontFamily: "Sans-Serif",
-        fontColor: "#004000",
-        fontWeight: 500,
+        fontColor: "#00A000",
+//        fontSize: size / 12,
+        fontWeight: 600,
       }
     }));
     diceKeyCanvas.hide21Changed.on( (newHide21) => this.hide21 = newHide21 );
     return diceKeyCanvas;
   }
 
-  protected updateStrength = () => {
-    // this.strengthMessageText.textContent = this.strengthMessage;
-    // this.stregnthFrameOfReferenceText.textContent = describeFrameOfReferenceForReallyBigNumber(this.strength);
+  handleOrientationCheckboxClicked = (excludeOrientationOfFaces: boolean) => {
+    if (this.derivationOptionsMutable) {
+      this.derivationOptions.excludeOrientationOfFaces = excludeOrientationOfFaces
+      this.renderDiceKey()
+    }
   }
-
-  // protected updateHint = () => {
-  //   this.derivationOptions.seedHint = this.hintInputTextField.value;
-  //   this.updateStrength();
-  // }
 
   render() {
     super.render();
 
-    // this.append(`
-    //   <div id="${this.strengthMessageTextId}"></div>
-    //   <div id="${this.stregnthFrameOfReferenceTextId}"></div>
-    //   </div>
-    // `);
+    //var orientationCheckbox: Checkbox;
+    this.append(
+      Div({class: "dicekey-container"},
+        this.renderDiceKey()
+      )
+    );
     if (this.derivationOptionsMutable) {
-      var label: Label | undefined;
-      this.append( Div().append(
-        label = Label({text: "Hint"}),
-        TextInput().with( t => { 
-          t.primaryElement.setAttribute("size", "60")
-          t.value = this.cornerLettersClockwise.split("").join("");
-          label?.primaryElement.setAttribute("for", t.primaryElementId)
-          t.changed.on( () => {
-            this.derivationOptions.seedHint = t.value;
-          })
-        })
-      ));
-      //   ,
-      //   `
-      //   <div>
-      //     <label for="${this.hintInputTextFieldId}">Hint</label>
-      //     <input type="text" id="${this.hintInputTextFieldId}" size="60" />
-      //   </div>
-      // `
+      this.append(
+        Div({class: "orientation-widget"},
+          Div({}, `Orientation of individual dice`),
+          Label({}, RadioButton({name: "orientation", value: "preserve", checked: !this.derivationOptions.excludeOrientationOfFaces}).with( r => r.clickedEvent.on( () => {
+            this.derivationOptions.excludeOrientationOfFaces = false;
+            this.renderSoon();
+          }) ), "Preserve"),
+          Label({}, RadioButton({name: "orientation", value:"remove", checked: !!this.derivationOptions.excludeOrientationOfFaces}).with( r => r.clickedEvent.on( () => {
+            this.derivationOptions.excludeOrientationOfFaces = true;
+            this.renderSoon();
+          })), "Remove")
+        )
+      );
     }
-    this.append(`
-      <div>
-        <label for="${this.removeOrientationToggleButtonId}">Remove orientations</label>
-        <input type="checkbox" id="${this.removeOrientationToggleButtonId}"/>
-      </div>
-      <div>
-        <label for="${this.rememberDiceKeyForDurationId}">Forget DiceKey immediately after responding</label>
-        <select rememberDiceKeyForDuration="${this.rememberDiceKeyForDurationId}">
-        </select>
-      </div>
-      <div>
-    `);
-    // Add a hint for when you need to find the same DiceKey to [re-generate this [key|secret] [unseal this message].
-
-    // Clear DiceKey [immediately after responding], [after 5 more minutes], [after an hour], [only when I ask]
-    
-    // This tab will close when you respond.
-    // If you want to do more with this DiceKey than just respond to this request, open another dicekeys.app tab.
-
-    if (this)
-    this.renderDiceKey();
-
-    this.excludeOrientationToggleButton.checked = !!this.derivationOptions.excludeOrientationOfFaces;
-    
-    if (!this.derivationOptionsMutable) {
-      this.excludeOrientationToggleButton.disabled = true;
-    } else {
-
-      this.excludeOrientationToggleButton.addEventListener("click", () => {
-        this.derivationOptions.excludeOrientationOfFaces = !this.derivationOptions.excludeOrientationOfFaces;
-        this.updateStrength();
-        this.renderDiceKey();
-        return true;
-      });
-//      this.hintInputTextField.addEventListener("keyup", this.updateHint);
+    this.append(
+      Div({class: 'dicekey-preservation-instruction'},
+        Span({text: `When you make your choice, the DiceKeys app will forget your DiceKey.  If you want to keep this app open and your DiceKey in memory, `}, '&nbsp;'),
+        A({href: window.origin, target:"_blank"}).append(`open a new app tab`),
+        `&nbsp;`,
+        Span({text: ` first.`}),      
+      ).withElement( div => {
+        DiceKeyAppState.instance!.windowsOpen.changedEvent.onChangeAndInitialValue( () => {
+          div.style.setProperty("visibility", DiceKeyAppState.instance!.windowsOpen.areThereOthers ? "hidden" : "visible")
+        } );
+      }),
+    );
+    var hintPurpose: Appendable | undefined;
+    if (this.derivationOptionsMutable && (hintPurpose = describeHintPurpose(this.options.command)) != null) {
+      var cornerCheckbox: Checkbox | undefined;
+      var hintTextFieldLabel: Label | undefined;
+      this.append(
+        Div().append(
+          Div().append(
+            `Include hint(s) to help you find the same DiceKey to ${hintPurpose}.`
+          ),
+          Div().append(
+            cornerCheckbox = Checkbox(),
+            Label({for: cornerCheckbox?.primaryElementId}).append(
+              `Include the corner letters of your DiceKey: `,
+              MonospaceSpan({text: this.cornerLettersClockwise}),
+              `.`
+            ),
+          ),
+          Div().append(
+            hintTextFieldLabel = Label().appendText(`Custom hint:`),
+            TextInput().with( t => { 
+              t.primaryElement.setAttribute("size", "60")
+              hintTextFieldLabel?.primaryElement.setAttribute("for", t.primaryElementId)
+              t.changedEvent.on( () => {
+                this.derivationOptions.seedHint = t.value;
+              })
+            })
+          )
+        )
+      );
     }
 
-    this.updateStrength();
-
-    // if (this.options.command === "getSecret" && this.priorDerivationProven ) {
-    //   // Note that "You are re-creating a secret you have created before."
-    // } else if (
-    //   this.options.command.startsWith("get") &&
-    //     this.options.command.endsWith("Key") &&
-    //     this.priorDerivationProven
-    // ) {
-    //   // Note that "You are re-creating a key that you have created before."
-    // } else if (!this.derivationOptionsMutable && this.derivationOptions.excludeOrientationOfFaces) {
-    //   // This application requires that you disclose your DiceKey without orientations
-    // } else if (!this.derivationOptionsMutable) {
-    //   // Hide hint field.  Hide orientations field
-    //   // This application does nto support hints or ignoring orientations
-    // } else {
-    //   // You may set a hint and remove orientations
-    // }
 
   }
 

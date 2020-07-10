@@ -2,7 +2,7 @@ import {
   ComponentEvent
 } from "./component-event"
 import {
-  HtmlComponent
+  HtmlComponent, Attributes
 } from "./html-component"
 import "regenerator-runtime/runtime";
 import {
@@ -30,7 +30,7 @@ const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints =>
   },
 });
 
-interface ReadDiceKeyOptions {
+interface ReadDiceKeyOptions extends Attributes {
   msDelayBetweenSuccessAndClosure?: number;
 }
 
@@ -309,7 +309,7 @@ export class ReadDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
         .map( FaceRead.fromJson )
         .map( faceRead => faceRead.toFace() )
       );
-      DiceKeyAppState.instance!.diceKey = diceKey;
+      DiceKeyAppState.instance!.diceKey.value = diceKey;
       this.finishDelayInProgress = true;
       setTimeout( () => {
         this.diceKeyLoadedEvent.send(diceKey);

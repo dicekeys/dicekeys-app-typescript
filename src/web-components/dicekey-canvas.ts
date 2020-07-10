@@ -1,4 +1,5 @@
 import {
+  Attributes,
   HtmlComponent
 } from "./html-component";
 import {
@@ -15,15 +16,15 @@ export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
 
-export interface DiceKeyCanvasOptions extends DiceKeyRenderOptions {
-  size?: number,
+export interface DiceKeyCanvasOptions extends DiceKeyRenderOptions, Attributes {
+//  size?: number,
   diceKey: PartialDiceKey,
   overlayMessage?: {
     message: string,
     fontWeight?: string | number,
     fontFamily?: string,
     fontColor?: string,
-    fontSize?: number    
+    fontSizeAsFractionOfBoxSize?: number    
   }
 }
 
@@ -44,7 +45,6 @@ export class DiceKeyCanvas extends HtmlComponent<DiceKeyCanvasOptions, HTMLCanva
     return this.diceKeyDisplayCanvas.getContext("2d")!; 
   }
 
-  private get size(): number { return this.options.size ?? 640 }
   public hide21: boolean;
 
   /**
@@ -57,9 +57,9 @@ export class DiceKeyCanvas extends HtmlComponent<DiceKeyCanvasOptions, HTMLCanva
   ) {
     super(options, document.createElement("canvas"));
     this.hide21 = !!options.hide21;
-    const sizeStr = this.size.toString();
-    this.primaryElement.setAttribute("height", sizeStr);
-    this.primaryElement.setAttribute("width", sizeStr);
+    // const sizeStr = this.size.toString();
+    this.primaryElement.classList.add("dicekey-canvas");
+
 
     this.primaryElement.addEventListener("click", () => this.toggleHide21() );
   }
@@ -74,15 +74,20 @@ export class DiceKeyCanvas extends HtmlComponent<DiceKeyCanvasOptions, HTMLCanva
 
   render() {
     super.render();
+    console.log("dimesions", this.parent?.primaryElement.offsetWidth, this.parent?.primaryElement.offsetHeight);
+    const size = Math.max(512, Math.min(this.primaryElement.parentElement?.offsetWidth ?? 512, this.primaryElement.parentElement?.offsetHeight ?? 512));
+    this.primaryElement.setAttribute("height", `${size}`);
+    this.primaryElement.setAttribute("width", `${size}`);
     const ctx = this.ctx;
-    renderDiceKey(ctx, this.options.diceKey, {hide21: this.hide21});
+    renderDiceKey(ctx, this.options.diceKey, {...this.options, hide21: this.hide21});
     if (this.hide21 && this.options.overlayMessage) {
-      const {message, fontColor = "#000000", fontSize = this.size/8, fontWeight = "normal", fontFamily = FontFamily} = this.options.overlayMessage;
+      const {message, fontColor = "#000000", fontSizeAsFractionOfBoxSize = 1/12 , fontWeight = "normal", fontFamily = FontFamily} = this.options.overlayMessage;
+      const fontSize = size * fontSizeAsFractionOfBoxSize;
       ctx.textAlign = "center";
       const font = `${ fontWeight } ${ fontSize }px ${ fontFamily }, monospace`;
       ctx.font = font;
       ctx.fillStyle = fontColor;
-      ctx.fillText(message, this.size /2, ((this.size / 2) + (fontSize * 0.3)) ); // 0.3 adjusts for baseline
+      ctx.fillText(message, this.diceKeyDisplayCanvas.width / 2, (this.diceKeyDisplayCanvas.height / 2) + (fontSize * 0.3) ); // 0.3 adjusts for baseline
       }
   }
 

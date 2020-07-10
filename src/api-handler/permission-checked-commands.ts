@@ -9,7 +9,9 @@ import {
   SeededCryptoModuleWithHelpers
 } from "@dicekeys/seeded-crypto-js";
 import {
-  DerivableObjectNames, ApiStrings
+  DerivableObjectNames, ApiStrings, DerivationOptions,
+  ApiCalls,
+  secretToPasswordWithSpacesBetweenWords
 } from "@dicekeys/dicekeys-api-js";
 import {
   PermissionCheckedSeedAccessor
@@ -36,6 +38,25 @@ export class PermissionCheckedCommands {
   public getAuthToken = (respondToUrl: string): string =>
     DiceKeyAppState.instance!!.addAuthenticationToken(respondToUrl);
 
+  imp = <METHOD extends ApiCalls.ApiCall>(
+    command: ApiCalls.ApiCommand<METHOD>,
+    implementation: (
+        seedString: string,
+        parameters: ApiCalls.ApiCallParameters<METHOD>
+      ) => ApiCalls.ApiCallResult<METHOD>
+  ): (parameters: ApiCalls.ApiCallParameters<METHOD>) => ApiCalls.ApiCallResult<METHOD> =>
+      (
+        parameters: ApiCalls.ApiCallParameters<METHOD>
+      ) => implementation("", {command, ...parameters} as ApiCalls.ApiRequestObject<METHOD>);
+
+  getSecret = this.imp<ApiCalls.GetSecret>(
+    "getSecret",
+    (seedString, {derivationOptionsJson}) => {
+      return this.seededCryptoModule.Secret.deriveFromSeed(
+        seedString, derivationOptionsJson)
+    }
+  )
+      
   /**
    * Implement [DiceKeysIntentApiClient.getSecret] with the necessary permissions checks
    */
@@ -44,10 +65,33 @@ export class PermissionCheckedCommands {
       ApiStrings.Commands.getSecret,
       originalDerivationOptionsJson,
       DerivableObjectNames.Secret
-    ).then( async ({seedString, derivationOptionsJson}) =>
+    ).then( ({seedString, derivationOptionsJson}) =>
       this.seededCryptoModule.Secret.deriveFromSeed(
         seedString, derivationOptionsJson)
     )
+
+    public getPassword = async (
+      originalDerivationOptionsJson: string,
+      wordLimit?: number
+    ) =>
+    this.permissionCheckedSeedAccessor.getSeedOrThrowIfNotAuthorizedAsync(
+      ApiStrings.Commands.getPassword,
+      originalDerivationOptionsJson,
+      DerivableObjectNames.Secret
+    ).then( async ({seedString, derivationOptionsJson}) => {
+        const secret = this.seededCryptoModule.Secret.deriveFromSeed(
+          seedString, derivationOptionsJson)
+        try {
+          const {wordList = "en_1024_words_5_chars_max_20200709"} = DerivationOptions(derivationOptionsJson);
+          const options = wordLimit != null ? {wordsNeeded: wordLimit} : {}; 
+          const password = secretToPasswordWithSpacesBetweenWords( secret.secretBytes, wordList, options );
+          return {password, derivationOptionsJson};
+        } finally {
+          secret.delete();
+        }
+      }
+    )
+
 
   /**
    * Implement [DiceKeysIntentApiClient.sealWithSymmetricKey] with the necessary permissions checks

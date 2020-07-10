@@ -2,7 +2,7 @@ import {
   ComponentEvent
 } from "./component-event"
 import {
-  HtmlComponent
+  HtmlComponent, Attributes
 } from "./html-component";
 import {
   DiceKeyCanvas,
@@ -15,7 +15,7 @@ import {
   DiceKey
 } from "../dicekeys/dicekey";
 
-interface DisplayDiceKeyCanvasOptions {
+interface DisplayDiceKeyCanvasOptions extends Attributes {
   diceKey: DiceKey;
   showOnlyCorners?: boolean;
 }
@@ -53,6 +53,7 @@ export class DisplayDiceKeyCanvas extends HtmlComponent<DisplayDiceKeyCanvasOpti
   renderDiceKeyCanvas = (): DiceKeyCanvas =>
     this.setDiceKeyCanvas(
       new DiceKeyCanvas({
+        diceBoxColor: "#000010",
         diceKey: this.showOnlyCorners ?
           removeAllButCornerLettersFromDiceKey(this.options.diceKey) :
           this.options.diceKey
@@ -80,7 +81,7 @@ export class DisplayDiceKeyCanvas extends HtmlComponent<DisplayDiceKeyCanvasOpti
     this.toggleObscureButton?.addEventListener("click", this.toggleObscureState );
     
     this.forgetDiceKeyButton.addEventListener("click", () => {
-      DiceKeyAppState.instance?.eraseDiceKey();
+      DiceKeyAppState.instance?.diceKey.remove();
       this.forgetEvent.send();
       this.remove();
     });

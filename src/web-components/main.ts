@@ -1,5 +1,5 @@
 import {
-  HtmlComponent
+  HtmlComponent, Attributes
 } from "./html-component"
 
 import {
@@ -47,7 +47,7 @@ import {
 import { ProofOfPriorDerivationModule } from "../api-handler/mutate-derivation-options";
 
 
-interface BodyOptions {
+interface BodyOptions extends Attributes {
   appState: DiceKeyAppState;
 }
 
@@ -61,13 +61,17 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
     const {appState} = options;
     this.appState = appState;
     
-    window.addEventListener("message", messageEvent => this.handleApiMessageEvent(messageEvent) );
+    window.addEventListener("message", messageEvent => this.handleMessageEvent(messageEvent) );
     // Let the parent know we're ready for messages. // FIXME document in API
     if (window.opener) {
       // Using origin "*" is dangerous, but we allow it only to let the window
       // that opened the app know that the window it opened had loaded.
       window.opener?.postMessage("ready", "*");
     }
+  }
+
+  handleMessageEvent (messageEvent: MessageEvent) {
+    this.handleApiMessageEvent(messageEvent);
   }
 
   handleApiMessageEvent = async (messageEvent: MessageEvent) => {
@@ -90,7 +94,7 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
 
 
   loadDiceKey = async (): Promise<DiceKey> => {
-    const diceKey = DiceKeyAppState.instance?.diceKey;
+    const diceKey = DiceKeyAppState.instance?.diceKey.value;
     if (diceKey) {
       return diceKey;
     }
@@ -113,7 +117,7 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
 
   async render() {
     super.render();
-    const diceKey = this.appState.diceKey;
+    const diceKey = this.appState.diceKey.value;
     if (Step.getUsersConsent.isInProgress) {
       
       const confirmationDialog = this.appendChild(
@@ -124,35 +128,35 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
         .declineChosenEvent.on( () => Step.getUsersConsent.cancel(UsersConsentResponse.Deny) )
       Step.getUsersConsent.promise?.finally( () => this.renderSoon() );
 
-    } else if (Step.apiCommand.isInProgress) {
-      
-      this.appendChild(
+    } else if (Step.apiCommand.isInProgress) {      
+      this.append(
         new ApiRequest(
           await ProofOfPriorDerivationModule.instancePromise,
           Step.apiCommand.options
-        )
+        ).with ( apiRequest => {
+          apiRequest.userApprovedEvent.on( Step.apiCommand.complete )
+          apiRequest.userCancelledEvent.on( Step.apiCommand.cancel )    
+        })
       )
-      .userApprovedEvent.on( Step.apiCommand.complete )
-      .userCancelledEvent.on( Step.apiCommand.cancel )
       Step.apiCommand.promise?.finally( this.renderSoon );
     } else if (Step.loadDiceKey.isInProgress) {
-      const readDiceKey = this.appendChild(new ReadDiceKey());
-      readDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
-      readDiceKey.userCancelledEvent.on( () => Step.loadDiceKey.cancel(
-        new Exceptions.UserCancelledLoadingDiceKey()
-      ));
+      this.append(new ReadDiceKey().with( readDiceKey => { 
+        readDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
+        readDiceKey.userCancelledEvent.on( () => Step.loadDiceKey.cancel(
+          new Exceptions.UserCancelledLoadingDiceKey()
+        ));
+      }));
       Step.loadDiceKey.promise?.finally( () => this.renderSoon() );
 
     } else if (diceKey) {
-      const displayCanvas = this.appendChild(new DisplayDiceKeyCanvas({diceKey}));
-      displayCanvas.forgetEvent.on( () => this.renderSoon() );
-
+      this.append(new DisplayDiceKeyCanvas({diceKey}).with( displayCanvas => {
+        displayCanvas.forgetEvent.on( () => this.renderSoon() );
+      }));
     } else {
-      const homeComponent = this.appendChild(new HomeComponent());
-      homeComponent.loadDiceKeyButtonClicked.on( () => {
-        this.loadDiceKey();
-      });
-
+      this.append(new HomeComponent().with( homeComponent  => 
+        homeComponent.loadDiceKeyButtonClicked.on( () => {
+          this.loadDiceKey();
+      })));
     }
   }
 

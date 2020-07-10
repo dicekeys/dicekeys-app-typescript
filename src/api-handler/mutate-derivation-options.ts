@@ -38,8 +38,14 @@ export class ProofOfPriorDerivationModule {
     private seededCryptoModule: SeededCryptoModuleWithHelpers
   ) {}
 
-  public static readonly instancePromise: Promise<ProofOfPriorDerivationModule> =
-    (async () => new ProofOfPriorDerivationModule(await SeededCryptoModulePromise) )();
+  private static _instance?: ProofOfPriorDerivationModule;
+  public static readonly instancePromise: Promise<ProofOfPriorDerivationModule> = (
+    async () => {
+      ProofOfPriorDerivationModule._instance = new ProofOfPriorDerivationModule(await SeededCryptoModulePromise);
+      return ProofOfPriorDerivationModule._instance;
+    }
+  )();
+  public static get instance() { return ProofOfPriorDerivationModule._instance; }
 
   /**
  * Generate a proof that this seed has been used to derive a key

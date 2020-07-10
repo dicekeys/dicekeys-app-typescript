@@ -1,6 +1,7 @@
 import {
-  EncryptedAppStateStore
-} from "./encrypted-app-state-store";
+  EncryptedAppStateStore,
+  TabsAndWindowsSharingThisState,
+} from "./locally-stored-state";
 import {
   DiceKey
 } from "../dicekeys/dicekey";
@@ -19,18 +20,16 @@ export class DiceKeyAppState extends EncryptedAppStateStore {
     expireAfterMinutesUnused: number
   ) {
     super (seededCryptoModule, expireAfterMinutesUnused);
+    // Erase the DiceKey if all windows are closed.
+    window.addEventListener("unload", () => {
+      if (this.windowsOpen.countOfOthers === 0 && window.origin.indexOf("localhost") === -1 ) {
+        this.diceKey.remove();
+      }
+    });
   }
 
-  private static diceKeyFieldName = "diceKey";
-  public get diceKey(): DiceKey | undefined {
-    return this.getEncryptedField<DiceKey>(DiceKeyAppState.diceKeyFieldName);
-  }
-  public set diceKey(value: DiceKey | undefined) {
-    this.setEncryptedField<DiceKey | undefined>(DiceKeyAppState.diceKeyFieldName, value);
-  }
-  public eraseDiceKey() {
-    this.removeField(DiceKeyAppState.diceKeyFieldName);
-  }
+  public readonly diceKey = this.addEncyrptedField<DiceKey>("dicekey");
+  public readonly windowsOpen = new TabsAndWindowsSharingThisState("windows-sharing-dicekeys-app-state");
 
   private static authenticationFieldName = (authenticationToken: string) =>
     `authenticationToken:${authenticationToken}`;
@@ -46,15 +45,15 @@ export class DiceKeyAppState extends EncryptedAppStateStore {
         return urlSafeBase64Encode((randomBytes(20)));
       }
     })();
-    this.setEncryptedField<string>(DiceKeyAppState.authenticationFieldName(authToken), respondToUrl);
+    const field = this.addEncyrptedField<string>(DiceKeyAppState.authenticationFieldName(authToken));
+    field.set(respondToUrl);
     return authToken;
   };
 
   getUrlForAuthenticationToken = (
     authToken: string
   ) : string | undefined =>
-    this.getEncryptedField<string>(DiceKeyAppState.authenticationFieldName(authToken));
-
+    this.addEncyrptedField<string>(DiceKeyAppState.authenticationFieldName(authToken)).get();
 
 
   private static instanceWritable: DiceKeyAppState | undefined;

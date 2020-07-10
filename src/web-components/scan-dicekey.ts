@@ -2,7 +2,7 @@ import {
   ComponentEvent
 } from "./component-event"
 import {
-  HtmlComponent
+  HtmlComponent, Attributes
 } from "./html-component"
 import "regenerator-runtime/runtime";
 import {
@@ -24,8 +24,8 @@ import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 import {
   Canvas,
   Div,
-  H3,
   MonospaceSpan,
+  Select,
   Video,
 } from "./html-components";
 import {
@@ -41,7 +41,7 @@ const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints =>
   },
 });
 
-interface ReadDiceKeyOptions {
+interface ReadDiceKeyOptions extends Attributes {
   msDelayBetweenSuccessAndClosure?: number;
   host: string;
   derivationOptions?: DerivationOptions;
@@ -54,7 +54,6 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
   private static readonly cameraSelectionMenuId = "camera-selection-menu";
 
   private get cameraSelectionMenu() {return document.getElementById(ScanDiceKey.cameraSelectionMenuId) as HTMLSelectElement;}
-//  private get overlayCanvas() {return document.getElementById(ScanDiceKey.overlayCanvasId) as HTMLCanvasElement;}
   private overlayCanvasComponent?: Canvas;
   private get overlayCanvas() {return this.overlayCanvasComponent?.primaryElement};
   private get overlayCanvasCtx() {return this.overlayCanvas?.getContext("2d")};
@@ -73,7 +72,7 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
 
   public get msDelayBetweenSuccessAndClosure(): number {
     return this.options.msDelayBetweenSuccessAndClosure == null ?
-      500 // Default delay of 500 seconds
+      100 // Default delay of 100 seconds
       :
       this.options.msDelayBetweenSuccessAndClosure;
   }
@@ -97,7 +96,7 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
 
     if (seedHint) {
       this.append(
-        H3().append(
+        Div({class: "hint"},
           "According to ",
           describeHost(host),
           ", you provided the following hint to identify your DiceKey: ",
@@ -106,7 +105,7 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
       );
     } else if (cornerLetters && cornerLetters.length === 4) {
       this.append(
-        H3().append(
+        Div({class: "hint"},
           "According to ",
           describeHost(host),
           ", you previously used a DiceKey with the letters ",
@@ -117,26 +116,20 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
         ),
       );
     }
-    //       <canvas id="${ScanDiceKey.overlayCanvasId}" class="overlay"></canvas>
-    //       <div class="content">
-    // <video id="${ScanDiceKey.playerId}" controls autoplay></video>
-    // </div>
 
     this.append(
       Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c ),
       Div({class: "content"}).append(
         Video().with( c => this.videoComponent = c ),
       ),
-        `
-         <select id="${ScanDiceKey.cameraSelectionMenuId}"></select>
-      `
+      Div({class: "centered-controls"}, Select({id: ScanDiceKey.cameraSelectionMenuId})),
     );
     this.captureCanvas = document.createElement("canvas") as HTMLCanvasElement;
     this.captureCanvasCtx = this.captureCanvas.getContext("2d")!;
 
     // Bind to HTML
-    this.videoPlayer?.style.setProperty("display", "none");
-    this.cameraSelectionMenu.style.setProperty("display", "none");
+    this.videoPlayer?.style.setProperty("visibility", "hidden");
+    this.cameraSelectionMenu.style.setProperty("visibility", "hidden");
     this.mediaStream = undefined;
     this.cameraSessionId = Math.random().toString() + Math.random().toString();
 
@@ -151,7 +144,7 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
       return false;
     }
     // If there's an existing stream, terminate it
-    this.mediaStream?.getTracks().forEach(track => track.stop() );
+    this.mediaStream?.getTracks().forEach( track => track.stop() );
     this.frameWorker.removeEventListener( "message", this.handleMessage );
     this.frameWorker.postMessage({action: "terminateSession", sessionId: this.cameraSessionId} as TerminateSessionRequest);
 
@@ -186,24 +179,26 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
   updateCamera = async (
     mediaStreamConstraints: MediaStreamConstraints = this.defaultVideoConstraints
   ): Promise<MediaStream> => {
-    const newStream = await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
     const oldMediaStream = this.mediaStream;
     // If there's an existing stream, terminate it
     oldMediaStream?.getTracks().forEach(track => track.stop() );
     // Now set the new stream
-    this.mediaStream = newStream;
+
+    const newStream = this.mediaStream = await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
     const {
       deviceId, height, width,
       // facingMode, aspectRatio, frameRate
     } = this.mediaStream?.getVideoTracks()[0]?.getSettings();
     this.camerasDeviceId = deviceId;
-    this.videoPlayer!.style.removeProperty("display");
-    this.videoPlayer!.srcObject = this.mediaStream = newStream;
+    this.videoPlayer!.srcObject = newStream;
     if (height && width) {
-      this.videoPlayer!.width = Math.min( width, 1024 );
-      this.videoPlayer!.height = Math.min( height, 1024 );
+      // this.videoPlayer!.width = Math.min( width, 1024 );
+      // this.videoPlayer!.height = Math.min( height, 1024 );
     }
     this.updateCameraList();
+    // Ensure the video play doesn't have property display: none
+    this.videoPlayer!.style.setProperty("visibility", "visible");
+
     return newStream;
   }
 
@@ -236,7 +231,7 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
     )
     if (cameraList.length === 1) {
       // There's only one camera option, so hide the camera-selection field.
-      this.cameraSelectionMenu!.style.setProperty("display", "none");
+      this.cameraSelectionMenu!.style.setProperty("visibility", "visible");
       return;
     }
     // const frontFacing = cameraList.filter( ({facingMode}) => facingMode === "user" );
@@ -277,7 +272,7 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
         })
       );
     this.cameraSelectionMenu!.value = this.camerasDeviceId || "";
-    this.cameraSelectionMenu!.style.removeProperty("display");
+    this.cameraSelectionMenu!.style.setProperty("visibility", "visible");
     // Handle user selection of cameras
     this.cameraSelectionMenu!.addEventListener("change", (_event) =>
       // The deviceID of the camera was stored in the value name of the option,
@@ -348,7 +343,7 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
         .map( FaceRead.fromJson )
         .map( faceRead => faceRead.toFace() )
       );
-      DiceKeyAppState.instance!.diceKey = diceKey;
+      DiceKeyAppState.instance!.diceKey.value = diceKey;
       this.finishDelayInProgress = true;
       setTimeout( () => {
         this.diceKeyLoadedEvent.send(diceKey);

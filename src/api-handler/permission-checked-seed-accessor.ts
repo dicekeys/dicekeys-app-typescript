@@ -8,10 +8,31 @@ import {
   ApiStrings,
   DerivationOptions,
   DerivableObjectName,
+  DerivableObjectNames,
 } from "@dicekeys/dicekeys-api-js";
 import {
   PackagedSealedMessage
 } from "@dicekeys/seeded-crypto-js";
+
+export const commandToDerivableObjectName = (command: ApiStrings.NonMetaCommand): DerivableObjectName => {
+  switch (command) {
+    case "getPassword":
+    case "getSecret":
+      return DerivableObjectNames.Secret;
+    case "getSealingKey": 
+    case "getUnsealingKey":
+    case "unsealWithUnsealingKey":
+      return DerivableObjectNames.UnsealingKey;
+    case "getSymmetricKey":
+    case "sealWithSymmetricKey":
+    case "unsealWithSymmetricKey":
+      return DerivableObjectNames.SymmetricKey;
+    case "getSigningKey":
+    case "generateSignature":
+    case "getSignatureVerificationKey":
+          return DerivableObjectNames.SigningKey
+  }
+}
 
 export class ClientMayNotRetrieveKeyException extends Error {
   constructor(public readonly type: DerivableObjectName) {
@@ -65,6 +86,19 @@ export class PermissionCheckedSeedAccessor{
     return await this.getUsersApprovalOfApiCommand({
       command, host, derivationOptionsJson
     });
+  }
+
+  public withSeedAndUserModifiedDerivationOptions = async (
+    command: ApiStrings.NonMetaCommand,
+    derivationOptionsJson: string,
+    fn: (seedStringAndDerivationOptions: SeedStringAndDerivationOptionsForApprovedApiCommand) => any
+  ): Promise<void> => {
+    this.permissionChecks.throwIfClientNotAuthorized(DerivationOptions(derivationOptionsJson, commandToDerivableObjectName(command)))
+    const host = this.permissionChecks.host;
+    const seedStringAndDerivationOptions = await this.getUsersApprovalOfApiCommand({
+      command, host, derivationOptionsJson
+    });
+    await fn(seedStringAndDerivationOptions);
   }
 
 

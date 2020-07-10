@@ -91,18 +91,21 @@ const textShade = "#000000";
 const hiddenTextShade = "#B0B0B0";
 
 export interface DiceKeyRenderOptions {
-  hide21?: boolean;
+  hide21?: boolean,
+  diceBoxColor?: string,
+  showLidTab?: boolean,
 }
 
 const renderFaceForSizes = (sizes: Sizes) => (
   ctx: CanvasRenderingContext2D,
   face: Partial<Face>,
   center: Point,
-  index: number = 0,
-  {hide21 = false}: DiceKeyRenderOptions = {},
+  _index: number = 0,
+  {
+    leaveDieBlank = false
+  }: DiceKeyRenderOptions & {leaveDieBlank?: boolean} = {},
 ): void => {
-  const hideThisDie = hide21 && !DiceKey.cornerIndexeSet.has(index);
-
+  const dieSurfaceColor = "#ffffff";
   const dieLeft = center.x - 0.5 * sizes.linearScaling;
   const dieTop = center.y - 0.5 * sizes.linearScaling;
   const undoverlineLeft = dieLeft + sizes.linearScaling * FaceDimensionsFractional.undoverlineLeftEdge;
@@ -141,17 +144,25 @@ const renderFaceForSizes = (sizes: Sizes) => (
   }
 
   // Draw the outline rectangle
-  ctx.fillStyle = ctx.strokeStyle = hideThisDie ? hiddenTextShade : textShade;
-  const sizeFromEdgeToEdge = sizes.linearSizeOfFace * 0.8;
+  ctx.fillStyle = dieSurfaceColor;
+  ctx.strokeStyle = textShade;
+  const sizeFromEdgeToEdge = sizes.linearSizeOfFace * 0.85;
+  const radius = sizeFromEdgeToEdge / 12;
   roundRect(
     ctx,
     center.x - 0.5 * sizeFromEdgeToEdge, center.y - 0.5 * sizeFromEdgeToEdge,
     sizeFromEdgeToEdge, sizeFromEdgeToEdge,
-    sizeFromEdgeToEdge / 6,
-    hideThisDie
+    radius,
+    true
+  );
+  roundRect(
+    ctx,
+    center.x - 0.5 * sizeFromEdgeToEdge, center.y - 0.5 * sizeFromEdgeToEdge,
+    sizeFromEdgeToEdge, sizeFromEdgeToEdge,
+    radius
   );
 
-  if (hideThisDie) {
+  if (leaveDieBlank) {
     return;
   }
 
@@ -207,24 +218,60 @@ export const renderDiceKey = (
   diceKey: PartialDiceKey,
   options: DiceKeyRenderOptions = {}
 ): void => {
-  const {width, height} = ctx.canvas;
-  const linearSize = Math.min(width, height);
-  const linearFaceSize = linearSize / 5;
+  const {
+    diceBoxColor = "#000030",
+    hide21,
+    showLidTab = true
+  } = options;
+  // The linear length of the box dedicated to the tab;
+  const tabFraction = showLidTab ? 0.1 : 0;
+  var {width, height} = ctx.canvas;
+
+  // Erase and make canvas transparent
+  ctx.clearRect(0, 0, width, height);
+
+  const linearSizeOfBox = Math.min(width, height * (1 - tabFraction));
+  const linearSizeOfTab = tabFraction * linearSizeOfBox;
+
   const centerX = width / 2;
-  const centerY = height / 2;
+  var centerY = (height - linearSizeOfTab) / 2
+  
+  const marginOfBoxEdgeAsFractionOfLinearSize = 0.03;
+  const linearSizeOfInnerBox = 1 - 2 * marginOfBoxEdgeAsFractionOfLinearSize;
+  const linearFaceSize = linearSizeOfBox * linearSizeOfInnerBox / 5;
   const renderFace = renderFaceFactory(linearFaceSize);
 
-  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = diceBoxColor;
+  roundRect(
+    ctx,
+    centerX - linearSizeOfBox / 2, centerY - linearSizeOfBox / 2, linearSizeOfBox, linearSizeOfBox,
+    linearSizeOfBox / 50,
+    true
+  );
+  var [r, g, b] = ctx.getImageData(centerX, centerY, 1, 1).data;
+  const diceBoxColorRGB = {r, g, b};
+
+  if (hide21 && showLidTab) {
+    ctx.beginPath();
+    ctx.arc(
+      centerX, centerY + linearSizeOfBox/2,
+      linearSizeOfTab,
+      0, Math.PI, false
+    );
+    ctx.closePath();
+    ctx.fill();
+  }
+  // ctx.fillRect(0, 0, width, height);
 
   diceKey.forEach( (face, index) => {
     // if obscuring, show only the top left and bottom right dice in canonical form.
-    renderFace(ctx, face,
-      {
-        x: centerX + linearFaceSize * (-2 + (index % 5)),
-        y: centerY + linearFaceSize * (-2 + Math.floor(index / 5)),
-      },
-      index,
-      options
-    );
+    const x = centerX + linearFaceSize * (-2 + (index % 5));
+    const y =  centerY + linearFaceSize * (-2 + Math.floor(index / 5));
+    const isCornerDie = DiceKey.cornerIndexeSet.has(index);
+    renderFace(ctx, face, {x, y}, index, {...options, leaveDieBlank: hide21 && !isCornerDie} );
+    if (hide21) {
+      ctx.fillStyle = `rgba(${diceBoxColorRGB.r},${diceBoxColorRGB.g},${diceBoxColorRGB.b},${ isCornerDie ? 0.8 : 0.97 })`;
+      ctx.fillRect(x - linearFaceSize / 2, y - linearFaceSize / 2, linearFaceSize, linearFaceSize);
+    }
   });
 }

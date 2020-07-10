@@ -91,6 +91,9 @@ export abstract class PermissionCheckedMarshalledCommands {
   protected abstract unmarshallOptionalStringParameter(
     parameterName: string
   ): string | undefined;
+  protected abstract unmarshallOptionalNumberParameter(
+    parameterName: string
+  ): number | undefined;
   protected abstract unmarshallBinaryParameter(
     parameterName: string
   ): Uint8Array;
@@ -162,10 +165,25 @@ export abstract class PermissionCheckedMarshalledCommands {
     this.api.getAuthToken(this.unmarshallStringParameter(ApiStrings.Inputs.COMMON.respondTo))
   ).sendSuccess()
 
+  private getPassword = async (): Promise<void> => {
+    const wordLimit = this.unmarshallOptionalNumberParameter(ApiStrings.Inputs.getPassword.wordLimit);
+    const {derivationOptionsJson, password} = await this.api.getPassword(
+      this.getCommonDerivationOptionsJsonParameter(),
+      wordLimit
+    );
+    this.marshallResult(
+      ApiStrings.Outputs.getPassword.derivationOptionsJson, derivationOptionsJson
+    );
+    this.marshallResult(
+      ApiStrings.Outputs.getPassword.password, password
+    );
+    this.sendSuccess();
+  }
+    
   private getSecret = async (): Promise<void> => this.marshallSeededCryptoObjectResultThenDeleteIt(
-      ApiStrings.Outputs.getSecret.secret,
-      await this.api.getSecret(this.getCommonDerivationOptionsJsonParameter())
-    ).sendSuccess()
+    ApiStrings.Outputs.getSecret.secret,
+    await this.api.getSecret(this.getCommonDerivationOptionsJsonParameter())
+  ).sendSuccess()
 
   private sealWithSymmetricKey = async (): Promise<void> =>
     this.marshallSeededCryptoObjectResultThenDeleteIt(

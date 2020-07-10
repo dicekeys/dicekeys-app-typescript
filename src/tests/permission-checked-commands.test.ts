@@ -52,7 +52,17 @@ describe("PermissionCheckedCommandsInstrumentedTest", () => {
     )
   );
 
-test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
+  test("getPassword", async () => {
+    const commands = await getPermissionCheckedCommands("https://example.com/");
+    const originalDerivationOptionsJson = JSON.stringify(DerivationOptions({
+      allow: [{host: "example.com"}]
+    }));
+    const {password, derivationOptionsJson}= await commands.getPassword(originalDerivationOptionsJson, 5);
+    expect(password.split(" ").length).toBe(5);
+    expect(derivationOptionsJson).toBe(originalDerivationOptionsJson)
+  });
+      
+  test("preventsLengthExtensionAttackOnASymmetricSeal", async () => {
     await expect( async () => {
       await ( 
         (await getPermissionCheckedCommands("https://example.comspoof/"))

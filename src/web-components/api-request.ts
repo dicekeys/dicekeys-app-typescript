@@ -3,10 +3,11 @@ import {
   DerivationOptions
 } from "@dicekeys/dicekeys-api-js";
 import {
-  HtmlComponent
+  HtmlComponent, Attributes
 } from "./html-component";
 import {
-  H3, H2
+  //H3, H2,
+  Div, InputButton
 } from "./html-components";
 import {
   ComponentEvent
@@ -45,34 +46,35 @@ import { ApiResponseSettings } from "./api-response-settings";
 // The hint does make it possible for others to know that you used the same  DcieKey for mutiple
 // accounts.
 
+export interface ApiRequestOptions extends Attributes, ApiCommandParameters {}
 
-export class ApiRequest extends HtmlComponent<ApiCommandParameters> {
+export class ApiRequest extends HtmlComponent<ApiRequestOptions> {
   protected messageElementId = this.uniqueNodeId("message");
-  protected confirmSendResponseButtonId = this.uniqueNodeId("continue-button");
-  protected cancelSendResponseButtonId = this.uniqueNodeId("cancel-button");
+  // protected confirmSendResponseButtonId = this.uniqueNodeId("continue-button");
+  // protected cancelSendResponseButtonId = this.uniqueNodeId("cancel-button");
 
   // protected hintMessageId = this.uniqueNodeId("hint-message");
 
-  protected closeWindowUponRespondingCheckboxId = this.uniqueNodeId("close-window-on-responding-checkbox");
-  protected forgetDiceKeyAfterRespondingId = this.uniqueNodeId("remember-dicekey-after-responding-checkbox");
-  protected rememberDiceKeyForDurationId = this.uniqueNodeId("remember-dicekey-after-duration-checkbox");
+  // protected closeWindowUponRespondingCheckboxId = this.uniqueNodeId("close-window-on-responding-checkbox");
+  // protected forgetDiceKeyAfterRespondingId = this.uniqueNodeId("remember-dicekey-after-responding-checkbox");
+  // protected rememberDiceKeyForDurationId = this.uniqueNodeId("remember-dicekey-after-duration-checkbox");
 
   public readonly derivationOptions: DerivationOptions;
 
 //  private get messageDiv(){return document.getElementById(ConfirmOperationDialog.messageElementId) as HTMLDivElement;}
-  private get continueButton() {return this.getInputField(this.confirmSendResponseButtonId)!; };
-  private get cancelButton() {return this.getInputField(this.cancelSendResponseButtonId)!; }
+  // private get continueButton() {return this.getInputField(this.confirmSendResponseButtonId)!; };
+  // private get cancelButton() {return this.getInputField(this.cancelSendResponseButtonId)!; }
  
   // private get hintMessage(){ return this.getField<HTMLDivElement>(this.hintMessageId)!; }
-  private get closeWindowUponRespondingCheckbox(){
-    return this.getInputField(this.closeWindowUponRespondingCheckboxId)!;
-  }
-  private get closeWindowUponResponding() {
-    return this.closeWindowUponRespondingCheckbox.checked;
-  }
+  // private get closeWindowUponRespondingCheckbox(){
+  //   return this.getInputField(this.closeWindowUponRespondingCheckboxId)!;
+  // }
+  // private get closeWindowUponResponding() {
+  //   return this.closeWindowUponRespondingCheckbox.checked;
+  // }
 
   private get diceKey(): DiceKey | undefined {
-    const diceKey = DiceKeyAppState.instance?.diceKey;
+    const diceKey = DiceKeyAppState.instance?.diceKey.value;
     if (diceKey == null) {
       return undefined;
     }
@@ -117,74 +119,49 @@ export class ApiRequest extends HtmlComponent<ApiCommandParameters> {
 
   hide21: boolean = true;
 
-  private setScanOrResponse = this.replaceableChild<ApiResponseSettings | ScanDiceKey>();
+//  private setScanOrResponse?: ReplaceableChild<ApiResponseSettings | ScanDiceKey>;
   private apiResponseSettings?: ApiResponseSettings;
+
+  private handleCancelButton = () => {
+    this.userCancelledEvent.send();
+    this.remove();    
+  }
+  private handleContinueButton = () => {
+    const seedString = this.seedString;
+    const derivationOptionsJson = this.apiResponseSettings?.finalDerivationOptionsJson;
+    if (seedString != null && derivationOptionsJson != null) {
+      this.userApprovedEvent.send({seedString, derivationOptionsJson});
+    }
+
+    // if (this.closeWindowUponResponding) {
+      setInterval( () => window.close(), 250 );
+    // }
+
+    this.remove();
+  }
 
   async render() {
     super.render();
     const {command, host} = this.options;
-    const diceKey = DiceKeyAppState.instance?.diceKey;
+    const diceKey = DiceKeyAppState.instance?.diceKey.value;
+    // Re-render whenver the diceKey value changes.
+    DiceKeyAppState.instance?.diceKey.changedEvent.on( this.renderSoon );
 
     this.append(
-      H2({class: "request-choice"}).with( c => c.append( API.describeRequestChoice(command, host, this.priorDerivationProven) ) ),
-      H3({class: "request-promise"}).with( c => c.append( API.describeDiceKeyAccessRestrictions(host) ) )
+      Div({class: "request-container"},
+        Div({class: "request-choice"}, API.describeRequestChoice(command, host, this.priorDerivationProven) ),
+        Div({class: "request-promise"}, API.describeDiceKeyAccessRestrictions(host) ),
+        ( diceKey ?
+          new ApiResponseSettings({...this.options, diceKey}).with( e => this.apiResponseSettings = e )
+          :
+          new ScanDiceKey({host, derivationOptions: this.derivationOptions})
+        ),
+        Div({class: "decision-button-container"},
+        InputButton({value: "Cancel", clickHandler: this.handleCancelButton}),
+        diceKey == null ? undefined :
+          InputButton({value: "Continue", clickHandler: this.handleContinueButton} )
+        ),
+      ),
     );
-    // this.appendHtml(`
-    //   <h2 id="message">${API.describeCommand(command, host, this.priorDerivationProven)}</h2>
-    //   <h3 id="submessage">${API.describeDiceKeyAccessRestritions(host)}</h3>
-    // `)
-    this.appendHtml(`      
-      <div>
-        <label for="${this.closeWindowUponRespondingCheckboxId}">Close this tab when responding</label>
-        <input type="checkbox" id="${this.closeWindowUponRespondingCheckboxId}"/>
-      <div>
-      <div>
-        <input type="button" id="${this.cancelSendResponseButtonId}" value="Cancel"/>
-        <input type="button" id="${this.confirmSendResponseButtonId}" value="Continue"/>
-      </div>
-    `);    
-    // if (!diceKey && this.derivationOptions.seedHint != null) { this.appendHtml(`
-    //     <div id="${this.hintMessageId}">></div>
-    //   `);
-    //   this.hintMessage.textContent = this.derivationOptions.seedHint;
-    // };   
-    if (!diceKey) {
-      this.continueButton.style.setProperty("visibility", "hidden");
-    }
-    this.setScanOrResponse(
-      diceKey ?
-        this.apiResponseSettings = new ApiResponseSettings(
-          await ProofOfPriorDerivationModule.instancePromise,
-          {
-            ...this.options,
-            diceKey
-          }
-        )
-        :
-        new ScanDiceKey({
-          msDelayBetweenSuccessAndClosure: 250,
-          host,
-          derivationOptions: this.derivationOptions
-        })
-    );
-
-    this.continueButton.addEventListener("click", async () => {
-      const seedString = this.seedString;
-      const derivationOptionsJson = this.apiResponseSettings?.finalDerivationOptionsJson;
-      if (seedString != null && derivationOptionsJson != null) {
-        this.userApprovedEvent.send({seedString, derivationOptionsJson});
-      }
-
-      if (this.closeWindowUponResponding) {
-        setInterval( () => window.close(), 250 );
-      }
-
-      this.remove();
-    });
-    this.cancelButton.addEventListener("click", () => {
-      this.userCancelledEvent.send();
-      this.remove();
-    });
-
   }
 }

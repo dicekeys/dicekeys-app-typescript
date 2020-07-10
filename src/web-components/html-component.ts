@@ -2,12 +2,25 @@ import {
   ComponentEvent
 } from "./component-event";
 
-export type AppendableItem = HtmlComponent | Node | string;
-export type AppendableItems = AppendableItem[];
-export type Appendable = AppendableItem | AppendableItems | Appendable[];
+interface AppendableCallback<T extends HtmlComponent = HtmlComponent> {
+  (htmlComponent: T): Appendable;
+}
+export type AppendableItem<T extends HtmlComponent = HtmlComponent> = AppendableCallback<T> | HtmlComponent | Node | string | undefined | false;
+export type Appendable<T extends HtmlComponent = HtmlComponent> = AppendableItem<T> | AppendableItem<T>[] | Appendable<T>[];
+
+
+export class Attributes {
+  name?: string;
+  id?: string;
+  value?: string;
+  style?: string;
+  class?: string | string[];
+  text?: string;
+}
+
 
 export class HtmlComponent<
-  OPTIONS extends object = object,
+  OPTIONS extends Attributes = Attributes,
   TOP_LEVEL_ELEMENT extends HTMLElement = HTMLElement  
 > {
   detachEvent = new ComponentEvent(this);
@@ -24,9 +37,34 @@ export class HtmlComponent<
   
   constructor(
     public readonly options: OPTIONS,
-    public readonly primaryElement: TOP_LEVEL_ELEMENT = document.createElement("div") as unknown as TOP_LEVEL_ELEMENT,
+    public readonly primaryElement: TOP_LEVEL_ELEMENT = document.createElement("div") as unknown as TOP_LEVEL_ELEMENT
   ) {
     this.detachEvent.on(() => this.remove());
+    const {text, class: Class} = this.options;
+    for (const key of ["id", "name", "style", "value"] as const) {
+      const val = options[key];
+      if (typeof val === "string") {
+        this.primaryElement.setAttribute(key, val);
+      }
+    }
+    // Give the object a class for each class it belongs to
+    // for (var obj: object | undefined = this; obj != null; obj = (obj as {super?: object}).super) {
+    //   this.primaryElement.classList.add(obj.constructor.name)
+    // }
+    const nameOfDescendantClass = this.constructor.name;
+    if (nameOfDescendantClass != "HtmlElement") {
+      this.primaryElement.classList.add(nameOfDescendantClass);
+    }
+    if (typeof text === "string" && this.primaryElement.innerText != null) {
+      this.primaryElement.innerText = text;
+    }
+    if (Class != null) {
+      const classes: string[] = typeof Class === "string" ?
+        [Class] :
+        Array.isArray(Class) ?
+          [...Class] : [];
+      this.primaryElement.classList.add(...classes);
+    }
     this.renderSoon();
   }
 
@@ -140,7 +178,7 @@ export class HtmlComponent<
    * 
    * @param html 
    */
-  appendHtml(html: string) {
+  appendHtml(html: string): this {
     // We can't simply add the HTML like this...
     //   `this.primaryElement.innerHTML += html;`
     // because that might mess up any existing children.
@@ -154,6 +192,15 @@ export class HtmlComponent<
     this.primaryElement.append(...div.childNodes);
     // and then clean up that temporary div.
     div.remove();
+    return this;
+  }
+
+  appendText(text: string): this {
+    const div = document.createElement("div");
+    div.innerText = text;
+    this.primaryElement.append(...div.childNodes);
+    div.remove();
+    return this;
   }
 
   /**
@@ -174,10 +221,14 @@ export class HtmlComponent<
     Append a list of components, nodes, or HTML strings.
   */
   append(
-    ...items: Appendable[]
-  ) {
+    ...items: Appendable<this>[]
+  ): this {
     for (const child of items) {
-      if (Array.isArray(child)) {
+      if (child == null || child === false) {
+        // skip undefined/null entries
+      } else if (typeof child === "function") {
+        this.append(child(this));
+      } else if (Array.isArray(child)) {
         this.append(...child);
       } else if (typeof child === "string") {
         this.appendHtml(child);
@@ -194,15 +245,31 @@ export class HtmlComponent<
     this.primaryElement.innerText = text;
     return this;
   }
+  
+  with = (callback: (t: this) => any): this => {
+    callback(this);
+    return this;
+  }
+
+  withElement = (callback: (t: TOP_LEVEL_ELEMENT) => any): this => {
+    callback(this.primaryElement);
+    return this;
+  }
 
   /**
    * Create a child ement that can be replaced
    */
-  replaceableChild = <HTML_COMPONENT extends HtmlComponent>() => {
+  replaceableChild = <HTML_COMPONENT extends HtmlComponent>(): ReplaceableChild<HTML_COMPONENT> => {
     var oldChild: HTML_COMPONENT | undefined = undefined;
     const replace = <ACTUAL_HTML_COMPONENT extends HTML_COMPONENT = HTML_COMPONENT>(
       child: ACTUAL_HTML_COMPONENT
     ): ACTUAL_HTML_COMPONENT => {
+      // if (child == null) {
+      //   if (oldChild) {
+      //     oldChild.remove();
+      //   }
+      //   return child;
+      // }
       if (oldChild != null && oldChild.primaryElement.parentNode != null && this.childComponents.has(oldChild)) {
         oldChild.primaryElement.replaceWith(child.primaryElement);
         oldChild.remove();
@@ -216,4 +283,7 @@ export class HtmlComponent<
     }
     return replace;
   }
+}
+export interface ReplaceableChild<HTML_COMPONENT extends HtmlComponent> {
+  (child: HTML_COMPONENT): HTML_COMPONENT
 }

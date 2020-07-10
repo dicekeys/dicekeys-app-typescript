@@ -5,23 +5,26 @@ import {
 import {
   AppMain
 } from "./web-components/main";
-import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
+import { DerivationOptions, ApiStrings } from "@dicekeys/dicekeys-api-js";
 
 window.addEventListener("load", () => {
   
   DiceKeyAppState.instancePromise.then( (appState) => {
     const app = new AppMain({appState});
+
+    window.addEventListener("resize", app.renderSoon );
     
     // For testing
     if (window.origin.startsWith("http://localhost")) {
       app.handleApiMessageEvent({
         origin: "https://localhost",
         data: {
-          command: "getSecret",
-          derivationOptionsJson: JSON.stringify(DerivationOptions({
-            mutable: true,
-            excludeOrientationOfFaces: true,
-            cornerLetters: "SWDC"
+          [ApiStrings.Inputs.COMMON.command]: ApiStrings.Commands.getPassword,
+          [ApiStrings.Inputs.getPassword.wordLimit]: "10",
+          derivationOptionsJson: JSON.stringify(DerivationOptions({            
+//            mutable: true,
+//            excludeOrientationOfFaces: true,
+//            cornerLetters: "SWDC"
           }))
         }
       } as MessageEvent)

@@ -3,13 +3,14 @@ import {
   RequestForUsersConsent
 } from "@dicekeys/dicekeys-api-js";
 import {
-  HtmlComponent
+  HtmlComponent,
+  Attributes
 } from "./html-component";
 import {
   ComponentEvent
 } from "./component-event"
 
-interface ConfirmationDialogOptions {
+interface ConfirmationDialogOptions extends Attributes {
   requestForUsersConsent?: RequestForUsersConsent,
   origin?: string
 };
