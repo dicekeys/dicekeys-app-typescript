@@ -1,6 +1,5 @@
 import {
-  ApiStrings,
-  Exceptions,
+  ApiStrings
 } from "@dicekeys/dicekeys-api-js"
 import {
   Appendable
@@ -110,9 +109,8 @@ export const describeCommandsAction = (
     case "getSealingKey": 
     return [`Do you want your DiceKey to ${createOrRecreate} keys for `, hostComponent, ` to store secrets?`];
     // Never
-    case "getAuthToken":
-//    default:
-        throw new Exceptions.InvalidCommand("Invalid API Command: " + command);
+    // default:
+    //     throw new Exceptions.InvalidCommand("Invalid API Command: " + command);
   }
 }
 
@@ -164,7 +162,6 @@ export const describeHintPurpose = (
       return `decode secrets or encode more secrets`;
     case "unsealWithSymmetricKey":
     case "unsealWithUnsealingKey":
-    case "getAuthToken":
       return undefined;
   }
 }

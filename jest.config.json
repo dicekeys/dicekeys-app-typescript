@@ -13,4 +13,4 @@
     "collectCoverage": true,
     "coveragePathIgnorePatterns": ["/node_modules/"],
     "testEnvironment": "jest-environment-node"
-  }
+}

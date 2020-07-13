@@ -9,7 +9,7 @@ import {
   urlSafeBase64Decode,
   urlSafeBase64Encode
 } from "./encodings";
-import { Commands } from "@dicekeys/dicekeys-api-js/dist/api-strings";
+import { Commands, MetaCommands } from "@dicekeys/dicekeys-api-js/dist/api-strings";
 import {
   GenerateSignature,
   GetPassword,
@@ -39,6 +39,9 @@ import {
   PackagedSealedMessageJson,
   PackagedSealedMessageFields
 } from "@dicekeys/seeded-crypto-js";
+import {
+  getRequestsDerivationOptionsJson
+} from "../api-handler/get-requests-derivation-options-json";
 const {
   Inputs,
   Outputs
@@ -63,7 +66,7 @@ export class UrlApi {
       const urlPromise = new Promise<URL>( (resolve, reject) => this.pendingCallResolveFunctions.set(requestId, {resolve, reject}));
       requestUrl.searchParams.append(Inputs.COMMON.requestId, requestId);
       requestUrl.searchParams.append(Inputs.COMMON.respondTo, this.respondToUrl);
-      requestUrl.searchParams.append(Inputs.COMMON.command, Commands.getAuthToken);
+      requestUrl.searchParams.append(Inputs.COMMON.command, MetaCommands.getAuthToken);
       this.transmitRequest(requestUrl);
       const url = await urlPromise;
       const newAuthToken = url.searchParams.get(Outputs.getAuthToken.authToken);
@@ -80,16 +83,14 @@ export class UrlApi {
   protected call = async <
     REQUEST extends ApiCalls.ApiRequestObject>(
     request: REQUEST & ApiCalls.ApiRequestObject
-  ): Promise<ApiCalls.ResponseForRequest<REQUEST>> => {
+  ): Promise<ApiCalls.ResultForRequest<REQUEST>> => {
     const requestUrl = new URL(this.requestUrlBase);
     const marshallString = (field: string, value: string) => requestUrl.searchParams.set(field, value);
     const requestId = ApiFactory.generateRequestId();
     marshallString(Inputs.COMMON.requestId, requestId);
     marshallString(Inputs.COMMON.respondTo, this.respondToUrl);
     marshallString(Inputs.COMMON.command, request.command)
-    const derivationOptionsJson =
-      ("derivationOptionsJson" in request) ?
-      request.derivationOptionsJson : request.packagedSealedMessage.derivationOptionsJson;
+    const derivationOptionsJson = getRequestsDerivationOptionsJson(request);
     if ("derivationOptionsJson" in request) {
       marshallString(Inputs.withDerivationOptions.derivationOptionsJson, request.derivationOptionsJson)
     }
@@ -205,9 +206,9 @@ export class UrlApi {
             derivationOptionsJson
           })) as ApiCalls.ApiCallResult<SealWithSymmetricKey>;
       case Commands.unsealWithSymmetricKey:
-        return urlSafeBase64Decode(required(Outputs.unsealWithSymmetricKey.plaintext)) as ApiCalls.ApiCallResult<UnsealWithSymmetricKey>;
+        return {plaintext: urlSafeBase64Decode(required(Outputs.unsealWithSymmetricKey.plaintext))} as ApiCalls.ApiCallResult<UnsealWithSymmetricKey>;
       case Commands.unsealWithUnsealingKey:
-        return urlSafeBase64Decode(required(Outputs.unsealWithUnsealingKey.plaintext)) as ApiCalls.ApiCallResult<UnsealWithUnsealingKey>;
+        return {plaintext: urlSafeBase64Decode(required(Outputs.unsealWithUnsealingKey.plaintext))} as ApiCalls.ApiCallResult<UnsealWithUnsealingKey>;
       default:
         throw new Error();
       }
@@ -241,8 +242,10 @@ export class UrlApi {
       try {
         const exception = result.searchParams.get(Outputs.COMMON.exception);
         if (exception) {
-          const exceptionMessage = result.searchParams.get(Outputs.COMMON.exceptionMessage);
-          throw new Error(`Exception: ${exception} with message ${exceptionMessage}`);
+          const message = result.searchParams.get(Outputs.COMMON.message) ?? undefined;
+          const stack = result.searchParams.get(Outputs.COMMON.stack) ?? undefined;
+          throw Exceptions.restoreException(exception, message, stack);
+          // throw new Error(`Exception: ${exception} with message ${message}`);
         }
         resolveFn!.resolve(result);
       } catch (e) {

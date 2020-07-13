@@ -27,7 +27,7 @@ export class PasswordManagerSignin extends HtmlComponent {
 
   getPasswordFromDiceKey = async() => {
     try {
-      const secretFields = await getSecret(pwmgrAppSecretDerivationOptionsJson);
+      const secretFields = await getSecret({derivationOptionsJson: pwmgrAppSecretDerivationOptionsJson});
       const secretAs13Words = secretTo10BitWords(secretFields.secretBytes, {wordsNeeded: 13});
       this.passwordTextElement.value = secretAs13Words.join(" ");
       // const secret = (await SeededCryptoModulePromise).Secret.fromJsObject(secretFields);

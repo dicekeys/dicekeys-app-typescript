@@ -2,12 +2,16 @@ import {
   DiceKey
 } from "../dicekeys/dicekey";
 import {
-  RequestForUsersConsent, UsersConsentResponse
-} from "@dicekeys/dicekeys-api-js";
+  ApiRequestContext
+} from "../api-handler/handle-api-request";
 import {
-  ApiCommandParameters,
-  SeedStringAndDerivationOptionsForApprovedApiCommand
-} from "../api-handler/permission-checked-seed-accessor";/**
+  ConsentResponse
+} from "../api-handler/handle-api-request";
+// import {
+//   ApiCommandParameters,
+//   SeedStringAndDerivationOptionsForApprovedApiCommand
+// } from "../api-handler/permission-checked-seed-accessor";
+/**
  * Represent an application step that is awaiting completion as a promise
  * that returns a result when complete.
  */
@@ -117,7 +121,7 @@ export const loadDiceKey = new StepState<DiceKey, undefined>();
 /**
  * A step for obtaining user's consent.
  */
-export const getUsersConsent = new StepState<UsersConsentResponse, RequestForUsersConsent>();
+export const getUsersConsent = new StepState<ConsentResponse, ApiRequestContext>();
 
 // /**
 //  * A step for the user modifying derivation options
@@ -131,8 +135,8 @@ export const getUsersConsent = new StepState<UsersConsentResponse, RequestForUse
   /**
  * A step for completing an API command
  */
-export const apiCommand =
-new StepState<
-  SeedStringAndDerivationOptionsForApprovedApiCommand,
-  ApiCommandParameters
->();
+// export const apiCommand =
+// new StepState<
+//   void,
+//   ApiRequestContext
+// >();

@@ -3,30 +3,21 @@ import {
 } from "./html-component"
 
 import {
-  RequestForUsersConsent,
-  UsersConsentResponse,
+  // RequestForUsersConsent,
+  // UsersConsentResponse,
 } from "@dicekeys/dicekeys-api-js";
 // import {
 //   ComponentEvent
 // } from "./component-event";
+import {
+  ApiRequestContainer
+} from "./api-request-container";
 import {
   DisplayDiceKeyCanvas
 } from "./display-dicekey-canvas";
 import {
   HomeComponent
 } from "./home-component";
-import {
-  ConfirmationDialog
-} from "./confirmation-dialog";
-import {
-  ApiRequest
-} from "./api-request";
-import {
-  Exceptions
-} from "@dicekeys/dicekeys-api-js"
-import {
-  ReadDiceKey
-} from "./read-dicekey";
 import {
   DiceKey
 } from "../dicekeys/dicekey";
@@ -37,14 +28,12 @@ import {
   Step
 } from "../state"
 import {
-  PostMessagePermissionCheckedMarshalledCommands
-} from "../api-handler/post-message-permission-checked-marshalled-commands";
-import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
-import { RequestForUsersConsentFn } from "../api-handler/api-permission-checks";
+  postMessageApiResponder
+} from "../api-handler/handle-post-message-api-request";
 import {
-  GetUsersApprovalOfApiCommand, ApiCommandParameters
-} from "../api-handler/permission-checked-seed-accessor";
-import { ProofOfPriorDerivationModule } from "../api-handler/mutate-derivation-options";
+  ApiRequestContext
+} from "../api-handler/handle-api-request";
+import { ScanDiceKey } from "./scan-dicekey";
 
 
 interface BodyOptions extends Attributes {
@@ -68,27 +57,26 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
       // that opened the app know that the window it opened had loaded.
       window.opener?.postMessage("ready", "*");
     }
+
+    this.handleApiRequestReceivedViaPostMessage = postMessageApiResponder(this.getUsersApprovalOfApiCommand)
   }
+
+  readonly handleApiRequestReceivedViaPostMessage: ReturnType<typeof postMessageApiResponder>;
 
   handleMessageEvent (messageEvent: MessageEvent) {
     this.handleApiMessageEvent(messageEvent);
   }
 
   handleApiMessageEvent = async (messageEvent: MessageEvent) => {
-    const serverApi = new PostMessagePermissionCheckedMarshalledCommands(
-      messageEvent,
-      await SeededCryptoModulePromise,
-      this.requestUsersConsent,
-      this.getUsersApprovalOfApiCommand,
-    );
-    if (serverApi.isCommand()) {
-      await serverApi.execute();
-      const windowName = messageEvent?.data?.windowName;
-      // Try to send focus back to calling window.
-      if (typeof windowName === "string") {
+    try {
+      await this.handleApiRequestReceivedViaPostMessage(messageEvent);
+    } finally {
+      // Close this window shortly after request completion
+      setTimeout( () => {
         const windowOpener = window.opener;// window.open("", windowName);
         windowOpener?.focus();
-      }
+        window.close()
+      }, 250 );
     }
   };
 
@@ -102,49 +90,35 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
     return await Step.loadDiceKey.start();
   }
 
-  requestUsersConsent: RequestForUsersConsentFn = (
-    requestForUsersConsent: RequestForUsersConsent
+  getUsersApprovalOfApiCommand = (
+    requestContext: ApiRequestContext
   ) => {
     this.renderSoon();
-    return Step.getUsersConsent.start(requestForUsersConsent);
+    return Step.getUsersConsent.start(requestContext);
   }
 
-  getUsersApprovalOfApiCommand: GetUsersApprovalOfApiCommand = (
-    parameters: ApiCommandParameters
-  ) => {
-    return Step.apiCommand.start(parameters);
-  }
+  // getUsersApprovalOfApiCommand: GetUsersApprovalOfApiCommand = (
+  //   parameters: ApiCommandParameters
+  // ) => {
+  //   return Step.apiCommand.start(parameters);
+  // }
 
   async render() {
     super.render();
     const diceKey = this.appState.diceKey.value;
     if (Step.getUsersConsent.isInProgress) {
-      
-      const confirmationDialog = this.appendChild(
-        new ConfirmationDialog({requestForUsersConsent: Step.getUsersConsent.options})
-      );
-      confirmationDialog
-        .allowChosenEvent.on( () => Step.getUsersConsent.complete(UsersConsentResponse.Allow) )
-        .declineChosenEvent.on( () => Step.getUsersConsent.cancel(UsersConsentResponse.Deny) )
-      Step.getUsersConsent.promise?.finally( () => this.renderSoon() );
-
-    } else if (Step.apiCommand.isInProgress) {      
       this.append(
-        new ApiRequest(
-          await ProofOfPriorDerivationModule.instancePromise,
-          Step.apiCommand.options
+        new ApiRequestContainer(
+          {requestContext: Step.getUsersConsent.options}
         ).with ( apiRequest => {
-          apiRequest.userApprovedEvent.on( Step.apiCommand.complete )
-          apiRequest.userCancelledEvent.on( Step.apiCommand.cancel )    
+          apiRequest.userApprovedEvent.on( Step.getUsersConsent.complete )
+          apiRequest.userCancelledEvent.on( Step.getUsersConsent.cancel )    
         })
       )
-      Step.apiCommand.promise?.finally( this.renderSoon );
+      Step.getUsersConsent.promise?.finally( this.renderSoon );
     } else if (Step.loadDiceKey.isInProgress) {
-      this.append(new ReadDiceKey().with( readDiceKey => { 
+      this.append(new ScanDiceKey({host: ""}).with( readDiceKey => { 
         readDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
-        readDiceKey.userCancelledEvent.on( () => Step.loadDiceKey.cancel(
-          new Exceptions.UserCancelledLoadingDiceKey()
-        ));
       }));
       Step.loadDiceKey.promise?.finally( () => this.renderSoon() );
 

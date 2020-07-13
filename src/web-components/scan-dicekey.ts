@@ -41,7 +41,7 @@ const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints =>
   },
 });
 
-interface ReadDiceKeyOptions extends Attributes {
+interface ScanDiceKeyOptions extends Attributes {
   msDelayBetweenSuccessAndClosure?: number;
   host: string;
   derivationOptions?: DerivationOptions;
@@ -50,7 +50,7 @@ interface ReadDiceKeyOptions extends Attributes {
 /**
  * This class implements the demo page.
  */
-export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
+export class ScanDiceKey extends HtmlComponent<ScanDiceKeyOptions> {
   private static readonly cameraSelectionMenuId = "camera-selection-menu";
 
   private get cameraSelectionMenu() {return document.getElementById(ScanDiceKey.cameraSelectionMenuId) as HTMLSelectElement;}
@@ -83,7 +83,7 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    options: ReadDiceKeyOptions
+    options: ScanDiceKeyOptions
   ) {
     super(options);
     this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
@@ -94,7 +94,7 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
     const {seedHint, cornerLetters} = this.options.derivationOptions || {};
     const {host} = this.options;
 
-    if (seedHint) {
+    if (host && seedHint) {
       this.append(
         Div({class: "hint"},
           "According to ",
@@ -103,7 +103,7 @@ export class ScanDiceKey extends HtmlComponent<ReadDiceKeyOptions> {
           MonospaceSpan().setInnerText(seedHint)
         )
       );
-    } else if (cornerLetters && cornerLetters.length === 4) {
+    } else if (host && cornerLetters && cornerLetters.length === 4) {
       this.append(
         Div({class: "hint"},
           "According to ",

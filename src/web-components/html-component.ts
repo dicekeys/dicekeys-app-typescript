@@ -36,7 +36,7 @@ export class HtmlComponent<
     `${nonUniqueName}::${(HtmlComponent.uniqueElementIdCounter++).toString()}`;
   
   constructor(
-    public readonly options: OPTIONS,
+    public readonly  options: OPTIONS,
     public readonly primaryElement: TOP_LEVEL_ELEMENT = document.createElement("div") as unknown as TOP_LEVEL_ELEMENT
   ) {
     this.detachEvent.on(() => this.remove());

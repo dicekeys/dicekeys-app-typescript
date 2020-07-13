@@ -5,64 +5,73 @@ import {
   ApiCalls,
   ApiFactory,
   PostMessageApiFactory,
-  UsersConsentResponse,
   DerivationOptions,
 } from "@dicekeys/dicekeys-api-js"
 
- import {
-  DiceKey, DiceKeyInHumanReadableForm
-} from "../dicekeys/dicekey";
-import { PostMessagePermissionCheckedMarshalledCommands } from "../api-handler/post-message-permission-checked-marshalled-commands";
+import {
+  ConsentResponse, ApiRequestContext
+} from '../api-handler/handle-api-request'
+import { postMessageApiResponder } from "../api-handler/handle-post-message-api-request";
 import { stringToUtf8ByteArray } from "../api/encodings";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
-import { GetUsersApprovalOfApiCommand } from "../api-handler/permission-checked-seed-accessor";
+import { postMessageApiCallFactory } from "@dicekeys/dicekeys-api-js/dist/post-message-api-factory";
 
-const diceKey = DiceKey.fromHumanReadableForm(
-  "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
-);
-const requestUsersConsent = (response: UsersConsentResponse) => () =>
-  Promise.resolve(response);
-const getUsersApprovalOfApiCommand: GetUsersApprovalOfApiCommand = ({
-    derivationOptionsJson
-}) => Promise.resolve({
-  seedString: DiceKey.toSeedString(diceKey, DerivationOptions(derivationOptionsJson)),
-  derivationOptionsJson
-});
+// const diceKey = DiceKey.fromHumanReadableForm(
+//   "A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm
+// );
+
+const getUsersConsentApprove = (requestContext: ApiRequestContext): Promise<ConsentResponse> =>
+  Promise.resolve({seedString: "a bogus seed", mutatedRequest: requestContext.request } );
+// const getUsersConsentReject: (request: ApiCalls.ApiRequestObject) => Promise<ConsentResponse> =
+//   (_request: ApiCalls.ApiRequestObject)  =>
+//     Promise.reject(new Exceptions.UserDeclinedToAuthorizeOperation())
+
+
+// const requestUsersConsent = (response: UsersConsentResponse) => () =>
+//   Promise.resolve(response);
+// const getUsersApprovalOfApiCommand: GetUsersApprovalOfApiCommand = ({
+//     derivationOptionsJson
+// }) => Promise.resolve({
+//   seedString: DiceKey.toSeedString(diceKey, DerivationOptions(derivationOptionsJson)),
+//   derivationOptionsJson
+// });
 
 const defaultRequestHost = "client.app";
 const defaultRequestOrigin = `https://${defaultRequestHost}`;
 
-const mockTransmitRequestFunction = (
+const mockClient = (
   requestOrigin: string = defaultRequestOrigin,
-  usersResponseToConsentRequest: UsersConsentResponse = UsersConsentResponse.Allow
-): PostMessageApiFactory.TransmitRequestFunction =>
-    <METHOD extends ApiCalls.ApiCall>(requestObject: ApiCalls.ApiRequestObject<METHOD>) => {
-    return new Promise<ApiCalls.ApiCallResult<METHOD>>( async (resolve, reject) => {
-      try {
-        const mockServerApi = new PostMessagePermissionCheckedMarshalledCommands(
-          {
-            origin: requestOrigin,
-            data: requestObject
-          } as MessageEvent,
-          await SeededCryptoModulePromise,
-          requestUsersConsent(usersResponseToConsentRequest),
-          getUsersApprovalOfApiCommand,
-          (data) => {
-            const mockResponseMessageEvent: MessageEvent = {
-              origin: requestOrigin,
-              data
-            } as MessageEvent;
-            resolve(mockResponseMessageEvent.data);
-          });
-        mockServerApi.execute();
-      } catch (e) {
-        reject(e);
-      }
-    });
-  };
+  getUsersConsent: (request: ApiRequestContext) => Promise<ConsentResponse>
+) => {
+  const mockServer = postMessageApiResponder(
+    getUsersConsent,
+    (response) =>
+      PostMessageApiFactory.handlePossibleResultMessage(
+        {
+          origin: "https://dicekeys.com",
+          data: response
+        } as MessageEvent
+      )
+  );
+
+  return postMessageApiCallFactory(
+    <CALL extends ApiCalls.ApiCall>(
+      request: ApiCalls.RequestMessage<CALL> & ApiCalls.PostMessageRequestMetadata 
+    ): Promise<ApiCalls.ApiCallResult<CALL>> => {
+      const resultPromise = PostMessageApiFactory.addPostMessageApiPromise<ApiCalls.ApiCallResult<CALL>>(request.requestId)
+      
+      mockServer({
+        origin: requestOrigin,
+        data: request
+      } as MessageEvent);
+
+      return resultPromise;
+    }
+  )
+}
 
 const defaultTestCall = PostMessageApiFactory.postMessageApiCallFactory(
-  mockTransmitRequestFunction(defaultRequestOrigin, UsersConsentResponse.Allow)
+  mockClient(defaultRequestOrigin, getUsersConsentApprove)
 );
 const generateSignature = ApiFactory.apiCallFactory<ApiCalls.GenerateSignature>("generateSignature", defaultTestCall);
 const getSealingKey = ApiFactory.apiCallFactory<ApiCalls.GetSealingKey>("getSealingKey", defaultTestCall);
@@ -96,7 +105,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
       derivationOptionsJson,
       plaintext: testMessageByteArray
     });
-    const plaintext = await unsealWithSymmetricKey({packagedSealedMessage});
+    const {plaintext} = await unsealWithSymmetricKey({packagedSealedMessage});
     expect(plaintext).toStrictEqual(testMessageByteArray);
 //    packagedSealedMessage.delete();
   });
@@ -108,7 +117,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
     });
     const symmetricKey = (await SeededCryptoModulePromise).SymmetricKey.fromJsObject(symmetricKeyFields);
     const packagedSealedMessage = symmetricKey.seal(testMessageByteArray);
-    const plaintext = await unsealWithSymmetricKey({packagedSealedMessage});
+    const {plaintext} = await unsealWithSymmetricKey({packagedSealedMessage});
     expect(plaintext).toStrictEqual(testMessageByteArray);
   });
 
@@ -151,7 +160,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
       }
     });
     const packagedSealedPkMessage = sealingKey.sealWithInstructions(testMessageByteArray, unsealingInstructionsJson);
-    const plaintext = await unsealWithUnsealingKey({packagedSealedMessage: packagedSealedPkMessage})
+    const {plaintext} = await unsealWithUnsealingKey({packagedSealedMessage: packagedSealedPkMessage})
     expect(plaintext).toStrictEqual(testMessageByteArray);
     expect(packagedSealedPkMessage.unsealingInstructions).toBe(unsealingInstructionsJson);
   });

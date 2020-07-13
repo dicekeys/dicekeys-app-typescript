@@ -1,6 +1,6 @@
 import {
 //  Exceptions,
-  DerivationOptions
+  DerivationOptions, ApiCalls, ApiStrings
 } from "@dicekeys/dicekeys-api-js";
 import {
   Attributes,
@@ -13,9 +13,6 @@ import {
   DiceKey,
   DiceKeyInHumanReadableForm,
 } from "../dicekeys/dicekey";
-import {
-  ApiCommandParameters,
-} from "../api-handler/permission-checked-seed-accessor";
 import {
   DiceKeyCanvas,
 //  removeAllButCornerLettersFromDiceKey
@@ -37,6 +34,15 @@ import {
 import {
   DiceKeyAppState
 } from "../state";
+import {
+  getRequestsDerivationOptionsJson
+} from "../api-handler/get-requests-derivation-options-json";
+import {
+  ApiRequestContext, ConsentResponse
+} from "../api-handler/handle-api-request";
+import {
+  executeApiRequestWithinWorker
+} from "../workers/call-api-command-worker";
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
@@ -52,20 +58,55 @@ import {
 // The hint does make it possible for others to know that you used the same  DcieKey for mutiple
 // accounts.
 
-export interface ApiResponseSettingsOptions extends ApiCommandParameters, Attributes {
+export interface ApproveApiCommandOptions extends Attributes {
+  requestContext: ApiRequestContext
   diceKey: DiceKey
 }
 
-export class ApiResponseSettings extends HtmlComponent<ApiResponseSettingsOptions> {
+export class ApproveApiCommand extends HtmlComponent<ApproveApiCommandOptions> {
 
-  public readonly derivationOptions: DerivationOptions;
+  public readonly derivationOptionsInOriginalRequest: DerivationOptions;
+  public modifiedDerivationOptions: DerivationOptions;
+   
+  /**
+   * The code supporting the dmeo page cannot until the WebAssembly module for the image
+   * processor has been loaded. Pass the module to wire up the page with this class.
+   * @param module The web assembly module that implements the DiceKey image processing.
+   */
+  constructor(
+    private proofOfPriorDerivationModule: ProofOfPriorDerivationModule,
+    options: ApproveApiCommandOptions
+) {
+    super(options);
+    this.derivationOptionsInOriginalRequest = DerivationOptions(getRequestsDerivationOptionsJson(this.options.requestContext.request));
+    this.modifiedDerivationOptions = {...this.derivationOptionsInOriginalRequest};
+    this.restartApiCommandPrecomputation();
+  }
+
+  modifyDerivationOptions(newDerivationOptions: Partial<DerivationOptions>) {
+    this.modifiedDerivationOptions = {...this.modifiedDerivationOptions, newDerivationOptions};
+    this.restartApiCommandPrecomputation();
+    if ("excludeOrientationOfFaces" in newDerivationOptions) {
+      this.renderDiceKey();
+    }
+  }
 
   private get diceKey(): DiceKey {
-    return DiceKey.applyDerivationOptions(this.options.diceKey, this.derivationOptions);
+    return DiceKey.applyDerivationOptions(this.options.diceKey, this.modifiedDerivationOptions);
   }
 
   private get seedString(): DiceKeyInHumanReadableForm {
-    return DiceKey.toSeedString( this.diceKey, this.derivationOptions );
+    return DiceKey.toSeedString(this.options.diceKey, this.modifiedDerivationOptions);
+  }
+
+  private _wereRequestedDerivationOptionsUsedBefore?: boolean;
+  protected get wereRequestedDerivationOptionsUsedBefore(): boolean {
+    if (this._wereRequestedDerivationOptionsUsedBefore == null) {
+      this._wereRequestedDerivationOptionsUsedBefore = this.proofOfPriorDerivationModule.verify(
+        this.seedString, this.derivationOptionsInOriginalRequest
+      );
+    }
+    return this._wereRequestedDerivationOptionsUsedBefore!;
   }
 
   private get cornerLettersClockwise(): string {
@@ -106,64 +147,78 @@ export class ApiResponseSettings extends HtmlComponent<ApiResponseSettingsOption
   //   return `Attakers must guess from ${decimal} possible values (${bits.toLocaleString()} bits of strength)`;
   // }
 
-  public get derivationOptionsMutable(): boolean { return areDerivationOptionsMutable(this.derivationOptions); }
-
-  private priorDerivationProvenCalculateOnlyOnce?: boolean;
-  protected get priorDerivationProven(): boolean {
-    if (this.seedString == null) {
-      return false;
-    } 
-    if (this.priorDerivationProvenCalculateOnlyOnce == null) {
-      this.priorDerivationProvenCalculateOnlyOnce = ProofOfPriorDerivationModule.instance?.verify(
-        this.seedString, this.derivationOptions
-      );
-    }
-    return this.priorDerivationProvenCalculateOnlyOnce!;
-  }
+  public get derivationOptionsMutable(): boolean { return areDerivationOptionsMutable(this.derivationOptionsInOriginalRequest); }
 
   public get finalDerivationOptionsJson(): string {
-    if (!this.derivationOptionsMutable || !ProofOfPriorDerivationModule.instance) {
+    if (!this.derivationOptionsMutable) {
       // We weren't allowed to mutate the derivatio options so leave them unchanged
-      return this.options.derivationOptionsJson
+      return getRequestsDerivationOptionsJson(this.options.requestContext.request)
     } else {
-      return ProofOfPriorDerivationModule.instance.addToDerivationOptionsJson(this.seedString, this.derivationOptions)
+      return this.proofOfPriorDerivationModule.addToDerivationOptionsJson(this.seedString, this.modifiedDerivationOptions)
     }
-  }
- 
-  /**
-   * The code supporting the dmeo page cannot until the WebAssembly module for the image
-   * processor has been loaded. Pass the module to wire up the page with this class.
-   * @param module The web assembly module that implements the DiceKey image processing.
-   */
-  constructor(
-    options: ApiResponseSettingsOptions
-) {
-    super(options);
-    this.derivationOptions = DerivationOptions(this.options.derivationOptionsJson);
   }
 
   hide21: boolean = true;
   private setDiceKeyCanvas = this.replaceableChild<DiceKeyCanvas>();
 
-  // animationTimeout: ReturnType<typeof setTimeout> | undefined;
-  // animateCloseBox () => {
-  //   this.animationTimeout = setTimeout
-  // }
+  public get mutatedRequest(): ApiCalls.RequestMessage {
+    const { request } = this.options.requestContext;
+    const derivationOptionsJson = this.finalDerivationOptionsJson;
+    return "derivationOptionsJson" in request ?
+      // replace the derivationOptionsJson field in the top level of the request
+      {...request, derivationOptionsJson} :
+      // replace the derivationOptionsJson field in the 
+      {...request, packagedSealedMessage: {...request.packagedSealedMessage, derivationOptionsJson}}
+  }
+
+  public getResponseReturnUponUsersConsent = (): ConsentResponse => {
+    const seedString = this.seedString;
+    const mutatedRequest = this.mutatedRequest;
+    return {
+        seedString,
+        mutatedRequest
+    };
+  }
+
+  private cancelPrecomputationOfApiResult: (() => void) | undefined;
+  #precomputedApiCommandResultPromise: Promise<ApiCalls.Response> | undefined;
+  public precomputedResultOfApiCommand: ApiCalls.Response | undefined;
+  private restartApiCommandPrecomputation = (): Promise<ApiCalls.Response> => {
+    if (this.cancelPrecomputationOfApiResult) {
+      this.cancelPrecomputationOfApiResult();
+      this.#precomputedApiCommandResultPromise = undefined;
+    }
+    const {cancel, resultPromise} = executeApiRequestWithinWorker({
+      seedString: this.seedString,
+      request: this.mutatedRequest
+    })
+    this.cancelPrecomputationOfApiResult = cancel;
+    this.#precomputedApiCommandResultPromise = resultPromise;
+    resultPromise.then( (result) => {
+      // Whenever we complete a computation, update the non-promised result and re-render
+      this.precomputedResultOfApiCommand = result;
+      this.renderSoon();
+    });
+    return resultPromise;
+  }
+  public get precomputedResultOfApiCommandPromise() { return this.#precomputedApiCommandResultPromise || this.restartApiCommandPrecomputation() }
+
+
 
   renderDiceKey = () => {
-//    const size = Math.min(window.innerWidth, window.innerHeight, 768);
+    if (!this.diceKey) {
+      return;
+    }
     const diceKeyCanvas = this.setDiceKeyCanvas(new DiceKeyCanvas({
-      diceKey: this.derivationOptions.excludeOrientationOfFaces ?
+      diceKey: this.modifiedDerivationOptions.excludeOrientationOfFaces ?
         DiceKey.removeOrientations(this.diceKey) :
         this.diceKey,
-//      size,
       diceBoxColor: "#000030",
       hide21: this.hide21,
       overlayMessage: {
         message: "press to open box",
         fontFamily: "Sans-Serif",
         fontColor: "#00A000",
-//        fontSize: size / 12,
         fontWeight: 600,
       }
     }));
@@ -173,7 +228,7 @@ export class ApiResponseSettings extends HtmlComponent<ApiResponseSettingsOption
 
   handleOrientationCheckboxClicked = (excludeOrientationOfFaces: boolean) => {
     if (this.derivationOptionsMutable) {
-      this.derivationOptions.excludeOrientationOfFaces = excludeOrientationOfFaces
+      this.modifyDerivationOptions({excludeOrientationOfFaces: excludeOrientationOfFaces})
       this.renderDiceKey()
     }
   }
@@ -191,12 +246,12 @@ export class ApiResponseSettings extends HtmlComponent<ApiResponseSettingsOption
       this.append(
         Div({class: "orientation-widget"},
           Div({}, `Orientation of individual dice`),
-          Label({}, RadioButton({name: "orientation", value: "preserve", checked: !this.derivationOptions.excludeOrientationOfFaces}).with( r => r.clickedEvent.on( () => {
-            this.derivationOptions.excludeOrientationOfFaces = false;
+          Label({}, RadioButton({name: "orientation", value: "preserve", checked: !this.modifiedDerivationOptions.excludeOrientationOfFaces}).with( r => r.clickedEvent.on( () => {
+            this.modifiedDerivationOptions.excludeOrientationOfFaces = false;
             this.renderSoon();
           }) ), "Preserve"),
-          Label({}, RadioButton({name: "orientation", value:"remove", checked: !!this.derivationOptions.excludeOrientationOfFaces}).with( r => r.clickedEvent.on( () => {
-            this.derivationOptions.excludeOrientationOfFaces = true;
+          Label({}, RadioButton({name: "orientation", value:"remove", checked: !!this.modifiedDerivationOptions.excludeOrientationOfFaces}).with( r => r.clickedEvent.on( () => {
+            this.modifiedDerivationOptions.excludeOrientationOfFaces = true;
             this.renderSoon();
           })), "Remove")
         )
@@ -215,7 +270,7 @@ export class ApiResponseSettings extends HtmlComponent<ApiResponseSettingsOption
       }),
     );
     var hintPurpose: Appendable | undefined;
-    if (this.derivationOptionsMutable && (hintPurpose = describeHintPurpose(this.options.command)) != null) {
+    if (this.derivationOptionsMutable && (hintPurpose = describeHintPurpose(this.options.requestContext.request.command)) != null) {
       var cornerCheckbox: Checkbox | undefined;
       var hintTextFieldLabel: Label | undefined;
       this.append(
@@ -237,12 +292,18 @@ export class ApiResponseSettings extends HtmlComponent<ApiResponseSettingsOption
               t.primaryElement.setAttribute("size", "60")
               hintTextFieldLabel?.primaryElement.setAttribute("for", t.primaryElementId)
               t.changedEvent.on( () => {
-                this.derivationOptions.seedHint = t.value;
+                this.modifyDerivationOptions({seedHint: t.value});
               })
             })
           )
         )
       );
+    }
+    if (this.options.requestContext.request.command === ApiStrings.Commands.getPassword &&
+        this.precomputedResultOfApiCommand != null) {
+      this.append(
+        Div({}, `The password will be: ${(this.precomputedResultOfApiCommand as ApiCalls.GetPasswordResponse).password}`)
+      )
     }
 
 
