@@ -260,7 +260,8 @@ export class HtmlComponent<
    * Create a child ement that can be replaced
    */
   replaceableChild = <HTML_COMPONENT extends HtmlComponent>(): ReplaceableChild<HTML_COMPONENT> => {
-    var oldChild: HTML_COMPONENT | undefined = undefined;
+    var current: HTML_COMPONENT | undefined = undefined;
+
     const replace = <ACTUAL_HTML_COMPONENT extends HTML_COMPONENT = HTML_COMPONENT>(
       child: ACTUAL_HTML_COMPONENT
     ): ACTUAL_HTML_COMPONENT => {
@@ -270,15 +271,15 @@ export class HtmlComponent<
       //   }
       //   return child;
       // }
-      if (oldChild != null && oldChild.primaryElement.parentNode != null && this.childComponents.has(oldChild)) {
-        oldChild.primaryElement.replaceWith(child.primaryElement);
-        oldChild.remove();
+      if (current != null && current.primaryElement.parentNode != null && this.childComponents.has(current)) {
+        current.primaryElement.replaceWith(child.primaryElement);
+        current.remove();
       } else {
         this.primaryElement.appendChild(child.primaryElement);
       }
       this.trackChild(child);
       child.parentComponent = this;
-      oldChild = child;
+      current = child;
       return child;
     }
     return replace;

@@ -30,7 +30,6 @@ export class ValueChangedComponentEvent<T> extends ComponentEvent<[T | undefined
     callback(this.parent.value);
     return this.on(callback);
   }
-
 }
 
 export abstract class StorageField<T> implements StorageField<T> {
@@ -54,16 +53,6 @@ export abstract class StorageField<T> implements StorageField<T> {
     this.lastValueReturned = value;
     return value;
   }
-
-  // protected notifyOtherWindowsOfChange = () => {
-  //   window.postMessage({
-  //       messageType: StorageField.UpdateSharedStateMessageName,
-  //       stateFieldName: this.name
-  //     },
-  //     // Send only to windows that share this origin and thus share state
-  //     window.origin
-  //   );
-  // }
 
   // override to create a deep equals operation
   equals(a: T | undefined, b: T | undefined): boolean {
@@ -107,37 +96,6 @@ export abstract class StorageField<T> implements StorageField<T> {
   }
 
   static UpdateSharedStateMessageName = "updateSharedStateValue";
-
-  // handleStateUpdateEvent = (messageEvent: MessageEvent): boolean => {
-  //   const {data} = messageEvent;
-  //   if (typeof data === "object" &&
-  //     "messageType" in data &&
-  //     typeof data.messageType === StorageField.UpdateSharedStateMessageName &&
-  //     "stateFieldName" in data &&
-  //     data.stateFieldName === this.name
-  //   ) {
-  //     this.changedEvent.send(this.value);
-  //     return true;
-  //   }
-  //   return false;
-  // }
-
-  // static handleStateUpdateEvent = (messageEvent: MessageEvent): boolean => {
-  //   const {data} = messageEvent;
-  //   if (typeof data === "object" &&
-  //     "messageType" in data &&
-  //     typeof data.messageType === StorageField.UpdateSharedStateMessageName &&
-  //     "stateFieldName" in data &&
-  //     typeof data.stateFieldName === "string"
-  //   ) {
-  //     const stateFieldName: string = data.stateFieldName;
-  //     const storageField = StorageField.byName.get(stateFieldName);
-  //     if (storageField) {
-  //       return storageField.handleStateUpdateEvent(messageEvent);
-  //     }
-  //   }
-  //   return false;
-  // }
 
   static onFocus = window.addEventListener("focus", () => {
     // See if any values have changed since the window lost focus

@@ -89,10 +89,13 @@ export const getSecret = implementApiCall<ApiCalls.GetSecret>(
 );
 
 export const getPassword = implementApiCall<ApiCalls.GetPassword>(
-    (seededCryptoModule, seedString, {wordLimit, derivationOptionsJson}) => deleteAfterOperation(
+    (seededCryptoModule, seedString, {derivationOptionsJson}) => deleteAfterOperation(
       seededCryptoModule.Secret.deriveFromSeed(seedString, derivationOptionsJson),
       (secret) => {
-        const {wordList = "en_1024_words_5_chars_max_20200709"} = DerivationOptions(derivationOptionsJson);
+        const {
+          wordList = "en_1024_words_5_chars_max_20200709",
+          wordLimit
+        } = DerivationOptions(derivationOptionsJson);
         const options = wordLimit != null ? {wordsNeeded: wordLimit} : {}; 
         const password = secretToPasswordWithSpacesBetweenWords( secret.secretBytes, wordList, options );
         return {password, derivationOptionsJson};

@@ -14,6 +14,7 @@ import {
 import {
   DiceKey
 } from "../dicekeys/dicekey";
+import { Observable } from "./observable";
 
 interface DisplayDiceKeyCanvasOptions extends Attributes {
   diceKey: DiceKey;
@@ -54,6 +55,7 @@ export class DisplayDiceKeyCanvas extends HtmlComponent<DisplayDiceKeyCanvasOpti
     this.setDiceKeyCanvas(
       new DiceKeyCanvas({
         diceBoxColor: "#000010",
+        obscure: new Observable<boolean>(true),
         diceKey: this.showOnlyCorners ?
           removeAllButCornerLettersFromDiceKey(this.options.diceKey) :
           this.options.diceKey

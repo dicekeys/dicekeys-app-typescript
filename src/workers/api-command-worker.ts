@@ -4,7 +4,7 @@ import "regenerator-runtime/runtime";
 // Hack to allow the webassembly module to load since it looks for window
 // FUTURE - can this be removed with better use of emscripten to generate non-broken code?
 // is this an artifact of the use of parcel when Stuart was testing this? 
-// (global as any).Window = (self as any).Window || self;
+(global as any).Window = (self as any).Window || self;
 
 import {
   SeededApiRequest
@@ -22,7 +22,7 @@ export interface ApiRequestWithSeed<REQUEST extends ApiCalls.ApiRequestObject> {
     request: REQUEST
 }
 
-export type ExecuteApiResponse<REQUEST extends ApiCalls.ApiRequestObject> = ApiCalls.ResponseForRequest<REQUEST>;
+export type ExecuteApiResponse<REQUEST extends ApiCalls.ApiRequestObject = ApiCalls.ApiRequestObject> = ApiCalls.ResponseForRequest<REQUEST>;
 
 function isApiRequestWithSeed(t: any) : t is ApiRequestWithSeed<ApiCalls.ApiRequestObject> {
     return typeof t === "object" &&

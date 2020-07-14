@@ -104,10 +104,6 @@ export class UrlApi {
         marshallString(Inputs.generateSignature.message, urlSafeBase64Encode(request.message));
         break;
       case Commands.getPassword:
-        if (request.wordLimit != null) {
-          marshallString(Inputs.getPassword.wordLimit, request.wordLimit.toString());
-        }
-        break;
       case Commands.getSealingKey:
       case Commands.getSecret:
       case Commands.getSignatureVerificationKey:

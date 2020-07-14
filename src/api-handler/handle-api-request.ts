@@ -5,7 +5,7 @@ import {
   throwIfClientMayNotRetrieveKey
 } from "./permission-checks"
 import {
-  executeApiRequestWithinWorker
+  ComputeApiCommandWorker
 } from "../workers/call-api-command-worker"
 import { SeededApiRequest } from "./seeded-api-request";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
@@ -43,7 +43,7 @@ export const handleApiRequest = async (
   
     const response = (typeof global.Worker !== "undefined") ?
       // We're in an environment with web workers. Await a remote execute
-      (await executeApiRequestWithinWorker({seedString, request: mutatedRequest}).resultPromise) :
+      (await new ComputeApiCommandWorker().calculate({seedString, request: mutatedRequest})) :
       // We have no choice but to run synchronously in this process
       // (fortunately, that means we're non-interactive and just testing)
       new SeededApiRequest(await SeededCryptoModulePromise, seedString, request).execute();

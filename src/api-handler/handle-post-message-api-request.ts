@@ -19,7 +19,13 @@ export const postMessageApiResponder = (
   getUsersConsent: (requestContext: ApiRequestContext) => Promise<ConsentResponse>,
   transmitResponseForTesting?: (response: ApiCalls.Response) => any // only set when testing
 ) => (candidateRequestEvent: MessageEvent) => {
-  if (!(candidateRequestEvent.data && "command" in candidateRequestEvent.data && ApiStrings.isCommand(candidateRequestEvent.data.command))) {
+  if (!(
+    // Exit if the data field doesn't have a "command" field with a known command.
+    candidateRequestEvent.data &&
+    typeof candidateRequestEvent.data === "object" &&
+    "command" in candidateRequestEvent.data &&
+    ApiStrings.isCommand(candidateRequestEvent.data.command))
+  ) {
     // This is not a request.  Ignore this message event.
     return;
   }
