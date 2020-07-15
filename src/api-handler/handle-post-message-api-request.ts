@@ -33,7 +33,7 @@ export const postMessageApiResponder = (
   const {windowName, ...request} = candidateRequestEvent.data as ApiCalls.RequestMessage & ApiCalls.PostMessageRequestMetadata;
   const transmitResponse = transmitResponseForTesting ||
     (
-      (response) => window.postMessage(response, origin)
+      (response) => window.opener.postMessage(response, origin)
     );
   // The host must match any requirements in the derivation options and
   // (for unseal operations) the UnsealingInstructions.      

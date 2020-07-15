@@ -72,11 +72,11 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
       await this.handleApiRequestReceivedViaPostMessage(messageEvent);
     } finally {
       // Close this window shortly after request completion
-      setTimeout( () => {
-        const windowOpener = window.opener;// window.open("", windowName);
-        windowOpener?.focus();
-        window.close()
-      }, 250 );
+      // setTimeout( () => {
+      //   const windowOpener = window.opener;// window.open("", windowName);
+      //   windowOpener?.focus();
+      //   window.close()
+      // }, 250 );
     }
   };
 

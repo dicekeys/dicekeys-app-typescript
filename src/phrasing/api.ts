@@ -1,5 +1,5 @@
 import {
-  ApiStrings
+  ApiStrings, Exceptions
 } from "@dicekeys/dicekeys-api-js"
 import {
   Appendable
@@ -67,11 +67,36 @@ const getKnownHost = (host:string): string | undefined => {
 export const describeHost = (host: string): Appendable => {
   const knownHost = getKnownHost(host);
   return (knownHost != null) ?
-      Span().with( e => e.primaryElement.style.setProperty("font-style", "italic") ).setInnerText(knownHost) :
+      Span({class: "known-application-name", text: knownHost}) :
       // [//`The website at `,
       MonospaceSpan().setInnerText(host)
       //]
   ;
+}
+
+export const shortDescribeCommandsAction = (
+  command: ApiStrings.Command,
+): string => {
+  switch (command) {
+    case "getPassword":
+      return `Send Password`;
+    case "getSecret":
+      return `Send Sassword`;
+    case "getSigningKey":
+    case "getSealingKey": 
+    case "getUnsealingKey":
+      return `Send Keys`;
+    case "getSymmetricKey":
+    case "getSignatureVerificationKey":
+      return `Send Key`;
+    case "sealWithSymmetricKey":
+      return `Send Encoded Message`;
+    case "unsealWithSymmetricKey":
+    case "unsealWithUnsealingKey":
+      return `Send Encoded Message`;
+    default:
+        throw new Exceptions.InvalidCommand("Invalid API Command: " + command);
+  }
 }
 
 export const describeCommandsAction = (
@@ -85,29 +110,29 @@ export const describeCommandsAction = (
   // use your DiceKey to 
   switch (command) {
     case "getPassword":
-      return [`Do you want your DiceKey to ${createOrRecreate} a password for `, hostComponent, `?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to ${createOrRecreate} a password?`];
     case "getSecret":
-      return [`Do you want your DiceKey to ${createOrRecreate} a secret security code for `, hostComponent, `?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to ${createOrRecreate} a secret security code?`];
     case "getUnsealingKey":
-      return [`Do you want your DiceKey to ${createOrRecreate} keys for `, hostComponent, ` to encode and decode secrets?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to ${createOrRecreate} keys to encode and decode secrets?`];
     case "getSymmetricKey":
-      return [`Do you want your DiceKey to ${createOrRecreate} keys for `, hostComponent, ` to encode and decode secrets?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to a ${createOrRecreate} key to encode and decode secrets?`];
     case "sealWithSymmetricKey":
-      return [`Do you want your DiceKey to encode secrets so that they can only be read by`, hostComponent, `?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to encode a secret?`];
     case "unsealWithSymmetricKey":
-      return [`Do you want your DiceKey to allow `, hostComponent, ` to decode its secrets?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to allow to decode a secret?`];
     case "unsealWithUnsealingKey":
-      return [`Do you want your DiceKey to allow `, hostComponent, ` to decode its secrets?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to allow to decode a secret?`];
     // Less common
     case "getSigningKey":
-      return [`Do you want your DiceKey to ${createOrRecreate} keys for `, hostComponent, ` to sign data?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to ${createOrRecreate} keys to sign data?`];
     case "generateSignature":
-      return [`Do you want your DiceKey to sign data on behalf of `, hostComponent, `?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to add its digital signature to data?`];
     case "getSignatureVerificationKey":
-      return [`Do you want your DiceKey to ${createOrRecreate} a key used to verify data signed by `, hostComponent, `?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to ${createOrRecreate} a key used to verify data it has signed?`];
       // Uncommon
     case "getSealingKey": 
-    return [`Do you want your DiceKey to ${createOrRecreate} keys for `, hostComponent, ` to store secrets?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to ${createOrRecreate} keys to store secrets?`];
     // Never
     // default:
     //     throw new Exceptions.InvalidCommand("Invalid API Command: " + command);

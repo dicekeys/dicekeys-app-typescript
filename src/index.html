@@ -101,6 +101,7 @@
       flex-shrink: 0;
       flex-grow: 0;
       font-size: 2em;
+      margin-top: 10px;
       margin-bottom: 0px;
       color: #202000;
       text-align: center;
@@ -114,15 +115,40 @@
       color: #001000;
       text-align: center;
     }
+    .password-to-be-shared-label {
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      font-size: 1.1em;
+    }
+    .password-to-be-shared-container {
+      display: flex;
+      justify-content: space-between;
+      align-content: center;
+      font-family: monospace;
+      cursor:pointer;
+      padding: 2px;
+      border-width: 1px;
+      border-color: black;
+      border-style: solid;
+    }
     .password-to-be-shared {
-      font-size: 1.3em;
-      text-align: center;
+      display: flex;
+      flex-grow: 0;
+      font-size: 1.4em;
+      font-family: monospace;
+    }
+    .crossout {
+      text-decoration: line-through;
     }
     .centered-controls, .decision-button-container {
       display: flex;
       flex-direction: row;
       justify-content: center;
       align-items: center;
+    }
+    .known-application-name {
+      font-family: serif;
     }
     .decision-button-container {
       margin-top: 20px;
@@ -137,5 +163,6 @@
     }
   </style>  
   </head>
+
     <body></body>
 </html>

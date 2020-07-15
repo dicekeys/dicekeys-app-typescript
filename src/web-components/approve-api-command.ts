@@ -25,15 +25,15 @@ import {
   Div,
   Label,
   TextInput,
-  A,
+//  A,
   MonospaceSpan,
   Span,
   Checkbox,
   RadioButton
 } from "./html-components";
-import {
-  DiceKeyAppState
-} from "../state";
+// import {
+//   DiceKeyAppState
+// } from "../state";
 import {
   getRequestsDerivationOptionsJson
 } from "../api-handler/get-requests-derivation-options-json";
@@ -48,6 +48,14 @@ import {
 } from "../workers/call-derivation-options-proof-worker";
 import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
 import { Observable } from "./observable";
+
+const obscuringCharacter = String.fromCharCode(0x25A0); // * ■▓▒░
+const obscurePassword = (password: string): string => {
+  const words = password.split(' ');
+  const obscuredWords = words.map( word => word.split("").map( _ => obscuringCharacter).join("")); // * ▓▒░
+  const sortedObscuredWords = obscuredWords.sort();
+  return sortedObscuredWords.join(' ');
+}
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
@@ -183,7 +191,8 @@ export class ApproveApiCommand extends HtmlComponent<ApproveApiCommandOptions> {
   // }
 
 
-  obscure = new Observable<boolean>(true);
+  obscurePassword = new Observable<boolean>(true);
+  obscureDiceKey = new Observable<boolean>(true).observe( isDiceKeyObscured => this.obscurePassword.value = isDiceKeyObscured );
   private setDiceKeyCanvas = this.replaceableChild<DiceKeyCanvas>();
 
 
@@ -206,7 +215,7 @@ export class ApproveApiCommand extends HtmlComponent<ApproveApiCommandOptions> {
         DiceKey.removeOrientations(this.diceKey) :
         this.diceKey,
       diceBoxColor: "#000030",
-      obscure: this.obscure,
+      obscure: this.obscureDiceKey,
       overlayMessage: {
         message: "press to open box",
         fontFamily: "Sans-Serif",
@@ -248,18 +257,18 @@ export class ApproveApiCommand extends HtmlComponent<ApproveApiCommandOptions> {
         )
       );
     }
-    this.append(
-      Div({class: 'dicekey-preservation-instruction'},
-        Span({text: `When you make your choice, the DiceKeys app will forget your DiceKey.  If you want to keep this app open and your DiceKey in memory, `}, '&nbsp;'),
-        A({href: window.origin, target:"_blank"}).append(`open a new app tab`),
-        `&nbsp;`,
-        Span({text: ` first.`}),      
-      ).withElement( div => {
-        DiceKeyAppState.instance!.windowsOpen.changedEvent.onChangeAndInitialValue( () => {
-          div.style.setProperty("visibility", DiceKeyAppState.instance!.windowsOpen.areThereOthers ? "hidden" : "visible")
-        } );
-      }),
-    );
+    // this.append(
+    //   Div({class: 'dicekey-preservation-instruction'},
+    //     Span({text: `When you make your choice, the DiceKeys app will forget your DiceKey.  If you want to keep this app open and your DiceKey in memory, `}, '&nbsp;'),
+    //     A({href: window.origin, target:"_blank"}).append(`open a new app tab`),
+    //     `&nbsp;`,
+    //     Span({text: ` first.`}),      
+    //   ).withElement( div => {
+    //     DiceKeyAppState.instance!.windowsOpen.changedEvent.onChangeAndInitialValue( () => {
+    //       div.style.setProperty("visibility", DiceKeyAppState.instance!.windowsOpen.areThereOthers ? "hidden" : "visible")
+    //     } );
+    //   }),
+    // );
     var hintPurpose: Appendable | undefined;
     if (this.areDerivationOptionsMutable && (hintPurpose = describeHintPurpose(this.options.requestContext.request.command)) != null) {
       var cornerCheckbox: Checkbox | undefined;
@@ -295,20 +304,27 @@ export class ApproveApiCommand extends HtmlComponent<ApproveApiCommandOptions> {
       const precomputedResult = ApproveApiCommand.computeApiCommandWorker.result as ApiCalls.GetPasswordResponse;
       const {password} = precomputedResult;
       this.append(
-        Div({class: "password-to-be-shared"}, `The password shared wth `,
-          describeHost(this.options.requestContext.host),
-          ` will be: `,
-          MonospaceSpan().withElement( (e) => {
-            this.obscure.observe( obscure => {
-              e.innerText = password.split(' ').map( word => obscure ? "*****" : word ).join(' ');
+        Div({class: "password-to-be-shared-label"}, Span({},
+          `password to be sent to&nbsp;`),
+          describeHost(this.options.requestContext.host
+        )),
+        Div({class: "password-to-be-shared-container"},
+          Div({}, "&nbsp;"),
+          Div({class: "password-to-be-shared"}).withElement( (e) => {
+            this.obscurePassword.observe( obscure => {
+              e.innerText = obscure ? obscurePassword(password) : password;
             })
-          }),
-          '.'
-        )
-      )
+           }),
+          Div({}, '&#x1F441;' // 👁, but packagers have problem with unicode
+          ).withElement( div => {
+            this.obscurePassword.observe( obscure => div.style.setProperty("text-decoration", obscure ? "" : "line-through" ));
+          })
+        ).withElement (div => div.addEventListener("click", () => { this.obscurePassword.value = ! this.obscurePassword.value } ) ),
+      );
     }
 
 
   }
+
 
 }

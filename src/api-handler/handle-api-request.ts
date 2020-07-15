@@ -70,5 +70,7 @@ export const handleApiRequest = async (
       requestId, exception, message, stack
     });
   }
+
+  setInterval( () => window.close(), 250);
 }
 

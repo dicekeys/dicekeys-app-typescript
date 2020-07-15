@@ -36,8 +36,8 @@ import {
 const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints => ({
   video: {
     deviceId,
-    width: { ideal: 1024 },
-    height: { ideal: 1024 },
+    width: { ideal: 768 }, // FIXME? 1024?
+    height: { ideal: 768 },
   },
 });
 
@@ -168,8 +168,8 @@ export class ScanDiceKey extends HtmlComponent<ScanDiceKeyOptions> {
   }
 
   defaultVideoConstraints: MediaStreamConstraints = {video: {
-    width: { ideal: 1024, min: 768 },
-    height: { ideal: 1024, min: 768 },
+    width: { ideal: 768, min: 768 }, // FIXME? 1024?
+    height: { ideal: 768, min: 768 },
     facingMode: "environment" // "user" (faces the user) | "environment" (away from user)
   }}
   camerasDeviceId: string | undefined;

@@ -39,6 +39,9 @@ import {
 import {
   VerifyDerivationOptionsWorker,
 } from "../workers/call-derivation-options-proof-worker";
+import {
+  shortDescribeCommandsAction
+} from "../phrasing/api";
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
@@ -112,12 +115,7 @@ export class ApiRequestContainer extends HtmlComponent<ApiRequestOptions> {
     }
     const consentResponse = await this.apiResponseSettings.getResponseReturnUponUsersConsent();
     this.userApprovedEvent.send(consentResponse);
-
-    // if (this.closeWindowUponResponding) {
-      setInterval( () => window.close(), 250 );
-    // }
-
-    this.remove();
+    // FIXME this.remove();
   }
 
   async render() {
@@ -139,7 +137,7 @@ export class ApiRequestContainer extends HtmlComponent<ApiRequestOptions> {
         Div({class: "decision-button-container"},
         InputButton({value: "Cancel", clickHandler: this.handleCancelButton}),
         diceKey == null ? undefined :
-          InputButton({value: "Continue", clickHandler: this.handleContinueButton} )
+          InputButton({value: shortDescribeCommandsAction(this.options.requestContext.request.command), clickHandler: this.handleContinueButton} )
         ),
       ),
     );

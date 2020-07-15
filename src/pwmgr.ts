@@ -2,15 +2,15 @@ import {
   HtmlComponent,
 } from "./web-components/html-component"
 import {
-  getSecret,
-  secretTo10BitWords,
-  DerivationOptions
+  DerivationOptions,
+  getPassword
 } from "@dicekeys/dicekeys-api-js"
 
 const pwmgrAppSecretDerivationOptionsJson = JSON.stringify(DerivationOptions({
   type: "Secret",
   mutable: true,
   excludeOrientationOfFaces: true,
+  wordLimit: 13,
   allow: [{"host": "pwmgr.app"}]
 }));
 
@@ -27,9 +27,8 @@ export class PasswordManagerSignin extends HtmlComponent {
 
   getPasswordFromDiceKey = async() => {
     try {
-      const secretFields = await getSecret({derivationOptionsJson: pwmgrAppSecretDerivationOptionsJson});
-      const secretAs13Words = secretTo10BitWords(secretFields.secretBytes, {wordsNeeded: 13});
-      this.passwordTextElement.value = secretAs13Words.join(" ");
+      const {password} = await getPassword({derivationOptionsJson: pwmgrAppSecretDerivationOptionsJson});
+      this.passwordTextElement.value = password;
       // const secret = (await SeededCryptoModulePromise).Secret.fromJsObject(secretFields);
       // secret.delete();
     } catch (e) {
