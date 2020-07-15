@@ -8,7 +8,6 @@ import {
   Undoverline,
   UndoverlineJson,
   Point,
-  Line
 } from "./undoverline";
 import { hammingDistance } from "./bit-operations";
 
@@ -19,10 +18,10 @@ import { hammingDistance } from "./bit-operations";
  */
 const majorityOfThree = <T>(
   a: T, b: T, c: T
-): T => 
-  (b == c) ? b : 
-  (a != null) ? a : 
-  (b != null) ? b : c;
+): T | undefined => 
+	(a === b || a == c) ? a : 
+	(b === c) ? b : 
+	undefined;
 
 export class FaceHasTooManyErrorsException extends Error {
   constructor(public faceRead: FaceRead) {
@@ -44,9 +43,12 @@ export interface FaceReadJson {
 	"orientationAsLowercaseLetterTRBL",
 	"ocrLetterCharsFromMostToLeastLikely", "ocrDigitCharsFromMostToLeastLikely",
 	"center"
-  ] as const;
-  const testFaceReadJsonKeys: readonly (keyof FaceReadJson)[] = FaceReadJsonKeys;
-  
+	] as const;
+	(() => {
+		const testFaceReadJsonKeys: readonly (keyof FaceReadJson)[] = FaceReadJsonKeys;
+		return testFaceReadJsonKeys;
+	})();
+
   interface UndoverlineBitMismatch {
 	type: 'undoverline-bit-mismatch';
 	location: "underline" | "overline";
@@ -89,15 +91,15 @@ export class FaceRead implements Partial<Face> {
   constructor(
     public readonly underline: Undoverline | undefined,
     public readonly overline: Undoverline | undefined,
-	public orientationAsLowercaseLetterTRBL: FaceOrientationLetterTrblOrUnknown,
+		public orientationAsLowercaseLetterTRBL: FaceOrientationLetterTrblOrUnknown,
     public readonly ocrLetterCharsFromMostToLeastLikely: string,
     public readonly ocrDigitCharsFromMostToLeastLikely: string,
 	public readonly center: Point
   ) {
     const ocrLetterRead = ocrLetterCharsFromMostToLeastLikely[0] as FaceLetter | undefined;
 		const ocrDigitRead = ocrDigitCharsFromMostToLeastLikely[0] as FaceDigit | undefined;
-		if (orientation != null) {
-			this.clockwise90DegreeRotationsFromUpright = Clockwise90DegreeRotationsFromUpright(orientation)
+		if (orientationAsLowercaseLetterTRBL != null) {
+			this.clockwise90DegreeRotationsFromUpright = Clockwise90DegreeRotationsFromUpright(orientationAsLowercaseLetterTRBL)
 		} else {
 			this.clockwise90DegreeRotationsFromUpright = 0;
 		}
@@ -194,7 +196,7 @@ export class FaceRead implements Partial<Face> {
     Undoverline.fromJsonUnderlineObject(j.underline),
     Undoverline.fromJsonOverlineObject(j.overline),
 	  j.orientationAsLowercaseLetterTRBL,
-    j.ocrDigitCharsFromMostToLeastLikely,
+    j.ocrLetterCharsFromMostToLeastLikely,
     j.ocrDigitCharsFromMostToLeastLikely,
   	j.center
   );

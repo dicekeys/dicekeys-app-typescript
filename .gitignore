@@ -3,6 +3,7 @@ node_modules/
 .vs/
 .cache/
 dist/
+dist-*/
 test-outputs/
 
 coverage/

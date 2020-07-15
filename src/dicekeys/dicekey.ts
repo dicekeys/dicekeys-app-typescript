@@ -3,14 +3,16 @@ import {randomBytes} from "crypto";
 import {
   FaceLetter, FaceLetters, InvalidFaceLetterException,
   FaceDigit, InvalidFaceDigitException,
-  Face, InvalidFaceRotationException,
+  Face,
+  //InvalidFaceRotationException,
   Clockwise90DegreeRotationsFromUpright,
-  FaceOrientationLetterTrbl,
-  ValidFaceOrientationLetterTrbl,
+  // FaceOrientationLetterTrbl,
+  // ValidFaceOrientationLetterTrbl,
   FaceOrientationLetterTrblOrUnknown,
   InvalidFaceOrientationLettersTrblOrUnknownException,
   FaceOrientationLettersTrbl
 } from "./face";
+import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 
 
 export const NumberOfFacesInKey = 25;
@@ -72,7 +74,7 @@ export class DiceKeyLettersRepeatedAndAbsentException extends InvalidDiceKeyExce
   }
 }
 
-const validateDiceKey = (diceKey: readonly Face[]): diceKey is DiceKey => {
+const validateDiceKey = (diceKey: readonly Face[], requireOneOfEachLetter: boolean = false): diceKey is DiceKey => {
   if (diceKey.length !== NumberOfFacesInKey) {
     throw new Error("Invalid key length");
   }
@@ -96,7 +98,7 @@ const validateDiceKey = (diceKey: readonly Face[]): diceKey is DiceKey => {
       absentLetters.delete(letter);
     }
   });
-  if (absentLetters.size > 0 || repeatedLetters.size > 0) {
+  if (requireOneOfEachLetter && (absentLetters.size > 0 || repeatedLetters.size > 0)) {
     const repeatedLettersWithPositions = Array.from(repeatedLetters).map( letter => [
       letter, 
       diceKey.reduce( ( result, d, index) => {
@@ -153,13 +155,13 @@ export const DiceKeyInHumanReadableForm = (diceKey: DiceKey): DiceKeyInHumanRead
   ).join("") as DiceKeyInHumanReadableForm
 
 const diceKeyFromHumanReadableForm = (
-  humanReadableForm: DiceKeyInHumanReadableForm
+  humanReadableForm: DiceKeyInHumanReadableForm,
+  requireOneOfEachLetter: boolean = false 
 ): DiceKey<Face> => {
   if (typeof(humanReadableForm) !== "string" || humanReadableForm.length !== 75) {
     throw new InvalidDiceKeyException("Invalid human-readable-form string length");
   }
   const diceKey: DiceKey = FacePositions.map( position => {
-    const base = position * 3;
     const [
       letter,
       digitString,
@@ -173,7 +175,7 @@ const diceKeyFromHumanReadableForm = (
     };
     return faceAndOrientation;
   }) as readonly Face[] as DiceKey;
-  validateDiceKey(diceKey);
+  validateDiceKey(diceKey, requireOneOfEachLetter);
   return diceKey;
 }
 
@@ -184,6 +186,7 @@ const diceKeyFromHumanReadableForm = (
  * charCode.) 
  */
 export type DiceKey<F extends Face = Face> = ReadOnlyTupleOf25Items<F>;
+export type PartialDiceKey = ReadOnlyTupleOf25Items<Partial<Face>>
 /**
  * Construct a dice key either from a tuple of 25 ElemeentFace objects,
  * 25 indexes (which represent a element, face, and rotation), or from the
@@ -240,6 +243,7 @@ const rotationIndexes5x5: {[rotation in Clockwise90DegreeRotationsFromUpright]: 
    ],
  };
 
+
 //  )
 type RotateFaceFn<F extends Face> = (
     f: F,
@@ -279,6 +283,11 @@ export function rotateDiceKey<F extends Face = Face>(
   );
 }
 
+const removeOrientations = <F extends Face = Face>(
+  diceKey: DiceKey<F>,
+): DiceKey => DiceKey<F>(diceKey.map( face => ({...face, orientationAsLowercaseLetterTRBL: "?"})));
+
+
 const FaceRotationsNonStationary = [1, 2, 3] as const;
 export function rotateToRotationIndependentForm<F extends Face = Face>(
   diceKey: DiceKey<Face>,
@@ -306,6 +315,43 @@ export function rotateToRotationIndependentForm<F extends Face = Face>(
   }
   return rotationIndependentDiceKey;
 }
+
+const applyDerivationOptions = (
+  diceKey: DiceKey,
+  derivationOptions: DerivationOptions | string
+): DiceKey => {
+  return (DerivationOptions(derivationOptions).excludeOrientationOfFaces) ?
+    removeOrientations(diceKey) :
+    diceKey;
+}
+
+/**
+ * Create a seed string frmo a DiceKey and a set of derivation options.
+ * 
+ * If the derivation options specify `"excludeOrientationOfFaces": true`, then
+ * the first step will remove all orientations from the DiceKey.
+ * 
+ * The second step is to rotate the DiceKey to canonical orientation. Since
+ * that orientation is based on the sort order of the DiceKey's human-readable
+ * form, and since that human-readable form contains orientation characters,
+ * this step comes after the optional exclusion of orientations.
+ * 
+ * The last step is to turn the 25 dice into triples of letter, digit, orientation
+ * via the [toHumanReadableForm] function.
+ * 
+ * 
+ * @param diceKey 
+ * @param derivationOptions 
+ */
+const toSeedString = (
+  diceKey: DiceKey,
+  derivationOptionsObjectOrJson: DerivationOptions | string
+): DiceKeyInHumanReadableForm => {
+  const preCanonicalDiceKey: DiceKey = applyDerivationOptions(diceKey, derivationOptionsObjectOrJson);
+  const canonicalDiceKey = rotateToRotationIndependentForm(preCanonicalDiceKey); 
+  const humanReadableForm = DiceKeyInHumanReadableForm(canonicalDiceKey);
+  return humanReadableForm;
+}
   
 DiceKey.validate = validateDiceKey;
 DiceKey.fromRandom = getRandomDiceKey;
@@ -314,3 +360,8 @@ DiceKey.toHumanReadableForm = DiceKeyInHumanReadableForm;
 DiceKey.rotate = rotateDiceKey;
 DiceKey.rotateToRotationIndependentForm = rotateToRotationIndependentForm;
 DiceKey.toStringOf25Triples = DiceKeyInHumanReadableForm;
+DiceKey.removeOrientations = removeOrientations;
+DiceKey.toSeedString = toSeedString;
+DiceKey.applyDerivationOptions = applyDerivationOptions;
+DiceKey.cornerIndexesClockwise = [0, 4, 24, 20] as const;
+DiceKey.cornerIndexeSet = new Set<number>(DiceKey.cornerIndexesClockwise);

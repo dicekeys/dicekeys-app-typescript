@@ -4,7 +4,7 @@
       "<rootDir>/src"
     ],
     "testMatch": [
-      "**/(*.)+(test).+(ts|js)"
+      "**/(*.)+(test).+(ts)"
     ],
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
@@ -13,4 +13,4 @@
     "collectCoverage": true,
     "coveragePathIgnorePatterns": ["/node_modules/"],
     "testEnvironment": "jest-environment-node"
-  }
+}

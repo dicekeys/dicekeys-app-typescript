@@ -10,27 +10,44 @@
   "scripts": {
     "start": "npm run build:live",
     "build": "tsc -p .",
-    "build:live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts"
+    "build-all": "npm run -s build-app & npm run -s build-pwmgr",
+    "build-app": "rimraf dist-app & parcel build src/index.html --no-minify --out-dir dist-app/",
+    "build-pwmgr": "rimraf dist-pwmgr & parcel build src/pwmgr.html --no-minify --out-dir dist-pwmgr/ --out-file index.html",
+    "build:live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "upload-pwmgr": "gsutil -m -h Cache-Control:\"Cache-Control:private, max-age=0, no-transform\" cp dist-pwmgr/* gs://pwmgr.app/",
+    "upload-app": "gsutil -m -h Cache-Control:\"Cache-Control:private, max-age=0, no-transform\" cp dist-app/* gs://dicekeys.app/",
+    "update-app": "npm run -s build-app & npm run -s upload-app",
+    "update-pwmgr": "npm run -s build-pwmgr & npm run -s upload-pwmgr",
+    "upload-all": "npm run upload-pwmgr && npm run upload-app"
   },
   "keywords": [],
   "author": "Stuart Schechter <stuart@dicekeys.com>",
   "license": "UNLICENSED. All rights reserved",
   "dependencies": {
+    "@dicekeys/dicekeys-api-js": "0.0.64",
     "@dicekeys/read-dicekey-js": "^0.0.2",
-    "@dicekeys/seeded-crypto-js": "^0.1.12",
-    "canvas": "^2.6.1"
+    "@dicekeys/seeded-crypto-js": "^0.1.26"
   },
+  "browserslist": [
+    "last 1 Chrome versions"
+  ],
   "devDependencies": {
+    "@types/core-js": "^2.5.3",
     "@types/emscripten": "^1.39.4",
     "@types/jest": "^25.2.2",
+    "@types/jsdom": "^16.2.3",
     "@types/node": "^14.0.1",
+    "canvas": "^2.6.1",
     "core-js": "^3.6.5",
-    "jest": "^26.0.1",
+    "jest": "^26.1.0",
+    "jsdom": "^16.2.2",
+    "node-fetch": "^2.6.0",
     "nodemon": "^2.0.3",
     "parcel-bundler": "^1.12.4",
+    "rimraf": "^3.0.2",
     "ts-jest": "^26.0.0",
     "ts-lint": "^4.5.1",
     "ts-node": "^8.10.0",
-    "typescript": "^3.9.2"
+    "typescript": "^3.9.6"
   }
 }
