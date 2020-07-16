@@ -202,7 +202,7 @@ const getSessionEncryptionSymmetricKey = (
     }
 
     document.cookie =
-      `${keySeedCookieName}=${value}; ${expires}path=/`;
+      `${keySeedCookieName}=${value}; SameSite=Strict; ${expires}path=/`;
     return value;
   }
 

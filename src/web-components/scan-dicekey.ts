@@ -36,6 +36,8 @@ const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints =>
     deviceId,
     width: { ideal: 768 }, // FIXME? 1024?
     height: { ideal: 768 },
+    aspectRatio: {ideal: 1},
+//    advanced: [{focusDistance: {ideal: 0}}]
   },
 });
 
@@ -189,10 +191,18 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     // Now set the new stream
 
     const newStream = this.mediaStream = await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
+    const track = newStream.getVideoTracks()[0];
+    
+    // if (typeof ImageCapture === "function") {
+    //   const imageCapture = new ImageCapture(track);
+    //   imageCapture.grabFrame().then( bitMap => {
+    //     const {width, height} = bitMap;
+    //   })
+    // }
     const {
       deviceId, height, width,
       // facingMode, aspectRatio, frameRate
-    } = this.mediaStream?.getVideoTracks()[0]?.getSettings();
+    } = track.getSettings();
     this.camerasDeviceId = deviceId;
     this.videoPlayer!.srcObject = newStream;
     if (height && width) {
@@ -296,6 +306,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
         setTimeout(this.startProcessingNewCameraFrame, 100);
         return;
     }
+
     // Ensure the capture canvas is the size of the video being retrieved
     if (this.captureCanvas!.width != this.videoPlayer!.videoWidth || this.captureCanvas!.height != this.videoPlayer!.videoHeight) {
         [this.captureCanvas!.width, this.captureCanvas!.height] = [this.videoPlayer!.videoWidth, this.videoPlayer!.videoHeight];
@@ -303,6 +314,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     }
     this.captureCanvasCtx!.drawImage(this.videoPlayer!, 0, 0);
     const {width, height, data} = this.captureCanvasCtx!.getImageData(0, 0, this.captureCanvas!.width, this.captureCanvas!.height);
+    // For focal distance: https://w3c.github.io/mediacapture-image/#example4
 
     // Ask the background worker to process the bitmap.
     // First construct a requeest

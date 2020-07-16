@@ -207,7 +207,6 @@ export type A = ReturnType<typeof A>;
 interface VideoAttributes extends Attributes {
 }
 export const Video = createHtmlElement<"video", VideoAttributes>("video").with( e => {
-  e.primaryElement.setAttribute("controls","");
-  e.primaryElement.setAttribute("autoplay","");
-});
-export type Video = ReturnType<typeof Video>;
+  // e.primaryElement.setAttribute("controls","");
+  e.primaryElement.setAttribute("autoplay","true");
+});export type Video = ReturnType<typeof Video>;
