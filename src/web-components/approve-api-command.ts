@@ -4,8 +4,8 @@ import {
 } from "@dicekeys/dicekeys-api-js";
 import {
   Attributes,
-  HtmlComponent, Appendable
-} from "./html-component";
+  Component, Appendable
+} from "../web-component-framework";
 import {
   areDerivationOptionsMutable
 } from "../api-handler/mutate-derivation-options"
@@ -26,11 +26,12 @@ import {
   Label,
   TextInput,
 //  A,
+  Observable,
   MonospaceSpan,
   Span,
   Checkbox,
   RadioButton
-} from "./html-components";
+} from "../web-component-framework";
 // import {
 //   DiceKeyAppState
 // } from "../state";
@@ -47,7 +48,6 @@ import {
   AddDerivationOptionsProofWorker,
 } from "../workers/call-derivation-options-proof-worker";
 import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
-import { Observable } from "./observable";
 
 const obscuringCharacter = String.fromCharCode(0x25A0); // * ■▓▒░
 const obscurePassword = (password: string): string => {
@@ -76,7 +76,7 @@ export interface ApproveApiCommandOptions extends Attributes {
   diceKey: DiceKey
 }
 
-export class ApproveApiCommand extends HtmlComponent<ApproveApiCommandOptions> {
+export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
 
   private readonly derivationOptionsJsonInOriginalRequest: string;  
   private readonly areDerivationOptionsMutable: boolean;
@@ -192,7 +192,6 @@ export class ApproveApiCommand extends HtmlComponent<ApproveApiCommandOptions> {
 
 
   obscurePassword = new Observable<boolean>(true);
-  obscureDiceKey = new Observable<boolean>(true).observe( isDiceKeyObscured => this.obscurePassword.value = isDiceKeyObscured );
   private setDiceKeyCanvas = this.replaceableChild<DiceKeyCanvas>();
 
 
@@ -215,7 +214,6 @@ export class ApproveApiCommand extends HtmlComponent<ApproveApiCommandOptions> {
         DiceKey.removeOrientations(this.diceKey) :
         this.diceKey,
       diceBoxColor: "#000030",
-      obscure: this.obscureDiceKey,
       overlayMessage: {
         message: "press to open box",
         fontFamily: "Sans-Serif",
@@ -246,14 +244,25 @@ export class ApproveApiCommand extends HtmlComponent<ApproveApiCommandOptions> {
       this.append(
         Div({class: "orientation-widget"},
           Div({}, `Orientation of individual dice`),
-          Label({}, RadioButton({name: "orientation", value: "preserve", checked: !this.modifiedDerivationOptions.excludeOrientationOfFaces}).with( r => r.clickedEvent.on( () => {
+          Label({}, RadioButton({name: "orientation", value: "preserve", checked: !this.modifiedDerivationOptions.excludeOrientationOfFaces}).with( r => r.events.click.on( () => {
             this.modifiedDerivationOptions.excludeOrientationOfFaces = false;
             this.renderSoon();
           }) ), "Preserve"),
-          Label({}, RadioButton({name: "orientation", value:"remove", checked: !!this.modifiedDerivationOptions.excludeOrientationOfFaces}).with( r => r.clickedEvent.on( () => {
-            this.modifiedDerivationOptions.excludeOrientationOfFaces = true;
-            this.renderSoon();
-          })), "Remove")
+          Label({},
+            RadioButton({
+                name: "orientation",
+                value:"remove",
+                checked: !!this.modifiedDerivationOptions.excludeOrientationOfFaces,
+                events: (events) => {
+                  events.click.on( () => {
+                    this.modifiedDerivationOptions.excludeOrientationOfFaces = true;
+                    this.renderSoon();
+                  })
+                }
+              },
+            ),
+          "Remove",
+          )
         )
       );
     }
@@ -291,7 +300,7 @@ export class ApproveApiCommand extends HtmlComponent<ApproveApiCommandOptions> {
             TextInput().with( t => { 
               t.primaryElement.setAttribute("size", "60")
               hintTextFieldLabel?.primaryElement.setAttribute("for", t.primaryElementId)
-              t.changedEvent.on( () => {
+              t.events.change.on( () => {
                 this.modifyDerivationOptions({seedHint: t.value});
               })
             })

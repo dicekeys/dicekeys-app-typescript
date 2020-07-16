@@ -5,10 +5,10 @@ import {
   SeededCryptoModuleWithHelpers,
   SymmetricKey
 } from "@dicekeys/seeded-crypto-js";
-import {
-  ComponentEvent
-} from "../web-components/component-event"
 import {randomBytes} from "crypto"
+import {
+  Observable
+} from "./observable"
 
 const getRandomBytes = (numberOfBytes: number): Uint8Array => {
   if (global.window && window.crypto) {
@@ -23,34 +23,35 @@ const getRandomBytes = (numberOfBytes: number): Uint8Array => {
 const minutesToMs = 60 * 1000;
 
 
-export class ValueChangedComponentEvent<T> extends ComponentEvent<[T | undefined], StorageField<T>> {
-  constructor(field: StorageField<T>) { super(field); }
+// export class ValueChangedComponentEvent<T> extends ComponentEvent<[T | undefined], StorageField<T>> {
+//   constructor(field: StorageField<T>) { super(field); }
 
-  onChangeAndInitialValue = (callback: (value: T | undefined) => any) => {
-    callback(this.parent.value);
-    return this.on(callback);
-  }
-}
+//   onChangeAndInitialValue = (callback: (value: T | undefined) => any) => {
+//     callback(this.parent.value);
+//     return this.on(callback);
+//   }
+// }
 
-export abstract class StorageField<T> implements StorageField<T> {
+export abstract class StorageField<T> extends Observable<T> {
   protected static byName = new Map<string, StorageField<any>>();
 
   public readonly name: string;
-  public readonly changedEvent: ValueChangedComponentEvent<T>;
+//  public readonly changedEvent: ValueChangedComponentEvent<T>;
   constructor (public readonly nameSuffix: string) {
+    super();
     this.name =`${this.constructor.name}::${nameSuffix}`;
-    this.changedEvent = new ValueChangedComponentEvent(this);
+//    this.changedEvent = new ValueChangedComponentEvent(this);
     StorageField.byName.set(this.name, this);
   }
 
   protected abstract encodeToString(value: T): string;
   protected abstract decodeFromString(valueAsString: string): T | undefined;
 
-  protected lastValueReturned: T | undefined;
-  get = (): T | undefined => {
+  protected lastValueWritten: T | undefined;
+  protected read(): T | undefined {
     const valueAsString = localStorage.getItem(this.name);
     const value = valueAsString == null ? undefined : this.decodeFromString(valueAsString);
-    this.lastValueReturned = value;
+    this.lastValueWritten = value;
     return value;
   }
 
@@ -60,42 +61,35 @@ export abstract class StorageField<T> implements StorageField<T> {
   }
 
   sendChangeEventIfValueChangedInOtherWindow = () => {
-    const lastValue = this.lastValueReturned;
-    const currentValue = this.get();
+    const lastValue = this.lastValueWritten;
+    const currentValue = this.read();
     if (!this.equals(lastValue, currentValue)) {
       this.changedEvent.send(currentValue);
     }
   }
 
-  set = (value: T | undefined): T | undefined => {
+  protected write(value: T | undefined): void {
     if (typeof value === "undefined") {
       this.remove();
     } else {
-      const priorValue = this.get();
-      if (priorValue !== value) {
-        localStorage.setItem(this.name, this.encodeToString(value));
+      const changed = !this.equals(value, this.lastValueWritten);
+      this.lastValueWritten = value;
+      localStorage.setItem(this.name, this.encodeToString(value));
+      if (changed) {
         this.changedEvent.send(value);
       }
     }
-    return value;
+    this.lastValueWritten = value;
   }
 
-  remove = () => {
+  remove() {
     const changed = typeof localStorage.getItem(this.name) !== "undefined";
     localStorage.removeItem(this.name);
+    this.lastValueWritten = undefined;
     if (changed) {
       this.changedEvent.send(undefined);
     }
   }
-
-  public get value(): T | undefined {
-    return this.get();
-  };
-  public set value(value: T | undefined) {
-    this.set(value);
-  }
-
-  static UpdateSharedStateMessageName = "updateSharedStateValue";
 
   static onFocus = window.addEventListener("focus", () => {
     // See if any values have changed since the window lost focus

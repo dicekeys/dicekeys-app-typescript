@@ -1,9 +1,14 @@
 import {
-  ComponentEvent
-} from "./component-event"
+  Component, Attributes,
+  ComponentEvent,
+  Canvas,
+  Div,
+  MonospaceSpan,
+  Select,
+  Video,
+} from "../web-component-framework"
 import {
-  HtmlComponent, Attributes
-} from "./html-component"
+} from "../web-component-framework"
 import "regenerator-runtime/runtime";
 import {
   FaceRead, FaceReadJson
@@ -21,13 +26,6 @@ import {
     TerminateSessionRequest
 } from "../workers/dicekey-image-frame-worker"
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
-import {
-  Canvas,
-  Div,
-  MonospaceSpan,
-  Select,
-  Video,
-} from "./html-components";
 import {
   describeHost
 } from "../phrasing/api";
@@ -50,7 +48,7 @@ interface ScanDiceKeyOptions extends Attributes {
 /**
  * This class implements the demo page.
  */
-export class ScanDiceKey extends HtmlComponent<ScanDiceKeyOptions> {
+export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   private static readonly cameraSelectionMenuId = "camera-selection-menu";
 
   private get cameraSelectionMenu() {return document.getElementById(ScanDiceKey.cameraSelectionMenuId) as HTMLSelectElement;}
@@ -94,6 +92,10 @@ export class ScanDiceKey extends HtmlComponent<ScanDiceKeyOptions> {
     const {seedHint, cornerLetters} = this.options.derivationOptions || {};
     const {host} = this.options;
 
+    this.append(
+      Div({class: "scan-instruction"}, `Use your camera to read your DiceKey`)
+    )
+
     if (host && seedHint) {
       this.append(
         Div({class: "hint"},
@@ -118,9 +120,11 @@ export class ScanDiceKey extends HtmlComponent<ScanDiceKeyOptions> {
     }
 
     this.append(
-      Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c ),
-      Div({class: "content"}).append(
-        Video().with( c => this.videoComponent = c ),
+      Div({},
+        Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c ),
+        Div({class: "content"}).append(
+          Video().with( c => this.videoComponent = c ),
+        )
       ),
       Div({class: "centered-controls"}, Select({id: ScanDiceKey.cameraSelectionMenuId})),
     );

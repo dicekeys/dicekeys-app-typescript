@@ -1,15 +1,16 @@
 import {
   ComponentEvent
-} from "../web-components/component-event"
+} from "./component-event"
 import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
 
 
 export class Observable<T> {
-
   public readonly changedEvent: ComponentEvent<[T | undefined]>;
+  protected _value: T | undefined;
 
-  constructor(protected _value: T | undefined) {
+  constructor(_value?: T | undefined) {
     this.changedEvent = new ComponentEvent<[T | undefined]>(this);
+    this.set(_value);
   }
 
   observe = ( callback: (value: T | undefined) => any ): this => {
@@ -26,16 +27,23 @@ export class Observable<T> {
         jsonStringifyWithSortedFieldOrder(a) === jsonStringifyWithSortedFieldOrder(b)
       );
 
-  private set = (value: T | undefined): this => {
-    if (!Observable.equals(this._value, value)) {
-      this._value = value;
+  protected write(value: T | undefined): any {
+    this._value = value;
+  }
+  protected read(): T | undefined {
+    return this._value;
+  }
+
+  public set = (value: T | undefined): this => {
+    if (!Observable.equals(this.read(), value)) {
+      this.write(value)
       this.changedEvent.send(value);
     }
     return this;
   }
 
   public get value(): T | undefined {
-    return this._value;
+    return this.read();
   };
   public set value(value: T | undefined) {
     this.set(value);

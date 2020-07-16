@@ -1,18 +1,10 @@
 import {
-  HtmlComponent
-} from "./html-component"
-import {
-  ComponentEvent
-} from "./component-event";
+  Component,
+  ComponentEvent,
+  InputButton
+} from "../web-component-framework"
 
-
-export class HomeComponent extends HtmlComponent {
-  static loadDiceKeyButtonId = "load-dice-key-button";
-  private get loadDiceKeyButton(): HTMLButtonElement {
-    return document.getElementById(HomeComponent.loadDiceKeyButtonId) as HTMLButtonElement;
-  }
-
-//  public static instance: HomeComponent | undefined;
+export class HomeComponent extends Component {
   
   public readonly loadDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);
 
@@ -29,13 +21,13 @@ export class HomeComponent extends HtmlComponent {
 
   render() {
     super.render();
-    this.appendHtml(`
-      <input id="${HomeComponent.loadDiceKeyButtonId}" type="button" value="Scan your DiceKey"/>
-    `);
-//    HomeComponent.instance = this;
-
-    // Bind events
-    this.loadDiceKeyButton.addEventListener("click", this.loadDiceKeyButtonClicked.send);
+    this.append(
+      InputButton({
+        value: "Scan your DiceKey",
+        events: (events) => {
+          events.click.on( this.loadDiceKeyButtonClicked.send )
+        }})
+    );
   }
 
 }

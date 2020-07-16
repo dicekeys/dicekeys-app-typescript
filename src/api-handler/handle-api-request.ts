@@ -57,14 +57,14 @@ export const handleApiRequest = async (
     const exception: string = 
       (typeof e === "string") ?
         e :
-    ("name" in e && typeof e.name === "string") ?
+    (typeof e === "object" && "name" in e && typeof e.name === "string") ?
         e.name :
       "unknown";
     const message: string | undefined = 
-      ("message" in e && typeof e.message === "string") ?
+      (typeof e === "object" && "message" in e && typeof e.message === "string") ?
         e.message : "unknown";
     const stack: string | undefined = 
-    ("stack" in e && typeof e.stack === "string") ?
+    (typeof e === "object" && "stack" in e && typeof e.stack === "string") ?
       e.stack : undefined;
     await transmitResponse({
       requestId, exception, message, stack

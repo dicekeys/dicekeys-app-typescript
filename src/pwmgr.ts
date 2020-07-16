@@ -1,6 +1,6 @@
 import {
-  HtmlComponent,
-} from "./web-components/html-component"
+  Component,
+} from "./web-component-framework"
 import {
   DerivationOptions,
   getPassword
@@ -17,7 +17,7 @@ const pwmgrAppSecretDerivationOptionsJson = JSON.stringify(DerivationOptions({
 const passwordFieldId = "password-field" as const;
 const getPasswordFromDiceKeyButtonId = "get-password-from-dicekey-button" as const;
 
-export class PasswordManagerSignin extends HtmlComponent {
+export class PasswordManagerSignin extends Component {
   private get passwordTextElement(): HTMLInputElement {
     return document.getElementById(passwordFieldId) as HTMLInputElement;
   }

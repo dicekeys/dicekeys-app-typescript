@@ -2,11 +2,11 @@ import {
   ComponentEvent
 } from "./component-event";
 
-interface AppendableCallback<T extends HtmlComponent = HtmlComponent> {
+interface AppendableCallback<T extends Component = Component> {
   (htmlComponent: T): Appendable;
 }
-export type AppendableItem<T extends HtmlComponent = HtmlComponent> = AppendableCallback<T> | HtmlComponent | Node | string | undefined | false;
-export type Appendable<T extends HtmlComponent = HtmlComponent> = AppendableItem<T> | AppendableItem<T>[] | Appendable<T>[];
+export type AppendableItem<T extends Component = Component> = AppendableCallback<T> | Component | Node | string | undefined | false;
+export type Appendable<T extends Component = Component> = AppendableItem<T> | AppendableItem<T>[] | Appendable<T>[];
 
 
 export class Attributes {
@@ -18,13 +18,12 @@ export class Attributes {
   text?: string;
 }
 
-
-export class HtmlComponent<
+export class Component<
   OPTIONS extends Attributes = Attributes,
   TOP_LEVEL_ELEMENT extends HTMLElement = HTMLElement  
 > {
   detachEvent = new ComponentEvent(this);
-  childComponents = new Set<HtmlComponent>();
+  childComponents = new Set<Component>();
 
   private static uniqueElementIdCounter: number = 0;
 
@@ -33,7 +32,7 @@ export class HtmlComponent<
    * @param nonUniqueName
    */
   uniqueNodeId = (nonUniqueName: string = "id"): string =>
-    `${nonUniqueName}::${(HtmlComponent.uniqueElementIdCounter++).toString()}`;
+    `${nonUniqueName}::${(Component.uniqueElementIdCounter++).toString()}`;
   
   constructor(
     public readonly  options: OPTIONS,
@@ -68,7 +67,7 @@ export class HtmlComponent<
     this.renderSoon();
   }
 
-  protected parentComponent?: HtmlComponent;
+  protected parentComponent?: Component;
   public get parent() { return this.parentComponent; }
 
   /**
@@ -155,11 +154,11 @@ export class HtmlComponent<
     return true;
   }
 
-  protected trackChild = (child: HtmlComponent) => {
+  protected trackChild = (child: Component) => {
     this.childComponents.add(child);
   }
 
-  protected removeChild = (child: HtmlComponent): boolean => {
+  protected removeChild = (child: Component): boolean => {
     if (this.childComponents.has(child)) {
       this.childComponents.delete(child);
       // Return true only if we had this child and the child had
@@ -208,7 +207,7 @@ export class HtmlComponent<
    * 
    * @param child 
    */
-  appendChild<HTML_COMPONENT extends HtmlComponent>(
+  appendChild<HTML_COMPONENT extends Component>(
     child: HTML_COMPONENT
   ): HTML_COMPONENT {
     this.primaryElement.appendChild(child.primaryElement);
@@ -232,7 +231,7 @@ export class HtmlComponent<
         this.append(...child);
       } else if (typeof child === "string") {
         this.appendHtml(child);
-      } else if (child instanceof HtmlComponent) {
+      } else if (child instanceof Component) {
         this.appendChild(child);
       } else {
         this.primaryElement.append(child);
@@ -259,7 +258,7 @@ export class HtmlComponent<
   /**
    * Create a child ement that can be replaced
    */
-  replaceableChild = <HTML_COMPONENT extends HtmlComponent>(): ReplaceableChild<HTML_COMPONENT> => {
+  replaceableChild = <HTML_COMPONENT extends Component>(): ReplaceableChild<HTML_COMPONENT> => {
     var current: HTML_COMPONENT | undefined = undefined;
 
     const replace = <ACTUAL_HTML_COMPONENT extends HTML_COMPONENT = HTML_COMPONENT>(
@@ -285,6 +284,6 @@ export class HtmlComponent<
     return replace;
   }
 }
-export interface ReplaceableChild<HTML_COMPONENT extends HtmlComponent> {
+export interface ReplaceableChild<HTML_COMPONENT extends Component> {
   (child: HTML_COMPONENT): HTML_COMPONENT
 }
