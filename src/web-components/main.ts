@@ -2,7 +2,7 @@ import {
   Component, Attributes, Div
 } from "../web-component-framework"
 
-import { Exceptions } from "@dicekeys/dicekeys-api-js";
+import { Exceptions, ApiStrings } from "@dicekeys/dicekeys-api-js";
 import {
   ApiRequestContainer
 } from "./api-request-container";
@@ -26,6 +26,9 @@ import {
   ApiRequestContext
 } from "../api-handler/handle-api-request";
 import { ScanDiceKey } from "./scan-dicekey";
+import {
+  urlApiResponder
+} from "../api-handler/handle-url-api-request";
 
 
 interface BodyOptions extends Attributes {
@@ -41,7 +44,7 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
     super(options, document.body);
     const {appState} = options;
     this.appState = appState;
-    
+
     window.addEventListener("message", messageEvent => this.handleMessageEvent(messageEvent) );
     // Let the parent know we're ready for messages. // FIXME document in API
     if (window.opener) {
@@ -51,6 +54,11 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
     }
 
     this.handleApiRequestReceivedViaPostMessage = postMessageApiResponder(this.getUsersApprovalOfApiCommand)
+
+    if (new URL(window.location.toString()).searchParams.get(ApiStrings.Inputs.COMMON.command)) {      
+      urlApiResponder(this.getUsersApprovalOfApiCommand)(window.location.toString())
+    }    
+
   }
 
   readonly handleApiRequestReceivedViaPostMessage: ReturnType<typeof postMessageApiResponder>;

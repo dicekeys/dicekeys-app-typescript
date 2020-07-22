@@ -174,7 +174,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   }
 
   defaultVideoConstraints: MediaStreamConstraints = {video: {
-    width: { ideal: 768, min: 768 }, // FIXME? 1024?
+    width: { ideal: 1024, min: 768 }, // FIXME? 1024?
     height: { ideal: 768, min: 768 },
     facingMode: "environment" // "user" (faces the user) | "environment" (away from user)
   }}

@@ -22,22 +22,16 @@ import {
   SealWithSymmetricKey,
   UnsealWithSymmetricKey,
   UnsealWithUnsealingKey,
+  GetSecretResponse,
 } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import {
   SignatureVerificationKeyJson,
-  SignatureVerificationKeyFields,
   SealingKeyJson,
-  SealingKeyFields,
-  SecretFields,
   SecretJson,
   SigningKeyJson,
-  SigningKeyFields,
   SymmetricKeyJson,
-  SymmetricKeyFields,
   UnsealingKeyJson,
-  UnsealingKeyFields,
   PackagedSealedMessageJson,
-  PackagedSealedMessageFields
 } from "@dicekeys/seeded-crypto-js";
 import {
   getRequestsDerivationOptionsJson
@@ -48,35 +42,39 @@ const {
 } = ApiStrings;
 
 export class UrlApi {
-  private pendingCallResolveFunctions = new Map<string, {resolve: (url: URL) => any, reject: (err: any) => any}>();
+  private pendingPromisesForRequestResponseUrls = new Map<string, (url: URL) => any>();
 
   constructor(
-    private requestUrlBase: string,
+    private requestUrlString: string,
     private respondToUrl: string,
     private transmitRequest: (request: URL) => any
   ) {
-///    super();
+
   }
 
   private authToken?: string;
   protected getAuthToken = async (forceReload: boolean = false): Promise<string> => {
     if (forceReload || !this.authToken) {
-      const requestUrl = new URL(this.requestUrlBase);
+      const requestUrl = new URL(this.requestUrlString);
       const requestId = ApiFactory.generateRequestId();
-      const urlPromise = new Promise<URL>( (resolve, reject) => this.pendingCallResolveFunctions.set(requestId, {resolve, reject}));
-      requestUrl.searchParams.append(Inputs.COMMON.requestId, requestId);
-      requestUrl.searchParams.append(Inputs.COMMON.respondTo, this.respondToUrl);
-      requestUrl.searchParams.append(Inputs.COMMON.command, MetaCommands.getAuthToken);
-      this.transmitRequest(requestUrl);
-      const url = await urlPromise;
-      const newAuthToken = url.searchParams.get(Outputs.getAuthToken.authToken);
-      if (newAuthToken != null) {
-        this.authToken = newAuthToken;        
-      } else {
-        throw new Exceptions.ClientNotAuthorizedException();
-      }
+      requestUrl.searchParams.set(Inputs.COMMON.requestId, requestId);
+      requestUrl.searchParams.set(Inputs.COMMON.respondTo, this.respondToUrl);
+      requestUrl.searchParams.set(Inputs.COMMON.command, MetaCommands.getAuthToken);
+      return new Promise<string>( (resolve, reject) => {
+        this.pendingPromisesForRequestResponseUrls.set(requestId, url => {
+          const newAuthToken = url.searchParams.get(Outputs.getAuthToken.authToken);
+          if (newAuthToken != null) {
+            this.authToken = newAuthToken;
+            resolve(newAuthToken);        
+          } else {
+            reject(new Exceptions.ClientNotAuthorizedException());
+          }
+        });
+        this.transmitRequest(requestUrl);
+      })
+    } else {
+       return this.authToken;
     }
-    return this.authToken!;
   }
 
 //  protected call: ApiFactory.ApiClientImplementation = async <COMMAND extends ApiStrings.Command>(
@@ -84,7 +82,7 @@ export class UrlApi {
     REQUEST extends ApiCalls.ApiRequestObject>(
     request: REQUEST & ApiCalls.ApiRequestObject
   ): Promise<ApiCalls.ResultForRequest<REQUEST>> => {
-    const requestUrl = new URL(this.requestUrlBase);
+    const requestUrl = new URL(this.requestUrlString);
     const marshallString = (field: string, value: string) => requestUrl.searchParams.set(field, value);
     const requestId = ApiFactory.generateRequestId();
     marshallString(Inputs.COMMON.requestId, requestId);
@@ -119,87 +117,110 @@ export class UrlApi {
         break;
       case Commands.unsealWithSymmetricKey:
       case Commands.unsealWithUnsealingKey:
-        const {ciphertext, derivationOptionsJson, unsealingInstructions} = request.packagedSealedMessage;
-        marshallString(Inputs.unsealWithUnsealingKey.packagedSealedMessage, JSON.stringify({
+        const {ciphertext, derivationOptionsJson, unsealingInstructions} = request.packagedSealedMessageFields;
+        marshallString(Inputs.unsealWithUnsealingKey.packagedSealedMessageFields, JSON.stringify({
           ciphertext: urlSafeBase64Encode(ciphertext),
           derivationOptionsJson, unsealingInstructions
         }));
     }
-    const urlPromise = new Promise<URL>( (resolve, reject) => this.pendingCallResolveFunctions.set(requestId, {resolve, reject}));
+    const urlPromise = new Promise<URL>( (resolve, _reject) => this.pendingPromisesForRequestResponseUrls.set(requestId, resolve));
     this.transmitRequest(requestUrl);
     const url = await urlPromise;
+    const exception = url.searchParams.get(Outputs.COMMON.exception);
+    if (typeof exception === "string") {
+      const message = url.searchParams.get(Outputs.COMMON.message) ?? undefined;
+      const stack = url.searchParams.get(Outputs.COMMON.stack) ?? undefined;
+      throw Exceptions.restoreException(exception, message, stack);
+    }
+
     const fromJson = <T, U>(json: string, f: (t: T) => U) => f(JSON.parse(json) as T);
     const required = (parameterName: string): string => url.searchParams.get(parameterName) ??
       ( () => { throw new Exceptions.MissingResponseParameter(parameterName) ; })()
 
+
     switch(request.command) {
       case Commands.generateSignature:
-        return {
-          signature: urlSafeBase64Decode(required(Outputs.generateSignature.signature)),
-          signatureVerificationKey: fromJson<SignatureVerificationKeyJson, SignatureVerificationKeyFields>(
-            required(Outputs.generateSignature.signatureVerificationKey), 
-            ({signatureVerificationKeyBytes, derivationOptionsJson}) => ({
+        return fromJson<SignatureVerificationKeyJson, ApiCalls.ApiCallResult<GenerateSignature>>(
+          required(Outputs.generateSignature.signatureVerificationKeyFields), 
+          ({signatureVerificationKeyBytes, derivationOptionsJson}) => ({
+            [Outputs.generateSignature.signatureVerificationKeyFields]: {
               derivationOptionsJson,
               signatureVerificationKeyBytes: urlSafeBase64Decode(signatureVerificationKeyBytes)
-            }))
-        } as ApiCalls.ApiCallResult<GenerateSignature>
+            },
+            [Outputs.generateSignature.signature]: urlSafeBase64Decode(required(Outputs.generateSignature.signature))            
+          } )
+        ) as ApiCalls.ApiCallResult<GenerateSignature>
       case Commands.getPassword:
         return {
           password: required(Outputs.getPassword.password),
           derivationOptionsJson: required(Outputs.getPassword.derivationOptionsJson)
         } as ApiCalls.ApiCallResult<GetPassword>
       case Commands.getSealingKey:
-        return fromJson<SealingKeyJson, SealingKeyFields>( required(Outputs.getSealingKey.sealingKey),
+        return fromJson<SealingKeyJson, ApiCalls.ApiCallResult<GetSealingKey>>( required(Outputs.getSealingKey.sealingKeyFields),
           ({sealingKeyBytes, derivationOptionsJson}) => ({
-            sealingKeyBytes: urlSafeBase64Decode(sealingKeyBytes),
-            derivationOptionsJson
+            [Outputs.getSealingKey.sealingKeyFields]: {
+              sealingKeyBytes: urlSafeBase64Decode(sealingKeyBytes),
+              derivationOptionsJson
+            }
           })) as ApiCalls.ApiCallResult<GetSealingKey>;
       case Commands.getSecret:
-        return fromJson<SecretJson, SecretFields>( required(Outputs.getSecret.secret),
+        return fromJson<SecretJson, GetSecretResponse>( required(Outputs.getSecret.secretFields),
           ({secretBytes, derivationOptionsJson}) => ({
-            secretBytes: urlSafeBase64Decode(secretBytes),
-            derivationOptionsJson
+            [Outputs.getSecret.secretFields]: {
+              secretBytes: urlSafeBase64Decode(secretBytes),
+              derivationOptionsJson
+            }
           })) as ApiCalls.ApiCallResult<GetSecret>;
       case Commands.getSignatureVerificationKey:
-        return fromJson<SignatureVerificationKeyJson, SignatureVerificationKeyFields>(
-          required(Outputs.getSignatureVerificationKey.signatureVerificationKey),
+        return fromJson<SignatureVerificationKeyJson, ApiCalls.ApiCallResult<GetSignatureVerificationKey>>(
+          required(Outputs.getSignatureVerificationKey.signatureVerificationKeyFields),
           ({signatureVerificationKeyBytes, derivationOptionsJson}) => ({
-            signatureVerificationKeyBytes: urlSafeBase64Decode(signatureVerificationKeyBytes),
-            derivationOptionsJson
+            [Outputs.getSignatureVerificationKey.signatureVerificationKeyFields]: {
+              signatureVerificationKeyBytes: urlSafeBase64Decode(signatureVerificationKeyBytes),
+              derivationOptionsJson
+            }
           })) as ApiCalls.ApiCallResult<GetSignatureVerificationKey>;
       case Commands.getSigningKey:
-        return fromJson<SigningKeyJson, SigningKeyFields>(
-          required(Outputs.getSigningKey.signingKey),
+        return fromJson<SigningKeyJson, ApiCalls.ApiCallResult<GetSigningKey>>(
+          required(Outputs.getSigningKey.signingKeyFields),
           ({signingKeyBytes, signatureVerificationKeyBytes, derivationOptionsJson}) => ({
-            derivationOptionsJson,
-            signingKeyBytes: urlSafeBase64Decode(signingKeyBytes),
-            signatureVerificationKeyBytes: signatureVerificationKeyBytes == null ?
-              new Uint8Array() :
-              urlSafeBase64Decode(signatureVerificationKeyBytes)
+            [Outputs.getSigningKey.signingKeyFields]: {
+              derivationOptionsJson,
+              signingKeyBytes: urlSafeBase64Decode(signingKeyBytes),
+              signatureVerificationKeyBytes: signatureVerificationKeyBytes == null ?
+                new Uint8Array() :
+                urlSafeBase64Decode(signatureVerificationKeyBytes)
+            }
           })) as ApiCalls.ApiCallResult<GetSigningKey>;
       case Commands.getSymmetricKey:
-        return fromJson<SymmetricKeyJson, SymmetricKeyFields>(
-          required(Outputs.getSymmetricKey.symmetricKey),
+        return fromJson<SymmetricKeyJson, ApiCalls.ApiCallResult<GetSymmetricKey>>(
+          required(Outputs.getSymmetricKey.symmetricKeyFields),
           ({keyBytes, derivationOptionsJson}) => ({
-            keyBytes: urlSafeBase64Decode(keyBytes),
-            derivationOptionsJson
+            [Outputs.getSymmetricKey.symmetricKeyFields]: {
+              keyBytes: urlSafeBase64Decode(keyBytes),
+              derivationOptionsJson
+            }
           })) as ApiCalls.ApiCallResult<GetSymmetricKey>;
       case Commands.getUnsealingKey:
-        return fromJson<UnsealingKeyJson, UnsealingKeyFields>(
-          required(Outputs.getUnsealingKey.unsealingKey),
+        return fromJson<UnsealingKeyJson, ApiCalls.ApiCallResult<GetUnsealingKey>>(
+          required(Outputs.getUnsealingKey.unsealingKeyFields),
           ({unsealingKeyBytes, sealingKeyBytes, derivationOptionsJson}) => ({
-            unsealingKeyBytes: urlSafeBase64Decode(unsealingKeyBytes),
-            sealingKeyBytes: urlSafeBase64Decode(sealingKeyBytes),
-            derivationOptionsJson
+            [Outputs.getUnsealingKey.unsealingKeyFields]: {
+              unsealingKeyBytes: urlSafeBase64Decode(unsealingKeyBytes),
+              sealingKeyBytes: urlSafeBase64Decode(sealingKeyBytes),
+              derivationOptionsJson
+            }
           })) as ApiCalls.ApiCallResult<GetUnsealingKey>;
         break;
       case Commands.sealWithSymmetricKey:
-        return fromJson<PackagedSealedMessageJson, PackagedSealedMessageFields>(
-          required(Outputs.sealWithSymmetricKey.packagedSealedMessage),
+        return fromJson<PackagedSealedMessageJson, ApiCalls.ApiCallResult<SealWithSymmetricKey>>(
+          required(Outputs.sealWithSymmetricKey.packagedSealedMessageFields),
           ({ciphertext, unsealingInstructions, derivationOptionsJson}) => ({
-            ciphertext: urlSafeBase64Decode(ciphertext),
-            unsealingInstructions,
-            derivationOptionsJson
+            [Outputs.sealWithSymmetricKey.packagedSealedMessageFields]: {
+              ciphertext: urlSafeBase64Decode(ciphertext),
+              unsealingInstructions,
+              derivationOptionsJson
+            }
           })) as ApiCalls.ApiCallResult<SealWithSymmetricKey>;
       case Commands.unsealWithSymmetricKey:
         return {plaintext: urlSafeBase64Decode(required(Outputs.unsealWithSymmetricKey.plaintext))} as ApiCalls.ApiCallResult<UnsealWithSymmetricKey>;
@@ -208,20 +229,19 @@ export class UrlApi {
       default:
         throw new Error();
       }
-    throw new Error();
   }
 
-  readonly generateSignature = ApiFactory.apiCallFactory("generateSignature", this.call);
-  readonly getPassword = ApiFactory.apiCallFactory("getPassword", this.call);
-  readonly getSealingKey = ApiFactory.apiCallFactory("getSealingKey", this.call);
-  readonly getSecret = ApiFactory.apiCallFactory("getSecret", this.call);
-  readonly getSignatureVerificationKey = ApiFactory.apiCallFactory("getSignatureVerificationKey", this.call);
-  readonly getSigningKey = ApiFactory.apiCallFactory("getSigningKey", this.call);
-  readonly getSymmetricKey = ApiFactory.apiCallFactory("getSymmetricKey", this.call);
-  readonly getUnsealingKey = ApiFactory.apiCallFactory("getUnsealingKey", this.call);
-  readonly sealWithSymmetricKey = ApiFactory.apiCallFactory("sealWithSymmetricKey", this.call);
-  readonly unsealWithSymmetricKey = ApiFactory.apiCallFactory("unsealWithSymmetricKey", this.call);
-  readonly unsealWithUnsealingKey = ApiFactory.apiCallFactory("unsealWithUnsealingKey", this.call);
+  readonly generateSignature = ApiFactory.apiCallFactory<GenerateSignature>("generateSignature", this.call);
+  readonly getSealingKey = ApiFactory.apiCallFactory<GetSealingKey>("getSealingKey", this.call);
+  readonly getSecret = ApiFactory.apiCallFactory<GetSecret>("getSecret", this.call);
+  readonly getPassword = ApiFactory.apiCallFactory<GetPassword>("getPassword", this.call);
+  readonly getSignatureVerificationKey = ApiFactory.apiCallFactory<GetSignatureVerificationKey>("getSignatureVerificationKey", this.call);
+  readonly getSigningKey = ApiFactory.apiCallFactory<GetSigningKey>("getSigningKey", this.call);
+  readonly getSymmetricKey = ApiFactory.apiCallFactory<GetSymmetricKey>("getSymmetricKey", this.call);
+  readonly getUnsealingKey = ApiFactory.apiCallFactory<GetUnsealingKey>("getUnsealingKey", this.call);
+  readonly sealWithSymmetricKey = ApiFactory.apiCallFactory<SealWithSymmetricKey>("sealWithSymmetricKey", this.call);
+  readonly unsealWithSymmetricKey = ApiFactory.apiCallFactory<UnsealWithSymmetricKey>("unsealWithSymmetricKey", this.call);
+  readonly unsealWithUnsealingKey = ApiFactory.apiCallFactory<UnsealWithUnsealingKey>("unsealWithUnsealingKey", this.call);
   
   /**
    * Activities and Fragments that use this API should implement onActivityResult and
@@ -232,21 +252,10 @@ export class UrlApi {
    */
   handleResult = (result: URL) => {
     const requestId = result.searchParams.get(Outputs.COMMON.requestId);
-    if (requestId && this.pendingCallResolveFunctions.has(requestId)) {
-      const resolveFn = this.pendingCallResolveFunctions.get(requestId);
-      this.pendingCallResolveFunctions.delete(requestId);
-      try {
-        const exception = result.searchParams.get(Outputs.COMMON.exception);
-        if (exception) {
-          const message = result.searchParams.get(Outputs.COMMON.message) ?? undefined;
-          const stack = result.searchParams.get(Outputs.COMMON.stack) ?? undefined;
-          throw Exceptions.restoreException(exception, message, stack);
-          // throw new Error(`Exception: ${exception} with message ${message}`);
-        }
-        resolveFn!.resolve(result);
-      } catch (e) {
-        resolveFn!.reject(e);
-      }
+    if (requestId && this.pendingPromisesForRequestResponseUrls.has(requestId)) {
+      const resolve = this.pendingPromisesForRequestResponseUrls.get(requestId)!;
+      this.pendingPromisesForRequestResponseUrls.delete(requestId);
+      resolve(result);
     }
   }
 

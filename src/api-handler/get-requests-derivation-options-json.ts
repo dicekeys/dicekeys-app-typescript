@@ -7,4 +7,4 @@ export const getRequestsDerivationOptionsJson = (
   request: ApiCalls.ApiRequestObject
 ): string => ("derivationOptionsJson" in request) ?
   request.derivationOptionsJson :
-  request.packagedSealedMessage.derivationOptionsJson
+  request.packagedSealedMessageFields.derivationOptionsJson

@@ -127,7 +127,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
       // replace the derivationOptionsJson field in the top level of the request
       {...request, derivationOptionsJson} :
       // replace the derivationOptionsJson field in the 
-      {...request, packagedSealedMessage: {...request.packagedSealedMessage, derivationOptionsJson}}
+      {...request, packagedSealedMessageFields: {...request.packagedSealedMessageFields, derivationOptionsJson}}
   }
 
   private updateBackgroundOperationsForDerivationOptions = async () => {

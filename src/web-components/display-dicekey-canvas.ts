@@ -41,7 +41,6 @@ export class DisplayDiceKeyCanvas extends Component<DisplayDiceKeyCanvasOptions>
     this.append(
       Div({class: "primary-container"},
         new DiceKeyCanvas({
-          diceBoxColor: "#000010",
           diceKey: this.options.diceKey
         }),
         InputButton({
