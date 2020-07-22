@@ -3,15 +3,10 @@ import {
   DerivationOptions
 } from "@dicekeys/dicekeys-api-js";
 import {
-  HtmlComponent, Attributes
-} from "./html-component";
-import {
-  //H3, H2,
-  Div, InputButton
-} from "./html-components";
-import {
+  Component, Attributes,
+  Div, InputButton,
   ComponentEvent
-} from "./component-event"
+} from "../web-component-framework";
 import {
   DiceKey,
 } from "../dicekeys/dicekey";
@@ -61,7 +56,7 @@ export interface ApiRequestOptions extends Attributes {
   requestContext: ApiRequestContext
 }
 
-export class ApiRequestContainer extends HtmlComponent<ApiRequestOptions> {
+export class ApiRequestContainer extends Component<ApiRequestOptions> {
   protected messageElementId = this.uniqueNodeId("message");
 
   public readonly derivationOptions: DerivationOptions;
@@ -84,7 +79,7 @@ export class ApiRequestContainer extends HtmlComponent<ApiRequestOptions> {
     this.derivationOptions = DerivationOptions(derivationOptionsJson);
     if (this.derivationOptions.proofOfPriorDerivation) {
       // Once the diceKey is available, calculate if the proof of prior derivation is valid
-      DiceKeyAppState.instance?.diceKey.changedEvent.onChangeAndInitialValue( async (diceKey) => {
+      DiceKeyAppState.instance?.diceKey.observe( async (diceKey) => {
         if (diceKey) {
           const seedString = DiceKey.toSeedString(diceKey, this.derivationOptions);
           const {verified} = await ApiRequestContainer.verifyDerivationOptionsWorker.calculate({seedString, derivationOptionsJson});
@@ -126,9 +121,11 @@ export class ApiRequestContainer extends HtmlComponent<ApiRequestOptions> {
     DiceKeyAppState.instance?.diceKey.changedEvent.on( this.renderSoon );
 
     this.append(
-      Div({class: "request-container"},
-        Div({class: "request-choice"}, API.describeRequestChoice(request.command, host, !!this.areDerivationOptionsVerified) ),
-        Div({class: "request-promise"}, API.describeDiceKeyAccessRestrictions(host) ),
+      Div({class: "primary-container"},
+        Div({class: "request-description"},
+          Div({class: "request-choice"}, API.describeRequestChoice(request.command, host, !!this.areDerivationOptionsVerified) ),
+          Div({class: "request-promise"}, API.describeDiceKeyAccessRestrictions(host) ),
+        ),
         ( diceKey ?
           new ApproveApiCommand({...this.options, diceKey}).with( e => this.apiResponseSettings = e )
           :

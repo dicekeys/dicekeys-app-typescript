@@ -2,12 +2,10 @@ import {
   ApiStrings, Exceptions
 } from "@dicekeys/dicekeys-api-js"
 import {
-  Appendable
-} from "../web-components/html-component";
-import {
+  Appendable,
   MonospaceSpan,
   Span,
-} from "../web-components/html-components";
+} from "../web-component-framework";
 
 
 const knownHostSuffixes: [string, string][] = [

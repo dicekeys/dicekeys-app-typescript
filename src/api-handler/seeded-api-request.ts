@@ -23,11 +23,3 @@ export class SeededApiRequest<REQUEST extends ApiCalls.ApiRequestObject> {
     this.#seededApiCommands.executeRequest(this.request);
 
 }
-
-
-// // Test type inference // FIXME -- REMOVE
-// SeededCryptoModulePromise.then( s => {
-//   const response: ApiCalls.GetPasswordResponse =
-//     new SeededApiRequest(s, "yo", {command: "getPassword", derivationOptionsJson: ""}).execute();
-//   if (response) {}
-// });

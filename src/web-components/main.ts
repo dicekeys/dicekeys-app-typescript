@@ -1,14 +1,8 @@
 import {
-  HtmlComponent, Attributes
-} from "./html-component"
+  Component, Attributes, Div
+} from "../web-component-framework"
 
-import {
-  // RequestForUsersConsent,
-  // UsersConsentResponse,
-} from "@dicekeys/dicekeys-api-js";
-// import {
-//   ComponentEvent
-// } from "./component-event";
+import { Exceptions, ApiStrings } from "@dicekeys/dicekeys-api-js";
 import {
   ApiRequestContainer
 } from "./api-request-container";
@@ -22,10 +16,8 @@ import {
   DiceKey
 } from "../dicekeys/dicekey";
 import {
+  Step,
   DiceKeyAppState
-} from "../state/app-state-dicekey"
-import {
-  Step
 } from "../state"
 import {
   postMessageApiResponder
@@ -34,13 +26,16 @@ import {
   ApiRequestContext
 } from "../api-handler/handle-api-request";
 import { ScanDiceKey } from "./scan-dicekey";
+import {
+  urlApiResponder
+} from "../api-handler/handle-url-api-request";
 
 
 interface BodyOptions extends Attributes {
   appState: DiceKeyAppState;
 }
 
-export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
+export class AppMain extends Component<BodyOptions, HTMLElement> {
   appState: DiceKeyAppState;
 
 //  action: PageAction = "home";
@@ -49,7 +44,7 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
     super(options, document.body);
     const {appState} = options;
     this.appState = appState;
-    
+
     window.addEventListener("message", messageEvent => this.handleMessageEvent(messageEvent) );
     // Let the parent know we're ready for messages. // FIXME document in API
     if (window.opener) {
@@ -59,6 +54,11 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
     }
 
     this.handleApiRequestReceivedViaPostMessage = postMessageApiResponder(this.getUsersApprovalOfApiCommand)
+
+    if (new URL(window.location.toString()).searchParams.get(ApiStrings.Inputs.COMMON.command)) {      
+      urlApiResponder(this.getUsersApprovalOfApiCommand)(window.location.toString())
+    }    
+
   }
 
   readonly handleApiRequestReceivedViaPostMessage: ReturnType<typeof postMessageApiResponder>;
@@ -68,16 +68,7 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
   }
 
   handleApiMessageEvent = async (messageEvent: MessageEvent) => {
-    try {
-      await this.handleApiRequestReceivedViaPostMessage(messageEvent);
-    } finally {
-      // Close this window shortly after request completion
-      // setTimeout( () => {
-      //   const windowOpener = window.opener;// window.open("", windowName);
-      //   windowOpener?.focus();
-      //   window.close()
-      // }, 250 );
-    }
+    this.handleApiRequestReceivedViaPostMessage(messageEvent);
   };
 
 
@@ -97,12 +88,6 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
     return Step.getUsersConsent.start(requestContext);
   }
 
-  // getUsersApprovalOfApiCommand: GetUsersApprovalOfApiCommand = (
-  //   parameters: ApiCommandParameters
-  // ) => {
-  //   return Step.apiCommand.start(parameters);
-  // }
-
   async render() {
     super.render();
     const diceKey = this.appState.diceKey.value;
@@ -112,14 +97,17 @@ export class AppMain extends HtmlComponent<BodyOptions, HTMLElement> {
           {requestContext: Step.getUsersConsent.options}
         ).with ( apiRequest => {
           apiRequest.userApprovedEvent.on( Step.getUsersConsent.complete )
-          apiRequest.userCancelledEvent.on( Step.getUsersConsent.cancel )    
+          apiRequest.userCancelledEvent.on( () => Step.getUsersConsent.cancel(new Exceptions.UserDeclinedToAuthorizeOperation("User cancelled")) )
         })
       )
       Step.getUsersConsent.promise?.finally( this.renderSoon );
     } else if (Step.loadDiceKey.isInProgress) {
-      this.append(new ScanDiceKey({host: ""}).with( readDiceKey => { 
-        readDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
-      }));
+      this.append(
+        Div({class: "request-container"},
+          new ScanDiceKey({host: ""}).with( readDiceKey => { 
+          readDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
+        })
+      ));
       Step.loadDiceKey.promise?.finally( () => this.renderSoon() );
 
     } else if (diceKey) {

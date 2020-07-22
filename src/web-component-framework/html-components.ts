@@ -1,17 +1,51 @@
 import {
   Attributes,
-  HtmlComponent,
+  Component,
   Appendable
-} from "./html-component";
+} from "./web-component";
 import { ComponentEvent } from "./component-event";
+
+interface HtmlElementAttributes<
+  K extends keyof HTMLElementTagNameMap
+> extends Attributes {
+  events?: (events: HtmlElementEvents<K>) => any
+}
+
+export class HtmlElementEvents<
+  K extends keyof HTMLElementTagNameMap
+> {
+  constructor (
+    private component: any,
+  ) {}
+  #instantiatedEvents = new Map<Parameters<HTMLElementTagNameMap[K]["addEventListener"]>[0], ComponentEvent<any, any>>();
+
+  protected getEvent = <
+    KEY extends Parameters<HTMLElementTagNameMap[K]["addEventListener"]>[0]
+  >(eventType: KEY) => {
+    if (!this.#instantiatedEvents.has(name)) {
+      const event = new ComponentEvent<[any], any>(this.component);
+      this.#instantiatedEvents.set(name, event);
+      this.component.primaryElement.addEventListener(eventType, event.send);
+    }
+    return this.#instantiatedEvents.get(name)! as unknown as ComponentEvent<[WindowEventMap[KEY & keyof WindowEventMap]], any>;
+  }
+
+  public get click() { return this.getEvent("click") }
+  public get keydown() { return this.getEvent("keydown") }
+  public get keyup() { return this.getEvent("keyup") }
+  public get change() { return this.getEvent("change") }
+}
 
 class HtmlElement<
   K extends keyof HTMLElementTagNameMap = keyof HTMLElementTagNameMap,
-  OPTIONS extends Attributes = Attributes
-> extends HtmlComponent<Partial<OPTIONS>, HTMLElementTagNameMap[K]> {
+  OPTIONS extends HtmlElementAttributes<K> = HtmlElementAttributes<K>
+> extends Component<Partial<OPTIONS>, HTMLElementTagNameMap[K]> {
+  public readonly events: HtmlElementEvents<K>;
 
   constructor(tagName: K, options?: OPTIONS) {
     super(options ?? {}, document.createElement(tagName));
+    this.events = new HtmlElementEvents(this);
+    this.options.events?.(this.events);
   }
 
   public static create = <
@@ -63,6 +97,7 @@ const htmlElementFactory = <
     createWithoutWith.with = withFn;
     return createWithoutWith;
   }
+
   return create();
 }
 
@@ -78,7 +113,7 @@ const createHtmlElement = <
 
 
 type InputType = "button" | "checkbox" | "color" | "date" | "datetime-local" | "email" | "file" | "hidden" | "image" | "month" | "number" | "password" | "radio" | "range" | "reset" | "search" | "submit" | "tel" | "text" | "time" | "url" | "week";
-interface InputAttributes extends Attributes {
+interface InputAttributes extends HtmlElementAttributes<"input"> {
 }
 class InputElement<
   OPTIONS extends InputAttributes = InputAttributes
@@ -86,14 +121,9 @@ class InputElement<
   constructor(type: InputType, options?: OPTIONS) {
     super("input", options);
     this.primaryElement.setAttribute("type", type);
-    this.primaryElement.addEventListener("change", (e) => this.changedEvent.send(e) );
-    this.primaryElement.addEventListener("keyup", (e) => this.changedEvent.send(e) );
-    this.primaryElement.addEventListener("click", (e) => this.clickedEvent.send(e) );
   }
   public get value() { return this.primaryElement.value }
   public set value(value: string) { this.primaryElement.value = value }
-  public readonly changedEvent = new ComponentEvent<[Event]>(this);
-  public readonly clickedEvent = new ComponentEvent<[Event]>(this);
 }
 /*
 <
@@ -177,7 +207,6 @@ export type A = ReturnType<typeof A>;
 interface VideoAttributes extends Attributes {
 }
 export const Video = createHtmlElement<"video", VideoAttributes>("video").with( e => {
-  e.primaryElement.setAttribute("controls","");
-  e.primaryElement.setAttribute("autoplay","");
-});
-export type Video = ReturnType<typeof Video>;
+  // e.primaryElement.setAttribute("controls","");
+  e.primaryElement.setAttribute("autoplay","true");
+});export type Video = ReturnType<typeof Video>;

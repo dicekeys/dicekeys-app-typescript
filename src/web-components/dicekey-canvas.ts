@@ -1,14 +1,12 @@
 import {
   Attributes,
-  HtmlComponent
-} from "./html-component";
+  Component,
+  Observable,
+} from "../web-component-framework";
 import {
   DiceKeyRenderOptions,
   renderDiceKey,  
 } from "../dicekeys/render";
-import {
-  Observable
-} from "./observable";
 import {
   DiceKey,
   PartialDiceKey
@@ -18,9 +16,7 @@ export const FontWeight = "700";
 
 
 export interface DiceKeyCanvasOptions extends DiceKeyRenderOptions, Attributes {
-//  size?: number,
   diceKey: PartialDiceKey,
-  obscure: Observable<boolean>,
   overlayMessage?: {
     message: string,
     fontWeight?: string | number,
@@ -29,6 +25,8 @@ export interface DiceKeyCanvasOptions extends DiceKeyRenderOptions, Attributes {
     fontSizeAsFractionOfBoxSize?: number    
   }
 }
+
+const obscure = new Observable<boolean>(true);
 
 export const removeAllButCornerLettersFromDiceKey = (diceKey: PartialDiceKey): PartialDiceKey =>
   diceKey.map( ({letter}, index) => ({
@@ -40,7 +38,7 @@ export const removeAllButCornerLettersFromDiceKey = (diceKey: PartialDiceKey): P
 /**
  * This class implements the component that displays DiceKeys.
  */
-export class DiceKeyCanvas extends HtmlComponent<DiceKeyCanvasOptions, HTMLCanvasElement> {
+export class DiceKeyCanvas extends Component<DiceKeyCanvasOptions, HTMLCanvasElement> {
   private get diceKeyDisplayCanvas(): HTMLCanvasElement { return this.primaryElement; }
 
   private get ctx(): CanvasRenderingContext2D {
@@ -60,9 +58,9 @@ export class DiceKeyCanvas extends HtmlComponent<DiceKeyCanvasOptions, HTMLCanva
     this.primaryElement.classList.add("dicekey-canvas");
 
     this.primaryElement.addEventListener("click", () => {
-      this.options.obscure.value = !this.options.obscure.value;
+      obscure.value = !obscure.value;
     }  );
-    this.options.obscure.observe( this.renderSoon );
+    obscure.observe( this.renderSoon );
   }
 
   render() {
@@ -72,9 +70,15 @@ export class DiceKeyCanvas extends HtmlComponent<DiceKeyCanvasOptions, HTMLCanva
     this.primaryElement.setAttribute("height", `${size}`);
     this.primaryElement.setAttribute("width", `${size}`);
     const ctx = this.ctx;
-    renderDiceKey(ctx, this.options.diceKey, {...this.options, hide21: this.options.obscure.value});
-    if (this.options.obscure.value && this.options.overlayMessage) {
-      const {message, fontColor = "#000000", fontSizeAsFractionOfBoxSize = 1/12 , fontWeight = "normal", fontFamily = FontFamily} = this.options.overlayMessage;
+    const overlayMessage = this.options.overlayMessage ?? {
+      message: "press to open box",
+      fontFamily: "Sans-Serif",
+      fontColor: "#00A000",
+      fontWeight: 600,
+    }
+    renderDiceKey(ctx, this.options.diceKey, {...this.options, hide21: obscure.value});
+    if (obscure.value && overlayMessage) {
+      const {message, fontColor = "#000000", fontSizeAsFractionOfBoxSize = 1/12 , fontWeight = "normal", fontFamily = FontFamily} = overlayMessage;
       const fontSize = size * fontSizeAsFractionOfBoxSize;
       ctx.textAlign = "center";
       const font = `${ fontWeight } ${ fontSize }px ${ fontFamily }, monospace`;

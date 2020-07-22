@@ -1,9 +1,14 @@
 import {
-  ComponentEvent
-} from "./component-event"
+  Component, Attributes,
+  ComponentEvent,
+  Canvas,
+  Div,
+  MonospaceSpan,
+  Select,
+  Video,
+} from "../web-component-framework"
 import {
-  HtmlComponent, Attributes
-} from "./html-component"
+} from "../web-component-framework"
 import "regenerator-runtime/runtime";
 import {
   FaceRead, FaceReadJson
@@ -22,13 +27,6 @@ import {
 } from "../workers/dicekey-image-frame-worker"
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 import {
-  Canvas,
-  Div,
-  MonospaceSpan,
-  Select,
-  Video,
-} from "./html-components";
-import {
   describeHost
 } from "../phrasing/api";
 
@@ -38,6 +36,8 @@ const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints =>
     deviceId,
     width: { ideal: 768 }, // FIXME? 1024?
     height: { ideal: 768 },
+    aspectRatio: {ideal: 1},
+//    advanced: [{focusDistance: {ideal: 0}}]
   },
 });
 
@@ -50,7 +50,7 @@ interface ScanDiceKeyOptions extends Attributes {
 /**
  * This class implements the demo page.
  */
-export class ScanDiceKey extends HtmlComponent<ScanDiceKeyOptions> {
+export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   private static readonly cameraSelectionMenuId = "camera-selection-menu";
 
   private get cameraSelectionMenu() {return document.getElementById(ScanDiceKey.cameraSelectionMenuId) as HTMLSelectElement;}
@@ -94,6 +94,10 @@ export class ScanDiceKey extends HtmlComponent<ScanDiceKeyOptions> {
     const {seedHint, cornerLetters} = this.options.derivationOptions || {};
     const {host} = this.options;
 
+    this.append(
+      Div({class: "scan-instruction"}, `Use your camera to read your DiceKey`)
+    )
+
     if (host && seedHint) {
       this.append(
         Div({class: "hint"},
@@ -118,9 +122,11 @@ export class ScanDiceKey extends HtmlComponent<ScanDiceKeyOptions> {
     }
 
     this.append(
-      Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c ),
-      Div({class: "content"}).append(
-        Video().with( c => this.videoComponent = c ),
+      Div({},
+        Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c ),
+        Div({class: "content"}).append(
+          Video().with( c => this.videoComponent = c ),
+        )
       ),
       Div({class: "centered-controls"}, Select({id: ScanDiceKey.cameraSelectionMenuId})),
     );
@@ -168,7 +174,7 @@ export class ScanDiceKey extends HtmlComponent<ScanDiceKeyOptions> {
   }
 
   defaultVideoConstraints: MediaStreamConstraints = {video: {
-    width: { ideal: 768, min: 768 }, // FIXME? 1024?
+    width: { ideal: 1024, min: 768 }, // FIXME? 1024?
     height: { ideal: 768, min: 768 },
     facingMode: "environment" // "user" (faces the user) | "environment" (away from user)
   }}
@@ -185,10 +191,18 @@ export class ScanDiceKey extends HtmlComponent<ScanDiceKeyOptions> {
     // Now set the new stream
 
     const newStream = this.mediaStream = await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
+    const track = newStream.getVideoTracks()[0];
+    
+    // if (typeof ImageCapture === "function") {
+    //   const imageCapture = new ImageCapture(track);
+    //   imageCapture.grabFrame().then( bitMap => {
+    //     const {width, height} = bitMap;
+    //   })
+    // }
     const {
       deviceId, height, width,
       // facingMode, aspectRatio, frameRate
-    } = this.mediaStream?.getVideoTracks()[0]?.getSettings();
+    } = track.getSettings();
     this.camerasDeviceId = deviceId;
     this.videoPlayer!.srcObject = newStream;
     if (height && width) {
@@ -292,6 +306,7 @@ export class ScanDiceKey extends HtmlComponent<ScanDiceKeyOptions> {
         setTimeout(this.startProcessingNewCameraFrame, 100);
         return;
     }
+
     // Ensure the capture canvas is the size of the video being retrieved
     if (this.captureCanvas!.width != this.videoPlayer!.videoWidth || this.captureCanvas!.height != this.videoPlayer!.videoHeight) {
         [this.captureCanvas!.width, this.captureCanvas!.height] = [this.videoPlayer!.videoWidth, this.videoPlayer!.videoHeight];
@@ -299,6 +314,7 @@ export class ScanDiceKey extends HtmlComponent<ScanDiceKeyOptions> {
     }
     this.captureCanvasCtx!.drawImage(this.videoPlayer!, 0, 0);
     const {width, height, data} = this.captureCanvasCtx!.getImageData(0, 0, this.captureCanvas!.width, this.captureCanvas!.height);
+    // For focal distance: https://w3c.github.io/mediacapture-image/#example4
 
     // Ask the background worker to process the bitmap.
     // First construct a requeest

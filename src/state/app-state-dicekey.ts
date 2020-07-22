@@ -1,7 +1,7 @@
 import {
   EncryptedAppStateStore,
   TabsAndWindowsSharingThisState,
-} from "./locally-stored-state";
+} from "../web-component-framework/locally-stored-state";
 import {
   DiceKey
 } from "../dicekeys/dicekey";
@@ -46,14 +46,14 @@ export class DiceKeyAppState extends EncryptedAppStateStore {
       }
     })();
     const field = this.addEncyrptedField<string>(DiceKeyAppState.authenticationFieldName(authToken));
-    field.set(respondToUrl);
+    field.value = respondToUrl;
     return authToken;
   };
 
   getUrlForAuthenticationToken = (
     authToken: string
   ) : string | undefined =>
-    this.addEncyrptedField<string>(DiceKeyAppState.authenticationFieldName(authToken)).get();
+    this.addEncyrptedField<string>(DiceKeyAppState.authenticationFieldName(authToken)).value;
 
 
   private static instanceWritable: DiceKeyAppState | undefined;

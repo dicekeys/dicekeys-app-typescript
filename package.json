@@ -24,7 +24,7 @@
   "author": "Stuart Schechter <stuart@dicekeys.com>",
   "license": "UNLICENSED. All rights reserved",
   "dependencies": {
-    "@dicekeys/dicekeys-api-js": "0.0.64",
+    "@dicekeys/dicekeys-api-js": "0.0.67",
     "@dicekeys/read-dicekey-js": "^0.0.2",
     "@dicekeys/seeded-crypto-js": "^0.1.26"
   },
@@ -37,6 +37,7 @@
     "@types/jest": "^25.2.2",
     "@types/jsdom": "^16.2.3",
     "@types/node": "^14.0.1",
+    "@types/w3c-image-capture": "^1.0.2",
     "canvas": "^2.6.1",
     "core-js": "^3.6.5",
     "jest": "^26.1.0",
