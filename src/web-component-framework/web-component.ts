@@ -22,6 +22,8 @@ export class Component<
   OPTIONS extends Attributes = Attributes,
   TOP_LEVEL_ELEMENT extends HTMLElement = HTMLElement  
 > {
+  #removed = false;
+  public get removed(): boolean { return this.#removed; }
   detachEvent = new ComponentEvent(this);
   childComponents = new Set<Component>();
 
@@ -115,12 +117,12 @@ export class Component<
    * (but not immediately, as constructors may need to finish first)
    */
   renderSoon = () => {
-    if (typeof this.renderTimeout !== "undefined" || this.alreadyRemoved) {
+    if (typeof this.renderTimeout !== "undefined" || this.#removed) {
       return;
     }
     this.renderTimeout = setTimeout( () => {
       try {
-        if (!this.alreadyRemoved) {
+        if (!this.#removed) {
           this.render();
         }
       } finally {
@@ -129,14 +131,13 @@ export class Component<
     }, 1);
   }
 
-  private alreadyRemoved = false;
   remove(): boolean {
-    if (this.alreadyRemoved) {
+    if (this.#removed) {
       // No need to remove, so return false
       return false;
     }
     // Make sure we only remove once;
-    this.alreadyRemoved = true;
+    this.#removed = true;
     // Send remove events to all children
     this.removeAllChildren();
     // Send remove event to parent

@@ -313,22 +313,24 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
       const precomputedResult = ApproveApiCommand.computeApiCommandWorker.result as ApiCalls.GetPasswordResponse;
       const {password} = precomputedResult;
       this.append(
-        Div({class: "password-to-be-shared-label"}, Span({},
-          `password to be sent to&nbsp;`),
-          describeHost(this.options.requestContext.host
-        )),
-        Div({class: "password-to-be-shared-container"},
-          Div({}, "&nbsp;"),
-          Div({class: "password-to-be-shared"}).withElement( (e) => {
-            this.obscurePassword.observe( obscure => {
-              e.innerText = obscure ? obscurePassword(password) : password;
+        Div({class: "centered-container"},
+          Div({class: "password-to-be-shared-label"}, Span({},
+            `password to be sent to&nbsp;`),
+            describeHost(this.options.requestContext.host
+          )),
+          Div({class: "password-to-be-shared-container"},
+            Div({}, "&nbsp;"),
+            Div({class: "password-to-be-shared"}).withElement( (e) => {
+              this.obscurePassword.observe( obscure => {
+                e.innerText = obscure ? obscurePassword(password) : password;
+              })
+            }),
+            Div({}, '&#x1F441;' // 👁, but packagers have problem with unicode
+            ).withElement( div => {
+              this.obscurePassword.observe( obscure => div.style.setProperty("text-decoration", obscure ? "" : "line-through" ));
             })
-           }),
-          Div({}, '&#x1F441;' // 👁, but packagers have problem with unicode
-          ).withElement( div => {
-            this.obscurePassword.observe( obscure => div.style.setProperty("text-decoration", obscure ? "" : "line-through" ));
-          })
-        ).withElement (div => div.addEventListener("click", () => { this.obscurePassword.value = ! this.obscurePassword.value } ) ),
+          ).withElement (div => div.addEventListener("click", () => { this.obscurePassword.value = ! this.obscurePassword.value } ) ),
+        )
       );
     }
 
