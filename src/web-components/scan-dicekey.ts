@@ -1,4 +1,5 @@
 import {
+  getElementDimensions,
   Component, Attributes,
   ComponentEvent,
   Canvas,
@@ -23,19 +24,27 @@ import {
 import {
     ProcessFrameRequest,
     ProcessFrameResponse,
-    TerminateSessionRequest
+    TerminateSessionRequest,
+    ProcessAugmentFrameRequest
 } from "../workers/dicekey-image-frame-worker"
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 import {
   describeHost
 } from "../phrasing/api";
 
+export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
+
+interface Frame {
+  width: number;
+  height: number;
+  rgbImageAsArrayBuffer: ArrayBufferLike;
+}
 
 const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints => ({
   video: {
     deviceId,
-    width: { ideal: 768 }, // FIXME? 1024?
-    height: { ideal: 768 },
+    width: { ideal: 1900 },
+    height: { ideal: 1024 },
     aspectRatio: {ideal: 1},
 //    advanced: [{focusDistance: {ideal: 0}}]
   },
@@ -47,17 +56,20 @@ interface ScanDiceKeyOptions extends Attributes {
   derivationOptions?: DerivationOptions;
 }
 
+
 /**
  * This class implements the demo page.
  */
 export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
-  private static readonly cameraSelectionMenuId = "camera-selection-menu";
+  private useImageCapture: boolean = imageCaptureSupported;
+  private useVideoToDisplay: boolean = !this.useImageCapture;
 
-  private get cameraSelectionMenu() {return document.getElementById(ScanDiceKey.cameraSelectionMenuId) as HTMLSelectElement;}
   private overlayCanvasComponent?: Canvas;
   private get overlayCanvas() {return this.overlayCanvasComponent?.primaryElement};
   private get overlayCanvasCtx() {return this.overlayCanvas?.getContext("2d")};
   private videoComponent?: Video;
+  private videoCanvas?: HTMLCanvasElement;
+  private cameraSelectionMenu?: HTMLSelectElement;
   private get videoPlayer() {return this.videoComponent?.primaryElement}
   
   private readonly frameWorker: Worker;
@@ -66,6 +78,8 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   private captureCanvasCtx?: CanvasRenderingContext2D;
   private mediaStream?: MediaStream;
   private cameraSessionId?: string;
+  private imageCapture?: ImageCapture;
+
   
   // Events
   public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], ScanDiceKey>(this);
@@ -122,20 +136,22 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     }
 
     this.append(
-      Div({},
-        Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c ),
-        Div({class: "content"}).append(
-          Video().with( c => this.videoComponent = c ),
-        )
+      Div({class: "content"},
+        ...(this.useVideoToDisplay ? [Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c )] : []),
+        this.useVideoToDisplay ?
+          Div({class: "content"}).append(
+            Video({style: "visibility: hidden;"}).with( c => this.videoComponent = c )
+           ) :
+          Canvas().withElement( c => { this.videoCanvas = c; }) //  c.setAttribute("width", "512"); c.setAttribute("height", "512")      
       ),
-      Div({class: "centered-controls"}, Select({id: ScanDiceKey.cameraSelectionMenuId})),
+      Div({class: "centered-controls"},
+        Select({style: "visibility: hidden;"}).withElement( e => this.cameraSelectionMenu = e )
+      ),
     );
     this.captureCanvas = document.createElement("canvas") as HTMLCanvasElement;
     this.captureCanvasCtx = this.captureCanvas.getContext("2d")!;
 
     // Bind to HTML
-    this.videoPlayer?.style.setProperty("visibility", "hidden");
-    this.cameraSelectionMenu.style.setProperty("visibility", "hidden");
     this.mediaStream = undefined;
     this.cameraSessionId = Math.random().toString() + Math.random().toString();
 
@@ -150,7 +166,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       return false;
     }
     // If there's an existing stream, terminate it
-    this.mediaStream?.getTracks().forEach( track => track.stop() );
+    this.mediaStream?.getTracks().forEach( track => track.readyState === "live" && track.enabled && track.stop() );
     this.frameWorker.removeEventListener( "message", this.handleMessage );
     this.frameWorker.postMessage({action: "terminateSession", sessionId: this.cameraSessionId} as TerminateSessionRequest);
 
@@ -164,8 +180,10 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     if (!this.readyReceived && "action" in message.data && message.data.action === "workerReady" ) {
       this.readyReceived = true;
       this.onWorkerReady();
-    } else if ("action" in message.data && message.data.action == "process") {
-      this.handleProcessedCameraFrame(message.data as ProcessFrameResponse)
+    } else if ("action" in message.data && (
+        message.data.action == "processRGBAImageFrameAndRenderOverlay" || message.data.action === "processAndAugmentRGBAImageFrame")
+      ) {
+      this.handleProcessedCameraFrame(message.data as ProcessFrameResponse )
     }
   }
 
@@ -174,8 +192,8 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   }
 
   defaultVideoConstraints: MediaStreamConstraints = {video: {
-    width: { ideal: 1024, min: 768 }, // FIXME? 1024?
-    height: { ideal: 768, min: 768 },
+    width: { ideal: 1900, min: 768 },
+    height: { ideal: 1024, min: 768 },
     facingMode: "environment" // "user" (faces the user) | "environment" (away from user)
   }}
   camerasDeviceId: string | undefined;
@@ -184,34 +202,33 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    */
   updateCamera = async (
     mediaStreamConstraints: MediaStreamConstraints = this.defaultVideoConstraints
-  ): Promise<MediaStream> => {
+  ): Promise<MediaStream | undefined> => {
     const oldMediaStream = this.mediaStream;
     // If there's an existing stream, terminate it
-    oldMediaStream?.getTracks().forEach(track => track.stop() );
+    oldMediaStream?.getTracks().forEach(track => track.readyState === "live" && track.enabled && track.stop() );
     // Now set the new stream
 
     const newStream = this.mediaStream = await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
     const track = newStream.getVideoTracks()[0];
+    this.imageCapture = new ImageCapture(track);
+    if (!track || track.readyState !== "live" || !track.enabled || track.muted ) {
+      return;
+    }
     
-    // if (typeof ImageCapture === "function") {
-    //   const imageCapture = new ImageCapture(track);
-    //   imageCapture.grabFrame().then( bitMap => {
-    //     const {width, height} = bitMap;
-    //   })
-    // }
     const {
       deviceId, height, width,
       // facingMode, aspectRatio, frameRate
     } = track.getSettings();
     this.camerasDeviceId = deviceId;
-    this.videoPlayer!.srcObject = newStream;
+    if (this.videoPlayer) {
+      this.videoPlayer.srcObject = newStream;
+      this.videoPlayer.style.setProperty("visibility", "visible");
+    }
     if (height && width) {
       // this.videoPlayer!.width = Math.min( width, 1024 );
       // this.videoPlayer!.height = Math.min( height, 1024 );
     }
     this.updateCameraList();
-    // Ensure the video play doesn't have property display: none
-    this.videoPlayer!.style.setProperty("visibility", "visible");
 
     return newStream;
   }
@@ -245,7 +262,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     )
     if (cameraList.length === 1) {
       // There's only one camera option, so hide the camera-selection field.
-      this.cameraSelectionMenu!.style.setProperty("visibility", "visible");
+      this.cameraSelectionMenu?.style.setProperty("visibility", "visible");
       return;
     }
     // const frontFacing = cameraList.filter( ({facingMode}) => facingMode === "user" );
@@ -259,9 +276,12 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     // }
 
     // Remove all child elements (select options)
-    this.cameraSelectionMenu!.innerHTML = '';
+    if (!this.cameraSelectionMenu) {
+      return;
+    }
+    this.cameraSelectionMenu.innerHTML = '';
     // Replace old child elements with updated select options
-    this.cameraSelectionMenu!.append(...
+    this.cameraSelectionMenu.append(...
       cameraList
         // turn the list of cameras into a list of menu options
         .map( (camera, index) => {
@@ -285,26 +305,43 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
           return option;
         })
       );
-    this.cameraSelectionMenu!.value = this.camerasDeviceId || "";
-    this.cameraSelectionMenu!.style.setProperty("visibility", "visible");
+    this.cameraSelectionMenu.value = this.camerasDeviceId || "";
+    this.cameraSelectionMenu.style.setProperty("visibility", "visible");
     // Handle user selection of cameras
-    this.cameraSelectionMenu!.addEventListener("change", (_event) =>
+    this.cameraSelectionMenu.addEventListener("change", (_event) =>
       // The deviceID of the camera was stored in the value name of the option,
       // so it can be retrieved from the value field fo the select element
-      this.updateCameraForDevice(this.cameraSelectionMenu!.value) );
+      this.updateCameraForDevice(this.cameraSelectionMenu?.value ?? "") );
   }
 
-  /**
-   * To process video images, we will loop through retrieving camera frames with
-   * this meethod, calling a webworker to process the frames, and then
-   * the web worker's response will trigger handleProcessedCameraFrame (below),
-   * which will call back to here.
-   */
-  startProcessingNewCameraFrame = () => {
+
+  getFrameUsingImageCapture = async (): Promise<Frame | undefined> => {
+    const track = this.imageCapture?.track;
+    if (track == null || track.readyState !== "live" || !track.enabled || track.muted) {
+      if (track?.muted) {
+        console.log("Track muted");
+        track?.addEventListener("unmute", () => { console.log("Track unmuted"); } );
+      }
+      return;
+    }
+    const bitMap = await this.imageCapture!.grabFrame();
+    const {width, height} = bitMap;
+    if (this.captureCanvas!.width != width || this.captureCanvas!.height != height) {
+      [this.captureCanvas!.width, this.captureCanvas!.height] = [width, height];
+      this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
+    }
+    this.captureCanvasCtx!.drawImage(bitMap, 0, 0);
+    const rgbImageAsArrayBuffer = this.captureCanvasCtx!.getImageData(0, 0, width, height).data.buffer;
+    return {width, height, rgbImageAsArrayBuffer};
+  };
+
+  getFrameFromVideoPlayer = (): Frame | undefined => {
+    if (!this.videoPlayer) {
+      return;
+    }
     if (this.videoPlayer!.videoWidth == 0 || this.videoPlayer!.videoHeight == 0) {
-        // There's no need to take action if there's no video
-        setTimeout(this.startProcessingNewCameraFrame, 100);
-        return;
+      // There's no need to take action if there's no video
+      return;
     }
 
     // Ensure the capture canvas is the size of the video being retrieved
@@ -314,15 +351,45 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     }
     this.captureCanvasCtx!.drawImage(this.videoPlayer!, 0, 0);
     const {width, height, data} = this.captureCanvasCtx!.getImageData(0, 0, this.captureCanvas!.width, this.captureCanvas!.height);
-    // For focal distance: https://w3c.github.io/mediacapture-image/#example4
+    const rgbImageAsArrayBuffer = data.buffer;
+    return {width, height, rgbImageAsArrayBuffer};
+  }
+
+  /**
+   * To process video images, we will loop through retrieving camera frames with
+   * this meethod, calling a webworker to process the frames, and then
+   * the web worker's response will trigger handleProcessedCameraFrame (below),
+   * which will call back to here.
+   */
+  startProcessingNewCameraFrame = async () => {
+    if (this.removed) {
+      // The element is no longer displaying and so processing should stop.
+      return;
+    }
+    const frame = this.useImageCapture ?
+      await this.getFrameUsingImageCapture() : this.getFrameFromVideoPlayer();
+    if (frame == null) {
+      // There's no need to take action if there's no video
+      setTimeout(this.startProcessingNewCameraFrame, 100);
+      return;
+    }
+
+//     if (this.videoCanvas) {
+//       // Copy frame into video canvas.
+//       const {rgbImageAsArrayBuffer, width, height} = frame;
+//       const ctx = this.videoCanvas.getContext("2d")!;
+//       const frameImageData = ctx.createImageData(width, height);
+// //        const overlayImageData = ctx.getImageData(0, 0, width, height);
+//       frameImageData.data.set(new Uint8Array(rgbImageAsArrayBuffer));
+//       ctx.putImageData(frameImageData, 0, 0);
+//     }
 
     // Ask the background worker to process the bitmap.
     // First construct a requeest
-    const request: ProcessFrameRequest = {
-      action: "processImageFrame",
+    const request: ProcessFrameRequest | ProcessAugmentFrameRequest = {
+      ...frame,
+      action: this.useVideoToDisplay ? "processRGBAImageFrameAndRenderOverlay" : "processAndAugmentRGBAImageFrame",
       sessionId: this.cameraSessionId!,
-      width, height,
-      rgbImageAsArrayBuffer: data.buffer
     };
     // The mark the objects that can be transffered to the worker.
     // This eliminates the need to copy the big memory buffer over, but the worker will now own the memory.
@@ -336,21 +403,53 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * Handle frames processed by the web worker, displaying the received
    * overlay image above the video image.
    */
-  handleProcessedCameraFrame = (response: ProcessFrameResponse) => {
-    const {width, height, overlayImageBuffer, diceKeyReadJson, isFinished} = response;
+  handleProcessedCameraFrame = async (response: ProcessFrameResponse ) => {
+    const {width, height, rgbImageAsArrayBuffer, diceKeyReadJson, isFinished} = response;
     const {overlayCanvas} = this;
     if (overlayCanvas) {
       // Ensure the overlay canvas is the same size as the captured canvas
       if (overlayCanvas.width != width || overlayCanvas.height != height) {
         [overlayCanvas.width, overlayCanvas.height] = [width, height];
         // Ensure the overlay is lined up with the video frame
-        const {left, top} = this.videoPlayer!.getBoundingClientRect()
+        const {left, top} =
+          this.videoPlayer ?
+            this.videoPlayer.getBoundingClientRect() :
+          this.videoCanvas ?
+            this.videoCanvas.getBoundingClientRect() :
+          {left: 0, top: 0};
         overlayCanvas.style.setProperty("left", left.toString());
         overlayCanvas.style.setProperty("top", top.toString());
-      }        
-      const overlayImageData = this.overlayCanvasCtx!.getImageData(0, 0, width, height);
-      overlayImageData.data.set(new Uint8Array(overlayImageBuffer));
+      }
+      const overlayImageData = this.overlayCanvasCtx!.createImageData(width, height);
+//      const overlayImageData = this.overlayCanvasCtx!.getImageData(0, 0, width, height);
+      overlayImageData.data.set(new Uint8Array(rgbImageAsArrayBuffer));
       this.overlayCanvasCtx?.putImageData(overlayImageData, 0, 0);
+    }
+    if (this.videoCanvas) {
+      // Grow the canvas to match the size of its parent element.
+      var rect = getElementDimensions(this.videoCanvas.parentElement!);
+      if (rect && (this.videoCanvas.width !== rect.width || this.videoCanvas.height !== rect.height)) {
+        this.videoCanvas.setAttribute("width", rect.width.toString());
+        this.videoCanvas.setAttribute("height", rect.height.toString());
+        this.videoCanvas.width = rect.width;
+        this.videoCanvas.height = rect.height;
+      }
+      // 
+      const ctx = this.videoCanvas.getContext("2d")!;
+      const imageData = new ImageData(new Uint8ClampedArray(rgbImageAsArrayBuffer), width, height);
+      const imageBitmap = await createImageBitmap(imageData);
+      const canvasWidthOverHeight = ctx.canvas.width / ctx.canvas.height;
+      const srcWidthOverHeight = width / height;
+      const [srcWidth, srcHeight] = canvasWidthOverHeight > srcWidthOverHeight ?
+        // The canvas is too wide for the source (the captured frame), so reduce the source's height
+        // to make the source relatively wider
+        [width, width / canvasWidthOverHeight] :
+        // The canvas is too tall for the source (the captured frame), so reduce the source's width
+        // to make it relatively taller
+        [height * canvasWidthOverHeight, height];
+      const srcX = (width - srcWidth) / 2;
+      const srcY = (height - srcHeight) / 2;
+      ctx.drawImage(imageBitmap, srcX, srcY, srcWidth, srcHeight, 0, 0, this.videoCanvas.width, this.videoCanvas.height);
     }
 
     if (isFinished && !this.finishDelayInProgress) {
@@ -368,8 +467,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
         this.parent?.renderSoon()
       }, this.msDelayBetweenSuccessAndClosure);
     } else {
-        setTimeout(this.startProcessingNewCameraFrame, 0)
-      }
-  
+      setTimeout(this.startProcessingNewCameraFrame, 0)
+    }
   }
 };

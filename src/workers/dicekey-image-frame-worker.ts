@@ -15,12 +15,19 @@ import {
 /**
  * A request to process an image frame while scanning dicekeys
  */
-export interface ProcessFrameRequest {
-    action: "processImageFrame";
+interface RequestMetadata {
     sessionId: string;
+}
+interface Frame {
     width: number;
     height: number;
-    rgbImageAsArrayBuffer: ArrayBuffer;
+    rgbImageAsArrayBuffer: ArrayBufferLike;
+}
+export interface ProcessFrameRequest extends RequestMetadata, Frame {
+    action: "processRGBAImageFrameAndRenderOverlay";
+}
+export interface ProcessAugmentFrameRequest extends RequestMetadata, Frame {
+    action: "processAndAugmentRGBAImageFrame";
 }
 
 export interface TerminateSessionRequest {
@@ -37,11 +44,8 @@ export interface ReadyMessage {
  * A response with the result of processing a camera frame
  * to look for a DiceKey
  */
-export interface ProcessFrameResponse {
-    action: "process";
-    width: number;
-    height: number;
-    overlayImageBuffer: ArrayBuffer | SharedArrayBuffer,
+export interface ProcessFrameResponse extends Frame, RequestMetadata {
+    action: "processRGBAImageFrameAndRenderOverlay" | "processAndAugmentRGBAImageFrame";
     isFinished: boolean,
     diceKeyReadJson: string
 }
@@ -49,7 +53,7 @@ export interface ProcessFrameResponse {
 function isTerminateSessionRequest(t: any) : t is TerminateSessionRequest {
     return typeof t === "object" &&
         "action" in t &&
-        t.action === "termainateSession" &&
+        t.action === "terminateSession" &&
         "sessionId" in t;
 }
 
@@ -57,7 +61,7 @@ function isTerminateSessionRequest(t: any) : t is TerminateSessionRequest {
 function isProcessFrameRequest(t: any) : t is ProcessFrameRequest {
     return typeof t === "object" &&
         "action" in t &&
-        t.action === "processImageFrame" &&
+        (t.action === "processRGBAImageFrameAndRenderOverlay" || t.action === "processAndAugmentRGBAImageFrame") &&
         "sessionId" in t && "width" in t && "height" in t &&
         "rgbImageAsArrayBuffer" in t;
 }
@@ -74,11 +78,11 @@ class FrameProcessingWorker {
         this.module = module;
         addEventListener( "message", (requestMessage) => {
             if (isTerminateSessionRequest(requestMessage.data)) {
-                this.sessionIdToImageProcessor.delete(requestMessage.data.action);
+                this.sessionIdToImageProcessor.delete(requestMessage.data.sessionId);
             } else if (isProcessFrameRequest(requestMessage.data)) {
-                const response = this.processImageFrame(requestMessage.data);
+                const response = this.processRGBAImageFrameAndRenderOverlay(requestMessage.data);
                 const transferableObjectsWithinResponse: Transferable[] = [
-                    response.overlayImageBuffer
+                    response.rgbImageAsArrayBuffer
                 ];
                 // TypeScript hack since it doesn't understand this is a worker and StackOverflow
                 // posts make it look hard to convince it otherwise.
@@ -87,27 +91,33 @@ class FrameProcessingWorker {
         });
         (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage({action: "workerReady"} as ReadyMessage);
     }
-    
-    processImageFrame = ({sessionId, width, height, rgbImageAsArrayBuffer}: ProcessFrameRequest): ProcessFrameResponse => {
+
+    processRGBAImageFrameAndRenderOverlay = ({
+        action, sessionId, width, height,
+        rgbImageAsArrayBuffer: inputRgbImageAsArrayBuffer
+      }: ProcessFrameRequest | ProcessAugmentFrameRequest
+    ): ProcessFrameResponse => {
+      const rgbImagesArrayUint8Array = new Uint8Array(inputRgbImageAsArrayBuffer);
         if (!this.sessionIdToImageProcessor.has(sessionId)) {
             this.sessionIdToImageProcessor.set(sessionId, new this.module.DiceKeyImageProcessor());
         }
         const diceKeyImageProcessor = this.sessionIdToImageProcessor.get(sessionId)!;
 
-        const dataBuffer = new Uint8ClampedArray(rgbImageAsArrayBuffer);
-        diceKeyImageProcessor.processImageData(width, height, dataBuffer);
+//        const inputDataBuffer = new Uint8ClampedArray(inputRgbImageAsArrayBuffer);
 
-        const bitMapArray = this.module.tsMemory.usingByteArray(width * height * 4, (bitmapBuffer) => {
-            diceKeyImageProcessor.renderAugmentationOverlay(width, height, bitmapBuffer.byteOffset);
-            // Copy and return output array into a byte array that exists outside webasm memory.
-            return new Uint8Array(bitmapBuffer)
-        });
+        if (action === "processRGBAImageFrameAndRenderOverlay") {
+          diceKeyImageProcessor.processRGBAImageAndRenderOverlay(width, height, rgbImagesArrayUint8Array)
+        } else { // if (action === "processAndAugmentRGBAImageFrame") ?
+          diceKeyImageProcessor.processAndAugmentRGBAImage(width, height, rgbImagesArrayUint8Array);
+        }
+
         const isFinished = diceKeyImageProcessor.isFinished();
         const diceKeyReadJson =  diceKeyImageProcessor.diceKeyReadJson();
+
+  
         return {
-            action: "process",
-            height, width,
-            overlayImageBuffer: bitMapArray.buffer,
+            action, sessionId, height, width,
+            rgbImageAsArrayBuffer: rgbImagesArrayUint8Array.buffer,
             isFinished,
             diceKeyReadJson
         }
