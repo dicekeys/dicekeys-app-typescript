@@ -139,9 +139,10 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       Div({class: "content"},
         ...(this.useVideoToDisplay ? [Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c )] : []),
         this.useVideoToDisplay ?
-          Div({class: "content"}).append(
+//          Div({class: "content"}).append(
             Video({style: "visibility: hidden;"}).with( c => this.videoComponent = c )
-           ) :
+//           ) 
+           :
           Canvas().withElement( c => { this.videoCanvas = c; }) //  c.setAttribute("width", "512"); c.setAttribute("height", "512")      
       ),
       Div({class: "centered-controls"},
@@ -408,20 +409,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     const {overlayCanvas} = this;
     if (overlayCanvas) {
       // Ensure the overlay canvas is the same size as the captured canvas
-      if (overlayCanvas.width != width || overlayCanvas.height != height) {
-        [overlayCanvas.width, overlayCanvas.height] = [width, height];
-        // Ensure the overlay is lined up with the video frame
-        const {left, top} =
-          this.videoPlayer ?
-            this.videoPlayer.getBoundingClientRect() :
-          this.videoCanvas ?
-            this.videoCanvas.getBoundingClientRect() :
-          {left: 0, top: 0};
-        overlayCanvas.style.setProperty("left", left.toString());
-        overlayCanvas.style.setProperty("top", top.toString());
-      }
       const overlayImageData = this.overlayCanvasCtx!.createImageData(width, height);
-//      const overlayImageData = this.overlayCanvasCtx!.getImageData(0, 0, width, height);
       overlayImageData.data.set(new Uint8Array(rgbImageAsArrayBuffer));
       this.overlayCanvasCtx?.putImageData(overlayImageData, 0, 0);
     }
