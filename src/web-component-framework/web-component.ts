@@ -20,7 +20,7 @@ export class Attributes {
 
 export class Component<
   OPTIONS extends Attributes = Attributes,
-  TOP_LEVEL_ELEMENT extends HTMLElement = HTMLElement  
+  TOP_LEVEL_ELEMENT extends HTMLElement | SVGElement = HTMLElement | SVGElement  
 > {
   #removed = false;
   public get removed(): boolean { return this.#removed; }
@@ -56,8 +56,8 @@ export class Component<
     if (nameOfDescendantClass != "HtmlElement") {
       this.primaryElement.classList.add(nameOfDescendantClass);
     }
-    if (typeof text === "string" && this.primaryElement.innerText != null) {
-      this.primaryElement.innerText = text;
+    if (typeof text === "string" && this.primaryElement.textContent != null) {
+      this.primaryElement.textContent = text;
     }
     if (Class != null) {
       const classes: string[] = typeof Class === "string" ?
@@ -242,7 +242,7 @@ export class Component<
   }
 
   setInnerText(text: string) {
-    this.primaryElement.innerText = text;
+    this.primaryElement.textContent = text;
     return this;
   }
   

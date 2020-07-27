@@ -14,9 +14,8 @@ import {
   DiceKeyInHumanReadableForm,
 } from "../dicekeys/dicekey";
 import {
-  DiceKeyCanvas,
-//  removeAllButCornerLettersFromDiceKey
-} from "./dicekey-canvas";
+  DiceKeySvg
+} from "./dicekey-svg";
 import {
 //  describeFrameOfReferenceForReallyBigNumber,
   describeHintPurpose, describeHost
@@ -192,7 +191,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
 
 
   obscurePassword = new Observable<boolean>(true);
-  private setDiceKeyCanvas = this.replaceableChild<DiceKeyCanvas>();
+  private setDiceKeySvg = this.replaceableChild<DiceKeySvg>();
 
 
   public getResponseReturnUponUsersConsent = async (): Promise<ConsentResponse> => {
@@ -209,11 +208,10 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     if (!this.diceKey) {
       return;
     }
-    const diceKeyCanvas = this.setDiceKeyCanvas(new DiceKeyCanvas({
+    const diceKeySvg = this.setDiceKeySvg(new DiceKeySvg({
       diceKey: this.modifiedDerivationOptions.excludeOrientationOfFaces ?
         DiceKey.removeOrientations(this.diceKey) :
         this.diceKey,
-      diceBoxColor: "#000030",
       overlayMessage: {
         message: "press to open box",
         fontFamily: "Sans-Serif",
@@ -221,7 +219,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
         fontWeight: 600,
       }
     }));
-    return diceKeyCanvas;
+    return diceKeySvg;
   }
 
   handleOrientationCheckboxClicked = (excludeOrientationOfFaces: boolean) => {

@@ -7,8 +7,8 @@ import {
   ApiRequestContainer
 } from "./api-request-container";
 import {
-  DisplayDiceKeyCanvas
-} from "./display-dicekey-canvas";
+  DiceKeySvgView
+} from "./display-dicekey-svg";
 import {
   HomeComponent
 } from "./home-component";
@@ -111,8 +111,8 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
       Step.loadDiceKey.promise?.finally( () => this.renderSoon() );
 
     } else if (diceKey) {
-      this.append(new DisplayDiceKeyCanvas({diceKey}).with( displayCanvas => {
-        displayCanvas.forgetEvent.on( () => this.renderSoon() );
+      this.append(new DiceKeySvgView({diceKey}).with( dicekeySvg => {
+        dicekeySvg.forgetEvent.on( () => this.renderSoon() );
       }));
     } else {
       this.append(new HomeComponent().with( homeComponent  => 

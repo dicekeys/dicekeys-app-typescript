@@ -4,8 +4,8 @@ import {
   InputButton, Div
 } from "../web-component-framework";
 import {
-  DiceKeyCanvas
-} from "./dicekey-canvas";
+  DiceKeySvg
+} from "./dicekey-svg";
 import {
   DiceKeyAppState
 } from "../state/app-state-dicekey";
@@ -13,7 +13,7 @@ import {
   DiceKey
 } from "../dicekeys/dicekey";
 
-interface DisplayDiceKeyCanvasOptions extends Attributes {
+interface DiceKeySvgViewOptions extends Attributes {
   diceKey: DiceKey;
   showOnlyCorners?: boolean;
 }
@@ -21,7 +21,7 @@ interface DisplayDiceKeyCanvasOptions extends Attributes {
 /**
  * This class implements the component that displays DiceKeys.
  */
-export class DisplayDiceKeyCanvas extends Component<DisplayDiceKeyCanvasOptions> {
+export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
     //  private readonly diceKeyCanvas : DiceKeyCanvas;
   public forgetEvent = new ComponentEvent(this);
 
@@ -31,7 +31,7 @@ export class DisplayDiceKeyCanvas extends Component<DisplayDiceKeyCanvasOptions>
    * @param module The web assembly module that implements the DiceKey image processing.
    */
   constructor(
-    options: DisplayDiceKeyCanvasOptions
+    options: DiceKeySvgViewOptions
   ) {
     super(options);
   }
@@ -40,17 +40,19 @@ export class DisplayDiceKeyCanvas extends Component<DisplayDiceKeyCanvasOptions>
     super.render();
     this.append(
       Div({class: "primary-container"},
-        new DiceKeyCanvas({
+        new DiceKeySvg({
           diceKey: this.options.diceKey
         }),
-        InputButton({
-          value: "Forget DiceKey",
-          events: (events) => events.click.on( () => {
-            DiceKeyAppState.instance?.diceKey.remove();
-            this.forgetEvent.send();
-            this.remove();    
+        Div({class: "centered-controls"},
+          InputButton({
+            value: "Forget DiceKey",
+            events: (events) => events.click.on( () => {
+              DiceKeyAppState.instance?.diceKey.remove();
+              this.forgetEvent.send();
+              this.remove();    
+            })
           })
-        }),
+        ),
       )
     );
   }

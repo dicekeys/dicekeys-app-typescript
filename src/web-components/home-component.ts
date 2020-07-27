@@ -21,6 +21,7 @@ export class HomeComponent extends Component {
 
   render() {
     super.render();
+    this.primaryElement.classList.add("expandable-centered-container");
     this.append(
       InputButton({
         value: "Scan your DiceKey",
