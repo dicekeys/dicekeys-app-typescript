@@ -40,13 +40,24 @@ interface Frame {
   rgbImageAsArrayBuffer: ArrayBufferLike;
 }
 
+ // Safari may require 640 or 1280, see 
+ // https://stackoverflow.com/questions/46981889/how-to-resolve-ios-11-safari-getusermedia-invalid-constraint-issue
+const defaultVideoWidthAndHeightContraints = {
+  width: { ideal: 1024, min: 640 },
+  height: { ideal: 1024, min: 640 },
+  aspectRatio: {ideal: 1},
+  //    advanced: [{focusDistance: {ideal: 0}}]
+} as const;
+
+const defaultVideoDeviceConstraints: MediaStreamConstraints = {video: {
+  ...defaultVideoWidthAndHeightContraints,
+  facingMode: "environment" // "user" (faces the user) | "environment" (away from user)
+}}
+
 const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints => ({
   video: {
+    ...defaultVideoWidthAndHeightContraints,
     deviceId,
-    width: { ideal: 1900 },
-    height: { ideal: 1024 },
-    aspectRatio: {ideal: 1},
-//    advanced: [{focusDistance: {ideal: 0}}]
   },
 });
 
@@ -192,37 +203,39 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.startProcessingNewCameraFrame();
   }
 
-  defaultVideoConstraints: MediaStreamConstraints = {video: {
-    width: { ideal: 1900, min: 768 },
-    height: { ideal: 1024, min: 768 },
-    facingMode: "environment" // "user" (faces the user) | "environment" (away from user)
-  }}
   camerasDeviceId: string | undefined;
   /**
    * Set the current camera
    */
   updateCamera = async (
-    mediaStreamConstraints: MediaStreamConstraints = this.defaultVideoConstraints
+    mediaStreamConstraints: MediaStreamConstraints = defaultVideoDeviceConstraints
   ): Promise<MediaStream | undefined> => {
     const oldMediaStream = this.mediaStream;
     // If there's an existing stream, terminate it
-    oldMediaStream?.getTracks().forEach(track => track.readyState === "live" && track.enabled && track.stop() );
+    oldMediaStream?.getTracks().forEach(track =>
+      track.readyState === "live" && track.enabled && track.stop()
+    );
     // Now set the new stream
-
-    const newStream = this.mediaStream = await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
-    const track = newStream.getVideoTracks()[0];
-    this.imageCapture = new ImageCapture(track);
+    try {
+      this.mediaStream = await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
+    } catch (e) {
+      console.log("Media stream creation failed", e);
+    }
+    const track = this.mediaStream!.getVideoTracks()[0];
+    if (imageCaptureSupported) {
+      this.imageCapture = new ImageCapture(track);
+    }
     if (!track || track.readyState !== "live" || !track.enabled || track.muted ) {
       return;
     }
-    
+      
     const {
       deviceId, height, width,
       // facingMode, aspectRatio, frameRate
     } = track.getSettings();
     this.camerasDeviceId = deviceId;
     if (this.videoPlayer) {
-      this.videoPlayer.srcObject = newStream;
+      this.videoPlayer.srcObject = this.mediaStream!;
       this.videoPlayer.style.setProperty("visibility", "visible");
     }
     if (height && width) {
@@ -231,7 +244,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     }
     this.updateCameraList();
 
-    return newStream;
+  return this.mediaStream!;
   }
 
   /**
@@ -261,11 +274,21 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       //   return {deviceId, label, groupId, kind, height, width, facingMode, aspectRatio, frameRate};
       // })
     )
-    if (cameraList.length === 1) {
-      // There's only one camera option, so hide the camera-selection field.
-      this.cameraSelectionMenu?.style.setProperty("visibility", "visible");
+    if (!this.cameraSelectionMenu) {
       return;
     }
+
+    if (cameraList.length === 0) {
+      // FIXME - throw appropriate error
+      return;
+    }
+
+    if (cameraList.length === 1) {
+      // There's only one camera option, so hide the camera-selection field.
+      this.cameraSelectionMenu.style.setProperty("display", "none");
+      return;
+    }
+    this.cameraSelectionMenu.style.setProperty("display", "block");
     // const frontFacing = cameraList.filter( ({facingMode}) => facingMode === "user" );
     // const rearFacing = cameraList.filter( ({facingMode}) => facingMode === "environment" );
     // const hasNonDirectional = cameraList.length > frontFacing.length + rearFacing.length;
@@ -277,9 +300,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     // }
 
     // Remove all child elements (select options)
-    if (!this.cameraSelectionMenu) {
-      return;
-    }
+
     this.cameraSelectionMenu.innerHTML = '';
     // Replace old child elements with updated select options
     this.cameraSelectionMenu.append(...
