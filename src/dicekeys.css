@@ -4,6 +4,9 @@
 html {
   display: flex; min-width: 100%; min-height: 100%;
 }
+option, select {
+  font-size: 1.5rem;
+}
 .content {
   position: relative;
   margin: 0 auto;

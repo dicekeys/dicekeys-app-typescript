@@ -31,6 +31,11 @@ import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 import {
   describeHost
 } from "../phrasing/api";
+import {
+  Camera,
+  CamerasOnThisDevice,
+  videoConstraintsForDevice
+} from "./cameras-on-this-device";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
@@ -39,27 +44,6 @@ interface Frame {
   height: number;
   rgbImageAsArrayBuffer: ArrayBufferLike;
 }
-
- // Safari may require 640 or 1280, see 
- // https://stackoverflow.com/questions/46981889/how-to-resolve-ios-11-safari-getusermedia-invalid-constraint-issue
-const defaultVideoWidthAndHeightContraints = {
-  width: { ideal: 1024, min: 640 },
-  height: { ideal: 1024, min: 640 },
-  aspectRatio: {ideal: 1},
-  //    advanced: [{focusDistance: {ideal: 0}}]
-} as const;
-
-const defaultVideoDeviceConstraints: MediaStreamConstraints = {video: {
-  ...defaultVideoWidthAndHeightContraints,
-  facingMode: "environment" // "user" (faces the user) | "environment" (away from user)
-}}
-
-const  videoConstraintsForDevice = (deviceId: string): MediaStreamConstraints => ({
-  video: {
-    ...defaultVideoWidthAndHeightContraints,
-    deviceId,
-  },
-});
 
 interface ScanDiceKeyOptions extends Attributes {
   msDelayBetweenSuccessAndClosure?: number;
@@ -72,6 +56,9 @@ interface ScanDiceKeyOptions extends Attributes {
  * This class implements the demo page.
  */
 export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
+  private readonly camerasOnThisDevice: CamerasOnThisDevice;
+  camerasDeviceId: string | undefined;
+
   private useImageCapture: boolean = imageCaptureSupported;
   private useVideoToDisplay: boolean = !this.useImageCapture;
 
@@ -111,7 +98,23 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     options: ScanDiceKeyOptions
   ) {
     super(options);
+    this.cameraSessionId = Math.random().toString() + Math.random().toString();
+    // Create worker for processing camera frames
     this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
+    // Listen for messages from worker
+    this.frameWorker.addEventListener( "message", this.handleMessage );
+    //
+    // Initialize the list of device cameras
+    this.camerasOnThisDevice = new CamerasOnThisDevice();
+    this.camerasOnThisDevice.updated.on( (cameras) => {
+      // Whenever there's an update to the camera list, if we don't have an
+      // active camera, set the active camera to the first camera in the list.
+      if (!this.mediaStream && cameras.length > 0) {
+        this.setCamera(cameras[0].deviceId);
+      }
+      // And update the rendered camera list
+      this.renderCameraList(cameras);
+    })
   }
 
   render() {
@@ -150,9 +153,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       Div({class: "content"},
         ...(this.useVideoToDisplay ? [Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c )] : []),
         this.useVideoToDisplay ?
-//          Div({class: "content"}).append(
             Video({style: "visibility: hidden;"}).with( c => this.videoComponent = c )
-//           ) 
            :
           Canvas().withElement( c => { this.videoCanvas = c; }) //  c.setAttribute("width", "512"); c.setAttribute("height", "512")      
       ),
@@ -162,14 +163,58 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     );
     this.captureCanvas = document.createElement("canvas") as HTMLCanvasElement;
     this.captureCanvasCtx = this.captureCanvas.getContext("2d")!;
+  }
 
-    // Bind to HTML
-    this.mediaStream = undefined;
-    this.cameraSessionId = Math.random().toString() + Math.random().toString();
+  
+  /**
+   * Update the selection menu of cameras
+   */
+  renderCameraList = (cameras: Camera[] = this.camerasOnThisDevice.cameras) => {
+    if (!this.cameraSelectionMenu) {
+      return;
+    }
 
-    // Start out with the default camera
-    this.updateCamera();
-    this.frameWorker.addEventListener( "message", this.handleMessage );
+    if (cameras.length < 2) {
+      // There's only one camera option, so hide the camera-selection field.
+      this.cameraSelectionMenu.style.setProperty("display", "none");
+      return;
+    }
+
+    this.cameraSelectionMenu.style.setProperty("display", "block");
+
+    // Remove all child elements (select options)
+    this.cameraSelectionMenu.innerHTML = '';
+    // Replace old child elements with updated select options
+    this.cameraSelectionMenu.append(...
+      cameras
+        // turn the list of cameras into a list of menu options
+        .map( (camera, index) => {
+          const {deviceId, label, facingMode, width, height} = camera;
+          const option = document.createElement('option');
+          const cameraName = `${
+            facingMode === "user" ? "Front Facing " :
+            facingMode === "environment" ? "Rear Facing " :
+            ""}${
+            label || `Camera ${index + 1}`
+          }${
+            (width && height) ? ` ${width}x${height} ` : ""
+          }`;
+          option.value = deviceId;
+          option.appendChild(document.createTextNode(cameraName)); //  (${deviceId})
+          return option;
+        })
+      );
+    this.cameraSelectionMenu.value = this.camerasDeviceId || "";
+    this.cameraSelectionMenu.style.setProperty("visibility", "visible");
+    // Handle user selection of cameras
+    this.cameraSelectionMenu.addEventListener("change", (_event) => {
+      // The deviceID of the camera was stored in the value name of the option,
+      // so it can be retrieved from the value field fo the select element
+      const deviceId = this.cameraSelectionMenu?.value;
+      if (deviceId) {
+        this.setCamera(deviceId);
+      }
+    });
   }
 
   remove() {
@@ -203,139 +248,60 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.startProcessingNewCameraFrame();
   }
 
-  camerasDeviceId: string | undefined;
+  setCamera = (deviceId: string) =>
+    this.setCameraByConstraints(videoConstraintsForDevice(deviceId));
+
   /**
    * Set the current camera
    */
-  updateCamera = async (
-    mediaStreamConstraints: MediaStreamConstraints = defaultVideoDeviceConstraints
-  ): Promise<MediaStream | undefined> => {
+  setCameraByConstraints = async (
+    mediaTrackConstraints: MediaTrackConstraints
+  ) => {
+    if (this.imageCapture) {
+      this.imageCapture = undefined;
+    }
     const oldMediaStream = this.mediaStream;
+    this.mediaStream = undefined;
     // If there's an existing stream, terminate it
-    oldMediaStream?.getTracks().forEach(track =>
-      track.readyState === "live" && track.enabled && track.stop()
-    );
+    oldMediaStream?.getTracks().forEach(track => {
+      if (track.readyState === "live" && track.enabled) {
+        try {
+          track.stop()
+        } catch (e) {
+          console.log("Exception stopping track", e);
+        }
+      }
+    });
     // Now set the new stream
     try {
-      this.mediaStream = await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
+      this.mediaStream = await navigator.mediaDevices.getUserMedia({video: mediaTrackConstraints});
     } catch (e) {
       console.log("Media stream creation failed", e);
     }
-    const track = this.mediaStream!.getVideoTracks()[0];
-    if (imageCaptureSupported) {
+    const track = this.mediaStream?.getVideoTracks()[0];
+    if (track && imageCaptureSupported) {
       this.imageCapture = new ImageCapture(track);
     }
     if (!track || track.readyState !== "live" || !track.enabled || track.muted ) {
+      console.log("Could not update camera", track);
       return;
     }
       
     const {
-      deviceId, height, width,
-      // facingMode, aspectRatio, frameRate
+      deviceId, height, width
     } = track.getSettings();
     this.camerasDeviceId = deviceId;
     if (this.videoPlayer) {
       this.videoPlayer.srcObject = this.mediaStream!;
       this.videoPlayer.style.setProperty("visibility", "visible");
+      if (height && width) {
+        // this.videoPlayer!.width = Math.min( width, 1024 );
+        // this.videoPlayer!.height = Math.min( height, 1024 );
+      }
     }
-    if (height && width) {
-      // this.videoPlayer!.width = Math.min( width, 1024 );
-      // this.videoPlayer!.height = Math.min( height, 1024 );
-    }
-    this.updateCameraList();
-
-  return this.mediaStream!;
+    this.renderCameraList();
+    return;
   }
-
-  /**
-   * Update the camera to use a device selected by the user.
-   */
-  updateCameraForDevice = (deviceId: string) => {
-    this.updateCamera(videoConstraintsForDevice(deviceId));
-  }
-
-  /**
-   * Update the list of cameras
-   */
-  updateCameraList = async () => {
-    const listOfAllMediaDevices = await navigator.mediaDevices.enumerateDevices();
-    const cameraList = await Promise.all(
-      listOfAllMediaDevices
-      // ignore all media devices except cameras
-      .filter( ({kind}) => kind === 'videoinput' )
-      // do parallel requests for user media to get camera data that
-      // enumerateDevices doesn't offer, and can only be learned via getUserMedia 
-      // .map( async camera => {
-      //   const {deviceId, label, groupId, kind} = camera;
-      //   const stream = await navigator.mediaDevices.getUserMedia(videoConstraintsForDevice(deviceId));
-      //   const {height, width, facingMode, aspectRatio, frameRate} = stream?.getVideoTracks()[0]?.getSettings();
-      //   // Don't keep any tracks from the stream since we're not actually going to look at it.
-      //   stream.getTracks().forEach(track => track.stop() );
-      //   return {deviceId, label, groupId, kind, height, width, facingMode, aspectRatio, frameRate};
-      // })
-    )
-    if (!this.cameraSelectionMenu) {
-      return;
-    }
-
-    if (cameraList.length === 0) {
-      // FIXME - throw appropriate error
-      return;
-    }
-
-    if (cameraList.length === 1) {
-      // There's only one camera option, so hide the camera-selection field.
-      this.cameraSelectionMenu.style.setProperty("display", "none");
-      return;
-    }
-    this.cameraSelectionMenu.style.setProperty("display", "block");
-    // const frontFacing = cameraList.filter( ({facingMode}) => facingMode === "user" );
-    // const rearFacing = cameraList.filter( ({facingMode}) => facingMode === "environment" );
-    // const hasNonDirectional = cameraList.length > frontFacing.length + rearFacing.length;
-    // const currentlyFacing = cameraList.filter( ({deviceId}) => deviceId === this.camerasDeviceId )[0]?.facingMode;
-    // const currentlyFacingFront = currentlyFacing === "user";
-    // const currethlyFacingRear = currentlyFacing === "environment";
-    // if (!hasNonDirectional && frontFacing.length > 0 && rearFacing.length === 0) {
-    //   // Display switch with front-facing, rear-facing, and then list if more than one of current direction
-    // }
-
-    // Remove all child elements (select options)
-
-    this.cameraSelectionMenu.innerHTML = '';
-    // Replace old child elements with updated select options
-    this.cameraSelectionMenu.append(...
-      cameraList
-        // turn the list of cameras into a list of menu options
-        .map( (camera, index) => {
-          const facingMode = undefined;
-          const width = undefined;
-          const height = undefined;
-          const {deviceId, label} = camera; //, facingMode, width, height} = camera;
-          const option = document.createElement('option');
-          option.value = deviceId;
-          option.appendChild(document.createTextNode(
-            `${
-              facingMode === "user" ? "Front Facing " :
-              facingMode === "environment" ? "Rear Facing " :
-              ""
-            }${
-              (width && height) ?
-              `${width}x${height} ` : ""
-            }${
-              label || `Camera ${index + 1}`
-            }`)); //  (${deviceId})
-          return option;
-        })
-      );
-    this.cameraSelectionMenu.value = this.camerasDeviceId || "";
-    this.cameraSelectionMenu.style.setProperty("visibility", "visible");
-    // Handle user selection of cameras
-    this.cameraSelectionMenu.addEventListener("change", (_event) =>
-      // The deviceID of the camera was stored in the value name of the option,
-      // so it can be retrieved from the value field fo the select element
-      this.updateCameraForDevice(this.cameraSelectionMenu?.value ?? "") );
-  }
-
 
   getFrameUsingImageCapture = async (): Promise<Frame | undefined> => {
     const track = this.imageCapture?.track;
