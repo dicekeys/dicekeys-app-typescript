@@ -165,7 +165,7 @@ export const renderDiceKey = (
 ): void => {
   const {
     hide21,
-    showLidTab = true
+    showLidTab = hide21
   } = options;
   // The linear length of the box dedicated to the tab;
   const tabFraction = 0.1;

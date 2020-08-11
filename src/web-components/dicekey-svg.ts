@@ -67,7 +67,7 @@ export class DiceKeySvg extends Component<DiceKeySvgOptions, SVGSVGElement> {
       fontColor: "#00A000",
       fontWeight: 600,
     }
-    renderDiceKey(this.primaryElement, this.options.diceKey, {...this.options, hide21: obscure.value});
+    renderDiceKey(this.primaryElement, this.options.diceKey, {...this.options, hide21: obscure.value, showLidTab: obscure.value});
     if (obscure.value && overlayMessage) {
       const {message, fontColor = "#000000", fontSizeAsFractionOfBoxSize = 1/12 , fontWeight = "normal", fontFamily = FontFamily} = overlayMessage;
       const fontSize = fontSizeAsFractionOfBoxSize * this.primaryElement.viewBox.baseVal.width;
