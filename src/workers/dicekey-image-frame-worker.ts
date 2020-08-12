@@ -105,11 +105,13 @@ class FrameProcessingWorker {
 
 //        const inputDataBuffer = new Uint8ClampedArray(inputRgbImageAsArrayBuffer);
 
+        console.log("Worker starts processing frame", (Date.now() % 100000) / 1000);
         if (action === "processRGBAImageFrameAndRenderOverlay") {
           diceKeyImageProcessor.processRGBAImageAndRenderOverlay(width, height, rgbImagesArrayUint8Array)
         } else { // if (action === "processAndAugmentRGBAImageFrame") ?
           diceKeyImageProcessor.processAndAugmentRGBAImage(width, height, rgbImagesArrayUint8Array);
         }
+        console.log("Worker finishes processing frame", (Date.now() % 100000) / 1000);
 
         const isFinished = diceKeyImageProcessor.isFinished();
         const diceKeyReadJson =  diceKeyImageProcessor.diceKeyReadJson();

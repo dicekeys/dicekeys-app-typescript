@@ -53,35 +53,105 @@ interface ScanDiceKeyOptions extends Attributes {
 
 
 /**
- * This class implements the demo page.
+ * This component scans (reads) a DiceKey using the device camera(s).
+ * 
+ * When possible, it will use the ImageCapture interface to grab frames
+ * at a resolution that's high enough to minimize the impact of errors
+ * while low enough to not make processing intolerably slow.
+ * Typically 768x768 or 1024x1024 (square units to fit a square DiceKey).
+ * 
+ * ## Implementation notes
+ * This component will always render a Video element, even though that Video
+ * element will not be displayed when we're grabbing frames using
+ * ImageCapture and rendering them by drawing them to a canvas.
+ * If we don't send the camera data to a video element and grab frames too
+ * slowly, some browsers will mute the camera image.  Ensuring the camera
+ * stream is always sent to a video element, even if that video element
+ * is not rendered, seems to address that problem.
  */
 export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
+  /**
+   * This separate module tracks the cameras attached to the device
+   */
   private readonly camerasOnThisDevice: CamerasOnThisDevice;
+
+  /**
+   * The id of the camera from which the current video feed originates.
+   */
   camerasDeviceId: string | undefined;
 
+  /**
+   * Set to true when we are able to use the ImageCapture API to grab
+   * frames from the camera and images are rendered into a canvas
+   */
   private useImageCapture: boolean = imageCaptureSupported;
-  private useVideoToDisplay: boolean = !this.useImageCapture;
+  /**
+   * Set to true when raw input frames are sent directly to a video element
+   * and then captured by scraping them out of the video element
+   */
+  private get useVideoToDisplay(): boolean {return !this.useImageCapture };
 
+  /**
+   * When ImageCapture is not available and we render raw video feeds, we
+   * overlay a translucent image displaying what we were and were not able
+   * to read from the last analyzed frame using this canvas element, which
+   * is at a higher z-index than the video below it.
+   */
   private overlayCanvasComponent?: Canvas;
   private get overlayCanvas() {return this.overlayCanvasComponent?.primaryElement};
   private get overlayCanvasCtx() {return this.overlayCanvas?.getContext("2d")};
+
+  /**
+   * For rendering raw camera input to the screen
+   */
   private videoComponent?: Video;
+
+  /**
+   * For rendering camera input to the screen after it has been
+   * processed and augmented to display what we've been able to read.
+   */
   private videoCanvas?: HTMLCanvasElement;
+
   private cameraSelectionMenu?: HTMLSelectElement;
   private get videoPlayer() {return this.videoComponent?.primaryElement}
   
   private readonly frameWorker: Worker;
 
+  /**
+   * A re-usable canvas into which to capture image frames
+   */
   private captureCanvas?: HTMLCanvasElement;
   private captureCanvasCtx?: CanvasRenderingContext2D;
+
+  /**
+   * The media stream from the current camera
+   */
   private mediaStream?: MediaStream;
+
+  /**
+   * A session id for the current camera stream
+   */
   private cameraSessionId?: string;
+
+  /**
+   * The ImageCapture object used to grab frames from the camera
+   * (not supported by all browsers.  We fallback to rendering
+   * to a video element and then capturing frames out of the
+   * video rendered to the screen.)
+   */
   private imageCapture?: ImageCapture;
 
   
   // Events
   public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], ScanDiceKey>(this);
 
+  /**
+   * We support a delay between when we've successfully scanned a DiceKey
+   * and when we report that success so that the user can see the frame
+   * which we scanned successfully with the rendering on top of it and
+   * have a chance to "see" the success with their own eyes before leaving
+   * this user experience.
+   */
   public get msDelayBetweenSuccessAndClosure(): number {
     return this.options.msDelayBetweenSuccessAndClosure == null ?
       100 // Default delay of 100 seconds
@@ -152,14 +222,14 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.append(
       Div({class: "content"},
         ...(this.useVideoToDisplay ? [Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c )] : []),
-        this.useVideoToDisplay ?
-            Video({style: "visibility: hidden;"}).with( c => this.videoComponent = c )
-           :
-          Canvas().withElement( c => { this.videoCanvas = c; }) //  c.setAttribute("width", "512"); c.setAttribute("height", "512")      
-      ),
-      Div({class: "centered-controls"},
-        Select({style: "visibility: hidden;"}).withElement( e => this.cameraSelectionMenu = e )
-      ),
+        Video({style: "display: none; visibility: hidden;"}).with( c => this.videoComponent = c ),
+        this.useImageCapture ?
+          Canvas().withElement( c => { this.videoCanvas = c; }) :
+          undefined,
+        ),
+        Div({class: "centered-controls"},
+          Select({style: "visibility: hidden;"}).withElement( e => this.cameraSelectionMenu = e )
+        ),
     );
     this.captureCanvas = document.createElement("canvas") as HTMLCanvasElement;
     this.captureCanvasCtx = this.captureCanvas.getContext("2d")!;
@@ -279,20 +349,21 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       console.log("Media stream creation failed", e);
     }
     const track = this.mediaStream?.getVideoTracks()[0];
-    if (track && imageCaptureSupported) {
-      this.imageCapture = new ImageCapture(track);
-    }
     if (!track || track.readyState !== "live" || !track.enabled || track.muted ) {
       console.log("Could not update camera", track);
       return;
     }
-      
     const {
       deviceId, height, width
     } = track.getSettings();
     this.camerasDeviceId = deviceId;
     if (this.videoPlayer) {
       this.videoPlayer.srcObject = this.mediaStream!;
+    }
+    if (track && this.useImageCapture) {
+      this.imageCapture = new ImageCapture(track);
+    } else if (this.videoPlayer) {
+      this.videoPlayer.style.setProperty("display", "block");
       this.videoPlayer.style.setProperty("visibility", "visible");
       if (height && width) {
         // this.videoPlayer!.width = Math.min( width, 1024 );
@@ -305,15 +376,24 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
 
   getFrameUsingImageCapture = async (): Promise<Frame | undefined> => {
     const track = this.imageCapture?.track;
+    console.log("getFrameUsingImageCapture", (Date.now() % 100000) / 1000);
     if (track == null || track.readyState !== "live" || !track.enabled || track.muted) {
       if (track?.muted) {
         console.log("Track muted");
+        // For some reason, if we don't read enough frames fast enough, browser may mute the
+        // track.  If they do, just re-open the camera.
+        if (this.camerasDeviceId) {
+          console.log("Resetting camera");
+          this.setCamera(this.camerasDeviceId!);
+        }
         track?.addEventListener("unmute", () => { console.log("Track unmuted"); } );
       }
       return;
     }
     const bitMap = await this.imageCapture!.grabFrame();
+    console.log("Frame grabbed", (Date.now() % 100000) / 1000);
     const {width, height} = bitMap;
+    console.log(`Grabbing frame with dimensions ${width}x${height}`)
     if (this.captureCanvas!.width != width || this.captureCanvas!.height != height) {
       [this.captureCanvas!.width, this.captureCanvas!.height] = [width, height];
       this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
@@ -358,6 +438,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       await this.getFrameUsingImageCapture() : this.getFrameFromVideoPlayer();
     if (frame == null) {
       // There's no need to take action if there's no video
+      console.log("No frame received.  Entering wait cycle");
       setTimeout(this.startProcessingNewCameraFrame, 100);
       return;
     }
@@ -392,6 +473,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * overlay image above the video image.
    */
   handleProcessedCameraFrame = async (response: ProcessFrameResponse ) => {
+    console.log("handleProcessedCameraFrame", (Date.now() % 100000) / 1000);
     const {width, height, rgbImageAsArrayBuffer, diceKeyReadJson, isFinished} = response;
     const {overlayCanvas} = this;
     if (overlayCanvas) {
@@ -442,6 +524,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
         this.parent?.renderSoon()
       }, this.msDelayBetweenSuccessAndClosure);
     } else {
+      // Trigger fetch of new camera frame
       setTimeout(this.startProcessingNewCameraFrame, 0)
     }
   }
