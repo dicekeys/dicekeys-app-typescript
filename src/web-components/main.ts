@@ -115,10 +115,15 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
         dicekeySvg.forgetEvent.on( () => this.renderSoon() );
       }));
     } else {
-      this.append(new HomeComponent().with( homeComponent  => 
+      this.append(new HomeComponent().with( homeComponent  => {
         homeComponent.loadDiceKeyButtonClicked.on( () => {
           this.loadDiceKey();
-      })));
+        });
+        homeComponent.createRandomDiceKeyButtonClicked.on( () => {
+          DiceKeyAppState.instance?.diceKey.set(DiceKey.fromRandom());
+          this.renderSoon();
+        });
+      }));
     }
   }
 

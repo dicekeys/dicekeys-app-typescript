@@ -5,20 +5,11 @@ import {
   SeededCryptoModuleWithHelpers,
   SymmetricKey
 } from "@dicekeys/seeded-crypto-js";
-import {randomBytes} from "crypto"
+import {getRandomBytes} from "../dicekeys/get-random-bytes";
 import {
   Observable
 } from "./observable"
 
-const getRandomBytes = (numberOfBytes: number): Uint8Array => {
-  if (global.window && window.crypto) {
-    const bytes = new Uint8Array(numberOfBytes);
-    crypto.getRandomValues(bytes);
-    return bytes;
-  } else {
-    return randomBytes(numberOfBytes);
-  }
-}
 
 const minutesToMs = 60 * 1000;
 

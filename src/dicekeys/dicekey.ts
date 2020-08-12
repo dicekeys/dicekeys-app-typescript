@@ -1,4 +1,4 @@
-import {randomBytes} from "crypto";
+import {getRandomUInt32} from "./get-random-bytes";
 // export * from "./face";
 import {
   FaceLetter, FaceLetters, InvalidFaceLetterException,
@@ -120,15 +120,15 @@ const validateDiceKey = (diceKey: readonly Face[], requireOneOfEachLetter: boole
 
 const getRandomDiceKey = (numberOfFaces: number = 6): DiceKey => {
   const remainingLetters = [...FaceLetters];
-  const r = randomBytes(NumberOfFacesInKey * 12);
-  return Array.from({ length: NumberOfFacesInKey }, (_, i): Face => {
-    const offset = i * 12;
+  return Array.from({ length: NumberOfFacesInKey }, (): Face => {
     // Pull out a letter at random from the remainingLetters array
-    const letterIndex = r.readUInt32LE(offset) % remainingLetters.length;
+    const letterIndex = getRandomUInt32() % remainingLetters.length;
     const letter = remainingLetters.splice(letterIndex, 1)[0] as FaceLetter;
     // Generate a digit at random
-    const digit = ((r.readUInt32LE(offset + 4) % numberOfFaces) + 1).toString() as FaceDigit;
-    const orientationAsLowercaseLetterTRBL = FaceOrientationLettersTrbl[Clockwise90DegreeRotationsFromUpright(r.readUInt32LE(offset + 8) % 4)];
+    const digit = ((getRandomUInt32() % numberOfFaces) + 1).toString() as FaceDigit;
+    const clockwiseOrientationsFromUpright = getRandomUInt32() % 4;
+    const orientationAsLowercaseLetterTRBL =
+      FaceOrientationLettersTrbl[Clockwise90DegreeRotationsFromUpright(clockwiseOrientationsFromUpright % 4)];
     const faceAndOrientation: Face = {
       digit, letter, orientationAsLowercaseLetterTRBL
     };

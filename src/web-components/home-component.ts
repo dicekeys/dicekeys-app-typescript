@@ -7,6 +7,7 @@ import {
 export class HomeComponent extends Component {
   
   public readonly loadDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);
+  public readonly createRandomDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);
 
   /**
    * The code supporting the dmeo page cannot until the WebAssembly module for the image
@@ -27,7 +28,15 @@ export class HomeComponent extends Component {
         value: "Scan your DiceKey",
         events: (events) => {
           events.click.on( this.loadDiceKeyButtonClicked.send )
-        }})
+        }}),
+        // Currently only show random DiceKey feature on staging.
+        window.location.host.indexOf("staging") > 0 ?
+        InputButton({
+          value: "Create a Random DiceKey for Testing",
+          style: "margin-top: 20vh;",
+          events: (events) => {
+            events.click.on( this.createRandomDiceKeyButtonClicked.send )
+        }}) : undefined
     );
   }
 
