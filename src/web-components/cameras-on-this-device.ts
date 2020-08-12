@@ -58,6 +58,7 @@ export class CamerasOnThisDevice {
   updated = new ComponentEvent<[Camera[]]>(this);
 
   private camerasByDeviceId = new Map<string, Camera>();
+  private unreadableCameraDevices = new Map<string, {cameraDevice: MediaDeviceInfo, exceptions: any[]}>();
 
   /**
    * A list of cameras sorted by direction (back-facing first, front-facing last)
@@ -67,6 +68,43 @@ export class CamerasOnThisDevice {
     const sortedCameras = [...this.camerasByDeviceId.values()]
       .sort( (a, b) => compareCameras(a, b) );
     return sortedCameras;
+  }
+
+  tryAddCamera = async (cameraDevice: MediaDeviceInfo): Promise<Camera | undefined> => {
+    const {deviceId} = cameraDevice;
+    try {
+      // Get a media stream so that we can get settings from the track
+      const stream = await navigator.mediaDevices.getUserMedia({video: videoConstraintsForDevice(deviceId)});
+      if (!stream) return;
+      const track = stream.getVideoTracks()[0];
+      if (!track) return;
+      const settings: MediaTrackSettings = track.getSettings();
+      const capabilities: MediaTrackCapabilities = track.getCapabilities();
+      stream?.getTracks().forEach(track => track.stop() );
+      if (!settings) return;          
+      // The label property needs to be set manually
+      const camera: Camera = {
+        ...settings,
+        ...{capabilities},
+        ...cameraDevice,
+        // The label (and possibly kind) are not copied via destructuring and must
+        // be manually copied.
+        kind: cameraDevice.kind,
+        label: cameraDevice.label
+      };
+      this.camerasByDeviceId.set(deviceId, camera);
+      // Just in case we had a problem loading this device in the past,
+      // remove it from the list of unreadable cameras
+      this.unreadableCameraDevices.delete(deviceId);
+      return camera;
+    } catch (e) {
+      if (this.unreadableCameraDevices.has(deviceId)) {
+        this.unreadableCameraDevices.get(deviceId)?.exceptions.unshift(e);
+      } else {
+        this.unreadableCameraDevices.set(deviceId, {cameraDevice, exceptions: [e]})
+      }
+    }
+    return;
   }
 
   addAttachedAndRemovedDetachedCameras = async (): Promise<void> => {
@@ -89,39 +127,27 @@ export class CamerasOnThisDevice {
     // Add cameras added since this list was last created
     const listOfNewlyAttachedCameras = listOfCurrentCameras.filter(
       ({deviceId}) => !this.camerasByDeviceId.has(deviceId)
-    );    
+    );
+    const setOfNewlyAttachedCameraIds = new Set<string>(listOfCurrentCameras.map( c => c.deviceId ));
     
     if (listOfNewlyAttachedCameras.length > 0) {
       await Promise.all(
         // do parallel requests for user media to get camera track settings that
         // enumerateDevices doesn't offer, and can only be learned via getUserMedia 
         // followed by getSettings
-        listOfNewlyAttachedCameras.map( async camera => {
-          const {deviceId} = camera;
-          try {
-            // Get a media stream so that we can get settings from the track
-            const stream = await navigator.mediaDevices.getUserMedia({video: videoConstraintsForDevice(deviceId)});
-            if (!stream) return;
-            const track = stream.getVideoTracks()[0];
-            if (!track) return;
-            const settings: MediaTrackSettings = track.getSettings();
-            const capabilities: MediaTrackCapabilities = track.getCapabilities();
-            stream?.getTracks().forEach(track => track.stop() );
-            if (!settings) return;          
-            // The label property needs to be set manually
-            this.camerasByDeviceId.set(deviceId, {...settings, ...{capabilities},  ...camera,
-              // The label (and possibly kind) are not copied via destructuring and must
-              // be manually copied.
-              kind: camera.kind,
-              label: camera.label});
-          } catch (e) {
-            // We need to catch exceptions here or the Promise.all
-            // will fail for the tracks that didn't have exceptions
-            console.log("Exception in camera track getSettings(). This may be mostly harmless if due to https://quire.io/w/dicekeys/646", camera,  {e}, e.name, e.message);
-            return;
-          }
-        })
+        listOfNewlyAttachedCameras.map( camera => this.tryAddCamera(camera) )
       );
+      for (const [, {cameraDevice}] of this.unreadableCameraDevices) {
+        if (setOfNewlyAttachedCameraIds.has(cameraDevice.deviceId)) {
+          // I hope you're as horrified as I am by the use of await in a loop.
+          // This is our here by last resort since some devices will not let us
+          // inspect cameras in parallel.
+          // This could be bad if a device had 50 cameras attached, so um, maybe this
+          // is an intentional plot to accidentally take down surveillance systems that
+          // might accidentally run this code?  Yeah, that's the ticket!
+          await this.tryAddCamera(cameraDevice);
+        }
+      }
     }
     if (deviceIdsOfRemovedCameras.length > 0 || listOfNewlyAttachedCameras.length > 0) {
       // A change to the list has been made so send an update event
