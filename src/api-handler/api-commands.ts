@@ -228,33 +228,38 @@ export const generateSignature = implementApiCall<ApiCalls.GenerateSignature> (
  * The caller is responsible for catching exceptions
  */
 export class SeededApiCommands {
+  public generateSignature;
+  public getSealingKey;
+  public getUnsealingKey;
+  public getSecret;
+  public getSignatureVerificationKey;
+  public getSigningKey;
+  public getSymmetricKey;
+  public getPassword;
+  public sealWithSymmetricKey;
+  public unsealWithSymmetricKey;
+  public unsealWithUnsealingKey;
+  
   constructor(
     private seededCryptoModule: SeededCryptoModuleWithHelpers,
     seedString: string,
   ) {
-    this.#seedString = seedString;
+    seedString = seedString;
+    this.generateSignature = generateSignature(this.seededCryptoModule)(seedString);
+    this.getSealingKey = getSealingKey(this.seededCryptoModule)(seedString);
+    this.getUnsealingKey = getUnsealingKey(this.seededCryptoModule)(seedString);
+    this.getSecret = getSecret(this.seededCryptoModule)(seedString);
+    this.getSignatureVerificationKey = getSignatureVerificationKey(this.seededCryptoModule)(seedString);
+    this.getSigningKey = getSigningKey(this.seededCryptoModule)(seedString);
+    this.getSymmetricKey = getSymmetricKey(this.seededCryptoModule)(seedString);
+    this.getPassword = getPassword(this.seededCryptoModule)(seedString);
+    this.sealWithSymmetricKey = sealWithSymmetricKey(this.seededCryptoModule)(seedString);
+    this.unsealWithSymmetricKey = unsealWithSymmetricKey(this.seededCryptoModule)(seedString);
+    this.unsealWithUnsealingKey = unsealWithUnsealingKey(this.seededCryptoModule)(seedString);
   }
-
-  /**
-   * Use ECMAscript-enforced private fields for the seedString and the
-   * implementApiCall function that accessses the seedString so that
-   * hose with access to this object can't extract the seedString.
-   * */  
-  readonly #seedString: string;
 
   static async create(seedString: string) {
     return new SeededApiCommands(await SeededCryptoModulePromise, seedString);
   }
 
-  generateSignature = generateSignature(this.seededCryptoModule)(this.#seedString);
-  getSealingKey = getSealingKey(this.seededCryptoModule)(this.#seedString);
-  getUnsealingKey = getUnsealingKey(this.seededCryptoModule)(this.#seedString);
-  getSecret = getSecret(this.seededCryptoModule)(this.#seedString);
-  getSignatureVerificationKey = getSignatureVerificationKey(this.seededCryptoModule)(this.#seedString);
-  getSigningKey = getSigningKey(this.seededCryptoModule)(this.#seedString);
-  getSymmetricKey = getSymmetricKey(this.seededCryptoModule)(this.#seedString);
-  getPassword = getPassword(this.seededCryptoModule)(this.#seedString);
-  sealWithSymmetricKey = sealWithSymmetricKey(this.seededCryptoModule)(this.#seedString);
-  unsealWithSymmetricKey = unsealWithSymmetricKey(this.seededCryptoModule)(this.#seedString);
-  unsealWithUnsealingKey = unsealWithUnsealingKey(this.seededCryptoModule)(this.#seedString);
 }
