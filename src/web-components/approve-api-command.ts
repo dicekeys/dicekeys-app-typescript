@@ -17,6 +17,9 @@ import {
   DiceKeySvg
 } from "./dicekey-svg";
 import {
+  DisplayPassword
+} from "./password-field";
+import {
 //  describeFrameOfReferenceForReallyBigNumber,
   describeHintPurpose, describeHost
 } from "../phrasing/api";
@@ -48,13 +51,6 @@ import {
 } from "../workers/call-derivation-options-proof-worker";
 import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
 
-const obscuringCharacter = String.fromCharCode(0x25A0); // * ■▓▒░
-const obscurePassword = (password: string): string => {
-  const words = password.split(' ');
-  const obscuredWords = words.map( word => word.split("").map( _ => obscuringCharacter).join("")); // * ▓▒░
-  const sortedObscuredWords = obscuredWords.sort();
-  return sortedObscuredWords.join(' ');
-}
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
@@ -104,6 +100,11 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     const seedString = DiceKey.toSeedString(this.options.diceKey, this.modifiedDerivationOptions);
     ApproveApiCommand.computeApiCommandWorker.calculate({seedString, request});    // After this class is constructed, kick of background calculations.
     setTimeout( () => this.updateBackgroundOperationsForDerivationOptions(), 1);
+    if ( request.command === ApiStrings.Commands.getPassword ) {
+      (ApproveApiCommand.computeApiCommandWorker.resultPromise as Promise<ApiCalls.GetPasswordResponse>).then(
+        precomputedResult => this.password.value = precomputedResult.password
+      );
+    }  
   }
 
   
@@ -189,7 +190,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
   //   return `Attakers must guess from ${decimal} possible values (${bits.toLocaleString()} bits of strength)`;
   // }
 
-
+  password = new Observable<string>();
   obscurePassword = new Observable<boolean>(true);
   private setDiceKeySvg = this.replaceableChild<DiceKeySvg>();
 
@@ -306,28 +307,22 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
         )
       );
     }
-    if (this.options.requestContext.request.command === ApiStrings.Commands.getPassword &&
-        ApproveApiCommand.computeApiCommandWorker.result != null) {
-      const precomputedResult = ApproveApiCommand.computeApiCommandWorker.result as ApiCalls.GetPasswordResponse;
-      const {password} = precomputedResult;
+    if (this.options.requestContext.request.command === ApiStrings.Commands.getPassword) {
       this.append(
         Div({class: "centered-container"},
           Div({class: "password-to-be-shared-label"}, Span({},
             `password to be sent to&nbsp;`),
             describeHost(this.options.requestContext.host
           )),
-          Div({class: "password-to-be-shared-container"},
-            Div({}, "&nbsp;"),
-            Div({class: "password-to-be-shared"}).withElement( (e) => {
-              this.obscurePassword.observe( obscure => {
-                e.innerText = obscure ? obscurePassword(password) : password;
-              })
-            }),
-            Div({}, '&#x1F441;' // 👁, but packagers have problem with unicode
-            ).withElement( div => {
-              this.obscurePassword.observe( obscure => div.style.setProperty("text-decoration", obscure ? "" : "line-through" ));
-            })
-          ).withElement (div => div.addEventListener("click", () => { this.obscurePassword.value = ! this.obscurePassword.value } ) ),
+          new DisplayPassword({
+            password: this.password,
+            obscurePassword: this.obscurePassword,
+            showCopyIcon: true
+          })
+        ).withElement( e =>
+          this.password.observe( (password) => e.style.setProperty("visibility",
+            password ? "visible" : "hidden"
+          ))
         )
       );
     }

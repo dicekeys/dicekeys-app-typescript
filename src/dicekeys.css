@@ -5,7 +5,10 @@ html {
   display: flex; min-width: 100%; min-height: 100%;
 }
 option, select {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+}
+label {
+  font-size: 1.4rem;
 }
 .content {
   position: relative;
@@ -166,7 +169,7 @@ input[type=button] {
   display: flex;
   justify-content: center;
   align-items: baseline;
-  font-size: 1.1em;
+  font-size: 1.1rem;
 }
 .centered-container, .expandable-centered-container {
   display: flex;
@@ -186,7 +189,10 @@ input[type=button] {
   align-content: center;
   font-family: monospace;
   cursor:pointer;
-  padding: 2px;
+  padding-top: 2px;
+  --padding-bottom: 2px;
+  padding-right: 2.5rem;
+  padding-left: 2.5rem;
   border-width: 1px;
   border-color: black;
   border-style: solid;

@@ -1,7 +1,7 @@
 import {
   Component, Attributes,
   ComponentEvent,
-  InputButton, Div
+  InputButton, Div, Label, Select, Option, Observable
 } from "../web-component-framework";
 import {
   DiceKeySvg
@@ -12,6 +12,18 @@ import {
 import {
   DiceKey
 } from "../dicekeys/dicekey";
+import {
+  passwordManagers
+} from "../dicekeys/supported-password-managers";
+import {
+  ComputeApiCommandWorker
+} from "../workers/call-api-command-worker";
+import {
+    ApiCalls, ApiStrings
+} from "@dicekeys/dicekeys-api-js";
+import {
+  DisplayPassword
+} from "./password-field"
 
 interface DiceKeySvgViewOptions extends Attributes {
   diceKey: DiceKey;
@@ -22,7 +34,8 @@ interface DiceKeySvgViewOptions extends Attributes {
  * This class implements the component that displays DiceKeys.
  */
 export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
-    //  private readonly diceKeyCanvas : DiceKeyCanvas;
+  private static readonly computerPasswordRequestWorker = new ComputeApiCommandWorker<ApiCalls.GetPasswordRequest>();
+
   public forgetEvent = new ComponentEvent(this);
 
   /**
@@ -36,12 +49,65 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
     super(options);
   }
 
+  containerElement?: HTMLDivElement;
+  passwordDivElement?: HTMLDivElement;
+
+  password = new Observable<string>();
+
+  // setPassword = (password: string) => {
+  //   const pw = password ?? "";
+  //   this.containerElement?.style.setProperty("visibility", pw.length > 0 ? "visible" : "hidden");
+  //   if (this.passwordDivElement != null) {
+  //     this.password.value = 
+  //   }
+  // }
+
+  onPasswordManagerSelectChanged = async (passwordManagerName: string) => {
+    const selectedManager = passwordManagers.find( pwmgr => pwmgr.name === passwordManagerName );
+    if (selectedManager != null) {
+      console.log("Selected password manager", selectedManager?.name);
+      // Derive password in background then set it.
+      const {derivationOptionsJson} = selectedManager;
+      const seedString = DiceKey.toSeedString(this.options.diceKey, derivationOptionsJson);
+      const request: ApiCalls.GetPasswordRequest = {
+        command: ApiStrings.Commands.getPassword,
+        derivationOptionsJson
+      };
+      console.log("Issuing request", seedString, request);
+      const result = await DiceKeySvgView.computerPasswordRequestWorker.calculate({seedString, request});
+      console.log("Calculation result", result);
+      if (!("exception" in result)) {
+        this.password.value = result.password;
+      }
+    }
+  }
+
   render() {
     super.render();
     this.append(
       Div({class: "primary-container"},
         new DiceKeySvg({
           diceKey: this.options.diceKey
+        }),
+        Div({class: "centered-controls"},
+          Label({style: `margin-bottom: 4px;`}, "Create a password for ",
+            Select({value: "default"},
+              Option({}),
+              passwordManagers.map( pwm => Option({value: pwm.name}, pwm.name) )
+            ).with( select => {
+              select.events.change.on( () => this.onPasswordManagerSelectChanged(select.primaryElement.value ))
+            })
+          )
+        ),
+        Div({class: "centered-container", style: `visibility: hidden`},
+          new DisplayPassword({
+            password: this.password,
+            showCopyIcon: true
+          }),
+        ).withElement( e => {
+          this.password.observe( (password =>
+              e.style.setProperty("visibility", password && password.length > 0 ? "visible" : "hidden")
+          ))
         }),
         Div({class: "centered-controls"},
           InputButton({

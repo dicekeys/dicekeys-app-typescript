@@ -10,7 +10,11 @@ import {
 
 const knownHostSuffixes: [string, string][] = [
   ["1password.com", "1Password"],
-  ["bitwarden.com", "BitWarden"]
+  ["bitwarden.com", "Bitwarden"],
+  ["authy.com", "Authy"],
+  ["keepersecurity.com", "Keeper"],
+  ["lastpass.com", "LastPass"],
+  ["localhost", "your password manager"]
 ];
 const getKnownHost = (host:string): string | undefined => {
   const hostLc = host.toLowerCase();

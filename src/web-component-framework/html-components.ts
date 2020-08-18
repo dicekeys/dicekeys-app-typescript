@@ -187,6 +187,8 @@ export const Canvas = createHtmlElement("canvas");
 export type Canvas = ReturnType<typeof Canvas>;
 export const Select = createHtmlElement("select");
 export type Select = ReturnType<typeof Select>;
+export const Option = createHtmlElement("option");
+export type Option = ReturnType<typeof Option>;
 
 export const Label = createHtmlElement<"label", Attributes & {for?: string}>("label").with( e => {
   if ( typeof e.options.for === "string") {

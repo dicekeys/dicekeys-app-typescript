@@ -52,7 +52,7 @@ export const throwIfHostNotOnAllowList =
       }
       if (!isHostOnAllowList(host, allowList)) {
         throw new Exceptions.ClientNotAuthorizedException(
-          `Client ${host} is not among list of allowed hosts: ${JSON.stringify(allowList)}`
+          `Client '${host}' is not among list of allowed hosts: ${JSON.stringify(allowList)}`
         );
       }
     }
