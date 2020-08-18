@@ -43,12 +43,18 @@ export class PasswordManagerSignin extends Component {
    */
   constructor() {
     super({}, document.getElementById("password-form-container")!);
+  }
+
+  render() {
     this.appendHtml(`
-      <input id="${passwordFieldId}" type="text" size="60"/>
-      <input id="${getPasswordFromDiceKeyButtonId}" type="button" value="Generate password from DiceKey"/>
+      <div style="display: flex; width: fit-content; align-self: center; align-items: flex-start;">
+        <input id="${passwordFieldId}" type="text" size="60"/>
+        <input id="${getPasswordFromDiceKeyButtonId}" type="button" value="Generate password from DiceKey"/>
+      </div>
     `);
 
     this.getPasswordFromDiceKeyButton.addEventListener("click", () => this.getPasswordFromDiceKey() );
+
   }
 };
 
