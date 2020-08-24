@@ -142,16 +142,22 @@ export class CamerasOnThisDevice extends Component<CamerasOnThisDeviceOptions> {
   }
 
   render() {
+    super.render();
+    this.append(
+      Div({class: "cameras-on-this-device-heading",
+           text: "Identifying device cameras..."
+          })
+    )
     for (const camera of this.cameras) {
       const {name} = camera;
       this.append(
-        Div({class: "camera-on-this-device-found", text: name})
+        Div({class: ["camera-on-this-device", "camera-found"], text: name})
       )
     };
     for (const camera of this.unreadableCameraDevices.values()) {
       const {label, deviceId} = camera.cameraDevice;
       this.append(
-        Div({class: "camera-on-this-device-unreadable", text: label || deviceId})
+        Div({class: ["camera-on-this-device", "camera-unreadable"], text: label || deviceId})
       );
     }
     const camerasToBeRead = [...this.camerasToBeAdded.values()]
@@ -159,7 +165,7 @@ export class CamerasOnThisDevice extends Component<CamerasOnThisDeviceOptions> {
     for (const camera of  camerasToBeRead) {
       const {label, deviceId} = camera;
       this.append(
-        Div({class: "camera-on-this-device-to-be-added", text: label || deviceId})
+        Div({class: ["camera-on-this-device", "camera-to-be-added"], text: label || deviceId})
       );
     }
   }
