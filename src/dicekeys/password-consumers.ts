@@ -29,11 +29,18 @@ export interface PasswordManagerSecurityParameters {
   masterPasswordRuleCompliancePrefix?: string;
 }
 
-export interface PasswordManager extends
+export enum PasswordConsumerType {
+  PasswordManager = "PasswordManager",
+  IdentityProvider = "IdentityProvider",
+  AuthenticatorApp = "AuthenticatorApp"
+}
+
+export interface PasswordConsumer extends
   PasswordManagerSecurityParameters,
   PasswordManagerContentInjectionParameters
 {
   name: string;
+  type: PasswordConsumerType
 }
 
 const defaultDomains = (hosts: SingletonOrArrayOf<string>) => ({
@@ -52,15 +59,16 @@ const defaultDerivationOptionsJson = (hosts: SingletonOrArrayOf<string>) => ({
 });
 
 const defaultPasswordManagerSecurityParameters = (
-  hosts: SingletonOrArrayOf<string>
+  ...hosts: string[]
 ): PasswordManagerSecurityParameters => ({
   ...defaultDomains(hosts),
   ...defaultDerivationOptionsJson(hosts),
 });
 
-export const passwordManagers: PasswordManager[] = [
+export const passwordConsumers: PasswordConsumer[] = [
   {
     name: "1Password",
+    type: PasswordConsumerType.PasswordManager,
 
     ...defaultPasswordManagerSecurityParameters("1password.com"),
 
@@ -69,12 +77,19 @@ export const passwordManagers: PasswordManager[] = [
     hintFieldSelector: undefined,
   },
   {
+    name: "Apple",
+    type: PasswordConsumerType.IdentityProvider,
+    ...defaultPasswordManagerSecurityParameters("apple.com"),
+  },
+  {
     name: "Authy",
+    type: PasswordConsumerType.AuthenticatorApp,
 
     ...defaultPasswordManagerSecurityParameters("authy.com"),
   },
   {
     name: "Bitwarden",
+    type: PasswordConsumerType.PasswordManager,
 
     ...defaultPasswordManagerSecurityParameters("bitwarden.com"),
 
@@ -83,7 +98,20 @@ export const passwordManagers: PasswordManager[] = [
     hintFieldSelector: "#hint",
   },
   {
+    name: "Facebook",
+    type: PasswordConsumerType.IdentityProvider,
+
+    ...defaultPasswordManagerSecurityParameters("facebook.com"),
+  },
+  {
+    name: "Google",
+    type: PasswordConsumerType.IdentityProvider,
+
+    ...defaultPasswordManagerSecurityParameters("google.com"),
+  },
+  {
     name: "Keeper",
+    type: PasswordConsumerType.PasswordManager,
 
     ...defaultPasswordManagerSecurityParameters("keepersecurity.com"),
     masterPasswordRuleCompliancePrefix: "A1! ",
@@ -95,6 +123,7 @@ export const passwordManagers: PasswordManager[] = [
   },
   {
     name: "LastPass",
+    type: PasswordConsumerType.PasswordManager,
 
     ...defaultPasswordManagerSecurityParameters("lastpass.com"),
     masterPasswordRuleCompliancePrefix: "A1! ",
@@ -104,11 +133,35 @@ export const passwordManagers: PasswordManager[] = [
     masterPasswordConfirmationFieldSelector: "#confirmmpw",
     hintFieldSelector: "#passwordreminder",
   },
-]
+  {
+    name: "Microsoft",
+    type: PasswordConsumerType.IdentityProvider,
 
-export const getPasswordManagerFoHostName = (hostName: string): PasswordManager | undefined => {
+    ...defaultPasswordManagerSecurityParameters("microsoft.com","live.com"),
+  }
+].sort( (a, b) =>
+  // First sort by type
+  a.type.localeCompare(b.type) ||
+  // the by name
+  a.name.localeCompare(b.name)
+)
+
+export const passwordConsumersGroupedByType: [PasswordConsumerType, PasswordConsumer[]][] = 
+  passwordConsumers.reduce( (result, passwordConsumer) => {
+    if (result.length > 0 && result[0][0] === passwordConsumer.type) {
+      // The password consumer is of the same type as the list
+      // we are currently appending to
+      result[0][1].push(passwordConsumer)
+    } else {
+      // This is a new password consumer type, so start a new list.
+      result.unshift([passwordConsumer.type, [passwordConsumer]]);
+    }
+    return result;
+  }, [] as [PasswordConsumerType, PasswordConsumer[]][]).reverse();
+
+export const getPasswordManagerFoHostName = (hostName: string): PasswordConsumer | undefined => {
   const lowercaseHostName = hostName.toLocaleLowerCase();
-  return passwordManagers.find( ({domains}) =>
+  return passwordConsumers.find( ({domains}) =>
     !!domains.find( ({domain, scope}) =>
       (scope !== SubdomainRule.onlyAllowSubdomains && lowercaseHostName === domain) ||
       (scope !== SubdomainRule.forbidSubdomains && lowercaseHostName.endsWith(`.${domain}`))

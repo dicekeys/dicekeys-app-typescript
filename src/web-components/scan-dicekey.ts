@@ -6,6 +6,7 @@ import {
   Div,
   MonospaceSpan,
   Select,
+  Option,
   Video,
 } from "../web-component-framework"
 import {
@@ -175,7 +176,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.frameWorker.addEventListener( "message", this.handleMessage );
     //
     // Initialize the list of device cameras
-    this.camerasOnThisDevice = new CamerasOnThisDevice();
+    this.camerasOnThisDevice = new CamerasOnThisDevice({});
     this.camerasOnThisDevice.updated.on( (cameras) => {
       // Whenever there's an update to the camera list, if we don't have an
       // active camera, set the active camera to the first camera in the list.
@@ -255,25 +256,9 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     // Remove all child elements (select options)
     this.cameraSelectionMenu.innerHTML = '';
     // Replace old child elements with updated select options
-    this.cameraSelectionMenu.append(...
-      cameras
-        // turn the list of cameras into a list of menu options
-        .map( (camera, index) => {
-          const {deviceId, label, facingMode, width, height} = camera;
-          const option = document.createElement('option');
-          const cameraName = `${
-            facingMode === "user" ? "Front Facing " :
-            facingMode === "environment" ? "Rear Facing " :
-            ""}${
-            label || `Camera ${index + 1}`
-          }${
-            (width && height) ? ` ${width}x${height} ` : ""
-          }`;
-          option.value = deviceId;
-          option.appendChild(document.createTextNode(cameraName)); //  (${deviceId})
-          return option;
-        })
-      );
+    this.cameraSelectionMenu.append(
+      ...cameras.map( (camera) => Option({text: camera.name, value: camera.deviceId}).primaryElement )
+    );
     this.cameraSelectionMenu.value = this.camerasDeviceId || "";
     this.cameraSelectionMenu.style.setProperty("visibility", "visible");
     // Handle user selection of cameras

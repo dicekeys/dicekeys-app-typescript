@@ -189,6 +189,8 @@ export const Select = createHtmlElement("select");
 export type Select = ReturnType<typeof Select>;
 export const Option = createHtmlElement("option");
 export type Option = ReturnType<typeof Option>;
+export const OptGroup = createHtmlElement("optgroup");
+export type OptGroup = ReturnType<typeof OptGroup>;
 
 export const Label = createHtmlElement<"label", Attributes & {for?: string}>("label").with( e => {
   if ( typeof e.options.for === "string") {
