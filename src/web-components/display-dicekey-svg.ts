@@ -1,7 +1,7 @@
 import {
   Component, Attributes,
   ComponentEvent,
-  InputButton, Div, Label, Select, Option, Observable
+  InputButton, Div, Label, Select, Option, Observable, OptGroup
 } from "../web-component-framework";
 import {
   DiceKeySvg
@@ -13,8 +13,9 @@ import {
   DiceKey
 } from "../dicekeys/dicekey";
 import {
-  passwordManagers
-} from "../dicekeys/supported-password-managers";
+  passwordConsumers,
+  passwordConsumersGroupedByType
+} from "../dicekeys/password-consumers";
 import {
   ComputeApiCommandWorker
 } from "../workers/call-api-command-worker";
@@ -24,6 +25,9 @@ import {
 import {
   DisplayPassword
 } from "./password-field"
+import {
+  describePasswordConsumerType
+} from "../phrasing/ui";
 
 interface DiceKeySvgViewOptions extends Attributes {
   diceKey: DiceKey;
@@ -63,7 +67,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
   // }
 
   onPasswordManagerSelectChanged = async (passwordManagerName: string) => {
-    const selectedManager = passwordManagers.find( pwmgr => pwmgr.name === passwordManagerName );
+    const selectedManager = passwordConsumers.find( pwmgr => pwmgr.name === passwordManagerName );
     if (selectedManager != null) {
       console.log("Selected password manager", selectedManager?.name);
       // Derive password in background then set it.
@@ -93,7 +97,11 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
           Label({style: `margin-bottom: 4px;`}, "Create a password for ",
             Select({value: "default"},
               Option({}),
-              passwordManagers.map( pwm => Option({value: pwm.name}, pwm.name) )
+              passwordConsumersGroupedByType.map( group => 
+                OptGroup({label: describePasswordConsumerType(group[0])},
+                  group[1].map( pwm => Option({value: pwm.name}, pwm.name) )
+                )
+              )
             ).with( select => {
               select.events.change.on( () => this.onPasswordManagerSelectChanged(select.primaryElement.value ))
             })

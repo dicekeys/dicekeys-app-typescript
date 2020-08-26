@@ -16,6 +16,7 @@ export class Attributes {
   style?: string;
   class?: string | string[];
   text?: string;
+  label?: string;
 }
 
 export class Component<
@@ -42,7 +43,7 @@ export class Component<
   ) {
     this.detachEvent.on(() => this.remove());
     const {text, class: Class} = this.options;
-    for (const key of ["id", "name", "style", "value"] as const) {
+    for (const key of ["id", "name", "style", "value", "label"] as const) {
       const val = options[key];
       if (typeof val === "string") {
         this.primaryElement.setAttribute(key, val);

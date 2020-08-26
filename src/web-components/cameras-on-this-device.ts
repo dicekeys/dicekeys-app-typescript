@@ -1,4 +1,4 @@
-import {ComponentEvent} from "../web-component-framework"
+import {Attributes, Component, ComponentEvent, Div} from "../web-component-framework"
 
 
  // Safari may require 640 or 1280, see 
@@ -21,7 +21,7 @@ export const videoConstraintsForDevice = (deviceId: string): MediaTrackConstrain
 });
 
 
-export type Camera = MediaDeviceInfo & MediaTrackSettings & {capabilities: MediaTrackCapabilities};
+export type Camera = MediaDeviceInfo & MediaTrackSettings & {name: string, capabilities: MediaTrackCapabilities};
 
 const getDirectionScore = ({facingMode}: Camera): number =>
   facingMode === "environment" ? -1 : // put cameras facing out first on the list
@@ -41,9 +41,11 @@ const compareCameras = (a: Camera, b: Camera): number => {
   return byLabel;
 }
 
-export class CamerasOnThisDevice {
+export interface CamerasOnThisDeviceOptions extends Attributes {}
+export class CamerasOnThisDevice extends Component<CamerasOnThisDeviceOptions> {
 
-  constructor() {
+  constructor(options: CamerasOnThisDeviceOptions) {
+    super(options, document.createElement("div"));
     this.addAttachedAndRemovedDetachedCameras();
     // Start getting a list of cameras
     // Make sure we update the camera list whenever a camera is added or removed
@@ -57,6 +59,7 @@ export class CamerasOnThisDevice {
    */
   updated = new ComponentEvent<[Camera[]]>(this);
 
+  private camerasToBeAdded = new Map<string, MediaDeviceInfo>();
   private camerasByDeviceId = new Map<string, Camera>();
   private unreadableCameraDevices = new Map<string, {cameraDevice: MediaDeviceInfo, exceptions: any[]}>();
 
@@ -70,6 +73,8 @@ export class CamerasOnThisDevice {
     return sortedCameras;
   }
 
+  unknownCameraIndex = new Map<string, number>();
+
   tryAddCamera = async (cameraDevice: MediaDeviceInfo): Promise<Camera | undefined> => {
     const {deviceId} = cameraDevice;
     try {
@@ -82,8 +87,7 @@ export class CamerasOnThisDevice {
       const capabilities: MediaTrackCapabilities = track.getCapabilities();
       stream?.getTracks().forEach(track => track.stop() );
       if (!settings) return;          
-      // The label property needs to be set manually
-      const camera: Camera = {
+      const cameraWithoutName = {
         ...settings,
         ...{capabilities},
         ...cameraDevice,
@@ -92,10 +96,40 @@ export class CamerasOnThisDevice {
         kind: cameraDevice.kind,
         label: cameraDevice.label
       };
-      this.camerasByDeviceId.set(deviceId, camera);
-      // Just in case we had a problem loading this device in the past,
-      // remove it from the list of unreadable cameras
+      const {label, facingMode, width, height} = cameraWithoutName;
+      const lcLabel = label.toLocaleLowerCase();
+      // Only add a direction string if the direction is present and
+      // it's not already implied in the label
+      const labelDoesNotContainDirection =
+        lcLabel.indexOf("rear") == -1 &&
+        lcLabel.indexOf("front") == -1;
+      const directionPrefix =
+        labelDoesNotContainDirection && facingMode === "user" ? "Front Facing " :
+        labelDoesNotContainDirection && facingMode === "environment" ? "Rear Facing " :
+        "";
+      var identifier: string;
+      if (label) {
+        identifier = label;
+      } else {
+        if (this.unknownCameraIndex.has(deviceId)) {
+          identifier = `Camera ${this.unknownCameraIndex.get(deviceId)!}`;
+        } else {
+          const cameraIndex = this.unknownCameraIndex.size +1;
+          this.unknownCameraIndex.set(deviceId, cameraIndex);
+          identifier = `Camera ${cameraIndex}`;
+        }
+      }
+      const resolution: string = (width && height) ? ` ${width}x${height} ` : ""
+      const name = directionPrefix + identifier + resolution;
+      // The label property needs to be set manually
+      const camera: Camera = {
+        ...cameraWithoutName,
+        name
+      };
+      this.camerasToBeAdded.delete(deviceId);
       this.unreadableCameraDevices.delete(deviceId);
+      this.camerasByDeviceId.set(deviceId, camera);
+      this.renderSoon();
       return camera;
     } catch (e) {
       if (this.unreadableCameraDevices.has(deviceId)) {
@@ -105,6 +139,35 @@ export class CamerasOnThisDevice {
       }
     }
     return;
+  }
+
+  render() {
+    super.render();
+    this.append(
+      Div({class: "cameras-on-this-device-heading",
+           text: "Identifying device cameras..."
+          })
+    )
+    for (const camera of this.cameras) {
+      const {name} = camera;
+      this.append(
+        Div({class: ["camera-on-this-device", "camera-found"], text: name})
+      )
+    };
+    for (const camera of this.unreadableCameraDevices.values()) {
+      const {label, deviceId} = camera.cameraDevice;
+      this.append(
+        Div({class: ["camera-on-this-device", "camera-unreadable"], text: label || deviceId})
+      );
+    }
+    const camerasToBeRead = [...this.camerasToBeAdded.values()]
+      .filter( ({deviceId}) => !this.unreadableCameraDevices.has(deviceId) )
+    for (const camera of  camerasToBeRead) {
+      const {label, deviceId} = camera;
+      this.append(
+        Div({class: ["camera-on-this-device", "camera-to-be-added"], text: label || deviceId})
+      );
+    }
   }
 
   addAttachedAndRemovedDetachedCameras = async (): Promise<void> => {
@@ -126,27 +189,25 @@ export class CamerasOnThisDevice {
 
     // Add cameras added since this list was last created
     const listOfNewlyAttachedCameras = listOfCurrentCameras.filter(
-      ({deviceId}) => !this.camerasByDeviceId.has(deviceId)
+      ({deviceId}) => !this.camerasByDeviceId.has(deviceId) && !this.camerasToBeAdded.has(deviceId)
     );
-    const setOfNewlyAttachedCameraIds = new Set<string>(listOfCurrentCameras.map( c => c.deviceId ));
-    
-    if (listOfNewlyAttachedCameras.length > 0) {
+    listOfNewlyAttachedCameras.forEach( camera => this.camerasToBeAdded.set(camera.deviceId, camera) )
+
+    if (this.camerasToBeAdded.size > 0) {
       await Promise.all(
         // do parallel requests for user media to get camera track settings that
         // enumerateDevices doesn't offer, and can only be learned via getUserMedia 
         // followed by getSettings
-        listOfNewlyAttachedCameras.map( camera => this.tryAddCamera(camera) )
+        [...this.camerasToBeAdded.values()].map( camera => this.tryAddCamera(camera) )
       );
-      for (const [, {cameraDevice}] of this.unreadableCameraDevices) {
-        if (setOfNewlyAttachedCameraIds.has(cameraDevice.deviceId)) {
-          // I hope you're as horrified as I am by the use of await in a loop.
-          // This is our here by last resort since some devices will not let us
-          // inspect cameras in parallel.
-          // This could be bad if a device had 50 cameras attached, so um, maybe this
-          // is an intentional plot to accidentally take down surveillance systems that
-          // might accidentally run this code?  Yeah, that's the ticket!
-          await this.tryAddCamera(cameraDevice);
-        }
+      for (const cameraDevice of this.camerasToBeAdded.values()) {
+        // I hope you're as horrified as I am by the use of await in a loop.
+        // This is our here by last resort since some devices will not let us
+        // inspect cameras in parallel.
+        // This could be bad if a device had 50 cameras attached, so um, maybe this
+        // is an intentional plot to accidentally take down surveillance systems that
+        // might accidentally run this code?  Yeah, that's the ticket!
+        await this.tryAddCamera(cameraDevice);
       }
     }
     if (deviceIdsOfRemovedCameras.length > 0 || listOfNewlyAttachedCameras.length > 0) {

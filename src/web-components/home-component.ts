@@ -30,13 +30,12 @@ export class HomeComponent extends Component {
           events.click.on( this.loadDiceKeyButtonClicked.send )
         }}),
         // Currently only show random DiceKey feature on staging.
-        window.location.host.indexOf("staging") >= 0 ?
         InputButton({
           value: "Create a Random DiceKey for Testing",
           style: "margin-top: 20vh;",
           events: (events) => {
             events.click.on( this.createRandomDiceKeyButtonClicked.send )
-        }}) : undefined
+        }})
     );
   }
 

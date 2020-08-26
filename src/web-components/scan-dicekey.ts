@@ -6,6 +6,7 @@ import {
   Div,
   MonospaceSpan,
   Select,
+  Option,
   Video,
 } from "../web-component-framework"
 import {
@@ -141,6 +142,9 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    */
   private imageCapture?: ImageCapture;
 
+  // Set to true when the first frame has been drawn.
+  // Allows us to draw first ImageCapture frame loaded without delay.
+  private hasAnImageBeenDrawnOntoTheVideoCanvas = false;
   
   // Events
   public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], ScanDiceKey>(this);
@@ -175,8 +179,10 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.frameWorker.addEventListener( "message", this.handleMessage );
     //
     // Initialize the list of device cameras
-    this.camerasOnThisDevice = new CamerasOnThisDevice();
+    this.camerasOnThisDevice = new CamerasOnThisDevice({});
     this.camerasOnThisDevice.updated.on( (cameras) => {
+      // no longer need to show the list of cameras
+      this.camerasOnThisDevice.remove()
       // Whenever there's an update to the camera list, if we don't have an
       // active camera, set the active camera to the first camera in the list.
       if (!this.mediaStream && cameras.length > 0) {
@@ -222,6 +228,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.append(
       Div({class: "content"},
         ...(this.useVideoToDisplay ? [Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c )] : []),
+        this.camerasOnThisDevice,
         Video({style: "display: none; visibility: hidden;"}).with( c => this.videoComponent = c ),
         this.useImageCapture ?
           Canvas().withElement( c => { this.videoCanvas = c; }) :
@@ -255,25 +262,9 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     // Remove all child elements (select options)
     this.cameraSelectionMenu.innerHTML = '';
     // Replace old child elements with updated select options
-    this.cameraSelectionMenu.append(...
-      cameras
-        // turn the list of cameras into a list of menu options
-        .map( (camera, index) => {
-          const {deviceId, label, facingMode, width, height} = camera;
-          const option = document.createElement('option');
-          const cameraName = `${
-            facingMode === "user" ? "Front Facing " :
-            facingMode === "environment" ? "Rear Facing " :
-            ""}${
-            label || `Camera ${index + 1}`
-          }${
-            (width && height) ? ` ${width}x${height} ` : ""
-          }`;
-          option.value = deviceId;
-          option.appendChild(document.createTextNode(cameraName)); //  (${deviceId})
-          return option;
-        })
-      );
+    this.cameraSelectionMenu.append(
+      ...cameras.map( (camera) => Option({text: camera.name, value: camera.deviceId}).primaryElement )
+    );
     this.cameraSelectionMenu.value = this.camerasDeviceId || "";
     this.cameraSelectionMenu.style.setProperty("visibility", "visible");
     // Handle user selection of cameras
@@ -391,6 +382,9 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       return;
     }
     const bitMap = await this.imageCapture!.grabFrame();
+    if (this.videoCanvas && !this.hasAnImageBeenDrawnOntoTheVideoCanvas) {
+      this.drawImageOntoVideoCanvas(bitMap);
+    }
     console.log("Frame grabbed", (Date.now() % 100000) / 1000);
     const {width, height} = bitMap;
     console.log(`Grabbing frame with dimensions ${width}x${height}`)
@@ -468,6 +462,35 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   }
 
   protected finishDelayInProgress: boolean = false;
+
+  drawImageOntoVideoCanvas = (imageBitmap: ImageBitmap) => {
+    const {width, height} = imageBitmap;
+    if (this.videoCanvas) {
+      var rect = getElementDimensions(this.videoCanvas.parentElement!);
+      if (rect && (this.videoCanvas.width !== rect.width || this.videoCanvas.height !== rect.height)) {
+        this.videoCanvas.setAttribute("width", rect.width.toString());
+        this.videoCanvas.setAttribute("height", rect.height.toString());
+        this.videoCanvas.width = rect.width;
+        this.videoCanvas.height = rect.height;
+      }
+      // 
+      const ctx = this.videoCanvas.getContext("2d")!;
+      const canvasWidthOverHeight = ctx.canvas.width / ctx.canvas.height;
+      const srcWidthOverHeight = width / height;
+      const [srcWidth, srcHeight] = canvasWidthOverHeight > srcWidthOverHeight ?
+        // The canvas is too wide for the source (the captured frame), so reduce the source's height
+        // to make the source relatively wider
+        [width, width / canvasWidthOverHeight] :
+        // The canvas is too tall for the source (the captured frame), so reduce the source's width
+        // to make it relatively taller
+        [height * canvasWidthOverHeight, height];
+      const srcX = (width - srcWidth) / 2;
+      const srcY = (height - srcHeight) / 2;
+      this.hasAnImageBeenDrawnOntoTheVideoCanvas = true;
+      ctx.drawImage(imageBitmap, srcX, srcY, srcWidth, srcHeight, 0, 0, this.videoCanvas.width, this.videoCanvas.height);
+    }
+  }
+
   /**
    * Handle frames processed by the web worker, displaying the received
    * overlay image above the video image.
@@ -484,29 +507,9 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     }
     if (this.videoCanvas) {
       // Grow the canvas to match the size of its parent element.
-      var rect = getElementDimensions(this.videoCanvas.parentElement!);
-      if (rect && (this.videoCanvas.width !== rect.width || this.videoCanvas.height !== rect.height)) {
-        this.videoCanvas.setAttribute("width", rect.width.toString());
-        this.videoCanvas.setAttribute("height", rect.height.toString());
-        this.videoCanvas.width = rect.width;
-        this.videoCanvas.height = rect.height;
-      }
-      // 
-      const ctx = this.videoCanvas.getContext("2d")!;
       const imageData = new ImageData(new Uint8ClampedArray(rgbImageAsArrayBuffer), width, height);
       const imageBitmap = await createImageBitmap(imageData);
-      const canvasWidthOverHeight = ctx.canvas.width / ctx.canvas.height;
-      const srcWidthOverHeight = width / height;
-      const [srcWidth, srcHeight] = canvasWidthOverHeight > srcWidthOverHeight ?
-        // The canvas is too wide for the source (the captured frame), so reduce the source's height
-        // to make the source relatively wider
-        [width, width / canvasWidthOverHeight] :
-        // The canvas is too tall for the source (the captured frame), so reduce the source's width
-        // to make it relatively taller
-        [height * canvasWidthOverHeight, height];
-      const srcX = (width - srcWidth) / 2;
-      const srcY = (height - srcHeight) / 2;
-      ctx.drawImage(imageBitmap, srcX, srcY, srcWidth, srcHeight, 0, 0, this.videoCanvas.width, this.videoCanvas.height);
+      this.drawImageOntoVideoCanvas(imageBitmap);
     }
 
     if (isFinished && !this.finishDelayInProgress) {
