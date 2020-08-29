@@ -113,7 +113,7 @@ export const passwordConsumers: PasswordConsumer[] = [
     name: "Keeper",
     type: PasswordConsumerType.PasswordManager,
 
-    ...defaultPasswordManagerSecurityParameters("keepersecurity.com"),
+    ...defaultPasswordManagerSecurityParameters("keepersecurity.com", "keepersecurity.eu"),
     masterPasswordRuleCompliancePrefix: "A1! ",
 
     elementToAugmentSelector: `.password > label`,

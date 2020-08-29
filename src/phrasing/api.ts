@@ -12,7 +12,8 @@ const knownHostSuffixes: [string, string][] = [
   ["1password.com", "1Password"],
   ["bitwarden.com", "Bitwarden"],
   ["authy.com", "Authy"],
-  ["keepersecurity.com", "Keeper"],
+  ["keepersecurity.com", "Keeper Security"],
+  ["keepersecurity.eu", "Keeper Security"],
   ["lastpass.com", "LastPass"],
   ["localhost", "your password manager"]
 ];

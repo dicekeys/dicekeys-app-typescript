@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////////
 //
 // This TypeScript (.ts) file specifies the dimensions
-// of fonts and data rendered noto DiceKeys faces.
+// of fonts and data rendered onto DiceKeys faces.
 //
 // This file is generated automatically by the DiceKeys
 // specification generator, which is written in TypeScript.

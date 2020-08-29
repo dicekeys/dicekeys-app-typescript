@@ -34,7 +34,7 @@ export const handleApiRequest = async (
     throwIfClientNotPermitted(request);
     throwIfClientMayNotRetrieveKey(request);
 
-    // Ensure the command isn't computationally prohobitive
+    // Ensure the command isn't computationally prohibitive
 
     // FIXME
 
