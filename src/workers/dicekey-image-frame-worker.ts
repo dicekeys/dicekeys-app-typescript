@@ -9,7 +9,7 @@ import "regenerator-runtime/runtime";
 import {
     DiceKeyImageProcessor,
     DiceKeyImageProcessorModuleWithHelpers,
-    DiceKeyImageProcessorModulePromise
+    DiceKeyImageProcessorModulePromise,
 } from "@dicekeys/read-dicekey-js"
 
 /**
@@ -24,10 +24,12 @@ interface Frame {
     rgbImageAsArrayBuffer: ArrayBufferLike;
 }
 export interface ProcessFrameRequest extends RequestMetadata, Frame {
-    action: "processRGBAImageFrameAndRenderOverlay";
+  requestId: number;
+  action: "processRGBAImageFrameAndRenderOverlay";
 }
 export interface ProcessAugmentFrameRequest extends RequestMetadata, Frame {
-    action: "processAndAugmentRGBAImageFrame";
+  requestId: number;
+  action: "processAndAugmentRGBAImageFrame";
 }
 
 export interface TerminateSessionRequest {
@@ -45,9 +47,10 @@ export interface ReadyMessage {
  * to look for a DiceKey
  */
 export interface ProcessFrameResponse extends Frame, RequestMetadata {
-    action: "processRGBAImageFrameAndRenderOverlay" | "processAndAugmentRGBAImageFrame";
-    isFinished: boolean,
-    diceKeyReadJson: string
+  requestId: number;
+  action: "processRGBAImageFrameAndRenderOverlay" | "processAndAugmentRGBAImageFrame";
+  isFinished: boolean,
+  diceKeyReadJson: string
 }
 
 function isTerminateSessionRequest(t: any) : t is TerminateSessionRequest {
@@ -93,6 +96,7 @@ class FrameProcessingWorker {
     }
 
     processRGBAImageFrameAndRenderOverlay = ({
+        requestId,
         action, sessionId, width, height,
         rgbImageAsArrayBuffer: inputRgbImageAsArrayBuffer
       }: ProcessFrameRequest | ProcessAugmentFrameRequest
@@ -116,12 +120,14 @@ class FrameProcessingWorker {
         const isFinished = diceKeyImageProcessor.isFinished();
         const diceKeyReadJson =  diceKeyImageProcessor.diceKeyReadJson();
 
+
   
         return {
-            action, sessionId, height, width,
-            rgbImageAsArrayBuffer: rgbImagesArrayUint8Array.buffer,
-            isFinished,
-            diceKeyReadJson
+          requestId,
+          action, sessionId, height, width,
+          rgbImageAsArrayBuffer: rgbImagesArrayUint8Array.buffer,
+          isFinished,
+          diceKeyReadJson
         }
     }
 }

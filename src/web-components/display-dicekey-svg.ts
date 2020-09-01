@@ -43,7 +43,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
   public forgetEvent = new ComponentEvent(this);
 
   /**
-   * The code supporting the dmeo page cannot until the WebAssembly module for the image
+   * The code supporting the demo page cannot until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */

@@ -30,9 +30,9 @@ const obscure = new Observable<boolean>(true);
 
 export const removeAllButCornerLettersFromDiceKey = (diceKey: PartialDiceKey): PartialDiceKey =>
   diceKey.map( ({letter}, index) => ({
-    letter: DiceKey.cornerIndexeSet.has(index) ? letter : undefined,
+    letter: DiceKey.cornerIndexSet.has(index) ? letter : undefined,
     digit: undefined,
-    orientationAsLowercaseLetterTRBL: undefined
+    orientationAsLowercaseLetterTrbl: undefined
   })) as PartialDiceKey;
 
 /**

@@ -13,8 +13,8 @@ import {
 } from "../web-component-framework"
 import "regenerator-runtime/runtime";
 import {
-  FaceRead, FaceReadJson
-} from "../dicekeys/face-read";
+  FaceRead, getImageOfFaceRead
+} from "@dicekeys/read-dicekey-js";
 import {
   DiceKey
 } from "../dicekeys/dicekey";
@@ -40,11 +40,11 @@ import {
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
-interface Frame {
-  width: number;
-  height: number;
-  rgbImageAsArrayBuffer: ArrayBufferLike;
-}
+// interface Frame {
+//   width: number;
+//   height: number;
+//   rgbImageAsArrayBuffer: ArrayBufferLike;
+// }
 
 interface ScanDiceKeyOptions extends Attributes {
   msDelayBetweenSuccessAndClosure?: number;
@@ -164,7 +164,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   }
 
   /**
-   * The code supporting the dmeo page cannot until the WebAssembly module for the image
+   * The code supporting the demo page cannot until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */
@@ -289,7 +289,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.frameWorker.postMessage({action: "terminateSession", sessionId: this.cameraSessionId} as TerminateSessionRequest);
 
     setTimeout( () => this.frameWorker.terminate(), this.msDelayBetweenSuccessAndClosure + 1000);
-    // remvoe successful
+    // remove successful
     return true;
   }
 
@@ -365,7 +365,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     return;
   }
 
-  getFrameUsingImageCapture = async (): Promise<Frame | undefined> => {
+  getFrameUsingImageCapture = async (): Promise<ImageData | undefined> => {
     const track = this.imageCapture?.track;
     console.log("getFrameUsingImageCapture", (Date.now() % 100000) / 1000);
     if (track == null || track.readyState !== "live" || !track.enabled || track.muted) {
@@ -393,11 +393,10 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
     }
     this.captureCanvasCtx!.drawImage(bitMap, 0, 0);
-    const rgbImageAsArrayBuffer = this.captureCanvasCtx!.getImageData(0, 0, width, height).data.buffer;
-    return {width, height, rgbImageAsArrayBuffer};
+    return this.captureCanvasCtx!.getImageData(0, 0, width, height);
   };
 
-  getFrameFromVideoPlayer = (): Frame | undefined => {
+  getFrameFromVideoPlayer = (): ImageData | undefined => {
     if (!this.videoPlayer) {
       return;
     }
@@ -412,49 +411,43 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
         this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
     }
     this.captureCanvasCtx!.drawImage(this.videoPlayer!, 0, 0);
-    const {width, height, data} = this.captureCanvasCtx!.getImageData(0, 0, this.captureCanvas!.width, this.captureCanvas!.height);
-    const rgbImageAsArrayBuffer = data.buffer;
-    return {width, height, rgbImageAsArrayBuffer};
+    return this.captureCanvasCtx!.getImageData(0, 0, this.captureCanvas!.width, this.captureCanvas!.height);
   }
 
   /**
    * To process video images, we will loop through retrieving camera frames with
-   * this meethod, calling a webworker to process the frames, and then
+   * this method, calling a webworker to process the frames, and then
    * the web worker's response will trigger handleProcessedCameraFrame (below),
    * which will call back to here.
    */
+  private nextRequestId = 1;
   startProcessingNewCameraFrame = async () => {
     if (this.removed) {
       // The element is no longer displaying and so processing should stop.
       return;
     }
-    const frame = this.useImageCapture ?
+    const imageData = this.useImageCapture ?
       await this.getFrameUsingImageCapture() : this.getFrameFromVideoPlayer();
-    if (frame == null) {
+    if (imageData == null) {
       // There's no need to take action if there's no video
       console.log("No frame received.  Entering wait cycle");
       setTimeout(this.startProcessingNewCameraFrame, 100);
       return;
     }
-
-//     if (this.videoCanvas) {
-//       // Copy frame into video canvas.
-//       const {rgbImageAsArrayBuffer, width, height} = frame;
-//       const ctx = this.videoCanvas.getContext("2d")!;
-//       const frameImageData = ctx.createImageData(width, height);
-// //        const overlayImageData = ctx.getImageData(0, 0, width, height);
-//       frameImageData.data.set(new Uint8Array(rgbImageAsArrayBuffer));
-//       ctx.putImageData(frameImageData, 0, 0);
-//     }
-
+    const requestId = this.nextRequestId++;
+    this.framesBeingProcessed.set(requestId, imageData);
+    const {width, height, data} = imageData;
+    // Create a copy of the image buffer that can be sent over to the worker
+    const rgbImageAsArrayBuffer = data.buffer.slice(0);
     // Ask the background worker to process the bitmap.
-    // First construct a requeest
+    // First construct a request
     const request: ProcessFrameRequest | ProcessAugmentFrameRequest = {
-      ...frame,
+      requestId,
+      width, height, rgbImageAsArrayBuffer,
       action: this.useVideoToDisplay ? "processRGBAImageFrameAndRenderOverlay" : "processAndAugmentRGBAImageFrame",
       sessionId: this.cameraSessionId!,
     };
-    // The mark the objects that can be transffered to the worker.
+    // The mark the objects that can be transferred to the worker.
     // This eliminates the need to copy the big memory buffer over, but the worker will now own the memory.
     const transferrableObjectsWithinRequest: Transferable[] =  [request.rgbImageAsArrayBuffer];
     // Send the request to the worker
@@ -491,13 +484,35 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     }
   }
 
+  private framesBeingProcessed = new Map<number, ImageData>();
+  private errorImages = new Map<string, HTMLCanvasElement>();
   /**
    * Handle frames processed by the web worker, displaying the received
    * overlay image above the video image.
    */
   handleProcessedCameraFrame = async (response: ProcessFrameResponse ) => {
     console.log("handleProcessedCameraFrame", (Date.now() % 100000) / 1000);
-    const {width, height, rgbImageAsArrayBuffer, diceKeyReadJson, isFinished} = response;
+    const {requestId, width, height, rgbImageAsArrayBuffer, diceKeyReadJson, isFinished} = response;
+    const imageData = this.framesBeingProcessed.get(requestId);
+    this.framesBeingProcessed.delete(requestId);
+
+    const facesRead = FaceRead.fromJson(diceKeyReadJson);
+    if (facesRead) {
+      const facesReadWithErrors = facesRead.filter( f => f.errors && f.errors.length > 0);
+      if (facesReadWithErrors.length > 0 && imageData) {
+        for (const face of facesReadWithErrors) {
+          const imageBitmap = await createImageBitmap(imageData);
+          if (!this.errorImages.has(face.uniqueIdentifier)) {
+            const canvas = document.createElement("canvas")
+            canvas.setAttribute("width", "200");
+            canvas.setAttribute("height", "200");
+            const ctx = canvas.getContext("2d");
+            getImageOfFaceRead(ctx!, imageBitmap, face);
+          }
+        }
+      }
+    }
+
     const {overlayCanvas} = this;
     if (overlayCanvas) {
       // Ensure the overlay canvas is the same size as the captured canvas
@@ -512,12 +527,10 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       this.drawImageOntoVideoCanvas(imageBitmap);
     }
 
-    if (isFinished && !this.finishDelayInProgress) {
-      const diceKey = DiceKey(
-        (JSON.parse(diceKeyReadJson) as FaceReadJson[])
-        .map( FaceRead.fromJson )
-        .map( faceRead => faceRead.toFace() )
-      );
+    if (facesRead && isFinished && !this.finishDelayInProgress) {
+      const diceKey = DiceKey( facesRead.map( faceRead => faceRead.toFace() ));
+      // FIXME -- add known errors here.
+
       DiceKeyAppState.instance!.diceKey.value = diceKey;
       this.finishDelayInProgress = true;
       setTimeout( () => {

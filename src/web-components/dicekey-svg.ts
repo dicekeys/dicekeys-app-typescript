@@ -31,9 +31,9 @@ const obscure = new Observable<boolean>(true);
 
 export const removeAllButCornerLettersFromDiceKey = (diceKey: PartialDiceKey): PartialDiceKey =>
   diceKey.map( ({letter}, index) => ({
-    letter: DiceKey.cornerIndexeSet.has(index) ? letter : undefined,
+    letter: DiceKey.cornerIndexSet.has(index) ? letter : undefined,
     digit: undefined,
-    orientationAsLowercaseLetterTRBL: undefined
+    orientationAsLowercaseLetterTrbl: undefined
   })) as PartialDiceKey;
 
 /**
@@ -42,7 +42,7 @@ export const removeAllButCornerLettersFromDiceKey = (diceKey: PartialDiceKey): P
 export class DiceKeySvg extends Component<DiceKeySvgOptions, SVGSVGElement> {
 
   /**
-   * The code supporting the dmeo page cannot until the WebAssembly module for the image
+   * The code supporting the demo page cannot run until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */

@@ -84,7 +84,7 @@ export const shortDescribeCommandsAction = (
     case "getPassword":
       return `Send Password`;
     case "getSecret":
-      return `Send Sassword`;
+      return `Send Secret`;
     case "getSigningKey":
     case "getSealingKey": 
     case "getUnsealingKey":
