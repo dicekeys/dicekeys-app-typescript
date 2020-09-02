@@ -13,14 +13,13 @@ import {
 } from "../web-component-framework"
 import "regenerator-runtime/runtime";
 import {
-  FaceRead, FaceReadJson
-} from "../dicekeys/face-read";
+  Face,
+  FaceRead, getImageOfFaceRead
+} from "@dicekeys/read-dicekey-js";
 import {
-  DiceKey
+  DiceKey, TupleOf25Items
 } from "../dicekeys/dicekey";
-import { 
-  DiceKeyAppState
-} from "../state/app-state-dicekey";
+import * as AppState from "../state";
 
 import {
     ProcessFrameRequest,
@@ -40,16 +39,17 @@ import {
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
-interface Frame {
-  width: number;
-  height: number;
-  rgbImageAsArrayBuffer: ArrayBufferLike;
-}
+// interface Frame {
+//   width: number;
+//   height: number;
+//   rgbImageAsArrayBuffer: ArrayBufferLike;
+// }
 
 interface ScanDiceKeyOptions extends Attributes {
   msDelayBetweenSuccessAndClosure?: number;
   host: string;
   derivationOptions?: DerivationOptions;
+  dieRenderingCanvasSize?: number;
 }
 
 
@@ -118,6 +118,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   
   private readonly frameWorker: Worker;
 
+
   /**
    * A re-usable canvas into which to capture image frames
    */
@@ -164,7 +165,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   }
 
   /**
-   * The code supporting the dmeo page cannot until the WebAssembly module for the image
+   * The code supporting the demo page cannot until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */
@@ -172,6 +173,8 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     options: ScanDiceKeyOptions
   ) {
     super(options);
+
+  
     this.cameraSessionId = Math.random().toString() + Math.random().toString();
     // Create worker for processing camera frames
     this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
@@ -289,7 +292,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.frameWorker.postMessage({action: "terminateSession", sessionId: this.cameraSessionId} as TerminateSessionRequest);
 
     setTimeout( () => this.frameWorker.terminate(), this.msDelayBetweenSuccessAndClosure + 1000);
-    // remvoe successful
+    // remove successful
     return true;
   }
 
@@ -365,7 +368,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     return;
   }
 
-  getFrameUsingImageCapture = async (): Promise<Frame | undefined> => {
+  getFrameUsingImageCapture = async (): Promise<ImageData | undefined> => {
     const track = this.imageCapture?.track;
     console.log("getFrameUsingImageCapture", (Date.now() % 100000) / 1000);
     if (track == null || track.readyState !== "live" || !track.enabled || track.muted) {
@@ -393,11 +396,10 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
     }
     this.captureCanvasCtx!.drawImage(bitMap, 0, 0);
-    const rgbImageAsArrayBuffer = this.captureCanvasCtx!.getImageData(0, 0, width, height).data.buffer;
-    return {width, height, rgbImageAsArrayBuffer};
+    return this.captureCanvasCtx!.getImageData(0, 0, width, height);
   };
 
-  getFrameFromVideoPlayer = (): Frame | undefined => {
+  getFrameFromVideoPlayer = (): ImageData | undefined => {
     if (!this.videoPlayer) {
       return;
     }
@@ -412,49 +414,43 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
         this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
     }
     this.captureCanvasCtx!.drawImage(this.videoPlayer!, 0, 0);
-    const {width, height, data} = this.captureCanvasCtx!.getImageData(0, 0, this.captureCanvas!.width, this.captureCanvas!.height);
-    const rgbImageAsArrayBuffer = data.buffer;
-    return {width, height, rgbImageAsArrayBuffer};
+    return this.captureCanvasCtx!.getImageData(0, 0, this.captureCanvas!.width, this.captureCanvas!.height);
   }
 
   /**
    * To process video images, we will loop through retrieving camera frames with
-   * this meethod, calling a webworker to process the frames, and then
+   * this method, calling a webworker to process the frames, and then
    * the web worker's response will trigger handleProcessedCameraFrame (below),
    * which will call back to here.
    */
+  private nextRequestId = 1;
   startProcessingNewCameraFrame = async () => {
     if (this.removed) {
       // The element is no longer displaying and so processing should stop.
       return;
     }
-    const frame = this.useImageCapture ?
+    const imageData = this.useImageCapture ?
       await this.getFrameUsingImageCapture() : this.getFrameFromVideoPlayer();
-    if (frame == null) {
+    if (imageData == null) {
       // There's no need to take action if there's no video
       console.log("No frame received.  Entering wait cycle");
       setTimeout(this.startProcessingNewCameraFrame, 100);
       return;
     }
-
-//     if (this.videoCanvas) {
-//       // Copy frame into video canvas.
-//       const {rgbImageAsArrayBuffer, width, height} = frame;
-//       const ctx = this.videoCanvas.getContext("2d")!;
-//       const frameImageData = ctx.createImageData(width, height);
-// //        const overlayImageData = ctx.getImageData(0, 0, width, height);
-//       frameImageData.data.set(new Uint8Array(rgbImageAsArrayBuffer));
-//       ctx.putImageData(frameImageData, 0, 0);
-//     }
-
+    const requestId = this.nextRequestId++;
+    this.framesBeingProcessed.set(requestId, imageData);
+    const {width, height, data} = imageData;
+    // Create a copy of the image buffer that can be sent over to the worker
+    const rgbImageAsArrayBuffer = data.buffer.slice(0);
     // Ask the background worker to process the bitmap.
-    // First construct a requeest
+    // First construct a request
     const request: ProcessFrameRequest | ProcessAugmentFrameRequest = {
-      ...frame,
+      requestId,
+      width, height, rgbImageAsArrayBuffer,
       action: this.useVideoToDisplay ? "processRGBAImageFrameAndRenderOverlay" : "processAndAugmentRGBAImageFrame",
       sessionId: this.cameraSessionId!,
     };
-    // The mark the objects that can be transffered to the worker.
+    // The mark the objects that can be transferred to the worker.
     // This eliminates the need to copy the big memory buffer over, but the worker will now own the memory.
     const transferrableObjectsWithinRequest: Transferable[] =  [request.rgbImageAsArrayBuffer];
     // Send the request to the worker
@@ -491,13 +487,56 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     }
   }
 
+  private framesBeingProcessed = new Map<number, ImageData>();
+  private errorImages = new Map<string, HTMLCanvasElement>();
   /**
    * Handle frames processed by the web worker, displaying the received
    * overlay image above the video image.
    */
   handleProcessedCameraFrame = async (response: ProcessFrameResponse ) => {
     console.log("handleProcessedCameraFrame", (Date.now() % 100000) / 1000);
-    const {width, height, rgbImageAsArrayBuffer, diceKeyReadJson, isFinished} = response;
+    const {requestId, width, height, rgbImageAsArrayBuffer, diceKeyReadJson, isFinished} = response;
+    const imageData = this.framesBeingProcessed.get(requestId);
+    this.framesBeingProcessed.delete(requestId);
+
+    const facesRead = FaceRead.fromJson(diceKeyReadJson) as TupleOf25Items<FaceRead> | undefined;
+    if (facesRead && imageData) {
+      const facesReadWithErrors = facesRead.filter( f => f.errors && f.errors.length > 0);
+      if (facesReadWithErrors.length == 0) {
+        //
+        // The faces were ready perfectly and there are no errors to correct.
+        AppState.Scanning.DieErrorImageMap.clear();
+        AppState.Scanning.FacesRead.set(undefined);  
+        AppState.EncryptedCrossTabState.instance!.diceKey.value =
+          DiceKey( facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
+
+      } else {
+        //
+        // There are errors that will need to be corrected.
+        const identifiersOfFacesWithErrors = new Set<string>(...
+          facesReadWithErrors.map( f => f.uniqueIdentifier )
+        );
+        // Remove images of erroneously-scanned dice that are no longer needed because
+        // the errors have been resolved or replaced
+        [...AppState.Scanning.DieErrorImageMap.keys()]
+          // filter to identifier dead ids
+          .filter( id => !identifiersOfFacesWithErrors.has(id) )
+          // then remove them
+          .forEach( (deadId) => AppState.Scanning.DieErrorImageMap.delete(deadId) );
+
+        // Capture images of faces in current scan that have errors
+        const imageBitmap = await createImageBitmap(imageData);
+        for (const face of facesReadWithErrors) {
+          if (!this.errorImages.has(face.uniqueIdentifier)) {
+            // Get the image of the die with an error and store it where we can get to it
+            // if we need the user to verify that we read it correctly.
+            const faceReadImageData = getImageOfFaceRead(imageBitmap, face, this.options.dieRenderingCanvasSize);
+            AppState.Scanning.DieErrorImageMap.set(face.uniqueIdentifier, faceReadImageData);
+          }
+        }
+      }
+    }
+
     const {overlayCanvas} = this;
     if (overlayCanvas) {
       // Ensure the overlay canvas is the same size as the captured canvas
@@ -512,16 +551,14 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       this.drawImageOntoVideoCanvas(imageBitmap);
     }
 
-    if (isFinished && !this.finishDelayInProgress) {
-      const diceKey = DiceKey(
-        (JSON.parse(diceKeyReadJson) as FaceReadJson[])
-        .map( FaceRead.fromJson )
-        .map( faceRead => faceRead.toFace() )
-      );
-      DiceKeyAppState.instance!.diceKey.value = diceKey;
+
+    if (facesRead && isFinished && !this.finishDelayInProgress) {
+      // const diceKey = DiceKey( facesRead.map( faceRead => faceRead.toFace() ));
+      // FIXME -- add known errors here.
       this.finishDelayInProgress = true;
       setTimeout( () => {
-        this.diceKeyLoadedEvent.send(diceKey);
+        // FIXME
+        this.diceKeyLoadedEvent.send(DiceKey( facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> ));
         this.remove();
         this.finishDelayInProgress = false;
         this.parent?.renderSoon()

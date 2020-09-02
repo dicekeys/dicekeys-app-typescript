@@ -35,7 +35,7 @@ import {
   UnsealingKeyJson
 } from "@dicekeys/seeded-crypto-js";
 import {
-  DiceKeyAppState
+  EncryptedCrossTabState
 } from "../state";
 const {
   Inputs,
@@ -257,7 +257,7 @@ const getRequestContextFromUrl = (
   const requestId = searchParams.get(ApiStrings.Inputs.COMMON.requestId);
   const authToken = searchParams.get(ApiStrings.Inputs.COMMON.authToken) ?? undefined;
   if (authToken != null ) {
-    const authUrl = DiceKeyAppState.instance?.getUrlForAuthenticationToken(authToken);
+    const authUrl = EncryptedCrossTabState.instance?.getUrlForAuthenticationToken(authToken);
     if (authUrl != null) {
       respondTo = authUrl;
       hostValidatedViaAuthToken = true;
@@ -298,7 +298,7 @@ export const urlApiResponder = (
     const requestId = requestUrl.searchParams.get(ApiStrings.Inputs.COMMON.requestId);
     if (typeof respondTo === "string" && typeof requestId === "string") {
       const responseUrl = new URL(respondTo);
-      const authToken = DiceKeyAppState.instance?.addAuthenticationToken(respondTo);
+      const authToken = EncryptedCrossTabState.instance?.addAuthenticationToken(respondTo);
       responseUrl.searchParams.set(Outputs.COMMON.requestId, requestId);
       if (authToken) {
         responseUrl.searchParams.set(Outputs.getAuthToken.authToken, authToken);

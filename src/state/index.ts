@@ -1,4 +1,5 @@
-export * from "./app-state-dicekey";
+export * from "./encrypted-cross-tab-state";
 
+import * as Scanning from "./scanning";
 import * as Step from "./steps";
-export {Step};
+export {Scanning, Step};

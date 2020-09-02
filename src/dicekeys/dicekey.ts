@@ -11,7 +11,7 @@ import {
   FaceOrientationLetterTrblOrUnknown,
   InvalidFaceOrientationLettersTrblOrUnknownException,
   FaceOrientationLettersTrbl
-} from "./face";
+} from "@dicekeys/read-dicekey-js";
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 
 
@@ -22,7 +22,7 @@ export const NumberOfFacesInKey = 25;
  * define an array of 25 items
  * (an array T[25] in a languages that support arrays with typed lengths)
  */
-type TupleOf25Items<T> = [
+export type TupleOf25Items<T> = [
   T, T, T, T, T,
   T, T, T, T, T,
   T, T, T, T, T,
@@ -30,7 +30,7 @@ type TupleOf25Items<T> = [
   T, T, T, T, T
 ];
 
-type ReadOnlyTupleOf25Items<T> = /* readonly */ [
+export type ReadOnlyTupleOf25Items<T> = /* readonly */ [
   T, T, T, T, T,
   T, T, T, T, T,
   T, T, T, T, T,
@@ -81,15 +81,15 @@ const validateDiceKey = (diceKey: readonly Face[], requireOneOfEachLetter: boole
   const lettersPresent = new Set<FaceLetter>();
   const absentLetters = new Set<FaceLetter>(FaceLetters);
   const repeatedLetters = new Set<FaceLetter>();
-  diceKey.forEach( ({letter, digit, orientationAsLowercaseLetterTRBL}, position) => {
+  diceKey.forEach( ({letter, digit, orientationAsLowercaseLetterTrbl}, position) => {
     if (!FaceLetter.isValid(letter)) {
       throw new InvalidFaceLetterException(letter, {position});
     }
     if (!FaceDigit.isValid(digit)) {
       throw new InvalidFaceDigitException(digit, {position});
     }
-    if (!FaceOrientationLetterTrblOrUnknown.isValid(orientationAsLowercaseLetterTRBL)) {
-      throw new InvalidFaceOrientationLettersTrblOrUnknownException(orientationAsLowercaseLetterTRBL, {position});
+    if (!FaceOrientationLetterTrblOrUnknown.isValid(orientationAsLowercaseLetterTrbl)) {
+      throw new InvalidFaceOrientationLettersTrblOrUnknownException(orientationAsLowercaseLetterTrbl, {position});
     }
     if (letter != null && lettersPresent.has(letter)) {
       repeatedLetters.add(letter);
@@ -127,10 +127,10 @@ const getRandomDiceKey = (numberOfFaces: number = 6): DiceKey => {
     // Generate a digit at random
     const digit = ((getRandomUInt32() % numberOfFaces) + 1).toString() as FaceDigit;
     const clockwiseOrientationsFromUpright = getRandomUInt32() % 4;
-    const orientationAsLowercaseLetterTRBL =
+    const orientationAsLowercaseLetterTrbl =
       FaceOrientationLettersTrbl[Clockwise90DegreeRotationsFromUpright(clockwiseOrientationsFromUpright % 4)];
     const faceAndOrientation: Face = {
-      digit, letter, orientationAsLowercaseLetterTRBL
+      digit, letter, orientationAsLowercaseLetterTrbl
     };
     return faceAndOrientation;
   }) as DiceKey;
@@ -151,7 +151,7 @@ export const DiceKeyInHumanReadableForm = (diceKey: DiceKey): DiceKeyInHumanRead
   diceKey.map( face =>
     (face.letter != null ? face.letter : "?") +
     (face.digit != null ? face.digit : "?") +
-    (face.orientationAsLowercaseLetterTRBL || "?")
+    (face.orientationAsLowercaseLetterTrbl || "?")
   ).join("") as DiceKeyInHumanReadableForm
 
 const diceKeyFromHumanReadableForm = (
@@ -165,13 +165,13 @@ const diceKeyFromHumanReadableForm = (
     const [
       letter,
       digitString,
-      orientationAsLowercaseLetterTRBL
+      orientationAsLowercaseLetterTrbl
     ] = humanReadableForm.substr(3 * position, 3).split("");
     const positionObj = {position: position as FacePosition};
     const faceAndOrientation: Face = {
       letter: FaceLetter(letter, positionObj),
       digit: FaceDigit(digitString, positionObj),
-      orientationAsLowercaseLetterTRBL: FaceOrientationLetterTrblOrUnknown(orientationAsLowercaseLetterTRBL, positionObj)
+      orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrblOrUnknown(orientationAsLowercaseLetterTrbl, positionObj)
     };
     return faceAndOrientation;
   }) as readonly Face[] as DiceKey;
@@ -188,7 +188,7 @@ const diceKeyFromHumanReadableForm = (
 export type DiceKey<F extends Face = Face> = ReadOnlyTupleOf25Items<F>;
 export type PartialDiceKey = ReadOnlyTupleOf25Items<Partial<Face>>
 /**
- * Construct a dice key either from a tuple of 25 ElemeentFace objects,
+ * Construct a dice key either from a tuple of 25 ElementFace objects,
  * 25 indexes (which represent a element, face, and rotation), or from the
  * 75-character representation used by the OCR algorithm.
  * @param diceKeyOr25FaceIndexesOr29WordsOrOcrResultString 
@@ -251,15 +251,15 @@ type RotateFaceFn<F extends Face> = (
   ) => F;
 
 const defaultRotateFaceFn = <F extends Face>(
-    {orientationAsLowercaseLetterTRBL, ...rest}: F,
+    {orientationAsLowercaseLetterTrbl, ...rest}: F,
     clockwise90DegreeTurnsToRotate: number
 ) => ({
   ...rest,
   // Since we're turning the box clockwise, the rotation of each element rotates as well
-  // If it was rightside up (0) and we rotate the box 90, it's now at 90
+  // If it was right-side up (0) and we rotate the box 90, it's now at 90
   // If it was upside down (180), and we rotate it the box 270,
   // it's now at 270+90 = 270 (mod 360)
-  orientationAsLowercaseLetterTRBL: FaceOrientationLetterTrblOrUnknown.rotate(orientationAsLowercaseLetterTRBL, clockwise90DegreeTurnsToRotate)
+  orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrblOrUnknown.rotate(orientationAsLowercaseLetterTrbl, clockwise90DegreeTurnsToRotate)
 } as F)
 
 export function rotateDiceKey<F extends Face = Face>(
@@ -285,7 +285,7 @@ export function rotateDiceKey<F extends Face = Face>(
 
 const removeOrientations = <F extends Face = Face>(
   diceKey: DiceKey<F>,
-): DiceKey => DiceKey<F>(diceKey.map( face => ({...face, orientationAsLowercaseLetterTRBL: "?"})));
+): DiceKey => DiceKey<F>(diceKey.map( face => ({...face, orientationAsLowercaseLetterTrbl: "?"})));
 
 
 const FaceRotationsNonStationary = [1, 2, 3] as const;
@@ -326,7 +326,7 @@ const applyDerivationOptions = (
 }
 
 /**
- * Create a seed string frmo a DiceKey and a set of derivation options.
+ * Create a seed string from a DiceKey and a set of derivation options.
  * 
  * If the derivation options specify `"excludeOrientationOfFaces": true`, then
  * the first step will remove all orientations from the DiceKey.
@@ -364,4 +364,4 @@ DiceKey.removeOrientations = removeOrientations;
 DiceKey.toSeedString = toSeedString;
 DiceKey.applyDerivationOptions = applyDerivationOptions;
 DiceKey.cornerIndexesClockwise = [0, 4, 24, 20] as const;
-DiceKey.cornerIndexeSet = new Set<number>(DiceKey.cornerIndexesClockwise);
+DiceKey.cornerIndexSet = new Set<number>(DiceKey.cornerIndexesClockwise);

@@ -7,8 +7,8 @@ import {
   DiceKeySvg
 } from "./dicekey-svg";
 import {
-  DiceKeyAppState
-} from "../state/app-state-dicekey";
+  EncryptedCrossTabState
+} from "../state/encrypted-cross-tab-state";
 import {
   DiceKey
 } from "../dicekeys/dicekey";
@@ -43,7 +43,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
   public forgetEvent = new ComponentEvent(this);
 
   /**
-   * The code supporting the dmeo page cannot until the WebAssembly module for the image
+   * The code supporting the demo page cannot until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */
@@ -121,7 +121,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
           InputButton({
             value: "Forget DiceKey",
             events: (events) => events.click.on( () => {
-              DiceKeyAppState.instance?.diceKey.remove();
+              EncryptedCrossTabState.instance?.diceKey.remove();
               this.forgetEvent.send();
               this.remove();    
             })

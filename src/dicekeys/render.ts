@@ -1,17 +1,12 @@
 import {
+  letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes,
   Face,
   FaceLetters, 
-  faceRotationLetterToClockwiseAngle
-} from "../dicekeys/face";
-import {
-  Point
-} from "../dicekeys/undoverline"
-import {
-  letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes,
-  // FaceWithUndoverlineCodes,
-  UndoverlineCodes, getUndoverlineCodes
-} from "../dicekeys/undoverline-tables";
-import {FaceDimensionsFractional} from "../dicekeys/face-dimensions";
+  faceRotationLetterToClockwiseAngle,
+  Point,
+  UndoverlineCodes, getUndoverlineCodes,
+  FaceDimensionsFractional
+} from "@dicekeys/read-dicekey-js";
 import { PartialDiceKey, DiceKey } from "./dicekey";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
@@ -110,7 +105,7 @@ const renderFaceForSizes = (sizes: Sizes) => (
   const dieTop = center.y - 0.5 * sizes.linearScaling;
   const undoverlineLeft = dieLeft + sizes.linearScaling * FaceDimensionsFractional.undoverlineLeftEdge;
   const firstDotLeft = dieLeft + sizes.linearScaling * FaceDimensionsFractional.undoverlineFirstDotLeftEdge;
-  const {letter, digit, orientationAsLowercaseLetterTRBL = "?"} = face;
+  const {letter, digit, orientationAsLowercaseLetterTrbl = "?"} = face;
   const {underlineCode, overlineCode} = (letter != null && digit != null ) ? getUndoverlineCodes({letter, digit}) : {underlineCode: undefined, overlineCode: undefined};
 
   // Draw an underline or overline
@@ -169,7 +164,7 @@ const renderFaceForSizes = (sizes: Sizes) => (
   // Rotate the canvas in counterclockwise before rendering, so that
   // when the rotation is restored (clockwise) the face will be in the
   // correct direction
-  const rotateCanvasBy = faceRotationLetterToClockwiseAngle(orientationAsLowercaseLetterTRBL);
+  const rotateCanvasBy = faceRotationLetterToClockwiseAngle(orientationAsLowercaseLetterTrbl);
   if (rotateCanvasBy !== 0) {
 //        ctx.save();
       ctx.translate(+center.x, +center.y);
@@ -184,7 +179,7 @@ const renderFaceForSizes = (sizes: Sizes) => (
   // Calculate the positions of the letter and digit
   // Letter is left of center
   const letterX = center.x - sizes.charXOffsetFromCenter;
-  // Digit is right of cetner
+  // Digit is right of center
   const digitX = center.x + sizes.charXOffsetFromCenter;
   const textY = dieTop + FaceDimensionsFractional.textBaselineY * sizes.linearScaling
   // Render the letter and digit
@@ -267,7 +262,7 @@ export const renderDiceKey = (
     // if obscuring, show only the top left and bottom right dice in canonical form.
     const x = centerX + linearFaceSize * (-2 + (index % 5));
     const y =  centerY + linearFaceSize * (-2 + Math.floor(index / 5));
-    const isCornerDie = DiceKey.cornerIndexeSet.has(index);
+    const isCornerDie = DiceKey.cornerIndexSet.has(index);
     renderFace(ctx, face, {x, y}, index, {...options, leaveDieBlank: hide21 && !isCornerDie} );
     if (hide21) {
       ctx.fillStyle = `rgba(${diceBoxColorRGB.r},${diceBoxColorRGB.g},${diceBoxColorRGB.b},${ isCornerDie ? 0.8 : 0.97 })`;

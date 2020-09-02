@@ -17,7 +17,7 @@ import {
   ScanDiceKey
 } from "./scan-dicekey"
 import {
-  DiceKeyAppState
+  EncryptedCrossTabState
 } from "../state";
 import {
   ApproveApiCommand
@@ -79,7 +79,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
     this.derivationOptions = DerivationOptions(derivationOptionsJson);
     if (this.derivationOptions.proofOfPriorDerivation) {
       // Once the diceKey is available, calculate if the proof of prior derivation is valid
-      DiceKeyAppState.instance?.diceKey.observe( async (diceKey) => {
+      EncryptedCrossTabState.instance?.diceKey.observe( async (diceKey) => {
         if (diceKey) {
           const seedString = DiceKey.toSeedString(diceKey, this.derivationOptions);
           const {verified} = await ApiRequestContainer.verifyDerivationOptionsWorker.calculate({seedString, derivationOptionsJson});
@@ -116,9 +116,9 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
   async render() {
     super.render();
     const {request, host} = this.options.requestContext;
-    const diceKey = DiceKeyAppState.instance?.diceKey.value;
+    const diceKey = EncryptedCrossTabState.instance?.diceKey.value;
     // Re-render whenver the diceKey value changes.
-    DiceKeyAppState.instance?.diceKey.changedEvent.on( this.renderSoon );
+    EncryptedCrossTabState.instance?.diceKey.changedEvent.on( this.renderSoon );
 
     this.append(
       Div({class: "primary-container"},

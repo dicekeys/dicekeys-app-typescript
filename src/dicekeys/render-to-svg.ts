@@ -1,17 +1,13 @@
 import * as SVG from "./svg";
 import {
+  letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes,
   Face,
   FaceLetters, 
-  faceRotationLetterToClockwiseAngle
-} from "../dicekeys/face";
-import {
-  Point
-} from "../dicekeys/undoverline"
-import {
-  letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes,
-  UndoverlineCodes, getUndoverlineCodes
-} from "../dicekeys/undoverline-tables";
-import {FaceDimensionsFractional} from "../dicekeys/face-dimensions";
+  faceRotationLetterToClockwiseAngle,
+  Point,
+  UndoverlineCodes, getUndoverlineCodes,
+  FaceDimensionsFractional
+} from "@dicekeys/read-dicekey-js";
 import { PartialDiceKey, DiceKey } from "./dicekey";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
@@ -130,7 +126,7 @@ export const renderFace = (
   linearFractionOfCoverage: number = 5/8,
 ): SVGElement =>  {
   const radius = 1 / 12;
-  const clockwiseAngle = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTRBL || "?");
+  const clockwiseAngle = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTrbl || "?");
   return SVG.g({
       transform: `translate(${center.x}, ${center.y})`,
     },
@@ -186,7 +182,7 @@ export const renderDiceKey = (
     svgElement.removeChild(svgElement.lastChild);
   }
 
-  // new SVG element, viewbox = ...
+  // new SVG element, viewBox = ...
   const top = -linearSizeOfBox / 2;
   const left = -linearSizeOfBox / 2;
   const radius = linearSizeOfBox / 50;
@@ -221,7 +217,7 @@ export const renderDiceKey = (
     // if obscuring, show only the top left and bottom right dice in canonical form.
     const x = distanceBetweenDieCenters * (-2 + (index % 5));
     const y = distanceBetweenDieCenters * (-2 + Math.floor(index / 5));
-    const isCornerDie = DiceKey.cornerIndexeSet.has(index);
+    const isCornerDie = DiceKey.cornerIndexSet.has(index);
     svgElement.appendChild(renderFace(hide21 && !isCornerDie ? {} : face, {x, y}));
     if (hide21) {
       svgElement.appendChild(SVG.rect({

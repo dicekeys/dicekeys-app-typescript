@@ -17,7 +17,7 @@ import {
 } from "../dicekeys/dicekey";
 import {
   Step,
-  DiceKeyAppState
+  EncryptedCrossTabState
 } from "../state"
 import {
   postMessageApiResponder
@@ -32,11 +32,11 @@ import {
 
 
 interface BodyOptions extends Attributes {
-  appState: DiceKeyAppState;
+  appState: EncryptedCrossTabState;
 }
 
 export class AppMain extends Component<BodyOptions, HTMLElement> {
-  appState: DiceKeyAppState;
+  appState: EncryptedCrossTabState;
 
 //  action: PageAction = "home";
 
@@ -73,7 +73,7 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
 
 
   loadDiceKey = async (): Promise<DiceKey> => {
-    const diceKey = DiceKeyAppState.instance?.diceKey.value;
+    const diceKey = EncryptedCrossTabState.instance?.diceKey.value;
     if (diceKey) {
       return diceKey;
     }
@@ -120,7 +120,7 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
           this.loadDiceKey();
         });
         homeComponent.createRandomDiceKeyButtonClicked.on( () => {
-          DiceKeyAppState.instance?.diceKey.set(DiceKey.fromRandom());
+          EncryptedCrossTabState.instance?.diceKey.set(DiceKey.fromRandom());
           this.renderSoon();
         });
       }));
