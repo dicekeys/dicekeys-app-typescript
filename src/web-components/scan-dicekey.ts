@@ -49,7 +49,7 @@ interface ScanDiceKeyOptions extends Attributes {
   msDelayBetweenSuccessAndClosure?: number;
   host: string;
   derivationOptions?: DerivationOptions;
-  dieRenderingCanvasSize: number;
+  dieRenderingCanvasSize?: number;
 }
 
 
@@ -530,7 +530,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
           if (!this.errorImages.has(face.uniqueIdentifier)) {
             // Get the image of the die with an error and store it where we can get to it
             // if we need the user to verify that we read it correctly.
-            const faceReadImageData = getImageOfFaceRead(imageBitmap, face);
+            const faceReadImageData = getImageOfFaceRead(imageBitmap, face, this.options.dieRenderingCanvasSize);
             AppState.Scanning.DieErrorImageMap.set(face.uniqueIdentifier, faceReadImageData);
           }
         }
