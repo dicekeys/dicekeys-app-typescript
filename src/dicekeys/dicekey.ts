@@ -22,7 +22,7 @@ export const NumberOfFacesInKey = 25;
  * define an array of 25 items
  * (an array T[25] in a languages that support arrays with typed lengths)
  */
-type TupleOf25Items<T> = [
+export type TupleOf25Items<T> = [
   T, T, T, T, T,
   T, T, T, T, T,
   T, T, T, T, T,
@@ -30,7 +30,7 @@ type TupleOf25Items<T> = [
   T, T, T, T, T
 ];
 
-type ReadOnlyTupleOf25Items<T> = /* readonly */ [
+export type ReadOnlyTupleOf25Items<T> = /* readonly */ [
   T, T, T, T, T,
   T, T, T, T, T,
   T, T, T, T, T,

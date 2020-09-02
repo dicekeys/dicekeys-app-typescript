@@ -14,7 +14,7 @@ import {randomBytes} from "crypto";
 
 const defaultAppStageExpirationTimeInMinutes = 30;
 
-export class DiceKeyAppState extends EncryptedAppStateStore {
+export class EncryptedCrossTabState extends EncryptedAppStateStore {
   constructor(
     seededCryptoModule: SeededCryptoModuleWithHelpers,
     expireAfterMinutesUnused: number
@@ -28,7 +28,10 @@ export class DiceKeyAppState extends EncryptedAppStateStore {
     });
   }
 
-  public readonly diceKey = this.addEncyrptedField<DiceKey>("dicekey");
+  /**
+   * 
+   */
+  public readonly diceKey = this.addEncryptedField<DiceKey>("dicekey");
   public readonly windowsOpen = new TabsAndWindowsSharingThisState("windows-sharing-dicekeys-app-state");
 
   private static authenticationFieldName = (authenticationToken: string) =>
@@ -45,7 +48,7 @@ export class DiceKeyAppState extends EncryptedAppStateStore {
         return urlSafeBase64Encode((randomBytes(20)));
       }
     })();
-    const field = this.addEncyrptedField<string>(DiceKeyAppState.authenticationFieldName(authToken));
+    const field = this.addEncryptedField<string>(EncryptedCrossTabState.authenticationFieldName(authToken));
     field.value = respondToUrl;
     return authToken;
   };
@@ -53,20 +56,20 @@ export class DiceKeyAppState extends EncryptedAppStateStore {
   getUrlForAuthenticationToken = (
     authToken: string
   ) : string | undefined =>
-    this.addEncyrptedField<string>(DiceKeyAppState.authenticationFieldName(authToken)).value;
+    this.addEncryptedField<string>(EncryptedCrossTabState.authenticationFieldName(authToken)).value;
 
 
-  private static instanceWritable: DiceKeyAppState | undefined;
-  public static readonly instancePromise: Promise<DiceKeyAppState> = (async () => {
+  private static instanceWritable: EncryptedCrossTabState | undefined;
+  public static readonly instancePromise: Promise<EncryptedCrossTabState> = (async () => {
     const seededCryptoModule = await SeededCryptoModulePromise;
-    DiceKeyAppState.instanceWritable = new DiceKeyAppState(
+    EncryptedCrossTabState.instanceWritable = new EncryptedCrossTabState(
       seededCryptoModule,
       defaultAppStageExpirationTimeInMinutes
     );
-    return DiceKeyAppState.instanceWritable;
+    return EncryptedCrossTabState.instanceWritable;
   })();
-  public static get instance(): DiceKeyAppState | undefined {
-    return DiceKeyAppState.instanceWritable;
+  public static get instance(): EncryptedCrossTabState | undefined {
+    return EncryptedCrossTabState.instanceWritable;
   }
 }
 

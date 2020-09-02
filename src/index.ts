@@ -1,7 +1,7 @@
 
 import {
-  DiceKeyAppState
-} from "./state/app-state-dicekey"
+  EncryptedCrossTabState
+} from "./state/encrypted-cross-tab-state"
 import {
   AppMain
 } from "./web-components/main";
@@ -9,7 +9,7 @@ import { DerivationOptions, ApiStrings } from "@dicekeys/dicekeys-api-js";
 
 window.addEventListener("load", () => {
   
-  DiceKeyAppState.instancePromise.then( (appState) => {
+  EncryptedCrossTabState.instancePromise.then( (appState) => {
     const app = new AppMain({appState});
 
     window.addEventListener("resize", app.renderSoon );

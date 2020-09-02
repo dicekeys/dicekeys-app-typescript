@@ -26,7 +26,7 @@
   "license": "UNLICENSED. All rights reserved",
   "dependencies": {
     "@dicekeys/dicekeys-api-js": "0.0.67",
-    "@dicekeys/read-dicekey-js": "0.0.11",
+    "@dicekeys/read-dicekey-js": "0.0.13",
     "@dicekeys/seeded-crypto-js": "^0.1.26"
   },
   "browserslist": [

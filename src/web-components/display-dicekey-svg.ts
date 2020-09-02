@@ -7,8 +7,8 @@ import {
   DiceKeySvg
 } from "./dicekey-svg";
 import {
-  DiceKeyAppState
-} from "../state/app-state-dicekey";
+  EncryptedCrossTabState
+} from "../state/encrypted-cross-tab-state";
 import {
   DiceKey
 } from "../dicekeys/dicekey";
@@ -121,7 +121,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
           InputButton({
             value: "Forget DiceKey",
             events: (events) => events.click.on( () => {
-              DiceKeyAppState.instance?.diceKey.remove();
+              EncryptedCrossTabState.instance?.diceKey.remove();
               this.forgetEvent.send();
               this.remove();    
             })

@@ -129,11 +129,11 @@ export class LocalStorageStringToObjMap<V> extends LocalStorageField<{[key: stri
 
 export class TabsAndWindowsSharingThisState extends LocalStorageStringToObjMap<number> {
   static myWindowId = urlSafeBase64Encode((getRandomBytes(20)));
-  static heartbeatFrequencyinMs = 5000;
+  static heartbeatFrequencyInMs = 5000;
   static heartbeat: any;
 
   sendHeartbeat = () => {
-    this.setField(TabsAndWindowsSharingThisState.myWindowId, (new Date()).getTime() + 2 * TabsAndWindowsSharingThisState.heartbeatFrequencyinMs);
+    this.setField(TabsAndWindowsSharingThisState.myWindowId, (new Date()).getTime() + 2 * TabsAndWindowsSharingThisState.heartbeatFrequencyInMs);
   }
 
   constructor (nameSuffix: string = `tabs-and-windows-sharing-this-state`) {
@@ -141,7 +141,7 @@ export class TabsAndWindowsSharingThisState extends LocalStorageStringToObjMap<n
     if (TabsAndWindowsSharingThisState.heartbeat == null) {
       TabsAndWindowsSharingThisState.heartbeat = setInterval(
         this.sendHeartbeat,   
-        TabsAndWindowsSharingThisState.heartbeatFrequencyinMs
+        TabsAndWindowsSharingThisState.heartbeatFrequencyInMs
       );
     }
     window.addEventListener("unload", () => {
@@ -158,7 +158,7 @@ export class TabsAndWindowsSharingThisState extends LocalStorageStringToObjMap<n
         if (windowId === TabsAndWindowsSharingThisState.myWindowId) return false;        
         if (whenExpires < nowInMs) return false;
         // just in case the clock was reset
-        if (whenExpires > (nowInMs + 2 * TabsAndWindowsSharingThisState.heartbeatFrequencyinMs))
+        if (whenExpires > (nowInMs + 2 * TabsAndWindowsSharingThisState.heartbeatFrequencyInMs))
           return false;
 
         return true;
@@ -208,7 +208,7 @@ const getSessionEncryptionSymmetricKey = (
       .map( cookie => cookie.substr(cookiePrefix.length).trim())
       [0];
     if (cookieRead) {
-      // Write the cookie back, in orer to reset the expiration clock]
+      // Write the cookie back, in order to reset the expiration clock]
       setSessionKeySeedCookie(cookieRead);
     }
     return cookieRead;
@@ -282,7 +282,7 @@ export class EncryptedAppStateStore extends AppStateStore {
     this.symmetricKey = getSessionEncryptionSymmetricKey(this.constructor.name, seededCryptoModule, expireAfterMinutesUnused);
   }
 
-  protected addEncyrptedField = <T>(name: string) => new EncryptedStorageField<T>(name, this.symmetricKey);
+  protected addEncryptedField = <T>(name: string) => new EncryptedStorageField<T>(name, this.symmetricKey);
 
 
 }

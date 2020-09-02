@@ -13,14 +13,13 @@ import {
 } from "../web-component-framework"
 import "regenerator-runtime/runtime";
 import {
+  Face,
   FaceRead, getImageOfFaceRead
 } from "@dicekeys/read-dicekey-js";
 import {
-  DiceKey
+  DiceKey, TupleOf25Items
 } from "../dicekeys/dicekey";
-import { 
-  DiceKeyAppState
-} from "../state/app-state-dicekey";
+import * as AppState from "../state";
 
 import {
     ProcessFrameRequest,
@@ -50,6 +49,7 @@ interface ScanDiceKeyOptions extends Attributes {
   msDelayBetweenSuccessAndClosure?: number;
   host: string;
   derivationOptions?: DerivationOptions;
+  dieRenderingCanvasSize: number;
 }
 
 
@@ -118,6 +118,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   
   private readonly frameWorker: Worker;
 
+
   /**
    * A re-usable canvas into which to capture image frames
    */
@@ -172,6 +173,8 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     options: ScanDiceKeyOptions
   ) {
     super(options);
+
+  
     this.cameraSessionId = Math.random().toString() + Math.random().toString();
     // Create worker for processing camera frames
     this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
@@ -496,18 +499,39 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     const imageData = this.framesBeingProcessed.get(requestId);
     this.framesBeingProcessed.delete(requestId);
 
-    const facesRead = FaceRead.fromJson(diceKeyReadJson);
-    if (facesRead) {
+    const facesRead = FaceRead.fromJson(diceKeyReadJson) as TupleOf25Items<FaceRead> | undefined;
+    if (facesRead && imageData) {
       const facesReadWithErrors = facesRead.filter( f => f.errors && f.errors.length > 0);
-      if (facesReadWithErrors.length > 0 && imageData) {
+      if (facesReadWithErrors.length == 0) {
+        //
+        // The faces were ready perfectly and there are no errors to correct.
+        AppState.Scanning.DieErrorImageMap.clear();
+        AppState.Scanning.FacesRead.set(undefined);  
+        AppState.EncryptedCrossTabState.instance!.diceKey.value =
+          DiceKey( facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
+
+      } else {
+        //
+        // There are errors that will need to be corrected.
+        const identifiersOfFacesWithErrors = new Set<string>(...
+          facesReadWithErrors.map( f => f.uniqueIdentifier )
+        );
+        // Remove images of erroneously-scanned dice that are no longer needed because
+        // the errors have been resolved or replaced
+        [...AppState.Scanning.DieErrorImageMap.keys()]
+          // filter to identifier dead ids
+          .filter( id => !identifiersOfFacesWithErrors.has(id) )
+          // then remove them
+          .forEach( (deadId) => AppState.Scanning.DieErrorImageMap.delete(deadId) );
+
+        // Capture images of faces in current scan that have errors
+        const imageBitmap = await createImageBitmap(imageData);
         for (const face of facesReadWithErrors) {
-          const imageBitmap = await createImageBitmap(imageData);
           if (!this.errorImages.has(face.uniqueIdentifier)) {
-            const canvas = document.createElement("canvas")
-            canvas.setAttribute("width", "200");
-            canvas.setAttribute("height", "200");
-            const ctx = canvas.getContext("2d");
-            getImageOfFaceRead(ctx!, imageBitmap, face);
+            // Get the image of the die with an error and store it where we can get to it
+            // if we need the user to verify that we read it correctly.
+            const faceReadImageData = getImageOfFaceRead(imageBitmap, face);
+            AppState.Scanning.DieErrorImageMap.set(face.uniqueIdentifier, faceReadImageData);
           }
         }
       }
@@ -527,14 +551,14 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       this.drawImageOntoVideoCanvas(imageBitmap);
     }
 
-    if (facesRead && isFinished && !this.finishDelayInProgress) {
-      const diceKey = DiceKey( facesRead.map( faceRead => faceRead.toFace() ));
-      // FIXME -- add known errors here.
 
-      DiceKeyAppState.instance!.diceKey.value = diceKey;
+    if (facesRead && isFinished && !this.finishDelayInProgress) {
+      // const diceKey = DiceKey( facesRead.map( faceRead => faceRead.toFace() ));
+      // FIXME -- add known errors here.
       this.finishDelayInProgress = true;
       setTimeout( () => {
-        this.diceKeyLoadedEvent.send(diceKey);
+        // FIXME
+        this.diceKeyLoadedEvent.send(DiceKey( facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> ));
         this.remove();
         this.finishDelayInProgress = false;
         this.parent?.renderSoon()
