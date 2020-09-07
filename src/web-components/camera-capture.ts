@@ -1,3 +1,5 @@
+import dialogStyles from "./dialog.module.css";
+import styles from "./camera-capture.module.css";
 import {
   getElementDimensions,
   Component, Attributes,
@@ -172,10 +174,10 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     this.append(
       Div({class: "content"},
         this.camerasOnThisDevice.cameras.length == 0 ? this.camerasOnThisDevice : undefined,
-        Canvas(this.useImageCapture ? {} :{class: "overlay"}).with( c => this.overlayCanvasComponent = c ),
+        Canvas(this.useImageCapture ? {} :{class: styles.overlay}).with( c => this.overlayCanvasComponent = c ),
         Video({style: "display: none; visibility: hidden;"}).with( c => this.videoComponent = c ),
       ),
-      Div({class: "centered-controls"},
+      Div({class: dialogStyles.centered_controls},
         Select({style: "visibility: hidden;"}).withElement( e => this.cameraSelectionMenu = e )
       ),
     );

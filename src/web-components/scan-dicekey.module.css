@@ -1,0 +1,24 @@
+
+.ScanDiceKey {
+  background-color: rgba(0, 0, 0, 1);
+  border: black solid 1px;
+  display: flex;
+  flex-grow: 5;
+  flex-shrink: 5;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-height: 100%;
+}
+.hint {
+  font-size: 1.25em;
+  /* text-align: center; */
+}
+.scan_instruction {
+  font-size: 1.35em;
+  font-weight: 500;
+  text-align: center;
+  color: #f8f8ff;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}

@@ -1,3 +1,6 @@
+import dialogStyles from "./dialog.module.css";
+import layoutStyles from "./layout.module.css";
+
 import {
   Component, Attributes,
   ComponentEvent,
@@ -93,7 +96,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
         new DiceKeySvg({
           diceKey: this.options.diceKey
         }),
-        Div({class: "centered-controls"},
+        Div({class: dialogStyles.centered_controls},
           Label({style: `margin-bottom: 4px;`}, "Create a password for ",
             Select({value: "default"},
               Option({}),
@@ -107,7 +110,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
             })
           )
         ),
-        Div({class: "centered-container", style: `visibility: hidden`},
+        Div({class: layoutStyles.centered_column, style: `visibility: hidden`},
           new DisplayPassword({
             password: this.password,
             showCopyIcon: true
@@ -117,7 +120,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
               e.style.setProperty("visibility", password && password.length > 0 ? "visible" : "hidden")
           ))
         }),
-        Div({class: "centered-controls"},
+        Div({class: dialogStyles.centered_controls},
           InputButton({
             value: "Forget DiceKey",
             events: (events) => events.click.on( () => {

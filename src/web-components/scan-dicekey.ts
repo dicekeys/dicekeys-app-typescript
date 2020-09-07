@@ -1,3 +1,4 @@
+import styles from "./scan-dicekey.module.css";
 import {
   Component,
   ComponentEvent,
@@ -13,7 +14,6 @@ import {
   DiceKey, TupleOf25Items
 } from "../dicekeys/dicekey";
 import * as AppState from "../state";
-
 import {
     ProcessFrameRequest,
     ProcessFrameResponse,
@@ -163,6 +163,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     options: ScanDiceKeyOptions
   ) {
     super(options);
+    this.primaryElement.classList.add(styles.ScanDiceKey);
     this.cameraCapturePromise = new Promise<CameraCapture>( (resolve) => this.resolveCameraCapturePromise = resolve );
     this.workerReadyPromise = new Promise<boolean>( (resolve => this.resolveWorkerReadyPromise = resolve ));
 
@@ -189,12 +190,12 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     const {host} = this.options;
 
     this.append(
-      Div({class: "scan-instruction"}, `Use your camera to read your DiceKey`)
+      Div({class: styles.scan_instruction}, `Use your camera to read your DiceKey`)
     )
 
     if (host && seedHint) {
       this.append(
-        Div({class: "hint"},
+        Div({class: styles.hint},
           "According to ",
           describeHost(host),
           ", you provided the following hint to identify your DiceKey: ",
@@ -203,7 +204,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       );
     } else if (host && cornerLetters && cornerLetters.length === 4) {
       this.append(
-        Div({class: "hint"},
+        Div({class: styles.hint},
           "According to ",
           describeHost(host),
           ", you previously used a DiceKey with the letters ",

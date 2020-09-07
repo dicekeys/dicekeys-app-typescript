@@ -1,7 +1,7 @@
+import styles from "./app-main.module.css";
 import {
   Component, Attributes, Div
 } from "../web-component-framework"
-
 import { Exceptions, ApiStrings } from "@dicekeys/dicekeys-api-js";
 import {
   ApiRequestContainer
@@ -42,6 +42,7 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
 
   constructor(options: BodyOptions) {
     super(options, document.body);
+    this.primaryElement.classList.add(styles.AppMain);
     const {appState} = options;
     this.appState = appState;
 

@@ -1,3 +1,4 @@
+import styles from "./api.module.css"
 import {
   ApiStrings, Exceptions
 } from "@dicekeys/dicekeys-api-js"
@@ -70,7 +71,7 @@ const getKnownHost = (host:string): string | undefined => {
 export const describeHost = (host: string): Appendable => {
   const knownHost = getKnownHost(host);
   return (knownHost != null) ?
-      Span({class: "known-application-name", text: knownHost}) :
+      Span({class: styles.known_application_name, text: knownHost}) :
       // [//`The website at `,
       MonospaceSpan().setInnerText(host)
       //]

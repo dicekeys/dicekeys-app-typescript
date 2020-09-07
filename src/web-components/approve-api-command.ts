@@ -1,3 +1,6 @@
+import styles from "./approve-api-command.module.css";
+import layoutStyles from "./layout.module.css";
+
 import {
 //  Exceptions,
   DerivationOptions, ApiCalls, ApiStrings
@@ -235,7 +238,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
 
     //var orientationCheckbox: Checkbox;
     this.append(
-      Div({class: "dicekey-container"},
+      Div({class: styles.dicekey_container},
         this.renderDiceKey()
       )
     );
@@ -266,7 +269,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
       );
     }
     // this.append(
-    //   Div({class: 'dicekey-preservation-instruction'},
+    //   Div({class: styles.dicekey_preservation_instruction},
     //     Span({text: `When you make your choice, the DiceKeys app will forget your DiceKey.  If you want to keep this app open and your DiceKey in memory, `}, '&nbsp;'),
     //     A({href: window.origin, target:"_blank"}).append(`open a new app tab`),
     //     `&nbsp;`,
@@ -309,8 +312,8 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     }
     if (this.options.requestContext.request.command === ApiStrings.Commands.getPassword) {
       this.append(
-        Div({class: "centered-container"},
-          Div({class: "password-to-be-shared-label"}, Span({},
+        Div({class: layoutStyles.expandable_centered_column},
+          Div({class: styles.password_to_be_shared_label}, Span({},
             `password to be sent to&nbsp;`),
             describeHost(this.options.requestContext.host
           )),

@@ -1,0 +1,12 @@
+.centered_column, .expandable_centered_column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+}
+.expandable_centered_column {
+  flex-grow: 5;
+  flex-shrink: 5;
+  flex-basis: 20%;
+}
