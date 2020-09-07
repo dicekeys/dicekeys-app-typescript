@@ -40,16 +40,16 @@ import {
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
-// had a legitimate reason to, removing orientations make it easier and mroe reliable.
+// had a legitimate reason to, removing orientations make it easier and more reliable.
 
-// By removing orientnations from your DiceKey before generating a ___,
+// By removing orientations from your DiceKey before generating a ___,
 // your DiceKey will be more than a quadrillion
 // (one million billion) times easier to guess, but the number of possible
 // values will still be ... 
 
 // This hint makes your DiceKey 303,600 easier to guess.  However, the number of possible
 // guesses is still greater than ... .
-// The hint does make it possible for others to know that you used the same  DcieKey for mutiple
+// The hint does make it possible for others to know that you used the same  DiceKey for multiple
 // accounts.
 
 export interface ApiRequestOptions extends Attributes {
@@ -67,7 +67,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
   public userCancelledEvent = new ComponentEvent(this);
 
   /**
-   * The code supporting the dmeo page cannot until the WebAssembly module for the image
+   * The code supporting the demo page cannot until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */
@@ -117,7 +117,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
     super.render();
     const {request, host} = this.options.requestContext;
     const diceKey = EncryptedCrossTabState.instance?.diceKey.value;
-    // Re-render whenver the diceKey value changes.
+    // Re-render whenever the diceKey value changes.
     EncryptedCrossTabState.instance?.diceKey.changedEvent.on( this.renderSoon );
 
     this.append(

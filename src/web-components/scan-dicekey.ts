@@ -1,15 +1,8 @@
 import {
-  getElementDimensions,
-  Component, Attributes,
+  Component,
   ComponentEvent,
-  Canvas,
   Div,
-  MonospaceSpan,
-  Select,
-  Option,
-  Video,
-} from "../web-component-framework"
-import {
+  MonospaceSpan
 } from "../web-component-framework"
 import "regenerator-runtime/runtime";
 import {
@@ -32,26 +25,17 @@ import {
   describeHost
 } from "../phrasing/api";
 import {
-  Camera,
-  CamerasOnThisDevice,
-  videoConstraintsForDevice
-} from "./cameras-on-this-device";
-
+  CameraCapture, CameraCaptureOptions
+} from "./camera-capture"
+import { VerifyFaceRead } from "./verify-face-read";
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
-// interface Frame {
-//   width: number;
-//   height: number;
-//   rgbImageAsArrayBuffer: ArrayBufferLike;
-// }
-
-interface ScanDiceKeyOptions extends Attributes {
+interface ScanDiceKeyOptions extends CameraCaptureOptions {
   msDelayBetweenSuccessAndClosure?: number;
   host: string;
   derivationOptions?: DerivationOptions;
   dieRenderingCanvasSize?: number;
 }
-
 
 /**
  * This component scans (reads) a DiceKey using the device camera(s).
@@ -71,83 +55,89 @@ interface ScanDiceKeyOptions extends Attributes {
  * is not rendered, seems to address that problem.
  */
 export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
-  /**
-   * This separate module tracks the cameras attached to the device
-   */
-  private readonly camerasOnThisDevice: CamerasOnThisDevice;
+  private resolveCameraCapturePromise: undefined | ((result: CameraCapture) => void);
+  private readonly cameraCapturePromise: Promise<CameraCapture>;
+  public resolveWorkerReadyPromise: undefined | ((result: boolean) => void);
+  private readonly workerReadyPromise: Promise<boolean>;
+
+  cameraCapture: CameraCapture  | undefined;
+
+  // FIXME - document
+  // Progress State
 
   /**
-   * The id of the camera from which the current video feed originates.
+   * The faces read during the process of scanning the dice, which includes details of overlines
+   * and underlines so that we can correct potential errors.
    */
-  camerasDeviceId: string | undefined;
+  private facesRead?: TupleOf25Items<FaceRead>;
+
+  get allFacesReadHaveMajorityValues(): boolean {
+    return this.facesRead?.filter( faceRead =>
+      faceRead.letter != null && faceRead.digit != null
+    ).length === 25;
+  }
+
+  get facesReadThatUserReportedInvalid(): FaceRead[] {
+    return this.facesRead?.filter( f => f.userValidationOutcome === "user-rejected") ?? []
+  }
+
+  get userHasInvalidatedAFace(): boolean {
+    return this.facesReadThatUserReportedInvalid.length > 0;
+  }
 
   /**
-   * Set to true when we are able to use the ImageCapture API to grab
-   * frames from the camera and images are rendered into a canvas
+   * The set of faces read that contain errors that the user has yet
+   * to verify were properly corrected
    */
-  private useImageCapture: boolean = imageCaptureSupported;
-  /**
-   * Set to true when raw input frames are sent directly to a video element
-   * and then captured by scraping them out of the video element
-   */
-  private get useVideoToDisplay(): boolean {return !this.useImageCapture };
+  get facesReadThatContainErrorsAndHaveNotBeenValidated(): FaceRead[] {
+    return this.facesRead?.filter( f => f.errors && f.errors.length > 0 &&
+        f.userValidationOutcome == null || f.userValidationOutcome === "user-rejected" ) ?? []
+  }
 
   /**
-   * When ImageCapture is not available and we render raw video feeds, we
-   * overlay a translucent image displaying what we were and were not able
-   * to read from the last analyzed frame using this canvas element, which
-   * is at a higher z-index than the video below it.
+   * Determines if all faces have either been read without errors or if all
+   * all corrected errors have been validated by the user so as to allow
+   * us to conclude that the DiceKey has been read correctly..
    */
-  private overlayCanvasComponent?: Canvas;
-  private get overlayCanvas() {return this.overlayCanvasComponent?.primaryElement};
-  private get overlayCanvasCtx() {return this.overlayCanvas?.getContext("2d")};
+  get allFacesHaveBeenValidated(): boolean {
+    return this.facesRead != null &&
+      this.facesRead.length === 25 &&
+      !this.userHasInvalidatedAFace &&
+      this.facesReadThatContainErrorsAndHaveNotBeenValidated.length == 0;    
+  }
+
+  protected finishDelayInProgress: boolean = false;
 
   /**
-   * For rendering raw camera input to the screen
+   * Track the set of images (frames) being processed.  In the current implementation,
+   * we're only processing one at a time, but a future implementation might pipeline
+   * two or more in parallel if it's safe to assume that there is parallelism to exploit.
    */
-  private videoComponent?: Video;
+  private framesBeingProcessed = new Map<number, ImageData>();
 
   /**
-   * For rendering camera input to the screen after it has been
-   * processed and augmented to display what we've been able to read.
+   * If a face is read with errors, keep an image of the face so that the
+   * user can verify that the error correction didn't fail. 
    */
-  private videoCanvas?: HTMLCanvasElement;
+  private errorImages = new Map<string, ImageBitmap>();
 
-  private cameraSelectionMenu?: HTMLSelectElement;
-  private get videoPlayer() {return this.videoComponent?.primaryElement}
-  
+  /**
+   * The background worker that processes image frames so that the
+   * UI thread is not delayed by their processing.
+   */
   private readonly frameWorker: Worker;
-
-
-  /**
-   * A re-usable canvas into which to capture image frames
-   */
-  private captureCanvas?: HTMLCanvasElement;
-  private captureCanvasCtx?: CanvasRenderingContext2D;
-
-  /**
-   * The media stream from the current camera
-   */
-  private mediaStream?: MediaStream;
 
   /**
    * A session id for the current camera stream
    */
   private cameraSessionId?: string;
 
-  /**
-   * The ImageCapture object used to grab frames from the camera
-   * (not supported by all browsers.  We fallback to rendering
-   * to a video element and then capturing frames out of the
-   * video rendered to the screen.)
-   */
-  private imageCapture?: ImageCapture;
-
-  // Set to true when the first frame has been drawn.
-  // Allows us to draw first ImageCapture frame loaded without delay.
-  private hasAnImageBeenDrawnOntoTheVideoCanvas = false;
-  
   // Events
+
+  /**
+   * This event is triggered when the DiceKey has been been scanned
+   * successfully.
+   */
   public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], ScanDiceKey>(this);
 
   /**
@@ -173,31 +163,28 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     options: ScanDiceKeyOptions
   ) {
     super(options);
+    this.cameraCapturePromise = new Promise<CameraCapture>( (resolve) => this.resolveCameraCapturePromise = resolve );
+    this.workerReadyPromise = new Promise<boolean>( (resolve => this.resolveWorkerReadyPromise = resolve ));
 
-  
     this.cameraSessionId = Math.random().toString() + Math.random().toString();
     // Create worker for processing camera frames
     this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
     // Listen for messages from worker
     this.frameWorker.addEventListener( "message", this.handleMessage );
-    //
-    // Initialize the list of device cameras
-    this.camerasOnThisDevice = new CamerasOnThisDevice({});
-    this.camerasOnThisDevice.updated.on( (cameras) => {
-      // no longer need to show the list of cameras
-      this.camerasOnThisDevice.remove()
-      // Whenever there's an update to the camera list, if we don't have an
-      // active camera, set the active camera to the first camera in the list.
-      if (!this.mediaStream && cameras.length > 0) {
-        this.setCamera(cameras[0].deviceId);
-      }
-      // And update the rendered camera list
-      this.renderCameraList(cameras);
-    })
   }
 
-  render() {
-    super.render();
+
+
+  reportDiceKeyReadAndValidated = () => {
+    const diceKey = DiceKey( this.facesRead?.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
+    this.diceKeyLoadedEvent.send(diceKey);
+    AppState.EncryptedCrossTabState.instance?.diceKey.set(diceKey);
+    // FIXME -- store additional state regarding how confidence we are that the DiceKey was read correctly.
+    // wasReadAutomaticallyAndWithoutSignificantErrors <-- derive this by looking at errors corrected
+    this.remove();
+  }
+
+  renderHint = () => {
     const {seedHint, cornerLetters} = this.options.derivationOptions || {};
     const {host} = this.options;
 
@@ -227,67 +214,53 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
         ),
       );
     }
-
-    this.append(
-      Div({class: "content"},
-        ...(this.useVideoToDisplay ? [Canvas({class: "overlay"}).with( c => this.overlayCanvasComponent = c )] : []),
-        this.camerasOnThisDevice,
-        Video({style: "display: none; visibility: hidden;"}).with( c => this.videoComponent = c ),
-        this.useImageCapture ?
-          Canvas().withElement( c => { this.videoCanvas = c; }) :
-          undefined,
-        ),
-        Div({class: "centered-controls"},
-          Select({style: "visibility: hidden;"}).withElement( e => this.cameraSelectionMenu = e )
-        ),
-    );
-    this.captureCanvas = document.createElement("canvas") as HTMLCanvasElement;
-    this.captureCanvasCtx = this.captureCanvas.getContext("2d")!;
   }
 
-  
-  /**
-   * Update the selection menu of cameras
-   */
-  renderCameraList = (cameras: Camera[] = this.camerasOnThisDevice.cameras) => {
-    if (!this.cameraSelectionMenu) {
-      return;
-    }
-
-    if (cameras.length < 2) {
-      // There's only one camera option, so hide the camera-selection field.
-      this.cameraSelectionMenu.style.setProperty("display", "none");
-      return;
-    }
-
-    this.cameraSelectionMenu.style.setProperty("display", "block");
-
-    // Remove all child elements (select options)
-    this.cameraSelectionMenu.innerHTML = '';
-    // Replace old child elements with updated select options
-    this.cameraSelectionMenu.append(
-      ...cameras.map( (camera) => Option({text: camera.name, value: camera.deviceId}).primaryElement )
-    );
-    this.cameraSelectionMenu.value = this.camerasDeviceId || "";
-    this.cameraSelectionMenu.style.setProperty("visibility", "visible");
-    // Handle user selection of cameras
-    this.cameraSelectionMenu.addEventListener("change", (_event) => {
-      // The deviceID of the camera was stored in the value name of the option,
-      // so it can be retrieved from the value field fo the select element
-      const deviceId = this.cameraSelectionMenu?.value;
-      if (deviceId) {
-        this.setCamera(deviceId);
+  render() {
+    super.render();
+    if (!this.allFacesReadHaveMajorityValues) {
+      // This image needs to be scanned
+      this.renderHint();
+      this.append(
+        new CameraCapture({fixAspectRatioToWidthOverHeight: 1}).with( cc => { this.cameraCapture = cc; this.resolveCameraCapturePromise?.(cc);} )
+      );
+      this.startProcessingNewCameraFrame();
+    } else if (this.facesReadThatContainErrorsAndHaveNotBeenValidated.length > 0) {
+      // The scan phase is complete, but there are errors to correct.
+      const faceToValidate = this.facesReadThatContainErrorsAndHaveNotBeenValidated[0];
+      const imageOfFaceToValidate = this.errorImages.get(faceToValidate.uniqueIdentifier);
+      if (imageOfFaceToValidate == null) {
+        // This exception indicates a coding error, as the code is designed this should never occur
+        throw new Error("Assertion failure: no image of face to validate");
       }
-    });
+      this.append(
+        new VerifyFaceRead({faceRead: faceToValidate, image: imageOfFaceToValidate}).with( vfr => {
+          vfr.userConfirmedOrDenied.on( (response) => {
+            if (response === "denied") {
+              // We need to start over
+              this.cameraSessionId = Math.random().toString() + Math.random().toString(); 
+              this.facesRead = undefined;
+              this.errorImages.clear();
+              this.framesBeingProcessed.clear();
+            } else if (this.facesReadThatContainErrorsAndHaveNotBeenValidated.length === 0) {
+              // All faces have been validated by the user
+              this.reportDiceKeyReadAndValidated();
+            }
+            this.renderSoon()
+          })
+        })
+      )
+    }
   }
+
 
   remove() {
     if (!super.remove()) {
       // This element has already been removed
       return false;
     }
+    this.cameraCapture?.remove();
     // If there's an existing stream, terminate it
-    this.mediaStream?.getTracks().forEach( track => track.readyState === "live" && track.enabled && track.stop() );
     this.frameWorker.removeEventListener( "message", this.handleMessage );
     this.frameWorker.postMessage({action: "terminateSession", sessionId: this.cameraSessionId} as TerminateSessionRequest);
 
@@ -300,7 +273,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   handleMessage = (message: MessageEvent) => {
     if (!this.readyReceived && "action" in message.data && message.data.action === "workerReady" ) {
       this.readyReceived = true;
-      this.onWorkerReady();
+      this.resolveWorkerReadyPromise?.(true);
     } else if ("action" in message.data && (
         message.data.action == "processRGBAImageFrameAndRenderOverlay" || message.data.action === "processAndAugmentRGBAImageFrame")
       ) {
@@ -308,114 +281,6 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     }
   }
 
-  onWorkerReady = () => {
-    this.startProcessingNewCameraFrame();
-  }
-
-  setCamera = (deviceId: string) =>
-    this.setCameraByConstraints(videoConstraintsForDevice(deviceId));
-
-  /**
-   * Set the current camera
-   */
-  setCameraByConstraints = async (
-    mediaTrackConstraints: MediaTrackConstraints
-  ) => {
-    if (this.imageCapture) {
-      this.imageCapture = undefined;
-    }
-    const oldMediaStream = this.mediaStream;
-    this.mediaStream = undefined;
-    // If there's an existing stream, terminate it
-    oldMediaStream?.getTracks().forEach(track => {
-      if (track.readyState === "live" && track.enabled) {
-        try {
-          track.stop()
-        } catch (e) {
-          console.log("Exception stopping track", e);
-        }
-      }
-    });
-    // Now set the new stream
-    try {
-      this.mediaStream = await navigator.mediaDevices.getUserMedia({video: mediaTrackConstraints});
-    } catch (e) {
-      console.log("Media stream creation failed", e);
-    }
-    const track = this.mediaStream?.getVideoTracks()[0];
-    if (!track || track.readyState !== "live" || !track.enabled || track.muted ) {
-      console.log("Could not update camera", track);
-      return;
-    }
-    const {
-      deviceId, height, width
-    } = track.getSettings();
-    this.camerasDeviceId = deviceId;
-    if (this.videoPlayer) {
-      this.videoPlayer.srcObject = this.mediaStream!;
-    }
-    if (track && this.useImageCapture) {
-      this.imageCapture = new ImageCapture(track);
-    } else if (this.videoPlayer) {
-      this.videoPlayer.style.setProperty("display", "block");
-      this.videoPlayer.style.setProperty("visibility", "visible");
-      if (height && width) {
-        // this.videoPlayer!.width = Math.min( width, 1024 );
-        // this.videoPlayer!.height = Math.min( height, 1024 );
-      }
-    }
-    this.renderCameraList();
-    return;
-  }
-
-  getFrameUsingImageCapture = async (): Promise<ImageData | undefined> => {
-    const track = this.imageCapture?.track;
-    console.log("getFrameUsingImageCapture", (Date.now() % 100000) / 1000);
-    if (track == null || track.readyState !== "live" || !track.enabled || track.muted) {
-      if (track?.muted) {
-        console.log("Track muted");
-        // For some reason, if we don't read enough frames fast enough, browser may mute the
-        // track.  If they do, just re-open the camera.
-        if (this.camerasDeviceId) {
-          console.log("Resetting camera");
-          this.setCamera(this.camerasDeviceId!);
-        }
-        track?.addEventListener("unmute", () => { console.log("Track unmuted"); } );
-      }
-      return;
-    }
-    const bitMap = await this.imageCapture!.grabFrame();
-    if (this.videoCanvas && !this.hasAnImageBeenDrawnOntoTheVideoCanvas) {
-      this.drawImageOntoVideoCanvas(bitMap);
-    }
-    console.log("Frame grabbed", (Date.now() % 100000) / 1000);
-    const {width, height} = bitMap;
-    console.log(`Grabbing frame with dimensions ${width}x${height}`)
-    if (this.captureCanvas!.width != width || this.captureCanvas!.height != height) {
-      [this.captureCanvas!.width, this.captureCanvas!.height] = [width, height];
-      this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
-    }
-    this.captureCanvasCtx!.drawImage(bitMap, 0, 0);
-    return this.captureCanvasCtx!.getImageData(0, 0, width, height);
-  };
-
-  getFrameFromVideoPlayer = (): ImageData | undefined => {
-    if (!this.videoPlayer) {
-      return;
-    }
-    if (this.videoPlayer!.videoWidth == 0 || this.videoPlayer!.videoHeight == 0) {
-      // There's no need to take action if there's no video
-      return;
-    }
-
-    // Ensure the capture canvas is the size of the video being retrieved
-    if (this.captureCanvas!.width != this.videoPlayer!.videoWidth || this.captureCanvas!.height != this.videoPlayer!.videoHeight) {
-        [this.captureCanvas!.width, this.captureCanvas!.height] = [this.videoPlayer!.videoWidth, this.videoPlayer!.videoHeight];
-        this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
-    }
-    this.captureCanvasCtx!.drawImage(this.videoPlayer!, 0, 0);
-    return this.captureCanvasCtx!.getImageData(0, 0, this.captureCanvas!.width, this.captureCanvas!.height);
-  }
 
   /**
    * To process video images, we will loop through retrieving camera frames with
@@ -425,18 +290,13 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    */
   private nextRequestId = 1;
   startProcessingNewCameraFrame = async () => {
-    if (this.removed) {
-      // The element is no longer displaying and so processing should stop.
-      return;
+    // make sure never to send the frame until the worker is ready
+    try {
+      await Promise.all([this.workerReadyPromise, this.cameraCapturePromise]);
+    } catch (e) {
+      console.log("Exception at start of processing", e);
     }
-    const imageData = this.useImageCapture ?
-      await this.getFrameUsingImageCapture() : this.getFrameFromVideoPlayer();
-    if (imageData == null) {
-      // There's no need to take action if there's no video
-      console.log("No frame received.  Entering wait cycle");
-      setTimeout(this.startProcessingNewCameraFrame, 100);
-      return;
-    }
+    const imageData = await this.cameraCapture!.getFrame();
     const requestId = this.nextRequestId++;
     this.framesBeingProcessed.set(requestId, imageData);
     const {width, height, data} = imageData;
@@ -447,7 +307,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     const request: ProcessFrameRequest | ProcessAugmentFrameRequest = {
       requestId,
       width, height, rgbImageAsArrayBuffer,
-      action: this.useVideoToDisplay ? "processRGBAImageFrameAndRenderOverlay" : "processAndAugmentRGBAImageFrame",
+      action: this.cameraCapture?.isRenderedOverVideo ? "processRGBAImageFrameAndRenderOverlay" : "processAndAugmentRGBAImageFrame",
       sessionId: this.cameraSessionId!,
     };
     // The mark the objects that can be transferred to the worker.
@@ -457,58 +317,33 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.frameWorker.postMessage(request, transferrableObjectsWithinRequest);
   }
 
-  protected finishDelayInProgress: boolean = false;
-
-  drawImageOntoVideoCanvas = (imageBitmap: ImageBitmap) => {
-    const {width, height} = imageBitmap;
-    if (this.videoCanvas) {
-      var rect = getElementDimensions(this.videoCanvas.parentElement!);
-      if (rect && (this.videoCanvas.width !== rect.width || this.videoCanvas.height !== rect.height)) {
-        this.videoCanvas.setAttribute("width", rect.width.toString());
-        this.videoCanvas.setAttribute("height", rect.height.toString());
-        this.videoCanvas.width = rect.width;
-        this.videoCanvas.height = rect.height;
-      }
-      // 
-      const ctx = this.videoCanvas.getContext("2d")!;
-      const canvasWidthOverHeight = ctx.canvas.width / ctx.canvas.height;
-      const srcWidthOverHeight = width / height;
-      const [srcWidth, srcHeight] = canvasWidthOverHeight > srcWidthOverHeight ?
-        // The canvas is too wide for the source (the captured frame), so reduce the source's height
-        // to make the source relatively wider
-        [width, width / canvasWidthOverHeight] :
-        // The canvas is too tall for the source (the captured frame), so reduce the source's width
-        // to make it relatively taller
-        [height * canvasWidthOverHeight, height];
-      const srcX = (width - srcWidth) / 2;
-      const srcY = (height - srcHeight) / 2;
-      this.hasAnImageBeenDrawnOntoTheVideoCanvas = true;
-      ctx.drawImage(imageBitmap, srcX, srcY, srcWidth, srcHeight, 0, 0, this.videoCanvas.width, this.videoCanvas.height);
-    }
-  }
-
-  private framesBeingProcessed = new Map<number, ImageData>();
-  private errorImages = new Map<string, HTMLCanvasElement>();
   /**
    * Handle frames processed by the web worker, displaying the received
    * overlay image above the video image.
    */
   handleProcessedCameraFrame = async (response: ProcessFrameResponse ) => {
     console.log("handleProcessedCameraFrame", (Date.now() % 100000) / 1000);
-    const {requestId, width, height, rgbImageAsArrayBuffer, diceKeyReadJson, isFinished} = response;
-    const imageData = this.framesBeingProcessed.get(requestId);
-    this.framesBeingProcessed.delete(requestId);
+    const {requestId, width, height, rgbImageAsArrayBuffer, diceKeyReadJson} = response;
 
-    const facesRead = FaceRead.fromJson(diceKeyReadJson) as TupleOf25Items<FaceRead> | undefined;
-    if (facesRead && imageData) {
-      const facesReadWithErrors = facesRead.filter( f => f.errors && f.errors.length > 0);
+    // Remove the pre-processed image from the set of images being processed
+    const originalImageData = this.framesBeingProcessed.get(requestId);
+    if (originalImageData == null) {
+      return;
+    }
+    this.framesBeingProcessed.delete(requestId);
+    
+    // Render the frame onto the screen
+    this.cameraCapture?.drawImageDataOntoVideoCanvas(new ImageData(new Uint8ClampedArray(rgbImageAsArrayBuffer), width, height));
+
+    this.facesRead = FaceRead.fromJson(diceKeyReadJson) as TupleOf25Items<FaceRead> | undefined;
+    if (this.facesRead && originalImageData) {
+      const facesReadWithErrors = this.facesRead.filter( f => f.errors && f.errors.length > 0);
       if (facesReadWithErrors.length == 0) {
         //
         // The faces were ready perfectly and there are no errors to correct.
-        AppState.Scanning.DieErrorImageMap.clear();
-        AppState.Scanning.FacesRead.set(undefined);  
+        this.errorImages.clear();
         AppState.EncryptedCrossTabState.instance!.diceKey.value =
-          DiceKey( facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
+          DiceKey( this.facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
 
       } else {
         //
@@ -518,50 +353,39 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
         );
         // Remove images of erroneously-scanned dice that are no longer needed because
         // the errors have been resolved or replaced
-        [...AppState.Scanning.DieErrorImageMap.keys()]
+        [...this.errorImages.keys()]
           // filter to identifier dead ids
           .filter( id => !identifiersOfFacesWithErrors.has(id) )
           // then remove them
-          .forEach( (deadId) => AppState.Scanning.DieErrorImageMap.delete(deadId) );
+          .forEach( (deadId) => this.errorImages.delete(deadId) );
 
         // Capture images of faces in current scan that have errors
-        const imageBitmap = await createImageBitmap(imageData);
-        for (const face of facesReadWithErrors) {
-          if (!this.errorImages.has(face.uniqueIdentifier)) {
-            // Get the image of the die with an error and store it where we can get to it
-            // if we need the user to verify that we read it correctly.
-            const faceReadImageData = getImageOfFaceRead(imageBitmap, face, this.options.dieRenderingCanvasSize);
-            AppState.Scanning.DieErrorImageMap.set(face.uniqueIdentifier, faceReadImageData);
-          }
-        }
+        const sourceImageBitmap = await createImageBitmap(originalImageData);
+        const facesReadWithErrorsButNoErrorImages = facesReadWithErrors.
+          filter( faceRead => !this.errorImages.has(faceRead.uniqueIdentifier));
+        await Promise.all(facesReadWithErrorsButNoErrorImages.map( async (face) => {
+          // Get the image of the die with an error and store it where we can get to it
+          // if we need the user to verify that we read it correctly.
+          const faceReadImageData = getImageOfFaceRead(sourceImageBitmap, face, this.options.dieRenderingCanvasSize);
+          const faceImageBitmap = await createImageBitmap(faceReadImageData);
+          this.errorImages.set(face.uniqueIdentifier, faceImageBitmap);
+        }));
       }
     }
 
-    const {overlayCanvas} = this;
-    if (overlayCanvas) {
-      // Ensure the overlay canvas is the same size as the captured canvas
-      const overlayImageData = this.overlayCanvasCtx!.createImageData(width, height);
-      overlayImageData.data.set(new Uint8Array(rgbImageAsArrayBuffer));
-      this.overlayCanvasCtx?.putImageData(overlayImageData, 0, 0);
-    }
-    if (this.videoCanvas) {
-      // Grow the canvas to match the size of its parent element.
-      const imageData = new ImageData(new Uint8ClampedArray(rgbImageAsArrayBuffer), width, height);
-      const imageBitmap = await createImageBitmap(imageData);
-      this.drawImageOntoVideoCanvas(imageBitmap);
-    }
-
-
-    if (facesRead && isFinished && !this.finishDelayInProgress) {
+    if (this.allFacesReadHaveMajorityValues && !this.finishDelayInProgress) {
       // const diceKey = DiceKey( facesRead.map( faceRead => faceRead.toFace() ));
       // FIXME -- add known errors here.
       this.finishDelayInProgress = true;
       setTimeout( () => {
         // FIXME
-        this.diceKeyLoadedEvent.send(DiceKey( facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> ));
-        this.remove();
         this.finishDelayInProgress = false;
-        this.parent?.renderSoon()
+        if (this.allFacesHaveBeenValidated) {
+          this.reportDiceKeyReadAndValidated();
+          this.parent?.renderSoon()
+        } else {
+          this.renderSoon();
+        }
       }, this.msDelayBetweenSuccessAndClosure);
     } else {
       // Trigger fetch of new camera frame

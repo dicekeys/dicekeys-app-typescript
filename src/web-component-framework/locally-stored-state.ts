@@ -252,8 +252,8 @@ export class EncryptedStorageField<T> extends StorageField<T> {
 
 
 export class AppStateStore {
-  addStringField = (name: string) => new LocalStorageStringField(name); 
-  addField = <T>(name: string) => new LocalStorageField<T>(name); 
+  protected addStringField = (name: string) => new LocalStorageStringField(name); 
+  protected addField = <T>(name: string) => new LocalStorageField<T>(name); 
 }
 
 /**
