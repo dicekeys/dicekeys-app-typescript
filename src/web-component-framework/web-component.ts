@@ -258,7 +258,7 @@ export class Component<
   }
 
   /**
-   * Create a child ement that can be replaced
+   * Create a child element that can be replaced
    */
   replaceableChild = <HTML_COMPONENT extends Component>(): ReplaceableChild<HTML_COMPONENT> => {
     var current: HTML_COMPONENT | undefined = undefined;

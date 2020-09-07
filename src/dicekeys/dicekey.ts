@@ -1,13 +1,9 @@
 import {getRandomUInt32} from "./get-random-bytes";
-// export * from "./face";
 import {
   FaceLetter, FaceLetters, InvalidFaceLetterException,
   FaceDigit, InvalidFaceDigitException,
   Face,
-  //InvalidFaceRotationException,
   Clockwise90DegreeRotationsFromUpright,
-  // FaceOrientationLetterTrbl,
-  // ValidFaceOrientationLetterTrbl,
   FaceOrientationLetterTrblOrUnknown,
   InvalidFaceOrientationLettersTrblOrUnknownException,
   FaceOrientationLettersTrbl
