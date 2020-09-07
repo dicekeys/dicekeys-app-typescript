@@ -1,7 +1,9 @@
 .centered_controls, .decision_button_container {
-  margin-top: 2.5%;
+  margin-top: 2vh;
   display: flex;
   flex-direction: row;
+  flex-grow: 5;
+  flex-shrink: 5;
   justify-content: center;
   align-items: center;
 }

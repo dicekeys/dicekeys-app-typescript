@@ -92,7 +92,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
   render() {
     super.render();
     this.append(
-      Div({class: "primary-container"},
+      Div({class: layoutStyles.stretched_column_container},
         new DiceKeySvg({
           diceKey: this.options.diceKey
         }),

@@ -51,7 +51,7 @@ export class DisplayPassword extends Component<DisplayPasswordOptions> {
     options: DisplayPasswordOptions
   ) {
       super(options);
-      this.primaryElement.classList.add(styles.password_to_be_shared_container);
+      this.addClass(styles.password_to_be_shared_container);
       this.obscurePassword = options.obscurePassword ?? new Observable<boolean>(true);
       this.obscurePassword?.observe( () => this.update() );
       this.options.password?.observe( () => this.update() );

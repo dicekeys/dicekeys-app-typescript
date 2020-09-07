@@ -1,0 +1,10 @@
+.dicekey_svg {
+  display: flex;
+  width: 96vw;
+  height: 96vh;
+  flex-basis: 75vh;
+  flex-grow: 5;
+  flex-shrink: 5;
+  align-self: center;
+  justify-self: center;
+}

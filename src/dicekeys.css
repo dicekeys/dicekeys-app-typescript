@@ -10,32 +10,9 @@ option, select {
 label {
   font-size: 1.4rem;
 }
-/* .content {
-  position: relative;
-  margin: 0 auto;
-  display: flex;
-  flex-grow: 2;
-  flex-shrink: 5;
-  flex-basis: 50%;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  max-height: 100%;
-} */
-/* .ApiResponseSettings {
-  display: flex;
-  flex-grow: 2;
-  flex-shrink: 2;
-  flex-direction: column;
-  justify-content: stretch;
-  align-items: stretch;
-} */
-
 video {
   max-width: 1024px;
   max-height: 1024px;
-}
-.content video {
   display: block;
   flex-grow: 0
 }
@@ -49,79 +26,3 @@ input[type=button] {
   font-size: 1.5em;
   border-radius: 5px;
 }
-/* .dicekey-preservation-instruction {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-} */
-
-
-.dicekey-video-or-box, .dicekey-svg, .ScanDiceKey {
-  display: flex;
-  flex-basis: 50%;
-  flex-grow: 2;
-  flex-shrink: 2;
-}
-.ApiRequest, .DiceKeySvgView, .ApiRequestContainer, .ApproveApiCommand,
-.primary-container, .request-container {
-  display: flex;
-  flex-grow: 2;
-  flex-shrink: 5;
-  flex-basis: 50%;
-  flex-direction: column;
-  justify-content: stretch;
-  align-items: stretch;
-  max-height: 100%;
-}
-
-
-
-/* .dicekey-container {
-  margin-top: 2.5%;
-  margin-bottom: 2.5%;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 2;
-  flex-shrink: 5;
-  flex-basis: 50%;
-  justify-content: stretch;
-  align-items: stretch;
-} */
-/* .dicekey-container > div {
-  display: flex;
-  flex-grow: 0;
-  flex: 1;
-} */
-/* .decision-button-container {
-  margin-top: 25px;
-} */
-/* .centered-container, .expandable-centered-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  align-content: center;
-}
-.expandable-centered-container {
-  flex-grow: 5;
-  flex-shrink: 5;
-  flex-basis: 20%;
-} */
-
-/* .password-to-be-shared {
-  display: flex;
-  flex-grow: 0;
-  font-size: 1.4em;
-  font-family: monospace;
-} */
-/* .crossout {
-  text-decoration: line-through;
-} */
-/* .centered-controls, .decision-button-container {
-  margin-top: 2.5%;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-} */

@@ -42,7 +42,7 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
 
   constructor(options: BodyOptions) {
     super(options, document.body);
-    this.primaryElement.classList.add(styles.AppMain);
+    this.addClass(styles.AppMain);
     const {appState} = options;
     this.appState = appState;
 

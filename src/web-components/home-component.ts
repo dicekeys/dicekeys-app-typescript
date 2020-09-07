@@ -23,7 +23,7 @@ export class HomeComponent extends Component {
 
   render() {
     super.render();
-    this.primaryElement.classList.add(layoutStyles.expandable_centered_column);
+    this.addClass(layoutStyles.centered_column);
     this.append(
       InputButton({
         value: "Scan your DiceKey",

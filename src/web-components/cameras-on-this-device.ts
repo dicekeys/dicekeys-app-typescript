@@ -48,7 +48,7 @@ export class CamerasOnThisDevice extends Component<CamerasOnThisDeviceOptions> {
 
   constructor(options: CamerasOnThisDeviceOptions) {
     super(options, document.createElement("div"));
-    this.primaryElement.classList.add(styles.camera_name)
+    this.addClass(styles.camera_name)
     this.addAttachedAndRemovedDetachedCameras();
     // Start getting a list of cameras
     // Make sure we update the camera list whenever a camera is added or removed

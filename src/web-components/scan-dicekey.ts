@@ -163,7 +163,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     options: ScanDiceKeyOptions
   ) {
     super(options);
-    this.primaryElement.classList.add(styles.ScanDiceKey);
+    this.addClass(styles.ScanDiceKey);
     this.cameraCapturePromise = new Promise<CameraCapture>( (resolve) => this.resolveCameraCapturePromise = resolve );
     this.workerReadyPromise = new Promise<boolean>( (resolve => this.resolveWorkerReadyPromise = resolve ));
 

@@ -235,6 +235,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
 
   render() {
     super.render();
+    this.addClass(layoutStyles.centered_column);
 
     //var orientationCheckbox: Checkbox;
     this.append(
@@ -312,7 +313,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     }
     if (this.options.requestContext.request.command === ApiStrings.Commands.getPassword) {
       this.append(
-        Div({class: layoutStyles.expandable_centered_column},
+        Div({class: layoutStyles.centered_column},
           Div({class: styles.password_to_be_shared_label}, Span({},
             `password to be sent to&nbsp;`),
             describeHost(this.options.requestContext.host

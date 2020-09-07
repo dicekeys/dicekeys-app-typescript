@@ -56,7 +56,7 @@ export class DiceKeyCanvas extends Component<DiceKeyCanvasOptions, HTMLCanvasEle
   ) {
     super(options, document.createElement("canvas"));
     // const sizeStr = this.size.toString();
-    this.primaryElement.classList.add(styles.DiceKeyCanvas);
+    this.addClass(styles.DiceKeyCanvas);
 
     this.primaryElement.addEventListener("click", () => {
       obscure.value = !obscure.value;

@@ -1,4 +1,6 @@
+import styles from "./dicekey-svg.module.css";
 import * as SVG from "../dicekeys/svg";
+
 import {
   Attributes,
   Component,
@@ -51,7 +53,7 @@ export class DiceKeySvg extends Component<DiceKeySvgOptions, SVGSVGElement> {
   ) {
     super(options, SVG.svg({}));
     // const sizeStr = this.size.toString();
-    this.primaryElement.classList.add("dicekey-svg");
+    this.addClass(styles.dicekey_svg);
 
     this.primaryElement.addEventListener("click", () => {
       obscure.value = !obscure.value;

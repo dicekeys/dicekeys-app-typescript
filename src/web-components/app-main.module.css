@@ -1,10 +1,13 @@
 .AppMain {
-  min-width: 96%;
-  max-width: 96%;
-  min-height: 96%;
-  max-height: 96%;
+  min-width: 96vw;
+  max-width: 96vw;
+  min-height: 96vh;
+  max-height: 96vh;
   margin: 0px;
-  padding: 2%;
+  padding-left: 2vw;
+  padding-right: 2vw;
+  padding-top: 2vh;
+  padding-bottom: 2vh;
   display: flex;
   flex-direction: column;
   justify-content: stretch;

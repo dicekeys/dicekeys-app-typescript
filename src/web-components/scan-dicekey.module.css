@@ -3,6 +3,7 @@
   background-color: rgba(0, 0, 0, 1);
   border: black solid 1px;
   display: flex;
+  flex-basis: 50%;
   flex-grow: 5;
   flex-shrink: 5;
   flex-direction: column;

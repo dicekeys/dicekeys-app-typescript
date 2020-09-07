@@ -51,11 +51,11 @@ export class Component<
     }
     // Give the object a class for each class it belongs to
     // for (var obj: object | undefined = this; obj != null; obj = (obj as {super?: object}).super) {
-    //   this.primaryElement.classList.add(obj.constructor.name)
+    //   this.addClass(obj.constructor.name)
     // }
     const nameOfDescendantClass = this.constructor.name;
     if (nameOfDescendantClass != "HtmlElement") {
-      this.primaryElement.classList.add(nameOfDescendantClass);
+      this.addClass(nameOfDescendantClass);
     }
     if (typeof text === "string" && this.primaryElement.textContent != null) {
       this.primaryElement.textContent = text;
@@ -65,7 +65,7 @@ export class Component<
         [Class] :
         Array.isArray(Class) ?
           [...Class] : [];
-      this.primaryElement.classList.add(...classes);
+      this.addClass(...classes);
     }
     this.renderSoon();
   }
@@ -254,6 +254,16 @@ export class Component<
 
   withElement = (callback: (t: TOP_LEVEL_ELEMENT) => any): this => {
     callback(this.primaryElement);
+    return this;
+  }
+
+  addClass = (...classes: string[]): this => {
+    this.primaryElement?.classList.add(...classes);
+    return this;
+  }
+
+  removeClass = (...classes: string[]): this => {
+    this.primaryElement?.classList.remove(...classes);
     return this;
   }
 
