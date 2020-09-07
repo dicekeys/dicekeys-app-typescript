@@ -1,3 +1,6 @@
+import styles from "./api-request-container.module.css";
+import dialogStyles from "./dialog.module.css";
+import layoutStyles from "./layout.module.css";
 import {
 //  Exceptions,
   DerivationOptions
@@ -96,7 +99,6 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
 
   hide21: boolean = true;
 
-//  private setScanOrResponse?: ReplaceableChild<ApiResponseSettings | ScanDiceKey>;
   private apiResponseSettings?: ApproveApiCommand;
 
   private handleCancelButton = () => {
@@ -115,27 +117,26 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
 
   async render() {
     super.render();
+    this.addClass(layoutStyles.stretched_column_container);
     const {request, host} = this.options.requestContext;
     const diceKey = EncryptedCrossTabState.instance?.diceKey.value;
     // Re-render whenever the diceKey value changes.
     EncryptedCrossTabState.instance?.diceKey.changedEvent.on( this.renderSoon );
 
     this.append(
-      Div({class: "primary-container"},
-        Div({class: "request-description"},
-          Div({class: "request-choice"}, API.describeRequestChoice(request.command, host, !!this.areDerivationOptionsVerified) ),
-          Div({class: "request-promise"}, API.describeDiceKeyAccessRestrictions(host) ),
-        ),
-        ( diceKey ?
-          new ApproveApiCommand({...this.options, diceKey}).with( e => this.apiResponseSettings = e )
-          :
-          new ScanDiceKey({host, derivationOptions: this.derivationOptions})
-        ),
-        Div({class: "decision-button-container"},
-        InputButton({value: "Cancel", clickHandler: this.handleCancelButton}),
-        diceKey == null ? undefined :
-          InputButton({value: shortDescribeCommandsAction(this.options.requestContext.request.command), clickHandler: this.handleContinueButton} )
-        ),
+      Div({class: styles.request_description},
+        Div({class: styles.request_choice}, API.describeRequestChoice(request.command, host, !!this.areDerivationOptionsVerified) ),
+        Div({class: styles.request_promise}, API.describeDiceKeyAccessRestrictions(host) ),
+      ),
+      ( diceKey ?
+        new ApproveApiCommand({...this.options, diceKey}).with( e => this.apiResponseSettings = e )
+        :
+        new ScanDiceKey({host, derivationOptions: this.derivationOptions})
+      ),
+      Div({class: dialogStyles.decision_button_container},
+      InputButton({value: "Cancel", clickHandler: this.handleCancelButton}),
+      diceKey == null ? undefined :
+        InputButton({value: shortDescribeCommandsAction(this.options.requestContext.request.command), clickHandler: this.handleContinueButton} )
       ),
     );
   }

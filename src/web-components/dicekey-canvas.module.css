@@ -1,0 +1,8 @@
+.DiceKeyCanvas {
+  flex-grow: 0;
+  flex-shrink: 0;
+  /* height: 768px;
+  width: 768px; */
+  /* flex-grow: 1; */
+  /* display: flex; */
+}

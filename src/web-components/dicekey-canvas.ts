@@ -1,3 +1,4 @@
+import styles from "./dicekey-canvas.module.css"
 import {
   Attributes,
   Component,
@@ -46,7 +47,7 @@ export class DiceKeyCanvas extends Component<DiceKeyCanvasOptions, HTMLCanvasEle
   }
 
   /**
-   * The code supporting the dmeo page cannot until the WebAssembly module for the image
+   * The code supporting the demo page cannot until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */
@@ -55,7 +56,7 @@ export class DiceKeyCanvas extends Component<DiceKeyCanvasOptions, HTMLCanvasEle
   ) {
     super(options, document.createElement("canvas"));
     // const sizeStr = this.size.toString();
-    this.primaryElement.classList.add("dicekey-canvas");
+    this.addClass(styles.DiceKeyCanvas);
 
     this.primaryElement.addEventListener("click", () => {
       obscure.value = !obscure.value;

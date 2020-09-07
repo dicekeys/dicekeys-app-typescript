@@ -1,3 +1,4 @@
+import layoutStyles from "./layout.module.css";
 import {
   Component,
   ComponentEvent,
@@ -10,7 +11,7 @@ export class HomeComponent extends Component {
   public readonly createRandomDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);
 
   /**
-   * The code supporting the dmeo page cannot until the WebAssembly module for the image
+   * The code supporting the demo page cannot until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */
@@ -22,7 +23,7 @@ export class HomeComponent extends Component {
 
   render() {
     super.render();
-    this.primaryElement.classList.add("expandable-centered-container");
+    this.addClass(layoutStyles.centered_column);
     this.append(
       InputButton({
         value: "Scan your DiceKey",

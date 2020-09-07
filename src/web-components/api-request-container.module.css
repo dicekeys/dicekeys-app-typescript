@@ -1,0 +1,22 @@
+
+.request_choice, .request_promise, .request_description {
+  flex-shrink: 0;
+  flex-grow: 0;
+  text-align: center;
+}
+.request_description {
+  margin-top: 0px;
+  margin-bottom: 15;
+  color: #202000;
+  font-weight: 550;
+}
+.request_choice {
+  font-size: 2em;
+  color: #202000;
+  font-weight: 550;
+}
+.request_promise {
+  font-size: 1.6em;
+  color: #001000;
+  text-align: center;
+}

@@ -1,0 +1,23 @@
+.centered_column, .stretched_column_container {
+  display: flex;
+  flex-direction: column;
+}
+
+.centered_column {
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  flex-shrink: 5;
+  flex-grow: 5;
+  flex-grow: 5;
+  flex-shrink: 5;
+}
+.stretched_column_container {
+  flex-grow: 5;
+  flex-shrink: 5;
+  flex-basis: 50vh;
+  justify-content: stretch;
+  align-items: stretch;
+  min-height: 92vh;
+  max-height: 92vh;
+}

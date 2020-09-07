@@ -1,5 +1,7 @@
-import {Attributes, Component, ComponentEvent, Div} from "../web-component-framework"
-
+import {
+  Attributes, Component, ComponentEvent, Div
+} from "../web-component-framework"
+import styles from "./cameras-on-this-device.module.css";
 
  // Safari may require 640 or 1280, see 
  // https://stackoverflow.com/questions/46981889/how-to-resolve-ios-11-safari-getusermedia-invalid-constraint-issue
@@ -46,6 +48,7 @@ export class CamerasOnThisDevice extends Component<CamerasOnThisDeviceOptions> {
 
   constructor(options: CamerasOnThisDeviceOptions) {
     super(options, document.createElement("div"));
+    this.addClass(styles.camera_name)
     this.addAttachedAndRemovedDetachedCameras();
     // Start getting a list of cameras
     // Make sure we update the camera list whenever a camera is added or removed

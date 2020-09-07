@@ -4,7 +4,7 @@ import {
 } from "./state/encrypted-cross-tab-state"
 import {
   AppMain
-} from "./web-components/main";
+} from "./web-components/app-main";
 import { DerivationOptions, ApiStrings } from "@dicekeys/dicekeys-api-js";
 
 window.addEventListener("load", () => {
