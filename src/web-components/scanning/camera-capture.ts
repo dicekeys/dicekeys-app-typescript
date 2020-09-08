@@ -1,4 +1,4 @@
-import dialogStyles from "./dialog.module.css";
+import dialogStyles from "../dialog.module.css";
 import styles from "./camera-capture.module.css";
 import {
   getElementDimensions,
@@ -8,7 +8,7 @@ import {
   Select,
   Option,
   Video
-} from "../web-component-framework"
+} from "../../web-component-framework"
 import {
   Camera,
   CamerasOnThisDevice,

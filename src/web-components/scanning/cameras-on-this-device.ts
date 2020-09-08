@@ -1,6 +1,6 @@
 import {
   Attributes, Component, ComponentEvent, Div
-} from "../web-component-framework"
+} from "../../web-component-framework"
 import styles from "./cameras-on-this-device.module.css";
 
  // Safari may require 640 or 1280, see 

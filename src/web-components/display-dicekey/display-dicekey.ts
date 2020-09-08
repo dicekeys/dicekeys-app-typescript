@@ -1,27 +1,27 @@
-import dialogStyles from "./dialog.module.css";
-import layoutStyles from "./layout.module.css";
+import dialogStyles from "../dialog.module.css";
+import layoutStyles from "../layout.module.css";
 
 import {
   Component, Attributes,
   ComponentEvent,
   InputButton, Div, Label, Select, Option, Observable, OptGroup
-} from "../web-component-framework";
+} from "../../web-component-framework";
 import {
   DiceKeySvg
 } from "./dicekey-svg";
 import {
   EncryptedCrossTabState
-} from "../state/encrypted-cross-tab-state";
+} from "../../state/encrypted-cross-tab-state";
 import {
   DiceKey
-} from "../dicekeys/dicekey";
+} from "../../dicekeys/dicekey";
 import {
   passwordConsumers,
   passwordConsumersGroupedByType
-} from "../dicekeys/password-consumers";
+} from "../../dicekeys/password-consumers";
 import {
   ComputeApiCommandWorker
-} from "../workers/call-api-command-worker";
+} from "../../workers/call-api-command-worker";
 import {
     ApiCalls, ApiStrings
 } from "@dicekeys/dicekeys-api-js";
@@ -30,7 +30,7 @@ import {
 } from "./password-field"
 import {
   describePasswordConsumerType
-} from "../phrasing/ui";
+} from "../../phrasing/ui";
 
 interface DiceKeySvgViewOptions extends Attributes {
   diceKey: DiceKey;

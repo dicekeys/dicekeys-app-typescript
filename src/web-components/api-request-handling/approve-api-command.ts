@@ -1,5 +1,5 @@
 import styles from "./approve-api-command.module.css";
-import layoutStyles from "./layout.module.css";
+import layoutStyles from "../layout.module.css";
 
 import {
 //  Exceptions,
@@ -8,24 +8,24 @@ import {
 import {
   Attributes,
   Component, Appendable
-} from "../web-component-framework";
+} from "../../web-component-framework";
 import {
   areDerivationOptionsMutable
-} from "../api-handler/mutate-derivation-options"
+} from "../../api-handler/mutate-derivation-options"
 import {
   DiceKey,
   DiceKeyInHumanReadableForm,
-} from "../dicekeys/dicekey";
+} from "../../dicekeys/dicekey";
 import {
   DiceKeySvg
-} from "./dicekey-svg";
+} from "../display-dicekey/dicekey-svg";
 import {
   DisplayPassword
-} from "./password-field";
+} from "../display-dicekey/password-field";
 import {
 //  describeFrameOfReferenceForReallyBigNumber,
   describeHintPurpose, describeHost
-} from "../phrasing/api";
+} from "../../phrasing/api";
 import { 
   Div,
   Label,
@@ -36,23 +36,23 @@ import {
   Span,
   Checkbox,
   RadioButton
-} from "../web-component-framework";
+} from "../../web-component-framework";
 // import {
 //   DiceKeyAppState
-// } from "../state";
+// } from "../../state";
 import {
   getRequestsDerivationOptionsJson
-} from "../api-handler/get-requests-derivation-options-json";
+} from "../../api-handler/get-requests-derivation-options-json";
 import {
   ApiRequestContext, ConsentResponse
-} from "../api-handler/handle-api-request";
+} from "../../api-handler/handle-api-request";
 import {
   ComputeApiCommandWorker
-} from "../workers/call-api-command-worker";
+} from "../../workers/call-api-command-worker";
 import {
   AddDerivationOptionsProofWorker,
-} from "../workers/call-derivation-options-proof-worker";
-import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
+} from "../../workers/call-derivation-options-proof-worker";
+import { jsonStringifyWithSortedFieldOrder } from "../../api-handler/json";
 
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
