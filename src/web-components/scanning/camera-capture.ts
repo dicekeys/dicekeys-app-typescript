@@ -11,6 +11,9 @@ import {
 } from "../../web-component-framework"
 import {
   Camera,
+  CamerasBeingInspected
+} from "./cameras-being-inspected";
+import {
   CamerasOnThisDevice,
   videoConstraintsForDevice
 } from "./cameras-on-this-device";
@@ -44,7 +47,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
   /**
    * This separate module tracks the cameras attached to the device
    */
-  private readonly camerasOnThisDevice: CamerasOnThisDevice;
+  private readonly camerasBeingInspected: CamerasBeingInspected = new CamerasBeingInspected({});
 
   /**
    * The id of the camera from which the current video feed originates.
@@ -116,10 +119,9 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
 
     //
     // Initialize the list of device cameras
-    this.camerasOnThisDevice = new CamerasOnThisDevice({});
-    this.camerasOnThisDevice.updated.on( (cameras) => {
+    CamerasOnThisDevice.instance.cameraListUpdated.on( (cameras) => {
       // no longer need to show the list of cameras
-      this.camerasOnThisDevice.remove()
+      this.camerasBeingInspected?.remove()
       // Whenever there's an update to the camera list, if we don't have an
       // active camera, set the active camera to the first camera in the list.
       if (!this.mediaStream && cameras.length > 0) {
@@ -128,8 +130,8 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
       // And update the rendered camera list
       this.renderCameraList(cameras);
     })
-    if (this.camerasOnThisDevice.cameras.length > 0) {
-      this.setCamera(this.camerasOnThisDevice.cameras[0].deviceId);
+    if (CamerasOnThisDevice.instance.cameras.length > 0) {
+      this.setCamera(CamerasOnThisDevice.instance.cameras[0].deviceId);
     } 
   }
 
@@ -137,7 +139,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
   /**
    * Update the selection menu of cameras
    */
-  renderCameraList = (cameras: Camera[] = this.camerasOnThisDevice.cameras) => {
+  renderCameraList = (cameras: Camera[] = CamerasOnThisDevice.instance.cameras) => {
     if (!this.cameraSelectionMenu) {
       return;
     }
@@ -173,7 +175,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     super.render();
     this.append(
       Div({class: "content"},
-        this.camerasOnThisDevice.cameras.length == 0 ? this.camerasOnThisDevice : undefined,
+        CamerasOnThisDevice.instance.cameras.length == 0 ? this.camerasBeingInspected : undefined,
         Canvas(this.useImageCapture ? {} :{class: styles.overlay}).with( c => this.overlayCanvasComponent = c ),
         Video({style: "display: none; visibility: hidden;"}).with( c => this.videoComponent = c ),
       ),

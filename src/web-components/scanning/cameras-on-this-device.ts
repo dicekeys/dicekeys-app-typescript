@@ -1,7 +1,6 @@
 import {
-  Attributes, Component, ComponentEvent, Div
+  ComponentEvent
 } from "../../web-component-framework"
-import styles from "./cameras-on-this-device.module.css";
 
  // Safari may require 640 or 1280, see 
  // https://stackoverflow.com/questions/46981889/how-to-resolve-ios-11-safari-getusermedia-invalid-constraint-issue
@@ -12,10 +11,6 @@ import styles from "./cameras-on-this-device.module.css";
   //    advanced: [{focusDistance: {ideal: 0}}]
 } as const;
 
-// const defaultVideoDeviceConstraints: MediaStreamConstraints = {video: {
-//   ...defaultVideoWidthAndHeightConstraints,
-//   facingMode: "environment" // "user" (faces the user) | "environment" (away from user)
-// }}
 
 export const videoConstraintsForDevice = (deviceId: string): MediaTrackConstraints => ({
   ...defaultVideoWidthAndHeightConstraints,
@@ -43,44 +38,60 @@ const compareCameras = (a: Camera, b: Camera): number => {
   return byLabel;
 }
 
-export interface CamerasOnThisDeviceOptions extends Attributes {}
-export class CamerasOnThisDevice extends Component<CamerasOnThisDeviceOptions> {
+export class CamerasOnThisDevice {
 
-  constructor(options: CamerasOnThisDeviceOptions) {
-    super(options, document.createElement("div"));
-    this.addClass(styles.camera_name)
+  private static _instance: CamerasOnThisDevice | undefined;
+
+  public static get instance(): CamerasOnThisDevice {
+    if (this._instance == null) {
+      this._instance = new CamerasOnThisDevice();
+    }
+    return this._instance;
+  }
+
+  private constructor() {
     this.addAttachedAndRemovedDetachedCameras();
     // Start getting a list of cameras
     // Make sure we update the camera list whenever a camera is added or removed
     navigator.mediaDevices.addEventListener('devicechange', () =>
       this.addAttachedAndRemovedDetachedCameras()
     );
-    if (CamerasOnThisDevice.camerasByDeviceId.size > 0) {
-      // A previous instance of this object already loaded cameras.
-      this.updated.send(this.cameras);
-    }
   }
+
+  
+  /**
+   * An event triggered whenever there's an update to the
+   * status of building the detailed list of cameras.
+   */
+  public cameraListProcessingStatusUpdated = new ComponentEvent<[]>(this);
+
   /**
    * An event triggered whenever the list of cameras changes
    */
-  updated = new ComponentEvent<[Camera[]]>(this);
+  public cameraListUpdated = new ComponentEvent<[Camera[]]>(this);
 
-  private camerasToBeAdded = new Map<string, MediaDeviceInfo>();
-  private static camerasByDeviceId = new Map<string, Camera>();
-  private static unreadableCameraDevices = new Map<string, {cameraDevice: MediaDeviceInfo, exceptions: any[]}>();
+  public readonly camerasToBeAdded = new Map<string, MediaDeviceInfo>();
+  public readonly camerasByDeviceId = new Map<string, Camera>();
+  public readonly unreadableCameraDevices = new Map<string, {cameraDevice: MediaDeviceInfo, exceptions: any[]}>();
 
   /**
    * A list of cameras sorted by direction (back-facing first, front-facing last)
    * then sorted by label
    */
-  get cameras(): Camera[] {
-    const sortedCameras = [...CamerasOnThisDevice.camerasByDeviceId.values()]
+  public get cameras(): Camera[] {
+    const sortedCameras = [...this.camerasByDeviceId.values()]
       .sort( (a, b) => compareCameras(a, b) );
     return sortedCameras;
   }
 
-  unknownCameraIndex = new Map<string, number>();
+  private cameraDeviceIdToCameraNumber = new Map<string, number>();
 
+  /**
+   * Try to access the camera to learn more about its resolution and other settings.
+   * @param cameraDevice A camera's MediaDeviceInfo returned by `navigator.mediaDevices.enumerateDevices()`
+   * 
+   * @returns A promise to either a full Camera record or undefined
+   */
   tryAddCamera = async (cameraDevice: MediaDeviceInfo): Promise<Camera | undefined> => {
     const {deviceId} = cameraDevice;
     try {
@@ -117,11 +128,11 @@ export class CamerasOnThisDevice extends Component<CamerasOnThisDeviceOptions> {
       if (label) {
         identifier = label;
       } else {
-        if (this.unknownCameraIndex.has(deviceId)) {
-          identifier = `Camera ${this.unknownCameraIndex.get(deviceId)!}`;
+        if (this.cameraDeviceIdToCameraNumber.has(deviceId)) {
+          identifier = `Camera ${this.cameraDeviceIdToCameraNumber.get(deviceId)!}`;
         } else {
-          const cameraIndex = this.unknownCameraIndex.size +1;
-          this.unknownCameraIndex.set(deviceId, cameraIndex);
+          const cameraIndex = this.cameraDeviceIdToCameraNumber.size +1;
+          this.cameraDeviceIdToCameraNumber.set(deviceId, cameraIndex);
           identifier = `Camera ${cameraIndex}`;
         }
       }
@@ -133,47 +144,19 @@ export class CamerasOnThisDevice extends Component<CamerasOnThisDeviceOptions> {
         name
       };
       this.camerasToBeAdded.delete(deviceId);
-      CamerasOnThisDevice.unreadableCameraDevices.delete(deviceId);
-      CamerasOnThisDevice.camerasByDeviceId.set(deviceId, camera);
-      this.renderSoon();
+      this.unreadableCameraDevices.delete(deviceId);
+      this.camerasByDeviceId.set(deviceId, camera);
+      this.cameraListProcessingStatusUpdated.send();
       return camera;
     } catch (e) {
-      if (CamerasOnThisDevice.unreadableCameraDevices.has(deviceId)) {
-        CamerasOnThisDevice.unreadableCameraDevices.get(deviceId)?.exceptions.unshift(e);
+      if (this.unreadableCameraDevices.has(deviceId)) {
+        this.unreadableCameraDevices.get(deviceId)?.exceptions.unshift(e);
       } else {
-        CamerasOnThisDevice.unreadableCameraDevices.set(deviceId, {cameraDevice, exceptions: [e]})
+        this.unreadableCameraDevices.set(deviceId, {cameraDevice, exceptions: [e]});
+        this.cameraListProcessingStatusUpdated.send();
       }
     }
     return;
-  }
-
-  render() {
-    super.render();
-    this.append(
-      Div({class: "cameras-on-this-device-heading",
-           text: "Identifying device cameras..."
-          })
-    )
-    for (const camera of this.cameras) {
-      const {name} = camera;
-      this.append(
-        Div({class: ["camera-on-this-device", "camera-found"], text: name})
-      )
-    };
-    for (const camera of CamerasOnThisDevice.unreadableCameraDevices.values()) {
-      const {label, deviceId} = camera.cameraDevice;
-      this.append(
-        Div({class: ["camera-on-this-device", "camera-unreadable"], text: label || deviceId})
-      );
-    }
-    const camerasToBeRead = [...this.camerasToBeAdded.values()]
-      .filter( ({deviceId}) => !CamerasOnThisDevice.unreadableCameraDevices.has(deviceId) )
-    for (const camera of  camerasToBeRead) {
-      const {label, deviceId} = camera;
-      this.append(
-        Div({class: ["camera-on-this-device", "camera-to-be-added"], text: label || deviceId})
-      );
-    }
   }
 
   addAttachedAndRemovedDetachedCameras = async (): Promise<void> => {
@@ -187,15 +170,15 @@ export class CamerasOnThisDevice extends Component<CamerasOnThisDeviceOptions> {
     }, new Set<string>());
 
     // Remove cameras no longer on list of media devices (presumably disconnected);
-    const deviceIdsOfRemovedCameras = [...CamerasOnThisDevice.camerasByDeviceId.keys()]
+    const deviceIdsOfRemovedCameras = [...this.camerasByDeviceId.keys()]
       .filter( deviceId => !setOfCurrentCamerasDeviceIds.has(deviceId) );
     for (const deviceIdOfRemovedCamera of deviceIdsOfRemovedCameras) {
-      CamerasOnThisDevice.camerasByDeviceId.delete(deviceIdOfRemovedCamera);
+      this.camerasByDeviceId.delete(deviceIdOfRemovedCamera);
     }
 
     // Add cameras added since this list was last created
     const listOfNewlyAttachedCameras = listOfCurrentCameras.filter(
-      ({deviceId}) => !CamerasOnThisDevice.camerasByDeviceId.has(deviceId) && !this.camerasToBeAdded.has(deviceId)
+      ({deviceId}) => !this.camerasByDeviceId.has(deviceId) && !this.camerasToBeAdded.has(deviceId)
     );
     listOfNewlyAttachedCameras.forEach( camera => this.camerasToBeAdded.set(camera.deviceId, camera) )
 
@@ -218,7 +201,7 @@ export class CamerasOnThisDevice extends Component<CamerasOnThisDeviceOptions> {
     }
     if (deviceIdsOfRemovedCameras.length > 0 || listOfNewlyAttachedCameras.length > 0) {
       // A change to the list has been made so send an update event
-      this.updated.send(this.cameras);
+      this.cameraListUpdated.send(this.cameras);
     }
   }
 
