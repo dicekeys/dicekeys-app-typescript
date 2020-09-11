@@ -4,7 +4,7 @@ import {
 import {
   CamerasOnThisDevice
 } from "./cameras-on-this-device";
-import styles from "./cameras-on-this-device.module.css";
+import styles from "./cameras-being-inspected.module.css";
 
 export type Camera = MediaDeviceInfo & MediaTrackSettings & {name: string, capabilities: MediaTrackCapabilities};
 
