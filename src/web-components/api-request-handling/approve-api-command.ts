@@ -247,7 +247,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
       this.append(
         Div({class: "orientation-widget"},
           Div({}, `Orientation of individual dice`),
-          Label({}, RadioButton({name: "orientation", value: "preserve", checked: !this.modifiedDerivationOptions.excludeOrientationOfFaces}).with( r => r.events.click.on( () => {
+          Label({}, RadioButton({name: "orientation", value: "preserve", ...(!this.modifiedDerivationOptions.excludeOrientationOfFaces ? {checked: ""} : {})}).with( r => r.events.click.on( () => {
             this.modifiedDerivationOptions.excludeOrientationOfFaces = false;
             this.renderSoon();
           }) ), "Preserve"),
@@ -255,7 +255,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
             RadioButton({
                 name: "orientation",
                 value:"remove",
-                checked: !!this.modifiedDerivationOptions.excludeOrientationOfFaces,
+                ...(!!this.modifiedDerivationOptions.excludeOrientationOfFaces ? {checked: ""} : {}),
                 events: (events) => {
                   events.click.on( () => {
                     this.modifiedDerivationOptions.excludeOrientationOfFaces = true;
