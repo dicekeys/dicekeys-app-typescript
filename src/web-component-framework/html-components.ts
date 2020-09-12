@@ -39,15 +39,15 @@ export class HtmlElementEvents<
   ) {}
   #instantiatedEvents = new Map<Parameters<HTMLElementTagNameMap[K]["addEventListener"]>[0], ComponentEvent<any, any>>();
 
-  protected getEvent = <
-    KEY extends Parameters<HTMLElementTagNameMap[K]["addEventListener"]>[0]
+  public readonly getEvent = <
+    KEY extends keyof HTMLElementEventMap// Parameters<HTMLElementTagNameMap[K]["addEventListener"]>[0]
   >(eventType: KEY) => {
-    if (!this.#instantiatedEvents.has(name)) {
+    if (!this.#instantiatedEvents.has(eventType)) {
       const event = new ComponentEvent<[any], any>(this.component);
-      this.#instantiatedEvents.set(name, event);
+      this.#instantiatedEvents.set(eventType, event);
       this.component.primaryElement.addEventListener(eventType, event.send);
     }
-    return this.#instantiatedEvents.get(name)! as unknown as ComponentEvent<[WindowEventMap[KEY & keyof WindowEventMap]], any>;
+    return this.#instantiatedEvents.get(eventType)! as unknown as ComponentEvent<[WindowEventMap[KEY & keyof WindowEventMap]], any>;
   }
 
   public get click() { return this.getEvent("click") }
@@ -178,6 +178,10 @@ export class CheckboxOrRadioButton extends InputElement<InputAttributes> {
   public get checked() { return this.primaryElement.checked }
   public set checked(value: boolean) { this.primaryElement.checked = value }
 }
+
+export const Button = createHtmlElement("button");
+export type Button = ReturnType<typeof Button>;
+
 
 export const TextInput = Input("text");
 export type TextInput = ReturnType<typeof TextInput>;
