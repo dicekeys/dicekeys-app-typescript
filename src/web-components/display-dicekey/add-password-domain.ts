@@ -5,13 +5,15 @@ import {
   Label,
   Span,
   TextInput,
-  Img, ComponentEvent
+  ComponentEvent, Div
 } from "../../web-component-framework";
+
 import { getRegisteredDomain } from "~domains/get-registered-domain";
+import { passwordDerivationOptionsJson } from "~dicekeys/password-consumers";
+import { FavIcon } from "./fav-icon";
 
 const domainRegexp = new RegExp("(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]");
 const isValidDomain = (candidate: string): boolean => domainRegexp.test(candidate);
-
 
 export interface AddPasswordDomainOptions extends Attributes {}
 
@@ -35,6 +37,13 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
   get domainOrUrl(): string { return this.domainOrUrlInputField?.value ?? ""; }
   derivedDomainInputField?: TextInput;
   get derivedDomain(): string { return this.derivedDomainInputField?.value ?? ""; }
+  derivationOptionsField?: TextInput;
+  get derivationOptions(): string { return this.derivationOptionsField?.value ?? ""; }
+  imageContainerDiv?: Div;
+  nameField?: TextInput;
+  get name(): string { return this.nameField?.value ?? ""; }
+
+
   faviconImage?: HTMLImageElement;
 
 
@@ -42,36 +51,50 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
     const domain = this.domainOrUrlInputField?.value ?? "";
     if (isValidDomain(domain)) {
       this.derivedDomainInputField!.value = getRegisteredDomain(domain);
+      this.handleRegisteredDomainChanged();
     }
   }
 
   private handleRegisteredDomainChanged = () => {
-    const newSrc = `https://${this.derivedDomain}/favicon.ico`;
-    if (this.faviconImage != null && newSrc != this.faviconImage.src) {
-      this.faviconImage.setAttribute("display", "none");
-      this.faviconImage.src = `https://${this.derivedDomain}/favicon.ico`;
-      this.faviconImage.addEventListener("load", () => this.faviconImage?.setAttribute("display", "block"));
-    }
+    this.derivationOptionsField!.value = passwordDerivationOptionsJson(this.derivedDomain);
+    this.nameField!.value = 
+      (this.derivedDomain.split(".")[0]?.charAt(0) ?? "").toLocaleUpperCase() +
+      (this.derivedDomain.split(".")[0]?.substr(1) ?? "")
+
+    this.imageContainerDiv?.clear();
+    this.imageContainerDiv?.append(
+      new FavIcon({domain: this.derivedDomain})
+    )
   }
 
   render() {
     super.render();
     this.append(
       Label({},
-        Span({},"Domain or URL"),
+        Span({},"Domain or URL of the application/service you need a password for"),
         TextInput().with( e => {
           this.domainOrUrlInputField = e;
           e.events.change.on(this.handleDomainOrUrlFieldChanged);
           e.events.keyup.on(this.handleDomainOrUrlFieldChanged);
-        }),
+      })),
       Label({},
-        Span({},"Derived Domain"),
+        Span({},"Service Domain"),
         TextInput({disabled: ""}).with( e => {
           this.derivedDomainInputField = e;
           e.events.change.on(this.handleRegisteredDomainChanged);
-        }),
-      ),
-      Img({style: "display: none"}).withElement( e => this.faviconImage = e ))
+      })),
+      Label({},
+        Span({},"Password derivation options"),
+        TextInput({disabled: ""}).with( e => {
+          this.derivationOptionsField = e;
+          e.events.change.on(this.handleRegisteredDomainChanged);
+      })),
+      Div({}).with( div => this.imageContainerDiv = div ),
+      Label({},
+        Span({},"Name"),
+        TextInput({disabled: ""}).with( e => {
+          this.nameField = e;
+      })),
     );
   }
 

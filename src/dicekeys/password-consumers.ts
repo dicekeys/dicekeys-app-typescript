@@ -51,19 +51,23 @@ export interface PasswordConsumer extends
 //   }) ),
 // });
 
-const defaultDerivationOptionsJson = (hosts: SingletonOrArrayOf<string>) => ({
-  derivationOptionsJson: `{"type": "Secret", "wordLimit": 13, "allow": [${
+export const passwordDerivationOptionsJson = (hosts: SingletonOrArrayOf<string>) =>
+`{"wordLimit": 13, "allow": [${
     asArray(hosts)
       .map( host => `{"host": "*.${host}"}`)
       .join(" ,")
-  }]}`
+  }]}`;
+
+
+export const passwordDerivationOptionsJsonObj = (hosts: SingletonOrArrayOf<string>) => ({
+  derivationOptionsJson: passwordDerivationOptionsJson(hosts)
 });
 
 const defaultPasswordManagerSecurityParameters = (
   ...hosts: string[]
 ): PasswordConsumerSecurityParameters => ({
 //  ...defaultDomains(hosts),
-  ...defaultDerivationOptionsJson(hosts),
+  ...passwordDerivationOptionsJsonObj(hosts),
 });
 
 
