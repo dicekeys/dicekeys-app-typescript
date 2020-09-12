@@ -24,7 +24,7 @@ import {
   ComputeApiCommandWorker
 } from "../../workers/call-api-command-worker";
 import {
-    ApiCalls, ApiStrings, DerivationOptions
+    ApiCalls, ApiStrings
 } from "@dicekeys/dicekeys-api-js";
 import {
   DisplayPassword
@@ -33,7 +33,6 @@ import {
   describePasswordConsumerType
 } from "../../phrasing/ui";
 import { AddPasswordDomain } from "./add-password-domain";
-import { FavIcon } from "./fav-icon";
 
 interface DiceKeySvgViewOptions extends Attributes {
   diceKey: DiceKey;
@@ -124,9 +123,10 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
                 OptGroup({label: describePasswordConsumerType(groupType)},
                   ...consumers.map( pwm => 
                       Option({value: pwm.name},
-                        new FavIcon({domain: 
-                          DerivationOptions(pwm.derivationOptionsJson).allow?.map( x => x.host ) ?? []
-                        }),
+                        // Option doesn't support images, but on platforms where it does...
+                        // new FavIcon({domain: 
+                        //   DerivationOptions(pwm.derivationOptionsJson).allow?.map( x => x.host ) ?? []
+                        // }),
                         pwm.name) ),
                   ...groupType !== PasswordConsumerType.UserEntered ? [] : [
                     Option({value: keyAddNewPassword}, "Add new")
