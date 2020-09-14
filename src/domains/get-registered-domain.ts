@@ -1,5 +1,8 @@
 import {readFileSync} from 'fs'
 
+const domainRegexp = new RegExp("(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]");
+const isValidDomain = (candidate: string): boolean => domainRegexp.test(candidate);
+
 type LabelMap = {[domain: string]: LabelMap} & {isTerminalNode?: boolean};
 /**
  * We will turn the public domain suffix list into a tree with the
@@ -78,7 +81,7 @@ export const getDomainFromDomainOrUrlString = (domainOrUrl: string): string => {
     }
   } catch {
   }
-  return domainOrUrl;
+  return isValidDomain(domainOrUrl) ? domainOrUrl : "";
 }
 
 /**

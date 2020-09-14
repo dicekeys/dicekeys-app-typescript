@@ -16,9 +16,11 @@ export class ComponentEvent<ARGS extends any[] = [], TARGET_TYPE = any> {
     ComponentEvent.targetToEventsAttachedToIt.get(target)?.add(this);
   }
   
-  on = (callback: (...args: ARGS) => any) => {
+  on = (...callbacks: ((...args: ARGS) => any)[]) => {
+    for (const callback of callbacks) {
       this.callbacks.add(callback);
-      return this.target;
+    }
+    return this.target;
   }
 
   remove = (callback: (...args: ARGS) => any) => {

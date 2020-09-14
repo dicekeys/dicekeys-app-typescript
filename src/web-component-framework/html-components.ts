@@ -151,7 +151,13 @@ class InputElement<
     this.primaryElement.setAttribute("type", type);
   }
   public get value() { return this.primaryElement.value }
-  public set value(value: string) { this.primaryElement.value = value }
+  public set value(value: string) { 
+    const valueChanged = this.primaryElement.value !== value;
+    this.primaryElement.value = value;
+    if (valueChanged) {
+      this.primaryElement.dispatchEvent(new Event("change"));
+    }
+  }
 }
 /*
 <
