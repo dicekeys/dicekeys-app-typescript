@@ -8,7 +8,7 @@ import {
 import "regenerator-runtime/runtime";
 import {
   Face,
-  FaceRead, getImageOfFaceRead
+  FaceRead, FaceReadError, getImageOfFaceRead
 } from "@dicekeys/read-dicekey-js";
 import {
   DiceKey, TupleOf25Items
@@ -71,7 +71,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    */
   private facesRead?: TupleOf25Items<FaceRead>;
 
-  get allFacesReadHaveMajorityValues(): boolean {
+  get  allFacesReadHaveMajorityValues(): boolean {
     return this.facesRead?.filter( faceRead =>
       faceRead.letter != null && faceRead.digit != null
     ).length === 25;
@@ -104,6 +104,78 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       this.facesRead.length === 25 &&
       !this.userHasInvalidatedAFace &&
       this.facesReadThatContainErrorsAndHaveNotBeenValidated.length == 0;    
+  }
+
+  /**
+   * A list of all the error types impacting the set of die faces
+   * (effectively a set presented as a list)
+   */
+  private get allDiceErrorTypes(): FaceReadError["type"][] {
+    const faceReadErrorTypes = new Set<FaceReadError["type"]>();
+    for (const face of this.facesRead ?? []) {
+      for (const errorType of face.errors) {
+         faceReadErrorTypes.add(errorType.type);
+      }
+    }
+    return [...faceReadErrorTypes];
+  }
+
+  /**
+   * For tracking the time period during which the only errors in the
+   * DiceKey being scanned are bit errors
+   */
+  private msSinceErrorsNarrowedToJustBitErrors: number | undefined;
+  /**
+   * Track the number of consecutive frames during which the only errors
+   * in the DiceKey being scanned are bit errors.
+   */
+  private framesSinceErrorsNarrowedToJustBitErrors: number | undefined;
+
+  /**
+   * This logic determines whether we've met the conditions for scanning,
+   * which is currently either:
+   *   (1) a perfect scan with no errors, or
+   *   (2) only errors in underlines or overlines that can be correct by a
+   *       math of one underline/overline to the OCR result, and which
+   *       we've been unable to fix after four frames and at least 1 second
+   *       of trying to get a better image.
+   */
+  private get shouldFinishScanning(): boolean {
+    // Can't finish if there isn't a majority value for each face.
+    if (!this.allFacesReadHaveMajorityValues) {
+      this.msSinceErrorsNarrowedToJustBitErrors = undefined;
+      this.framesSinceErrorsNarrowedToJustBitErrors = undefined;
+      return false;
+    }
+    const errorTypes = this.allDiceErrorTypes;
+    if (errorTypes.length === 0) {
+      // All faces have majority values and no errors found -- we're done
+      return true;
+    }
+
+    const errorsAreOnlyBitErrors = errorTypes.every( e =>
+        e === "undoverline-bit-mismatch" || e === "undoverline-missing"
+          // should we allow || e === "ocr-second-choice"?        
+    );
+    if (!errorsAreOnlyBitErrors) {
+      this.msSinceErrorsNarrowedToJustBitErrors = undefined;
+      this.framesSinceErrorsNarrowedToJustBitErrors = undefined;
+      return false;
+    }
+    
+    if (this.msSinceErrorsNarrowedToJustBitErrors == null ||
+      this.framesSinceErrorsNarrowedToJustBitErrors == null
+    ) {
+      this.msSinceErrorsNarrowedToJustBitErrors = Date.now();
+      this.framesSinceErrorsNarrowedToJustBitErrors = 0;
+    }
+
+    // Require at last 1 second and 4 frames to be processed before
+    // giving up on correcting the error.
+    return (
+      Date.now() - this.msSinceErrorsNarrowedToJustBitErrors > 1000 &&
+      ++this.framesSinceErrorsNarrowedToJustBitErrors >= 4
+    );
   }
 
   protected finishDelayInProgress: boolean = false;
@@ -318,6 +390,8 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.frameWorker.postMessage(request, transferrableObjectsWithinRequest);
   }
 
+
+
   /**
    * Handle frames processed by the web worker, displaying the received
    * overlay image above the video image.
@@ -374,12 +448,9 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       }
     }
 
-    if (this.allFacesReadHaveMajorityValues && !this.finishDelayInProgress) {
-      // const diceKey = DiceKey( facesRead.map( faceRead => faceRead.toFace() ));
-      // FIXME -- add known errors here.
+    if (this.shouldFinishScanning) {
       this.finishDelayInProgress = true;
       setTimeout( () => {
-        // FIXME
         this.finishDelayInProgress = false;
         if (this.allFacesHaveBeenValidated) {
           this.reportDiceKeyReadAndValidated();
@@ -393,4 +464,5 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       setTimeout(this.startProcessingNewCameraFrame, 0)
     }
   }
+
 };
