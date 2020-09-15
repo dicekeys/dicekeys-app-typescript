@@ -449,11 +449,8 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     }
 
     if (this.shouldFinishScanning) {
-      // const diceKey = DiceKey( facesRead.map( faceRead => faceRead.toFace() ));
-      // FIXME -- add known errors here.
       this.finishDelayInProgress = true;
       setTimeout( () => {
-        // FIXME
         this.finishDelayInProgress = false;
         if (this.allFacesHaveBeenValidated) {
           this.reportDiceKeyReadAndValidated();
