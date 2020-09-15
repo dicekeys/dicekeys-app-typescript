@@ -5,13 +5,13 @@ import {
 import { Exceptions, ApiStrings } from "@dicekeys/dicekeys-api-js";
 import {
   ApiRequestContainer
-} from "./api-request-container";
+} from "./api-request-handling/api-request-container";
 import {
   DiceKeySvgView
-} from "./display-dicekey-svg";
+} from "./display-dicekey/display-dicekey";
 import {
-  HomeComponent
-} from "./home-component";
+  DisplayWhenNoDiceKeyPresent
+} from "./display-when-no-dicekey-present";
 import {
   DiceKey
 } from "../dicekeys/dicekey";
@@ -25,7 +25,7 @@ import {
 import {
   ApiRequestContext
 } from "../api-handler/handle-api-request";
-import { ScanDiceKey } from "./scan-dicekey";
+import { ScanDiceKey } from "./scanning/scan-dicekey";
 import {
   urlApiResponder
 } from "../api-handler/handle-url-api-request";
@@ -93,6 +93,8 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
     super.render();
     const diceKey = this.appState.diceKey.value;
     if (Step.getUsersConsent.isInProgress) {
+      // If we're in the middle of getting the user's consent for an operation,
+      // Render the ApiRequestContainer
       this.append(
         new ApiRequestContainer(
           {requestContext: Step.getUsersConsent.options}
@@ -103,6 +105,8 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
       )
       Step.getUsersConsent.promise?.finally( this.renderSoon );
     } else if (Step.loadDiceKey.isInProgress) {
+      // When we're in the process of loading/scanning a DiceKey,
+      // show the component for scanning it.
       this.append(
         Div({class: "request-container"},
           new ScanDiceKey({host: ""}).with( readDiceKey => { 
@@ -112,11 +116,14 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
       Step.loadDiceKey.promise?.finally( () => this.renderSoon() );
 
     } else if (diceKey) {
+      // A DiceKey is present and the user has options for what to do with it.
       this.append(new DiceKeySvgView({diceKey}).with( dicekeySvg => {
         dicekeySvg.forgetEvent.on( () => this.renderSoon() );
       }));
     } else {
-      this.append(new HomeComponent().with( homeComponent  => {
+      // There is no DiceKey present and the user has the option to start scanning one
+      // or to create a random one
+      this.append(new DisplayWhenNoDiceKeyPresent().with( homeComponent  => {
         homeComponent.loadDiceKeyButtonClicked.on( () => {
           this.loadDiceKey();
         });

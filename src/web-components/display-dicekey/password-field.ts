@@ -1,11 +1,11 @@
 import styles from "./password-field.module.css"
 import {
   Attributes,
-  Component} from "../web-component-framework";
+  Component} from "../../web-component-framework";
 import { 
   Div,
   Observable,
-} from "../web-component-framework";
+} from "../../web-component-framework";
 // import {
 //   DiceKeyAppState
 // } from "../state";

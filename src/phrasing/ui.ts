@@ -10,5 +10,7 @@ export const describePasswordConsumerType = (pct: PasswordConsumerType): string 
       return "Identity Providers";
     case PasswordConsumerType.AuthenticatorApp:
       return "Authenticator Applications";
+    case PasswordConsumerType.UserEntered:
+      return "Custom";
   }
 }

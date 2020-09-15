@@ -14,10 +14,10 @@
     "build-app": "rimraf dist-app & parcel build src/index.html --no-minify --out-dir dist-app/",
     "build-pwmgr": "rimraf dist-pwmgr & parcel build src/pwmgr.html --no-minify --out-dir dist-pwmgr/ --out-file index.html",
     "build:live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
-    "upload-pwmgr": "gsutil -m -h Cache-Control:\"Cache-Control:private, max-age=0, no-transform\" cp dist-pwmgr/* gs://pwmgr.app/",
-    "upload-production": "gsutil -m -h Cache-Control:\"Cache-Control:private, max-age=0, no-transform\" cp dist-app/* gs://dicekeys.app/",
+    "upload-pwmgr": "gsutil -m cp dist-pwmgr/* gs://pwmgr.app/",
+    "upload-production": "gsutil -m cp dist-app/* gs://dicekeys.app/ & gsutil setmeta -h \"Cache-Control:no-store\" gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/*.js",
     "update-production": "npm run -s build-app & npm run -s upload-production",
-    "upload-staging": "gsutil -m -h Cache-Control:\"Cache-Control:private, max-age=0, no-transform\" cp dist-app/* gs://staging.dicekeys.app/",
+    "upload-staging": "gsutil -m cp -z js dist-app/* gs://staging.dicekeys.app/ & gsutil setmeta -h \"Cache-Control:no-store; Content-Type: text/html\" gs://staging.dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://staging.dicekeys.app/*.js",
     "update-staging": "npm run -s build-app & npm run -s upload-staging",
     "update-pwmgr": "npm run -s build-pwmgr & npm run -s upload-pwmgr"
   },

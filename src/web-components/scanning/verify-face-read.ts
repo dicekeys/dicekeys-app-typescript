@@ -1,6 +1,6 @@
 import {
   Attributes, Canvas, Component, ComponentEvent, Div, InputButton
-} from "../web-component-framework";
+} from "../../web-component-framework";
 import {
   FaceRead
 } from "@dicekeys/read-dicekey-js";

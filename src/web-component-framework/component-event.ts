@@ -1,29 +1,31 @@
-export class ComponentEvent<ARGS extends any[] = [], CHAIN = any> {
-  private static parentToEvents = new Map<any, Set<ComponentEvent>>();
+export class ComponentEvent<ARGS extends any[] = [], TARGET_TYPE = any> {
+  private static targetToEventsAttachedToIt = new Map<any, Set<ComponentEvent>>();
 
-  public static removeAllEventListeners(parent: any) {
-    for (const event of ComponentEvent.parentToEvents.get(parent) ?? []) {
+  public static removeAllEventListeners(target: any) {
+    for (const event of ComponentEvent.targetToEventsAttachedToIt.get(target) ?? []) {
       event.removeAll();
     }
   }
 
   private callbacks = new Set<(...args: ARGS)=> any>();
-  constructor(protected parent: CHAIN) {
+  constructor(protected target: TARGET_TYPE) {
     // Track all of the events present on the parent component
-    if (!ComponentEvent.parentToEvents.has(parent)) {
-      ComponentEvent.parentToEvents.set(parent, new Set());
+    if (!ComponentEvent.targetToEventsAttachedToIt.has(target)) {
+      ComponentEvent.targetToEventsAttachedToIt.set(target, new Set());
     }
-    ComponentEvent.parentToEvents.get(parent)?.add(this);
+    ComponentEvent.targetToEventsAttachedToIt.get(target)?.add(this);
   }
   
-  on = (callback: (...args: ARGS) => any) => {
+  on = (...callbacks: ((...args: ARGS) => any)[]) => {
+    for (const callback of callbacks) {
       this.callbacks.add(callback);
-      return this.parent;
+    }
+    return this.target;
   }
 
   remove = (callback: (...args: ARGS) => any) => {
     this.callbacks.delete(callback);
-    return this.parent;
+    return this.target;
   }
 
   removeAll = () => {
@@ -34,6 +36,6 @@ export class ComponentEvent<ARGS extends any[] = [], CHAIN = any> {
     for (const callback of this.callbacks) {
       callback(...args);
     }
-    return this.parent;
+    return this.target;
   }
 };

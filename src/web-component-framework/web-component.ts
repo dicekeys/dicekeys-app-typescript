@@ -12,16 +12,18 @@ export type Appendable<T extends Component = Component> = AppendableItem<T> | Ap
 export class Attributes {
   name?: string;
   id?: string;
-  value?: string;
-  style?: string;
-  class?: string | string[];
   text?: string;
-  label?: string;
+  class?: string | string[];
+  style?: string;
 }
+
+export const DefaultComponentAttributesToCopy : (string & keyof Attributes)[] =
+  ["id", "name", "style"]
+;
 
 export class Component<
   OPTIONS extends Attributes = Attributes,
-  TOP_LEVEL_ELEMENT extends HTMLElement | SVGElement = HTMLElement | SVGElement  
+  TOP_LEVEL_ELEMENT extends HTMLElement | SVGElement = HTMLElement | SVGElement
 > {
   #removed = false;
   public get removed(): boolean { return this.#removed; }
@@ -39,11 +41,17 @@ export class Component<
   
   constructor(
     public readonly  options: OPTIONS,
-    public readonly primaryElement: TOP_LEVEL_ELEMENT = document.createElement("div") as unknown as TOP_LEVEL_ELEMENT
+    public readonly primaryElement: TOP_LEVEL_ELEMENT = document.createElement("div") as unknown as TOP_LEVEL_ELEMENT,
+    attributesToCopy: (string & keyof OPTIONS)[] = []
   ) {
     this.detachEvent.on(() => this.remove());
-    const {text, class: Class} = this.options;
-    for (const key of ["id", "name", "style", "value", "label"] as const) {
+    const {text, class: classes} = this.options;
+    const setOfAllAttributesToCopy = new Set<(string & keyof OPTIONS)>([...DefaultComponentAttributesToCopy, ...attributesToCopy]);
+    for (const key of setOfAllAttributesToCopy) {
+      if (key === "class" || key === "text") {
+        // Classes are a special case
+        continue;
+      }
       const val = options[key];
       if (typeof val === "string") {
         this.primaryElement.setAttribute(key, val);
@@ -60,12 +68,14 @@ export class Component<
     if (typeof text === "string" && this.primaryElement.textContent != null) {
       this.primaryElement.textContent = text;
     }
-    if (Class != null) {
-      const classes: string[] = typeof Class === "string" ?
-        [Class] :
-        Array.isArray(Class) ?
-          [...Class] : [];
-      this.addClass(...classes);
+    if (classes != null) {
+      this.addClass(...(
+        typeof classes === "string" ?
+          [classes] :
+        Array.isArray(classes) ?
+          [...classes] :
+          []
+      ));
     }
     this.renderSoon();
   }
