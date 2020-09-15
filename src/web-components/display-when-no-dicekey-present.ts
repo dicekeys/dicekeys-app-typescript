@@ -5,7 +5,7 @@ import {
   InputButton
 } from "../web-component-framework"
 
-export class HomeComponent extends Component {
+export class DisplayWhenNoDiceKeyPresent extends Component {
   
   public readonly loadDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);
   public readonly createRandomDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);

@@ -4,7 +4,7 @@ import {
   ComponentEvent,
   Div,
   MonospaceSpan
-} from "../web-component-framework"
+} from "../../web-component-framework"
 import "regenerator-runtime/runtime";
 import {
   Face,
@@ -12,18 +12,18 @@ import {
 } from "@dicekeys/read-dicekey-js";
 import {
   DiceKey, TupleOf25Items
-} from "../dicekeys/dicekey";
-import * as AppState from "../state";
+} from "../../dicekeys/dicekey";
+import * as AppState from "../../state";
 import {
     ProcessFrameRequest,
     ProcessFrameResponse,
     TerminateSessionRequest,
     ProcessAugmentFrameRequest
-} from "../workers/dicekey-image-frame-worker"
+} from "../../workers/dicekey-image-frame-worker"
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 import {
   describeHost
-} from "../phrasing/api";
+} from "../../phrasing/api";
 import {
   CameraCapture, CameraCaptureOptions
 } from "./camera-capture"
@@ -241,7 +241,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
 
     this.cameraSessionId = Math.random().toString() + Math.random().toString();
     // Create worker for processing camera frames
-    this.frameWorker = new Worker('../workers/dicekey-image-frame-worker.ts');
+    this.frameWorker = new Worker('../../workers/dicekey-image-frame-worker.ts');
     // Listen for messages from worker
     this.frameWorker.addEventListener( "message", this.handleMessage );
   }

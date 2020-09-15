@@ -1,6 +1,6 @@
 import styles from "./api-request-container.module.css";
-import dialogStyles from "./dialog.module.css";
-import layoutStyles from "./layout.module.css";
+import dialogStyles from "../dialog.module.css";
+import layoutStyles from "../layout.module.css";
 import {
 //  Exceptions,
   DerivationOptions
@@ -9,37 +9,37 @@ import {
   Component, Attributes,
   Div, InputButton,
   ComponentEvent
-} from "../web-component-framework";
+} from "../../web-component-framework";
 import {
   DiceKey,
-} from "../dicekeys/dicekey";
+} from "../../dicekeys/dicekey";
 import {
   API,
-} from "../phrasing";
+} from "../../phrasing";
 import {
   ScanDiceKey
-} from "./scan-dicekey"
+} from "../scanning/scan-dicekey"
 import {
   EncryptedCrossTabState
-} from "../state";
+} from "../../state";
 import {
   ApproveApiCommand
 } from "./approve-api-command";
 import {
   ApiRequestContext
-} from "../api-handler/handle-api-request";
+} from "../../api-handler/handle-api-request";
 import {
   ConsentResponse
-} from "../api-handler/handle-api-request";
+} from "../../api-handler/handle-api-request";
 import {
   getRequestsDerivationOptionsJson
-} from "../api-handler/get-requests-derivation-options-json";
+} from "../../api-handler/get-requests-derivation-options-json";
 import {
   VerifyDerivationOptionsWorker,
-} from "../workers/call-derivation-options-proof-worker";
+} from "../../workers/call-derivation-options-proof-worker";
 import {
   shortDescribeCommandsAction
-} from "../phrasing/api";
+} from "../../phrasing/api";
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you

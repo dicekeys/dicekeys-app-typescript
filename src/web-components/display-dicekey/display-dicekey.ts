@@ -1,27 +1,28 @@
-import dialogStyles from "./dialog.module.css";
-import layoutStyles from "./layout.module.css";
+import dialogStyles from "../dialog.module.css";
+import layoutStyles from "../layout.module.css";
 
 import {
   Component, Attributes,
   ComponentEvent,
   InputButton, Div, Label, Select, Option, Observable, OptGroup
-} from "../web-component-framework";
+} from "../../web-component-framework";
 import {
   DiceKeySvg
 } from "./dicekey-svg";
 import {
   EncryptedCrossTabState
-} from "../state/encrypted-cross-tab-state";
+} from "../../state/encrypted-cross-tab-state";
 import {
   DiceKey
-} from "../dicekeys/dicekey";
+} from "../../dicekeys/dicekey";
 import {
-  passwordConsumers,
-  passwordConsumersGroupedByType
-} from "../dicekeys/password-consumers";
+  getPasswordConsumers,
+  getPasswordConsumersGroupedByType,
+  PasswordConsumerType
+} from "../../dicekeys/password-consumers";
 import {
   ComputeApiCommandWorker
-} from "../workers/call-api-command-worker";
+} from "../../workers/call-api-command-worker";
 import {
     ApiCalls, ApiStrings
 } from "@dicekeys/dicekeys-api-js";
@@ -30,12 +31,15 @@ import {
 } from "./password-field"
 import {
   describePasswordConsumerType
-} from "../phrasing/ui";
+} from "../../phrasing/ui";
+import { AddPasswordDomain } from "./add-password-domain";
 
 interface DiceKeySvgViewOptions extends Attributes {
   diceKey: DiceKey;
   showOnlyCorners?: boolean;
 }
+
+const keyAddNewPassword = "add new password";
 
 /**
  * This class implements the component that displays DiceKeys.
@@ -61,6 +65,8 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
 
   password = new Observable<string>();
 
+  showAddNewPassword?: boolean;
+
   // setPassword = (password: string) => {
   //   const pw = password ?? "";
   //   this.containerElement?.style.setProperty("visibility", pw.length > 0 ? "visible" : "hidden");
@@ -70,7 +76,12 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
   // }
 
   onPasswordManagerSelectChanged = async (passwordManagerName: string) => {
-    const selectedManager = passwordConsumers.find( pwmgr => pwmgr.name === passwordManagerName );
+    if (passwordManagerName === keyAddNewPassword) {
+      this.showAddNewPassword = true;
+      this.renderSoon();
+      return;
+    }
+    const selectedManager = getPasswordConsumers().find( pwmgr => pwmgr.name === passwordManagerName );
     if (selectedManager != null) {
       console.log("Selected password manager", selectedManager?.name);
       // Derive password in background then set it.
@@ -91,6 +102,14 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
 
   render() {
     super.render();
+    if (this.showAddNewPassword) {
+      this.append(new AddPasswordDomain({}).with( e => e.complete.on( () => {
+          this.showAddNewPassword = false;
+          this.renderSoon();
+        }))
+      )
+      return;
+    }
     this.append(
       Div({class: layoutStyles.stretched_column_container},
         new DiceKeySvg({
@@ -100,9 +119,18 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
           Label({style: `margin-bottom: 4px;`}, "Create a password for ",
             Select({value: "default"},
               Option({}),
-              passwordConsumersGroupedByType.map( group => 
-                OptGroup({label: describePasswordConsumerType(group[0])},
-                  group[1].map( pwm => Option({value: pwm.name}, pwm.name) )
+              getPasswordConsumersGroupedByType().map( ([groupType, consumers]) => 
+                OptGroup({label: describePasswordConsumerType(groupType)},
+                  ...consumers.map( pwm => 
+                      Option({value: pwm.name},
+                        // Option doesn't support images, but on platforms where it does...
+                        // new FavIcon({domain: 
+                        //   DerivationOptions(pwm.derivationOptionsJson).allow?.map( x => x.host ) ?? []
+                        // }),
+                        pwm.name) ),
+                  ...groupType !== PasswordConsumerType.UserEntered ? [] : [
+                    Option({value: keyAddNewPassword}, "Add new")
+                  ]
                 )
               )
             ).with( select => {

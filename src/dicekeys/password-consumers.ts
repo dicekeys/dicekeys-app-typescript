@@ -1,13 +1,13 @@
-export enum SubdomainRule {
-  onlyAllowSubdomains = "onlyAllowSubdomains",
-  forbidSubdomains = "forbidSubdomains",
-  allowDomainAndItsSubdomains = "allowDomainAndItsSubdomains"
-};
+// export enum SubdomainRule {
+//   onlyAllowSubdomains = "onlyAllowSubdomains",
+//   forbidSubdomains = "forbidSubdomains",
+//   allowDomainAndItsSubdomains = "allowDomainAndItsSubdomains"
+// };
 
-export interface AllowableDomain {
-  domain: string;
-  scope?: SubdomainRule;
-}
+// export interface AllowableDomain {
+//   domain: string;
+//   scope?: SubdomainRule;
+// }
 
 export type SingletonOrArrayOf<T> = T | T[];
 
@@ -16,56 +16,62 @@ export const asArray = <T>(x: SingletonOrArrayOf<T> | undefined): T[] =>
   typeof x !== "undefined" ? [x] :
   [];
 
-export interface PasswordManagerContentInjectionParameters {
+export interface PasswordConsumerContentInjectionParameters {
   masterPasswordFieldSelector?: SingletonOrArrayOf<string>;
   masterPasswordConfirmationFieldSelector?: SingletonOrArrayOf<string>;
   elementToAugmentSelector?: string,
   hintFieldSelector?: SingletonOrArrayOf<string>;
 }
 
-export interface PasswordManagerSecurityParameters {
+export interface PasswordConsumerSecurityParameters {
   derivationOptionsJson: string,
-  domains: AllowableDomain[];
+//  domains: AllowableDomain[];
   masterPasswordRuleCompliancePrefix?: string;
 }
 
 export enum PasswordConsumerType {
   PasswordManager = "PasswordManager",
   IdentityProvider = "IdentityProvider",
-  AuthenticatorApp = "AuthenticatorApp"
+  AuthenticatorApp = "AuthenticatorApp",
+  UserEntered = "UserEntered"
 }
 
 export interface PasswordConsumer extends
-  PasswordManagerSecurityParameters,
-  PasswordManagerContentInjectionParameters
+  PasswordConsumerSecurityParameters,
+  PasswordConsumerContentInjectionParameters
 {
   name: string;
   type: PasswordConsumerType
 }
 
-const defaultDomains = (hosts: SingletonOrArrayOf<string>) => ({
-  domains: asArray(hosts).map( host => ({
-    domain: host,
-    scope: SubdomainRule.allowDomainAndItsSubdomains
-  }) ),
-});
+// const defaultDomains = (hosts: SingletonOrArrayOf<string>) => ({
+//   domains: asArray(hosts).map( host => ({
+//     domain: host,
+//     scope: SubdomainRule.allowDomainAndItsSubdomains
+//   }) ),
+// });
 
-const defaultDerivationOptionsJson = (hosts: SingletonOrArrayOf<string>) => ({
-  derivationOptionsJson: `{"type": "Secret", "wordLimit": 13, "allow": [${
+export const passwordDerivationOptionsJson = (hosts: SingletonOrArrayOf<string>) =>
+`{"wordLimit": 13, "allow": [${
     asArray(hosts)
       .map( host => `{"host": "*.${host}"}`)
       .join(" ,")
-  }]}`
+  }]}`;
+
+
+export const passwordDerivationOptionsJsonObj = (hosts: SingletonOrArrayOf<string>) => ({
+  derivationOptionsJson: passwordDerivationOptionsJson(hosts)
 });
 
 const defaultPasswordManagerSecurityParameters = (
   ...hosts: string[]
-): PasswordManagerSecurityParameters => ({
-  ...defaultDomains(hosts),
-  ...defaultDerivationOptionsJson(hosts),
+): PasswordConsumerSecurityParameters => ({
+//  ...defaultDomains(hosts),
+  ...passwordDerivationOptionsJsonObj(hosts),
 });
 
-export const passwordConsumers: PasswordConsumer[] = [
+
+const defaultPasswordConsumerList: PasswordConsumer[] = [
   {
     name: "1Password",
     type: PasswordConsumerType.PasswordManager,
@@ -139,6 +145,38 @@ export const passwordConsumers: PasswordConsumer[] = [
 
     ...defaultPasswordManagerSecurityParameters("microsoft.com","live.com"),
   }
+]
+
+
+const passwordConsumersStorageKey = "dicekeys:password-consumers.ts:PasswordConsumers"
+const getStoredPasswordConsumers = (): PasswordConsumer[] => {
+  const passwordConsumerArray = JSON.parse(
+    localStorage.getItem(passwordConsumersStorageKey) ?? "[]"
+  ) as PasswordConsumer[];
+  if (!Array.isArray(passwordConsumerArray)) {
+    return []
+  }
+  return passwordConsumerArray.filter( consumer =>
+    typeof consumer.derivationOptionsJson === "string" &&
+    typeof consumer.name === "string"
+  )
+}
+export const removeStoredPasswordConsumer = (nameOfPasswordConsumerToRemove: string): void => {
+  const updatedPasswordConsumers = getStoredPasswordConsumers()
+    .filter( consumer => consumer.name != nameOfPasswordConsumerToRemove );
+  localStorage.setItem(passwordConsumersStorageKey, JSON.stringify(updatedPasswordConsumers));
+}
+
+export const addStoredPasswordConsumer = (newPasswordConsumer: PasswordConsumer): void=> {
+  const updatedPasswordConsumers = getStoredPasswordConsumers()
+      .filter( consumer => consumer.name != newPasswordConsumer.name )
+      .concat(newPasswordConsumer)
+  localStorage.setItem(passwordConsumersStorageKey, JSON.stringify(updatedPasswordConsumers));
+}
+
+export const getPasswordConsumers = (): PasswordConsumer[] => [
+  ...defaultPasswordConsumerList,
+  ...getStoredPasswordConsumers(),
 ].sort( (a, b) =>
   // First sort by type
   a.type.localeCompare(b.type) ||
@@ -146,8 +184,9 @@ export const passwordConsumers: PasswordConsumer[] = [
   a.name.localeCompare(b.name)
 )
 
-export const passwordConsumersGroupedByType: [PasswordConsumerType, PasswordConsumer[]][] = 
-  passwordConsumers.reduce( (result, passwordConsumer) => {
+
+export const getPasswordConsumersGroupedByType = (): [PasswordConsumerType, PasswordConsumer[]][] =>
+getPasswordConsumers().reduce( (result, passwordConsumer) => {
     if (result.length > 0 && result[0][0] === passwordConsumer.type) {
       // The password consumer is of the same type as the list
       // we are currently appending to
@@ -157,28 +196,28 @@ export const passwordConsumersGroupedByType: [PasswordConsumerType, PasswordCons
       result.unshift([passwordConsumer.type, [passwordConsumer]]);
     }
     return result;
-  }, [] as [PasswordConsumerType, PasswordConsumer[]][]).reverse();
+  }, [[PasswordConsumerType.UserEntered,[]]] as [PasswordConsumerType, PasswordConsumer[]][]).reverse();
 
-export const getPasswordManagerFoHostName = (hostName: string): PasswordConsumer | undefined => {
-  const lowercaseHostName = hostName.toLocaleLowerCase();
-  return passwordConsumers.find( ({domains}) =>
-    !!domains.find( ({domain, scope}) =>
-      (scope !== SubdomainRule.onlyAllowSubdomains && lowercaseHostName === domain) ||
-      (scope !== SubdomainRule.forbidSubdomains && lowercaseHostName.endsWith(`.${domain}`))
-    )
-  )
-}
+// export const getPasswordManagerFoHostName = (hostName: string): PasswordConsumer | undefined => {
+//   const lowercaseHostName = hostName.toLocaleLowerCase();
+//   return passwordConsumers.find( ({domains}) =>
+//     !!domains.find( ({domain, scope}) =>
+//       (scope !== SubdomainRule.onlyAllowSubdomains && lowercaseHostName === domain) ||
+//       (scope !== SubdomainRule.forbidSubdomains && lowercaseHostName.endsWith(`.${domain}`))
+//     )
+//   )
+// }
 
-const getPasswordManagerForUrlObject = (url: URL | Location) =>
-  (url.origin.startsWith("https://") || undefined) &&
-  getPasswordManagerFoHostName(url.hostname);
+// const getPasswordManagerForUrlObject = (url: URL | Location) =>
+//   (url.origin.startsWith("https://") || undefined) &&
+//   getPasswordManagerFoHostName(url.hostname);
 
-/**
- * Get the password manager record for the current URL, or return
- * undefined if the current URL does not belong to a password manager.
- * 
- * @param url A URL in the form of a string or URL object.
- */
-export const getPasswordManagerForUrl = (url: string | URL | Location) =>
-  getPasswordManagerForUrlObject( typeof url === "string" ? new URL(url) : url);
+// /**
+//  * Get the password manager record for the current URL, or return
+//  * undefined if the current URL does not belong to a password manager.
+//  * 
+//  * @param url A URL in the form of a string or URL object.
+//  */
+// export const getPasswordManagerForUrl = (url: string | URL | Location) =>
+//   getPasswordManagerForUrlObject( typeof url === "string" ? new URL(url) : url);
 
