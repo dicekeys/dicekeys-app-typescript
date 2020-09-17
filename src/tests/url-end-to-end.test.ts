@@ -103,11 +103,11 @@ describe("End To End Url Api Tests", () => {
     const derivationOptions = DerivationOptions({
       requireAuthenticationHandshake: true,
       allow: [{host: defaultRespondToHost}],
-      lengthInBytes: 13
+      wordLimit: 15
     });
     const {password, derivationOptionsJson} = await client.getPassword({derivationOptionsJson: JSON.stringify(derivationOptions)});
     expect(derivationOptionsJson).toBeDefined();
-    expect(password.length).toBeGreaterThan(13);
+    expect(password.length).toBeGreaterThan(15);
   });
 
 });

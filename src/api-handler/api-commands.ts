@@ -2,9 +2,7 @@ import {
   SeededCryptoModuleWithHelpers, SeededCryptoModulePromise,
 } from "@dicekeys/seeded-crypto-js";
 import {
-  DerivationOptions,
   ApiCalls,
-  secretToPasswordWithSpacesBetweenWords,
   ApiStrings
 } from "@dicekeys/dicekeys-api-js";
 const {Outputs} = ApiStrings;
@@ -29,7 +27,7 @@ const {Outputs} = ApiStrings;
  *     a. if the requesting client is not allowed to make the request (e.g. domain not on hosts list)
  *     b. if the derivation options don't include clientMayRetrieveKey and the request is
  *          getSymmetricKey, getSigningKey, or getUnsealingKey
- * 2. If computational cost is excessive, reject the requeset
+ * 2. If computational cost is excessive, reject the request
  *        later we can implement preview of request with warning and have worker calculate in background
  * 3. Calculate the result ahead of time for getPassword or unseal operations
  * 4. Ask the user to approve the command and (if appropriate) to mutate the derivation options
@@ -55,7 +53,7 @@ const {Outputs} = ApiStrings;
 
 const implementApiCall = <METHOD extends ApiCalls.ApiCall>(
   implementation: (
-    seedededCryptoModule: SeededCryptoModuleWithHelpers,
+    seededCryptoModule: SeededCryptoModuleWithHelpers,
     seedString: string,
     parameters: ApiCalls.ApiCallParameters<METHOD>
   ) => ApiCalls.ApiCallResult<METHOD>
@@ -94,15 +92,9 @@ export const getSecret = implementApiCall<ApiCalls.GetSecret>(
 
 export const getPassword = implementApiCall<ApiCalls.GetPassword>(
     (seededCryptoModule, seedString, {derivationOptionsJson}) => deleteAfterOperation(
-      seededCryptoModule.Secret.deriveFromSeed(seedString, derivationOptionsJson),
-      (secret) => {
-        const {
-          wordList = "en_1024_words_5_chars_max_20200709",
-          wordLimit
-        } = DerivationOptions(derivationOptionsJson);
-        const options = wordLimit != null ? {wordsNeeded: wordLimit} : {}; 
-        const password = secretToPasswordWithSpacesBetweenWords( secret.secretBytes, wordList, options );
-        return {password, derivationOptionsJson};
+      seededCryptoModule.Password.deriveFromSeed(seedString, derivationOptionsJson),
+      (password) => {
+        return {password: password.password(), derivationOptionsJson};
       }
     )
   )
