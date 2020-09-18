@@ -341,31 +341,54 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     });
   }
 
-  drawImageDataOntoVideoCanvas = async (imageData: ImageData | ImageBitmap) => {
+  private canvasForDrawImageDataOntoVideoCanvas: HTMLCanvasElement | undefined;
+  private ctxForDrawImageDataOntoVideoCanvas: CanvasRenderingContext2D | undefined;
+  drawImageDataOntoVideoCanvas = (imageDataOrBitmap: ImageData | ImageBitmap) => {
     if (!this.overlayCanvas) {
       return;
     }
-    const imageBitmap = imageData instanceof ImageBitmap ?
-      imageData :
-      await createImageBitmap(imageData);
-    var width: number;
-    var height: number;
-    if (this.videoPlayer && this.videoPlayer.style.getPropertyValue("display") !== "none") {
-      // Match the canvas size to the video player since we're overlaying above it.
-      const rect = getElementDimensions(this.videoPlayer);
-      width = rect.width;
-      height = rect.height;
-    } else {
-      // Match the canvas size to the video frame
-      const {
-        maxWidth = window.innerWidth,
-        maxHeight = window.innerHeight * 7 /8,
-      } = this.options;
-      width = Math.min(imageBitmap.width, maxWidth);
-      height = Math.min(imageBitmap.height, maxHeight);
+    const ctx = this.overlayCanvasCtx;
+    if (!ctx) return;
+
+    if (imageDataOrBitmap instanceof ImageData) {
+      if (this.canvasForDrawImageDataOntoVideoCanvas == null || this.ctxForDrawImageDataOntoVideoCanvas == null) {
+        this.canvasForDrawImageDataOntoVideoCanvas = document.createElement("canvas");
+        this.ctxForDrawImageDataOntoVideoCanvas = this.canvasForDrawImageDataOntoVideoCanvas.getContext("2d")!;
+      }
+      if (this.canvasForDrawImageDataOntoVideoCanvas.width !== imageDataOrBitmap.width) {
+        this.canvasForDrawImageDataOntoVideoCanvas.setAttribute("width", imageDataOrBitmap.width.toString());
+      }
+      if (this.canvasForDrawImageDataOntoVideoCanvas.height !== imageDataOrBitmap.height) {
+        this.canvasForDrawImageDataOntoVideoCanvas.setAttribute("height", imageDataOrBitmap.height.toString());
+      }
+      this.ctxForDrawImageDataOntoVideoCanvas.putImageData(imageDataOrBitmap, 0, 0);
     }
+    const canvasOrBitmap = (imageDataOrBitmap instanceof ImageData) ?
+      this.canvasForDrawImageDataOntoVideoCanvas! : imageDataOrBitmap;
+    if (!this.imageCapture) {
+      // We're drawing an overlay, so we need to clear the canvas first.
+      ctx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+      this.overlayCanvas.style.setProperty("left",this.overlayCanvas.parentElement!.offsetLeft.toString())
+      this.overlayCanvas.style.setProperty("top",this.overlayCanvas.parentElement!.offsetTop.toString())
+    }
+
+    // Match the canvas size to the video player since we're overlaying above it.
+    const rect = getElementDimensions(
+        (this.videoPlayer && this.videoPlayer.style.getPropertyValue("display") !== "none") ?
+          this.videoPlayer:
+          this.overlayCanvas!.parentElement!
+      );
+    var {width, height} = rect;
+
+      // Match the canvas size to the video frame
+    const {
+      maxWidth = window.innerWidth,
+      maxHeight = window.innerHeight * 7 /8,
+    } = this.options;
+    width = Math.min(imageDataOrBitmap.width, maxWidth);
+    height = Math.min(imageDataOrBitmap.height, maxHeight);
     const {fixAspectRatioToWidthOverHeight} = this.options;
-    if (this.useImageCapture && fixAspectRatioToWidthOverHeight != null) {
+    if (fixAspectRatioToWidthOverHeight != null) {
       if (Math.floor(width / fixAspectRatioToWidthOverHeight) > height) {
         // The width is too large for the aspect ratio
         // and should be reduced to match the height
@@ -382,7 +405,6 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
       this.overlayCanvas.width = width;
       this.overlayCanvas.height = height;
     }
-    const ctx = this.overlayCanvasCtx!;
     const canvasAspectRatioAsWidthOverHeight = ctx.canvas.width / ctx.canvas.height;
     const srcWidthOverHeight = width / height;
     const [srcWidth, srcHeight] = canvasAspectRatioAsWidthOverHeight > srcWidthOverHeight ?
@@ -395,11 +417,8 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     const srcX = (width - srcWidth) / 2;
     const srcY = (height - srcHeight) / 2;
     this.hasAnImageBeenDrawnOntoTheOverlayCanvas = true;
-    if (!this.imageCapture) {
-      // We're drawing an overlay, so we need to clear the canvas first.
-      ctx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
-    }
-    ctx.drawImage(imageBitmap, srcX, srcY, srcWidth, srcHeight, 0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+  
+    ctx.drawImage(canvasOrBitmap, srcX, srcY, srcWidth, srcHeight, 0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
   }
 
 

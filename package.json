@@ -25,9 +25,9 @@
   "author": "Stuart Schechter <stuart@dicekeys.com>",
   "license": "UNLICENSED. All rights reserved",
   "dependencies": {
-    "@dicekeys/dicekeys-api-js": "0.0.67",
-    "@dicekeys/read-dicekey-js": "0.0.17",
-    "@dicekeys/seeded-crypto-js": "^0.1.26"
+    "@dicekeys/dicekeys-api-js": "0.0.72",
+    "@dicekeys/read-dicekey-js": "0.0.21",
+    "@dicekeys/seeded-crypto-js": "^0.1.27"
   },
   "browserslist": [
     "last 1 Chrome versions"

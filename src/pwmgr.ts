@@ -10,14 +10,14 @@ const pwmgrAppSecretDerivationOptionsJson = JSON.stringify(DerivationOptions({
   type: "Secret",
   mutable: true,
   excludeOrientationOfFaces: true,
-  wordLimit: 13,
+  wordLimit: 15,
   allow: [{"host": "pwmgr.app"}]
 }));
 
 const passwordFieldId = "password-field" as const;
 const getPasswordFromDiceKeyButtonId = "get-password-from-dicekey-button" as const;
 
-export class PasswordManagerSignin extends Component {
+export class PasswordManagerSignIn extends Component {
   private get passwordTextElement(): HTMLInputElement {
     return document.getElementById(passwordFieldId) as HTMLInputElement;
   }
@@ -37,7 +37,7 @@ export class PasswordManagerSignin extends Component {
   }
 
   /**
-   * The code supporting the dmeo page cannot until the WebAssembly module for the image
+   * The code supporting the demo page cannot until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */
@@ -59,7 +59,7 @@ export class PasswordManagerSignin extends Component {
 };
 
 window.addEventListener("load", () => {
-  new PasswordManagerSignin();
+  new PasswordManagerSignIn();
 });
 
 window.addEventListener("message", (messageEvent) =>
