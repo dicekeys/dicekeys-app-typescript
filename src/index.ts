@@ -21,7 +21,6 @@ window.addEventListener("load", () => {
         data: {
           [ApiStrings.Inputs.COMMON.command]: ApiStrings.Commands.getPassword,
           derivationOptionsJson: JSON.stringify(DerivationOptions({          
-            wordLimit: 15
 //            mutable: true,
 //            excludeOrientationOfFaces: true,
 //            cornerLetters: "SWDC"
