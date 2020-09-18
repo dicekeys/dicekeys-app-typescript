@@ -408,7 +408,8 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.framesBeingProcessed.delete(requestId);
     
     // Render the frame onto the screen
-    this.cameraCapture?.drawImageDataOntoVideoCanvas(new ImageData(new Uint8ClampedArray(rgbImageAsArrayBuffer), width, height));
+    const imageData = new ImageData(new Uint8ClampedArray(rgbImageAsArrayBuffer), width, height);
+    this.cameraCapture?.drawImageDataOntoVideoCanvas(imageData);
 
     this.facesRead = FaceRead.fromJson(diceKeyReadJson) as TupleOf25Items<FaceRead> | undefined;
     if (this.facesRead && originalImageData) {
