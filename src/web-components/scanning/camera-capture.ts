@@ -120,11 +120,11 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     //
     // Initialize the list of device cameras
     CamerasOnThisDevice.instance.cameraListUpdated.on( (cameras) => {
-      // no longer need to show the list of cameras
-      this.camerasBeingInspected?.remove()
       // Whenever there's an update to the camera list, if we don't have an
       // active camera, set the active camera to the first camera in the list.
       if (!this.mediaStream && cameras.length > 0) {
+        // no longer need to show the list of cameras
+        this.camerasBeingInspected?.remove()
         this.setCamera(cameras[0].deviceId);
       }
       // And update the rendered camera list

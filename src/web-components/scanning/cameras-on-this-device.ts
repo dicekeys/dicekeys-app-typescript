@@ -18,7 +18,7 @@ export const videoConstraintsForDevice = (deviceId: string): MediaTrackConstrain
 });
 
 
-export type Camera = MediaDeviceInfo & MediaTrackSettings & {name: string, capabilities: MediaTrackCapabilities};
+export type Camera = MediaDeviceInfo & MediaTrackSettings & {name: string, capabilities: MediaTrackCapabilities | undefined};
 
 const getDirectionScore = ({facingMode}: Camera): number =>
   facingMode === "environment" ? -1 : // put cameras facing out first on the list
@@ -101,7 +101,7 @@ export class CamerasOnThisDevice {
       const track = stream.getVideoTracks()[0];
       if (!track) return;
       const settings: MediaTrackSettings = track.getSettings();
-      const capabilities: MediaTrackCapabilities = track.getCapabilities();
+      const capabilities: MediaTrackCapabilities = track.getCapabilities?.() ;
       stream?.getTracks().forEach(track => track.stop() );
       if (!settings) return;          
       const cameraWithoutName = {
