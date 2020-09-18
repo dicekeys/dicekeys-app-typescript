@@ -8,12 +8,12 @@ import {
   Select,
   Option,
   Video
-} from "../../web-component-framework"
+} from "../../web-component-framework";
 import {
-  Camera,
   CamerasBeingInspected
 } from "./cameras-being-inspected";
 import {
+  Camera,
   CamerasOnThisDevice,
   videoConstraintsForDevice
 } from "./cameras-on-this-device";

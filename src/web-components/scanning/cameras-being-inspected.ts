@@ -6,8 +6,6 @@ import {
 } from "./cameras-on-this-device";
 import styles from "./cameras-being-inspected.module.css";
 
-export type Camera = MediaDeviceInfo & MediaTrackSettings & {name: string, capabilities: MediaTrackCapabilities};
-
 export interface CamerasBeingInspectedOptions extends Attributes {}
 export class CamerasBeingInspected extends Component<CamerasBeingInspectedOptions> {
 
