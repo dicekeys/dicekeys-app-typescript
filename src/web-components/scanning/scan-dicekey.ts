@@ -191,7 +191,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * If a face is read with errors, keep an image of the face so that the
    * user can verify that the error correction didn't fail. 
    */
-  private errorImages = new Map<string, ImageBitmap>();
+  private errorImages = new Map<string, {width: number, height: number, data: Uint8ClampedArray}>();
 
   /**
    * The background worker that processes image frames so that the
@@ -435,15 +435,13 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
           .forEach( (deadId) => this.errorImages.delete(deadId) );
 
         // Capture images of faces in current scan that have errors
-        const sourceImageBitmap = await createImageBitmap(originalImageData);
         const facesReadWithErrorsButNoErrorImages = facesReadWithErrors.
           filter( faceRead => !this.errorImages.has(faceRead.uniqueIdentifier));
         await Promise.all(facesReadWithErrorsButNoErrorImages.map( async (face) => {
           // Get the image of the die with an error and store it where we can get to it
           // if we need the user to verify that we read it correctly.
-          const faceReadImageData = getImageOfFaceRead(sourceImageBitmap, face, this.options.dieRenderingCanvasSize);
-          const faceImageBitmap = await createImageBitmap(faceReadImageData);
-          this.errorImages.set(face.uniqueIdentifier, faceImageBitmap);
+          const faceReadImageData = getImageOfFaceRead(originalImageData, face, this.options.dieRenderingCanvasSize);
+          this.errorImages.set(face.uniqueIdentifier, {width: faceReadImageData.width, height: faceReadImageData.height, data: new Uint8ClampedArray(faceReadImageData.data)});
         }));
       }
     }

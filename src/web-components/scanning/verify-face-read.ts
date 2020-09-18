@@ -8,7 +8,7 @@ import {
 
 export interface VerifyFaceReadOptions extends Attributes {
   faceRead: FaceRead;
-  image: ImageBitmap
+  image: {width: number, height: number, data: Uint8ClampedArray}
 }
 
 export class VerifyFaceRead extends Component<VerifyFaceReadOptions>  {
@@ -25,10 +25,13 @@ export class VerifyFaceRead extends Component<VerifyFaceReadOptions>  {
     this.append(
       Div({style: "color: white; font-size: 2rem;"}, "Is this die a " + letter + digit + "?"),
       Canvas().withElement( canvas => {
-        canvas.width = this.options.image.width;
-        canvas.height = this.options.image.height;
+        const {width, height} = this.options.image;
+        canvas.width = width;
+        canvas.height = height;
         this.imageCanvas = canvas;
-        canvas.getContext("2d")?.drawImage(this.options.image, 0, 0);
+        const imageData = new ImageData(width, height);
+        imageData.data.set(this.options.image.data);
+        canvas.getContext("2d")?.putImageData(imageData, 0, 0);
       }),
       Div({},
         InputButton({value: "No"}).with( b => b.events.click.on( () => {
