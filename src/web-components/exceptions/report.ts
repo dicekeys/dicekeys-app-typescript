@@ -1,5 +1,5 @@
 export const reportException = (e: Error, extraInfo?: string): void => {
-  console.log("Exception", e);
+  console.log("Exception", e, extraInfo);
   document.body.innerHTML = ""
   const pre = document.createElement("pre");
   pre.textContent += "Please copy the text of this error and report it to beta@dicekeys.com." + "\n\n" ;

@@ -17,6 +17,7 @@ import {
   CamerasOnThisDevice,
 //  videoConstraintsForDevice
 } from "./cameras-on-this-device";
+import { browserInfo } from "~utilities/browser";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
@@ -28,11 +29,21 @@ export interface CameraCaptureOptions extends Attributes {
 
 
 const getDefaultCameraDimensions = (): {width: number, height: number} => {
-  // FIXME
-  return {
-    width: 1280,
-    height: 1280
-  };
+  const {browser} = browserInfo;
+  switch (browser) {
+    case "Safari": return {
+      width: 1280,
+      height: 1280
+    };
+    case "Firefox": return {
+      width: 1280,
+      height: 1280,
+    };
+    default: return {
+      width: 1024,
+      height: 1024
+    };
+  }
 }
 const defaultCameraDimensions = getDefaultCameraDimensions();
 
@@ -163,15 +174,6 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     );
     this.cameraSelectionMenu.value = this.camerasDeviceId || "";
     this.cameraSelectionMenu.style.setProperty("visibility", "visible");
-    // Handle user selection of cameras
-    this.cameraSelectionMenu.addEventListener("change", (_event) => {
-      // The deviceID of the camera was stored in the value name of the option,
-      // so it can be retrieved from the value field fo the select element
-      const deviceId = this.cameraSelectionMenu?.value;
-      if (deviceId) {
-        this.setCameraByDeviceId(deviceId);
-      }
-    });
   }
 
 
@@ -181,6 +183,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
       return;
     }
     if (cameras.length == 0) {
+      this.camerasDeviceId = undefined;
       this.renderSoon();
     }
     // Whenever there's an update to the camera list, if we don't have an
@@ -228,7 +231,13 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
           Video().with( c => this.videoComponent = c ),
         ),
         Div({class: dialogStyles.centered_controls},
-          Select().withElement( e => this.cameraSelectionMenu = e )
+          Select().withElement( e => {
+            this.cameraSelectionMenu = e;
+            // Handle user selection of cameras
+            // The deviceID of the camera was stored in the value name of the option,
+            // so it can be retrieved from the value field fo the select element
+            e.addEventListener("change", (_event) => this.setCameraByDeviceId(this.cameraSelectionMenu?.value) );
+          }),
         ),
       );
       this.onCameraListUpdate(CamerasOnThisDevice.instance.cameras);
@@ -236,18 +245,27 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
   }
 
   remove() {
+    if (this.videoPlayer) {
+      this.videoPlayer.srcObject = null;
+    }
     if (!super.remove()) {
       // This element has already been removed
       return false;
     }
     // If there's an existing stream, terminate it
     this.mediaStream?.getVideoTracks().forEach( track => track.stop() ); // FIXME - was this needed?:  track.readyState === "live" && track.enabled && 
+    // try for firefox
+    this.mediaStream?.stop?.();
+
     this.mediaStream = undefined;
     // remove successful
     return true;
   }
 
-  setCameraByDeviceId = (deviceId: string) => {
+  setCameraByDeviceId = (deviceId: string | undefined ) => {
+    if (deviceId == null) {
+      return;
+    }
     const camera = CamerasOnThisDevice.instance.camerasByDeviceId.get(deviceId);
     if (camera) {
       this.setCamera(camera);
@@ -256,14 +274,24 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
 
   setCamera = (camera: Camera) => {
     const {deviceId} = camera;
+    
     if (camera) {
       this.setCameraByConstraints({
         deviceId,
-        width: Math.min(camera.capabilities?.width?.max ?? defaultCameraDimensions.width, defaultCameraDimensions.width),
-        height: Math.min(camera.capabilities?.height?.max ?? defaultCameraDimensions.height, defaultCameraDimensions.height)
+        width: {
+          ideal: 1200,
+//          ideal: Math.min(camera.capabilities?.width?.max ?? defaultCameraDimensions.width, defaultCameraDimensions.width),
+          max: 1600,
+          min: 720,
+        },
+        height: {
+//          ideal: Math.min(camera.capabilities?.height?.max ?? defaultCameraDimensions.height, defaultCameraDimensions.height),
+          ideal: 1200,
+          max: 1600,
+          min: 720
+        },
+        aspectRatio: {ideal: 1},     
       });
-    } else {
-      this.setCameraByConstraints({...defaultCameraDimensions, deviceId});
     }
   }
 
@@ -286,25 +314,36 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
    * Set the current camera
    */
   setCameraByConstraints = async (
-    mediaTrackConstraints: MediaTrackConstraints
+    mediaTrackConstraints: MediaTrackConstraints & {deviceId: string}
   ) => {
     if (this.imageCapture) {
       this.imageCapture = undefined;
     }
+    if (this.camerasDeviceId === mediaTrackConstraints.deviceId) {
+      return;
+    }
+    this.camerasDeviceId = mediaTrackConstraints.deviceId;
     const oldMediaStream = this.mediaStream;
     this.mediaStream = undefined;
     // If there's an existing stream, terminate it
+    if (this.videoPlayer) {
+      this.videoPlayer.srcObject = null;
+    }
     oldMediaStream?.getVideoTracks().forEach(track => {
 //      if (track.readyState === "live" && track.enabled) {
         try {
-          track.stop()
+          track.stop();
         } catch (e) {
           console.log("Exception stopping track", e);
         }
 //      }
     });
+    // try for firefox
+    oldMediaStream?.stop?.();
+
     // Now set the new stream
     try {
+      console.log("Calling getUserMedia", mediaTrackConstraints);
       this.mediaStream = await navigator.mediaDevices.getUserMedia({video: mediaTrackConstraints});
     }  catch (e) {
       return this.throwException(e, "navigator.mediaDevices.getUserMedia");
@@ -314,9 +353,8 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
       const track = this.mediaStream?.getVideoTracks()[0];
       this.throwIfTrackNotReadable(track);
       const {
-        deviceId, height, width
+        height, width
       } = track.getSettings();
-      this.camerasDeviceId = deviceId;
       if (this.videoPlayer) {
         this.videoPlayer.srcObject = this.mediaStream!;
       }

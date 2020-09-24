@@ -109,6 +109,8 @@ export class CamerasOnThisDevice {
       const settings: MediaTrackSettings = track.getSettings();
       const capabilities: MediaTrackCapabilities = track.getCapabilities?.() ;
       stream?.getTracks().forEach(track => track.stop() );
+      // try for firefox
+      stream?.stop?.();
       if (!settings) return;          
       const cameraWithoutName = {
         ...settings,
