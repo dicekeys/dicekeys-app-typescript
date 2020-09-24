@@ -15,7 +15,7 @@ export class Attributes {
   text?: string;
   class?: string | string[];
   style?: string;
-  onExceptionEvent?: (error: unknown) => void;
+  onExceptionEvent?: (error: Error) => void;
 }
 
 export const DefaultComponentAttributesToCopy : (string & keyof Attributes)[] =
@@ -29,7 +29,7 @@ export class Component<
   #removed = false;
   public get removed(): boolean { return this.#removed; }
   detachEvent = new ComponentEvent(this);
-  public exceptionEvent = new ComponentEvent<[unknown], this>(this);
+  public exceptionEvent = new ComponentEvent<[Error], this>(this);
   
   childComponents = new Set<Component>();
 
@@ -43,7 +43,7 @@ export class Component<
     `${nonUniqueName}::${(Component.uniqueElementIdCounter++).toString()}`;
   
   constructor(
-    public readonly  options: OPTIONS,
+    public readonly options: OPTIONS,
     public readonly primaryElement: TOP_LEVEL_ELEMENT = document.createElement("div") as unknown as TOP_LEVEL_ELEMENT,
     attributesToCopy: (string & keyof OPTIONS)[] = []
   ) {
@@ -318,10 +318,17 @@ export class Component<
    *
    * @param exception 
    */
-  protected throwException = (exception: unknown) => {
-    this.exceptionEvent.send(exception);
+  protected throwException = (e: unknown) => {
+    if (e instanceof Error) {
+      this.exceptionEvent.send(e);
+    } else {
+      try {
+        throw new Error(typeof e === "string" ? e : JSON.stringify(e))
+      } catch (exception) {
+        this.exceptionEvent.send(exception as Error)
+      }
+    }
   }
-
 }
 export interface ReplaceableChild<HTML_COMPONENT extends Component> {
   (child: HTML_COMPONENT): HTML_COMPONENT

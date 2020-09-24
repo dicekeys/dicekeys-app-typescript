@@ -18,7 +18,7 @@ import {
     ProcessFrameRequest,
     ProcessFrameResponse,
     TerminateSessionRequest,
-    ProcessAugmentFrameRequest, FaceReadWithImageIfErrorFound
+    FaceReadWithImageIfErrorFound
 } from "../../workers/dicekey-image-frame-worker"
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 import {
@@ -74,7 +74,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   get  allFacesReadHaveMajorityValues(): boolean {
     return this.facesRead?.filter( faceRead =>
       faceRead.letter != null && faceRead.digit != null
-    ).length === 25;
+    )?.length === 25;
   }
 
   get facesReadThatUserReportedInvalid(): FaceRead[] {
@@ -350,9 +350,9 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     if (!this.readyReceived && "action" in message.data && message.data.action === "workerReady" ) {
       this.readyReceived = true;
       this.resolveWorkerReadyPromise?.(true);
-    } else if ("action" in message.data && (
-        message.data.action == "processRGBAImageFrameAndRenderOverlay" || message.data.action === "processAndAugmentRGBAImageFrame")
-      ) {
+    } else if ("action" in message.data &&
+      message.data.action === "processRGBAImageFrame"
+    ) {
       this.handleProcessedCameraFrame(message.data as ProcessFrameResponse )
     }
   }
@@ -379,10 +379,10 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     const rgbImageAsArrayBuffer = data.buffer.slice(0);
     // Ask the background worker to process the bitmap.
     // First construct a request
-    const request: ProcessFrameRequest | ProcessAugmentFrameRequest = {
+    const request: ProcessFrameRequest = {
       requestId,
       width, height, rgbImageAsArrayBuffer,
-      action: this.cameraCapture?.isRenderedOverVideo ? "processRGBAImageFrameAndRenderOverlay" : "processAndAugmentRGBAImageFrame",
+      action: "processRGBAImageFrame",
       sessionId: this.cameraSessionId!,
     };
     // The mark the objects that can be transferred to the worker.

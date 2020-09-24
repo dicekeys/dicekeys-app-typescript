@@ -26,11 +26,7 @@ interface Frame {
 }
 export interface ProcessFrameRequest extends RequestMetadata, Frame {
   requestId: number;
-  action: "processRGBAImageFrameAndRenderOverlay";
-}
-export interface ProcessAugmentFrameRequest extends RequestMetadata, Frame {
-  requestId: number;
-  action: "processAndAugmentRGBAImageFrame";
+  action: "processRGBAImageFrame";
 }
 
 export interface TerminateSessionRequest {
@@ -49,9 +45,11 @@ export type FaceReadWithImageIfErrorFound = FaceRead & {squareImageAsRgbaArray?:
  * A response with the result of processing a camera frame
  * to look for a DiceKey
  */
-export interface ProcessFrameResponse extends Frame, RequestMetadata {
+export interface ProcessFrameResponse extends RequestMetadata {
+  width: number;
+  height: number;
   requestId: number;
-  action: "processRGBAImageFrameAndRenderOverlay" | "processAndAugmentRGBAImageFrame";
+  action: "processRGBAImageFrame";
   isFinished: boolean,
   facesReadObjectArray: TupleOf25Items<FaceReadJsonObjectWithImageIfErrorFound> | undefined,
   exception?: Error;
@@ -68,7 +66,7 @@ function isTerminateSessionRequest(t: any) : t is TerminateSessionRequest {
 function isProcessFrameRequest(t: any) : t is ProcessFrameRequest {
     return typeof t === "object" &&
         "action" in t &&
-        (t.action === "processRGBAImageFrameAndRenderOverlay" || t.action === "processAndAugmentRGBAImageFrame") &&
+        (t.action === "processRGBAImageFrame") &&
         "sessionId" in t && "width" in t && "height" in t &&
         "rgbImageAsArrayBuffer" in t;
 }
@@ -87,9 +85,8 @@ class FrameProcessingWorker {
             if (isTerminateSessionRequest(requestMessage.data)) {
                 this.sessionIdToImageProcessor.delete(requestMessage.data.sessionId);
             } else if (isProcessFrameRequest(requestMessage.data)) {
-                const response = this.processRGBAImageFrameAndRenderOverlay(requestMessage.data);
+                const response = this.processRGBAImageFrame(requestMessage.data);
                 const transferableObjectsWithinResponse: Transferable[] = [
-                    response.rgbImageAsArrayBuffer
                 ];
                 // TypeScript hack since it doesn't understand this is a worker and StackOverflow
                 // posts make it look hard to convince it otherwise.
@@ -99,11 +96,11 @@ class FrameProcessingWorker {
         (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage({action: "workerReady"} as ReadyMessage);
     }
 
-    processRGBAImageFrameAndRenderOverlay = ({
+    processRGBAImageFrame = ({
         requestId,
         action, sessionId, width, height,
         rgbImageAsArrayBuffer: inputRgbImageAsArrayBuffer
-      }: ProcessFrameRequest | ProcessAugmentFrameRequest
+      }: ProcessFrameRequest
     ): ProcessFrameResponse => {
       try {
       const rgbImagesArrayUint8Array = new Uint8Array(inputRgbImageAsArrayBuffer);
@@ -114,11 +111,7 @@ class FrameProcessingWorker {
 
         // console.log("Worker starts processing frame", (Date.now() % 100000) / 1000);
         try {
-          if (action === "processRGBAImageFrameAndRenderOverlay") {
-            diceKeyImageProcessor.processRGBAImageAndRenderOverlay(width, height, rgbImagesArrayUint8Array)
-          } else { // if (action === "processAndAugmentRGBAImageFrame") ?
-            diceKeyImageProcessor.processAndAugmentRGBAImage(width, height, rgbImagesArrayUint8Array);
-          }
+          diceKeyImageProcessor.processRGBAImage(width, height, rgbImagesArrayUint8Array)
         } catch (e) {
           if (typeof e === "string") {
             throw new Error("Error in processImage: " + e);
@@ -153,7 +146,6 @@ class FrameProcessingWorker {
         return {
           requestId,
           action, sessionId, height, width,
-          rgbImageAsArrayBuffer: rgbImagesArrayUint8Array.buffer,
           isFinished,
           facesReadObjectArray: facesReadJsonObj.length === 25 ? facesReadJsonObj as TupleOf25Items<FaceReadJsonObjectWithImageIfErrorFound> : undefined,
         }
@@ -167,7 +159,6 @@ class FrameProcessingWorker {
       return {
         requestId,
         action, sessionId, height, width,
-        rgbImageAsArrayBuffer: inputRgbImageAsArrayBuffer,
         isFinished: false,
         facesReadObjectArray: undefined,
         exception

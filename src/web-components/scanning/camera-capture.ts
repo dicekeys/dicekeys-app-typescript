@@ -15,7 +15,7 @@ import {
 import {
   Camera,
   CamerasOnThisDevice,
-  videoConstraintsForDevice
+//  videoConstraintsForDevice
 } from "./cameras-on-this-device";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
@@ -25,6 +25,16 @@ export interface CameraCaptureOptions extends Attributes {
   maxHeight?: number;
   fixAspectRatioToWidthOverHeight?: number;
 }
+
+
+const getDefaultCameraDimensions = (): {width: number, height: number} => {
+  // FIXME
+  return {
+    width: 1280,
+    height: 1280
+  };
+}
+const defaultCameraDimensions = getDefaultCameraDimensions();
 
 /**
  * This component scans scans images using the device camera(s).
@@ -109,7 +119,6 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
 
   public noCamerasFoundEvent = new ComponentEvent<[], this>(this);
   public camerasMuteEvent = new ComponentEvent<[], this>(this);
-  public exceptionEvent = new ComponentEvent<[unknown], this>(this);
 
   
   
@@ -127,7 +136,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     // Initialize the list of device cameras
     CamerasOnThisDevice.instance.cameraListUpdated.on( (cameras) => this.onCameraListUpdate(cameras) )
     if (CamerasOnThisDevice.instance.cameras.length > 0) {
-      this.setCamera(CamerasOnThisDevice.instance.cameras[0].deviceId);
+      this.setCamera(CamerasOnThisDevice.instance.cameras[0]);
     } 
   }  
   /**
@@ -160,7 +169,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
       // so it can be retrieved from the value field fo the select element
       const deviceId = this.cameraSelectionMenu?.value;
       if (deviceId) {
-        this.setCamera(deviceId);
+        this.setCameraByDeviceId(deviceId);
       }
     });
   }
@@ -180,7 +189,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
       // no longer need to show the list of cameras
       this.camerasBeingInspected?.remove()
       if (!this.mediaStream) {
-        this.setCamera(cameras[0].deviceId);
+        this.setCamera(cameras[0]);
       }
     }
     // And update the rendered camera list
@@ -238,8 +247,25 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     return true;
   }
 
-  setCamera = (deviceId: string) =>
-    this.setCameraByConstraints(videoConstraintsForDevice(deviceId));
+  setCameraByDeviceId = (deviceId: string) => {
+    const camera = CamerasOnThisDevice.instance.camerasByDeviceId.get(deviceId);
+    if (camera) {
+      this.setCamera(camera);
+    }
+  }
+
+  setCamera = (camera: Camera) => {
+    const {deviceId} = camera;
+    if (camera) {
+      this.setCameraByConstraints({
+        deviceId,
+        width: camera.capabilities?.width?.max ?? defaultCameraDimensions.width,
+        height: camera.capabilities?.height?.max ?? defaultCameraDimensions.height
+      });
+    } else {
+      this.setCameraByConstraints({...defaultCameraDimensions, deviceId});
+    }
+  }
 
   private throwIfTrackNotReadable = (track: MediaStreamTrack | undefined): void => {
     if (track == null) {
@@ -308,35 +334,46 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
   }
 
   private getFrameUsingImageCapture = async (): Promise<ImageData | undefined> => {
-    const track = this.imageCapture?.track;
-    ///console.log("getFrameUsingImageCapture", (Date.now() % 100000) / 1000);
-    if (this.camerasDeviceId == null) {
-      return;
-    }
-    this.throwIfTrackNotReadable(track);
-    if (track == null || track.readyState !== "live" || !track.enabled || track.muted) {
-      if (track?.muted) {
-        console.log("Track muted");
-        // For some reason, if we don't read enough frames fast enough, browser may mute the
-        // track.  If they do, just re-open the camera.
-        if (this.camerasDeviceId) {
-          console.log("Resetting camera");
-          this.setCamera(this.camerasDeviceId!);
-        }
-        track?.addEventListener("unmute", () => { console.log("Track unmuted"); } );
+    try {
+      const track = this.imageCapture?.track;
+      ///console.log("getFrameUsingImageCapture", (Date.now() % 100000) / 1000);
+      if (this.camerasDeviceId == null) {
+        return;
       }
-      return;
+      this.throwIfTrackNotReadable(track);
+      if (track == null || track.readyState !== "live" || !track.enabled || track.muted) {
+        if (track?.muted) {
+          console.log("Track muted");
+          // For some reason, if we don't read enough frames fast enough, browser may mute the
+          // track.  If they do, just re-open the camera.
+          if (this.camerasDeviceId) {
+            console.log("Resetting camera");
+            this.setCameraByDeviceId(this.camerasDeviceId);
+          }
+          track?.addEventListener("unmute", () => { console.log("Track unmuted"); } );
+        }
+        return;
+      }
+      var bitMap: ImageBitmap | undefined;
+      try {
+        // image capture isn't ready
+        bitMap = await this.imageCapture!.grabFrame();
+      } catch {
+        return;
+      }
+      // console.log("Frame grabbed", (Date.now() % 100000) / 1000);
+      const {width, height} = bitMap;
+      // console.log(`Grabbing frame with dimensions ${width}x${height}`)
+      if (this.captureCanvas!.width != width || this.captureCanvas!.height != height) {
+        [this.captureCanvas!.width, this.captureCanvas!.height] = [width, height];
+        this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
+      }
+      this.captureCanvasCtx!.drawImage(bitMap, 0, 0);
+      return this.captureCanvasCtx!.getImageData(0, 0, width, height);
+    } catch (e) {
+      this.throwException(e);
+      return undefined;
     }
-    const bitMap = await this.imageCapture!.grabFrame();
-    // console.log("Frame grabbed", (Date.now() % 100000) / 1000);
-    const {width, height} = bitMap;
-    // console.log(`Grabbing frame with dimensions ${width}x${height}`)
-    if (this.captureCanvas!.width != width || this.captureCanvas!.height != height) {
-      [this.captureCanvas!.width, this.captureCanvas!.height] = [width, height];
-      this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
-    }
-    this.captureCanvasCtx!.drawImage(bitMap, 0, 0);
-    return this.captureCanvasCtx!.getImageData(0, 0, width, height);
   };
 
   private getFrameFromVideoPlayer = (): ImageData | undefined => {
@@ -367,7 +404,6 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
   }
 
   getFrame = async (): Promise<ImageData> => {
-    this.throwException(new Error("Test exception"));
     const imageData = await this.getFrameOrUndefinedIfNotReady();
     if (imageData != null) {
       return imageData;
