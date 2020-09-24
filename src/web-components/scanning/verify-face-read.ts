@@ -24,7 +24,7 @@ export class VerifyFaceRead extends Component<VerifyFaceReadOptions>  {
     const {letter, digit} = this.options.faceRead
     this.append(
       Div({style: "color: white; font-size: 2rem;"}, "Is this die a " + letter + digit + "?"),
-      Canvas().withElement( canvas => {
+      Canvas({style: "width: 40rem; height: 40rem;"}).withElement( canvas => {
         const {width, height} = this.options.image;
         canvas.width = width;
         canvas.height = height;

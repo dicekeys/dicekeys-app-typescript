@@ -97,7 +97,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
       const result = await DiceKeySvgView.computerPasswordRequestWorker.calculate({seedString, request});
       console.log("Calculation result", result);
       if ("exception" in result) {
-        this.throwException(result.exception);
+        this.throwException(result.exception, "calculating a password");
       } else {
         this.password.value = result.password;
       }

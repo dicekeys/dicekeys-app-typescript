@@ -68,7 +68,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
    * Set to true when we are able to use the ImageCapture API to grab
    * frames from the camera and images are rendered into a canvas
    */
-  private useImageCapture: boolean = imageCaptureSupported;
+  private useImageCapture: boolean = imageCaptureSupported && false; // FIXME default off
   /**
    * Set to true when raw input frames are sent directly to a video element
    * and then captured by scraping them out of the video element
@@ -241,7 +241,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
       return false;
     }
     // If there's an existing stream, terminate it
-    this.mediaStream?.getTracks().forEach( track => track.readyState === "live" && track.enabled && track.stop() );
+    this.mediaStream?.getVideoTracks().forEach( track => track.stop() ); // FIXME - was this needed?:  track.readyState === "live" && track.enabled && 
     this.mediaStream = undefined;
     // remove successful
     return true;
@@ -259,8 +259,8 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     if (camera) {
       this.setCameraByConstraints({
         deviceId,
-        width: camera.capabilities?.width?.max ?? defaultCameraDimensions.width,
-        height: camera.capabilities?.height?.max ?? defaultCameraDimensions.height
+        width: Math.min(camera.capabilities?.width?.max ?? defaultCameraDimensions.width, defaultCameraDimensions.width),
+        height: Math.min(camera.capabilities?.height?.max ?? defaultCameraDimensions.height, defaultCameraDimensions.height)
       });
     } else {
       this.setCameraByConstraints({...defaultCameraDimensions, deviceId});
@@ -294,19 +294,23 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     const oldMediaStream = this.mediaStream;
     this.mediaStream = undefined;
     // If there's an existing stream, terminate it
-    oldMediaStream?.getTracks().forEach(track => {
-      if (track.readyState === "live" && track.enabled) {
+    oldMediaStream?.getVideoTracks().forEach(track => {
+//      if (track.readyState === "live" && track.enabled) {
         try {
           track.stop()
         } catch (e) {
           console.log("Exception stopping track", e);
         }
-      }
+//      }
     });
     // Now set the new stream
     try {
       this.mediaStream = await navigator.mediaDevices.getUserMedia({video: mediaTrackConstraints});
+    }  catch (e) {
+      return this.throwException(e, "navigator.mediaDevices.getUserMedia");
+    }
 
+    try {
       const track = this.mediaStream?.getVideoTracks()[0];
       this.throwIfTrackNotReadable(track);
       const {
@@ -327,7 +331,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
         }
       }
     } catch (e) {
-      return this.throwException(e);
+      return this.throwException(e, "Setting camera after getUserMedia completes");
     }
     this.renderCameraList();
     return;
@@ -437,10 +441,21 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     if (!this.overlayCanvas) {
       return
     }
-    this.overlayCanvas.style.setProperty("left",this.overlayCanvas.parentElement!.offsetLeft.toString())
-    this.overlayCanvas.style.setProperty("top",this.overlayCanvas.parentElement!.offsetTop.toString())
-    this.overlayCanvas.setAttribute("width", width.toString());
-    this.overlayCanvas.setAttribute("height", height.toString());
+    const parentElement = this.overlayCanvas.parentElement;
+    if (this.overlayCanvas.width != width) {
+      this.overlayCanvas.setAttribute("width", width.toString());
+    }
+    if (this.overlayCanvas.height != height) {
+      this.overlayCanvas.setAttribute("height", height.toString());
+    } 
+    if (parentElement) {
+      if (this.overlayCanvas.style.getPropertyValue("left") !== parentElement.offsetLeft.toString()) {
+        this.overlayCanvas.style.setProperty("left",this.overlayCanvas.parentElement!.offsetLeft.toString())
+      }
+      if (this.overlayCanvas.style.getPropertyValue("top") !== parentElement.offsetTop.toString()) {
+        this.overlayCanvas.style.setProperty("top",this.overlayCanvas.parentElement!.offsetTop.toString())
+      }
+    }
     return this.overlayCanvas.getContext("2d") ?? undefined;
   }
 

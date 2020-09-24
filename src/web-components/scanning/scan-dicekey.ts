@@ -3,7 +3,9 @@ import {
   Component,
   ComponentEvent,
   Div,
-  MonospaceSpan
+  MonospaceSpan,
+  Observable,
+  Span
 } from "../../web-component-framework"
 import {
   Face,
@@ -28,6 +30,7 @@ import {
   CameraCapture, CameraCaptureOptions
 } from "./camera-capture"
 import { VerifyFaceRead } from "./verify-face-read";
+import { browserInfo } from "~utilities/browser";
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
 interface ScanDiceKeyOptions extends CameraCaptureOptions {
@@ -295,6 +298,14 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       // This image needs to be scanned
       this.renderHint();
       this.append(
+        Div({style: "color: yellow;"},
+          // browser info
+          Span({text: `${browserInfo.browser} ${browserInfo.browserVersion} ${browserInfo.os} ${browserInfo.osVersion
+          } mobile=${browserInfo.mobile} screen=${browserInfo.screenSize.width}x${browserInfo.screenSize.height} `}),
+          Span({}).withElement( e => this.frameSize.observe( fs => e.innerText = fs ? ` frame size: ${fs.width}x${fs.height} ` : `` )),
+          // frames per second
+          Span({}).withElement( e => this.framesPerSecond.observe( fps => e.textContent = `${(fps ?? 0).toString()}fps ` ))
+        ),
         new CameraCapture({fixAspectRatioToWidthOverHeight: 1, onExceptionEvent: this.options.onExceptionEvent}).with( cc => {
           this.cameraCapture = cc;
           this.resolveCameraCapturePromise?.(cc);
@@ -392,7 +403,17 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.frameWorker.postMessage(request, transferrableObjectsWithinRequest);
   }
 
+  /**
+   * Tracks the number of frames processed per second
+   */
+  public framesPerSecond = new Observable<number>(0);
+  public frameSize = new Observable<{width: number, height: number}>({width: 0, height: 0});
 
+  /**
+   * Record the times each processed frame comes back (in ms) so
+   * that we can calculate the frame rate (framesPerSecond)
+   */
+  private frameProcessedTimesMs: number[] = [];
 
   /**
    * Handle frames processed by the web worker, displaying the received
@@ -402,8 +423,22 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     // console.log("handleProcessedCameraFrame", (Date.now() % 100000) / 1000);
     const {width, height, facesReadObjectArray, exception} = response;
 
+    this.frameSize.value = {width, height};
+
     if (exception != null) {
-      return this.throwException(exception);
+      return this.throwException(exception, "From frame worker");
+    }
+
+    this.frameProcessedTimesMs.push(Date.now());
+    if (this.frameProcessedTimesMs.length > 1) {
+      const msPerFrame = (
+        this.frameProcessedTimesMs[this.frameProcessedTimesMs.length-1] -
+        this.frameProcessedTimesMs[0]
+      ) / (this.frameProcessedTimesMs.length - 1);
+      this.framesPerSecond.value = Math.round( 10000 / msPerFrame) / 10;
+      if (this.frameProcessedTimesMs.length === 4) {
+        this.frameProcessedTimesMs.shift();
+      }
     }
  
     try {
@@ -443,7 +478,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
         setTimeout(this.startProcessingNewCameraFrame, 0)
       }
     } catch (e) {
-      this.throwException(e);
+      this.throwException(e, "Handling a processed frame");
     }
   }
 

@@ -15,7 +15,7 @@ export class Attributes {
   text?: string;
   class?: string | string[];
   style?: string;
-  onExceptionEvent?: (error: Error) => void;
+  onExceptionEvent?: (error: Error, extraInfo?: string) => void;
 }
 
 export const DefaultComponentAttributesToCopy : (string & keyof Attributes)[] =
@@ -29,7 +29,7 @@ export class Component<
   #removed = false;
   public get removed(): boolean { return this.#removed; }
   detachEvent = new ComponentEvent(this);
-  public exceptionEvent = new ComponentEvent<[Error], this>(this);
+  public exceptionEvent = new ComponentEvent<[Error, string?], this>(this);
   
   childComponents = new Set<Component>();
 
@@ -318,14 +318,21 @@ export class Component<
    *
    * @param exception 
    */
-  protected throwException = (e: unknown) => {
+  protected throwException = (e: unknown, extraInfo?: string) => {
     if (e instanceof Error) {
-      this.exceptionEvent.send(e);
+      if (!e.stack || e.stack.length == 0) {
+        try {
+          throw new Error("Get me a stack!");
+        } catch (errorWhichHopefullyHasStack) {
+          e.stack = errorWhichHopefullyHasStack.stack;
+        }
+      }
+      this.exceptionEvent.send(e, extraInfo);
     } else {
       try {
         throw new Error(typeof e === "string" ? e : JSON.stringify(e))
       } catch (exception) {
-        this.exceptionEvent.send(exception as Error)
+        this.exceptionEvent.send(exception as Error, extraInfo)
       }
     }
   }

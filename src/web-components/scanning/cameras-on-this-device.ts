@@ -1,3 +1,4 @@
+import { browserInfo } from "~utilities/browser";
 import {
   ComponentEvent
 } from "../../web-component-framework"
@@ -118,7 +119,8 @@ export class CamerasOnThisDevice {
         kind: cameraDevice.kind,
         label: cameraDevice.label
       };
-      const {label, facingMode, width, height} = cameraWithoutName;
+      const {label, facingMode} = cameraWithoutName;
+      var {width, height} = cameraWithoutName;
       const lcLabel = label.toLocaleLowerCase();
       // Only add a direction string if the direction is present and
       // it's not already implied in the label
@@ -140,6 +142,11 @@ export class CamerasOnThisDevice {
           this.cameraDeviceIdToCameraNumber.set(deviceId, cameraIndex);
           identifier = `Camera ${cameraIndex}`;
         }
+      }
+      if (width === 640 && height === 480 && browserInfo.browser === "Firefox") {
+        // Firefox always returns 640x480
+        width = undefined;
+        height = undefined;
       }
       const resolution: string = (width && height) ? ` ${width}x${height} ` : ""
       const name = directionPrefix + identifier + resolution;

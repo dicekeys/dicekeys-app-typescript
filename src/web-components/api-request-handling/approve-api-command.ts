@@ -107,7 +107,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
       (ApproveApiCommand.computeApiCommandWorker.resultPromise as Promise<ApiCalls.GetPasswordResponse | {exception: unknown}>).then(
         precomputedResult => {
           if ("exception" in precomputedResult) {
-            this.throwException(precomputedResult.exception);
+            this.throwException(precomputedResult.exception, "precomputing an API command");
           } else {
             this.password.value = precomputedResult.password;
           }

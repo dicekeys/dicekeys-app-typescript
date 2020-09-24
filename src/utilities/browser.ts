@@ -42,7 +42,7 @@ const browsers: {searchKey: string, name?: string}[] = [
   {searchKey: "Trident/", name: "Internet Explorer"},
 ];
 
-export const getBrowserInfo = () => {
+const getBrowserInfo = () => {
   const screenSize = {
     width: screen?.width,
     height: screen?.height
@@ -130,3 +130,4 @@ export const getBrowserInfo = () => {
     mobile,
   };
 };
+export const browserInfo = getBrowserInfo();
