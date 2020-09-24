@@ -7,7 +7,8 @@ import {
 } from "../../web-component-framework"
 import {
   Face,
-  FaceRead, FaceReadError
+  FaceRead, FaceReadError,
+  renderFacesRead
 } from "@dicekeys/read-dicekey-js";
 import {
   DiceKey, TupleOf25Items
@@ -399,41 +400,50 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    */
   handleProcessedCameraFrame = async (response: ProcessFrameResponse ) => {
     // console.log("handleProcessedCameraFrame", (Date.now() % 100000) / 1000);
-    const {width, height, rgbImageAsArrayBuffer, facesReadObjectArray, exception} = response;
+    const {width, height, facesReadObjectArray, exception} = response;
 
     if (exception != null) {
       return this.throwException(exception);
     }
-    
-    // Render the frame onto the screen
-    const imageData = new ImageData(new Uint8ClampedArray(rgbImageAsArrayBuffer), width, height);
-    this.cameraCapture?.drawImageDataOntoVideoCanvas(imageData);
-
-    this.facesRead = facesReadObjectArray?.map( faceReadObject => {
-      const faceRead: FaceReadWithImageIfErrorFound = FaceRead.fromJsonObject(faceReadObject);
-      faceRead.squareImageAsRgbaArray = faceReadObject.squareImageAsRgbaArray;
-      return faceRead;
-    }) as TupleOf25Items<FaceReadWithImageIfErrorFound>;
-    if (this.facesRead && this.facesRead.length === 25 && this.facesReadThatContainErrorsAndHaveNotBeenValidated.length === 0 ) {
-      // The faces were ready perfectly and there are no errors to correct.
-      AppState.EncryptedCrossTabState.instance!.diceKey.value =
-        DiceKey( this.facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
-    }
-
-    if (this.shouldFinishScanning) {
-      this.finishDelayInProgress = true;
-      setTimeout( () => {
-        this.finishDelayInProgress = false;
-        if (this.allFacesHaveBeenValidated) {
-          this.reportDiceKeyReadAndValidated();
-          this.parent?.renderSoon()
-        } else {
-          this.renderSoon();
+ 
+    try {
+      // Render the frame onto the screen
+      const overlayCanvasCtx = this.cameraCapture?.getOverlayCanvasCtx(width, height);
+      if (overlayCanvasCtx) {
+        overlayCanvasCtx.clearRect(0, 0, width, height);
+        if (this.facesRead) {
+          renderFacesRead(overlayCanvasCtx, this.facesRead, {});
         }
-      }, this.msDelayBetweenSuccessAndClosure);
-    } else {
-      // Trigger fetch of new camera frame
-      setTimeout(this.startProcessingNewCameraFrame, 0)
+      }
+
+      this.facesRead = facesReadObjectArray?.map( faceReadObject => {
+        const faceRead: FaceReadWithImageIfErrorFound = FaceRead.fromJsonObject(faceReadObject);
+        faceRead.squareImageAsRgbaArray = faceReadObject.squareImageAsRgbaArray;
+        return faceRead;
+      }) as TupleOf25Items<FaceReadWithImageIfErrorFound>;
+      if (this.facesRead && this.facesRead.length === 25 && this.facesReadThatContainErrorsAndHaveNotBeenValidated.length === 0 ) {
+        // The faces were ready perfectly and there are no errors to correct.
+        AppState.EncryptedCrossTabState.instance!.diceKey.value =
+          DiceKey( this.facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
+      }
+
+      if (this.shouldFinishScanning) {
+        this.finishDelayInProgress = true;
+        setTimeout( () => {
+          this.finishDelayInProgress = false;
+          if (this.allFacesHaveBeenValidated) {
+            this.reportDiceKeyReadAndValidated();
+            this.parent?.renderSoon()
+          } else {
+            this.renderSoon();
+          }
+        }, this.msDelayBetweenSuccessAndClosure);
+      } else {
+        // Trigger fetch of new camera frame
+        setTimeout(this.startProcessingNewCameraFrame, 0)
+      }
+    } catch (e) {
+      this.throwException(e);
     }
   }
 
