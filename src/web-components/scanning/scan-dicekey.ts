@@ -7,7 +7,7 @@ import {
 } from "../../web-component-framework"
 import {
   Face,
-  FaceRead, FaceReadError, getImageOfFaceRead
+  FaceRead, FaceReadError
 } from "@dicekeys/read-dicekey-js";
 import {
   DiceKey, TupleOf25Items
@@ -17,7 +17,7 @@ import {
     ProcessFrameRequest,
     ProcessFrameResponse,
     TerminateSessionRequest,
-    ProcessAugmentFrameRequest
+    ProcessAugmentFrameRequest, FaceReadWithImageIfErrorFound
 } from "../../workers/dicekey-image-frame-worker"
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 import {
@@ -68,7 +68,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * The faces read during the process of scanning the dice, which includes details of overlines
    * and underlines so that we can correct potential errors.
    */
-  private facesRead?: TupleOf25Items<FaceRead>;
+  private facesRead?: TupleOf25Items<FaceReadWithImageIfErrorFound>;
 
   get  allFacesReadHaveMajorityValues(): boolean {
     return this.facesRead?.filter( faceRead =>
@@ -88,7 +88,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * The set of faces read that contain errors that the user has yet
    * to verify were properly corrected
    */
-  get facesReadThatContainErrorsAndHaveNotBeenValidated(): FaceRead[] {
+  get facesReadThatContainErrorsAndHaveNotBeenValidated(): FaceReadWithImageIfErrorFound[] {
     return this.facesRead?.filter( f => f.errors && f.errors.length > 0 &&
         f.userValidationOutcome == null || f.userValidationOutcome === "user-rejected" ) ?? []
   }
@@ -184,13 +184,13 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * we're only processing one at a time, but a future implementation might pipeline
    * two or more in parallel if it's safe to assume that there is parallelism to exploit.
    */
-  private framesBeingProcessed = new Map<number, ImageData>();
+  // FIXME - remove private framesBeingProcessed = new Map<number, ImageData>();
 
   /**
    * If a face is read with errors, keep an image of the face so that the
    * user can verify that the error correction didn't fail. 
    */
-  private errorImages = new Map<string, {width: number, height: number, data: Uint8ClampedArray}>();
+  // FIXME REMOVE private errorImages = new Map<string, {width: number, height: number, data: Uint8ClampedArray}>();
 
   /**
    * The background worker that processes image frames so that the
@@ -303,20 +303,20 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     } else if (this.facesReadThatContainErrorsAndHaveNotBeenValidated.length > 0) {
       // The scan phase is complete, but there are errors to correct.
       const faceToValidate = this.facesReadThatContainErrorsAndHaveNotBeenValidated[0];
-      const imageOfFaceToValidate = this.errorImages.get(faceToValidate.uniqueIdentifier);
-      if (imageOfFaceToValidate == null) {
+      const imageDataRgba = faceToValidate.squareImageAsRgbaArray!;
+//      const imageOfFaceToValidate = this.errorImages.get(faceToValidate.uniqueIdentifier);
+      if (imageDataRgba.length == 0) {
         // This exception indicates a coding error, as the code is designed this should never occur
         throw new Error("Assertion failure: no image of face to validate");
       }
+      const imageSize = Math.sqrt(imageDataRgba.length / 4);
       this.append(
-        new VerifyFaceRead({faceRead: faceToValidate, image: imageOfFaceToValidate}).with( vfr => {
+        new VerifyFaceRead({faceRead: faceToValidate, image: {data: imageDataRgba, width: imageSize, height: imageSize}}).with( vfr => {
           vfr.userConfirmedOrDenied.on( (response) => {
             if (response === "denied") {
               // We need to start over
               this.cameraSessionId = Math.random().toString() + Math.random().toString(); 
               this.facesRead = undefined;
-              this.errorImages.clear();
-              this.framesBeingProcessed.clear();
             } else if (this.facesReadThatContainErrorsAndHaveNotBeenValidated.length === 0) {
               // All faces have been validated by the user
               this.reportDiceKeyReadAndValidated();
@@ -373,7 +373,6 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     }
     const imageData = await this.cameraCapture!.getFrame();
     const requestId = this.nextRequestId++;
-    this.framesBeingProcessed.set(requestId, imageData);
     const {width, height, data} = imageData;
     // Create a copy of the image buffer that can be sent over to the worker
     const rgbImageAsArrayBuffer = data.buffer.slice(0);
@@ -400,57 +399,25 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    */
   handleProcessedCameraFrame = async (response: ProcessFrameResponse ) => {
     // console.log("handleProcessedCameraFrame", (Date.now() % 100000) / 1000);
-    const {requestId, width, height, rgbImageAsArrayBuffer, diceKeyReadJson, exception} = response;
+    const {width, height, rgbImageAsArrayBuffer, facesReadObjectArray, exception} = response;
 
     if (exception != null) {
       return this.throwException(exception);
     }
     
-    // Remove the pre-processed image from the set of images being processed
-    const originalImageData = this.framesBeingProcessed.get(requestId);
-    if (originalImageData == null) {
-      return;
-    }
-    this.framesBeingProcessed.delete(requestId);
-    
     // Render the frame onto the screen
     const imageData = new ImageData(new Uint8ClampedArray(rgbImageAsArrayBuffer), width, height);
     this.cameraCapture?.drawImageDataOntoVideoCanvas(imageData);
 
-    this.facesRead = FaceRead.fromJson(diceKeyReadJson) as TupleOf25Items<FaceRead> | undefined;
-    if (this.facesRead && originalImageData) {
-      const facesReadWithErrors = this.facesRead.filter( f => f.errors && f.errors.length > 0);
-      if (facesReadWithErrors.length == 0) {
-        //
-        // The faces were ready perfectly and there are no errors to correct.
-        this.errorImages.clear();
-        AppState.EncryptedCrossTabState.instance!.diceKey.value =
-          DiceKey( this.facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
-
-      } else {
-        //
-        // There are errors that will need to be corrected.
-        const identifiersOfFacesWithErrors = new Set<string>(...
-          facesReadWithErrors.map( f => f.uniqueIdentifier )
-        );
-        // Remove images of erroneously-scanned dice that are no longer needed because
-        // the errors have been resolved or replaced
-        [...this.errorImages.keys()]
-          // filter to identifier dead ids
-          .filter( id => !identifiersOfFacesWithErrors.has(id) )
-          // then remove them
-          .forEach( (deadId) => this.errorImages.delete(deadId) );
-
-        // Capture images of faces in current scan that have errors
-        const facesReadWithErrorsButNoErrorImages = facesReadWithErrors.
-          filter( faceRead => !this.errorImages.has(faceRead.uniqueIdentifier));
-        await Promise.all(facesReadWithErrorsButNoErrorImages.map( async (face) => {
-          // Get the image of the die with an error and store it where we can get to it
-          // if we need the user to verify that we read it correctly.
-          const faceReadImageData = getImageOfFaceRead(originalImageData, face, this.options.dieRenderingCanvasSize);
-          this.errorImages.set(face.uniqueIdentifier, {width: faceReadImageData.width, height: faceReadImageData.height, data: new Uint8ClampedArray(faceReadImageData.data)});
-        }));
-      }
+    this.facesRead = facesReadObjectArray?.map( faceReadObject => {
+      const faceRead: FaceReadWithImageIfErrorFound = FaceRead.fromJsonObject(faceReadObject);
+      faceRead.squareImageAsRgbaArray = faceReadObject.squareImageAsRgbaArray;
+      return faceRead;
+    }) as TupleOf25Items<FaceReadWithImageIfErrorFound>;
+    if (this.facesRead && this.facesRead.length === 25 && this.facesReadThatContainErrorsAndHaveNotBeenValidated.length === 0 ) {
+      // The faces were ready perfectly and there are no errors to correct.
+      AppState.EncryptedCrossTabState.instance!.diceKey.value =
+        DiceKey( this.facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
     }
 
     if (this.shouldFinishScanning) {

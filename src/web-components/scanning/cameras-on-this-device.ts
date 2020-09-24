@@ -4,16 +4,16 @@ import {
 
  // Safari may require 640 or 1280, see 
  // https://stackoverflow.com/questions/46981889/how-to-resolve-ios-11-safari-getusermedia-invalid-constraint-issue
- const defaultVideoWidthAndHeightConstraints = {
-  width: { ideal: 1024, min: 640 },
-  height: { ideal: 1024, min: 640 },
-  aspectRatio: {ideal: 1},
-  //    advanced: [{focusDistance: {ideal: 0}}]
-} as const;
+//  const defaultVideoWidthAndHeightConstraints = {
+//   // width: { ideal: 1024, min: 640 },
+//   // height: { ideal: 1024, min: 640 },
+//   aspectRatio: {ideal: 1},
+//   //    advanced: [{focusDistance: {ideal: 0}}]
+// } as const;
 
 
 export const videoConstraintsForDevice = (deviceId: string): MediaTrackConstraints => ({
-  ...defaultVideoWidthAndHeightConstraints,
+//  ...defaultVideoWidthAndHeightConstraints,
   deviceId,
 });
 

@@ -9,8 +9,9 @@ import "regenerator-runtime/runtime";
 import {
     DiceKeyImageProcessor,
     DiceKeyImageProcessorModuleWithHelpers,
-    DiceKeyImageProcessorModulePromise,
+    DiceKeyImageProcessorModulePromise, FaceReadJson, FaceRead
 } from "@dicekeys/read-dicekey-js"
+import { TupleOf25Items } from "~dicekeys/dicekey";
 
 /**
  * A request to process an image frame while scanning dicekeys
@@ -41,6 +42,8 @@ export interface ReadyMessage {
     action: "workerReady"
 }
 
+export type FaceReadJsonObjectWithImageIfErrorFound = FaceReadJson & {squareImageAsRgbaArray?: Uint8ClampedArray};
+export type FaceReadWithImageIfErrorFound = FaceRead & {squareImageAsRgbaArray?: Uint8ClampedArray};
 
 /**
  * A response with the result of processing a camera frame
@@ -50,8 +53,8 @@ export interface ProcessFrameResponse extends Frame, RequestMetadata {
   requestId: number;
   action: "processRGBAImageFrameAndRenderOverlay" | "processAndAugmentRGBAImageFrame";
   isFinished: boolean,
-  diceKeyReadJson: string
-  exception?: unknown;
+  facesReadObjectArray: TupleOf25Items<FaceReadJsonObjectWithImageIfErrorFound> | undefined,
+  exception?: Error;
 }
 
 function isTerminateSessionRequest(t: any) : t is TerminateSessionRequest {
@@ -110,16 +113,41 @@ class FrameProcessingWorker {
         const diceKeyImageProcessor = this.sessionIdToImageProcessor.get(sessionId)!;
 
         // console.log("Worker starts processing frame", (Date.now() % 100000) / 1000);
-        if (action === "processRGBAImageFrameAndRenderOverlay") {
-          diceKeyImageProcessor.processRGBAImageAndRenderOverlay(width, height, rgbImagesArrayUint8Array)
-        } else { // if (action === "processAndAugmentRGBAImageFrame") ?
-          diceKeyImageProcessor.processAndAugmentRGBAImage(width, height, rgbImagesArrayUint8Array);
+        try {
+          if (action === "processRGBAImageFrameAndRenderOverlay") {
+            diceKeyImageProcessor.processRGBAImageAndRenderOverlay(width, height, rgbImagesArrayUint8Array)
+          } else { // if (action === "processAndAugmentRGBAImageFrame") ?
+            diceKeyImageProcessor.processAndAugmentRGBAImage(width, height, rgbImagesArrayUint8Array);
+          }
+        } catch (e) {
+          if (typeof e === "string") {
+            throw new Error("Error in processImage: " + e);
+          } else {
+            throw e;
+          }
         }
-        // console.log("Worker finishes processing frame", (Date.now() % 100000) / 1000);
+    // console.log("Worker finishes processing frame", (Date.now() % 100000) / 1000);
 
         const isFinished = diceKeyImageProcessor.isFinished();
-        const diceKeyReadJson =  diceKeyImageProcessor.diceKeyReadJson();
+        const facesReadJsonObj =  (JSON.parse(diceKeyImageProcessor.diceKeyReadJson()) ?? []) as FaceReadJsonObjectWithImageIfErrorFound[];
+        facesReadJsonObj.forEach( (faceReadJsonObj, faceIndex) => {
+          const faceRead = FaceRead.fromJsonObject(faceReadJsonObj);
+          if (faceRead.errors && faceRead.errors.length > 0) {
+            try {
+              const faceReadImageDataFromCpp = diceKeyImageProcessor.getFaceImage(faceIndex);
+              const faceReadImageData = new Uint8ClampedArray(faceReadImageDataFromCpp);
+              faceReadJsonObj.squareImageAsRgbaArray = new Uint8ClampedArray(faceReadImageData);
+            } catch (e) {
+              if (typeof e === "string") {
+                throw new Error("Error in getFaceImage: " + e);
+              } else {
+                throw e;
+              }
+            }
+          }
+        });
 
+          
 
   
         return {
@@ -127,16 +155,22 @@ class FrameProcessingWorker {
           action, sessionId, height, width,
           rgbImageAsArrayBuffer: rgbImagesArrayUint8Array.buffer,
           isFinished,
-          diceKeyReadJson
+          facesReadObjectArray: facesReadJsonObj.length === 25 ? facesReadJsonObj as TupleOf25Items<FaceReadJsonObjectWithImageIfErrorFound> : undefined,
         }
-    } catch (e) {
+    } catch (exception) {
+      if (typeof exception === "string") {
+        try {throw new Error(exception)} catch (newE) {exception = newE}
+      }
+      if (!(exception instanceof Error)) {
+        try {throw new Error(JSON.stringify(exception))} catch (newE) {exception = newE}
+      }
       return {
         requestId,
         action, sessionId, height, width,
         rgbImageAsArrayBuffer: inputRgbImageAsArrayBuffer,
         isFinished: false,
-        diceKeyReadJson: "{}",
-        exception: e
+        facesReadObjectArray: undefined,
+        exception
       }
     }
   }
