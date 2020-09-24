@@ -20,10 +20,15 @@ export const videoConstraintsForDevice = (deviceId: string): MediaTrackConstrain
 
 export type Camera = MediaDeviceInfo & MediaTrackSettings & {name: string, capabilities: MediaTrackCapabilities | undefined};
 
-const getDirectionScore = ({facingMode}: Camera): number =>
-  facingMode === "environment" ? -1 : // put cameras facing out first on the list
-  typeof facingMode !== "string" ? 0 : // put cameras with an undefined direction next 
-  1; // put cameras facing "user", "left", or "right" last;
+const getDirectionScore = ({facingMode, label}: Camera): number => {
+  const lcLabel = (label ?? "").toLocaleLowerCase(); 
+  return (
+      facingMode === "environment" || lcLabel.indexOf("rear") >= 0 || lcLabel.indexOf("back") >= 0
+  ) ? -1 :
+    (facingMode === "user" || lcLabel.indexOf("front") >= 0 || lcLabel.indexOf("forward") ) ?
+    1 :
+  0; 
+}
 const getResolutionCapabilitiesScore = ({capabilities}: Camera): number =>
   (capabilities && capabilities.width && capabilities.width.max && capabilities.height && capabilities.height.max) ?
   -capabilities.width.max * capabilities.height.max :
@@ -159,6 +164,11 @@ export class CamerasOnThisDevice {
     return;
   }
 
+  /**
+   * Set to true once the list of cameras has been populated the first time
+   */
+  private _ready: boolean = false; 
+  public get ready() { return this._ready; }
   addAttachedAndRemovedDetachedCameras = async (): Promise<void> => {
     const listOfAllMediaDevices = await navigator.mediaDevices.enumerateDevices();
 
@@ -199,7 +209,12 @@ export class CamerasOnThisDevice {
         await this.tryAddCamera(cameraDevice);
       }
     }
-    if (deviceIdsOfRemovedCameras.length > 0 || listOfNewlyAttachedCameras.length > 0) {
+    if (
+      !this._ready ||
+      deviceIdsOfRemovedCameras.length > 0 ||
+      listOfNewlyAttachedCameras.length > 0
+    ) {
+      this._ready = true;
       // A change to the list has been made so send an update event
       this.cameraListUpdated.send(this.cameras);
     }

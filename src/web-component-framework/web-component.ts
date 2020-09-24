@@ -15,6 +15,7 @@ export class Attributes {
   text?: string;
   class?: string | string[];
   style?: string;
+  onExceptionEvent?: (error: unknown) => void;
 }
 
 export const DefaultComponentAttributesToCopy : (string & keyof Attributes)[] =
@@ -28,6 +29,8 @@ export class Component<
   #removed = false;
   public get removed(): boolean { return this.#removed; }
   detachEvent = new ComponentEvent(this);
+  public exceptionEvent = new ComponentEvent<[unknown], this>(this);
+  
   childComponents = new Set<Component>();
 
   private static uniqueElementIdCounter: number = 0;
@@ -45,6 +48,9 @@ export class Component<
     attributesToCopy: (string & keyof OPTIONS)[] = []
   ) {
     this.detachEvent.on(() => this.remove());
+    if (options.onExceptionEvent) {
+      this.exceptionEvent.on(options.onExceptionEvent);
+    }
     const {text, class: classes} = this.options;
     const setOfAllAttributesToCopy = new Set<(string & keyof OPTIONS)>([...DefaultComponentAttributesToCopy, ...attributesToCopy]);
     for (const key of setOfAllAttributesToCopy) {
@@ -305,6 +311,17 @@ export class Component<
     }
     return replace;
   }
+
+  
+  /**
+   * Throw exceptions that can be passed up to parent components
+   *
+   * @param exception 
+   */
+  protected throwException = (exception: unknown) => {
+    this.exceptionEvent.send(exception);
+  }
+
 }
 export interface ReplaceableChild<HTML_COMPONENT extends Component> {
   (child: HTML_COMPONENT): HTML_COMPONENT

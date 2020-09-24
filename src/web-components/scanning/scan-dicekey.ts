@@ -5,7 +5,6 @@ import {
   Div,
   MonospaceSpan
 } from "../../web-component-framework"
-import "regenerator-runtime/runtime";
 import {
   Face,
   FaceRead, FaceReadError, getImageOfFaceRead
@@ -295,7 +294,10 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       // This image needs to be scanned
       this.renderHint();
       this.append(
-        new CameraCapture({fixAspectRatioToWidthOverHeight: 1}).with( cc => { this.cameraCapture = cc; this.resolveCameraCapturePromise?.(cc);} )
+        new CameraCapture({fixAspectRatioToWidthOverHeight: 1, onExceptionEvent: this.options.onExceptionEvent}).with( cc => {
+          this.cameraCapture = cc;
+          this.resolveCameraCapturePromise?.(cc);
+        } )
       );
       this.startProcessingNewCameraFrame();
     } else if (this.facesReadThatContainErrorsAndHaveNotBeenValidated.length > 0) {
@@ -397,9 +399,13 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * overlay image above the video image.
    */
   handleProcessedCameraFrame = async (response: ProcessFrameResponse ) => {
-    console.log("handleProcessedCameraFrame", (Date.now() % 100000) / 1000);
-    const {requestId, width, height, rgbImageAsArrayBuffer, diceKeyReadJson} = response;
+    // console.log("handleProcessedCameraFrame", (Date.now() % 100000) / 1000);
+    const {requestId, width, height, rgbImageAsArrayBuffer, diceKeyReadJson, exception} = response;
 
+    if (exception != null) {
+      return this.throwException(exception);
+    }
+    
     // Remove the pre-processed image from the set of images being processed
     const originalImageData = this.framesBeingProcessed.get(requestId);
     if (originalImageData == null) {

@@ -7,7 +7,7 @@ import {
   Div,
   Select,
   Option,
-  Video
+  Video, ComponentEvent
 } from "../../web-component-framework";
 import {
   CamerasBeingInspected
@@ -105,6 +105,12 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
   // Set to true when the first frame has been drawn.
   // Allows us to draw first ImageCapture frame loaded without delay.
   private hasAnImageBeenDrawnOntoTheOverlayCanvas = false;
+
+
+  public noCamerasFoundEvent = new ComponentEvent<[], this>(this);
+  public camerasMuteEvent = new ComponentEvent<[], this>(this);
+  public exceptionEvent = new ComponentEvent<[unknown], this>(this);
+
   
   
   /**
@@ -119,23 +125,11 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
 
     //
     // Initialize the list of device cameras
-    CamerasOnThisDevice.instance.cameraListUpdated.on( (cameras) => {
-      // Whenever there's an update to the camera list, if we don't have an
-      // active camera, set the active camera to the first camera in the list.
-      if (!this.mediaStream && cameras.length > 0) {
-        // no longer need to show the list of cameras
-        this.camerasBeingInspected?.remove()
-        this.setCamera(cameras[0].deviceId);
-      }
-      // And update the rendered camera list
-      this.renderCameraList(cameras);
-    })
+    CamerasOnThisDevice.instance.cameraListUpdated.on( (cameras) => this.onCameraListUpdate(cameras) )
     if (CamerasOnThisDevice.instance.cameras.length > 0) {
       this.setCamera(CamerasOnThisDevice.instance.cameras[0].deviceId);
     } 
-  }
-
-  
+  }  
   /**
    * Update the selection menu of cameras
    */
@@ -171,18 +165,56 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     });
   }
 
+
+  private onCameraListUpdate = (cameras: Camera[]): void => {
+    if (!this.overlayCanvas || this.removed) {
+      return;
+    }
+    if (cameras.length == 0) {
+      this.renderSoon();     
+    }
+    // Whenever there's an update to the camera list, if we don't have an
+    // active camera, set the active camera to the first camera in the list.
+    if (cameras.length > 0) {
+      // no longer need to show the list of cameras
+      this.camerasBeingInspected?.remove()
+      if (!this.mediaStream) {
+        this.setCamera(cameras[0].deviceId);
+      }
+    }
+    // And update the rendered camera list
+    this.renderCameraList(cameras);
+  }
+
+
   render() {
     super.render();
-    this.append(
-      Div({class: "content"},
-        CamerasOnThisDevice.instance.cameras.length == 0 ? this.camerasBeingInspected : undefined,
-        Canvas(this.useImageCapture ? {} :{class: styles.overlay}).with( c => this.overlayCanvasComponent = c ),
-        Video({style: "display: none; visibility: hidden;"}).with( c => this.videoComponent = c ),
-      ),
-      Div({class: dialogStyles.centered_controls},
-        Select({style: "visibility: hidden;"}).withElement( e => this.cameraSelectionMenu = e )
-      ),
-    );
+    if (CamerasOnThisDevice.instance.ready && CamerasOnThisDevice.instance.cameras.length == 0) {
+      this.append(
+        Div({style: "color: #ff8080; font-size: 1.75rem; max-width: 70vw;"},
+          "Either no cameras are connected or your browser is denying access to them.",
+          document.createElement("br"),
+          document.createElement("br"),
+          "Please make sure cameras are connected, no other apps are using them, and that the app is permitted to access them.",
+          document.createElement("br"),
+          "Then press the refresh button in your browser."
+        )
+      );
+    } else {
+      this.append(
+        Div({},
+          CamerasOnThisDevice.instance.cameras.length == 0 ? this.camerasBeingInspected : undefined,
+          Canvas(this.useImageCapture ? {} :{class: styles.overlay}).with( c => this.overlayCanvasComponent = c ),
+          Video({style: "display: none; visibility: hidden;"}).with( c => this.videoComponent = c ),
+        ),
+        Div({class: dialogStyles.centered_controls},
+          Select({style: "visibility: hidden;"}).withElement( e => this.cameraSelectionMenu = e )
+        ),
+      );
+      if (CamerasOnThisDevice.instance.ready) {
+        this.onCameraListUpdate(CamerasOnThisDevice.instance.cameras);
+      }
+    }
   }
 
   remove() {
@@ -199,6 +231,21 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
 
   setCamera = (deviceId: string) =>
     this.setCameraByConstraints(videoConstraintsForDevice(deviceId));
+
+  private throwIfTrackNotReadable = (track: MediaStreamTrack | undefined): void => {
+    if (track == null) {
+      throw new Error("Cannot set camera because track is null.");
+    }
+    if (track.readyState !== "live") {
+      throw new Error("Cannot set camera because track is not in live state.");
+    }
+    if (!track.enabled) {
+      throw new Error("Cannot set camera because track is not enabled.");
+    }
+    if (track.muted ) {
+      throw new Error("Cannot set camera because track is muted.");
+    }
+  }
 
   /**
    * Set the current camera
@@ -224,30 +271,28 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     // Now set the new stream
     try {
       this.mediaStream = await navigator.mediaDevices.getUserMedia({video: mediaTrackConstraints});
-    } catch (e) {
-      console.log("Media stream creation failed", e);
-    }
-    const track = this.mediaStream?.getVideoTracks()[0];
-    if (!track || track.readyState !== "live" || !track.enabled || track.muted ) {
-      console.log("Could not update camera", track);
-      return;
-    }
-    const {
-      deviceId, height, width
-    } = track.getSettings();
-    this.camerasDeviceId = deviceId;
-    if (this.videoPlayer) {
-      this.videoPlayer.srcObject = this.mediaStream!;
-    }
-    if (track && this.useImageCapture) {
-      this.imageCapture = new ImageCapture(track);
-    } else if (this.videoPlayer) {
-      this.videoPlayer.style.setProperty("display", "block");
-      this.videoPlayer.style.setProperty("visibility", "visible");
-      if (height && width) {
-        // this.videoPlayer!.width = Math.min( width, 1024 );
-        // this.videoPlayer!.height = Math.min( height, 1024 );
+
+      const track = this.mediaStream?.getVideoTracks()[0];
+      this.throwIfTrackNotReadable(track);
+      const {
+        deviceId, height, width
+      } = track.getSettings();
+      this.camerasDeviceId = deviceId;
+      if (this.videoPlayer) {
+        this.videoPlayer.srcObject = this.mediaStream!;
       }
+      if (track && this.useImageCapture) {
+        this.imageCapture = new ImageCapture(track);
+      } else if (this.videoPlayer) {
+        this.videoPlayer.style.setProperty("display", "block");
+        this.videoPlayer.style.setProperty("visibility", "visible");
+        if (height && width) {
+          // this.videoPlayer!.width = Math.min( width, 1024 );
+          // this.videoPlayer!.height = Math.min( height, 1024 );
+        }
+      }
+    } catch (e) {
+      return this.throwException(e);
     }
     this.renderCameraList();
     return;
@@ -255,7 +300,11 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
 
   private getFrameUsingImageCapture = async (): Promise<ImageData | undefined> => {
     const track = this.imageCapture?.track;
-    console.log("getFrameUsingImageCapture", (Date.now() % 100000) / 1000);
+    ///console.log("getFrameUsingImageCapture", (Date.now() % 100000) / 1000);
+    if (this.camerasDeviceId == null) {
+      return;
+    }
+    this.throwIfTrackNotReadable(track);
     if (track == null || track.readyState !== "live" || !track.enabled || track.muted) {
       if (track?.muted) {
         console.log("Track muted");
@@ -273,9 +322,9 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     if (this.overlayCanvas && !this.isRenderedOverVideo && !this.hasAnImageBeenDrawnOntoTheOverlayCanvas) {
       this.drawImageDataOntoVideoCanvas(bitMap);
     }
-    console.log("Frame grabbed", (Date.now() % 100000) / 1000);
+    // console.log("Frame grabbed", (Date.now() % 100000) / 1000);
     const {width, height} = bitMap;
-    console.log(`Grabbing frame with dimensions ${width}x${height}`)
+    // console.log(`Grabbing frame with dimensions ${width}x${height}`)
     if (this.captureCanvas!.width != width || this.captureCanvas!.height != height) {
       [this.captureCanvas!.width, this.captureCanvas!.height] = [width, height];
       this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
@@ -305,13 +354,14 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
   private getFrameOrUndefinedIfNotReady = async (): Promise<ImageData | undefined> => {
     if (this.removed) {
       // The element is no longer displaying and so processing should stop.
-      throw new Error("Can't grab frame because the CameraCapture component has been removed");
+      return undefined;
     }
     return await (this.useImageCapture ?
       this.getFrameUsingImageCapture() : this.getFrameFromVideoPlayer());
   }
 
   getFrame = async (): Promise<ImageData> => {
+    this.throwException(new Error("Test exception"));
     const imageData = await this.getFrameOrUndefinedIfNotReady();
     if (imageData != null) {
       return imageData;

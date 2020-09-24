@@ -51,6 +51,7 @@ export interface ProcessFrameResponse extends Frame, RequestMetadata {
   action: "processRGBAImageFrameAndRenderOverlay" | "processAndAugmentRGBAImageFrame";
   isFinished: boolean,
   diceKeyReadJson: string
+  exception?: unknown;
 }
 
 function isTerminateSessionRequest(t: any) : t is TerminateSessionRequest {
@@ -101,21 +102,20 @@ class FrameProcessingWorker {
         rgbImageAsArrayBuffer: inputRgbImageAsArrayBuffer
       }: ProcessFrameRequest | ProcessAugmentFrameRequest
     ): ProcessFrameResponse => {
+      try {
       const rgbImagesArrayUint8Array = new Uint8Array(inputRgbImageAsArrayBuffer);
         if (!this.sessionIdToImageProcessor.has(sessionId)) {
             this.sessionIdToImageProcessor.set(sessionId, new this.module.DiceKeyImageProcessor());
         }
         const diceKeyImageProcessor = this.sessionIdToImageProcessor.get(sessionId)!;
 
-//        const inputDataBuffer = new Uint8ClampedArray(inputRgbImageAsArrayBuffer);
-
-        console.log("Worker starts processing frame", (Date.now() % 100000) / 1000);
+        // console.log("Worker starts processing frame", (Date.now() % 100000) / 1000);
         if (action === "processRGBAImageFrameAndRenderOverlay") {
           diceKeyImageProcessor.processRGBAImageAndRenderOverlay(width, height, rgbImagesArrayUint8Array)
         } else { // if (action === "processAndAugmentRGBAImageFrame") ?
           diceKeyImageProcessor.processAndAugmentRGBAImage(width, height, rgbImagesArrayUint8Array);
         }
-        console.log("Worker finishes processing frame", (Date.now() % 100000) / 1000);
+        // console.log("Worker finishes processing frame", (Date.now() % 100000) / 1000);
 
         const isFinished = diceKeyImageProcessor.isFinished();
         const diceKeyReadJson =  diceKeyImageProcessor.diceKeyReadJson();
@@ -129,7 +129,17 @@ class FrameProcessingWorker {
           isFinished,
           diceKeyReadJson
         }
+    } catch (e) {
+      return {
+        requestId,
+        action, sessionId, height, width,
+        rgbImageAsArrayBuffer: inputRgbImageAsArrayBuffer,
+        isFinished: false,
+        diceKeyReadJson: "{}",
+        exception: e
+      }
     }
+  }
 }
 
 // Create the worker once the required webassembly has been created.

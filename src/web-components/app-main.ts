@@ -29,6 +29,9 @@ import { ScanDiceKey } from "./scanning/scan-dicekey";
 import {
   urlApiResponder
 } from "../api-handler/handle-url-api-request";
+import {
+  reportException
+} from "./exceptions";
 
 
 interface BodyOptions extends Attributes {
@@ -97,7 +100,7 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
       // Render the ApiRequestContainer
       this.append(
         new ApiRequestContainer(
-          {requestContext: Step.getUsersConsent.options}
+          {requestContext: Step.getUsersConsent.options, onExceptionEvent: reportException}
         ).with ( apiRequest => {
           apiRequest.userApprovedEvent.on( Step.getUsersConsent.complete )
           apiRequest.userCancelledEvent.on( () => Step.getUsersConsent.cancel(new Exceptions.UserDeclinedToAuthorizeOperation("User cancelled")) )
@@ -109,7 +112,7 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
       // show the component for scanning it.
       this.append(
         Div({class: "request-container"},
-          new ScanDiceKey({host: ""}).with( readDiceKey => { 
+          new ScanDiceKey({host: "", onExceptionEvent: reportException}).with( readDiceKey => { 
           readDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
         })
       ));

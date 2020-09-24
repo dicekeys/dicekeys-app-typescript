@@ -104,8 +104,14 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     ApproveApiCommand.computeApiCommandWorker.calculate({seedString, request});    // After this class is constructed, kick of background calculations.
     setTimeout( () => this.updateBackgroundOperationsForDerivationOptions(), 1);
     if ( request.command === ApiStrings.Commands.getPassword ) {
-      (ApproveApiCommand.computeApiCommandWorker.resultPromise as Promise<ApiCalls.GetPasswordResponse>).then(
-        precomputedResult => this.password.value = precomputedResult.password
+      (ApproveApiCommand.computeApiCommandWorker.resultPromise as Promise<ApiCalls.GetPasswordResponse | {exception: unknown}>).then(
+        precomputedResult => {
+          if ("exception" in precomputedResult) {
+            this.throwException(precomputedResult.exception);
+          } else {
+            this.password.value = precomputedResult.password;
+          }
+        }
       );
     }  
   }

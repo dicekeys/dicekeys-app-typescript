@@ -52,7 +52,7 @@ export interface PasswordConsumer extends
 // });
 
 export const passwordDerivationOptionsJson = (hosts: SingletonOrArrayOf<string>) =>
-`{"wordLimit": 13, "allow": [${
+`{"allow": [${
     asArray(hosts)
       .map( host => `{"host": "*.${host}"}`)
       .join(" ,")
