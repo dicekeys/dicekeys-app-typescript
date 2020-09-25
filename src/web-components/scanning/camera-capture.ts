@@ -17,7 +17,7 @@ import {
   CamerasOnThisDevice,
 //  videoConstraintsForDevice
 } from "./cameras-on-this-device";
-import { browserInfo } from "~utilities/browser";
+// import { browserInfo } from "../utilities/browser";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
@@ -28,24 +28,24 @@ export interface CameraCaptureOptions extends Attributes {
 }
 
 
-const getDefaultCameraDimensions = (): {width: number, height: number} => {
-  const {browser} = browserInfo;
-  switch (browser) {
-    case "Safari": return {
-      width: 1280,
-      height: 1280
-    };
-    case "Firefox": return {
-      width: 1280,
-      height: 1280,
-    };
-    default: return {
-      width: 1024,
-      height: 1024
-    };
-  }
-}
-const defaultCameraDimensions = getDefaultCameraDimensions();
+// const getDefaultCameraDimensions = (): {width: number, height: number} => {
+//   const {browser} = browserInfo;
+//   switch (browser) {
+//     case "Safari": return {
+//       width: 1280,
+//       height: 1280
+//     };
+//     case "Firefox": return {
+//       width: 1280,
+//       height: 1280,
+//     };
+//     default: return {
+//       width: 1024,
+//       height: 1024
+//     };
+//   }
+// }
+// const defaultCameraDimensions = getDefaultCameraDimensions();
 
 /**
  * This component scans scans images using the device camera(s).
@@ -279,18 +279,19 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
       this.setCameraByConstraints({
         deviceId,
         width: {
-          ideal: 1200,
+          ideal: 1080,
 //          ideal: Math.min(camera.capabilities?.width?.max ?? defaultCameraDimensions.width, defaultCameraDimensions.width),
           max: 1600,
           min: 720,
         },
         height: {
 //          ideal: Math.min(camera.capabilities?.height?.max ?? defaultCameraDimensions.height, defaultCameraDimensions.height),
-          ideal: 1200,
+          ideal: 1080,
           max: 1600,
           min: 720
         },
-        aspectRatio: {ideal: 1},     
+        aspectRatio: {ideal: 1},
+        advanced: [{focusDistance: {ideal: 0}}]
       });
     }
   }
