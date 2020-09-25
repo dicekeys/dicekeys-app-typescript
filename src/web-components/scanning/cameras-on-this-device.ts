@@ -1,4 +1,4 @@
-import { browserInfo } from "~utilities/browser";
+// import { browserInfo } from "~utilities/browser";
 import {
   ComponentEvent
 } from "../../web-component-framework"
@@ -21,15 +21,20 @@ export const videoConstraintsForDevice = (deviceId: string): MediaTrackConstrain
 
 export type Camera = MediaDeviceInfo & MediaTrackSettings & {name: string, capabilities: MediaTrackCapabilities | undefined};
 
-const getDirectionScore = ({facingMode, label}: Camera): number => {
-  const lcLabel = (label ?? "").toLocaleLowerCase(); 
-  return (
-      facingMode === "environment" || lcLabel.indexOf("rear") >= 0 || lcLabel.indexOf("back") >= 0
-  ) ? -1 :
-    (facingMode === "user" || lcLabel.indexOf("front") >= 0 || lcLabel.indexOf("forward") ) ?
-    1 :
-  0; 
+const rearDirectionNamesLc = ["environment", "rear", "back"];
+const frontDirectionNamesLc = ["user", "front", "forward", "display"];
+const lcStrContainsCandidate = (...lcCandidates: string[]) => (searchIn: string): boolean => {
+  const lcSearchIn = searchIn.toLocaleLowerCase();
+  return (lcCandidates.some( lcCandidate => lcSearchIn.indexOf(lcCandidate) !== -1))
 }
+const containsRearDirectionName = lcStrContainsCandidate(...rearDirectionNamesLc);
+const containsFrontDirectionName = lcStrContainsCandidate(...frontDirectionNamesLc);
+const containsDirectionName = lcStrContainsCandidate(...frontDirectionNamesLc, ...rearDirectionNamesLc);
+
+const getDirectionScore = ({facingMode, label}: Camera): number => 
+  ( facingMode === "environment" || containsRearDirectionName(label) ) ? -1 :
+  ( facingMode === "user" || containsFrontDirectionName(label) ) ? 1 :
+  0; 
 const getResolutionCapabilitiesScore = ({capabilities}: Camera): number =>
   (capabilities && capabilities.width && capabilities.width.max && capabilities.height && capabilities.height.max) ?
   -capabilities.width.max * capabilities.height.max :
@@ -91,6 +96,12 @@ export class CamerasOnThisDevice {
   }
 
   private cameraDeviceIdToCameraNumber = new Map<string, number>();
+  private getCameraNumber = (deviceId: string): number => {
+    if (!this.cameraDeviceIdToCameraNumber.has(deviceId)) {
+      this.cameraDeviceIdToCameraNumber.set(deviceId, this.cameraDeviceIdToCameraNumber.size +1);
+    }
+    return this.cameraDeviceIdToCameraNumber.get(deviceId)!;
+  }
 
   /**
    * Try to access the camera to learn more about its resolution and other settings.
@@ -123,34 +134,19 @@ export class CamerasOnThisDevice {
       };
       const {label, facingMode} = cameraWithoutName;
       var {width, height} = cameraWithoutName;
-      const lcLabel = label.toLocaleLowerCase();
+      if (capabilities && capabilities.width?.max && capabilities.height?.max) {
+        width = capabilities.width.max;
+        height = capabilities.height.max;
+      }
       // Only add a direction string if the direction is present and
       // it's not already implied in the label
-      const labelDoesNotContainDirection =
-        lcLabel.indexOf("rear") == -1 &&
-        lcLabel.indexOf("front") == -1;
-      const directionPrefix =
-        labelDoesNotContainDirection && facingMode === "user" ? "Front Facing " :
-        labelDoesNotContainDirection && facingMode === "environment" ? "Rear Facing " :
-        "";
-      var identifier: string;
-      if (label) {
-        identifier = label;
-      } else {
-        if (this.cameraDeviceIdToCameraNumber.has(deviceId)) {
-          identifier = `Camera ${this.cameraDeviceIdToCameraNumber.get(deviceId)!}`;
-        } else {
-          const cameraIndex = this.cameraDeviceIdToCameraNumber.size +1;
-          this.cameraDeviceIdToCameraNumber.set(deviceId, cameraIndex);
-          identifier = `Camera ${cameraIndex}`;
-        }
-      }
-      if (width === 640 && height === 480 && browserInfo.browser === "Firefox") {
-        // Firefox always returns 640x480
-        width = undefined;
-        height = undefined;
-      }
-      const resolution: string = (width && height) ? ` ${width}x${height} ` : ""
+      const directionPrefix = containsDirectionName(label) ? "" :
+          facingMode === "user" ? "Front Facing " :
+          facingMode === "environment" ? "Rear Facing " :
+          "";
+      const identifier: string = label || `Camera ${this.getCameraNumber(deviceId)}`;
+      // Only display resolution if it's known and not the default of 640x480
+      const resolution: string = (width && height && !(width===640 && height===480)) ? ` ${width}x${height} ` : ""
       const name = directionPrefix + identifier + resolution;
       // The label property needs to be set manually
       const camera: Camera = {
