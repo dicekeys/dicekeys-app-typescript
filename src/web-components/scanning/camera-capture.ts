@@ -347,7 +347,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
       console.log("Calling getUserMedia", mediaTrackConstraints);
       this.mediaStream = await navigator.mediaDevices.getUserMedia({video: mediaTrackConstraints});
     }  catch (e) {
-      return this.throwException(e, "navigator.mediaDevices.getUserMedia");
+      return this.throwException(e, `navigator.mediaDevices.getUserMedia: ${JSON.stringify(mediaTrackConstraints)}`);
     }
 
     try {
@@ -370,7 +370,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
         }
       }
     } catch (e) {
-      return this.throwException(e, "Setting camera after getUserMedia completes");
+      return this.throwException(e, `Setting camera after getUserMedia completes, ${JSON.stringify(mediaTrackConstraints)}`);
     }
     this.renderCameraList();
     return;
@@ -414,7 +414,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
       this.captureCanvasCtx!.drawImage(bitMap, 0, 0);
       return this.captureCanvasCtx!.getImageData(0, 0, width, height);
     } catch (e) {
-      this.throwException(e);
+      this.throwException(e, `getFrameUsingImageCapture`);
       return undefined;
     }
   };
