@@ -5,7 +5,7 @@ import {
 import {
   AppMain
 } from "./web-components/app-main";
-import { DerivationOptions, ApiStrings } from "@dicekeys/dicekeys-api-js";
+import { DerivationOptions, ApiCalls } from "@dicekeys/dicekeys-api-js";
 
 window.addEventListener("load", () => {
   
@@ -19,7 +19,7 @@ window.addEventListener("load", () => {
       app.handleApiMessageEvent({
         origin: "https://localhost",
         data: {
-          [ApiStrings.Inputs.COMMON.command]: ApiStrings.Commands.getPassword,
+          [ApiCalls.Command.getPassword]: ApiCalls.Command.getPassword,
           derivationOptionsJson: JSON.stringify(DerivationOptions({          
 //            mutable: true,
 //            excludeOrientationOfFaces: true,

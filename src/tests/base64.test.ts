@@ -1,7 +1,7 @@
 import {
   urlSafeBase64Decode,
   urlSafeBase64Encode,
-} from "../api/encodings"
+} from "@dicekeys/dicekeys-api-js"
 
 if (typeof btoa === 'undefined') {
   global.btoa = function (str) {

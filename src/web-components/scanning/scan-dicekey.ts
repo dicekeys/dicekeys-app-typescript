@@ -3,12 +3,14 @@ import {
   Component,
   ComponentEvent,
   Div,
-  MonospaceSpan
+  MonospaceSpan,
+  Observable,
+  Span
 } from "../../web-component-framework"
-import "regenerator-runtime/runtime";
 import {
   Face,
-  FaceRead, FaceReadError, getImageOfFaceRead
+  FaceRead, FaceReadError,
+  renderFacesRead
 } from "@dicekeys/read-dicekey-js";
 import {
   DiceKey, TupleOf25Items
@@ -18,7 +20,7 @@ import {
     ProcessFrameRequest,
     ProcessFrameResponse,
     TerminateSessionRequest,
-    ProcessAugmentFrameRequest
+    FaceReadWithImageIfErrorFound
 } from "../../workers/dicekey-image-frame-worker"
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 import {
@@ -28,6 +30,7 @@ import {
   CameraCapture, CameraCaptureOptions
 } from "./camera-capture"
 import { VerifyFaceRead } from "./verify-face-read";
+import { browserInfo } from "~utilities/browser";
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
 interface ScanDiceKeyOptions extends CameraCaptureOptions {
@@ -69,12 +72,12 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * The faces read during the process of scanning the dice, which includes details of overlines
    * and underlines so that we can correct potential errors.
    */
-  private facesRead?: TupleOf25Items<FaceRead>;
+  private facesRead?: TupleOf25Items<FaceReadWithImageIfErrorFound>;
 
   get  allFacesReadHaveMajorityValues(): boolean {
     return this.facesRead?.filter( faceRead =>
       faceRead.letter != null && faceRead.digit != null
-    ).length === 25;
+    )?.length === 25;
   }
 
   get facesReadThatUserReportedInvalid(): FaceRead[] {
@@ -89,7 +92,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * The set of faces read that contain errors that the user has yet
    * to verify were properly corrected
    */
-  get facesReadThatContainErrorsAndHaveNotBeenValidated(): FaceRead[] {
+  get facesReadThatContainErrorsAndHaveNotBeenValidated(): FaceReadWithImageIfErrorFound[] {
     return this.facesRead?.filter( f => f.errors && f.errors.length > 0 &&
         f.userValidationOutcome == null || f.userValidationOutcome === "user-rejected" ) ?? []
   }
@@ -185,13 +188,13 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * we're only processing one at a time, but a future implementation might pipeline
    * two or more in parallel if it's safe to assume that there is parallelism to exploit.
    */
-  private framesBeingProcessed = new Map<number, ImageData>();
+  // FIXME - remove private framesBeingProcessed = new Map<number, ImageData>();
 
   /**
    * If a face is read with errors, keep an image of the face so that the
    * user can verify that the error correction didn't fail. 
    */
-  private errorImages = new Map<string, {width: number, height: number, data: Uint8ClampedArray}>();
+  // FIXME REMOVE private errorImages = new Map<string, {width: number, height: number, data: Uint8ClampedArray}>();
 
   /**
    * The background worker that processes image frames so that the
@@ -295,26 +298,37 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       // This image needs to be scanned
       this.renderHint();
       this.append(
-        new CameraCapture({fixAspectRatioToWidthOverHeight: 1}).with( cc => { this.cameraCapture = cc; this.resolveCameraCapturePromise?.(cc);} )
+        Div({style: "color: yellow;"},
+          // browser info
+          Span({text: `${browserInfo.browser} ${browserInfo.browserVersion} ${browserInfo.os} ${browserInfo.osVersion
+          } mobile=${browserInfo.mobile} screen=${browserInfo.screenSize.width}x${browserInfo.screenSize.height} `}),
+          Span({}).withElement( e => this.frameSize.observe( fs => e.innerText = fs ? ` frame size: ${fs.width}x${fs.height} ` : `` )),
+          // frames per second
+          Span({}).withElement( e => this.framesPerSecond.observe( fps => e.textContent = `${(fps ?? 0).toString()}fps ` ))
+        ),
+        new CameraCapture({fixAspectRatioToWidthOverHeight: 1, onExceptionEvent: this.options.onExceptionEvent}).with( cc => {
+          this.cameraCapture = cc;
+          this.resolveCameraCapturePromise?.(cc);
+        } )
       );
       this.startProcessingNewCameraFrame();
     } else if (this.facesReadThatContainErrorsAndHaveNotBeenValidated.length > 0) {
       // The scan phase is complete, but there are errors to correct.
       const faceToValidate = this.facesReadThatContainErrorsAndHaveNotBeenValidated[0];
-      const imageOfFaceToValidate = this.errorImages.get(faceToValidate.uniqueIdentifier);
-      if (imageOfFaceToValidate == null) {
+      const imageDataRgba = faceToValidate.squareImageAsRgbaArray!;
+//      const imageOfFaceToValidate = this.errorImages.get(faceToValidate.uniqueIdentifier);
+      if (imageDataRgba.length == 0) {
         // This exception indicates a coding error, as the code is designed this should never occur
         throw new Error("Assertion failure: no image of face to validate");
       }
+      const imageSize = Math.sqrt(imageDataRgba.length / 4);
       this.append(
-        new VerifyFaceRead({faceRead: faceToValidate, image: imageOfFaceToValidate}).with( vfr => {
+        new VerifyFaceRead({faceRead: faceToValidate, image: {data: imageDataRgba, width: imageSize, height: imageSize}}).with( vfr => {
           vfr.userConfirmedOrDenied.on( (response) => {
             if (response === "denied") {
               // We need to start over
               this.cameraSessionId = Math.random().toString() + Math.random().toString(); 
               this.facesRead = undefined;
-              this.errorImages.clear();
-              this.framesBeingProcessed.clear();
             } else if (this.facesReadThatContainErrorsAndHaveNotBeenValidated.length === 0) {
               // All faces have been validated by the user
               this.reportDiceKeyReadAndValidated();
@@ -347,9 +361,9 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     if (!this.readyReceived && "action" in message.data && message.data.action === "workerReady" ) {
       this.readyReceived = true;
       this.resolveWorkerReadyPromise?.(true);
-    } else if ("action" in message.data && (
-        message.data.action == "processRGBAImageFrameAndRenderOverlay" || message.data.action === "processAndAugmentRGBAImageFrame")
-      ) {
+    } else if ("action" in message.data &&
+      message.data.action === "processRGBAImageFrame"
+    ) {
       this.handleProcessedCameraFrame(message.data as ProcessFrameResponse )
     }
   }
@@ -371,16 +385,15 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     }
     const imageData = await this.cameraCapture!.getFrame();
     const requestId = this.nextRequestId++;
-    this.framesBeingProcessed.set(requestId, imageData);
     const {width, height, data} = imageData;
     // Create a copy of the image buffer that can be sent over to the worker
     const rgbImageAsArrayBuffer = data.buffer.slice(0);
     // Ask the background worker to process the bitmap.
     // First construct a request
-    const request: ProcessFrameRequest | ProcessAugmentFrameRequest = {
+    const request: ProcessFrameRequest = {
       requestId,
       width, height, rgbImageAsArrayBuffer,
-      action: this.cameraCapture?.isRenderedOverVideo ? "processRGBAImageFrameAndRenderOverlay" : "processAndAugmentRGBAImageFrame",
+      action: "processRGBAImageFrame",
       sessionId: this.cameraSessionId!,
     };
     // The mark the objects that can be transferred to the worker.
@@ -390,77 +403,82 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     this.frameWorker.postMessage(request, transferrableObjectsWithinRequest);
   }
 
+  /**
+   * Tracks the number of frames processed per second
+   */
+  public framesPerSecond = new Observable<number>(0);
+  public frameSize = new Observable<{width: number, height: number}>({width: 0, height: 0});
 
+  /**
+   * Record the times each processed frame comes back (in ms) so
+   * that we can calculate the frame rate (framesPerSecond)
+   */
+  private frameProcessedTimesMs: number[] = [];
 
   /**
    * Handle frames processed by the web worker, displaying the received
    * overlay image above the video image.
    */
   handleProcessedCameraFrame = async (response: ProcessFrameResponse ) => {
-    console.log("handleProcessedCameraFrame", (Date.now() % 100000) / 1000);
-    const {requestId, width, height, rgbImageAsArrayBuffer, diceKeyReadJson} = response;
+    // console.log("handleProcessedCameraFrame", (Date.now() % 100000) / 1000);
+    const {width, height, facesReadObjectArray, exception} = response;
 
-    // Remove the pre-processed image from the set of images being processed
-    const originalImageData = this.framesBeingProcessed.get(requestId);
-    if (originalImageData == null) {
-      return;
+    this.frameSize.value = {width, height};
+
+    if (exception != null) {
+      return this.throwException(exception, "From frame worker");
     }
-    this.framesBeingProcessed.delete(requestId);
-    
-    // Render the frame onto the screen
-    const imageData = new ImageData(new Uint8ClampedArray(rgbImageAsArrayBuffer), width, height);
-    this.cameraCapture?.drawImageDataOntoVideoCanvas(imageData);
 
-    this.facesRead = FaceRead.fromJson(diceKeyReadJson) as TupleOf25Items<FaceRead> | undefined;
-    if (this.facesRead && originalImageData) {
-      const facesReadWithErrors = this.facesRead.filter( f => f.errors && f.errors.length > 0);
-      if (facesReadWithErrors.length == 0) {
-        //
-        // The faces were ready perfectly and there are no errors to correct.
-        this.errorImages.clear();
-        AppState.EncryptedCrossTabState.instance!.diceKey.value =
-          DiceKey( this.facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
-
-      } else {
-        //
-        // There are errors that will need to be corrected.
-        const identifiersOfFacesWithErrors = new Set<string>(...
-          facesReadWithErrors.map( f => f.uniqueIdentifier )
-        );
-        // Remove images of erroneously-scanned dice that are no longer needed because
-        // the errors have been resolved or replaced
-        [...this.errorImages.keys()]
-          // filter to identifier dead ids
-          .filter( id => !identifiersOfFacesWithErrors.has(id) )
-          // then remove them
-          .forEach( (deadId) => this.errorImages.delete(deadId) );
-
-        // Capture images of faces in current scan that have errors
-        const facesReadWithErrorsButNoErrorImages = facesReadWithErrors.
-          filter( faceRead => !this.errorImages.has(faceRead.uniqueIdentifier));
-        await Promise.all(facesReadWithErrorsButNoErrorImages.map( async (face) => {
-          // Get the image of the die with an error and store it where we can get to it
-          // if we need the user to verify that we read it correctly.
-          const faceReadImageData = getImageOfFaceRead(originalImageData, face, this.options.dieRenderingCanvasSize);
-          this.errorImages.set(face.uniqueIdentifier, {width: faceReadImageData.width, height: faceReadImageData.height, data: new Uint8ClampedArray(faceReadImageData.data)});
-        }));
+    this.frameProcessedTimesMs.push(Date.now());
+    if (this.frameProcessedTimesMs.length > 1) {
+      const msPerFrame = (
+        this.frameProcessedTimesMs[this.frameProcessedTimesMs.length-1] -
+        this.frameProcessedTimesMs[0]
+      ) / (this.frameProcessedTimesMs.length - 1);
+      this.framesPerSecond.value = Math.round( 10000 / msPerFrame) / 10;
+      if (this.frameProcessedTimesMs.length === 4) {
+        this.frameProcessedTimesMs.shift();
       }
     }
-
-    if (this.shouldFinishScanning) {
-      this.finishDelayInProgress = true;
-      setTimeout( () => {
-        this.finishDelayInProgress = false;
-        if (this.allFacesHaveBeenValidated) {
-          this.reportDiceKeyReadAndValidated();
-          this.parent?.renderSoon()
-        } else {
-          this.renderSoon();
+ 
+    try {
+      // Render the frame onto the screen
+      const overlayCanvasCtx = this.cameraCapture?.getOverlayCanvasCtx(width, height);
+      if (overlayCanvasCtx) {
+        overlayCanvasCtx.clearRect(0, 0, width, height);
+        if (this.facesRead) {
+          renderFacesRead(overlayCanvasCtx, this.facesRead, {});
         }
-      }, this.msDelayBetweenSuccessAndClosure);
-    } else {
-      // Trigger fetch of new camera frame
-      setTimeout(this.startProcessingNewCameraFrame, 0)
+      }
+
+      this.facesRead = facesReadObjectArray?.map( faceReadObject => {
+        const faceRead: FaceReadWithImageIfErrorFound = FaceRead.fromJsonObject(faceReadObject);
+        faceRead.squareImageAsRgbaArray = faceReadObject.squareImageAsRgbaArray;
+        return faceRead;
+      }) as TupleOf25Items<FaceReadWithImageIfErrorFound>;
+      if (this.facesRead && this.facesRead.length === 25 && this.facesReadThatContainErrorsAndHaveNotBeenValidated.length === 0 ) {
+        // The faces were ready perfectly and there are no errors to correct.
+        AppState.EncryptedCrossTabState.instance!.diceKey.value =
+          DiceKey( this.facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
+      }
+
+      if (this.shouldFinishScanning) {
+        this.finishDelayInProgress = true;
+        setTimeout( () => {
+          this.finishDelayInProgress = false;
+          if (this.allFacesHaveBeenValidated) {
+            this.reportDiceKeyReadAndValidated();
+            this.parent?.renderSoon()
+          } else {
+            this.renderSoon();
+          }
+        }, this.msDelayBetweenSuccessAndClosure);
+      } else {
+        // Trigger fetch of new camera frame
+        setTimeout(this.startProcessingNewCameraFrame, 0)
+      }
+    } catch (e) {
+      this.throwException(e, "Handling a processed frame");
     }
   }
 

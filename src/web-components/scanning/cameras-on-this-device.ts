@@ -1,29 +1,40 @@
+// import { browserInfo } from "~utilities/browser";
 import {
   ComponentEvent
 } from "../../web-component-framework"
 
  // Safari may require 640 or 1280, see 
  // https://stackoverflow.com/questions/46981889/how-to-resolve-ios-11-safari-getusermedia-invalid-constraint-issue
- const defaultVideoWidthAndHeightConstraints = {
-  width: { ideal: 1024, min: 640 },
-  height: { ideal: 1024, min: 640 },
-  aspectRatio: {ideal: 1},
-  //    advanced: [{focusDistance: {ideal: 0}}]
-} as const;
+//  const defaultVideoWidthAndHeightConstraints = {
+//   // width: { ideal: 1024, min: 640 },
+//   // height: { ideal: 1024, min: 640 },
+//   aspectRatio: {ideal: 1},
+//   //    advanced: [{focusDistance: {ideal: 0}}]
+// } as const;
 
 
 export const videoConstraintsForDevice = (deviceId: string): MediaTrackConstraints => ({
-  ...defaultVideoWidthAndHeightConstraints,
+//  ...defaultVideoWidthAndHeightConstraints,
   deviceId,
 });
 
 
 export type Camera = MediaDeviceInfo & MediaTrackSettings & {name: string, capabilities: MediaTrackCapabilities | undefined};
 
-const getDirectionScore = ({facingMode}: Camera): number =>
-  facingMode === "environment" ? -1 : // put cameras facing out first on the list
-  typeof facingMode !== "string" ? 0 : // put cameras with an undefined direction next 
-  1; // put cameras facing "user", "left", or "right" last;
+const rearDirectionNamesLc = ["environment", "rear", "back"];
+const frontDirectionNamesLc = ["user", "front", "forward", "display"];
+const lcStrContainsCandidate = (...lcCandidates: string[]) => (searchIn: string): boolean => {
+  const lcSearchIn = searchIn.toLocaleLowerCase();
+  return (lcCandidates.some( lcCandidate => lcSearchIn.indexOf(lcCandidate) !== -1))
+}
+const containsRearDirectionName = lcStrContainsCandidate(...rearDirectionNamesLc);
+const containsFrontDirectionName = lcStrContainsCandidate(...frontDirectionNamesLc);
+const containsDirectionName = lcStrContainsCandidate(...frontDirectionNamesLc, ...rearDirectionNamesLc);
+
+const getDirectionScore = ({facingMode, label}: Camera): number => 
+  ( facingMode === "environment" || containsRearDirectionName(label) ) ? -1 :
+  ( facingMode === "user" || containsFrontDirectionName(label) ) ? 1 :
+  0; 
 const getResolutionCapabilitiesScore = ({capabilities}: Camera): number =>
   (capabilities && capabilities.width && capabilities.width.max && capabilities.height && capabilities.height.max) ?
   -capabilities.width.max * capabilities.height.max :
@@ -85,6 +96,12 @@ export class CamerasOnThisDevice {
   }
 
   private cameraDeviceIdToCameraNumber = new Map<string, number>();
+  private getCameraNumber = (deviceId: string): number => {
+    if (!this.cameraDeviceIdToCameraNumber.has(deviceId)) {
+      this.cameraDeviceIdToCameraNumber.set(deviceId, this.cameraDeviceIdToCameraNumber.size +1);
+    }
+    return this.cameraDeviceIdToCameraNumber.get(deviceId)!;
+  }
 
   /**
    * Try to access the camera to learn more about its resolution and other settings.
@@ -103,6 +120,8 @@ export class CamerasOnThisDevice {
       const settings: MediaTrackSettings = track.getSettings();
       const capabilities: MediaTrackCapabilities = track.getCapabilities?.() ;
       stream?.getTracks().forEach(track => track.stop() );
+      // try for firefox
+      stream?.stop?.();
       if (!settings) return;          
       const cameraWithoutName = {
         ...settings,
@@ -113,30 +132,21 @@ export class CamerasOnThisDevice {
         kind: cameraDevice.kind,
         label: cameraDevice.label
       };
-      const {label, facingMode, width, height} = cameraWithoutName;
-      const lcLabel = label.toLocaleLowerCase();
+      const {label, facingMode} = cameraWithoutName;
+      var {width, height} = cameraWithoutName;
+      if (capabilities && capabilities.width?.max && capabilities.height?.max) {
+        width = capabilities.width.max;
+        height = capabilities.height.max;
+      }
       // Only add a direction string if the direction is present and
       // it's not already implied in the label
-      const labelDoesNotContainDirection =
-        lcLabel.indexOf("rear") == -1 &&
-        lcLabel.indexOf("front") == -1;
-      const directionPrefix =
-        labelDoesNotContainDirection && facingMode === "user" ? "Front Facing " :
-        labelDoesNotContainDirection && facingMode === "environment" ? "Rear Facing " :
-        "";
-      var identifier: string;
-      if (label) {
-        identifier = label;
-      } else {
-        if (this.cameraDeviceIdToCameraNumber.has(deviceId)) {
-          identifier = `Camera ${this.cameraDeviceIdToCameraNumber.get(deviceId)!}`;
-        } else {
-          const cameraIndex = this.cameraDeviceIdToCameraNumber.size +1;
-          this.cameraDeviceIdToCameraNumber.set(deviceId, cameraIndex);
-          identifier = `Camera ${cameraIndex}`;
-        }
-      }
-      const resolution: string = (width && height) ? ` ${width}x${height} ` : ""
+      const directionPrefix = containsDirectionName(label) ? "" :
+          facingMode === "user" ? "Front Facing " :
+          facingMode === "environment" ? "Rear Facing " :
+          "";
+      const identifier: string = label || `Camera ${this.getCameraNumber(deviceId)}`;
+      // Only display resolution if it's known and not the default of 640x480
+      const resolution: string = (width && height && !(width===640 && height===480)) ? ` ${width}x${height} ` : ""
       const name = directionPrefix + identifier + resolution;
       // The label property needs to be set manually
       const camera: Camera = {
@@ -159,6 +169,11 @@ export class CamerasOnThisDevice {
     return;
   }
 
+  /**
+   * Set to true once the list of cameras has been populated the first time
+   */
+  private _ready: boolean = false; 
+  public get ready() { return this._ready; }
   addAttachedAndRemovedDetachedCameras = async (): Promise<void> => {
     const listOfAllMediaDevices = await navigator.mediaDevices.enumerateDevices();
 
@@ -199,7 +214,12 @@ export class CamerasOnThisDevice {
         await this.tryAddCamera(cameraDevice);
       }
     }
-    if (deviceIdsOfRemovedCameras.length > 0 || listOfNewlyAttachedCameras.length > 0) {
+    if (
+      !this._ready ||
+      deviceIdsOfRemovedCameras.length > 0 ||
+      listOfNewlyAttachedCameras.length > 0
+    ) {
+      this._ready = true;
       // A change to the list has been made so send an update event
       this.cameraListUpdated.send(this.cameras);
     }

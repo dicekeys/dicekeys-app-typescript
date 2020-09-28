@@ -1,6 +1,6 @@
 import {
   urlSafeBase64Encode, urlSafeBase64Decode, utf8ByteArrayToString
-} from "../api/encodings"
+} from "@dicekeys/dicekeys-api-js"
 import {
   SeededCryptoModuleWithHelpers,
   SymmetricKey

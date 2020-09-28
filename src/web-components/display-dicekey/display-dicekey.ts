@@ -4,7 +4,7 @@ import layoutStyles from "../layout.module.css";
 import {
   Component, Attributes,
   ComponentEvent,
-  InputButton, Div, Label, Select, Option, Observable, OptGroup
+  InputButton, Div, Label, Select, Option, Observable, OptGroup, TextInput
 } from "../../web-component-framework";
 import {
   DiceKeySvg
@@ -24,7 +24,7 @@ import {
   ComputeApiCommandWorker
 } from "../../workers/call-api-command-worker";
 import {
-    ApiCalls, ApiStrings
+    ApiCalls
 } from "@dicekeys/dicekeys-api-js";
 import {
   DisplayPassword
@@ -63,6 +63,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
   containerElement?: HTMLDivElement;
   passwordDivElement?: HTMLDivElement;
 
+  derivationOptionsJson = new Observable<string>();
   password = new Observable<string>();
 
   showAddNewPassword?: boolean;
@@ -87,14 +88,17 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
       // Derive password in background then set it.
       const {derivationOptionsJson} = selectedManager;
       const seedString = DiceKey.toSeedString(this.options.diceKey, derivationOptionsJson);
+      this.derivationOptionsJson.set(derivationOptionsJson);
       const request: ApiCalls.GetPasswordRequest = {
-        command: ApiStrings.Commands.getPassword,
+        command: ApiCalls.Command.getPassword,
         derivationOptionsJson
       };
       console.log("Issuing request", seedString, request);
       const result = await DiceKeySvgView.computerPasswordRequestWorker.calculate({seedString, request});
       console.log("Calculation result", result);
-      if (!("exception" in result)) {
+      if ("exception" in result) {
+        this.throwException(result.exception, "calculating a password");
+      } else {
         this.password.value = result.password;
       }
     }
@@ -138,7 +142,16 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
             })
           )
         ),
-        Div({class: layoutStyles.centered_column, style: `visibility: hidden`},
+        Div({class: layoutStyles.centered_column},
+//          TextInput({style: `visibility: hidden;`}).with( e => {
+          TextInput({style: "justify-self: stretch;"}).with( e => {
+            this.derivationOptionsJson.observe( ( newDerivationOptionsJson => {
+              e.primaryElement.style.setProperty("visibility", newDerivationOptionsJson && newDerivationOptionsJson.length > 0 ? "visible" : "hidden");
+              e.value = newDerivationOptionsJson ?? "";
+            })) 
+          })
+        ),
+        Div({class: layoutStyles.centered_column, style: `visibility: hidden;`},
           new DisplayPassword({
             password: this.password,
             showCopyIcon: true

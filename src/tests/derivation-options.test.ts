@@ -13,7 +13,8 @@ const seedString = "Put this in water and an avocado will grow.";
 const someDerivationOptions = DerivationOptions({
   mutable: true,
   type: "Secret",
-  lengthInBytes: 128,
+  lengthInBytes: 128
+}, {
   someExtraSalt: "totally"
 });
 

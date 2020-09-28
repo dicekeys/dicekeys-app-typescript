@@ -1,7 +1,9 @@
 import {
   ApiCalls,
-  ApiStrings,
   Exceptions,
+  UrlRequestMetadataParameterNames,
+  urlSafeBase64Decode, urlSafeBase64Encode,
+  UrlApiMetaCommand
 } from "@dicekeys/dicekeys-api-js";
 import {
   throwIfUrlNotPermitted
@@ -11,19 +13,33 @@ import {
   ApiRequestContext,
   ConsentResponse
 } from "./handle-api-request";
-import { urlSafeBase64Decode, urlSafeBase64Encode } from "../api/encodings";
 import {
+  GenerateSignatureParameterNames,
   GenerateSignatureRequest,
+  GenerateSignatureSuccessResponseParameterNames,
   GetPasswordRequest,
+  GetPasswordSuccessResponseParameterNames,
   GetSealingKeyRequest,
+  GetSealingKeySuccessResponseParameterNames,
   GetSecretRequest,
+  GetSecretSuccessResponseParameterNames,
   GetSignatureVerificationKeyRequest,
+  GetSignatureVerificationKeySuccessResponseParameterNames,
   GetSigningKeyRequest,
+  GetSigningKeySuccessResponseParameterNames,
   GetSymmetricKeyRequest,
+  GetSymmetricKeySuccessResponseParameterNames,
   GetUnsealingKeyRequest,
+  GetUnsealingKeySuccessResponseParameterNames,
+  ResponseMetadataParameterNames,
+  SealWithSymmetricKeyParameterNames,
   SealWithSymmetricKeyRequest,
+  SealWithSymmetricKeySuccessResponseParameterNames,
   UnsealWithSymmetricKeyRequest,
-  UnsealWithUnsealingKeyRequest
+  UnsealWithSymmetricKeySuccessResponseParameterNames,
+  UnsealWithUnsealingKeyParameterNames,
+  UnsealWithUnsealingKeyRequest,
+  UnsealWithUnsealingKeySuccessResponseParameterNames,
 } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import {
   PackagedSealedMessageJson,
@@ -32,18 +48,13 @@ import {
   SecretJson,
   SigningKeyJson,
   SymmetricKeyJson,
-  UnsealingKeyJson
+  UnsealingKeyJson,
 } from "@dicekeys/seeded-crypto-js";
 import {
   EncryptedCrossTabState
 } from "../state";
-const {
-  Inputs,
-  Outputs,
-  Commands
-} = ApiStrings;
 
-interface MarshallCommand<COMMAND extends ApiStrings.Command> {
+interface MarshallCommand<COMMAND extends ApiCalls.Command> {
   (
     marhsallers: {
       add: (fieldName: string, value: string) => void,
@@ -55,61 +66,61 @@ interface MarshallCommand<COMMAND extends ApiStrings.Command> {
 
 // Since TypeScript doesn't do type inference on switch statements well enough,
 // this function allows us to simulate a properly typed switch case statement.
-const commandMarshallers = new Map<ApiStrings.Command, MarshallCommand<ApiStrings.Command>>();
-const addResponseMarshallerForCommand = <COMMAND extends ApiStrings.Command>(
+const commandMarshallers = new Map<ApiCalls.Command, MarshallCommand<ApiCalls.Command>>();
+const addResponseMarshallerForCommand = <COMMAND extends ApiCalls.Command>(
   forCommand: COMMAND,
   callback: MarshallCommand<COMMAND>
 ): void => {
   commandMarshallers.set(forCommand, callback);
 }
 addResponseMarshallerForCommand(
-  Commands.generateSignature,
+  ApiCalls.Command.generateSignature,
   ({add, addJSON}, {signature, signatureVerificationKeyFields}) => {
   const {signatureVerificationKeyBytes, derivationOptionsJson} = signatureVerificationKeyFields;
-    add(Outputs.generateSignature.signature, urlSafeBase64Encode(signature));
-    addJSON<SignatureVerificationKeyJson>(Outputs.generateSignature.signatureVerificationKeyFields, {
+    add(GenerateSignatureSuccessResponseParameterNames.signature, urlSafeBase64Encode(signature));
+    addJSON<SignatureVerificationKeyJson>(GenerateSignatureSuccessResponseParameterNames.signatureVerificationKeyFields, {
       derivationOptionsJson,
       signatureVerificationKeyBytes: urlSafeBase64Encode(signatureVerificationKeyBytes)      
     })
 });
 addResponseMarshallerForCommand(
-  Commands.getPassword,
+  ApiCalls.Command.getPassword,
   ({add}, {password, derivationOptionsJson}) => {
-    add(Outputs.getPassword.password, password);
-    add(Outputs.getPassword.derivationOptionsJson, derivationOptionsJson);
+    add(GetPasswordSuccessResponseParameterNames.password, password);
+    add(GetPasswordSuccessResponseParameterNames.derivationOptionsJson, derivationOptionsJson);
 });
 addResponseMarshallerForCommand(
-  Commands.getSealingKey,
+  ApiCalls.Command.getSealingKey,
   ({addJSON}, {sealingKeyFields}) => {
     const {derivationOptionsJson, sealingKeyBytes} = sealingKeyFields;
-    addJSON<SealingKeyJson>(Outputs.getSealingKey.sealingKeyFields, {
+    addJSON<SealingKeyJson>(GetSealingKeySuccessResponseParameterNames.sealingKeyFields, {
       derivationOptionsJson,
       sealingKeyBytes: urlSafeBase64Encode(sealingKeyBytes)
     });
 });
 addResponseMarshallerForCommand(
-  Commands.getSecret,
+  ApiCalls.Command.getSecret,
   ({addJSON}, {secretFields}) => {
     const {derivationOptionsJson, secretBytes} = secretFields;
-    addJSON<SecretJson>(Outputs.getSecret.secretFields, {
+    addJSON<SecretJson>(GetSecretSuccessResponseParameterNames.secretFields, {
       derivationOptionsJson,
       secretBytes: urlSafeBase64Encode(secretBytes)
     });
 });
 addResponseMarshallerForCommand(
-  Commands.getSignatureVerificationKey,
+  ApiCalls.Command.getSignatureVerificationKey,
   ({addJSON}, {signatureVerificationKeyFields}) => {
     const {derivationOptionsJson, signatureVerificationKeyBytes} = signatureVerificationKeyFields;
-    addJSON<SignatureVerificationKeyJson>(Outputs.getSignatureVerificationKey.signatureVerificationKeyFields, {
+    addJSON<SignatureVerificationKeyJson>(GetSignatureVerificationKeySuccessResponseParameterNames.signatureVerificationKeyFields, {
       derivationOptionsJson,
       signatureVerificationKeyBytes: urlSafeBase64Encode(signatureVerificationKeyBytes)
   });
 });
 addResponseMarshallerForCommand(
-  Commands.getSigningKey,
+  ApiCalls.Command.getSigningKey,
   ({addJSON}, {signingKeyFields}) => {
     const {derivationOptionsJson, signatureVerificationKeyBytes, signingKeyBytes} = signingKeyFields;
-    addJSON<SigningKeyJson>(Outputs.getSigningKey.signingKeyFields, {
+    addJSON<SigningKeyJson>(GetSigningKeySuccessResponseParameterNames.signingKeyFields, {
       derivationOptionsJson,
       signingKeyBytes: urlSafeBase64Encode(signingKeyBytes),
       ...( signatureVerificationKeyBytes == null ? {} : {
@@ -118,66 +129,66 @@ addResponseMarshallerForCommand(
     });
 });
 addResponseMarshallerForCommand(
-  Commands.getSymmetricKey,
+  ApiCalls.Command.getSymmetricKey,
   ({addJSON}, {symmetricKeyFields}) => {
     const {derivationOptionsJson, keyBytes} = symmetricKeyFields;
-    addJSON<SymmetricKeyJson>(Outputs.getSymmetricKey.symmetricKeyFields, {
+    addJSON<SymmetricKeyJson>(GetSymmetricKeySuccessResponseParameterNames.symmetricKeyFields, {
       derivationOptionsJson,
       keyBytes: urlSafeBase64Encode(keyBytes)
     });
 });
 addResponseMarshallerForCommand(
-  Commands.getUnsealingKey,
+  ApiCalls.Command.getUnsealingKey,
   ({addJSON}, {unsealingKeyFields}) => {
     const {derivationOptionsJson, unsealingKeyBytes, sealingKeyBytes} = unsealingKeyFields;
-    addJSON<UnsealingKeyJson>(Outputs.getUnsealingKey.unsealingKeyFields, {
+    addJSON<UnsealingKeyJson>(GetUnsealingKeySuccessResponseParameterNames.unsealingKeyFields, {
       derivationOptionsJson,
       unsealingKeyBytes: urlSafeBase64Encode(unsealingKeyBytes),
       sealingKeyBytes: urlSafeBase64Encode(sealingKeyBytes)
     });
 });
 addResponseMarshallerForCommand(
-  Commands.sealWithSymmetricKey,
+  ApiCalls.Command.sealWithSymmetricKey,
   ({addJSON}, {packagedSealedMessageFields}) => {
     const {derivationOptionsJson, ciphertext, unsealingInstructions} = packagedSealedMessageFields;
-    addJSON<PackagedSealedMessageJson>(Outputs.sealWithSymmetricKey.packagedSealedMessageFields, {
+    addJSON<PackagedSealedMessageJson>(SealWithSymmetricKeySuccessResponseParameterNames.packagedSealedMessageFields, {
       derivationOptionsJson, unsealingInstructions,
       ciphertext: urlSafeBase64Encode(ciphertext)
     });
 });
 addResponseMarshallerForCommand(
-  Commands.unsealWithSymmetricKey,
+  ApiCalls.Command.unsealWithSymmetricKey,
   ({add}, {plaintext}) => {
-    add(Outputs.unsealWithSymmetricKey.plaintext, urlSafeBase64Encode(plaintext) );
+    add(UnsealWithSymmetricKeySuccessResponseParameterNames.plaintext, urlSafeBase64Encode(plaintext) );
 });
 addResponseMarshallerForCommand(
-  Commands.unsealWithUnsealingKey,
+  ApiCalls.Command.unsealWithUnsealingKey,
   ({add}, {plaintext}) => {
-    add(Outputs.unsealWithUnsealingKey.plaintext, urlSafeBase64Encode(plaintext) );
+    add(UnsealWithUnsealingKeySuccessResponseParameterNames.plaintext, urlSafeBase64Encode(plaintext) );
 });
 
 const addResponseToUrl = (
-  command: ApiStrings.Command,
+  command: ApiCalls.Command,
   responseUrl: string,
   response: ApiCalls.Response,
 ): string => {
-  // Construct a response URL onto which we can add resposne parameters
+  // Construct a response URL onto which we can add response parameters
   const url = new URL(responseUrl);
-  // Syntatic sugar for marshalling responses into the URL
+  // Syntactic sugar for marshalling responses into the URL
   const add = (name: string, value: string) => url.searchParams.set(name, value);
   const addJSON = <T>(fieldName: string, t: T) => add(fieldName, JSON.stringify(t));
   // Always copy the requestId back into the response
-  add(Outputs.COMMON.requestId, response.requestId);
+  add(ResponseMetadataParameterNames.requestId, response.requestId);
 
   // Marshall exceptions if thrown.
   if ("exception" in response) {
     const {exception, message, stack} = response;
-    add(Outputs.COMMON.exception, exception);
+    add(ApiCalls.ExceptionResponseParameterNames.exception, exception);
     if (message != null) {
-      add(Outputs.COMMON.message, message);
+      add(ApiCalls.ExceptionResponseParameterNames.message!, message);
     }
     if (stack != null) {
-      add(Outputs.COMMON.stack, stack);
+      add(ApiCalls.ExceptionResponseParameterNames.stack!, stack);
     }
     return url.toString();
   }
@@ -192,51 +203,51 @@ const addResponseToUrl = (
 const getRequestFromSearchParams = (
   searchParams: URLSearchParams
 ): ApiCalls.ApiRequestObject | undefined => {
-  const command = searchParams.get(ApiStrings.Inputs.COMMON.command) ?? undefined;
+  const command = searchParams.get(ApiCalls.RequestCommandParameterNames.command) ?? undefined;
   if (command == null) {
     return undefined;
   }
-  if (!ApiStrings.isCommand(command)) {
+  if (!(command in ApiCalls.Command)) {
     throw new Exceptions.InvalidCommand(`Invalid API command: ${command}`);
   }
   const requireParam = (paramName: string) => searchParams.get(paramName) ??
     (() => { throw new Exceptions.MissingParameter(`Command ${command} missing parameter ${paramName}.`);} )();
   
   switch (command) {
-    case Commands.generateSignature:
+    case ApiCalls.Command.generateSignature:
       return {
         command,
-        [Inputs.generateSignature.derivationOptionsJson]: requireParam(Inputs.withDerivationOptions.derivationOptionsJson),
-        [Inputs.generateSignature.message]: urlSafeBase64Decode(requireParam(Inputs.generateSignature.message))
+        derivationOptionsJson: requireParam(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson),
+        message: urlSafeBase64Decode(requireParam(GenerateSignatureParameterNames.message))
       } as GenerateSignatureRequest;
-    case Commands.getPassword:
-    case Commands.getSealingKey:
-    case Commands.getSecret:
-    case Commands.getSignatureVerificationKey:
-    case Commands.getSigningKey:
-    case Commands.getSymmetricKey:
-    case Commands.getUnsealingKey:
+    case ApiCalls.Command.getPassword:
+    case ApiCalls.Command.getSealingKey:
+    case ApiCalls.Command.getSecret:
+    case ApiCalls.Command.getSignatureVerificationKey:
+    case ApiCalls.Command.getSigningKey:
+    case ApiCalls.Command.getSymmetricKey:
+    case ApiCalls.Command.getUnsealingKey:
       return {
         command,
-        [Inputs.withDerivationOptions.derivationOptionsJson]: requireParam(Inputs.withDerivationOptions.derivationOptionsJson),
+        [ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson]: requireParam(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson),
       } as GetPasswordRequest | GetSealingKeyRequest | GetSecretRequest | GetSignatureVerificationKeyRequest | GetSigningKeyRequest | GetSymmetricKeyRequest | GetUnsealingKeyRequest;
-    case Commands.sealWithSymmetricKey: {
-      const unsealingInstructions = searchParams.get(Inputs.sealWithSymmetricKey.unsealingInstructions) ?? undefined;
+    case ApiCalls.Command.sealWithSymmetricKey: {
+      const unsealingInstructions = searchParams.get(SealWithSymmetricKeyParameterNames.unsealingInstructions!) ?? undefined;
       return {
         command,
-        [Inputs.sealWithSymmetricKey.derivationOptionsJson]: requireParam(Inputs.sealWithSymmetricKey.derivationOptionsJson),
-        [Inputs.sealWithSymmetricKey.plaintext]: urlSafeBase64Decode(requireParam(Inputs.sealWithSymmetricKey.plaintext)),
+        [SealWithSymmetricKeyParameterNames.derivationOptionsJson]: requireParam(SealWithSymmetricKeyParameterNames.derivationOptionsJson),
+        [SealWithSymmetricKeyParameterNames.plaintext]: urlSafeBase64Decode(requireParam(SealWithSymmetricKeyParameterNames.plaintext)),
         ...( unsealingInstructions == null ? {} :{unsealingInstructions}
         )
       } as SealWithSymmetricKeyRequest;
     }
-    case Commands.unsealWithSymmetricKey:
-    case Commands.unsealWithUnsealingKey: {
-      const packagedSealedMessageJson = requireParam(Inputs.unsealing.packagedSealedMessageFields);
+    case ApiCalls.Command.unsealWithSymmetricKey:
+    case ApiCalls.Command.unsealWithUnsealingKey: {
+      const packagedSealedMessageJson = requireParam(UnsealWithUnsealingKeyParameterNames.packagedSealedMessageFields);
       const {ciphertext, derivationOptionsJson, unsealingInstructions} = JSON.parse(packagedSealedMessageJson) as PackagedSealedMessageJson;
       return {
         command,
-        [Inputs.unsealing.packagedSealedMessageFields]: {
+        packagedSealedMessageFields: {
           ciphertext: urlSafeBase64Decode(ciphertext),
           derivationOptionsJson,
           ...( unsealingInstructions == null ? {} : {unsealingInstructions}
@@ -252,10 +263,10 @@ const getRequestContextFromUrl = (
   requestUrl: URL
 ): undefined | (ApiRequestContext & {hostValidatedViaAuthToken: boolean, respondTo: string, origin: string, pathname: string}) => {
   const {searchParams} = requestUrl;
-  var respondTo = searchParams.get(ApiStrings.Inputs.COMMON.respondTo);
+  var respondTo = searchParams.get(UrlRequestMetadataParameterNames.respondTo);
   var hostValidatedViaAuthToken = false;
-  const requestId = searchParams.get(ApiStrings.Inputs.COMMON.requestId);
-  const authToken = searchParams.get(ApiStrings.Inputs.COMMON.authToken) ?? undefined;
+  const requestId = searchParams.get(ApiCalls.RequestMetadataParameterNames.requestId);
+  const authToken = searchParams.get(UrlRequestMetadataParameterNames.authToken!) ?? undefined;
   if (authToken != null ) {
     const authUrl = EncryptedCrossTabState.instance?.getUrlForAuthenticationToken(authToken);
     if (authUrl != null) {
@@ -292,16 +303,16 @@ export const urlApiResponder = (
   transmitResponseUrl: (response: string) => any = (url: string) => window.location.replace(url)
 ) => (candidateRequestUrl: string) => {
   const requestUrl = new URL(candidateRequestUrl);
-  if (requestUrl.searchParams.get(Inputs.COMMON.command) === ApiStrings.MetaCommands.getAuthToken) {
+  if (requestUrl.searchParams.get(ApiCalls.RequestCommandParameterNames.command) === UrlApiMetaCommand.getAuthToken) {
     // Special case request for authentication tokens.
-    const respondTo = requestUrl.searchParams.get(ApiStrings.Inputs.COMMON.respondTo);
-    const requestId = requestUrl.searchParams.get(ApiStrings.Inputs.COMMON.requestId);
+    const respondTo = requestUrl.searchParams.get(UrlRequestMetadataParameterNames.respondTo);
+    const requestId = requestUrl.searchParams.get(ApiCalls.RequestMetadataParameterNames.requestId);
     if (typeof respondTo === "string" && typeof requestId === "string") {
       const responseUrl = new URL(respondTo);
       const authToken = EncryptedCrossTabState.instance?.addAuthenticationToken(respondTo);
-      responseUrl.searchParams.set(Outputs.COMMON.requestId, requestId);
+      responseUrl.searchParams.set(ResponseMetadataParameterNames.requestId, requestId);
       if (authToken) {
-        responseUrl.searchParams.set(Outputs.getAuthToken.authToken, authToken);
+        responseUrl.searchParams.set(UrlRequestMetadataParameterNames.authToken!, authToken);
       }
       transmitResponseUrl(responseUrl.toString());
     }

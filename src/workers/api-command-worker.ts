@@ -10,7 +10,7 @@ import {
   SeededApiRequest
 } from "../api-handler/seeded-api-request";
 import {
-  ApiCalls, ApiStrings
+  ApiCalls
 } from "@dicekeys/dicekeys-api-js";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 
@@ -28,17 +28,21 @@ function isApiRequestWithSeed(t: any) : t is ApiRequestWithSeed<ApiCalls.ApiRequ
     return typeof t === "object" &&
       typeof t["seedString"] === "string" &&
       typeof t["request"] === "object" &&
-      ApiStrings.isCommand(t["request"]["command"])
+      t["request"]["command"] in ApiCalls.Command
 }
 
 addEventListener( "message", async (requestMessage) => {
   if (isApiRequestWithSeed(requestMessage.data)) {
     const {seedString, request} = requestMessage.data;
-    const response = new SeededApiRequest(
-      await SeededCryptoModulePromise,
-      seedString,
-      request
-    ).execute();
-    (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(response);
+    try {
+      const response = new SeededApiRequest(
+        await SeededCryptoModulePromise,
+        seedString,
+        request
+      ).execute();
+      (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(response);
+    } catch (exception) {
+      (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage({exception, request});
+    }
   }
 });

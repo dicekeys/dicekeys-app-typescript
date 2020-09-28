@@ -1,7 +1,6 @@
 import {
   DerivationOptions,
   ApiCalls,
-  ApiStrings,
   Exceptions,
   UnsealingInstructions,
   WebBasedApplicationIdentity,
@@ -24,7 +23,7 @@ const doesPathMatchRequirement = (
     return pathObserved === pathExpected.substr(0, pathExpected.length - 2) ||
           pathObserved.startsWith(pathExpected.substr(0, pathExpected.length -1));
   } else if (pathExpected.endsWith("*")) {
-    // The path reqquirement specifies a prefix, so test for a prefix match
+    // The path requirement specifies a prefix, so test for a prefix match
     return pathObserved.startsWith(pathExpected.substr(0, pathExpected.length -1));
   } else {
     // This path requirement does not specify a prefix, so test for exact match
@@ -84,8 +83,8 @@ export const throwIfUrlNotPermitted = (host: string, path: string, hostValidated
   const throwIfNotOnAllowList = throwIfUrlNotOnAllowList(host, path, hostValidatedViaAuthToken);
   return (request: ApiCalls.ApiRequestObject): void => {
     if (
-      request.command === ApiStrings.Commands.unsealWithSymmetricKey ||
-      request.command === ApiStrings.Commands.unsealWithUnsealingKey
+      request.command === ApiCalls.Command.unsealWithSymmetricKey ||
+      request.command === ApiCalls.Command.unsealWithUnsealingKey
     ) {
       // Unsealing operations have two possible allow lists, both embedded in the packageSealedMessage parameter:
       //   - like all other operations, an allow list may be placed in derivation options.
@@ -93,12 +92,12 @@ export const throwIfUrlNotPermitted = (host: string, path: string, hostValidated
       throwIfNotOnAllowList(DerivationOptions(request.packagedSealedMessageFields.derivationOptionsJson));
       const unsealingInstructions = UnsealingInstructions(request.packagedSealedMessageFields.unsealingInstructions);
       throwIfNotOnAllowList(unsealingInstructions);
-      if (unsealingInstructions.requireUsersConsent) {
-        // FIXME
-        // if ((await this.requestUsersConsent(requireUsersConsent)) !== UsersConsentResponse.Allow) {
-        //   throw new Exceptions.UserDeclinedToAuthorizeOperation("Operation declined by user")
-        // }
-      }
+      // if (unsealingInstructions.requireUsersConsent) {
+      //   // FIXME
+      //   // if ((await this.requestUsersConsent(requireUsersConsent)) !== UsersConsentResponse.Allow) {
+      //   //   throw new Exceptions.UserDeclinedToAuthorizeOperation("Operation declined by user")
+      //   // }
+      // }
     } else {
       // The list of allowed web identities is specified via the allow field of the derivation options.
       throwIfNotOnAllowList(DerivationOptions(request.derivationOptionsJson));

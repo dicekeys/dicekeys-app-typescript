@@ -8,7 +8,7 @@
 //   UnsealingKey
 // } from "@dicekeys/seeded-crypto-js";
 // import {
-//   ApiStrings,
+//   ,
 //   DerivationOptions,
 //   GenerateSignatureResult,
 //   UnsealingInstructions
@@ -28,7 +28,7 @@
 //   Inputs,
 //   Outputs,
 //   Commands,
-// } = ApiStrings;
+// } = ;
 
 // export interface UnmsarshallerForResponse {
 //   getOptionalStringParameter: (name: string) => string | undefined;
@@ -40,7 +40,7 @@
 //   constructor() {}
 
 //   protected abstract call: <T>(
-//     command: ApiStrings.Command,
+//     command: .Command,
 //     authTokenRequired: boolean,
 //     parameters: [string, string | Uint8Array | {toJson: () => string} ][],
 //     processResponse: (unmarshallerForResponse: UnmsarshallerForResponse) => T | Promise<T>

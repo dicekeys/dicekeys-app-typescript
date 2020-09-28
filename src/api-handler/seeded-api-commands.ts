@@ -4,7 +4,6 @@ import {
 import * as ApiCommands from "./api-commands"
 import {
   ApiCalls,
-  ApiStrings,
   Exceptions,
 } from "@dicekeys/dicekeys-api-js";
 
@@ -26,8 +25,8 @@ export class SeededApiCommands {
   }
 
   /**
-   * Use ECMAscript-enforced private fields for the seedString and the
-   * implementApiCall function that accessses the seedString so that
+   * Use ECMAScript-enforced private fields for the seedString and the
+   * implementApiCall function that accesses the seedString so that
    * hose with access to this object can't extract the seedString.
    * */  
   readonly #seedString: string;
@@ -52,27 +51,27 @@ export class SeededApiCommands {
     request: REQUEST & ApiCalls.ApiRequestObject
   ): ApiCalls.ResultForRequest<REQUEST> => {
     switch (request.command) {
-      case ApiStrings.Commands.generateSignature:
+      case ApiCalls.Command.generateSignature:
         return this.generateSignature(request);
-      case ApiStrings.Commands.getPassword:
+      case ApiCalls.Command.getPassword:
         return this.getPassword(request);
-      case ApiStrings.Commands.getSealingKey:
+      case ApiCalls.Command.getSealingKey:
         return this.getSealingKey(request);
-      case ApiStrings.Commands.getSecret:
+      case ApiCalls.Command.getSecret:
         return this.getSecret(request);
-      case ApiStrings.Commands.getSignatureVerificationKey:
+      case ApiCalls.Command.getSignatureVerificationKey:
         return this.getSignatureVerificationKey(request);
-      case ApiStrings.Commands.getSigningKey:
+      case ApiCalls.Command.getSigningKey:
         return this.getSigningKey(request);
-      case ApiStrings.Commands.getSymmetricKey:
+      case ApiCalls.Command.getSymmetricKey:
         return this.getSymmetricKey(request);
-      case ApiStrings.Commands.getUnsealingKey:
+      case ApiCalls.Command.getUnsealingKey:
         return this.getUnsealingKey(request);
-      case ApiStrings.Commands.sealWithSymmetricKey:
+      case ApiCalls.Command.sealWithSymmetricKey:
         return this.sealWithSymmetricKey(request);
-      case ApiStrings.Commands.unsealWithSymmetricKey:
+      case ApiCalls.Command.unsealWithSymmetricKey:
         return this.unsealWithSymmetricKey(request);
-      case ApiStrings.Commands.unsealWithUnsealingKey:
+      case ApiCalls.Command.unsealWithUnsealingKey:
         return this.unsealWithUnsealingKey(request);
       default: 
         throw new Exceptions.InvalidCommand();

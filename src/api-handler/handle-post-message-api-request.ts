@@ -1,6 +1,5 @@
 import {
-  ApiCalls,
-  ApiStrings,
+  ApiCalls
 } from "@dicekeys/dicekeys-api-js";
 import {
   throwIfHostNotPermitted
@@ -10,6 +9,7 @@ import {
   ApiRequestContext,
   ConsentResponse
 } from "./handle-api-request";
+import { PostMessageRequestMetadata } from "@dicekeys/dicekeys-api-js/dist/post-message-api-factory";
 
 
 /**
@@ -24,13 +24,13 @@ export const postMessageApiResponder = (
     candidateRequestEvent.data &&
     typeof candidateRequestEvent.data === "object" &&
     "command" in candidateRequestEvent.data &&
-    ApiStrings.isCommand(candidateRequestEvent.data.command))
+    candidateRequestEvent.data.command in ApiCalls.Command)
   ) {
     // This is not a request.  Ignore this message event.
     return;
   }
   const origin = candidateRequestEvent.origin;
-  const {windowName, ...request} = candidateRequestEvent.data as ApiCalls.RequestMessage & ApiCalls.PostMessageRequestMetadata;
+  const {windowName, ...request} = candidateRequestEvent.data as ApiCalls.RequestMessage & PostMessageRequestMetadata;
   const transmitResponse = transmitResponseForTesting ||
     (
       (response) => window.opener.postMessage(response, origin)

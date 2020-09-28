@@ -3,14 +3,12 @@
  */
 import {
   DerivationOptions,
+  UrlApi,
+  stringToUtf8ByteArray
 } from "@dicekeys/dicekeys-api-js";
 import {
   urlApiResponder
 } from "../api-handler/handle-url-api-request";
-import {
-  UrlApi
-} from "../api/url-api";
-import { stringToUtf8ByteArray } from "../api/encodings";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import {
   ApiRequestContext,
@@ -103,7 +101,7 @@ describe("End To End Url Api Tests", () => {
     const derivationOptions = DerivationOptions({
       requireAuthenticationHandshake: true,
       allow: [{host: defaultRespondToHost}],
-      wordLimit: 15
+      lengthInWords: 15
     });
     const {password, derivationOptionsJson} = await client.getPassword({derivationOptionsJson: JSON.stringify(derivationOptions)});
     expect(derivationOptionsJson).toBeDefined();

@@ -1,5 +1,6 @@
 import {
-  DerivationOptions
+  DerivationOptions,
+  urlSafeBase64Encode,
 } from "@dicekeys/dicekeys-api-js";
 import {
   jsonStringifyWithSortedFieldOrder
@@ -7,9 +8,6 @@ import {
 import {
    SeededCryptoModuleWithHelpers, SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js";
-import {
-  urlSafeBase64Encode
-} from "../api/encodings"
 
 /**
  * Test if derivation options contain a `"mutable": true` field indicating
@@ -86,7 +84,7 @@ export class ProofOfPriorDerivationModule {
     seedString: string,
     derivationOptionsOrJson: DerivationOptions | string
   ): string => {
-    // Once the proof is provided, the derivation options become immmutable
+    // Once the proof is provided, the derivation options become immutable
     // since any change will invalidate the proof field.  So, remove any
     // [mutable] field from the [DerivationOptions]
     const derivationOptions = removeMutableFromDerivationOptions(
@@ -100,7 +98,7 @@ export class ProofOfPriorDerivationModule {
   /**
    * Verify that a secret or key has previously been derived with the same
    * seedString and DerivationOptions by checking the [proofOfPriorDerivation]
-   * field against a hash of the DerivationOptoins and the SeedString.
+   * field against a hash of the DerivationOptions and the SeedString.
    * 
    * @param seedString 
    * @param derivationOptionsOrJson 

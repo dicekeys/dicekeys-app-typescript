@@ -2,15 +2,16 @@ import {
   Component,
 } from "./web-component-framework"
 import {
-  DerivationOptions,
-  getPassword
+//  DerivationOptions,
+  getPassword,
+  PasswordDerivationOptions
 } from "@dicekeys/dicekeys-api-js"
 
-const pwmgrAppSecretDerivationOptionsJson = JSON.stringify(DerivationOptions({
-  type: "Secret",
+const pwmgrAppSecretDerivationOptionsJson = JSON.stringify(PasswordDerivationOptions({
+  type: "Password",
   mutable: true,
   excludeOrientationOfFaces: true,
-  wordLimit: 15,
+  lengthInWords: 15,
   allow: [{"host": "pwmgr.app"}]
 }));
 

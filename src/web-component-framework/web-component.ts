@@ -15,6 +15,7 @@ export class Attributes {
   text?: string;
   class?: string | string[];
   style?: string;
+  onExceptionEvent?: (error: Error, extraInfo?: string) => void;
 }
 
 export const DefaultComponentAttributesToCopy : (string & keyof Attributes)[] =
@@ -28,6 +29,8 @@ export class Component<
   #removed = false;
   public get removed(): boolean { return this.#removed; }
   detachEvent = new ComponentEvent(this);
+  public exceptionEvent = new ComponentEvent<[Error, string?], this>(this);
+  
   childComponents = new Set<Component>();
 
   private static uniqueElementIdCounter: number = 0;
@@ -40,11 +43,14 @@ export class Component<
     `${nonUniqueName}::${(Component.uniqueElementIdCounter++).toString()}`;
   
   constructor(
-    public readonly  options: OPTIONS,
+    public readonly options: OPTIONS,
     public readonly primaryElement: TOP_LEVEL_ELEMENT = document.createElement("div") as unknown as TOP_LEVEL_ELEMENT,
     attributesToCopy: (string & keyof OPTIONS)[] = []
   ) {
     this.detachEvent.on(() => this.remove());
+    if (options.onExceptionEvent) {
+      this.exceptionEvent.on(options.onExceptionEvent);
+    }
     const {text, class: classes} = this.options;
     const setOfAllAttributesToCopy = new Set<(string & keyof OPTIONS)>([...DefaultComponentAttributesToCopy, ...attributesToCopy]);
     for (const key of setOfAllAttributesToCopy) {
@@ -304,6 +310,31 @@ export class Component<
       return child;
     }
     return replace;
+  }
+
+  
+  /**
+   * Throw exceptions that can be passed up to parent components
+   *
+   * @param exception 
+   */
+  protected throwException = (e: unknown, extraInfo?: string) => {
+    if (e instanceof Error) {
+      if (!e.stack || e.stack.length == 0) {
+        try {
+          throw new Error("Get me a stack!");
+        } catch (errorWhichHopefullyHasStack) {
+          e.stack = errorWhichHopefullyHasStack.stack;
+        }
+      }
+      this.exceptionEvent.send(e, extraInfo);
+    } else {
+      try {
+        throw new Error(typeof e === "string" ? e : JSON.stringify(e))
+      } catch (exception) {
+        this.exceptionEvent.send(exception as Error, extraInfo)
+      }
+    }
   }
 }
 export interface ReplaceableChild<HTML_COMPONENT extends Component> {
