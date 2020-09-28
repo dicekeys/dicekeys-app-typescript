@@ -1,6 +1,6 @@
 import styles from "./api.module.css"
 import {
-  ApiStrings, Exceptions
+  ApiCalls, Exceptions
 } from "@dicekeys/dicekeys-api-js"
 import {
   Appendable,
@@ -32,7 +32,7 @@ const getKnownHost = (host:string): string | undefined => {
 // type KeyName = Exclude<DerivableObject, "Secret">;
 
 // export const commandToDerivableObjectType = (
-//   command: ApiStrings.Command
+//   command: ApiCalls.Command
 // ): DerivableObject => {
 //   switch (command) {
 //     case "getSecret":
@@ -79,7 +79,7 @@ export const describeHost = (host: string): Appendable => {
 }
 
 export const shortDescribeCommandsAction = (
-  command: ApiStrings.Command,
+  command: ApiCalls.Command,
 ): string => {
   switch (command) {
     case "getPassword":
@@ -104,7 +104,7 @@ export const shortDescribeCommandsAction = (
 }
 
 export const describeCommandsAction = (
-  command: ApiStrings.Command,
+  command: ApiCalls.Command,
   host: string,
   areDerivationOptionsSigned: boolean
 ): Appendable => {
@@ -146,7 +146,7 @@ export const describeCommandsAction = (
 
 export const describeRequestChoice = describeCommandsAction; 
 // (
-//   command: ApiStrings.Command,
+//   command: ApiCalls.Command,
 //   host: string,
 //   areDerivationOptionsSigned: boolean
 // //  derivationOptionsObjOrJson: DerivationOptions | string
@@ -168,7 +168,7 @@ export const describeDiceKeyAccessRestrictions = (host: string): Appendable => (
 
 // Add a hint for when you need to find the same DiceKey to [re-generate this [key|secret] [unseal this message].
 export const describeHintPurpose = (
-  command: ApiStrings.Command
+  command: ApiCalls.Command
 ): string | undefined => {
   switch (command) {
     case "getPassword":

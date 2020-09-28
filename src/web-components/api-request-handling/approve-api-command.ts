@@ -3,7 +3,7 @@ import layoutStyles from "../layout.module.css";
 
 import {
 //  Exceptions,
-  DerivationOptions, ApiCalls, ApiStrings
+  DerivationOptions, ApiCalls
 } from "@dicekeys/dicekeys-api-js";
 import {
   Attributes,
@@ -103,8 +103,8 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     const seedString = DiceKey.toSeedString(this.options.diceKey, this.modifiedDerivationOptions);
     ApproveApiCommand.computeApiCommandWorker.calculate({seedString, request});    // After this class is constructed, kick of background calculations.
     setTimeout( () => this.updateBackgroundOperationsForDerivationOptions(), 1);
-    if ( request.command === ApiStrings.Commands.getPassword ) {
-      (ApproveApiCommand.computeApiCommandWorker.resultPromise as Promise<ApiCalls.GetPasswordResponse>).then(
+    if ( request.command === ApiCalls.Command.getPassword ) {
+      (ApproveApiCommand.computeApiCommandWorker.resultPromise as Promise<ApiCalls.GetPasswordSuccessResponse>).then(
         precomputedResult => this.password.value = precomputedResult.password
       );
     }  
@@ -311,7 +311,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
         )
       );
     }
-    if (this.options.requestContext.request.command === ApiStrings.Commands.getPassword) {
+    if (this.options.requestContext.request.command === ApiCalls.Command.getPassword) {
       this.append(
         Div({class: layoutStyles.centered_column},
           Div({class: styles.password_to_be_shared_label}, Span({},

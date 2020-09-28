@@ -1,7 +1,6 @@
 import {
   DerivationOptions,
   ApiCalls,
-  ApiStrings,
   Exceptions,
   UnsealingInstructions
 } from "@dicekeys/dicekeys-api-js";
@@ -13,7 +12,7 @@ export const doesHostMatchRequirement = (
   {hostExpected, hostObserved}: {hostExpected: string, hostObserved: string}
 ) =>
   // (A)
-  // Tthere is no "*." prefix in the hostExpected specification so an exact
+  // There is no "*." prefix in the hostExpected specification so an exact
   // match is required
   hostObserved === hostExpected ||
   // (B)
@@ -69,8 +68,8 @@ export const throwIfHostNotPermitted = (host: string) => {
   const throwIfNotOnAllowList = throwIfHostNotOnAllowList(host);
   return (request: ApiCalls.ApiRequestObject): void => {
     if (
-      request.command === ApiStrings.Commands.unsealWithSymmetricKey ||
-      request.command === ApiStrings.Commands.unsealWithUnsealingKey
+      request.command === ApiCalls.Command.unsealWithSymmetricKey ||
+      request.command === ApiCalls.Command.unsealWithUnsealingKey
     ) {
       // Unsealing operations have two possible allow lists, both embedded in the packageSealedMessage parameter:
       //   - like all other operations, an allow list may be placed in derivation options.
@@ -78,12 +77,12 @@ export const throwIfHostNotPermitted = (host: string) => {
       throwIfNotOnAllowList(DerivationOptions(request.packagedSealedMessageFields.derivationOptionsJson).allow);
       const unsealingInstructions = UnsealingInstructions(request.packagedSealedMessageFields.unsealingInstructions);
       throwIfNotOnAllowList(unsealingInstructions.allow);
-      if (unsealingInstructions.requireUsersConsent) {
-        // FIXME
-        // if ((await this.requestUsersConsent(requireUsersConsent)) !== UsersConsentResponse.Allow) {
-        //   throw new Exceptions.UserDeclinedToAuthorizeOperation("Operation declined by user")
-        // }
-      }
+      // if (unsealingInstructions.requireUsersConsent) {
+      //   // FIXME
+      //   // if ((await this.requestUsersConsent(requireUsersConsent)) !== UsersConsentResponse.Allow) {
+      //   //   throw new Exceptions.UserDeclinedToAuthorizeOperation("Operation declined by user")
+      //   // }
+      // }
     } else {
       // The list of allowed web identities is specified via the allow field of the derivation options.
       throwIfNotOnAllowList(DerivationOptions(request.derivationOptionsJson).allow);

@@ -9,7 +9,7 @@ import {
   SeededCryptoModuleWithHelpers,
   SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js";
-import { urlSafeBase64Encode } from "../api/encodings";
+import { urlSafeBase64Encode } from "@dicekeys/dicekeys-api-js";
 import {randomBytes} from "crypto";
 
 const defaultAppStageExpirationTimeInMinutes = 30;

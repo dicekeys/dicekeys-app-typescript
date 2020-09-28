@@ -6,15 +6,14 @@ import {
   ApiFactory,
   PostMessageApiFactory,
   DerivationOptions,
+  stringToUtf8ByteArray
 } from "@dicekeys/dicekeys-api-js"
 
 import {
   ConsentResponse, ApiRequestContext
 } from '../api-handler/handle-api-request'
 import { postMessageApiResponder } from "../api-handler/handle-post-message-api-request";
-import { stringToUtf8ByteArray } from "../api/encodings";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
-import { postMessageApiCallFactory } from "@dicekeys/dicekeys-api-js/dist/post-message-api-factory";
 
 const getUsersConsentApprove = (requestContext: ApiRequestContext): Promise<ConsentResponse> =>
   Promise.resolve({seedString: "a bogus seed", mutatedRequest: requestContext.request } );
@@ -37,9 +36,9 @@ const mockClient = (
       )
   );
 
-  return postMessageApiCallFactory(
+  return PostMessageApiFactory.postMessageApiCallFactory(
     <CALL extends ApiCalls.ApiCall>(
-      request: ApiCalls.RequestMessage<CALL> & ApiCalls.PostMessageRequestMetadata 
+      request: ApiCalls.RequestMessage<CALL> & PostMessageApiFactory.PostMessageRequestMetadata 
     ): Promise<ApiCalls.ApiCallResult<CALL>> => {
       const resultPromise = PostMessageApiFactory.addPostMessageApiPromise<ApiCalls.ApiCallResult<CALL>>(request.requestId)
       

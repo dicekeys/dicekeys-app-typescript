@@ -24,7 +24,7 @@ import {
   ComputeApiCommandWorker
 } from "../../workers/call-api-command-worker";
 import {
-    ApiCalls, ApiStrings
+    ApiCalls
 } from "@dicekeys/dicekeys-api-js";
 import {
   DisplayPassword
@@ -88,7 +88,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
       const {derivationOptionsJson} = selectedManager;
       const seedString = DiceKey.toSeedString(this.options.diceKey, derivationOptionsJson);
       const request: ApiCalls.GetPasswordRequest = {
-        command: ApiStrings.Commands.getPassword,
+        command: ApiCalls.Command.getPassword,
         derivationOptionsJson
       };
       console.log("Issuing request", seedString, request);

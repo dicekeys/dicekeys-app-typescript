@@ -2,7 +2,7 @@ import styles from "./app-main.module.css";
 import {
   Component, Attributes, Div
 } from "../web-component-framework"
-import { Exceptions, ApiStrings } from "@dicekeys/dicekeys-api-js";
+import { Exceptions, ApiCalls } from "@dicekeys/dicekeys-api-js";
 import {
   ApiRequestContainer
 } from "./api-request-handling/api-request-container";
@@ -56,7 +56,7 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
 
     this.handleApiRequestReceivedViaPostMessage = postMessageApiResponder(this.getUsersApprovalOfApiCommand)
 
-    if (new URL(window.location.toString()).searchParams.get(ApiStrings.Inputs.COMMON.command)) {      
+    if (new URL(window.location.toString()).searchParams.get(ApiCalls.RequestCommandParameterNames.command)) {      
       urlApiResponder(this.getUsersApprovalOfApiCommand)(window.location.toString())
     }    
 
