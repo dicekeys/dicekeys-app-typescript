@@ -131,7 +131,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
       ( diceKey ?
         new ApproveApiCommand({...this.options, diceKey}).with( e => this.apiResponseSettings = e )
         :
-        new ScanDiceKey({host, derivationOptions: this.derivationOptions})
+        new ScanDiceKey({host, derivationOptions: this.derivationOptions, onExceptionEvent: this.options.onExceptionEvent})
       ),
       Div({class: dialogStyles.decision_button_container},
       InputButton({value: "Cancel", clickHandler: this.handleCancelButton}),

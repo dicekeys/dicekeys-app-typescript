@@ -34,11 +34,15 @@ function isApiRequestWithSeed(t: any) : t is ApiRequestWithSeed<ApiCalls.ApiRequ
 addEventListener( "message", async (requestMessage) => {
   if (isApiRequestWithSeed(requestMessage.data)) {
     const {seedString, request} = requestMessage.data;
-    const response = new SeededApiRequest(
-      await SeededCryptoModulePromise,
-      seedString,
-      request
-    ).execute();
-    (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(response);
+    try {
+      const response = new SeededApiRequest(
+        await SeededCryptoModulePromise,
+        seedString,
+        request
+      ).execute();
+      (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(response);
+    } catch (exception) {
+      (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage({exception, request});
+    }
   }
 });

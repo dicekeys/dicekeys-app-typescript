@@ -9,8 +9,9 @@ import "regenerator-runtime/runtime";
 import {
     DiceKeyImageProcessor,
     DiceKeyImageProcessorModuleWithHelpers,
-    DiceKeyImageProcessorModulePromise,
+    DiceKeyImageProcessorModulePromise, FaceReadJson, FaceRead
 } from "@dicekeys/read-dicekey-js"
+import { TupleOf25Items } from "~dicekeys/dicekey";
 
 /**
  * A request to process an image frame while scanning dicekeys
@@ -25,11 +26,7 @@ interface Frame {
 }
 export interface ProcessFrameRequest extends RequestMetadata, Frame {
   requestId: number;
-  action: "processRGBAImageFrameAndRenderOverlay";
-}
-export interface ProcessAugmentFrameRequest extends RequestMetadata, Frame {
-  requestId: number;
-  action: "processAndAugmentRGBAImageFrame";
+  action: "processRGBAImageFrame";
 }
 
 export interface TerminateSessionRequest {
@@ -41,16 +38,21 @@ export interface ReadyMessage {
     action: "workerReady"
 }
 
+export type FaceReadJsonObjectWithImageIfErrorFound = FaceReadJson & {squareImageAsRgbaArray?: Uint8ClampedArray};
+export type FaceReadWithImageIfErrorFound = FaceRead & {squareImageAsRgbaArray?: Uint8ClampedArray};
 
 /**
  * A response with the result of processing a camera frame
  * to look for a DiceKey
  */
-export interface ProcessFrameResponse extends Frame, RequestMetadata {
+export interface ProcessFrameResponse extends RequestMetadata {
+  width: number;
+  height: number;
   requestId: number;
-  action: "processRGBAImageFrameAndRenderOverlay" | "processAndAugmentRGBAImageFrame";
+  action: "processRGBAImageFrame";
   isFinished: boolean,
-  diceKeyReadJson: string
+  facesReadObjectArray: TupleOf25Items<FaceReadJsonObjectWithImageIfErrorFound> | undefined,
+  exception?: Error;
 }
 
 function isTerminateSessionRequest(t: any) : t is TerminateSessionRequest {
@@ -64,7 +66,7 @@ function isTerminateSessionRequest(t: any) : t is TerminateSessionRequest {
 function isProcessFrameRequest(t: any) : t is ProcessFrameRequest {
     return typeof t === "object" &&
         "action" in t &&
-        (t.action === "processRGBAImageFrameAndRenderOverlay" || t.action === "processAndAugmentRGBAImageFrame") &&
+        (t.action === "processRGBAImageFrame") &&
         "sessionId" in t && "width" in t && "height" in t &&
         "rgbImageAsArrayBuffer" in t;
 }
@@ -83,9 +85,8 @@ class FrameProcessingWorker {
             if (isTerminateSessionRequest(requestMessage.data)) {
                 this.sessionIdToImageProcessor.delete(requestMessage.data.sessionId);
             } else if (isProcessFrameRequest(requestMessage.data)) {
-                const response = this.processRGBAImageFrameAndRenderOverlay(requestMessage.data);
+                const response = this.processRGBAImageFrame(requestMessage.data);
                 const transferableObjectsWithinResponse: Transferable[] = [
-                    response.rgbImageAsArrayBuffer
                 ];
                 // TypeScript hack since it doesn't understand this is a worker and StackOverflow
                 // posts make it look hard to convince it otherwise.
@@ -95,41 +96,75 @@ class FrameProcessingWorker {
         (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage({action: "workerReady"} as ReadyMessage);
     }
 
-    processRGBAImageFrameAndRenderOverlay = ({
+    processRGBAImageFrame = ({
         requestId,
         action, sessionId, width, height,
         rgbImageAsArrayBuffer: inputRgbImageAsArrayBuffer
-      }: ProcessFrameRequest | ProcessAugmentFrameRequest
+      }: ProcessFrameRequest
     ): ProcessFrameResponse => {
+      try {
       const rgbImagesArrayUint8Array = new Uint8Array(inputRgbImageAsArrayBuffer);
         if (!this.sessionIdToImageProcessor.has(sessionId)) {
             this.sessionIdToImageProcessor.set(sessionId, new this.module.DiceKeyImageProcessor());
         }
         const diceKeyImageProcessor = this.sessionIdToImageProcessor.get(sessionId)!;
 
-//        const inputDataBuffer = new Uint8ClampedArray(inputRgbImageAsArrayBuffer);
-
-        console.log("Worker starts processing frame", (Date.now() % 100000) / 1000);
-        if (action === "processRGBAImageFrameAndRenderOverlay") {
-          diceKeyImageProcessor.processRGBAImageAndRenderOverlay(width, height, rgbImagesArrayUint8Array)
-        } else { // if (action === "processAndAugmentRGBAImageFrame") ?
-          diceKeyImageProcessor.processAndAugmentRGBAImage(width, height, rgbImagesArrayUint8Array);
+        // console.log("Worker starts processing frame", (Date.now() % 100000) / 1000);
+        try {
+          diceKeyImageProcessor.processRGBAImage(width, height, rgbImagesArrayUint8Array)
+        } catch (e) {
+          if (typeof e === "string") {
+            throw new Error("Error in processImage: " + e);
+          } else {
+            throw e;
+          }
         }
-        console.log("Worker finishes processing frame", (Date.now() % 100000) / 1000);
+    // console.log("Worker finishes processing frame", (Date.now() % 100000) / 1000);
 
         const isFinished = diceKeyImageProcessor.isFinished();
-        const diceKeyReadJson =  diceKeyImageProcessor.diceKeyReadJson();
+        const facesReadJsonObj =  (JSON.parse(diceKeyImageProcessor.diceKeyReadJson()) ?? []) as FaceReadJsonObjectWithImageIfErrorFound[];
+        facesReadJsonObj.forEach( (faceReadJsonObj, faceIndex) => {
+          const faceRead = FaceRead.fromJsonObject(faceReadJsonObj);
+          if (faceRead.errors && faceRead.errors.length > 0) {
+            try {
+              const faceReadImageDataFromCpp = diceKeyImageProcessor.getFaceImage(faceIndex);
+              const faceReadImageData = new Uint8ClampedArray(faceReadImageDataFromCpp);
+              faceReadJsonObj.squareImageAsRgbaArray = new Uint8ClampedArray(faceReadImageData);
+            } catch (e) {
+              if (typeof e === "string") {
+                throw new Error("Error in getFaceImage: " + e);
+              } else {
+                throw e;
+              }
+            }
+          }
+        });
 
+          
 
   
         return {
           requestId,
           action, sessionId, height, width,
-          rgbImageAsArrayBuffer: rgbImagesArrayUint8Array.buffer,
           isFinished,
-          diceKeyReadJson
+          facesReadObjectArray: facesReadJsonObj.length === 25 ? facesReadJsonObj as TupleOf25Items<FaceReadJsonObjectWithImageIfErrorFound> : undefined,
         }
+    } catch (exception) {
+      if (typeof exception === "string") {
+        try {throw new Error(exception)} catch (newE) {exception = newE}
+      }
+      if (!(exception instanceof Error)) {
+        try {throw new Error(JSON.stringify(exception))} catch (newE) {exception = newE}
+      }
+      return {
+        requestId,
+        action, sessionId, height, width,
+        isFinished: false,
+        facesReadObjectArray: undefined,
+        exception
+      }
     }
+  }
 }
 
 // Create the worker once the required webassembly has been created.
