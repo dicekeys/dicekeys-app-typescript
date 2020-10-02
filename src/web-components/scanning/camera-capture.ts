@@ -17,6 +17,7 @@ import {
   CamerasOnThisDevice,
 //  videoConstraintsForDevice
 } from "./cameras-on-this-device";
+import { browserInfo } from "~utilities/browser";
 // import { browserInfo } from "../utilities/browser";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
@@ -274,24 +275,24 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
 
   setCamera = (camera: Camera) => {
     const {deviceId} = camera;
-    
+    const ideal = browserInfo.browser === "Safari" ? 1080: 1024;
     if (camera) {
       this.setCameraByConstraints({
         deviceId,
         width: {
-          ideal: 1080,
+          ideal,
 //          ideal: Math.min(camera.capabilities?.width?.max ?? defaultCameraDimensions.width, defaultCameraDimensions.width),
-          max: 1600,
-          min: 720,
+          max: 1280,
+//          min: 640,
         },
         height: {
 //          ideal: Math.min(camera.capabilities?.height?.max ?? defaultCameraDimensions.height, defaultCameraDimensions.height),
-          ideal: 1080,
-          max: 1600,
-          min: 720
+          ideal,
+          max: 1280,
+//          min: 640
         },
         aspectRatio: {ideal: 1},
-        advanced: [{focusDistance: {ideal: 0}}]
+        // advanced: [{focusDistance: {ideal: 0}}]
       });
     }
   }
@@ -347,7 +348,11 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
       console.log("Calling getUserMedia", mediaTrackConstraints);
       this.mediaStream = await navigator.mediaDevices.getUserMedia({video: mediaTrackConstraints});
     }  catch (e) {
-      return this.throwException(e, `navigator.mediaDevices.getUserMedia: ${JSON.stringify(mediaTrackConstraints)}`);
+      return this.throwException(e, `navigator.mediaDevices.getUserMedia: ${
+        "\n\n" +
+        "Setting constraints " + JSON.stringify(mediaTrackConstraints, undefined, "\t") + "\n\n" +
+        "For cameras " + JSON.stringify(CamerasOnThisDevice.instance.cameras, undefined, "\t")
+      }`);
     }
 
     try {
