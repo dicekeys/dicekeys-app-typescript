@@ -10,6 +10,8 @@ import {
   doesHostMatchRequirement
 } from "./post-message-permission-checks";
 
+const DefaultPermittedPathList = [`"/--derived-secret-api--/*`];
+
 const doesPathMatchRequirement = (
   {pathExpected, pathObserved}: {pathExpected: string, pathObserved: string}
 ) => {
@@ -42,8 +44,7 @@ export const isUrlOnAllowList = (
       hostObserved: host
     }) &&
     (
-      webBasedApplicationIdentity.paths == null ||
-      webBasedApplicationIdentity.paths.some( pathExpected =>
+      ( webBasedApplicationIdentity.paths ?? DefaultPermittedPathList ).some( pathExpected =>
         doesPathMatchRequirement({
           pathExpected, pathObserved: path
         })
