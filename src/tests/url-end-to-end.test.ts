@@ -19,7 +19,7 @@ const getUsersConsentApprove = (requestContext: ApiRequestContext): Promise<Cons
   Promise.resolve({seedString: "a bogus seed", mutatedRequest: requestContext.request } );
   
 const defaultRespondToHost = "client.app";
-const defaultRespondToUrl = `https://${defaultRespondToHost}/`;
+const defaultRespondToUrl = `https://${defaultRespondToHost}/--derived-secret-api--/handle-response`;
 const defaultServerUrl = "https://dicekeys.app/"
 
 const getMockClient = (

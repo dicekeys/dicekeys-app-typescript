@@ -10,7 +10,7 @@ import {
   doesHostMatchRequirement
 } from "./post-message-permission-checks";
 
-const DefaultPermittedPathList = [`"/--derived-secret-api--/*`];
+const DefaultPermittedPathList = [`/--derived-secret-api--/*`];
 
 const doesPathMatchRequirement = (
   {pathExpected, pathObserved}: {pathExpected: string, pathObserved: string}
