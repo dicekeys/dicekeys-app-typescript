@@ -32,6 +32,7 @@ import {
 import {
   reportException
 } from "./exceptions";
+import { EnterDiceKey } from "./display-dicekey/enter-dicekey";
 
 
 interface BodyOptions extends Attributes {
@@ -107,7 +108,18 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
         })
       )
       Step.getUsersConsent.promise?.finally( this.renderSoon );
-    } else if (Step.loadDiceKey.isInProgress) {
+    } else if (Step.enterDiceKey.isInProgress) {
+      // When we're in the process of loading/scanning a DiceKey,
+      // show the component for scanning it.
+      this.append(
+        Div({class: "request-container"},
+          new EnterDiceKey({onExceptionEvent: reportException}).with( enterDiceKey => { 
+          enterDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
+        })
+      ));
+      Step.loadDiceKey.promise?.finally( () => this.renderSoon() );
+
+    }  else if (Step.loadDiceKey.isInProgress) {
       // When we're in the process of loading/scanning a DiceKey,
       // show the component for scanning it.
       this.append(
@@ -129,6 +141,10 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
       this.append(new DisplayWhenNoDiceKeyPresent().with( homeComponent  => {
         homeComponent.loadDiceKeyButtonClicked.on( () => {
           this.loadDiceKey();
+        });
+        homeComponent.typeDiceKeyButtonClicked.on( () => {
+          Step.enterDiceKey.start();
+          this.renderSoon(); 
         });
         homeComponent.createRandomDiceKeyButtonClicked.on( () => {
           EncryptedCrossTabState.instance?.diceKey.set(DiceKey.fromRandom());

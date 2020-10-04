@@ -213,7 +213,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * This event is triggered when the DiceKey has been been scanned
    * successfully.
    */
-  public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], ScanDiceKey>(this);
+  public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], this>(this);
 
   /**
    * We support a delay between when we've successfully scanned a DiceKey

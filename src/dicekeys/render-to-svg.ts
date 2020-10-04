@@ -17,7 +17,10 @@ export enum UndoverlineType {
   overline = "overline",
 }
 
-export function addUndoverlineCodes<T extends Face>(face: T): T & UndoverlineCodes {
+export function addUndoverlineCodes<T extends Partial<Face>>(face: T): T & (UndoverlineCodes | {}) {
+  if (face.letter == null || face.digit == null) {
+    return face;
+  }
   const letterIndexTimesSixPlusDigitIndex = (FaceLetters.indexOf(face.letter) * 6) + (parseInt(face.digit) -1);
   const {underlineCode, overlineCode} = 
     letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes[letterIndexTimesSixPlusDigitIndex];
@@ -27,11 +30,13 @@ export function addUndoverlineCodes<T extends Face>(face: T): T & UndoverlineCod
 const textShade = "#000000";
 const hiddenTextShade = "#B0B0B0";
 const dieSurfaceColor = "#ffffff";
+const dieSurfaceColorHighlighted = "rgb(222, 244, 64)"
 const diceBoxColor = "#000030"
 
 export interface DiceKeyRenderOptions {
   hide21?: boolean,
   diceBoxColor?: [number, number, number],
+  highlightDieAtIndex?: number,
   showLidTab?: boolean,
 }
 
@@ -97,16 +102,22 @@ const renderUnitFace = (
     }
   }
   // Render the underline and overline
-  renderUndoverline("underline", underlineCode);
-  renderUndoverline("overline", overlineCode);
+  if (underlineCode != null) {
+    renderUndoverline("underline", underlineCode);
+  }
+  if (overlineCode != null) {
+    renderUndoverline("overline", overlineCode);
+  }
 
-  renderedElements.push(SVG.text({
-      x: 0,
-      y: -0.5 + FaceDimensionsFractional.textBaselineY,
-      style: `font-family: ${FontFamily}; fill:${textShade};font-size:${FaceDimensionsFractional.fontSize}px;font-weight:${FontWeight};letter-spacing:${FaceDimensionsFractional.spaceBetweenLetterAndDigit}px;text-anchor:middle;text-align:center;line-height:1;fill-opacity:1;`,
-    },
-    SVG.tspan(`${letter || ' '}${digit || ' '}`)
-  ));
+  if (letter != null || digit != null) {
+    renderedElements.push(SVG.text({
+        x: 0,
+        y: -0.5 + FaceDimensionsFractional.textBaselineY,
+        style: `font-family: ${FontFamily}; fill:${textShade};font-size:${FaceDimensionsFractional.fontSize}px;font-weight:${FontWeight};letter-spacing:${FaceDimensionsFractional.spaceBetweenLetterAndDigit}px;text-anchor:middle;text-align:center;line-height:1;fill-opacity:1;`,
+      },
+      SVG.tspan(`${letter ?? ' '}${digit ?? ' '}`)
+    ));
+  }
   return renderedElements;
 }
 
@@ -123,7 +134,13 @@ const renderUnitFace = (
 export const renderFace = (
   face: Partial<Face>,
   center: Point = {x: 0, y: 0},
-  linearFractionOfCoverage: number = 5/8,
+  {
+    highlightThisDie = false,
+    linearFractionOfCoverage = 5/8,  
+  }: {
+    highlightThisDie?: boolean,
+    linearFractionOfCoverage?: number,
+  } = {}
 ): SVGElement =>  {
   const radius = 1 / 12;
   const clockwiseAngle = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTrbl || "?");
@@ -134,7 +151,7 @@ export const renderFace = (
       x: -0.5, y: -0.5,
       width: 1, height: 1,
       rx: radius, ry: radius,
-      style: `fill: ${dieSurfaceColor};` // `stroke: ${textShade}`
+      style: `fill: ${highlightThisDie ? dieSurfaceColorHighlighted : dieSurfaceColor};` // `stroke: ${textShade}`
     }),
     SVG.g({
         transform: `scale(${linearFractionOfCoverage})${
@@ -218,7 +235,7 @@ export const renderDiceKey = (
     const x = distanceBetweenDieCenters * (-2 + (index % 5));
     const y = distanceBetweenDieCenters * (-2 + Math.floor(index / 5));
     const isCornerDie = DiceKey.cornerIndexSet.has(index);
-    svgElement.appendChild(renderFace(hide21 && !isCornerDie ? {} : face, {x, y}));
+    svgElement.appendChild(renderFace(hide21 && !isCornerDie ? {} : face, {x, y}, {highlightThisDie: index === options.highlightDieAtIndex }));
     if (hide21) {
       svgElement.appendChild(SVG.rect({
         x: x - distanceBetweenDieCenters/2,
