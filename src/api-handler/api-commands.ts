@@ -102,9 +102,7 @@ export const getSecret = implementApiCall<ApiCalls.GetSecret>(
 export const getPassword = implementApiCall<ApiCalls.GetPassword>(
     (seededCryptoModule, seedString, {derivationOptionsJson}) => deleteAfterOperation(
       seededCryptoModule.Password.deriveFromSeed(seedString, derivationOptionsJson),
-      (password) => {
-        return {password: password.password(), derivationOptionsJson};
-      }
+      (password) => password.toJsObject()
     )
   )
 
