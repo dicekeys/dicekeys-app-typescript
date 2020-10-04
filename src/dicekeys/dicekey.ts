@@ -145,9 +145,9 @@ export type DiceKeyInHumanReadableForm = DiceKeyInHumanReadableFormType & string
 
 export const DiceKeyInHumanReadableForm = (diceKey: DiceKey): DiceKeyInHumanReadableForm =>
   diceKey.map( face =>
-    (face.letter != null ? face.letter : "?") +
-    (face.digit != null ? face.digit : "?") +
-    (face.orientationAsLowercaseLetterTrbl || "?")
+    (face.letter ?? "?") +
+    (face.digit ?? "?") +
+    (face.orientationAsLowercaseLetterTrbl ?? "?")
   ).join("") as DiceKeyInHumanReadableForm
 
 const diceKeyFromHumanReadableForm = (

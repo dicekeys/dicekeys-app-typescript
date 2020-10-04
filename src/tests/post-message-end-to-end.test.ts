@@ -184,13 +184,13 @@ describe("End-to-end API tests using the PostMessage API", () => {
   test("getPassword", async () => {
     const derivationOptions = DerivationOptions({
       allow: [{host: defaultRequestHost}],
-      lengthInBytes: 13
+      lengthInWords: 13
     });
     const {password, derivationOptionsJson} = await getPassword({
       derivationOptionsJson: JSON.stringify(derivationOptions)
     });
     expect(derivationOptionsJson).toBeDefined();
-    expect(password.length).toBeGreaterThan(13);
+    expect(password.substr(0,2)).toBe("13");
   });
 
 
