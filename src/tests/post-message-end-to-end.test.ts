@@ -83,33 +83,33 @@ describe("End-to-end API tests using the PostMessage API", () => {
   const testMessageByteArray = stringToUtf8ByteArray(testMessage);
 
   test("symmetricKeySealAndUnseal", async () => {
-    const {packagedSealedMessageFields} = await sealWithSymmetricKey({
+    const {seededCryptoObjectAsJson: packagedSealedMessageJson} = await sealWithSymmetricKey({
       derivationOptionsJson,
       plaintext: testMessageByteArray
     });
-    const {plaintext} = await unsealWithSymmetricKey({packagedSealedMessageFields});
+    const {plaintext} = await unsealWithSymmetricKey({packagedSealedMessageJson});
     expect(plaintext).toStrictEqual(testMessageByteArray);
 //    packagedSealedMessage.delete();
   });
 
   
   test("Local symmetric key seal and remote unseal", async () => {
-    const {symmetricKeyFields} = await getSymmetricKey({
+    const {seededCryptoObjectAsJson: symmetricKeyJson} = await getSymmetricKey({
       derivationOptionsJson: derivationOptionsForProtectedKeysJson
     });
-    const symmetricKey = (await SeededCryptoModulePromise).SymmetricKey.fromJsObject(symmetricKeyFields);
+    const symmetricKey = (await SeededCryptoModulePromise).SymmetricKey.fromJson(symmetricKeyJson);
     const packagedSealedMessage = symmetricKey.seal(testMessageByteArray);
-    const {plaintext} = await unsealWithSymmetricKey({packagedSealedMessageFields: packagedSealedMessage.toJsObject()});
+    const {plaintext} = await unsealWithSymmetricKey({packagedSealedMessageJson: packagedSealedMessage.toJson()});
     expect(plaintext).toStrictEqual(testMessageByteArray);
   });
 
   test("Remote sign and verify", async () => {
-    const {signature, signatureVerificationKeyFields: initialSignatureVerificationKeyFields} =
+    const {signature, seededCryptoObjectAsJson: initialSignatureVerificationKeyJson} =
       (await generateSignature({derivationOptionsJson, message: testMessageByteArray}));
-    const {signatureVerificationKeyFields} = await getSignatureVerificationKey({derivationOptionsJson})
+    const {seededCryptoObjectAsJson: signatureVerificationKeyJon} = await getSignatureVerificationKey({derivationOptionsJson})
     const signatureVerificationKey = (await SeededCryptoModulePromise)
-      .SignatureVerificationKey.fromJsObject(signatureVerificationKeyFields);
-    expect(signatureVerificationKey.signatureVerificationKeyBytes).toStrictEqual(initialSignatureVerificationKeyFields.signatureVerificationKeyBytes);
+      .SignatureVerificationKey.fromJson(signatureVerificationKeyJon);
+    expect(signatureVerificationKey.signatureVerificationKeyBytes).toStrictEqual( (await SeededCryptoModulePromise).SignatureVerificationKey.fromJson(initialSignatureVerificationKeyJson).signatureVerificationKeyBytes);
     expect(signatureVerificationKey.verify(testMessageByteArray, signature)).toBeTruthy();
     expect(signatureVerificationKey.verify(Uint8Array.from([0]), signature)).toBeFalsy();
     signatureVerificationKey.delete();
@@ -117,22 +117,22 @@ describe("End-to-end API tests using the PostMessage API", () => {
 
   
   test("Local sign and verify", async () => {
-    const {signingKeyFields} = await getSigningKey({derivationOptionsJson: derivationOptionsForProtectedKeysJson});
-    const signingKey = (await SeededCryptoModulePromise).SigningKey.fromJsObject(signingKeyFields);
+    const {seededCryptoObjectAsJson: signingKeyJson} = await getSigningKey({derivationOptionsJson: derivationOptionsForProtectedKeysJson});
+    const signingKey = (await SeededCryptoModulePromise).SigningKey.fromJson(signingKeyJson);
     const signature = signingKey.generateSignature(testMessageByteArray);
-    const {signatureVerificationKeyFields} = await getSignatureVerificationKey({
+    const {seededCryptoObjectAsJson: signatureVerificationKeyJson} = await getSignatureVerificationKey({
       derivationOptionsJson: derivationOptionsForProtectedKeysJson
     })
     const signatureVerificationKey = (await SeededCryptoModulePromise)
-      .SignatureVerificationKey.fromJsObject(signatureVerificationKeyFields);
+      .SignatureVerificationKey.fromJson(signatureVerificationKeyJson);
     expect(signatureVerificationKey.verify(testMessageByteArray, signature)).toBeTruthy();
     expect(signatureVerificationKey.verify(Uint8Array.from([0]), signature)).toBeFalsy();
     signatureVerificationKey.delete();
   });
 
   test("asymmetricSealAndUnseal", async () => {
-    const { sealingKeyFields } = await getSealingKey({derivationOptionsJson});
-    const sealingKey = (await SeededCryptoModulePromise).SealingKey.fromJsObject(sealingKeyFields);
+    const { seededCryptoObjectAsJson: sealingKeyJson } = await getSealingKey({derivationOptionsJson});
+    const sealingKey = (await SeededCryptoModulePromise).SealingKey.fromJson(sealingKeyJson);
     const unsealingInstructionsJson = JSON.stringify({
       "requireUsersConsent": {
           "question": "Do you want use \"8fsd8pweDmqed\" as your SpoonerMail account password and remove your current password?",
@@ -143,17 +143,17 @@ describe("End-to-end API tests using the PostMessage API", () => {
       }
     });
     const packagedSealedPkMessage = sealingKey.sealWithInstructions(testMessageByteArray, unsealingInstructionsJson);
-    const {plaintext} = await unsealWithUnsealingKey({packagedSealedMessageFields: packagedSealedPkMessage})
+    const {plaintext} = await unsealWithUnsealingKey({packagedSealedMessageJson: packagedSealedPkMessage.toJson()})
     expect(plaintext).toStrictEqual(testMessageByteArray);
     expect(packagedSealedPkMessage.unsealingInstructions).toBe(unsealingInstructionsJson);
   });
 
   
   test("Local Asymmetric Seal And Unseal", async () => {
-    const { unsealingKeyFields } = await getUnsealingKey({
+    const { seededCryptoObjectAsJson: unsealingKeyJson } = await getUnsealingKey({
       derivationOptionsJson: derivationOptionsForProtectedKeysJson
     });
-    const unsealingKey = (await SeededCryptoModulePromise).UnsealingKey.fromJsObject(unsealingKeyFields);
+    const unsealingKey = (await SeededCryptoModulePromise).UnsealingKey.fromJson(unsealingKeyJson);
     const sealingKey = unsealingKey.getSealingKey();
     const unsealingInstructionsJson = JSON.stringify({
       "requireUsersConsent": {
@@ -176,8 +176,9 @@ describe("End-to-end API tests using the PostMessage API", () => {
       allow: [{host: defaultRequestHost}],
       lengthInBytes: 13
     });
-    const {secretFields} = await getSecret({derivationOptionsJson: JSON.stringify(derivationOptions)});
-    expect(secretFields.secretBytes.length).toBe(13);
+    const {seededCryptoObjectAsJson: secretJson} = await getSecret({derivationOptionsJson: JSON.stringify(derivationOptions)});
+    const secret = (await SeededCryptoModulePromise).Secret.fromJson(secretJson);
+    expect(secret.secretBytes.length).toBe(13);
   });
 
   
@@ -186,11 +187,12 @@ describe("End-to-end API tests using the PostMessage API", () => {
       allow: [{host: defaultRequestHost}],
       lengthInWords: 13
     });
-    const {password, derivationOptionsJson} = await getPassword({
+    const {seededCryptoObjectAsJson: passwordJson} = await getPassword({
       derivationOptionsJson: JSON.stringify(derivationOptions)
     });
+    const password = (await SeededCryptoModulePromise).Password.fromJson(passwordJson);
     expect(derivationOptionsJson).toBeDefined();
-    expect(password.substr(0,2)).toBe("13");
+    expect(password.password.substr(0,2)).toBe("13");
   });
 
 

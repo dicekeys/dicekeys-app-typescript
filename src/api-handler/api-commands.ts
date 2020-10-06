@@ -5,6 +5,7 @@ import {
   ApiCalls
 } from "@dicekeys/dicekeys-api-js";
 import {
+  GetPasswordSuccessResponseParameterNames,
   GetSealingKeySuccessResponseParameterNames,
   GetSecretSuccessResponseParameterNames,
   GetSignatureVerificationKeySuccessResponseParameterNames,
@@ -83,33 +84,30 @@ function deleteAfterOperation<DELETABLE extends {delete: () => any}, RESULT>(
   }
 }
 
-function toJsObjectAndDelete<RESULT, T extends {delete: () => any, toJsObject: () => RESULT}>(
+function toJsonAndDelete<RESULT, T extends {delete: () => any, toJson: () => RESULT}>(
   derivedValue: T
 ): RESULT {
-  return deleteAfterOperation( derivedValue, ( d ) => d.toJsObject() )
+  return deleteAfterOperation( derivedValue, ( d ) => d.toJson() )
 }
-        
+
 export const getSecret = implementApiCall<ApiCalls.GetSecret>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-    [GetSecretSuccessResponseParameterNames.secretFields]:
-      toJsObjectAndDelete( 
-        seededCryptoModule.Secret.deriveFromSeed(
-          seedString, derivationOptionsJson)
-      )
-  })
-);
+    [GetSecretSuccessResponseParameterNames.seededCryptoObjectAsJson]:
+      toJsonAndDelete( 
+        seededCryptoModule.Secret.deriveFromSeed(seedString, derivationOptionsJson)
+  )}));
 
 export const getPassword = implementApiCall<ApiCalls.GetPassword>(
-    (seededCryptoModule, seedString, {derivationOptionsJson}) => deleteAfterOperation(
-      seededCryptoModule.Password.deriveFromSeed(seedString, derivationOptionsJson),
-      (password) => password.toJsObject()
-    )
-  )
+    (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
+      [GetPasswordSuccessResponseParameterNames.seededCryptoObjectAsJson]:
+        toJsonAndDelete( 
+          seededCryptoModule.Password.deriveFromSeed(seedString, derivationOptionsJson)
+    )}));
 
 export const sealWithSymmetricKey = implementApiCall<ApiCalls.SealWithSymmetricKey>(
   (seededCryptoModule, seedString, {plaintext, unsealingInstructions, derivationOptionsJson}) => ({
-      [SealWithSymmetricKeySuccessResponseParameterNames.packagedSealedMessageFields]:
-        toJsObjectAndDelete(
+      [SealWithSymmetricKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
+        toJsonAndDelete(
           seededCryptoModule.SymmetricKey.sealWithInstructions(
             plaintext,
             unsealingInstructions ?? "",
@@ -121,9 +119,9 @@ export const sealWithSymmetricKey = implementApiCall<ApiCalls.SealWithSymmetricK
   );
 
 export const unsealWithSymmetricKey = implementApiCall<ApiCalls.UnsealWithSymmetricKey>(
-  (seededCryptoModule, seedString, {packagedSealedMessageFields}) => ({
+  (seededCryptoModule, seedString, {packagedSealedMessageJson}) => ({
     [UnsealWithSymmetricKeySuccessResponseParameterNames.plaintext]: deleteAfterOperation(
-      seededCryptoModule.PackagedSealedMessage.fromJsObject(packagedSealedMessageFields),
+      seededCryptoModule.PackagedSealedMessage.fromJson(packagedSealedMessageJson),
       (packagedSealedMessageNativeObject) =>
         seededCryptoModule.SymmetricKey.unseal(packagedSealedMessageNativeObject, seedString)
     )
@@ -132,8 +130,8 @@ export const unsealWithSymmetricKey = implementApiCall<ApiCalls.UnsealWithSymmet
 
 export const getSealingKey = implementApiCall<ApiCalls.GetSealingKey>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-    [GetSealingKeySuccessResponseParameterNames.sealingKeyFields]:
-      toJsObjectAndDelete(
+    [GetSealingKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
+      toJsonAndDelete(
         seededCryptoModule.UnsealingKey.deriveFromSeed(
           seedString,
           derivationOptionsJson
@@ -144,8 +142,8 @@ export const getSealingKey = implementApiCall<ApiCalls.GetSealingKey>(
 
 export const getUnsealingKey = implementApiCall<ApiCalls.GetUnsealingKey>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-    [GetUnsealingKeySuccessResponseParameterNames.unsealingKeyFields]:
-      toJsObjectAndDelete(
+    [GetUnsealingKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
+      toJsonAndDelete(
         seededCryptoModule.UnsealingKey.deriveFromSeed(
           seedString,
           derivationOptionsJson
@@ -156,8 +154,8 @@ export const getUnsealingKey = implementApiCall<ApiCalls.GetUnsealingKey>(
 
 export const getSigningKey = implementApiCall<ApiCalls.GetSigningKey>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-    [GetSigningKeySuccessResponseParameterNames.signingKeyFields]:
-      toJsObjectAndDelete(
+    [GetSigningKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
+      toJsonAndDelete(
         seededCryptoModule.SigningKey.deriveFromSeed(
           seedString,
           derivationOptionsJson
@@ -168,8 +166,8 @@ export const getSigningKey = implementApiCall<ApiCalls.GetSigningKey>(
 
 export const getSymmetricKey = implementApiCall<ApiCalls.GetSymmetricKey>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-    [GetSymmetricKeySuccessResponseParameterNames.symmetricKeyFields]:
-      toJsObjectAndDelete(
+    [GetSymmetricKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
+      toJsonAndDelete(
         seededCryptoModule.SymmetricKey.deriveFromSeed(
           seedString,
           derivationOptionsJson
@@ -180,8 +178,8 @@ export const getSymmetricKey = implementApiCall<ApiCalls.GetSymmetricKey>(
 
 export const getSignatureVerificationKey = implementApiCall<ApiCalls.GetSignatureVerificationKey>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-    [GetSignatureVerificationKeySuccessResponseParameterNames.signatureVerificationKeyFields]:
-      toJsObjectAndDelete(
+    [GetSignatureVerificationKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
+      toJsonAndDelete(
         seededCryptoModule.SignatureVerificationKey.deriveFromSeed(
           seedString,
           derivationOptionsJson
@@ -191,9 +189,9 @@ export const getSignatureVerificationKey = implementApiCall<ApiCalls.GetSignatur
   );
 
 export const unsealWithUnsealingKey = implementApiCall<ApiCalls.UnsealWithUnsealingKey> (
-  (seededCryptoModule, seedString, {packagedSealedMessageFields}) => ({
+  (seededCryptoModule, seedString, {packagedSealedMessageJson}) => ({
     plaintext: deleteAfterOperation(
-      seededCryptoModule.PackagedSealedMessage.fromJsObject(packagedSealedMessageFields),
+      seededCryptoModule.PackagedSealedMessage.fromJson(packagedSealedMessageJson),
       (packagedSealedMessageNativeObject) =>
         seededCryptoModule.UnsealingKey.unseal(packagedSealedMessageNativeObject, seedString)
     )
@@ -210,7 +208,7 @@ export const generateSignature = implementApiCall<ApiCalls.GenerateSignature> (
       const signature = signingKey.generateSignature(message);
       return {
         signature,
-        signatureVerificationKeyFields: signatureVerificationKey.toJsObject()
+        seededCryptoObjectAsJson: signatureVerificationKey.toJson()
       };
     } finally {
       signingKey.delete();

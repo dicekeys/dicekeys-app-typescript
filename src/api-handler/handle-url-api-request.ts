@@ -20,36 +20,19 @@ import {
   GetPasswordRequest,
   GetPasswordSuccessResponseParameterNames,
   GetSealingKeyRequest,
-  GetSealingKeySuccessResponseParameterNames,
   GetSecretRequest,
-  GetSecretSuccessResponseParameterNames,
   GetSignatureVerificationKeyRequest,
-  GetSignatureVerificationKeySuccessResponseParameterNames,
   GetSigningKeyRequest,
-  GetSigningKeySuccessResponseParameterNames,
   GetSymmetricKeyRequest,
-  GetSymmetricKeySuccessResponseParameterNames,
   GetUnsealingKeyRequest,
-  GetUnsealingKeySuccessResponseParameterNames,
   ResponseMetadataParameterNames,
   SealWithSymmetricKeyParameterNames,
   SealWithSymmetricKeyRequest,
-  SealWithSymmetricKeySuccessResponseParameterNames,
+  UnsealSuccessResponseParameterNames,
   UnsealWithSymmetricKeyRequest,
-  UnsealWithSymmetricKeySuccessResponseParameterNames,
-  UnsealWithUnsealingKeyParameterNames,
+  UnsealParameterNames,
   UnsealWithUnsealingKeyRequest,
-  UnsealWithUnsealingKeySuccessResponseParameterNames,
 } from "@dicekeys/dicekeys-api-js/dist/api-calls";
-import {
-  PackagedSealedMessageJson,
-  SignatureVerificationKeyJson,
-  SealingKeyJson,
-  SecretJson,
-  SigningKeyJson,
-  SymmetricKeyJson,
-  UnsealingKeyJson,
-} from "@dicekeys/seeded-crypto-js";
 import {
   EncryptedCrossTabState
 } from "../state";
@@ -57,8 +40,7 @@ import {
 interface MarshallCommand<COMMAND extends ApiCalls.Command> {
   (
     marhsallers: {
-      add: (fieldName: string, value: string) => void,
-      addJSON: <T>(fieldName: string, t: T) => void,
+      add: (fieldName: string, value: string) => void
     },
     response: ApiCalls.ResponseForCommand<COMMAND>,
   ): void
@@ -68,103 +50,40 @@ interface MarshallCommand<COMMAND extends ApiCalls.Command> {
 // this function allows us to simulate a properly typed switch case statement.
 const commandMarshallers = new Map<ApiCalls.Command, MarshallCommand<ApiCalls.Command>>();
 const addResponseMarshallerForCommand = <COMMAND extends ApiCalls.Command>(
-  forCommand: COMMAND,
+  forCommand: COMMAND | COMMAND[],
   callback: MarshallCommand<COMMAND>
 ): void => {
-  commandMarshallers.set(forCommand, callback);
+  for (const command of Array.isArray(forCommand) ? forCommand : [forCommand]) {
+    commandMarshallers.set(command, callback);
+  }
 }
 addResponseMarshallerForCommand(
   ApiCalls.Command.generateSignature,
-  ({add, addJSON}, {signature, signatureVerificationKeyFields}) => {
-  const {signatureVerificationKeyBytes, derivationOptionsJson} = signatureVerificationKeyFields;
+  ({add}, {signature, seededCryptoObjectAsJson}) => {
     add(GenerateSignatureSuccessResponseParameterNames.signature, urlSafeBase64Encode(signature));
-    addJSON<SignatureVerificationKeyJson>(GenerateSignatureSuccessResponseParameterNames.signatureVerificationKeyFields, {
-      derivationOptionsJson,
-      signatureVerificationKeyBytes: urlSafeBase64Encode(signatureVerificationKeyBytes)      
-    })
+    add(GenerateSignatureSuccessResponseParameterNames.seededCryptoObjectAsJson, seededCryptoObjectAsJson);
 });
 addResponseMarshallerForCommand(
-  ApiCalls.Command.getPassword,
-  ({add}, {password, derivationOptionsJson}) => {
-    add(GetPasswordSuccessResponseParameterNames.password, password);
-    add(GetPasswordSuccessResponseParameterNames.derivationOptionsJson, derivationOptionsJson);
+  [
+    ApiCalls.Command.getPassword,
+    ApiCalls.Command.getSealingKey,
+    ApiCalls.Command.getSecret,
+    ApiCalls.Command.getSignatureVerificationKey,
+    ApiCalls.Command.getSigningKey,
+    ApiCalls.Command.getSymmetricKey,
+    ApiCalls.Command.getUnsealingKey,
+    ApiCalls.Command.sealWithSymmetricKey,
+  ],
+  ({add}, {seededCryptoObjectAsJson}) => {
+    add(GetPasswordSuccessResponseParameterNames.seededCryptoObjectAsJson, seededCryptoObjectAsJson);
 });
 addResponseMarshallerForCommand(
-  ApiCalls.Command.getSealingKey,
-  ({addJSON}, {sealingKeyFields}) => {
-    const {derivationOptionsJson, sealingKeyBytes} = sealingKeyFields;
-    addJSON<SealingKeyJson>(GetSealingKeySuccessResponseParameterNames.sealingKeyFields, {
-      derivationOptionsJson,
-      sealingKeyBytes: urlSafeBase64Encode(sealingKeyBytes)
-    });
-});
-addResponseMarshallerForCommand(
-  ApiCalls.Command.getSecret,
-  ({addJSON}, {secretFields}) => {
-    const {derivationOptionsJson, secretBytes} = secretFields;
-    addJSON<SecretJson>(GetSecretSuccessResponseParameterNames.secretFields, {
-      derivationOptionsJson,
-      secretBytes: urlSafeBase64Encode(secretBytes)
-    });
-});
-addResponseMarshallerForCommand(
-  ApiCalls.Command.getSignatureVerificationKey,
-  ({addJSON}, {signatureVerificationKeyFields}) => {
-    const {derivationOptionsJson, signatureVerificationKeyBytes} = signatureVerificationKeyFields;
-    addJSON<SignatureVerificationKeyJson>(GetSignatureVerificationKeySuccessResponseParameterNames.signatureVerificationKeyFields, {
-      derivationOptionsJson,
-      signatureVerificationKeyBytes: urlSafeBase64Encode(signatureVerificationKeyBytes)
-  });
-});
-addResponseMarshallerForCommand(
-  ApiCalls.Command.getSigningKey,
-  ({addJSON}, {signingKeyFields}) => {
-    const {derivationOptionsJson, signatureVerificationKeyBytes, signingKeyBytes} = signingKeyFields;
-    addJSON<SigningKeyJson>(GetSigningKeySuccessResponseParameterNames.signingKeyFields, {
-      derivationOptionsJson,
-      signingKeyBytes: urlSafeBase64Encode(signingKeyBytes),
-      ...( signatureVerificationKeyBytes == null ? {} : {
-          signatureVerificationKeyBytes: urlSafeBase64Encode(signatureVerificationKeyBytes)
-      })
-    });
-});
-addResponseMarshallerForCommand(
-  ApiCalls.Command.getSymmetricKey,
-  ({addJSON}, {symmetricKeyFields}) => {
-    const {derivationOptionsJson, keyBytes} = symmetricKeyFields;
-    addJSON<SymmetricKeyJson>(GetSymmetricKeySuccessResponseParameterNames.symmetricKeyFields, {
-      derivationOptionsJson,
-      keyBytes: urlSafeBase64Encode(keyBytes)
-    });
-});
-addResponseMarshallerForCommand(
-  ApiCalls.Command.getUnsealingKey,
-  ({addJSON}, {unsealingKeyFields}) => {
-    const {derivationOptionsJson, unsealingKeyBytes, sealingKeyBytes} = unsealingKeyFields;
-    addJSON<UnsealingKeyJson>(GetUnsealingKeySuccessResponseParameterNames.unsealingKeyFields, {
-      derivationOptionsJson,
-      unsealingKeyBytes: urlSafeBase64Encode(unsealingKeyBytes),
-      sealingKeyBytes: urlSafeBase64Encode(sealingKeyBytes)
-    });
-});
-addResponseMarshallerForCommand(
-  ApiCalls.Command.sealWithSymmetricKey,
-  ({addJSON}, {packagedSealedMessageFields}) => {
-    const {derivationOptionsJson, ciphertext, unsealingInstructions} = packagedSealedMessageFields;
-    addJSON<PackagedSealedMessageJson>(SealWithSymmetricKeySuccessResponseParameterNames.packagedSealedMessageFields, {
-      derivationOptionsJson, unsealingInstructions,
-      ciphertext: urlSafeBase64Encode(ciphertext)
-    });
-});
-addResponseMarshallerForCommand(
-  ApiCalls.Command.unsealWithSymmetricKey,
+  [
+    ApiCalls.Command.unsealWithSymmetricKey,
+    ApiCalls.Command.unsealWithUnsealingKey,
+  ],
   ({add}, {plaintext}) => {
-    add(UnsealWithSymmetricKeySuccessResponseParameterNames.plaintext, urlSafeBase64Encode(plaintext) );
-});
-addResponseMarshallerForCommand(
-  ApiCalls.Command.unsealWithUnsealingKey,
-  ({add}, {plaintext}) => {
-    add(UnsealWithUnsealingKeySuccessResponseParameterNames.plaintext, urlSafeBase64Encode(plaintext) );
+    add(UnsealSuccessResponseParameterNames.plaintext, urlSafeBase64Encode(plaintext) );
 });
 
 const addResponseToUrl = (
@@ -176,7 +95,6 @@ const addResponseToUrl = (
   const url = new URL(responseUrl);
   // Syntactic sugar for marshalling responses into the URL
   const add = (name: string, value: string) => url.searchParams.set(name, value);
-  const addJSON = <T>(fieldName: string, t: T) => add(fieldName, JSON.stringify(t));
   // Always copy the requestId back into the response
   add(ResponseMetadataParameterNames.requestId, response.requestId);
 
@@ -195,7 +113,7 @@ const addResponseToUrl = (
 
   // Get the correct marshaller for this command and call it.
   const marshaller = commandMarshallers.get(command);
-  marshaller?.({add, addJSON}, response);
+  marshaller?.({add}, response);
 
   return url.toString();
 }
@@ -243,16 +161,10 @@ const getRequestFromSearchParams = (
     }
     case ApiCalls.Command.unsealWithSymmetricKey:
     case ApiCalls.Command.unsealWithUnsealingKey: {
-      const packagedSealedMessageJson = requireParam(UnsealWithUnsealingKeyParameterNames.packagedSealedMessageFields);
-      const {ciphertext, derivationOptionsJson, unsealingInstructions} = JSON.parse(packagedSealedMessageJson) as PackagedSealedMessageJson;
+      const packagedSealedMessageJson = requireParam(UnsealParameterNames.packagedSealedMessageJson);
       return {
         command,
-        packagedSealedMessageFields: {
-          ciphertext: urlSafeBase64Decode(ciphertext),
-          derivationOptionsJson,
-          ...( unsealingInstructions == null ? {} : {unsealingInstructions}
-          )
-        }
+        packagedSealedMessageJson
       } as UnsealWithSymmetricKeyRequest | UnsealWithUnsealingKeyRequest;
     }
   }

@@ -1,11 +1,11 @@
 import {
   DerivationOptions,
-  ApiCalls,
   Exceptions,
   UnsealingInstructions,
   WebBasedApplicationIdentity,
-  AuthenticationRequirements
+  AuthenticationRequirements, ApiCalls
 } from "@dicekeys/dicekeys-api-js";
+import { extraRequestDerivationOptionsAndInstructions } from "./get-requests-derivation-options-json";
 import {
   doesHostMatchRequirement
 } from "./post-message-permission-checks";
@@ -83,25 +83,14 @@ export const throwIfUrlNotOnAllowList =
 export const throwIfUrlNotPermitted = (host: string, path: string, hostValidatedViaAuthToken: boolean) => {
   const throwIfNotOnAllowList = throwIfUrlNotOnAllowList(host, path, hostValidatedViaAuthToken);
   return (request: ApiCalls.ApiRequestObject): void => {
-    if (
-      request.command === ApiCalls.Command.unsealWithSymmetricKey ||
-      request.command === ApiCalls.Command.unsealWithUnsealingKey
-    ) {
-      // Unsealing operations have two possible allow lists, both embedded in the packageSealedMessage parameter:
-      //   - like all other operations, an allow list may be placed in derivation options.
-      //   = unique to these operations, an allow list may be placed in the unsealing instructions.
-      throwIfNotOnAllowList(DerivationOptions(request.packagedSealedMessageFields.derivationOptionsJson));
-      const unsealingInstructions = UnsealingInstructions(request.packagedSealedMessageFields.unsealingInstructions);
-      throwIfNotOnAllowList(unsealingInstructions);
-      // if (unsealingInstructions.requireUsersConsent) {
-      //   // FIXME
-      //   // if ((await this.requestUsersConsent(requireUsersConsent)) !== UsersConsentResponse.Allow) {
-      //   //   throw new Exceptions.UserDeclinedToAuthorizeOperation("Operation declined by user")
-      //   // }
-      // }
-    } else {
-      // The list of allowed web identities is specified via the allow field of the derivation options.
-      throwIfNotOnAllowList(DerivationOptions(request.derivationOptionsJson));
+    const {derivationOptionsJson, unsealingInstructions} = extraRequestDerivationOptionsAndInstructions(request);
+    throwIfNotOnAllowList(DerivationOptions(derivationOptionsJson));
+
+    // Unsealing operations have two possible allow lists, both embedded in the packageSealedMessage parameter:
+    //   - like all other operations, an allow list may be placed in derivation options.
+    //   = unique to these operations, an allow list may be placed in the unsealing instructions.
+    if (unsealingInstructions) {
+      throwIfNotOnAllowList(UnsealingInstructions(unsealingInstructions));
     }
   }
 }
