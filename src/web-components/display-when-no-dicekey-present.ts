@@ -8,6 +8,7 @@ import {
 export class DisplayWhenNoDiceKeyPresent extends Component {
   
   public readonly loadDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);
+  public readonly typeDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);
   public readonly createRandomDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);
 
   /**
@@ -30,13 +31,19 @@ export class DisplayWhenNoDiceKeyPresent extends Component {
         events: (events) => {
           events.click.on( this.loadDiceKeyButtonClicked.send )
         }}),
-        // Currently only show random DiceKey feature on staging.
-        InputButton({
-          value: "Create a Random DiceKey for Testing",
-          style: "margin-top: 20vh;",
-          events: (events) => {
-            events.click.on( this.createRandomDiceKeyButtonClicked.send )
-        }})
+      InputButton({
+        value: "Type your DiceKey",
+        style: "margin-top: 10vh;",
+        events: (events) => {
+          events.click.on( this.typeDiceKeyButtonClicked.send )
+        }}),
+      InputButton({
+        value: "Create a Random DiceKey for Testing",
+        style: "margin-top: 10vh;",
+        events: (events) => {
+          events.click.on( this.createRandomDiceKeyButtonClicked.send )
+      }}),
+      
     );
   }
 

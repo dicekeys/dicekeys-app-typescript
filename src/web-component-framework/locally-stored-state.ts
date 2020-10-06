@@ -29,7 +29,7 @@ export abstract class StorageField<T> extends Observable<T> {
   public readonly name: string;
 //  public readonly changedEvent: ValueChangedComponentEvent<T>;
   constructor (public readonly nameSuffix: string) {
-    super();
+    super(undefined);
     this.name =`${this.constructor.name}::${nameSuffix}`;
 //    this.changedEvent = new ValueChangedComponentEvent(this);
     StorageField.byName.set(this.name, this);

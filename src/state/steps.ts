@@ -119,6 +119,11 @@ class StepState<
 export const loadDiceKey = new StepState<DiceKey, undefined>();
 
 /**
+ * A step for manually entering a DiceKey into state
+ */
+export const enterDiceKey = new StepState<DiceKey, undefined>();
+
+/**
  * A step for obtaining user's consent.
  */
 export const getUsersConsent = new StepState<ConsentResponse, ApiRequestContext>();

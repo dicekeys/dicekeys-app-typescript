@@ -20,6 +20,8 @@ export const FontWeight = "700";
 
 export interface DiceKeySvgOptions extends DiceKeyRenderOptions, Attributes {
   diceKey: PartialDiceKey,
+  obscureOnClick?: boolean,
+  obscureByDefault?: boolean,
   overlayMessage?: {
     message: string,
     fontWeight?: string | number,
@@ -29,7 +31,6 @@ export interface DiceKeySvgOptions extends DiceKeyRenderOptions, Attributes {
   }
 }
 
-const obscure = new Observable<boolean>(true);
 
 export const removeAllButCornerLettersFromDiceKey = (diceKey: PartialDiceKey): PartialDiceKey =>
   diceKey.map( ({letter}, index) => ({
@@ -42,6 +43,7 @@ export const removeAllButCornerLettersFromDiceKey = (diceKey: PartialDiceKey): P
  * This class implements the component that displays DiceKeys.
  */
 export class DiceKeySvg extends Component<DiceKeySvgOptions, SVGSVGElement> {
+  readonly obscure: Observable<boolean>;
 
   /**
    * The code supporting the demo page cannot run until the WebAssembly module for the image
@@ -54,11 +56,18 @@ export class DiceKeySvg extends Component<DiceKeySvgOptions, SVGSVGElement> {
     super(options, SVG.svg({}));
     // const sizeStr = this.size.toString();
     this.addClass(styles.dicekey_svg);
+    this.obscure = new Observable<boolean>(options?.obscureByDefault ?? false)
 
-    this.primaryElement.addEventListener("click", () => {
-      obscure.value = !obscure.value;
-    }  );
-    obscure.observe( this.renderSoon );
+    if (options.obscureOnClick || ((typeof options.obscureOnClick === "undefined") && options.obscureOnClick)) {
+      this.primaryElement.addEventListener("click", () => {
+        this.obscure.value = !this.obscure.value;
+      }  );
+      this.obscure.observe( this.renderSoon );
+    }
+  }
+
+  private get mayObscure(): boolean {
+    return this.options.obscureByDefault || !!this.options.obscureOnClick;
   }
 
   render() {
@@ -69,8 +78,12 @@ export class DiceKeySvg extends Component<DiceKeySvgOptions, SVGSVGElement> {
       fontColor: "#00A000",
       fontWeight: 600,
     }
-    renderDiceKey(this.primaryElement, this.options.diceKey, {...this.options, hide21: obscure.value, showLidTab: obscure.value});
-    if (obscure.value && overlayMessage) {
+    renderDiceKey(this.primaryElement, this.options.diceKey, 
+      {
+        leaveSpaceForTab: this.mayObscure,
+        ...this.options,
+        hide21: this.obscure.value, showLidTab: this.obscure.value});
+    if (this.obscure.value && overlayMessage) {
       const {message, fontColor = "#000000", fontSizeAsFractionOfBoxSize = 1/12 , fontWeight = "normal", fontFamily = FontFamily} = overlayMessage;
       const fontSize = fontSizeAsFractionOfBoxSize * this.primaryElement.viewBox.baseVal.width;
       this.primaryElement.appendChild(SVG.text({

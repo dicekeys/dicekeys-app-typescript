@@ -42,11 +42,11 @@ describe("End To End Url Api Tests", () => {
 
   test("symmetricKeySealAndUnseal", async () => {
     const client = getMockClient();
-    const {packagedSealedMessageFields} = await client.sealWithSymmetricKey({
+    const {seededCryptoObjectAsJson: packagedSealedMessageJson} = await client.sealWithSymmetricKey({
       derivationOptionsJson,
       plaintext: testMessageByteArray
     });
-    const { plaintext } = await client.unsealWithSymmetricKey({packagedSealedMessageFields});
+    const { plaintext } = await client.unsealWithSymmetricKey({packagedSealedMessageJson});
     expect(plaintext).toEqual(testMessageByteArray);
   });
 
@@ -56,19 +56,19 @@ describe("End To End Url Api Tests", () => {
       derivationOptionsJson,
       message: testMessageByteArray
     })
-    const {signatureVerificationKeyFields} = await client.getSignatureVerificationKey({derivationOptionsJson})
+    const {seededCryptoObjectAsJson: signatureVerificationKeyJson} = await client.getSignatureVerificationKey({derivationOptionsJson})
     const seededCrypto = await SeededCryptoModulePromise;
-    const signatureVerificationKey = seededCrypto.SignatureVerificationKey.fromJsObject(signatureVerificationKeyFields);
-    expect(signatureVerificationKey.signatureVerificationKeyBytes).toStrictEqual(sig.signatureVerificationKeyFields.signatureVerificationKeyBytes);
+    const signatureVerificationKey = seededCrypto.SignatureVerificationKey.fromJson(signatureVerificationKeyJson);
+    expect(signatureVerificationKey.signatureVerificationKeyBytes).toStrictEqual( (await SeededCryptoModulePromise).SignatureVerificationKey.fromJson(sig.seededCryptoObjectAsJson).signatureVerificationKeyBytes);
     expect(signatureVerificationKey.verify(testMessageByteArray, sig.signature)).toBeTruthy();
     expect(signatureVerificationKey.verify(Uint8Array.from([0]), sig.signature)).toBeFalsy();
   });
 
   test("fun asymmetricSealAndUnseal", async () => {
     const client = getMockClient();
-    const {sealingKeyFields} = await client.getSealingKey({derivationOptionsJson});
+    const {seededCryptoObjectAsJson: sealingKeyJson} = await client.getSealingKey({derivationOptionsJson});
     const seededCrypto = await SeededCryptoModulePromise;
-    const sealingKey = seededCrypto.SealingKey.fromJsObject(sealingKeyFields);
+    const sealingKey = seededCrypto.SealingKey.fromJson(sealingKeyJson);
     const unsealingInstructionsJson = JSON.stringify({
       "requireUsersConsent": {
           "question": "Do you want use \"8fsd8pweDmqed\" as your SpoonerMail account password and remove your current password?",
@@ -79,7 +79,7 @@ describe("End To End Url Api Tests", () => {
       }
     });
     const packagedSealedPkMessage = sealingKey.sealWithInstructions(testMessageByteArray, unsealingInstructionsJson);
-    const { plaintext } = await client.unsealWithUnsealingKey({packagedSealedMessageFields: packagedSealedPkMessage.toJsObject()})
+    const { plaintext } = await client.unsealWithUnsealingKey({packagedSealedMessageJson: packagedSealedPkMessage.toJson()})
     expect(plaintext).toStrictEqual(testMessageByteArray);
     expect(packagedSealedPkMessage.unsealingInstructions).toBe(unsealingInstructionsJson);
   });
@@ -92,8 +92,9 @@ describe("End To End Url Api Tests", () => {
       lengthInBytes: 13
     });
     const derivationOptionsJson = JSON.stringify(derivationOptions);
-    const {secretFields} = await client.getSecret({derivationOptionsJson});
-    expect(secretFields.secretBytes.length).toBe(13);
+    const {seededCryptoObjectAsJson: secretJson} = await client.getSecret({derivationOptionsJson});
+    const secret = (await SeededCryptoModulePromise).Secret.fromJson(secretJson);
+    expect(secret.secretBytes.length).toBe(13);
   });
 
   test("getPasswordWithHandshake", async () => {
@@ -103,9 +104,10 @@ describe("End To End Url Api Tests", () => {
       allow: [{host: defaultRespondToHost}],
       lengthInWords: 15
     });
-    const {password, derivationOptionsJson} = await client.getPassword({derivationOptionsJson: JSON.stringify(derivationOptions)});
-    expect(derivationOptionsJson).toBeDefined();
-    expect(password.length).toBeGreaterThan(15);
+    const {seededCryptoObjectAsJson: passwordJson} = await client.getPassword({derivationOptionsJson: JSON.stringify(derivationOptions)});
+    const password = (await SeededCryptoModulePromise).Password.fromJson(passwordJson)
+    expect(password.derivationOptionsJson).toBeDefined();
+    expect(password.password.length).toBeGreaterThan(15);
   });
 
 });

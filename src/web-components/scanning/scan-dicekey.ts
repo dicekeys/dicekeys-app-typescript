@@ -15,7 +15,6 @@ import {
 import {
   DiceKey, TupleOf25Items
 } from "../../dicekeys/dicekey";
-import * as AppState from "../../state";
 import {
     ProcessFrameRequest,
     ProcessFrameResponse,
@@ -33,9 +32,14 @@ import { VerifyFaceRead } from "./verify-face-read";
 import { browserInfo } from "~utilities/browser";
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
+const minScanningDimensions = {
+  width: 1024,
+  height: 768
+}
+
 interface ScanDiceKeyOptions extends CameraCaptureOptions {
   msDelayBetweenSuccessAndClosure?: number;
-  host: string;
+  host?: string;
   derivationOptions?: DerivationOptions;
   dieRenderingCanvasSize?: number;
 }
@@ -64,9 +68,6 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   private readonly workerReadyPromise: Promise<boolean>;
 
   cameraCapture: CameraCapture  | undefined;
-
-  // FIXME - document
-  // Progress State
 
   /**
    * The faces read during the process of scanning the dice, which includes details of overlines
@@ -184,19 +185,6 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   protected finishDelayInProgress: boolean = false;
 
   /**
-   * Track the set of images (frames) being processed.  In the current implementation,
-   * we're only processing one at a time, but a future implementation might pipeline
-   * two or more in parallel if it's safe to assume that there is parallelism to exploit.
-   */
-  // FIXME - remove private framesBeingProcessed = new Map<number, ImageData>();
-
-  /**
-   * If a face is read with errors, keep an image of the face so that the
-   * user can verify that the error correction didn't fail. 
-   */
-  // FIXME REMOVE private errorImages = new Map<string, {width: number, height: number, data: Uint8ClampedArray}>();
-
-  /**
    * The background worker that processes image frames so that the
    * UI thread is not delayed by their processing.
    */
@@ -213,7 +201,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * This event is triggered when the DiceKey has been been scanned
    * successfully.
    */
-  public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], ScanDiceKey>(this);
+  public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], this>(this);
 
   /**
    * We support a delay between when we've successfully scanned a DiceKey
@@ -254,9 +242,6 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   reportDiceKeyReadAndValidated = () => {
     const diceKey = DiceKey( this.facesRead?.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
     this.diceKeyLoadedEvent.send(diceKey);
-    AppState.EncryptedCrossTabState.instance?.diceKey.set(diceKey);
-    // FIXME -- store additional state regarding how confidence we are that the DiceKey was read correctly.
-    // wasReadAutomaticallyAndWithoutSignificantErrors <-- derive this by looking at errors corrected
     this.remove();
   }
 
@@ -296,9 +281,20 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     super.render();
     if (!this.allFacesReadHaveMajorityValues) {
       // This image needs to be scanned
-      this.renderHint();
+      this.renderHint();      
       this.append(
-        Div({style: "color: yellow;"},
+      // Frame size warning
+      Div({
+        class: styles.frame_size_warning,
+        text: `Your camera's may not scan at a sufficient level of detail (resolution) to scan a DiceKey`}
+      ).withElement(  e=> this.frameSize.observe( (fs) =>
+          e.style.setProperty('display',
+            ( fs && fs.height > 0 && fs.width > 0 &&  (fs.height < minScanningDimensions.height || fs.width < minScanningDimensions.width) ) ?
+            'flex' : 'none'
+          )
+      )),
+      // Debug data stats
+      Div({class: styles.data_to_display_for_debugging},
           // browser info
           Span({text: `${browserInfo.browser} ${browserInfo.browserVersion} ${browserInfo.os} ${browserInfo.osVersion
           } mobile=${browserInfo.mobile} screen=${browserInfo.screenSize.width}x${browserInfo.screenSize.height} `}),
@@ -458,8 +454,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       }) as TupleOf25Items<FaceReadWithImageIfErrorFound>;
       if (this.facesRead && this.facesRead.length === 25 && this.facesReadThatContainErrorsAndHaveNotBeenValidated.length === 0 ) {
         // The faces were ready perfectly and there are no errors to correct.
-        AppState.EncryptedCrossTabState.instance!.diceKey.value =
-          DiceKey( this.facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
+        this.reportDiceKeyReadAndValidated();
       }
 
       if (this.shouldFinishScanning) {

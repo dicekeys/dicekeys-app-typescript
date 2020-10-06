@@ -4,6 +4,7 @@ import {
 import {
   FaceRead
 } from "@dicekeys/read-dicekey-js";
+import dialogStyles from "../dialog.module.css";
 
 
 export interface VerifyFaceReadOptions extends Attributes {
@@ -33,7 +34,7 @@ export class VerifyFaceRead extends Component<VerifyFaceReadOptions>  {
         imageData.data.set(this.options.image.data);
         canvas.getContext("2d")?.putImageData(imageData, 0, 0);
       }),
-      Div({},
+      Div({class: dialogStyles.decision_button_container},
         InputButton({value: "No"}).with( b => b.events.click.on( () => {
           this.options.faceRead.userValidationOutcome = "user-rejected";
           this.userConfirmedOrDenied.send("denied") 
