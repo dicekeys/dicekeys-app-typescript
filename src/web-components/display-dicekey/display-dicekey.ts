@@ -33,6 +33,7 @@ import {
   describePasswordConsumerType
 } from "../../phrasing/ui";
 import { AddPasswordDomain } from "./add-password-domain";
+import { PasswordJson } from "@dicekeys/seeded-crypto-js";
 
 interface DiceKeySvgViewOptions extends Attributes {
   diceKey: DiceKey;
@@ -99,7 +100,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
       if ("exception" in result) {
         this.throwException(result.exception, "calculating a password");
       } else {
-        this.password.value = result.password;
+        this.password.value = (JSON.parse(result.seededCryptoObjectAsJson) as PasswordJson).password;
       }
     }
   }

@@ -41,7 +41,7 @@ import {
 //   DiceKeyAppState
 // } from "../../state";
 import {
-  getRequestsDerivationOptionsJson
+  extraRequestDerivationOptionsAndInstructions
 } from "../../api-handler/get-requests-derivation-options-json";
 import {
   ApiRequestContext, ConsentResponse
@@ -53,6 +53,7 @@ import {
   AddDerivationOptionsProofWorker,
 } from "../../workers/call-derivation-options-proof-worker";
 import { jsonStringifyWithSortedFieldOrder } from "../../api-handler/json";
+import { PasswordJson } from "@dicekeys/seeded-crypto-js";
 
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
@@ -94,7 +95,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     options: ApproveApiCommandOptions
 ) {
     super(options);
-    const derivationOptionsJson = getRequestsDerivationOptionsJson(this.options.requestContext.request);
+    const {derivationOptionsJson} = extraRequestDerivationOptionsAndInstructions(this.options.requestContext.request);
     this.derivationOptionsJsonInOriginalRequest = derivationOptionsJson;
     this.areDerivationOptionsMutable = areDerivationOptionsMutable(this.derivationOptionsJsonInOriginalRequest);
     this.modifiedDerivationOptions = DerivationOptions(this.derivationOptionsJsonInOriginalRequest);
@@ -105,7 +106,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     setTimeout( () => this.updateBackgroundOperationsForDerivationOptions(), 1);
     if ( request.command === ApiCalls.Command.getPassword ) {
       (ApproveApiCommand.computeApiCommandWorker.resultPromise as Promise<ApiCalls.GetPasswordSuccessResponse>).then(
-        precomputedResult => this.password.value = precomputedResult.password
+        precomputedResult => this.password.value = (JSON.parse(precomputedResult.seededCryptoObjectAsJson) as PasswordJson).password
       ).catch( (e: unknown) => 
         this.throwException(e, "precomputing an API command")
       );
@@ -132,7 +133,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
       // replace the derivationOptionsJson field in the top level of the request
       {...request, derivationOptionsJson} :
       // replace the derivationOptionsJson field in the 
-      {...request, packagedSealedMessageFields: {...request.packagedSealedMessageFields, derivationOptionsJson}}
+      {...request, packagedSealedMessageJson: JSON.stringify({...(JSON.parse(request.packagedSealedMessageJson)), derivationOptionsJson})}
   }
 
   private updateBackgroundOperationsForDerivationOptions = async () => {

@@ -32,7 +32,7 @@ import {
   ConsentResponse
 } from "../../api-handler/handle-api-request";
 import {
-  getRequestsDerivationOptionsJson
+  extraRequestDerivationOptionsAndInstructions
 } from "../../api-handler/get-requests-derivation-options-json";
 import {
   VerifyDerivationOptionsWorker,
@@ -78,7 +78,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
     options: ApiRequestOptions
   ) {
     super(options);
-    const derivationOptionsJson = getRequestsDerivationOptionsJson(this.options.requestContext.request);
+    const {derivationOptionsJson} = extraRequestDerivationOptionsAndInstructions(this.options.requestContext.request);
     this.derivationOptions = DerivationOptions(derivationOptionsJson);
     if (this.derivationOptions.proofOfPriorDerivation) {
       // Once the diceKey is available, calculate if the proof of prior derivation is valid
