@@ -1,11 +1,12 @@
-import styles from "./add-password-domain.module.css"
+import styles from "./add-password-domain.module.css";
+import dialogStyles from "../dialog.module.css";
 import {
   Attributes,
   Component,
   Label,
   Span,
   TextInput,
-  ComponentEvent, Div, Button, Checkbox
+  ComponentEvent, Div, Button
 } from "../../web-component-framework";
 
 import { getRegisteredDomain } from "~domains/get-registered-domain";
@@ -18,7 +19,7 @@ export interface AddPasswordDomainOptions extends Attributes {}
 export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
 
   /**
-   * The code supporting the demo page cannot until the WebAssembly module for the image
+   * The code supporting the demo page cannot load until the WebAssembly module for the image
    * processor has been loaded. Pass the module to wire up the page with this class.
    * @param module The web assembly module that implements the DiceKey image processing.
    */
@@ -44,31 +45,18 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
   domainOrUrlInputField?: TextInput;
   get domainOrUrl(): string { return this.domainOrUrlInputField?.value ?? ""; }
   derivedDomainInputField?: TextInput;
-  domainFieldEditAllowedCheckbox?: Checkbox;
   get derivedDomain(): string { return this.derivedDomainInputField?.value ?? ""; }
   derivationOptionsJsonField?: TextInput;
-  derivationOptionsJsonEditAllowedCheckbox?: Checkbox;
   get derivationOptionsJson(): string { return this.derivationOptionsJsonField?.value ?? ""; }
   imageContainerDiv?: Div;
   nameField?: TextInput;
-  nameFieldEditAllowedCheckbox?: Checkbox;
   get name(): string { return this.nameField?.value ?? ""; }
   addButton?: HTMLButtonElement;
 
   faviconImage?: HTMLImageElement;
 
-  private disableUnlessChecked = (fieldToDisable: TextInput, checkbox: Checkbox) => {
-    if (checkbox.checked) {
-      fieldToDisable.primaryElement.removeAttribute("disabled");
-    } else {
-      fieldToDisable.primaryElement.setAttribute("disabled", "");
-    }
-  }
-
-
-
   private deriveDomainField = () => {
-    if (this.derivedDomainInputField && !this.domainFieldEditAllowedCheckbox?.checked) {
+    if (this.derivedDomainInputField && this.derivedDomainInputField.primaryElement.disabled) {
       const registeredDomain = getRegisteredDomain(this.domainOrUrlInputField?.value ?? "");
       if (registeredDomain == null || registeredDomain.length == 0) return;
       this.derivedDomainInputField.value = registeredDomain;
@@ -76,13 +64,13 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
   }
 
   private deriveDerivationOptionsJsonField = () => {
-    if (this.derivationOptionsJsonField && !this.derivationOptionsJsonEditAllowedCheckbox?.checked) {
+    if (this.derivationOptionsJsonField && this.derivationOptionsJsonField.primaryElement.disabled) {
       this.derivationOptionsJsonField.value = passwordDerivationOptionsJson(this.derivedDomain);
     }
   }
 
   private deriveNameField = () => {
-    if (this.nameField && !this.nameFieldEditAllowedCheckbox?.checked) {
+    if (this.nameField && this.nameField.primaryElement.disabled) {
       this.nameField.value = 
         (this.derivedDomain.split(".")[0]?.charAt(0) ?? "").toLocaleUpperCase() +
         (this.derivedDomain.split(".")[0]?.substr(1) ?? "");
@@ -117,90 +105,65 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
     );
   }
 
-  // private handleRegisteredDomainChanged = () => {
-  //   this.deriveDerivationOptionsJsonField();
-
-  //   if (!this.nameFieldManual?.checked) {
-  //     this.nameField!.value = 
-  //       (this.derivedDomain.split(".")[0]?.charAt(0) ?? "").toLocaleUpperCase() +
-  //       (this.derivedDomain.split(".")[0]?.substr(1) ?? "")
-
-  //     try{
-  //       if (this.name.length > 0 && this.derivationOptionsJson.length > 0 && DerivationOptions(this.derivationOptionsJson)) {
-  //         this.addButton?.removeAttribute("disabled");
-  //       }
-  //     } catch {
-  //       // Do nothing if there was an exception calculation the derivation options.
-  //     }
-
-  //     this.imageContainerDiv?.clear();
-  //     this.imageContainerDiv?.append(
-  //       new FavIcon({domain: this.derivedDomain})
-  //     )
-  //   }
-  // }
 
   render() {
     super.render();
     this.append(
-      Label({},
-        Span({},"Domain or URL of the application/service you need a password for"),
-        TextInput().with( e => {
-          this.domainOrUrlInputField = e;
-          e.events.change.on(this.deriveDomainField);
-          e.events.keyup.on(this.deriveDomainField);
-      })),
-      Label({},
-        Span({},"Service Domain"),
+      Div({class: dialogStyles.instructions ,text: `You can fill in all the options simply by pasting the URL of the service you need a password for into the first field.`}),
+      Label({class: styles.item_label},
+        Span({class: styles.label_span},"Domain or URL of the application/service you need a password for"),
+        Div({style: "display: flex; flex-direction: row"},
+          TextInput({style: "display: flex;"}).with( e => {
+            this.domainOrUrlInputField = e;
+            e.events.change.on(this.deriveDomainField);
+            e.events.keyup.on(this.deriveDomainField);
+          }),
+          Div({style: "display: flex;"}).with( div => this.imageContainerDiv = div ),
+        )
+      ),
+      Label({class: styles.item_label},
+        Span({class: styles.label_span},"Service Domain"),
         TextInput({disabled: ""}).with( e => {
           this.derivedDomainInputField = e;
           e.events.keyup.on(this.deriveDerivationOptionsJsonField, this.deriveNameField, this.deriveImage, this.updateSubmitButtonState);
           e.events.change.on(this.deriveDerivationOptionsJsonField, this.deriveNameField, this.deriveImage, this.updateSubmitButtonState);
-
         }),
-        Label({},
-          Span({}, "Set manually"),
-          Checkbox({}, ).with( e => {
-            this.domainFieldEditAllowedCheckbox = e;
-            e.events.click.on( () => { this.disableUnlessChecked(this.derivedDomainInputField!, e)})
-          } )
-        ),
+        Span({class: styles.write_icon}).with( e => e.events.click.on( () => {
+          this.derivedDomainInputField!.primaryElement.disabled = !this.derivedDomainInputField!.primaryElement.disabled;
+          this.deriveDomainField();
+        })),
       ),
-      Label({},
-        Span({},"Password derivation options"),
+      Label({class: styles.item_label},
+        Span({class: styles.label_span},"Password derivation options"),
         TextInput({disabled: ""}).with( e => {
           this.derivationOptionsJsonField = e;
           e.events.keyup.on(this.updateSubmitButtonState);
           e.events.change.on(this.updateSubmitButtonState);
-       }),
-       Label({},
-        Span({}, "Set manually"),
-        Checkbox({}, ).with( e => {
-          this.derivationOptionsJsonEditAllowedCheckbox = e;
-          e.events.click.on( () => { this.disableUnlessChecked(this.derivationOptionsJsonField!, e)})
-        } )
+        }),
+        Span({class: styles.write_icon}).with( e => e.events.click.on( () => {
+          this.derivationOptionsJsonField!.primaryElement.disabled = !this.derivationOptionsJsonField!.primaryElement.disabled;
+          this.deriveDerivationOptionsJsonField();
+        })),
       ),
-      ),
-      Div({}).with( div => this.imageContainerDiv = div ),
       Label({},
-        Span({},"Name"),
+        Span({class: styles.label_span},"Name"),
         TextInput({disabled: ""}).with( e => {
           this.nameField = e;
         }),
-        Label({},
-          Span({}, "Set manually"),
-          Checkbox({}, ).with( e => {
-            this.domainFieldEditAllowedCheckbox = e;
-            e.events.click.on( () => { this.disableUnlessChecked(this.nameField!, e)})
-          } )        )
+        Span({class: styles.write_icon}).with( e => e.events.click.on( () => {
+          this.nameField!.primaryElement.disabled = !this.nameField!.primaryElement.disabled;
+          this.deriveNameField();
+        }))
       ),
-      Button({value: "Cancel"}, "Cancel").with( e => {
-        e.events.click.on( this.complete.send )
-      }),
-      Button({value: "Add", disabled: ""}, "Add").with( e => {
-        this.addButton = e.primaryElement;
-        e.events.click.on( this.add )
-      }),
+      Div({class: dialogStyles.decision_button_container},
+        Button({value: "Cancel"}, "Cancel").with( e => {
+          e.events.click.on( this.complete.send )
+        }),
+        Button({value: "Add", disabled: ""}, "Add").with( e => {
+          this.addButton = e.primaryElement;
+          e.events.click.on( this.add )
+        }),
+      )
     );
   }
 

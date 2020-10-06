@@ -7,3 +7,8 @@
   justify-content: center;
   align-items: center;
 }
+
+.instructions {
+  font-size: 1.33rem;
+  margin-bottom: 1.5rem;
+}

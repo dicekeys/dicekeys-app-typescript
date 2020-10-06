@@ -95,7 +95,7 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
     this.renderSoon(); 
     const diceKey = await Step.enterDiceKey.start();
     const appState = await EncryptedCrossTabState.instancePromise;
-    appState.diceKey.value = diceKey;
+    appState.diceKey.set(diceKey);
     return diceKey;
   }
 

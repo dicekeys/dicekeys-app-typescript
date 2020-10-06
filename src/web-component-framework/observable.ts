@@ -5,7 +5,7 @@ import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
 
 
 export class Observable<T> {
-  public readonly changedEvent: ComponentEvent<[T | undefined]>;
+  public readonly changedEvent: ComponentEvent<[T | undefined], this>;
   protected _value: T | undefined;
 
   constructor(_value?: T | undefined) {

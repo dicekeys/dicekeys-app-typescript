@@ -1,3 +1,4 @@
+import styles from "./display-dicekey.module.css";
 import dialogStyles from "../dialog.module.css";
 import layoutStyles from "../layout.module.css";
 
@@ -34,6 +35,7 @@ import {
 } from "../../phrasing/ui";
 import { AddPasswordDomain } from "./add-password-domain";
 import { PasswordJson } from "@dicekeys/seeded-crypto-js";
+import { VerifyDicekey } from "./verify-dicekey";
 
 interface DiceKeySvgViewOptions extends Attributes {
   diceKey: DiceKey;
@@ -67,7 +69,8 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
   derivationOptionsJson = new Observable<string>();
   password = new Observable<string>();
 
-  showAddNewPassword?: boolean;
+  showOnlyAddNewPasswordComponent = new Observable<boolean>(false).changedEvent.on( this.renderSoon );
+  showOnlyVerifyCopyComponent = new Observable<boolean>(false).changedEvent.on( this.renderSoon );
 
   // setPassword = (password: string) => {
   //   const pw = password ?? "";
@@ -79,7 +82,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
 
   onPasswordManagerSelectChanged = async (passwordManagerName: string) => {
     if (passwordManagerName === keyAddNewPassword) {
-      this.showAddNewPassword = true;
+      this.showOnlyAddNewPasswordComponent.value = true;
       this.renderSoon();
       return;
     }
@@ -107,74 +110,86 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
 
   render() {
     super.render();
-    if (this.showAddNewPassword) {
+    if (this.showOnlyAddNewPasswordComponent.value) {
       this.append(new AddPasswordDomain({}).with( e => e.complete.on( () => {
-          this.showAddNewPassword = false;
+          this.showOnlyAddNewPasswordComponent.value = false;
           this.renderSoon();
         }))
       )
       return;
     }
-    this.append(
-      Div({class: layoutStyles.stretched_column_container},
-        new DiceKeySvg({
-          diceKey: this.options.diceKey
-        }),
-        Div({class: dialogStyles.centered_controls},
-          Label({style: `margin-bottom: 4px;`}, "Create a password for ",
-            Select({value: "default"},
-              Option({}),
-              getPasswordConsumersGroupedByType().map( ([groupType, consumers]) => 
-                OptGroup({label: describePasswordConsumerType(groupType)},
-                  ...consumers.map( pwm => 
-                      Option({value: pwm.name},
-                        // Option doesn't support images, but on platforms where it does...
-                        // new FavIcon({domain: 
-                        //   DerivationOptions(pwm.derivationOptionsJson).allow?.map( x => x.host ) ?? []
-                        // }),
-                        pwm.name) ),
-                  ...groupType !== PasswordConsumerType.UserEntered ? [] : [
-                    Option({value: keyAddNewPassword}, "Add new")
-                  ]
-                )
-              )
-            ).with( select => {
-              select.events.change.on( () => this.onPasswordManagerSelectChanged(select.primaryElement.value ))
-            })
-          )
-        ),
-        Div({class: layoutStyles.centered_column},
-//          TextInput({style: `visibility: hidden;`}).with( e => {
-          TextInput({style: "justify-self: stretch;"}).with( e => {
-            this.derivationOptionsJson.observe( ( newDerivationOptionsJson => {
-              e.primaryElement.style.setProperty("visibility", newDerivationOptionsJson && newDerivationOptionsJson.length > 0 ? "visible" : "hidden");
-              e.value = newDerivationOptionsJson ?? "";
-            })) 
-          })
-        ),
-        Div({class: layoutStyles.centered_column, style: `visibility: hidden;`},
-          new DisplayPassword({
-            password: this.password,
-            showCopyIcon: true
+    if (this.showOnlyVerifyCopyComponent.value) {
+      this.append(
+        new VerifyDicekey({diceKey: this.options.diceKey}).with( e => {
+          e.doneEvent.on( () => this.showOnlyVerifyCopyComponent.set(false));
+        })
+      );
+    } else {
+      this.append(
+        Div({class: layoutStyles.stretched_column_container},
+          new DiceKeySvg({
+            diceKey: this.options.diceKey
           }),
-        ).withElement( e => {
-          this.password.observe( (password =>
-              e.style.setProperty("visibility", password && password.length > 0 ? "visible" : "hidden")
-          ))
-        }),
-        Div({class: dialogStyles.centered_controls},
-          InputButton({
-            value: "Forget DiceKey",
-            events: (events) => events.click.on( () => {
-              EncryptedCrossTabState.instance?.diceKey.remove();
-              this.forgetEvent.send();
-              this.remove();    
+          Div({class: dialogStyles.centered_controls},
+            Label({class: styles.create_password_for_label}, "Create a password for ",
+              Select({value: "default"},
+                Option({}),
+                getPasswordConsumersGroupedByType().map( ([groupType, consumers]) => 
+                  OptGroup({label: describePasswordConsumerType(groupType)},
+                    ...consumers.map( pwm => 
+                        Option({value: pwm.name},
+                          // Option doesn't support images, but on platforms where it does...
+                          // new FavIcon({domain: 
+                          //   DerivationOptions(pwm.derivationOptionsJson).allow?.map( x => x.host ) ?? []
+                          // }),
+                          pwm.name) ),
+                    ...groupType !== PasswordConsumerType.UserEntered ? [] : [
+                      Option({value: keyAddNewPassword}, "Add new")
+                    ]
+                  )
+                )
+              ).with( select => {
+                select.events.change.on( () => this.onPasswordManagerSelectChanged(select.primaryElement.value ))
+              })
+            )
+          ),
+          Div({class: layoutStyles.centered_column},
+            TextInput({class: styles.derivation_options_input}).with( e => {
+              this.derivationOptionsJson.observe( ( newDerivationOptionsJson => {
+                e.primaryElement.style.setProperty("visibility", newDerivationOptionsJson && newDerivationOptionsJson.length > 0 ? "visible" : "hidden");
+                e.value = newDerivationOptionsJson ?? "";
+              })) 
             })
-          })
-        ),
-      )
-    );
+          ),
+          Div({class: layoutStyles.centered_column, style: `visibility: hidden;`},
+            new DisplayPassword({
+              password: this.password,
+              showCopyIcon: true
+            }),
+          ).withElement( e => {
+            this.password.observe( (password =>
+                e.style.setProperty("visibility", password && password.length > 0 ? "visible" : "hidden")
+            ))
+          }),
+          Div({class: dialogStyles.centered_controls},
+            InputButton({
+              value: "Verify Copy",
+              events: (events) => events.click.on( () =>
+                this.showOnlyVerifyCopyComponent.set(true)
+              )
+            }),
+            InputButton({
+              value: "Forget",
+              events: (events) => events.click.on( () => {
+                EncryptedCrossTabState.instance?.diceKey.remove();
+                this.forgetEvent.send();
+                this.remove();    
+              })
+            })
+          ),
+        )
+      );
+    }
   }
-
 
 };

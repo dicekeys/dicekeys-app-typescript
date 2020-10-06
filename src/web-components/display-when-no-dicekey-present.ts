@@ -42,7 +42,8 @@ export class DisplayWhenNoDiceKeyPresent extends Component {
         style: "margin-top: 10vh;",
         events: (events) => {
           events.click.on( this.createRandomDiceKeyButtonClicked.send )
-      }})
+      }}),
+      
     );
   }
 

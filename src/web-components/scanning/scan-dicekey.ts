@@ -15,7 +15,6 @@ import {
 import {
   DiceKey, TupleOf25Items
 } from "../../dicekeys/dicekey";
-import * as AppState from "../../state";
 import {
     ProcessFrameRequest,
     ProcessFrameResponse,
@@ -40,7 +39,7 @@ const minScanningDimensions = {
 
 interface ScanDiceKeyOptions extends CameraCaptureOptions {
   msDelayBetweenSuccessAndClosure?: number;
-  host: string;
+  host?: string;
   derivationOptions?: DerivationOptions;
   dieRenderingCanvasSize?: number;
 }
@@ -455,8 +454,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       }) as TupleOf25Items<FaceReadWithImageIfErrorFound>;
       if (this.facesRead && this.facesRead.length === 25 && this.facesReadThatContainErrorsAndHaveNotBeenValidated.length === 0 ) {
         // The faces were ready perfectly and there are no errors to correct.
-        AppState.EncryptedCrossTabState.instance!.diceKey.value =
-          DiceKey( this.facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
+        this.reportDiceKeyReadAndValidated();
       }
 
       if (this.shouldFinishScanning) {
