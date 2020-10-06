@@ -63,7 +63,7 @@ export class EnterDiceKey extends Component<EnterDiceKeyOptions, SVGSVGElement> 
     this.append(
       new DiceKeySvg({...this.options, diceKey: this.diceKey, highlightDieAtIndex: this.currentFaceIndex}),
       Div({
-        class: styles.key_hints
+        class: styles.key_hints,
         text: `To rotate the current face, use either < >, - +, or CTRL arrow (right and left arrows).`
       }),
       Div({class: dialogStyles.decision_button_container},
