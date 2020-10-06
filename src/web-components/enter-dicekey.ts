@@ -1,5 +1,6 @@
 import dialogStyles from "./dialog.module.css";
 import layoutStyles from "./layout.module.css";
+import styles from "./enter-dicekey.module.css";
 import {
   Attributes,
   Component,
@@ -62,7 +63,7 @@ export class EnterDiceKey extends Component<EnterDiceKeyOptions, SVGSVGElement> 
     this.append(
       new DiceKeySvg({...this.options, diceKey: this.diceKey, highlightDieAtIndex: this.currentFaceIndex}),
       Div({
-        style: "text-align: center; font-size: 1.5rem;",
+        class: styles.key_hints
         text: `To rotate the current face, use either < >, - +, or CTRL arrow (right and left arrows).`
       }),
       Div({class: dialogStyles.decision_button_container},
