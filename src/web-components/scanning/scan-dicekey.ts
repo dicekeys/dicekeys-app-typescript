@@ -254,9 +254,6 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
   reportDiceKeyReadAndValidated = () => {
     const diceKey = DiceKey( this.facesRead?.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
     this.diceKeyLoadedEvent.send(diceKey);
-    AppState.EncryptedCrossTabState.instance?.diceKey.set(diceKey);
-    // FIXME -- store additional state regarding how confidence we are that the DiceKey was read correctly.
-    // wasReadAutomaticallyAndWithoutSignificantErrors <-- derive this by looking at errors corrected
     this.remove();
   }
 

@@ -32,7 +32,7 @@ import {
 import {
   reportException
 } from "./exceptions";
-import { EnterDiceKey } from "./display-dicekey/enter-dicekey";
+import { EnterDiceKey } from "./enter-dicekey";
 
 
 interface BodyOptions extends Attributes {
@@ -78,12 +78,25 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
 
 
   loadDiceKey = async (): Promise<DiceKey> => {
-    const diceKey = EncryptedCrossTabState.instance?.diceKey.value;
+    const appState = await EncryptedCrossTabState.instancePromise;
+    var diceKey = appState.diceKey.value;
     if (diceKey) {
       return diceKey;
     }
+    this.renderSoon();
+    diceKey = await Step.loadDiceKey.start();
+    appState.diceKey.set(diceKey);
+    // FIXME -- store additional state regarding how confidence we are that the DiceKey was read correctly.
+    // wasReadAutomaticallyAndWithoutSignificantErrors <-- derive this by looking at errors corrected
+    return diceKey;
+  }
+
+  enterDiceKey = async (): Promise<DiceKey> => {
     this.renderSoon(); 
-    return await Step.loadDiceKey.start();
+    const diceKey = await Step.enterDiceKey.start();
+    const appState = await EncryptedCrossTabState.instancePromise;
+    appState.diceKey.value = diceKey;
+    return diceKey;
   }
 
   getUsersApprovalOfApiCommand = (
@@ -114,10 +127,11 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
       this.append(
         Div({class: "request-container"},
           new EnterDiceKey({onExceptionEvent: reportException}).with( enterDiceKey => { 
-          enterDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
+          enterDiceKey.diceKeyEnteredEvent.on( Step.enterDiceKey.complete );
+          enterDiceKey.cancelledEvent.on( Step.enterDiceKey.cancel );
         })
       ));
-      Step.loadDiceKey.promise?.finally( () => this.renderSoon() );
+      Step.enterDiceKey.promise?.finally( () => this.renderSoon() );
 
     }  else if (Step.loadDiceKey.isInProgress) {
       // When we're in the process of loading/scanning a DiceKey,
@@ -143,8 +157,7 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
           this.loadDiceKey();
         });
         homeComponent.typeDiceKeyButtonClicked.on( () => {
-          Step.enterDiceKey.start();
-          this.renderSoon(); 
+          this.enterDiceKey();
         });
         homeComponent.createRandomDiceKeyButtonClicked.on( () => {
           EncryptedCrossTabState.instance?.diceKey.set(DiceKey.fromRandom());

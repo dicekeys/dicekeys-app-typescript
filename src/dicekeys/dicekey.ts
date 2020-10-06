@@ -70,21 +70,38 @@ export class DiceKeyLettersRepeatedAndAbsentException extends InvalidDiceKeyExce
   }
 }
 
-const validateDiceKey = (diceKey: readonly Face[], requireOneOfEachLetter: boolean = false): diceKey is DiceKey => {
+export interface DiceKeyValidationOptions {
+  requireOneOfEachLetter?: boolean
+  allowOrientationOfQuestionMark?: boolean,
+  throwOnFailures?: boolean
+ }
+
+const validateDiceKey = (diceKey: readonly Partial<Face>[], {
+  requireOneOfEachLetter = false,
+  allowOrientationOfQuestionMark = false,
+  throwOnFailures = false
+} : DiceKeyValidationOptions = {}): diceKey is DiceKey => {
   if (diceKey.length !== NumberOfFacesInKey) {
-    throw new Error("Invalid key length");
+    if (!throwOnFailures) { return false; }
+    throw new Error(`A DiceKey must have ${NumberOfFacesInKey} faces`);
   }
   const lettersPresent = new Set<FaceLetter>();
   const absentLetters = new Set<FaceLetter>(FaceLetters);
   const repeatedLetters = new Set<FaceLetter>();
-  diceKey.forEach( ({letter, digit, orientationAsLowercaseLetterTrbl}, position) => {
+  for (var position = 0; position < NumberOfFacesInKey; position++) {
+    const {letter, digit, orientationAsLowercaseLetterTrbl} = diceKey[position];
     if (!FaceLetter.isValid(letter)) {
+      if (!throwOnFailures) { return false; }
       throw new InvalidFaceLetterException(letter, {position});
     }
     if (!FaceDigit.isValid(digit)) {
+      if (!throwOnFailures) { return false; }
       throw new InvalidFaceDigitException(digit, {position});
     }
-    if (!FaceOrientationLetterTrblOrUnknown.isValid(orientationAsLowercaseLetterTrbl)) {
+    if (!FaceOrientationLetterTrblOrUnknown.isValid(orientationAsLowercaseLetterTrbl) || 
+      (!allowOrientationOfQuestionMark && orientationAsLowercaseLetterTrbl === "?")
+    ) {
+      if (!throwOnFailures) { return false; }
       throw new InvalidFaceOrientationLettersTrblOrUnknownException(orientationAsLowercaseLetterTrbl, {position});
     }
     if (letter != null && lettersPresent.has(letter)) {
@@ -93,8 +110,9 @@ const validateDiceKey = (diceKey: readonly Face[], requireOneOfEachLetter: boole
       lettersPresent.add(letter);
       absentLetters.delete(letter);
     }
-  });
+  }
   if (requireOneOfEachLetter && (absentLetters.size > 0 || repeatedLetters.size > 0)) {
+    if (!throwOnFailures) { return false; }
     const repeatedLettersWithPositions = Array.from(repeatedLetters).map( letter => [
       letter, 
       diceKey.reduce( ( result, d, index) => {
@@ -152,7 +170,7 @@ export const DiceKeyInHumanReadableForm = (diceKey: DiceKey): DiceKeyInHumanRead
 
 const diceKeyFromHumanReadableForm = (
   humanReadableForm: DiceKeyInHumanReadableForm,
-  requireOneOfEachLetter: boolean = false 
+  validationOptions: DiceKeyValidationOptions = {}
 ): DiceKey<Face> => {
   if (typeof(humanReadableForm) !== "string" || humanReadableForm.length !== 75) {
     throw new InvalidDiceKeyException("Invalid human-readable-form string length");
@@ -171,7 +189,7 @@ const diceKeyFromHumanReadableForm = (
     };
     return faceAndOrientation;
   }) as readonly Face[] as DiceKey;
-  validateDiceKey(diceKey, requireOneOfEachLetter);
+  validateDiceKey(diceKey, {throwOnFailures: true, ...validationOptions});
   return diceKey;
 }
 
@@ -201,7 +219,7 @@ export function DiceKey<F extends Face = Face>(
   if (typeof(diceKeyAsFacesOrHumanReadableForm) === "string") {
     return diceKeyFromHumanReadableForm(diceKeyAsFacesOrHumanReadableForm as DiceKeyInHumanReadableForm);
   }
-  if (validateDiceKey(diceKeyAsFacesOrHumanReadableForm as TupleOf25Items<F>)) {
+  if (validateDiceKey(diceKeyAsFacesOrHumanReadableForm)) {
     return diceKeyAsFacesOrHumanReadableForm as DiceKey<F>;
   }
   throw new InvalidDiceKeyException("Invalid key format.");

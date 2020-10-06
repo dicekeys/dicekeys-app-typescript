@@ -78,6 +78,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
     options: ApiRequestOptions
   ) {
     super(options);
+    this.addClass(layoutStyles.stretched_column_container);
     const {derivationOptionsJson} = extraRequestDerivationOptionsAndInstructions(this.options.requestContext.request);
     this.derivationOptions = DerivationOptions(derivationOptionsJson);
     if (this.derivationOptions.proofOfPriorDerivation) {
@@ -117,9 +118,9 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
 
   async render() {
     super.render();
-    this.addClass(layoutStyles.stretched_column_container);
     const {request, host} = this.options.requestContext;
-    const diceKey = EncryptedCrossTabState.instance?.diceKey.value;
+    const appState = await EncryptedCrossTabState.instancePromise;
+    const diceKey = appState.diceKey.value;
     // Re-render whenever the diceKey value changes.
     EncryptedCrossTabState.instance?.diceKey.changedEvent.on( this.renderSoon );
 
@@ -131,7 +132,13 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
       ( diceKey ?
         new ApproveApiCommand({...this.options, diceKey}).with( e => this.apiResponseSettings = e )
         :
-        new ScanDiceKey({host, derivationOptions: this.derivationOptions, onExceptionEvent: this.options.onExceptionEvent})
+        new ScanDiceKey({
+          host,
+          derivationOptions: this.derivationOptions,
+          onExceptionEvent: this.options.onExceptionEvent
+        }).with( e => {
+          e.diceKeyLoadedEvent.on( appState.diceKey.set )
+        })
       ),
       Div({class: dialogStyles.decision_button_container},
       InputButton({value: "Cancel", clickHandler: this.handleCancelButton}),

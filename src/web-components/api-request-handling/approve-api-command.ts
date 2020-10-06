@@ -219,6 +219,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
       diceKey: this.modifiedDerivationOptions.excludeOrientationOfFaces ?
         DiceKey.removeOrientations(this.diceKey) :
         this.diceKey,
+      obscureByDefault: true,
       overlayMessage: {
         message: "press to open box",
         fontFamily: "Sans-Serif",

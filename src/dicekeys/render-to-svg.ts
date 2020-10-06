@@ -38,6 +38,7 @@ export interface DiceKeyRenderOptions {
   diceBoxColor?: [number, number, number],
   highlightDieAtIndex?: number,
   showLidTab?: boolean,
+  leaveSpaceForTab?: boolean
 }
 
 /**
@@ -178,10 +179,11 @@ export const renderDiceKey = (
 ): void => {
   const {
     hide21,
-    showLidTab = hide21
+    showLidTab = hide21,
+    leaveSpaceForTab = showLidTab
   } = options;
   // The linear length of the box dedicated to the tab;
-  const tabFraction = 0.1;
+  const tabFraction = leaveSpaceForTab ? 0.1 : 0;
 
   const linearSizeOfFace = 1;
   const distanceBetweenFacesAsFractionOfLinearSizeOfFace = 0.2

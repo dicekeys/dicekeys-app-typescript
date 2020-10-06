@@ -1,21 +1,21 @@
-import styles from "./dicekey-svg.module.css";
-import * as SVG from "../../dicekeys/svg";
-
+import dialogStyles from "./dialog.module.css";
+import layoutStyles from "./layout.module.css";
 import {
   Attributes,
   Component,
   ComponentEvent,
-//  Observable,
-} from "../../web-component-framework";
+  Div,
+  InputButton,
+} from "../web-component-framework";
 import {
-  DiceKeyRenderOptions,
-  renderDiceKey,  
-} from "../../dicekeys/render-to-svg";
+  DiceKeyRenderOptions
+} from "../dicekeys/render-to-svg";
 import {
   DiceKey,
   PartialDiceKey,
-} from "../../dicekeys/dicekey";
+} from "../dicekeys/dicekey";
 import { Face, FaceDigit, FaceLetter, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
+import { DiceKeySvg } from "./display-dicekey/dicekey-svg";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
@@ -36,8 +36,8 @@ export class EnterDiceKey extends Component<EnterDiceKeyOptions, SVGSVGElement> 
    * This event is triggered when the DiceKey has been been scanned
    * successfully.
    */
-  public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], this>(this);
-
+  public readonly diceKeyEnteredEvent = new ComponentEvent<[DiceKey], this>(this);
+  public readonly cancelledEvent = new ComponentEvent<[], this>(this);
 
   currentFaceIndex: number = 0;
 
@@ -51,15 +51,34 @@ export class EnterDiceKey extends Component<EnterDiceKeyOptions, SVGSVGElement> 
   constructor(
     options: EnterDiceKeyOptions
   ) {
-    super(options, SVG.svg({}));
+    super(options);
+    this.addClass(layoutStyles.stretched_column_container);
     // const sizeStr = this.size.toString();
-    this.addClass(styles.dicekey_svg);
     document.addEventListener("keydown", this.keyDownListener);
   }
 
   render() {
     super.render();
-    renderDiceKey(this.primaryElement, this.diceKey, {...this.options, highlightDieAtIndex: this.currentFaceIndex});
+    this.append(
+      new DiceKeySvg({...this.options, diceKey: this.diceKey, highlightDieAtIndex: this.currentFaceIndex}),
+      Div({
+        style: "text-align: center; font-size: 1.5rem;",
+        text: `To rotate the current face, use either < >, - +, or CTRL arrow (right and left arrows).`
+      }),
+      Div({class: dialogStyles.decision_button_container},
+        InputButton({value: `Cancel`, events: e => e.click.on( () => this.cancelledEvent.send())}),
+        InputButton({
+          value: `Done`,
+          style: `visibility: ${ DiceKey.validate(this.diceKey) ? "visible": "hidden"}`,
+          events: events => events.click.on( () => {
+            const diceKey = this.diceKey;
+            if (DiceKey.validate(diceKey)) {
+              this.diceKeyEnteredEvent.send(diceKey);
+            }
+          })
+        })
+      )
+    );
   }
 
   remove() {
@@ -80,12 +99,12 @@ export class EnterDiceKey extends Component<EnterDiceKeyOptions, SVGSVGElement> 
   keyDownListener = (event: KeyboardEvent) => {
     const upperKey = event.key.toUpperCase();
     if (FaceLetter.isValid(upperKey)) {
-      if (this.currentFace.letter != null && this.nextFace.letter == null) {
+      if (this.currentFace.letter != null && this.currentFace.digit != null && this.nextFace.letter == null) {
         this.currentFaceIndex = this.nextFaceIndex;
       }
       this.currentFace.letter = upperKey;
     } else if (FaceDigit.isValid(upperKey)) {
-      if (this.currentFace.digit != null && this.nextFace.digit == null) {
+      if (this.currentFace.letter != null && this.currentFace.digit != null && this.nextFace.digit == null) {
         this.currentFaceIndex = this.nextFaceIndex;
       }
       this.currentFace.digit = upperKey;
@@ -141,6 +160,9 @@ export class EnterDiceKey extends Component<EnterDiceKeyOptions, SVGSVGElement> 
       this.currentFaceIndex = 0;
     } else if (event.code === "End") {
       this.currentFaceIndex = 24;
+    } else {
+      // No key found.  Do nothing and allow (DO NOT prevent) default
+      return;
     }
     event.preventDefault();
     this.renderSoon();

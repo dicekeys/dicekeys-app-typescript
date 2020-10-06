@@ -33,12 +33,13 @@ export class DisplayWhenNoDiceKeyPresent extends Component {
         }}),
       InputButton({
         value: "Type your DiceKey",
+        style: "margin-top: 10vh;",
         events: (events) => {
           events.click.on( this.typeDiceKeyButtonClicked.send )
         }}),
       InputButton({
         value: "Create a Random DiceKey for Testing",
-        style: "margin-top: 20vh;",
+        style: "margin-top: 10vh;",
         events: (events) => {
           events.click.on( this.createRandomDiceKeyButtonClicked.send )
       }})
