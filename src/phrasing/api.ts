@@ -7,6 +7,7 @@ import {
   MonospaceSpan,
   Span,
 } from "../web-component-framework";
+import { DICEKEY } from "~web-components/dicekey-styled";
 
 
 const knownHostSuffixes: [string, string][] = [
@@ -27,45 +28,6 @@ const getKnownHost = (host:string): string | undefined => {
   }
   return undefined;
 }
-
-// type DerivableObject = DerivableObjectName  | "SealingKey" | "SignatureVerificationKey";
-// type KeyName = Exclude<DerivableObject, "Secret">;
-
-// export const commandToDerivableObjectType = (
-//   command: ApiCalls.Command
-// ): DerivableObject => {
-//   switch (command) {
-//     case "getSecret":
-//       return DerivableObjectNames.Secret
-//     case "getSealingKey":
-//       return "SealingKey"
-//     case "getUnsealingKey":
-//       return DerivableObjectNames.UnsealingKey
-//     case "getSignatureVerificationKey":
-//       return "SignatureVerificationKey"
-//     case "getSymmetricKey":
-//       return DerivableObjectNames.SymmetricKey
-//     case "generateSignature":
-//       return DerivableObjectNames.SigningKey
-//     case "getSigningKey":
-//       return DerivableObjectNames.SigningKey
-//     case "sealWithSymmetricKey":
-//       return DerivableObjectNames.SymmetricKey
-//     case "unsealWithSymmetricKey":
-//       return DerivableObjectNames.SymmetricKey
-//     case "unsealWithUnsealingKey":
-//       return DerivableObjectNames.UnsealingKey
-//     case "getAuthToken":
-// //    default:
-//         throw new Exceptions.InvalidCommand("Invalid API Command: " + command);
-//   }
-// }
-
-// const getPurposeForKey = (
-//   derivableObject: DerivableObjectName
-// ) => {
-
-// }
 
 
 export const describeHost = (host: string): Appendable => {
@@ -114,29 +76,29 @@ export const describeCommandsAction = (
   // use your DiceKey to 
   switch (command) {
     case "getPassword":
-      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to ${createOrRecreate} a password?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your `, DICEKEY(), ` to ${createOrRecreate} a password?`];
     case "getSecret":
-      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to ${createOrRecreate} a secret security code?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your `, DICEKEY(), ` to ${createOrRecreate} a secret security code?`];
     case "getUnsealingKey":
-      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to ${createOrRecreate} keys to encode and decode secrets?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your `, DICEKEY(), ` to ${createOrRecreate} keys to encode and decode secrets?`];
     case "getSymmetricKey":
-      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to a ${createOrRecreate} key to encode and decode secrets?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your `, DICEKEY(), ` to a ${createOrRecreate} key to encode and decode secrets?`];
     case "sealWithSymmetricKey":
-      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to encode a secret?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your `, DICEKEY(), ` to encode a secret?`];
     case "unsealWithSymmetricKey":
-      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to allow to decode a secret?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your `, DICEKEY(), ` to allow to decode a secret?`];
     case "unsealWithUnsealingKey":
-      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to allow to decode a secret?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your `, DICEKEY(), ` to allow to decode a secret?`];
     // Less common
     case "getSigningKey":
-      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to ${createOrRecreate} keys to sign data?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your `, DICEKEY(), ` to ${createOrRecreate} keys to sign data?`];
     case "generateSignature":
-      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to add its digital signature to data?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your `, DICEKEY(), ` to add its digital signature to data?`];
     case "getSignatureVerificationKey":
-      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to ${createOrRecreate} a key used to verify data it has signed?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your `, DICEKEY(), ` to ${createOrRecreate} a key used to verify data it has signed?`];
       // Uncommon
     case "getSealingKey": 
-      return [`May&nbsp;`, hostComponent, `&nbsp;use your DiceKey to ${createOrRecreate} keys to store secrets?`];
+      return [`May&nbsp;`, hostComponent, `&nbsp;use your `, DICEKEY(), ` to ${createOrRecreate} keys to store secrets?`];
     // Never
     // default:
     //     throw new Exceptions.InvalidCommand("Invalid API Command: " + command);
@@ -145,23 +107,12 @@ export const describeCommandsAction = (
 
 
 export const describeRequestChoice = describeCommandsAction; 
-// (
-//   command: ApiCalls.Command,
-//   host: string,
-//   areDerivationOptionsSigned: boolean
-// //  derivationOptionsObjOrJson: DerivationOptions | string
-// //  const derivationOptions = DerivationOptions(derivationOptionsObjOrJson);
-// ): Appendable => ([
-//   "Allow ",
-//   describeHost(host),
-//   ` to use your DiceKey to ${describeCommandsAction(command, areDerivationOptionsSigned)}?`
-// ]);
-
 
 export const describeDiceKeyAccessRestrictions = (host: string): Appendable => ([
     `(`,
     describeHost(host),
-    ` will not see your DiceKey.)`
+    ` will not see your `, DICEKEY(),
+    `.)`
   ]);
 
 

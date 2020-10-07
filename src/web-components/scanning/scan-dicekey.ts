@@ -30,6 +30,7 @@ import {
 } from "./camera-capture"
 import { VerifyFaceRead } from "./verify-face-read";
 import { browserInfo } from "~utilities/browser";
+import { DICEKEY } from "~web-components/dicekey-styled";
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
 const minScanningDimensions = {
@@ -250,7 +251,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
     const {host} = this.options;
 
     this.append(
-      Div({class: styles.scan_instruction}, `Use your camera to read your DiceKey`)
+      Div({class: styles.scan_instruction}, `Use your camera to read your `, DICEKEY())
     )
 
     if (host && seedHint) {
@@ -286,7 +287,8 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       // Frame size warning
       Div({
         class: styles.frame_size_warning,
-        text: `Your camera's may not scan at a sufficient level of detail (resolution) to scan a DiceKey`}
+       },
+       `Your camera may not record enough detail (a high enough resolution) to scan a `, DICEKEY()
       ).withElement(  e=> this.frameSize.observe( (fs) =>
           e.style.setProperty('display',
             ( fs && fs.height > 0 && fs.width > 0 &&  (fs.height < minScanningDimensions.height || fs.width < minScanningDimensions.width) ) ?

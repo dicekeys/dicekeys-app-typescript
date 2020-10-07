@@ -2,10 +2,13 @@ import layoutStyles from "./layout.module.css";
 import {
   Component,
   ComponentEvent,
-  InputButton
-} from "../web-component-framework"
+  Button, Attributes
+} from "../web-component-framework";
+import {
+  DICEKEY
+} from "./dicekey-styled";
 
-export class DisplayWhenNoDiceKeyPresent extends Component {
+export class DisplayWhenNoDiceKeyPresent extends Component<Attributes, HTMLSpanElement> {
   
   public readonly loadDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);
   public readonly typeDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);
@@ -26,23 +29,27 @@ export class DisplayWhenNoDiceKeyPresent extends Component {
     super.render();
     this.addClass(layoutStyles.centered_column);
     this.append(
-      InputButton({
-        value: "Scan your DiceKey",
+      Button({
         events: (events) => {
           events.click.on( this.loadDiceKeyButtonClicked.send )
-        }}),
-      InputButton({
-        value: "Type your DiceKey",
+        }},
+        "Scan your ",
+        DICEKEY() 
+      ),
+      Button({
         style: "margin-top: 10vh;",
         events: (events) => {
           events.click.on( this.typeDiceKeyButtonClicked.send )
-        }}),
-      InputButton({
-        value: "Create a Random DiceKey for Testing",
+        }},
+        "Type your ", DICEKEY()
+        ),
+      Button({
         style: "margin-top: 10vh;",
         events: (events) => {
           events.click.on( this.createRandomDiceKeyButtonClicked.send )
-      }}),
+      }},
+        "Create a Random ", DICEKEY(), " for Testing",
+      ),
       
     );
   }

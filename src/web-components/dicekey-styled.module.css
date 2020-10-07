@@ -1,0 +1,11 @@
+.dice_style, .keys_style {
+  font-family: Calibri, Noto Sans, Roboto, sans-serif;
+}
+
+.dice_style {
+  font-weight: normal;
+}
+
+.keys_style {
+  font-weight: bold;
+}

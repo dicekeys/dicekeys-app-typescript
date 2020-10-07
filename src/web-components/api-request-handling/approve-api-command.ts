@@ -54,6 +54,7 @@ import {
 } from "../../workers/call-derivation-options-proof-worker";
 import { jsonStringifyWithSortedFieldOrder } from "../../api-handler/json";
 import { PasswordJson } from "@dicekeys/seeded-crypto-js";
+import { DICEKEY } from "~web-components/dicekey-styled";
 
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
@@ -292,12 +293,12 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
       this.append(
         Div().append(
           Div().append(
-            `Include hint(s) to help you find the same DiceKey to ${hintPurpose}.`
+            `Include hint(s) to help you find the same `, DICEKEY() ,` to ${hintPurpose}.`
           ),
           Div().append(
             cornerCheckbox = Checkbox(),
             Label({for: cornerCheckbox?.primaryElementId}).append(
-              `Include the corner letters of your DiceKey: `,
+              `Include the corner letters of your `, DICEKEY(), `: `,
               MonospaceSpan({text: this.cornerLettersClockwise}),
               `.`
             ),
