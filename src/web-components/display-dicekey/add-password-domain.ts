@@ -1,5 +1,6 @@
 import styles from "./add-password-domain.module.css";
 import dialogStyles from "../dialog.module.css";
+import layoutStyles from "../layout.module.css";
 import {
   Attributes,
   Component,
@@ -108,12 +109,13 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
 
   render() {
     super.render();
+    this.addClass(layoutStyles.stretched_column_container)
     this.append(
       Div({class: dialogStyles.instructions ,text: `You can fill in all the options simply by pasting the URL of the service you need a password for into the first field.`}),
       Label({class: styles.item_label},
-        Span({class: styles.label_span},"Domain or URL of the application/service you need a password for"),
+        Span({class: styles.label_span},"Enter the domain name or HTTPS URL of the application/service the password is for:"),
         Div({style: "display: flex; flex-direction: row"},
-          TextInput({style: "display: flex;"}).with( e => {
+          TextInput({class: styles.text_box, style: "display: flex;"}).with( e => {
             this.domainOrUrlInputField = e;
             e.events.change.on(this.deriveDomainField);
             e.events.keyup.on(this.deriveDomainField);
@@ -122,8 +124,8 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         )
       ),
       Label({class: styles.item_label},
-        Span({class: styles.label_span},"Service Domain"),
-        TextInput({disabled: ""}).with( e => {
+        Span({class: styles.label_span},"The domain name with which this password may be shared:"),
+        TextInput({class: styles.text_box, disabled: ""}).with( e => {
           this.derivedDomainInputField = e;
           e.events.keyup.on(this.deriveDerivationOptionsJsonField, this.deriveNameField, this.deriveImage, this.updateSubmitButtonState);
           e.events.change.on(this.deriveDerivationOptionsJsonField, this.deriveNameField, this.deriveImage, this.updateSubmitButtonState);
@@ -134,8 +136,8 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         })),
       ),
       Label({class: styles.item_label},
-        Span({class: styles.label_span},"Password derivation options"),
-        TextInput({disabled: ""}).with( e => {
+        Span({class: styles.label_span},"JSON formatted password derivation options:"),
+        TextInput({class: styles.text_box, disabled: ""}).with( e => {
           this.derivationOptionsJsonField = e;
           e.events.keyup.on(this.updateSubmitButtonState);
           e.events.change.on(this.updateSubmitButtonState);
@@ -146,8 +148,8 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         })),
       ),
       Label({},
-        Span({class: styles.label_span},"Name"),
-        TextInput({disabled: ""}).with( e => {
+        Span({class: styles.label_span},"The name of this type of password (to appear in the passwords-generation menu):"),
+        TextInput({class: styles.text_box, disabled: ""}).with( e => {
           this.nameField = e;
         }),
         Span({class: styles.write_icon}).with( e => e.events.click.on( () => {
