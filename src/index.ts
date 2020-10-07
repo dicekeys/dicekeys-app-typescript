@@ -15,11 +15,11 @@ window.addEventListener("load", () => {
     window.addEventListener("resize", app.renderSoon );
     
     // For testing
-    if (window.origin.startsWith("http://localhost")) {
+    if (false && window.origin.startsWith("http://localhost")) {
       app.handleApiMessageEvent({
         origin: "https://localhost",
         data: {
-          [ApiCalls.Command.getPassword]: ApiCalls.Command.getPassword,
+          "command": ApiCalls.Command.getPassword,
           derivationOptionsJson: JSON.stringify(DerivationOptions({          
 //            mutable: true,
 //            excludeOrientationOfFaces: true,
