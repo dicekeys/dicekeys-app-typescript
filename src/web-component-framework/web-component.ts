@@ -8,13 +8,52 @@ interface AppendableCallback<T extends Component = Component> {
 export type AppendableItem<T extends Component = Component> = AppendableCallback<T> | Component | Node | string | undefined | false;
 export type Appendable<T extends Component = Component> = AppendableItem<T> | AppendableItem<T>[] | Appendable<T>[];
 
+export type HTMLElementTagName = keyof HTMLElementTagNameMap;
+export type SVGElementTagName = keyof SVGElementTagNameMap;
+export type ElementTagName = HTMLElementTagName | SVGElementTagName;
+export type ElementTagNameMap<K extends ElementTagName> =
+  K extends keyof HTMLElementTagNameMap ?
+    HTMLElementTagNameMap :
+    SVGElementTagNameMap;
+export type Element<TAG_NAME extends ElementTagName = ElementTagName> = TAG_NAME extends HTMLElementTagName ? HTMLElementTagNameMap[TAG_NAME] :
+  TAG_NAME extends SVGElementTagName ?  SVGElementTagNameMap[TAG_NAME] : never;
+  
+export class HtmlElementEvents<
+  K extends ElementTagName
+> {
+  constructor (
+    private component: any,
+  ) {}
+  #instantiatedEvents = new Map<Parameters<Element<K>["addEventListener"]>[0], ComponentEvent<any, any>>();
 
-export class Attributes {
+  public readonly getEvent = <
+    KEY extends keyof HTMLElementEventMap// Parameters<HTMLElementTagNameMap[K]["addEventListener"]>[0]
+  >(eventType: KEY) => {
+    if (!this.#instantiatedEvents.has(eventType)) {
+      const event = new ComponentEvent<[any], any>(this.component);
+      this.#instantiatedEvents.set(eventType, event);
+      this.component.primaryElement.addEventListener(eventType, event.send);
+    }
+    return this.#instantiatedEvents.get(eventType)! as unknown as ComponentEvent<[WindowEventMap[KEY & keyof WindowEventMap]], any>;
+  }
+
+  public get click() { return this.getEvent("click") }
+  public get keydown() { return this.getEvent("keydown") }
+  public get keyup() { return this.getEvent("keyup") }
+  public get change() { return this.getEvent("change") }
+}
+
+export class Attributes<
+  K extends ElementTagName = ElementTagName
+> {
   name?: string;
   id?: string;
   text?: string;
   class?: string | string[];
   style?: string;
+  value?: string;
+  label?: string;
+  events?: (events: HtmlElementEvents<K>) => any;
   onExceptionEvent?: (error: Error, extraInfo?: string) => void;
 }
 
@@ -24,7 +63,8 @@ export const DefaultComponentAttributesToCopy : (string & keyof Attributes)[] =
 
 export class Component<
   OPTIONS extends Attributes = Attributes,
-  TOP_LEVEL_ELEMENT extends HTMLElement | SVGElement = HTMLElement | SVGElement
+//  PRIMARY_ELEMENT extends HTMLOrSVGElement = HTMLOrSVGElement // extends HTMLElement | SVGElement = HTMLElement | SVGElement
+  PRIMARY_ELEMENT_TAG_NAME extends ElementTagName = ElementTagName // extends HTMLElement | SVGElement = HTMLElement | SVGElement
 > {
   #removed = false;
   public get removed(): boolean { return this.#removed; }
@@ -41,16 +81,20 @@ export class Component<
    */
   uniqueNodeId = (nonUniqueName: string = "id"): string =>
     `${nonUniqueName}::${(Component.uniqueElementIdCounter++).toString()}`;
-  
+
+  public readonly events: HtmlElementEvents<PRIMARY_ELEMENT_TAG_NAME>;
+
   constructor(
     public readonly options: OPTIONS,
-    public readonly primaryElement: TOP_LEVEL_ELEMENT = document.createElement("div") as unknown as TOP_LEVEL_ELEMENT,
+    public readonly primaryElement: Element<PRIMARY_ELEMENT_TAG_NAME> = document.createElement("div") as unknown as Element<PRIMARY_ELEMENT_TAG_NAME>,
     attributesToCopy: (string & keyof OPTIONS)[] = []
   ) {
     this.detachEvent.on(() => this.remove());
     if (options.onExceptionEvent) {
       this.exceptionEvent.on(options.onExceptionEvent);
     }
+    this.events = new HtmlElementEvents(this);
+    this.options.events?.(this.events);
     const {text, class: classes} = this.options;
     const setOfAllAttributesToCopy = new Set<(string & keyof OPTIONS)>([...DefaultComponentAttributesToCopy, ...attributesToCopy]);
     for (const key of setOfAllAttributesToCopy) {
@@ -124,8 +168,9 @@ export class Component<
    * Inherit and call super when extending to ensure old elements
    * are cleared out before the render begins.
    */
-  render(): void | Promise<void> {
+  render(...appendable: Appendable[]): void | Promise<void> {
     this.clear();
+    this.append(appendable);
   }
 
   private renderTimeout?: number | NodeJS.Timeout;
@@ -268,7 +313,7 @@ export class Component<
     return this;
   }
 
-  withElement = (callback: (t: TOP_LEVEL_ELEMENT) => any): this => {
+  withElement = (callback: (t: Element<PRIMARY_ELEMENT_TAG_NAME>) => any): this => {
     callback(this.primaryElement);
     return this;
   }

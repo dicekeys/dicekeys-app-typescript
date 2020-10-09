@@ -1,75 +1,35 @@
 import {
   Attributes,
   Component,
-  Appendable
+  Appendable, ElementTagName, Element
 } from "./web-component";
-import { ComponentEvent } from "./component-event";
 
 
-
-// interface HtmlElementAttributes<
-//   K extends keyof HTMLElementTagNameMap
-// > extends Attributes, HTMLElementTagNameMap[K] {
-//   events?: (events: HtmlElementEvents<K>) => any;
-//   value?: string;
-//   style?: string;
-//   class?: string | string[];
-//   disabled?: "";
-//   text?: string;
-//   label?: string;
-// }
 type HtmlElementAttributes<
-  K extends keyof HTMLElementTagNameMap
-> = Attributes & {
-  [attributeName in keyof (HTMLElementTagNameMap[K])]?: string;
+  K extends ElementTagName
+> = Attributes<K> & {
+  [attributeName in keyof (Element<K>)]?: string;
 } & {
-  events?: (events: HtmlElementEvents<K>) => any;
   value?: string;
   text?: string;
   label?: string;
 }
 
-// const defaultHtmlCopyAttributes = ["style", "value", "label", "disabled"] as const;
-
-export class HtmlElementEvents<
-  K extends keyof HTMLElementTagNameMap
-> {
-  constructor (
-    private component: any,
-  ) {}
-  #instantiatedEvents = new Map<Parameters<HTMLElementTagNameMap[K]["addEventListener"]>[0], ComponentEvent<any, any>>();
-
-  public readonly getEvent = <
-    KEY extends keyof HTMLElementEventMap// Parameters<HTMLElementTagNameMap[K]["addEventListener"]>[0]
-  >(eventType: KEY) => {
-    if (!this.#instantiatedEvents.has(eventType)) {
-      const event = new ComponentEvent<[any], any>(this.component);
-      this.#instantiatedEvents.set(eventType, event);
-      this.component.primaryElement.addEventListener(eventType, event.send);
-    }
-    return this.#instantiatedEvents.get(eventType)! as unknown as ComponentEvent<[WindowEventMap[KEY & keyof WindowEventMap]], any>;
-  }
-
-  public get click() { return this.getEvent("click") }
-  public get keydown() { return this.getEvent("keydown") }
-  public get keyup() { return this.getEvent("keyup") }
-  public get change() { return this.getEvent("change") }
-}
 
 class HtmlElement<
-  K extends keyof HTMLElementTagNameMap,// = keyof HTMLElementTagNameMap,
+  K extends ElementTagName,// = keyof HTMLElementTagNameMap,
   OPTIONS extends HtmlElementAttributes<K> = HtmlElementAttributes<K>
-> extends Component<OPTIONS, HTMLElementTagNameMap[K]> {
-  public readonly events: HtmlElementEvents<K>;
+> extends Component<OPTIONS, K> {
+  // public readonly events: HtmlElementEvents<K>;
 
   constructor(
     tagName: K,
     options?: OPTIONS,
     // attributesToCopy: (string & keyof OPTIONS)[] = []
   ) {
-    super(options ?? {} as OPTIONS, document.createElement(tagName), Object.keys(options ?? {}) as (string & keyof OPTIONS)[] );
-    this.events = new HtmlElementEvents(this);
-    this.options.events?.(this.events);
+    super(options ?? {} as OPTIONS, document.createElement(tagName) as Element<K>, Object.keys(options ?? {}) as (string & keyof OPTIONS)[] );
+    // this.events = new HtmlElementEvents(this);
+    // this.options.events?.(this.events);
   }
 
   public static create = <
@@ -90,7 +50,7 @@ class HtmlElement<
 
 interface CreateOrWith<
   ELEMENT extends HtmlElement<K, OPTIONS>,
-  K extends keyof HTMLElementTagNameMap = keyof HTMLElementTagNameMap,
+  K extends ElementTagName = ElementTagName,
   OPTIONS extends HtmlElementAttributes<K> = HtmlElementAttributes<K>
 > {
   (options?: OPTIONS, ...appendable: Appendable<ELEMENT>[]): ELEMENT;
@@ -99,7 +59,7 @@ interface CreateOrWith<
 
 const htmlElementFactory = <
   ELEMENT extends HtmlElement<K, OPTIONS>,
-  K extends keyof HTMLElementTagNameMap = keyof HTMLElementTagNameMap,
+  K extends ElementTagName = ElementTagName,
   OPTIONS extends HtmlElementAttributes<K> = HtmlElementAttributes<K>,
 >(
   creator: (options?: OPTIONS, ...appendable: Appendable<ELEMENT>[]) => ELEMENT

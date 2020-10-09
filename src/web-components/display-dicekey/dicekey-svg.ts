@@ -42,7 +42,7 @@ export const removeAllButCornerLettersFromDiceKey = (diceKey: PartialDiceKey): P
 /**
  * This class implements the component that displays DiceKeys.
  */
-export class DiceKeySvg extends Component<DiceKeySvgOptions, SVGSVGElement> {
+export class DiceKeySvg extends Component<DiceKeySvgOptions, "svg"> {
   readonly obscure: Observable<boolean>;
 
   /**

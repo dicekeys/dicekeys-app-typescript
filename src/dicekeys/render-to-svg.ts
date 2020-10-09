@@ -31,7 +31,7 @@ const textShade = "#000000";
 const hiddenTextShade = "#B0B0B0";
 const dieSurfaceColor = "#ffffff";
 const dieSurfaceColorHighlighted = "rgb(222, 244, 64)"
-const diceBoxColor = "#000030"
+const diceBoxColor = "rgb(5,3,80)"; // actual Pantone color 07C = rgb(10,6,159), but actual product looks much darker than that purported equality
 
 export interface DiceKeyRenderOptions {
   hide21?: boolean,

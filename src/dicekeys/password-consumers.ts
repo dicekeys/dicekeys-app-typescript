@@ -1,14 +1,3 @@
-// export enum SubdomainRule {
-//   onlyAllowSubdomains = "onlyAllowSubdomains",
-//   forbidSubdomains = "forbidSubdomains",
-//   allowDomainAndItsSubdomains = "allowDomainAndItsSubdomains"
-// };
-
-// export interface AllowableDomain {
-//   domain: string;
-//   scope?: SubdomainRule;
-// }
-
 export type SingletonOrArrayOf<T> = T | T[];
 
 export const asArray = <T>(x: SingletonOrArrayOf<T> | undefined): T[] =>
@@ -44,19 +33,19 @@ export interface PasswordConsumer extends
   type: PasswordConsumerType
 }
 
-// const defaultDomains = (hosts: SingletonOrArrayOf<string>) => ({
-//   domains: asArray(hosts).map( host => ({
-//     domain: host,
-//     scope: SubdomainRule.allowDomainAndItsSubdomains
-//   }) ),
-// });
 
-export const passwordDerivationOptionsJson = (hosts: SingletonOrArrayOf<string>) =>
-`{"allow": [${
-    asArray(hosts)
-      .map( host => `{"host": "*.${host}"}`)
-      .join(" ,")
-  }]}`;
+export const passwordDerivationOptionsJson = (hostOrHosts: SingletonOrArrayOf<string>) => {
+  const hosts = asArray(hostOrHosts);
+  if (hosts.length > 0 && hosts.some( host => host && host.length > 0 )) {
+    return `{"allow": [${
+        hosts
+          .map( host => `{"host": "*.${host}"}`)
+          .join(" ,")
+      }]}`;
+  } else {
+    return "";
+  }
+}
 
 
 export const passwordDerivationOptionsJsonObj = (hosts: SingletonOrArrayOf<string>) => ({

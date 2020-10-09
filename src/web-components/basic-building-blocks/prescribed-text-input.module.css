@@ -1,0 +1,10 @@
+.optional_prescribed_text_input {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-content: center;
+}
+
+.toggle_span {
+  user-select: none;
+}

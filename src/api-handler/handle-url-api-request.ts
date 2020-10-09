@@ -86,7 +86,7 @@ addResponseMarshallerForCommand(
     add(UnsealSuccessResponseParameterNames.plaintext, urlSafeBase64Encode(plaintext) );
 });
 
-const addResponseToUrl = (
+export const addResponseToUrl = (
   command: ApiCalls.Command,
   responseUrl: string,
   response: ApiCalls.Response,
@@ -118,7 +118,7 @@ const addResponseToUrl = (
   return url.toString();
 }
 
-const getRequestFromSearchParams = (
+export const getApiRequestFromSearchParams = (
   searchParams: URLSearchParams
 ): ApiCalls.ApiRequestObject | undefined => {
   const command = searchParams.get(ApiCalls.RequestCommandParameterNames.command) ?? undefined;
@@ -171,7 +171,7 @@ const getRequestFromSearchParams = (
   throw new Exceptions.InvalidCommand(command);
 }
 
-const getRequestContextFromUrl = (
+const getApiRequestContextFromUrl = (
   requestUrl: URL
 ): undefined | (ApiRequestContext & {hostValidatedViaAuthToken: boolean, respondTo: string, origin: string, pathname: string}) => {
   const {searchParams} = requestUrl;
@@ -190,7 +190,7 @@ const getRequestContextFromUrl = (
     // This is not a request.  Ignore this message event.
     return;
   }
-  const request = getRequestFromSearchParams(requestUrl.searchParams);
+  const request = getApiRequestFromSearchParams(requestUrl.searchParams);
   if (request == null) {
     return undefined;
   }
@@ -230,7 +230,7 @@ export const urlApiResponder = (
     }
     return;
   }
-  const processedRequest = getRequestContextFromUrl(requestUrl);
+  const processedRequest = getApiRequestContextFromUrl(requestUrl);
   if (processedRequest == null) {
     return;
   }

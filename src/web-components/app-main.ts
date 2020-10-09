@@ -39,7 +39,7 @@ interface BodyOptions extends Attributes {
   appState: EncryptedCrossTabState;
 }
 
-export class AppMain extends Component<BodyOptions, HTMLElement> {
+export class AppMain extends Component<BodyOptions> {
   appState: EncryptedCrossTabState;
 
 //  action: PageAction = "home";
