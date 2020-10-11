@@ -53,7 +53,7 @@ interface CreateOrWith<
   K extends ElementTagName = ElementTagName,
   OPTIONS extends HtmlElementAttributes<K> = HtmlElementAttributes<K>
 > {
-  (options?: OPTIONS, ...appendable: Appendable<ELEMENT>[]): ELEMENT;
+  (options?: OPTIONS, ...appendable: readonly Appendable[]): ELEMENT;
   with: (callback: (t: ELEMENT) => any) => CreateOrWith<ELEMENT, K, OPTIONS>
 }
 

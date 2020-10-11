@@ -5,7 +5,7 @@ import {
   Span,
   Attributes
 } from "../web-component-framework";
-import { Component } from "~web-component-framework";
+import { Component } from "../web-component-framework";
 
 class StyledLogo extends Component<Attributes> {
   constructor(

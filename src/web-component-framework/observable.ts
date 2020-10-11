@@ -3,7 +3,6 @@ import {
 } from "./component-event"
 import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
 
-export type OptionallyObservable<T> = T | Observable<T>
 
 export class Observable<T> {
   public readonly changedEvent: ComponentEvent<[newValue: T, previousValue: T | undefined], this>;
@@ -15,11 +14,11 @@ export class Observable<T> {
   }
 
   static from = <T>(
-    x?: OptionallyObservable<T>
+    initialValue: OptionallyObservable<T>
   ): Observable<T> =>
-    ((x == null) || !(x instanceof Observable)) ?
-      new Observable<T>(x) :
-      x;
+    ((initialValue == null) || !(initialValue instanceof Observable)) ?
+      new Observable<T>(initialValue) :
+      initialValue;
 
   /**
    * Calls the callback function with the new value whenever the value changes.
@@ -105,3 +104,4 @@ export class Observable<T> {
 
 
 }
+export type OptionallyObservable<T> = T | Observable<T>

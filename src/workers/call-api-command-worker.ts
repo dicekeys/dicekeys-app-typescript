@@ -1,11 +1,17 @@
 import {
-  ApiCalls
+  ApiCalls,
+  toFieldNameMap
 } from "@dicekeys/dicekeys-api-js";
 import {
   ApiRequestWithSeed,
-  ExecuteApiResponse
+  ExecuteApiResponse,
 } from "./api-command-worker";
 import { WorkerRequest } from "./worker-request";
+
+export const ApiRequestWithSeedParameterNames = toFieldNameMap<ApiRequestWithSeed<ApiCalls.ApiRequestObject>>(
+  "seedString",
+  "request"
+)
 
 export class ComputeApiCommandWorker<
 REQUEST extends ApiCalls.ApiRequestObject = ApiCalls.ApiRequestObject

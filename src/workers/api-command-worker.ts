@@ -10,7 +10,7 @@ import {
   SeededApiRequest
 } from "../api-handler/seeded-api-request";
 import {
-  ApiCalls
+  ApiCalls,
 } from "@dicekeys/dicekeys-api-js";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 
@@ -21,7 +21,6 @@ export interface ApiRequestWithSeed<REQUEST extends ApiCalls.ApiRequestObject> {
     seedString: string,
     request: REQUEST
 }
-
 export type ExecuteApiResponse<REQUEST extends ApiCalls.ApiRequestObject = ApiCalls.ApiRequestObject> = ApiCalls.ResponseForRequest<REQUEST>;
 
 function isApiRequestWithSeed(t: any) : t is ApiRequestWithSeed<ApiCalls.ApiRequestObject> {

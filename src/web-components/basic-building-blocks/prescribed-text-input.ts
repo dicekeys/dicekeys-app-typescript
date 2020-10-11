@@ -1,8 +1,6 @@
 import style from "./prescribed-text-input.module.css";
 import {
   Component, OptionallyObservable,
-} from "../../web-component-framework";
-import { 
   Observable,
 } from "../../web-component-framework";
 import {
@@ -34,7 +32,7 @@ class UsePrescribedTextToggle extends ToggleButton<"span"> {
 
 
 type PrescribedTextInputFieldOptions = ObservableTextInputOptions & {
-  prescribed?:  OptionallyObservable<string | undefined>
+  prescribed?:  OptionallyObservable<string>
   usePrescribed?: OptionallyObservable<boolean>,
   forceUsePrescribed?: boolean
 }
@@ -48,7 +46,7 @@ class PrescribedTextInputField<
    */
   lastNonPrescribedValue: string | undefined;
   #usePrescribedValue: Observable<boolean>
-  #prescribedValue: Observable<string | undefined>;
+  #prescribedValue: Observable<string>;
 
   get prescribedValue() { return this.#prescribedValue };
   get usePrescribedValue() { return this.#usePrescribedValue };
@@ -78,8 +76,8 @@ class PrescribedTextInputField<
 
   constructor(options?: OPTIONS) {
     super(options! ?? {});
-    this.#prescribedValue = Observable.from<string | undefined>(this.options.prescribed)
-    this.#usePrescribedValue = Observable.from(this.options.usePrescribed)
+    this.#prescribedValue = Observable.from<string>(this.options.prescribed ?? "")
+    this.#usePrescribedValue = Observable.from(this.options.usePrescribed ?? true)
     this.usePrescribedValue.onChange( this.onUsePrescribedValueChanged ?? this.options.forceUsePrescribed !== false );
     this.prescribedValue.observe( this.onPrescribedValueChanged );
   }
@@ -95,11 +93,11 @@ export class PrescribedTextInput extends Component<PrescribedTextInputOptions> {
   }
 
   get observable() { return this.prescribedTextInput!.observable };
-  observe = (callback: (newValue: string | undefined, oldValue: string | undefined) => any): this => {
-    this.observable.observe(callback);
+  observe = (callback: (newValue: string, oldValue: string) => any): this => {
+    this.observable.observe( (newValue, oldValue) => callback(newValue ?? "", oldValue ?? "") );
     return this;
   }
-  get value(): string | undefined { return this.prescribedTextInput?.value }
+  get value(): string | "" { return this.prescribedTextInput?.value ?? ""}
 
   render() {
     super.render(

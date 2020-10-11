@@ -150,7 +150,7 @@ export const getApiRequestFromSearchParams = (
         [ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson]: requireParam(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson),
       } as GetPasswordRequest | GetSealingKeyRequest | GetSecretRequest | GetSignatureVerificationKeyRequest | GetSigningKeyRequest | GetSymmetricKeyRequest | GetUnsealingKeyRequest;
     case ApiCalls.Command.sealWithSymmetricKey: {
-      const unsealingInstructions = searchParams.get(SealWithSymmetricKeyParameterNames.unsealingInstructions!) ?? undefined;
+      const unsealingInstructions = searchParams.get(SealWithSymmetricKeyParameterNames.unsealingInstructions) ?? undefined;
       return {
         command,
         [SealWithSymmetricKeyParameterNames.derivationOptionsJson]: requireParam(SealWithSymmetricKeyParameterNames.derivationOptionsJson),

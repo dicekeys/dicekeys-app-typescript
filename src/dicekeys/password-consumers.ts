@@ -1,3 +1,7 @@
+import {
+  derivationOptionsJsonForAllowedDomains
+} from "./derivation-options-json-for-allowed-domains";
+
 export type SingletonOrArrayOf<T> = T | T[];
 
 export const asArray = <T>(x: SingletonOrArrayOf<T> | undefined): T[] =>
@@ -33,30 +37,17 @@ export interface PasswordConsumer extends
   type: PasswordConsumerType
 }
 
+export const passwordDerivationOptionsJson = (hostOrHosts: SingletonOrArrayOf<string>) => 
+  derivationOptionsJsonForAllowedDomains(asArray(hostOrHosts));
 
-export const passwordDerivationOptionsJson = (hostOrHosts: SingletonOrArrayOf<string>) => {
-  const hosts = asArray(hostOrHosts);
-  if (hosts.length > 0 && hosts.some( host => host && host.length > 0 )) {
-    return `{"allow": [${
-        hosts
-          .map( host => `{"host": "*.${host}"}`)
-          .join(" ,")
-      }]}`;
-  } else {
-    return "";
-  }
-}
-
-
-export const passwordDerivationOptionsJsonObj = (hosts: SingletonOrArrayOf<string>) => ({
-  derivationOptionsJson: passwordDerivationOptionsJson(hosts)
+export const passwordDerivationOptionsJsonObj = (domains: SingletonOrArrayOf<string>) => ({
+  derivationOptionsJson: passwordDerivationOptionsJson(domains)
 });
 
 const defaultPasswordManagerSecurityParameters = (
-  ...hosts: string[]
+  ...domains: string[]
 ): PasswordConsumerSecurityParameters => ({
-//  ...defaultDomains(hosts),
-  ...passwordDerivationOptionsJsonObj(hosts),
+  ...passwordDerivationOptionsJsonObj(domains),
 });
 
 

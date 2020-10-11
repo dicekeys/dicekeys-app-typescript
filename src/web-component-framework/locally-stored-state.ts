@@ -2,13 +2,15 @@ import {
   urlSafeBase64Encode, urlSafeBase64Decode, utf8ByteArrayToString
 } from "@dicekeys/dicekeys-api-js"
 import {
+  getRandomBytes
+} from "../dicekeys/get-random-bytes";
+import {
+  Observable
+} from "./observable";
+import {
   SeededCryptoModuleWithHelpers,
   SymmetricKey
 } from "@dicekeys/seeded-crypto-js";
-import {getRandomBytes} from "../dicekeys/get-random-bytes";
-import {
-  Observable
-} from "./observable"
 
 
 const minutesToMs = 60 * 1000;

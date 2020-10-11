@@ -1,7 +1,5 @@
 import {
   Component,
-} from "../../web-component-framework";
-import { 
   TextInput,
   Observable,
 } from "../../web-component-framework";

@@ -11,7 +11,7 @@ import {
     DiceKeyImageProcessorModuleWithHelpers,
     DiceKeyImageProcessorModulePromise, FaceReadJson, FaceRead
 } from "@dicekeys/read-dicekey-js"
-import { TupleOf25Items } from "~dicekeys/dicekey";
+import { TupleOf25Items } from "../dicekeys/dicekey";
 
 /**
  * A request to process an image frame while scanning dicekeys

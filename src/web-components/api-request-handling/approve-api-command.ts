@@ -54,7 +54,7 @@ import {
 } from "../../workers/call-derivation-options-proof-worker";
 import { jsonStringifyWithSortedFieldOrder } from "../../api-handler/json";
 import { PasswordJson } from "@dicekeys/seeded-crypto-js";
-import { DICEKEY } from "~web-components/dicekey-styled";
+import { DICEKEY } from "../../web-components/dicekey-styled";
 
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)

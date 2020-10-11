@@ -1,9 +1,7 @@
 import {
   Attributes,
   Component,
-  ElementTagName
-} from "../../web-component-framework";
-import { 
+  ElementTagName,
   Observable,
 } from "../../web-component-framework";
 
