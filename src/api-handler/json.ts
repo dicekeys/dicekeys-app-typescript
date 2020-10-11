@@ -25,5 +25,5 @@ const deepCanonicalizeObjectFieldOrder = <T>(item: T): T =>
       // replicate non-objects (and dates) by reference (not deep copies)
       item;
 
-export const jsonStringifyWithSortedFieldOrder = <T>(item: T): string =>
-  JSON.stringify( deepCanonicalizeObjectFieldOrder(item) );
+export const jsonStringifyWithSortedFieldOrder = <T>(item: T, delimiter?: string ): string =>
+  JSON.stringify( deepCanonicalizeObjectFieldOrder(item), undefined, delimiter );

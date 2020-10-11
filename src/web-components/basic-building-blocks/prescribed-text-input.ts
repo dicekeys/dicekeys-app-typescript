@@ -1,7 +1,6 @@
 import style from "./prescribed-text-input.module.css";
 import {
-  Component, OptionallyObservable,
-  Observable,
+  Component, Div
 } from "../../web-component-framework";
 import {
   ObservableTextInput,
@@ -10,6 +9,10 @@ import {
 import {
   ToggleButton, ToggleButtonOptions
 } from "./toggle-button";
+import {
+  PrescribedTextFieldObservables
+} from "./prescribed-text-field-observables";
+
 
 class UsePrescribedTextToggle extends ToggleButton<"span"> {
   constructor(options: ToggleButtonOptions<"span">) {
@@ -29,82 +32,61 @@ class UsePrescribedTextToggle extends ToggleButton<"span"> {
 }
 
 
-
-
-type PrescribedTextInputFieldOptions = ObservableTextInputOptions & {
-  prescribed?:  OptionallyObservable<string>
-  usePrescribed?: OptionallyObservable<boolean>,
-  forceUsePrescribed?: boolean
+type PrescribedTextInputFieldOptions<T extends string = string, NAME extends string = string> = ObservableTextInputOptions & {
+  observables: PrescribedTextFieldObservables<T, NAME>
 }
 class PrescribedTextInputField<
-  OPTIONS extends PrescribedTextInputFieldOptions = PrescribedTextInputFieldOptions
+  T extends string = string,
+  NAME extends string = string,
+  OPTIONS extends PrescribedTextInputFieldOptions<T, NAME> = PrescribedTextInputFieldOptions<T, NAME>
 > extends ObservableTextInput<OPTIONS> {
-
   /**
    * The value the user set if choosing not to use the prescribed text.
    * (Kept here when the text field is using the prescribed value.)
    */
   lastNonPrescribedValue: string | undefined;
-  #usePrescribedValue: Observable<boolean>
-  #prescribedValue: Observable<string>;
 
-  get prescribedValue() { return this.#prescribedValue };
-  get usePrescribedValue() { return this.#usePrescribedValue };
-
-  onPrescribedValueChanged = (newValue: string | undefined) => {
-    if (this.usePrescribedValue.value) {
-      this.set(newValue);
-    }
-  }
-
-  onUsePrescribedValueChanged = ( usePrescribedValue: boolean ) => {
-    this.primaryElement.disabled = usePrescribedValue;
-    if (usePrescribedValue) {
-      this.lastNonPrescribedValue = this.value;
-      const prescribedValue = this.prescribedValue;
-      this.set(
-        typeof (prescribedValue) === "string" ?
-          prescribedValue :
-          prescribedValue?.value ?? ""
-      );
-    } else if (this.lastNonPrescribedValue != null) {
-      // restore the last non-prescribed value
-      this.set(this.lastNonPrescribedValue);
-    }
-
-  }
-
-  constructor(options?: OPTIONS) {
+  constructor(options: OPTIONS) {
     super(options! ?? {});
-    this.#prescribedValue = Observable.from<string>(this.options.prescribed ?? "")
-    this.#usePrescribedValue = Observable.from(this.options.usePrescribed ?? true)
-    this.usePrescribedValue.onChange( this.onUsePrescribedValueChanged ?? this.options.forceUsePrescribed !== false );
-    this.prescribedValue.observe( this.onPrescribedValueChanged );
+    this.options.observables.actual.observe( newValue => {
+      if (this.primaryElement.value !== newValue) {
+        this.primaryElement.value = newValue ?? "";
+      }
+    })
+    this.options.observables.usePrescribed.observe( newUsePrescribed => {
+      this.primaryElement.style.setProperty("background-color",
+        newUsePrescribed ? "#F0F0F0" : "#FFFFFF"
+      )
+      this.primaryElement.style.setProperty("color",
+        newUsePrescribed ? "rgb(0, 128, 0)" : "#000040"
+      )
+    })
   }
 }
 
 export type PrescribedTextInputOptions = PrescribedTextInputFieldOptions
 export class PrescribedTextInput extends Component<PrescribedTextInputOptions> {
-  private prescribedTextInput?: PrescribedTextInputField
 
   constructor(options: PrescribedTextInputFieldOptions) {
     super(options);
     this.addClass(style.optional_prescribed_text_input);
   }
 
-  get observable() { return this.prescribedTextInput!.observable };
+  get observable() { return this.options.observables.actual };
   observe = (callback: (newValue: string, oldValue: string) => any): this => {
-    this.observable.observe( (newValue, oldValue) => callback(newValue ?? "", oldValue ?? "") );
+    this.options.observables.actual.observe( (newValue, oldValue) => callback(newValue ?? "", oldValue ?? "") );
     return this;
   }
-  get value(): string | "" { return this.prescribedTextInput?.value ?? ""}
+  get value(): string | "" { return this.options.observables.actual.value ?? ""}
 
   render() {
     super.render(
-      new PrescribedTextInputField(this.options).with( e => this.prescribedTextInput = e ),
-      ...(this.options.forceUsePrescribed ?
-        [] :
-        [new UsePrescribedTextToggle({booleanObservable: this.prescribedTextInput!.usePrescribedValue})]
+      ...(this.options.observables.formula.value ? [
+        Div({class: style.formula}, this.options.observables.formula.value )
+      ] : []),
+      Div({class: style.text_box_and_toggle},
+        new PrescribedTextInputField(this.options),
+        new UsePrescribedTextToggle({booleanObservable: this.options.observables.usePrescribed})
       )
     );
   }

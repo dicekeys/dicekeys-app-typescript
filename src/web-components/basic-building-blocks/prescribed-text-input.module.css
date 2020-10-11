@@ -1,10 +1,22 @@
 .optional_prescribed_text_input {
   display: flex;
+  flex-direction: column;
+  align-items: start;
+  align-content: start;
+}
+
+.text_box_and_toggle {
+  display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: start;
   align-content: center;
 }
 
+
 .toggle_span {
   user-select: none;
+}
+
+.formula {
+  font-family: monospace;
 }

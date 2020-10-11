@@ -13,7 +13,7 @@ import { getRegisteredDomain } from "~domains/get-registered-domain";
 import { addStoredPasswordConsumer, PasswordConsumerType, passwordDerivationOptionsJson } from "~dicekeys/password-consumers";
 // import { FavIcon } from "./fav-icon";
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
-import { ObservableTextInput, ObservableTextInputOptions, PrescribedTextInput } from "~web-components/basic-building-blocks";
+import { ObservableTextInput, ObservableTextInputOptions, PrescribedTextFieldObservables, PrescribedTextInput } from "~web-components/basic-building-blocks";
 
 export interface AddPasswordDomainOptions extends Attributes {}
 
@@ -117,24 +117,30 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         Span({class: styles.label_span},"The domain name with which this password may be shared:"),
         new PrescribedTextInput({
           style: `min-width: 50vw;`,
-          observable: this.domainName,
-          prescribed: this.prescribedDomainName
+          observables: new PrescribedTextFieldObservables('domain', {
+            observable: this.domainName,
+            prescribed: this.prescribedDomainName
+          })
         }),
       ),
       Label({class: styles.item_label},
         Span({class: styles.label_span},"JSON formatted password derivation options:"),
         new PrescribedTextInput({
           style: `min-width: 50vw;`,
-          observable: this.derivationOptionsJson,  
-          prescribed: this.prescribedDerivationOptionsJson
+          observables: new PrescribedTextFieldObservables('derivation options', {
+            observable: this.derivationOptionsJson,  
+            prescribed: this.prescribedDerivationOptionsJson
+          })
         }),
       ),
       Label({},
         Span({class: styles.label_span},"The name of this type of password (to appear in the passwords-generation menu):"),
         new PrescribedTextInput({
           style: `min-width: 50vw;`,
-          observable: this.name,
-          prescribed: this.prescribedName
+          observables: new PrescribedTextFieldObservables('name', {
+            observable: this.name,
+            prescribed: this.prescribedName
+          })
         }),
       ),
       Div({class: dialogStyles.decision_button_container},

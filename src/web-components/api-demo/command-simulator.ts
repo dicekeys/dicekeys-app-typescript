@@ -2,7 +2,7 @@ import {
   ApiCalls, UrlRequestMetadataParameterNames
 } from "@dicekeys/dicekeys-api-js";
 import {
-  Component, Attributes, Observable, Select, Option, Div
+  Component, Attributes, Observable, Select, Option, Div, Pre
 } from "../../web-component-framework";
 import {
   ApiRequestWithSeedParameterNames,
@@ -17,6 +17,7 @@ import {
   PrescribedTextFieldObservables,
   LabeledPrescribedTextInput
 } from "../basic-building-blocks";
+import { jsonStringifyWithSortedFieldOrder } from "~api-handler/json";
 
 
 interface CommandSimulatorOptions<
@@ -58,6 +59,7 @@ export class CommandSimulator extends Component<CommandSimulatorOptions> {
   requestId: PrescribedTextFieldObservables<string, typeof ApiCalls.RequestMetadataParameterNames.requestId>;
   requestUrl= new PrescribedTextFieldObservables<string, "requestUrl">("requestUrl");
 
+  responseJson = new Observable<string>();
   responseUrl = new Observable<string>();
 
   constructor(options: CommandSimulatorOptions) {
@@ -88,17 +90,17 @@ export class CommandSimulator extends Component<CommandSimulatorOptions> {
     this.requestUrl = new PrescribedTextFieldObservables("requestUrl", options.requestUrl);
     this.requestUrl.prescribed.set( this.prescribedRequestUrl );
     for (const requestUrlShouldObserve of  [this.command, this.derivationOptionsJson, this.message, this.plaintext, this.unsealingInstructions, this.packagedSealedMessageJson, this.requestUrl] as const) {
-      requestUrlShouldObserve.observable.onChange( () => this.requestUrl.prescribed.set( this.prescribedRequestUrl) );
+      requestUrlShouldObserve.actual.onChange( () => this.requestUrl.prescribed.set( this.prescribedRequestUrl) );
     }
-    this.requestUrl.observable.observe( () =>  this.processRequestUrl() );
-    this.seedString.observable.onChange( () => this.processRequestUrl() )
+    this.requestUrl.actual.observe( () =>  this.processRequestUrl() );
+    this.seedString.actual.onChange( () => this.processRequestUrl() )
 
 
   }
 
   get prescribedRequestUrl(): string {
     const url = new URL(`https://dicekeys.app/`);
-    const command = this.command.observable.value;
+    const command = this.command.actual.value;
     if (!command) return "";
     const parameters = [
       "command",
@@ -107,7 +109,7 @@ export class CommandSimulator extends Component<CommandSimulatorOptions> {
       ...(Object.keys(ApiCalls.ParameterNames[command]) as (KeysIncludingOptionalKeys<ApiCalls.Parameters>)[])
     ] as const;
     for (const parameterName of parameters) {
-      const parameterValue = this[parameterName].observable.value;
+      const parameterValue = this[parameterName].actual.value;
       if (parameterValue != null) {
         url.searchParams.append(parameterName, parameterValue);
       }
@@ -141,8 +143,10 @@ export class CommandSimulator extends Component<CommandSimulatorOptions> {
     const seedString = this.seedString.value;
     if (seedString && request && respondTo) {
       try {
-        const response = await new ComputeApiCommandWorker().calculate({seedString, request});
-        const responseUrl = addResponseToUrl(command, respondTo, response);
+        const responseObject = await new ComputeApiCommandWorker().calculate({seedString, request});
+        const responseJson = jsonStringifyWithSortedFieldOrder(responseObject, " ");
+        this.responseJson.set(responseJson);
+        const responseUrl = addResponseToUrl(command, respondTo, responseObject);
         this.responseUrl.set(responseUrl);
       } catch (e) {
         this.responseUrl.set(e?.toString() ?? "Unknown exception")
@@ -173,25 +177,21 @@ export class CommandSimulator extends Component<CommandSimulatorOptions> {
     parameter: PrescribedTextFieldObservables<string, string>
   ): void => {
     if (this.commandHasParameter(parameter.name)) {
-      this.append( new LabeledPrescribedTextInput(parameter, `${parameter.name}`) )
+      this.append( new LabeledPrescribedTextInput({observables: parameter}, `${parameter.name}`) )
     }
   }
 
   render() {
     super.render();
-    if (this.command.forceUsePrescribed) {
-
-    } else {
-      this.append(
-        Select({value: this.command.value},
-          Option({}, ""),
-          ...ApiCalls.Commands.map( command => Option({value: command, ...(command === this.command.value ? {selected: ""} : {})}, command) )
-        ).with( select => select.events.change.on( () => {
-          this.command.set(select.primaryElement.value as ApiCalls.Command);
-          this.renderSoon();
-        }))
-      );
-    }
+    this.append(
+      Select({value: this.command.value},
+        Option({}, ""),
+        ...ApiCalls.Commands.map( command => Option({value: command, ...(command === this.command.value ? {selected: ""} : {})}, command) )
+      ).with( select => select.events.change.on( () => {
+        this.command.set(select.primaryElement.value as ApiCalls.Command);
+        this.renderSoon();
+      }))
+    );
     this.appendPrescribedTextInputIfParameterOfCommand(this.seedString);
     this.appendPrescribedTextInputIfParameterOfCommand(this.requestUrl);
     this.appendPrescribedTextInputIfParameterOfCommand(this.requestId);
@@ -203,9 +203,13 @@ export class CommandSimulator extends Component<CommandSimulatorOptions> {
     this.appendPrescribedTextInputIfParameterOfCommand(this.packagedSealedMessageJson);
 
     this.append(
-      new LabeledPrescribedTextInput(this.requestUrl, "Request URL:"),
+      new LabeledPrescribedTextInput({observables: this.requestUrl}, "Request URL:"),
       Div({},
-        Div({}, "Response:"),
+        Div({}, "Response JSON:"),
+        Pre({}).withElement( e => this.responseJson.observe( (responseJson) => e.textContent = responseJson ?? "" ))  
+      ),
+      Div({},
+        Div({}, "Response URL:"),
         Div({}).withElement( e => this.responseUrl.observe( (newResponseUrl) => e.textContent = newResponseUrl ?? "" ))  
       )
     )

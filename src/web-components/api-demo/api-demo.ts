@@ -28,13 +28,20 @@ interface ApiDemoOptions extends Attributes {
 export class ApiDemo extends Component<ApiDemoOptions> {
   
   domainOrCommaSeparatedDomains = new PrescribedTextFieldObservables<string, "domains">("domains", {
-    prescribed: `${window.location.hostname}`
+    prescribed: `${window.location.hostname}`,
+    usePrescribed: false
   });
-  derivationOptionsJson = new PrescribedTextFieldObservables<string, "domains">("domains");
+
+  derivationOptionsJson = new PrescribedTextFieldObservables<string, "domains">("domains", {
+    formula: `{"allow": [{"host":"*.\$AuthorizedDomain"}]}`
+  });
+
   seedString: PrescribedTextFieldObservables<string, typeof ApiRequestWithSeedParameterNames.seedString>;
 
   respondTo = new PrescribedTextFieldObservables<string, typeof UrlRequestMetadataParameterNames.respondTo>(
-    UrlRequestMetadataParameterNames.respondTo,
+    UrlRequestMetadataParameterNames.respondTo, {
+      formula: `https://\$ApplicationsDomainName${DefaultPermittedPathPrefix}`
+    }
   )
 
   constructor(options: ApiDemoOptions) {
@@ -45,7 +52,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
           ...options.seedString
         }
       );
-    this.domainOrCommaSeparatedDomains.observable.observe( () => {
+    this.domainOrCommaSeparatedDomains.actual.observe( () => {
       this.derivationOptionsJson.prescribed.set(derivationOptionsJsonForAllowedDomains(this.domains));
       this.respondTo.prescribed.set(`${window.location.protocol}//${this.domains[0] ?? window.location.host}${DefaultPermittedPathPrefix}`)
     });
@@ -59,16 +66,16 @@ export class ApiDemo extends Component<ApiDemoOptions> {
 
   render() {
     super.render(
-      new LabeledPrescribedTextInput(this.domainOrCommaSeparatedDomains, "Domain or domains (comma-separated) permitted to perform operations with the derived secrets:"),
-      new LabeledPrescribedTextInput(this.seedString, "Seed:"),
-      new LabeledPrescribedTextInput(this.respondTo, "Respond to:"),
-      new LabeledPrescribedTextInput(this.derivationOptionsJson, "Derivation options:"),
+      new LabeledPrescribedTextInput({observables: this.domainOrCommaSeparatedDomains}, "Authorized or domains (comma-separated) allowed to perform operations with the derived secrets:"),
+      new LabeledPrescribedTextInput({observables: this.seedString}, "Seed:"),
+      new LabeledPrescribedTextInput({observables: this.respondTo}, "Respond to:"),
+      new LabeledPrescribedTextInput({observables: this.derivationOptionsJson}, "Derivation options:"),
 
       new CommandSimulator({
         onExceptionEvent: this.options.onExceptionEvent,
-        seedString: {prescribed: this.seedString.observable},
-        respondTo: {prescribed: this.respondTo.observable},
-        derivationOptionsJson: {prescribed: this.derivationOptionsJson.observable}
+        seedString: {prescribed: this.seedString.actual},
+        respondTo: {prescribed: this.respondTo.actual},
+        derivationOptionsJson: {prescribed: this.derivationOptionsJson.actual}
       })
     );
   }

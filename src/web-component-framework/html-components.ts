@@ -183,6 +183,7 @@ export type Div = ReturnType<typeof Div>;
 export const Span = createHtmlElement("span");
 export const MonospaceSpan = Span.with( e => e.primaryElement.style.setProperty("font-family", "monospace") );
 export type Span = ReturnType<typeof Span>;
+export const Pre = createHtmlElement("pre");
 export const Canvas = createHtmlElement("canvas");
 export type Canvas = ReturnType<typeof Canvas>;
 export const Select = createHtmlElement("select");
