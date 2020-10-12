@@ -4,7 +4,6 @@ import {
 } from "@dicekeys/dicekeys-api-js"
 import { PackagedSealedMessageJson } from "@dicekeys/seeded-crypto-js";
 
-
 export const extraRequestDerivationOptionsAndInstructions = (
   request: ApiCalls.ApiRequestObject
 ): {derivationOptionsJson: string, unsealingInstructions?: string} => {

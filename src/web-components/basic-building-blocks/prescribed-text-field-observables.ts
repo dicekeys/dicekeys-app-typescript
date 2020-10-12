@@ -4,7 +4,7 @@ import {
 
 export interface PrescribedTextFieldSpecification<T extends string = string> {
   formula?: OptionallyObservable<T | "">;
-  observable?: OptionallyObservable<T | "">;
+  actual?: OptionallyObservable<T | "">;
   prescribed?: OptionallyObservable<T | "">;
   usePrescribed?: OptionallyObservable<boolean>
 //  forceUsePrescribed?: boolean;
@@ -29,10 +29,17 @@ export class PrescribedTextFieldObservables<T extends string = string, NAME exte
   ) {
     this.formula = Observable.from(spec.formula ?? "");
     this.prescribed = Observable.from(spec.prescribed ?? "");
-    this.actual = Observable.from(spec.observable ?? this.prescribed.value ?? "");
+    this.actual = Observable.from(spec.actual ?? this.prescribed.value ?? "");
     this.usePrescribed = Observable.from(spec.usePrescribed ?? true);
 //    this.forceUsePrescribed = !!spec.forceUsePrescribed;
+    this.actual.observe( newActualValue => {
+      if ( newActualValue !== this.prescribed.value ) {
+        // The user changed the value to something other than prescribed
+        this.usePrescribed.set(false);
+      }
+    }
 
+    )
     this.prescribed.observe( (newValue) => {
       // When the prescribed value changes and the field is supposed to use the prescribed value,
       // copy the new prescribed value to the observable value

@@ -41,7 +41,11 @@ addEventListener( "message", async (requestMessage) => {
       ).execute();
       (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(response);
     } catch (exception) {
-      (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage({exception, request});
+      console.log("Worker exception", exception, typeof (exception));
+      (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(
+        {exception: exception instanceof Error ?
+          JSON.stringify({name: exception.name, message: exception.message, stack: exception.stack}) :
+          JSON.stringify(exception, undefined, " "), request});
     }
   }
 });

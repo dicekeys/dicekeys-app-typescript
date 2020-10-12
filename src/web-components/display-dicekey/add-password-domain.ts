@@ -118,7 +118,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         new PrescribedTextInput({
           style: `min-width: 50vw;`,
           observables: new PrescribedTextFieldObservables('domain', {
-            observable: this.domainName,
+            actual: this.domainName,
             prescribed: this.prescribedDomainName
           })
         }),
@@ -128,7 +128,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         new PrescribedTextInput({
           style: `min-width: 50vw;`,
           observables: new PrescribedTextFieldObservables('derivation options', {
-            observable: this.derivationOptionsJson,  
+            actual: this.derivationOptionsJson,  
             prescribed: this.prescribedDerivationOptionsJson
           })
         }),
@@ -138,7 +138,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         new PrescribedTextInput({
           style: `min-width: 50vw;`,
           observables: new PrescribedTextFieldObservables('name', {
-            observable: this.name,
+            actual: this.name,
             prescribed: this.prescribedName
           })
         }),

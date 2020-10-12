@@ -43,7 +43,7 @@ export class HtmlElementEvents<
   public get change() { return this.getEvent("change") }
 }
 
-export class Attributes<
+export interface Attributes<
   K extends ElementTagName = ElementTagName
 > {
   name?: string;

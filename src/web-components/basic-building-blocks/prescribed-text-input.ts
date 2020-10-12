@@ -1,33 +1,30 @@
 import style from "./prescribed-text-input.module.css";
 import {
-  Component, Div
+  Attributes,
+  Component, Div, Observable
 } from "../../web-component-framework";
 import {
   ObservableTextInput,
   ObservableTextInputOptions,
 } from "./observable-text-input";
 import {
-  ToggleButton, ToggleButtonOptions
-} from "./toggle-button";
-import {
   PrescribedTextFieldObservables
 } from "./prescribed-text-field-observables";
 
 
-class UsePrescribedTextToggle extends ToggleButton<"span"> {
-  constructor(options: ToggleButtonOptions<"span">) {
+interface UsePrescribedTextButtonOptions extends Attributes<"button"> {
+  visibilityObservable: Observable<boolean>;
+}
+class UsePrescribedTextToggle extends Component<UsePrescribedTextButtonOptions,"button"> {
+  constructor(options: UsePrescribedTextButtonOptions) {
     super(options);
     this.addClass(style.toggle_span);
-    this.options.booleanObservable.observe( (usePrescribedValue) => {
-      if (usePrescribedValue) {
-        this.primaryElement.style.removeProperty('text-decoration');
-      } else {
-        this.primaryElement.style.setProperty('text-decoration', 'line-through');
-      }
+    this.options.visibilityObservable.observe( (visibility) => {
+        this.primaryElement.style.setProperty('visibility',visibility ? "visible" : "hidden");
     });
   }
   render() {
-    super.render("&#x1F589;");
+    super.render("&#x2ba8;");
   }
 }
 
@@ -46,30 +43,39 @@ class PrescribedTextInputField<
    */
   lastNonPrescribedValue: string | undefined;
 
+  styleOnPrescribedObservableMatch = () => {
+    const observables = this.options.observables;
+    const matches = observables.prescribed.value === observables.actual.value;
+    this.primaryElement.style.setProperty("color", matches ? "#008000" : "#000040")
+    this.primaryElement.style.setProperty("background-color", matches ? "#F0F0F0" : "#FFFFFF")
+  }
+
   constructor(options: OPTIONS) {
-    super(options! ?? {});
-    this.options.observables.actual.observe( newValue => {
+    super({observable: options.observables.actual,  ...(options! ?? {})});
+    this.observable.observe( newValue => {
+      this.styleOnPrescribedObservableMatch();
       if (this.primaryElement.value !== newValue) {
         this.primaryElement.value = newValue ?? "";
       }
     })
-    this.options.observables.usePrescribed.observe( newUsePrescribed => {
-      this.primaryElement.style.setProperty("background-color",
-        newUsePrescribed ? "#F0F0F0" : "#FFFFFF"
-      )
-      this.primaryElement.style.setProperty("color",
-        newUsePrescribed ? "rgb(0, 128, 0)" : "#000040"
-      )
-    })
+    this.options.observables.usePrescribed.observe( () =>
+      this.styleOnPrescribedObservableMatch()
+    )
   }
 }
 
 export type PrescribedTextInputOptions = PrescribedTextInputFieldOptions
 export class PrescribedTextInput extends Component<PrescribedTextInputOptions> {
 
+  readonly showUsePrescribedButton = new Observable<boolean>();
+  #updateUsingPrescribed = () => {
+    this.showUsePrescribedButton.set(this.options.observables.usePrescribed.value == false && !!this.options.observables.prescribed.value);
+  } 
   constructor(options: PrescribedTextInputFieldOptions) {
     super(options);
     this.addClass(style.optional_prescribed_text_input);
+    options.observables.prescribed.onChange( () => this.#updateUsingPrescribed() );
+    options.observables.usePrescribed.observe( () => this.#updateUsingPrescribed() );
   }
 
   get observable() { return this.options.observables.actual };
@@ -86,7 +92,10 @@ export class PrescribedTextInput extends Component<PrescribedTextInputOptions> {
       ] : []),
       Div({class: style.text_box_and_toggle},
         new PrescribedTextInputField(this.options),
-        new UsePrescribedTextToggle({booleanObservable: this.options.observables.usePrescribed})
+        new UsePrescribedTextToggle({
+          visibilityObservable: this.showUsePrescribedButton,
+          events: events => events.click.on( () => this.options.observables.usePrescribed.set(true) )
+        })
       )
     );
   }

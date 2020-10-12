@@ -70,8 +70,19 @@ const implementApiCall = <METHOD extends ApiCalls.ApiCall>(
 ) =>
   (seededCryptoModule: SeededCryptoModuleWithHelpers) =>
     (seedString: string) =>
-      (parameters: METHOD["parameters"]) => 
-        implementation(seededCryptoModule, seedString, parameters);
+      (parameters: METHOD["parameters"]) => {
+        try {
+          return implementation(seededCryptoModule, seedString, parameters);
+        } catch (e) {
+          if (typeof e === "number") {
+            // The seeded crypto library will throw exception pointers which need
+            // to be converted back into strings.
+            throw new Error(seededCryptoModule.getExceptionMessage(e));
+          } else {
+            throw e;
+          }
+        }
+      }
 
 function deleteAfterOperation<DELETABLE extends {delete: () => any}, RESULT>(
   deletable: DELETABLE,
@@ -107,14 +118,14 @@ export const getPassword = implementApiCall<ApiCalls.GetPassword>(
 export const sealWithSymmetricKey = implementApiCall<ApiCalls.SealWithSymmetricKey>(
   (seededCryptoModule, seedString, {plaintext, unsealingInstructions, derivationOptionsJson}) => ({
       [SealWithSymmetricKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
-        toJsonAndDelete(
+      toJsonAndDelete(
           seededCryptoModule.SymmetricKey.sealWithInstructions(
             plaintext,
             unsealingInstructions ?? "",
             seedString,
             derivationOptionsJson
           )
-        )
+      )
     })
   );
 

@@ -15,6 +15,7 @@
 
 .toggle_span {
   user-select: none;
+  border: none;
 }
 
 .formula {

@@ -22,18 +22,26 @@ import {
   CommandSimulator
 } from "./command-simulator";
 
+// const options = {
+//   symmetric: "Seal and unseal data with a symmetric key",
+//   sealing: "Seal and unseal data with a public/private key pair",
+//   signing: "Sign data"
+
+// }
+
 interface ApiDemoOptions extends Attributes {
   seedString?: PrescribedTextFieldSpecification<string>;
 }
+
 export class ApiDemo extends Component<ApiDemoOptions> {
   
   domainOrCommaSeparatedDomains = new PrescribedTextFieldObservables<string, "domains">("domains", {
-    prescribed: `${window.location.hostname}`,
+    actual: 'example.com',
     usePrescribed: false
   });
 
   derivationOptionsJson = new PrescribedTextFieldObservables<string, "domains">("domains", {
-    formula: `{"allow": [{"host":"*.\$AuthorizedDomain"}]}`
+    formula: `{"allow":[{"host":"*.\$AuthorizedDomain"}]}`
   });
 
   seedString: PrescribedTextFieldObservables<string, typeof ApiRequestWithSeedParameterNames.seedString>;
@@ -48,7 +56,8 @@ export class ApiDemo extends Component<ApiDemoOptions> {
     super(options);
     this.seedString = new PrescribedTextFieldObservables(ApiRequestWithSeedParameterNames.seedString,
         {
-          prescribed: new URL(window.location.href).searchParams.get(ApiRequestWithSeedParameterNames.seedString) ?? "Jenny: 867-5309", 
+          prescribed: new URL(window.location.href).searchParams.get(ApiRequestWithSeedParameterNames.seedString) ?? 
+            "A1tB2rC3bD4lE5tF6rG1bH2lI3tJ4rK5bL6lM1tN2rO3bP4lR5tS6rT1bU2lV3tW4rX5bY6lZ1t",
           ...options.seedString
         }
       );
@@ -73,6 +82,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
 
       new CommandSimulator({
         onExceptionEvent: this.options.onExceptionEvent,
+        command: "sealWithSymmetricKey",
         seedString: {prescribed: this.seedString.actual},
         respondTo: {prescribed: this.respondTo.actual},
         derivationOptionsJson: {prescribed: this.derivationOptionsJson.actual}
