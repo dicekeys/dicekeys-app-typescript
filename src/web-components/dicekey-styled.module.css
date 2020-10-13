@@ -1,5 +1,6 @@
 .dice_style, .keys_style {
   font-family: Calibri, Noto Sans, Roboto, sans-serif;
+  font-variant: small-caps;
 }
 
 .dice_style {

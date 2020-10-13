@@ -1,8 +1,9 @@
+import styles from "./demo.module.css";
 import {
   UrlRequestMetadataParameterNames
 } from "@dicekeys/dicekeys-api-js";
 import {
-  Component, Attributes
+  Component, Attributes, Div, Observable
 } from "../../web-component-framework";
 import {
   ApiRequestWithSeedParameterNames,
@@ -11,23 +12,15 @@ import {
   DefaultPermittedPathPrefix
 } from "../../api-handler/url-permission-checks";
 import {
-  derivationOptionsJsonForAllowedDomains
-} from "../../dicekeys/derivation-options-json-for-allowed-domains";
-import {
   PrescribedTextFieldSpecification,
   PrescribedTextFieldObservables,
-  LabeledPrescribedTextInput
+  PrescribedTextInput
 } from "../basic-building-blocks"
 import {
-  CommandSimulator
-} from "./command-simulator";
-
-// const options = {
-//   symmetric: "Seal and unseal data with a symmetric key",
-//   sealing: "Seal and unseal data with a public/private key pair",
-//   signing: "Sign data"
-
-// }
+  Formula,
+  FormulaInputVariable
+} from "./formula"
+import { SymmetricKeySealAndUnseal } from "./multi-command-simulator";
 
 interface ApiDemoOptions extends Attributes {
   seedString?: PrescribedTextFieldSpecification<string>;
@@ -35,20 +28,23 @@ interface ApiDemoOptions extends Attributes {
 
 export class ApiDemo extends Component<ApiDemoOptions> {
   
-  domainOrCommaSeparatedDomains = new PrescribedTextFieldObservables<string, "domains">("domains", {
-    actual: 'example.com',
+  commaSeparatedAuthorizedDomains = new PrescribedTextFieldObservables<string, "domains">("domains", {
+    formula: Formula("authorizedDomains[]", [FormulaInputVariable({}, "authorizedDomain1"), ", ... , ", FormulaInputVariable({}, "authorizedDomainN")]),
+    actual: 'example.pwmgr.app, example.com',
     usePrescribed: false
   });
 
-  derivationOptionsJson = new PrescribedTextFieldObservables<string, "domains">("domains", {
-    formula: `{"allow":[{"host":"*.\$AuthorizedDomain"}]}`
-  });
+  authorizedDomains: Observable<string[]>;
+
+  // derivationOptionsJson = new PrescribedTextFieldObservables<string, "domains">("domains", {
+  //   formula: Formula("derivationOptionsJson", `'{"allow":[{"host":"*.`, FormulaInputVariable({}, "authorizedDomains[i]"), `"}]}'`)
+  // });
 
   seedString: PrescribedTextFieldObservables<string, typeof ApiRequestWithSeedParameterNames.seedString>;
 
   respondTo = new PrescribedTextFieldObservables<string, typeof UrlRequestMetadataParameterNames.respondTo>(
     UrlRequestMetadataParameterNames.respondTo, {
-      formula: `https://\$ApplicationsDomainName${DefaultPermittedPathPrefix}`
+      formula: Formula("respondTo", "'", "https://", FormulaInputVariable({}, "authorizedDomains[i]"), DefaultPermittedPathPrefix, "'")
     }
   )
 
@@ -56,36 +52,63 @@ export class ApiDemo extends Component<ApiDemoOptions> {
     super(options);
     this.seedString = new PrescribedTextFieldObservables(ApiRequestWithSeedParameterNames.seedString,
         {
-          prescribed: new URL(window.location.href).searchParams.get(ApiRequestWithSeedParameterNames.seedString) ?? 
+          formula: Formula("seed", 'DiceKeys.toSeed(', FormulaInputVariable({}, "diceKey"),  ')'),
+          // prescribed: new URL(window.location.href).searchParams.get(ApiRequestWithSeedParameterNames.seedString) ?? 
+          //   "A1tB2rC3bD4lE5tF6rG1bH2lI3tJ4rK5bL6lM1tN2rO3bP4lR5tS6rT1bU2lV3tW4rX5bY6lZ1t",
+          actual: new URL(window.location.href).searchParams.get(ApiRequestWithSeedParameterNames.seedString) ?? 
             "A1tB2rC3bD4lE5tF6rG1bH2lI3tJ4rK5bL6lM1tN2rO3bP4lR5tS6rT1bU2lV3tW4rX5bY6lZ1t",
           ...options.seedString
         }
       );
-    this.domainOrCommaSeparatedDomains.actual.observe( () => {
-      this.derivationOptionsJson.prescribed.set(derivationOptionsJsonForAllowedDomains(this.domains));
-      this.respondTo.prescribed.set(`${window.location.protocol}//${this.domains[0] ?? window.location.host}${DefaultPermittedPathPrefix}`)
-    });
+    this.authorizedDomains = new Observable<string[]>([]);
+    this.commaSeparatedAuthorizedDomains.actual.observe( (commaSeparatedAuthorizedDomains) =>
+        this.authorizedDomains.set(
+          (commaSeparatedAuthorizedDomains || "").split(",")
+            .map( domain => domain.trim() )
+        )
+      );
+    this.authorizedDomains.observe( authorizedDomains =>
+//      this.derivationOptionsJson.prescribed.set(derivationOptionsJsonForAllowedDomains(this.domains));
+      this.respondTo.prescribed.set(`${window.location.protocol}//${
+          (authorizedDomains && authorizedDomains.length > 0) ? authorizedDomains[0] : window.location.host
+        }${DefaultPermittedPathPrefix}`)
+    );
   }
 
+
   get domains(): string[] {
-    return this.domainOrCommaSeparatedDomains.value
+    return this.commaSeparatedAuthorizedDomains.value
       .split(",")
       .map( domain => domain.trim() );
   }
 
   render() {
     super.render(
-      new LabeledPrescribedTextInput({observables: this.domainOrCommaSeparatedDomains}, "Authorized or domains (comma-separated) allowed to perform operations with the derived secrets:"),
-      new LabeledPrescribedTextInput({observables: this.seedString}, "Seed:"),
-      new LabeledPrescribedTextInput({observables: this.respondTo}, "Respond to:"),
-      new LabeledPrescribedTextInput({observables: this.derivationOptionsJson}, "Derivation options:"),
-
-      new CommandSimulator({
+      Div({class: styles.instructions}, 
+        `When you make an API call to the DiceKeys app, the app will derive secrets from a a seed
+        <a href="https://dicekeys.github.io/seeded-crypto/introduction.html" target="new">generated from the user's DiceKey</a>.
+        The seed you enter will be used to simulate API calls below.
+      `),
+      new PrescribedTextInput({style: `width: 37.5rem;`, observables: this.seedString}),
+      Div({class: styles.instructions}, 
+        `Whether on the web, iOS, or Android, your applications and services will be authenticated by their domain name(s).
+        Enter the domain names that should be allowed to perform cryptographic operations on your keys.
+      `),
+      new PrescribedTextInput({style: `width: 37.5rem;`, observables: this.commaSeparatedAuthorizedDomains}),
+      Div({class: styles.instructions}, 
+        `When making your API call via the URL-based API, you'll need to provide the URL to which the DiceKeys app should post the response.
+        (The request will be denied if the URL receiving the response isn't authorized to use the derived keys.)
+      `),
+      new PrescribedTextInput({style: `width: 37.5rem;`, observables: this.respondTo}),
+   
+      new SymmetricKeySealAndUnseal({
+//      new CommandSimulator({
         onExceptionEvent: this.options.onExceptionEvent,
-        command: "sealWithSymmetricKey",
+//        command: "sealWithSymmetricKey",
+        authorizedDomains: this.authorizedDomains,
         seedString: {prescribed: this.seedString.actual},
         respondTo: {prescribed: this.respondTo.actual},
-        derivationOptionsJson: {prescribed: this.derivationOptionsJson.actual}
+//        derivationOptionsJson: {prescribed: this.derivationOptionsJson.actual}
       })
     );
   }

@@ -65,15 +65,15 @@ class PrescribedTextInputField<
 }
 
 export type PrescribedTextInputOptions = PrescribedTextInputFieldOptions
-export class PrescribedTextInput extends Component<PrescribedTextInputOptions> {
+export class PrescribedTextInput extends Component<PrescribedTextInputOptions, "div"> {
 
   readonly showUsePrescribedButton = new Observable<boolean>();
   #updateUsingPrescribed = () => {
     this.showUsePrescribedButton.set(this.options.observables.usePrescribed.value == false && !!this.options.observables.prescribed.value);
   } 
   constructor(options: PrescribedTextInputFieldOptions) {
-    super(options);
-    this.addClass(style.optional_prescribed_text_input);
+    super(options, document.createElement("div"));
+    this.addClass(style.prescribed_text_input);
     options.observables.prescribed.onChange( () => this.#updateUsingPrescribed() );
     options.observables.usePrescribed.observe( () => this.#updateUsingPrescribed() );
   }
@@ -91,7 +91,7 @@ export class PrescribedTextInput extends Component<PrescribedTextInputOptions> {
         Div({class: style.formula}, this.options.observables.formula.value )
       ] : []),
       Div({class: style.text_box_and_toggle},
-        new PrescribedTextInputField(this.options),
+        new PrescribedTextInputField({class: style.text_box,...this.options}),
         new UsePrescribedTextToggle({
           visibilityObservable: this.showUsePrescribedButton,
           events: events => events.click.on( () => this.options.observables.usePrescribed.set(true) )

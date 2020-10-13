@@ -1,0 +1,37 @@
+.instructions {
+  font-family: "Calibri", "Roboto", sans-serif;
+}
+
+.formula_input {
+  color: rgb(192, 32, 192);
+  font-style: italic;
+  font-weight: bold;
+}
+
+.formula_result {
+  color:rgb(128, 24, 128);
+  font-weight: bold;
+}
+
+.command_in_request_url_formula {
+  color: rgb(135, 93, 184);
+  font-style: italic;
+  font-weight: 700;
+}
+
+.result_block {
+  color: black;
+}
+
+.result_label {
+  color:rgb(128, 24, 128);
+  font-weight: bold;
+}
+
+.result_value {
+  white-space: pre;
+  width: 80vw;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  overflow-y:hidden;
+}

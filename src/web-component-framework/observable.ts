@@ -3,7 +3,6 @@ import {
 } from "./component-event"
 import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
 
-
 export class Observable<T> {
   public readonly changedEvent: ComponentEvent<[newValue: T, previousValue: T | undefined], this>;
   protected _value: T | undefined;
@@ -46,6 +45,15 @@ export class Observable<T> {
     return this;
   }
 
+  update = (objectToWriteTo: {textContent: string | null}) => {
+    this.observe( newValue => {
+      if (newValue != null) {
+        objectToWriteTo.textContent = `${newValue}`;
+      }
+    })
+    return this;
+  }
+
   static equals = (a: any, b: any): boolean =>
       (a === b)
       ||
@@ -72,7 +80,7 @@ export class Observable<T> {
 
   public set = (value: T): this => {
     const previousValue = this.read();
-    if (!Observable.equals(previousValue, value)) {
+    if (previousValue !== value) {
       this.write(value)
       this.changedEvent.send(value, previousValue);
     }

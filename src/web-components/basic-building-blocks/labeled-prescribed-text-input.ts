@@ -21,7 +21,7 @@ export class LabeledPrescribedTextInput extends Component<LabelPrescribedTextInp
   render() {
     this.append(
       Div({},
-        Label({}, ...this.appendable,
+        Label({class: styles.label}, ...this.appendable,
           new PrescribedTextInput({class: styles.input_class, ...this.options})
         )
       )

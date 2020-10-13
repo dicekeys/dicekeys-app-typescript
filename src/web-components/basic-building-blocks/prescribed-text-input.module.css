@@ -1,23 +1,35 @@
-.optional_prescribed_text_input {
+.prescribed_text_input {
   display: flex;
   flex-direction: column;
-  align-items: start;
-  align-content: start;
+  align-content: stretch;
+  align-items: stretch;
 }
 
 .text_box_and_toggle {
   display: flex;
   flex-direction: row;
-  align-items: start;
-  align-content: center;
+  align-items: stretch;
+  align-content: stretch;
+  flex-grow: 10;
+  flex-shrink : 10;
+  flex-basis: auto;
 }
-
 
 .toggle_span {
   user-select: none;
   border: none;
+  flex-grow: 0;
 }
 
 .formula {
   font-family: monospace;
+  font-size: 1rem;
+  color: #808080;
+}
+
+.text_box {
+  display: flex;
+  flex-grow: 10;
+  flex-shrink : 10;
+  flex-basis: auto;
 }

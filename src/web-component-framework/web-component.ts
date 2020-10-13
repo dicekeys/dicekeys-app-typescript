@@ -1,6 +1,7 @@
 import {
   ComponentEvent
 } from "./component-event";
+import { Observable } from "./observable";
 
 interface AppendableCallback<T extends Component = Component> {
   (htmlComponent: T): Appendable;
@@ -315,6 +316,19 @@ export class Component<
 
   withElement = (callback: (t: Element<PRIMARY_ELEMENT_TAG_NAME>) => any): this => {
     callback(this.primaryElement);
+    return this;
+  }
+  
+  set textContent(value: string | null) {
+    this.primaryElement.textContent = value;
+    if ("createEvent" in document) {
+      var evt = document.createEvent("HTMLEvents");
+      evt.initEvent("change", false, true);
+      this.primaryElement.dispatchEvent(evt);
+   }
+  }
+  updateFromObservable = (observable: Observable<string>): this => {
+    observable.update(this);
     return this;
   }
 

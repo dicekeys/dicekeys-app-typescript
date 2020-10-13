@@ -1,8 +1,9 @@
+import style from "./demo.module.css";
 import {
-  ApiCalls, stringToUtf8ByteArray, UrlRequestMetadataParameterNames, urlSafeBase64Encode
+  ApiCalls, DerivationOptions, stringToUtf8ByteArray, UrlRequestMetadataParameterNames, urlSafeBase64Decode, urlSafeBase64Encode, utf8ByteArrayToString
 } from "@dicekeys/dicekeys-api-js";
 import {
-  Component, Attributes, Observable, Div, Pre, Appendable
+  Component, Attributes, Observable, Div, Appendable, Span, TextAreaAutoGrow
 } from "../../web-component-framework";
 import {
   ApiRequestWithSeedParameterNames,
@@ -15,11 +16,29 @@ import {
 import {
   PrescribedTextFieldObservablesOrSpecification,
   PrescribedTextFieldObservables,
-  LabeledPrescribedTextInput
+  PrescribedTextInput
 } from "../basic-building-blocks";
 import { jsonStringifyWithSortedFieldOrder } from "~api-handler/json";
-import { ParameterNames } from "@dicekeys/dicekeys-api-js/dist/api-calls";
+import {
+  Formula,
+  FormulaInputVariable
+} from "./formula"
+import { derivationOptionsJsonForAllowedDomains } from "~dicekeys/derivation-options-json-for-allowed-domains";
 
+const commandsWithSeededCryptoObjectResponse = new Set<ApiCalls.Command>([
+  ApiCalls.Command.getPassword,
+  ApiCalls.Command.getSealingKey,
+  ApiCalls.Command.getSecret,
+  ApiCalls.Command.getSignatureVerificationKey,
+  ApiCalls.Command.getSigningKey,
+  ApiCalls.Command.getSymmetricKey,
+  ApiCalls.Command.getUnsealingKey,
+  ApiCalls.Command.sealWithSymmetricKey
+]);
+const commandsWithPlaintextResponse = new Set<ApiCalls.Command>([
+  ApiCalls.Command.unsealWithSymmetricKey,
+  ApiCalls.Command.unsealWithUnsealingKey
+]);
 
 interface CommandSimulatorOptions<
   COMMAND extends ApiCalls.Command = ApiCalls.Command
@@ -29,25 +48,21 @@ interface CommandSimulatorOptions<
   respondTo?: PrescribedTextFieldObservablesOrSpecification<string, typeof UrlRequestMetadataParameterNames.respondTo>;
   requestId?: PrescribedTextFieldObservables<string, typeof ApiCalls.RequestMetadataParameterNames.requestId>;
 
-//  derivationOptionsJson?:  PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>;
-  derivationOptionsJson?: typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson extends keyof typeof ParameterNames[COMMAND] ?
-    PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson> :
-    never;
-  message?: COMMAND extends typeof ApiCalls.Command.generateSignature ? 
-    PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.GenerateSignatureParameterNames.message> :
-    never;
-  plaintext?: COMMAND extends (typeof ApiCalls.Command.sealWithSymmetricKey) ?
-    PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.plaintext> :
-    never;
+  authorizedDomains?: Observable<string[]>,
+
+  messageString?: PrescribedTextFieldObservablesOrSpecification<string, "messageString">;
+  messageBase64?: PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.GenerateSignatureParameterNames.message>
+  plaintextString?: PrescribedTextFieldObservablesOrSpecification<string, "plaintextString">;
+  plaintextBase64?: PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.plaintext>;
+  
   unsealingInstructions?: COMMAND extends (typeof ApiCalls.Command.sealWithSymmetricKey) ?
     PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.unsealingInstructions> :
     never;
-  packagedSealedMessageJson?: COMMAND extends (typeof ApiCalls.Command.unsealWithSymmetricKey | typeof ApiCalls.Command.unsealWithUnsealingKey) ?
-    PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.UnsealParameterNames.packagedSealedMessageJson> :
-    never;
-  
+  packagedSealedMessageJson?: PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.UnsealParameterNames.packagedSealedMessageJson>;
 
-  requestUrl?: PrescribedTextFieldObservablesOrSpecification<string>;
+  responseObject?: Observable<ApiCalls.ResponseForCommand<COMMAND> | ApiCalls.ExceptionResponse>;
+  seededCryptoObjectAsJson?: Observable<string>
+  signature?: Observable<string>
 }
 
 
@@ -64,112 +79,120 @@ export class CommandSimulator<
   readonly seedString: PrescribedTextFieldObservables<string, typeof ApiRequestWithSeedParameterNames.seedString>;
   readonly respondTo: PrescribedTextFieldObservables<string, typeof UrlRequestMetadataParameterNames.respondTo>;
 
-  readonly derivationOptionsJson: typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson extends keyof typeof ParameterNames[COMMAND] ?
-    PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson> :
-    never;
+  readonly derivationOptionsJson: PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>;
   
-  message: COMMAND extends typeof ApiCalls.Command.generateSignature ?
-    PrescribedTextFieldObservables<string, typeof ApiCalls.GenerateSignatureParameterNames.message> : never;
+  messageString: PrescribedTextFieldObservables<string, "messageString">;
+  messageBase64: PrescribedTextFieldObservables<string, typeof ApiCalls.GenerateSignatureParameterNames.message> ;
 
-  messageBase64: COMMAND extends typeof ApiCalls.Command.generateSignature ?
-    PrescribedTextFieldObservables<string, typeof ApiCalls.GenerateSignatureParameterNames.message> : never;
+  plaintextString: PrescribedTextFieldObservables<string, "plaintextString">;
+  plaintextBase64: PrescribedTextFieldObservables<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.plaintext>;
 
-  plaintext: COMMAND extends typeof ApiCalls.Command.sealWithSymmetricKey ?
-    PrescribedTextFieldObservables<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.plaintext> : never;
+  unsealingInstructions: PrescribedTextFieldObservables<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.unsealingInstructions>;
 
-  plaintextBase64: COMMAND extends typeof ApiCalls.Command.sealWithSymmetricKey ?
-    PrescribedTextFieldObservables<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.plaintext> : never;
-
-  unsealingInstructions: COMMAND extends typeof ApiCalls.Command.sealWithSymmetricKey ?
-    PrescribedTextFieldObservables<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.unsealingInstructions> : never;
-
-  packagedSealedMessageJson: COMMAND extends (typeof ApiCalls.Command.unsealWithSymmetricKey | typeof ApiCalls.Command.unsealWithUnsealingKey) ?
-    PrescribedTextFieldObservables<string, typeof ApiCalls.UnsealParameterNames.packagedSealedMessageJson> : never;
+  packagedSealedMessageJson: PrescribedTextFieldObservables<string, typeof ApiCalls.UnsealParameterNames.packagedSealedMessageJson>;
 
   private static numericRequestId: number = 0;
   requestId: PrescribedTextFieldObservables<string, typeof ApiCalls.RequestMetadataParameterNames.requestId>;
   requestUrl= new PrescribedTextFieldObservables<string, "requestUrl">("requestUrl");
 
-  requestObject = new Observable<ApiCalls.Request | undefined>();
+  requestObject = new Observable<ApiCalls.CommandsApiCall<COMMAND>["request"] | undefined>();
   responseJson = new Observable<string>();
   responseUrl = new Observable<string>();
+  responseUrlObject = new Observable<URL>();
+
+  responseObject: Observable<ApiCalls.ResponseForCommand<COMMAND> | ApiCalls.ExceptionResponse>;
+
+  seededCryptoObjectAsJson: Observable<string>;
+  signature: Observable<string>;
+  authorizedDomains: Observable<string[]>;
 
   constructor(options: CommandSimulatorOptions<COMMAND>) {
     super (options);
     this.command = options.command;
+    this.authorizedDomains = options.authorizedDomains ?? new Observable();
     this.seedString = PrescribedTextFieldObservables.from(ApiRequestWithSeedParameterNames.seedString, options.seedString);
     this.respondTo = PrescribedTextFieldObservables.from(UrlRequestMetadataParameterNames.respondTo, options.respondTo);
 
-    this.derivationOptionsJson = (
-      (ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson in ParameterNames[this.command]) ?
-        PrescribedTextFieldObservables.from(
-         ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson, options.derivationOptionsJson
-        ) :
-        undefined
-    ) as typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson extends keyof typeof ParameterNames[COMMAND] ?
-      PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson> :
-      never;
+    this.responseObject = options.responseObject ?? new Observable<ApiCalls.ResponseForCommand<COMMAND> | ApiCalls.ExceptionResponse>()
 
-    this.message = (options.command === ApiCalls.Command.generateSignature ? PrescribedTextFieldObservables.from(
-        // FIXME -- needs to indicate base 64 encoding.
-        ApiCalls.GenerateSignatureParameterNames.message, {...options.message}
-      ) : undefined
-    ) as COMMAND extends typeof ApiCalls.Command.generateSignature ? PrescribedTextFieldObservables<string, typeof ApiCalls.GenerateSignatureParameterNames.message> : never;
+    this.derivationOptionsJson = new PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>(
+      ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson, {
+      formula: Formula("derivationOptionsJson", `'{"allow":[{"host":"*.`, FormulaInputVariable({}, "authorizedDomains[i]"), `"}]}'`),
+    });
+    // Update derivation options based on domains.
+    this.authorizedDomains.observe( domains => domains &&
+      this.derivationOptionsJson.prescribed.set(derivationOptionsJsonForAllowedDomains(domains)
+    ));
 
-    this.messageBase64 = (options.command === ApiCalls.Command.generateSignature ? PrescribedTextFieldObservables.from(
-        // FIXME -- needs to indicate base 64 encoding.
-        ApiCalls.GenerateSignatureParameterNames.message + "Base64", {//...options.messageBase64
-        }
-      ) : undefined
-    ) as COMMAND extends typeof ApiCalls.Command.generateSignature ? PrescribedTextFieldObservables<string, typeof ApiCalls.GenerateSignatureParameterNames.message> : never;
+    if (this.derivationOptionsJson && this.options.authorizedDomains) {
+      this.options.authorizedDomains.observe( (authorizedDomains) =>
+        this.derivationOptionsJson.prescribed.set(derivationOptionsJsonForAllowedDomains(authorizedDomains ?? []))
+      )
+    }
 
-    if (options.command === ApiCalls.Command.generateSignature) {
-      this.message.actual.observe( message => 
+    this.messageString = PrescribedTextFieldObservables.from("messageString", options.messageString);
+    this.messageBase64 = PrescribedTextFieldObservables.from(ApiCalls.GenerateSignatureParameterNames.message, options.messageBase64);
+
+    if (this.command === ApiCalls.Command.generateSignature) {
+      this.messageString.actual.observe( message => 
         this.messageBase64.prescribed.set(urlSafeBase64Encode(stringToUtf8ByteArray(message ?? "")))
       )
     }
 
-    this.plaintext = (options.command === ApiCalls.Command.sealWithSymmetricKey ? PrescribedTextFieldObservables.from(
-        ApiCalls.SealWithSymmetricKeyParameterNames.plaintext, {
-          prescribed: "Shh.... don't tell anyone!",
-          ...options.plaintext
-        }
-      ) : undefined
-    ) as COMMAND extends typeof ApiCalls.Command.sealWithSymmetricKey ?
-      PrescribedTextFieldObservables<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.plaintext> : never
+    this.plaintextString = PrescribedTextFieldObservables.from(
+      "plaintextString", options.plaintextString ?? (
+        (this.command === ApiCalls.Command.sealWithSymmetricKey) ? {
+        actual: "Easy as API!",
+        } : {}
+      )
+    );
 
-    this.plaintextBase64 = (options.command === ApiCalls.Command.sealWithSymmetricKey ? PrescribedTextFieldObservables.from(
-        ApiCalls.SealWithSymmetricKeyParameterNames.plaintext + "Base64", {///          ...options.plaintextBase64
-        }
-      ) : undefined
-    ) as COMMAND extends typeof ApiCalls.Command.sealWithSymmetricKey ?
-      PrescribedTextFieldObservables<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.plaintext> : never;
+    this.plaintextBase64 = PrescribedTextFieldObservables.from(
+      ApiCalls.SealWithSymmetricKeyParameterNames.plaintext, {
+        formula: Formula("plaintextBase64", "urlSafeBase64Encode(toUtf8(", FormulaInputVariable({},"plaintext"), "))")
+      }
+    );
 
-    if (options.command === ApiCalls.Command.sealWithSymmetricKey) {
-      this.plaintext.actual.observe( plaintext => 
+    if (this.command === ApiCalls.Command.sealWithSymmetricKey) {
+      this.plaintextString.actual.observe( plaintext => 
         this.plaintextBase64.prescribed.set(urlSafeBase64Encode(stringToUtf8ByteArray(plaintext ?? "")))
       )
+    } else if (this.command === ApiCalls.Command.unsealWithUnsealingKey || this.command === ApiCalls.Command.unsealWithSymmetricKey) {
+      this.plaintextBase64.actual.observe( plaintextBase64 => {
+        try {
+          this.plaintextString.set(utf8ByteArrayToString(urlSafeBase64Decode(plaintextBase64 ?? "")));
+        } catch {
+          this.plaintextString.set("(Not a UTF8 string)")
+        }
+      })
     }
 
-    this.unsealingInstructions = (options.command === ApiCalls.Command.sealWithSymmetricKey ? 
-      PrescribedTextFieldObservables.from(
-        ApiCalls.SealWithSymmetricKeyParameterNames.unsealingInstructions, options.unsealingInstructions
-      ) : undefined
-    ) as COMMAND extends typeof ApiCalls.Command.sealWithSymmetricKey ?
-      PrescribedTextFieldObservables<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.unsealingInstructions> : never;
-
-    this.packagedSealedMessageJson =  ( (options.command === ApiCalls.Command.sealWithSymmetricKey || options.command === ApiCalls.Command.unsealWithUnsealingKey) ? 
-        PrescribedTextFieldObservables.from(
-          ApiCalls.UnsealParameterNames.packagedSealedMessageJson, options.packagedSealedMessageJson
-        ) : undefined
-    ) as COMMAND extends (typeof ApiCalls.Command.unsealWithSymmetricKey | typeof ApiCalls.Command.unsealWithUnsealingKey) ?
-      PrescribedTextFieldObservables<string, typeof ApiCalls.UnsealParameterNames.packagedSealedMessageJson> : never;
+    this.unsealingInstructions = PrescribedTextFieldObservables.from(
+      ApiCalls.SealWithSymmetricKeyParameterNames.unsealingInstructions, options.unsealingInstructions ?? {
+        formula: Formula("unsealingInstructions", `'{"allow":[{"host":"*.`, FormulaInputVariable({}, "authorizedDomains[i]"), `"}]}'`)
+      }
+    );
+    
+    this.packagedSealedMessageJson = PrescribedTextFieldObservables.from(
+      ApiCalls.UnsealParameterNames.packagedSealedMessageJson, options.packagedSealedMessageJson
+    );
 
 
     this.requestId = PrescribedTextFieldObservables.from(
-      ApiCalls.RequestMetadataParameterNames.requestId, options.requestId ?? {prescribed: `req-${++CommandSimulator.numericRequestId}`}
+      ApiCalls.RequestMetadataParameterNames.requestId, options.requestId ?? {
+        formula: Formula("requestId", "getUniqueId()"),
+        prescribed: `${++CommandSimulator.numericRequestId
+      }`}
     );
-    this.requestUrl = new PrescribedTextFieldObservables("requestUrl", options.requestUrl);
+
+    const requestUrlFormula: Appendable = Formula('requestUrl', `'https://dicekeys.app?command=`, Span({class: style.command_in_request_url_formula}, this.command),
+      ...(this.parameterNames.map( (parameterName): Appendable =>
+        (["&", parameterName, "=", FormulaInputVariable({}, `${parameterName}${parameterName === "message" || parameterName === "plaintext" ? "Base64" : ""}`)])
+      )),
+      "'"
+    );
+
+    this.requestUrl = new PrescribedTextFieldObservables<string, "requestUrl">("requestUrl", {formula: requestUrlFormula});
     this.requestUrl.prescribed.set( this.prescribedRequestUrl );
     for (const requestUrlShouldObserve of  [this.derivationOptionsJson, this.messageBase64, this.plaintextBase64, this.unsealingInstructions, this.packagedSealedMessageJson, this.requestUrl] as const) {
       requestUrlShouldObserve?.actual.onChange( () => this.requestUrl.prescribed.set(
@@ -177,17 +200,40 @@ export class CommandSimulator<
     }
     this.requestUrl.actual.observe( () =>  this.processRequestUrl() );
     this.seedString.actual.onChange( () => this.processRequestUrl() );
+
+    this.seededCryptoObjectAsJson = options.seededCryptoObjectAsJson ?? new Observable<string>();
+    this.signature = options.signature ?? new Observable<string>();
+
+    this.responseUrlObject.observe( responseUrlObj => {
+      const searchParams = responseUrlObj?.searchParams;
+      if (!searchParams) return;
+      const seededCryptoObjectAsJson = searchParams.get("seededCryptoObjectAsJson");
+      if (seededCryptoObjectAsJson) this.seededCryptoObjectAsJson.set(seededCryptoObjectAsJson);
+      const plaintext = searchParams.get("plaintext");
+      if (plaintext) this.plaintextBase64.set(plaintext);
+      const signature = searchParams.get("signature");
+      if (signature) this.signature.set(signature);
+    })
+  }
+
+  get parameterNames(): ("requestId" | "respondTo"| KeysIncludingOptionalKeys<ApiCalls.Parameters>)[] {
+    const allParameterNames = [
+      "requestId",
+      "respondTo",
+      ...(Object.keys(ApiCalls.ParameterNames[this.command]) as (KeysIncludingOptionalKeys<ApiCalls.Parameters>)[])
+    ] as ("requestId" | "respondTo"| KeysIncludingOptionalKeys<ApiCalls.Parameters>)[];
+    if ("unsealingInstructions" in ApiCalls.ParameterNames[this.command] && !this.unsealingInstructions.actual.value) {
+      // We only include the unsealingInstructions parameter if there are instructions
+      return allParameterNames.filter( pname => pname != "unsealingInstructions");
+    } else {
+      return allParameterNames;
+    }
   }
 
   get prescribedRequestUrl(): string {
     const url = new URL(`https://dicekeys.app/`);
     url.searchParams.append(ApiCalls.RequestCommandParameterNames.command, this.command);
-    const parameters = [
-      "requestId",
-      "respondTo",
-      ...(Object.keys(ApiCalls.ParameterNames[this.command]) as (KeysIncludingOptionalKeys<ApiCalls.Parameters>)[])
-    ] as const;
-    for (const parameterName of parameters) {
+    for (const parameterName of this.parameterNames) {
       if (parameterName === "message") {
         url.searchParams.append(parameterName, this.messageBase64.actual.value ?? "");
       } else if (parameterName === "plaintext") {
@@ -228,21 +274,23 @@ export class CommandSimulator<
     if (command == null || !(command in ApiCalls.Command)) {
       return;
     }
-    const request = getApiRequestFromSearchParams(requestUrl.searchParams);
-    const respondTo = searchParams.get(UrlRequestMetadataParameterNames.respondTo);
-    
-    const seedString = this.seedString.value;
-    if (seedString && request && respondTo) {
-      try {
+    try {
+      const request = getApiRequestFromSearchParams(requestUrl.searchParams);
+      const respondTo = searchParams.get(UrlRequestMetadataParameterNames.respondTo);
+      
+      const seedString = this.seedString.value;
+      if (seedString && request && respondTo) {
         const responseObject = await new ComputeApiCommandWorker().calculate({seedString, request});
         responseObject.requestId = searchParams.get("requestId")!;
+        this.responseObject.set(responseObject);
         const responseJson = jsonStringifyWithSortedFieldOrder(responseObject, " ");
         this.responseJson.set(responseJson);
         const responseUrl = addResponseToUrl(command, respondTo, responseObject);
         this.responseUrl.set(responseUrl);
-      } catch (e) {
-        this.responseUrl.set(e?.toString() ?? "Unknown exception")
+        this.responseUrlObject.set(new URL(responseUrl));
       }
+    } catch (e) {
+      this.responseUrl.set(e?.toString() ?? "Unknown exception")
     }
   }
 
@@ -263,19 +311,6 @@ export class CommandSimulator<
   commandHasParameter = (parameterName: string): boolean =>
     !!this.command && parameterName in ApiCalls.ParameterNames[this.command];
 
-  prescribedTextInput = (
-    parameter: PrescribedTextFieldObservables<string, string>
-  ): Appendable => 
-    new LabeledPrescribedTextInput({observables: parameter}, `${parameter.name}`);
-  
-
-  prescribedTextInputIfParameterOfCommand = (
-    parameter?: PrescribedTextFieldObservables<string, string>
-  ): Appendable[] => {
-    return (parameter && this.commandHasParameter(parameter.name)) ?
-      [this.prescribedTextInput(parameter)] :
-      []
-  }
 
   render() {
     // this.append(
@@ -288,63 +323,99 @@ export class CommandSimulator<
     //   }))
     // );
     super.render(
-      Div({},
-        Div({}, `Command: ${this.command}`),
-      ),
+      Div({style: `font-size: 1.5rem; font-family: monospace; background-color: #111111; color: white; width: fit-content; padding:5px; margin-top: 10px`}, `${this.command}`),
       // FIXME -- conditionally render if not set
       // ...this.prescribedTextInputIfParameterOfCommand(this.seedString),
       // ...this.prescribedTextInputIfParameterOfCommand(this.requestUrl),
-      this.prescribedTextInput(this.requestId),
-
+      new PrescribedTextInput({style: `width: 16rem;`, observables: this.requestId}),
+      ...((this.command === ApiCalls.Command.unsealWithSymmetricKey || this.command === ApiCalls.Command.unsealWithUnsealingKey) ?
+        [ new PrescribedTextInput({observables: this.packagedSealedMessageJson}) ] : [
+          Div({class: style
+            .instructions}, 
+            `You can specify the options for deriving secrets via a <a targe="new" href="https://dicekeys.github.io/seeded-crypto/derivation_options_format.html"/>JSON format</a>,
+            which allow you to restrict which apps and services can use the secrets you derive.
+          `),
+    
+          new PrescribedTextInput({style: `width: 37.5rem;`, observables: this.derivationOptionsJson}),
+        ]
+      ),
       // ...this.prescribedTextInputIfParameterOfCommand(this.derivationOptionsJson),
-      ...this.prescribedTextInputIfParameterOfCommand(this.message),
       ...(this.command === ApiCalls.Command.generateSignature ? [
-        this.prescribedTextInput(this.messageBase64)
+        new PrescribedTextInput({observables: this.messageString}),
+        new PrescribedTextInput({observables: this.messageBase64})
       ] : []),
-      ...this.prescribedTextInputIfParameterOfCommand(this.plaintext),
       ...(this.command === ApiCalls.Command.sealWithSymmetricKey ? [
-          this.prescribedTextInput(this.plaintextBase64)
+          new PrescribedTextInput({observables: this.plaintextString}),
+          new PrescribedTextInput({observables: this.plaintextBase64}),
+          new PrescribedTextInput({observables: this.unsealingInstructions}).withElement( e => {
+            this.derivationOptionsJson.actual.observe( derivationOptionsJson => {
+              try {
+                if (DerivationOptions(derivationOptionsJson)?.allow) {
+                  e.style.setProperty('display', 'none');
+                  return; 
+                }
+              } catch {}
+              e.style.setProperty('display','flex')
+            })
+          }),
         ] : []),
-      ...this.prescribedTextInputIfParameterOfCommand(this.unsealingInstructions),
-      ...this.prescribedTextInputIfParameterOfCommand(this.packagedSealedMessageJson),
+
       // Div({},
       //   Div({style: "overflow-wrap: break-word;"}, "Request (JSON):"),
       //   Pre({}).withElement( e => this.requestObject.observe( requestObj =>
       //     e.textContent = requestObj == null ? "" : jsonStringifyWithSortedFieldOrder(requestObj, " ")
       //   ))  
       // ),
-      new LabeledPrescribedTextInput({observables: this.requestUrl}, "Request URL:"),
-      Div({},
-        Div({}, "Response URL:"),
-        Div({style: "overflow-wrap: break-word;"}).withElement( e => this.responseUrl.observe( (newResponseUrl) => e.textContent = newResponseUrl ?? "" ))  
+      Div({},this.requestUrl.formula.value),
+      TextAreaAutoGrow({disabled: "", style: "width: 80vw; word-break: break-all;overflow-wrap: anywhere; overflow-y:hidden;"}).updateFromObservable(this.requestUrl.actual),
+      Div({class: style.result_block},
+        Div({class: style.result_label}, "Response URL:"),
+        Div({class: style.result_value}).updateFromObservable(this.responseUrl) 
       ),
-      Div({},
-        Div({style: "overflow-wrap: break-word;"}, "Response (JSON):"),
-        Pre({}).withElement( e => this.responseJson.observe( (responseJson) => e.textContent = responseJson ?? "" ))  
-      ),
+      // Div({},
+      //   Div({style: "word-break: break-all;overflow-wrap: anywhere;"}, "Response (JSON):"),
+      //   Pre({}).withElement( e => this.responseJson.observe( (responseJson) => e.textContent = responseJson ?? "" ))  
+      // ),
+      ...((this.command === ApiCalls.Command.generateSignature) ? [
+        Div({class: style.result_block},
+          Div({class: style.result_label}, "signature"),
+          Div({class: style.result_value}).withElement( e =>
+            this.responseUrlObject.observe( responseUrlObject => 
+              e.textContent = responseUrlObject?.searchParams.get("signature") ?? ""
+            )
+          )
+        )
+      ] : []),
+      ...((commandsWithSeededCryptoObjectResponse.has(this.command)) ? [
+        Div({class: style.result_block},
+          Div({class: style.result_label}, "seededCryptoObjectAsJson"),
+          Div({class: style.result_value}).withElement( e =>
+            this.responseUrlObject.observe( responseUrlObject => {
+              try {
+                const seededCryptoObjectAsJson = responseUrlObject?.searchParams.get("seededCryptoObjectAsJson");
+                if (seededCryptoObjectAsJson) {
+                  // re-parse and stringify the result to pretty-print it
+                  e.textContent = jsonStringifyWithSortedFieldOrder(
+                    JSON.parse(seededCryptoObjectAsJson), "  "
+                  );
+                }
+              } catch {}
+            })
+          )
+        )
+      ] : []),
+      ...((commandsWithPlaintextResponse.has(this.command)) ? [
+        Div({class: style.result_block},
+          Div({class: style.result_label}, "plaintext"),
+          Div({class: style.result_value}).withElement( e =>
+            this.plaintextBase64.actual.observe( plaintextBase64 => e.textContent = plaintextBase64 ?? "")
+          ),
+          Div({class: style.result_value}).withElement( e =>
+            this.plaintextString.actual.observe( plaintextString => e.textContent = plaintextString ?? "")
+          )
+        )
+      ] : []),
+      
     )
   }
 }
-
-
-export interface MultiCommandSimulatorObservables {
-  seedString: PrescribedTextFieldObservablesOrSpecification<string, typeof ApiRequestWithSeedParameterNames.seedString>;
-  respondTo: PrescribedTextFieldObservablesOrSpecification<string, typeof UrlRequestMetadataParameterNames.respondTo>;
-  derivationOptionsJson: PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>;
-}
-export interface MultiCommandSimulatorOptions extends Attributes<"div">, MultiCommandSimulatorObservables {}
-export class MultiCommandSimulator<OPTIONS extends MultiCommandSimulatorOptions> extends Component<OPTIONS> {
-
-  readonly seedString: PrescribedTextFieldObservables<string, typeof ApiRequestWithSeedParameterNames.seedString>;
-  readonly respondTo: PrescribedTextFieldObservables<string, typeof UrlRequestMetadataParameterNames.respondTo>;
-  readonly derivationOptionsJson: PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>;
-
-  constructor(options: OPTIONS) {
-    super(options);
-    this.seedString = PrescribedTextFieldObservables.from(ApiRequestWithSeedParameterNames.seedString, options.seedString);
-    this.respondTo = PrescribedTextFieldObservables.from(UrlRequestMetadataParameterNames.respondTo, options.respondTo);
-    this.derivationOptionsJson = PrescribedTextFieldObservables.from(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson, options.derivationOptionsJson);
-  }
-}
-
-// export class SymmetricSealAndUnsealDemo extends Component<MultiCommandSimulatorOptions>

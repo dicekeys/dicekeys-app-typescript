@@ -1,9 +1,10 @@
 import {
+  Appendable,
   Observable, OptionallyObservable
 } from "../../web-component-framework";
 
 export interface PrescribedTextFieldSpecification<T extends string = string> {
-  formula?: OptionallyObservable<T | "">;
+  formula?: OptionallyObservable<Appendable>;
   actual?: OptionallyObservable<T | "">;
   prescribed?: OptionallyObservable<T | "">;
   usePrescribed?: OptionallyObservable<boolean>
@@ -14,7 +15,7 @@ export type PrescribedTextFieldObservablesOrSpecification<T extends string = str
   PrescribedTextFieldSpecification<T> | PrescribedTextFieldObservables<T, NAME>;
 
 export class PrescribedTextFieldObservables<T extends string = string, NAME extends string = string> {
-  public readonly formula: Observable<T | "">;  
+  public readonly formula: Observable<Appendable>;  
   public readonly actual: Observable<T | "">;
   public readonly prescribed: Observable<T | "">;
   public readonly usePrescribed: Observable<boolean>;
@@ -33,7 +34,7 @@ export class PrescribedTextFieldObservables<T extends string = string, NAME exte
     this.usePrescribed = Observable.from(spec.usePrescribed ?? true);
 //    this.forceUsePrescribed = !!spec.forceUsePrescribed;
     this.actual.observe( newActualValue => {
-      if ( newActualValue !== this.prescribed.value ) {
+      if ( (newActualValue ?? "") !== (this.prescribed.value ?? "") ) {
         // The user changed the value to something other than prescribed
         this.usePrescribed.set(false);
       }
@@ -42,7 +43,7 @@ export class PrescribedTextFieldObservables<T extends string = string, NAME exte
     )
     this.prescribed.observe( (newValue) => {
       // When the prescribed value changes and the field is supposed to use the prescribed value,
-      // copy the new prescribed value to the observable value
+      // copy the new prescribed value to the d value
       if (newValue != null && this.usePrescribed.value) {
         this.actual.set(newValue);
       }

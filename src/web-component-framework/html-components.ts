@@ -161,6 +161,8 @@ export const InputButton =
   }
 })
 export type InputButton = ReturnType<typeof InputButton>;
+export const TextArea = createHtmlElement("textarea");
+export type TextArea = ReturnType<typeof TextArea>;
 
 export const Checkbox = htmlElementFactory(
   (options?: CheckboxOrRadioButton["options"]) => new CheckboxOrRadioButton("checkbox", options)
@@ -204,3 +206,24 @@ export const Video = createHtmlElement("video").with( e => {
   // e.primaryElement.setAttribute("controls","");
   e.primaryElement.setAttribute("autoplay","true");
 });export type Video = ReturnType<typeof Video>;
+
+
+export class TextAreaAutoGrowElement extends HtmlElement<"textarea"> {
+  
+  constructor(options?: HtmlElementAttributes<"textarea">) {
+    super("textarea", options);
+    this.events.change.on( () => this.#resize() )
+  }
+
+  #resize = () => {
+    this.primaryElement.style.height = 'auto';
+    this.primaryElement.style.height = this.primaryElement.scrollHeight.toString() + 'px';
+  }
+
+  render() {
+    super.render();
+    this.#resize();
+  }
+}
+export const TextAreaAutoGrow = (options?: HtmlElementAttributes<"textarea">) => new TextAreaAutoGrowElement(options);
+export type TextAreaAutoGrow = typeof TextAreaAutoGrowElement;
