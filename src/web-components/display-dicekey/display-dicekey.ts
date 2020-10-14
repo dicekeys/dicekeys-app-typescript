@@ -103,7 +103,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
       if ("exception" in result) {
         this.throwException(result.exception, "calculating a password");
       } else {
-        this.password.value = (JSON.parse(result.seededCryptoObjectAsJson) as PasswordJson).password;
+        this.password.value = (JSON.parse(result.passwordJson) as PasswordJson).password;
       }
     }
   }

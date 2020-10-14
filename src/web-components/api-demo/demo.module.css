@@ -1,5 +1,90 @@
+.command_simulator_card {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  background-color: #f6f9f9;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  border-width: 0.25rem;
+  border-color: #404040;
+  border-style: solid;
+  border-radius: 1rem;
+}
+
+.command_simulator_card_title {
+  font-size: 1.25rem;
+  font-family: monospace;
+  background-color: #404040;
+  color: white;
+  width: fit-content;
+  padding: .5rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  margin-left: -1rem;
+  margin-top: 0px;
+  margin-bottom: .5rem;
+  border-bottom-right-radius: 1rem;;
+}
+
+.parameter_card {
+  background-color: rgba(128, 128, 128, 0.05);
+  border-radius: 0.25rem;
+  padding: .25rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  margin-top: .25rem;
+  margin-bottom: .25rem;
+  border-width: 0.1rem;
+  border-radius: 0.5rem;
+  border-color: rgba(128, 128, 128, .25);
+  border-style: solid;
+}
+
 .instructions {
   font-family: "Calibri", "Roboto", sans-serif;
+}
+
+.formula {
+  color: rgb(64,64,64);
+  font-size: 1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-content: flex-start;
+  align-items: baseline;
+  flex-wrap: nowrap;
+}
+
+.formula_left {
+  display: flex;
+  flex: none;
+  color:rgb(128, 24, 128);
+  font-weight: bold;
+}
+
+.formula_type {
+  padding-left: .15rem;
+  display: flex;
+  flex: none;
+  color:rgb(0 ,0 ,0 , .5);
+}
+
+.formula_type::before {
+  content: ":";
+  padding-right: .15rem;
+}
+
+.formula_operator {
+  display: flex;
+  flex: none;
+  font-weight: bold;
+  color: black;
+}
+
+.formula_right {
+  display: block;
+  word-break: break-all;
+  word-wrap: break-word;
+  flex: flex-shrink;
 }
 
 .formula_input {
@@ -8,19 +93,10 @@
   font-weight: bold;
 }
 
-.formula_result {
-  color:rgb(128, 24, 128);
-  font-weight: bold;
-}
-
 .command_in_request_url_formula {
-  color: rgb(135, 93, 184);
-  font-style: italic;
+  color:black;
   font-weight: 700;
-}
-
-.result_block {
-  color: black;
+  font-family: consolas, monospace;
 }
 
 .result_label {
@@ -29,9 +105,19 @@
 }
 
 .result_value {
-  white-space: pre;
-  width: 80vw;
   word-break: break-all;
-  overflow-wrap: anywhere;
-  overflow-y:hidden;
+  word-wrap: break-word;
+  border-width: 0.05rem;
+  background-color: #F0F0F0;
+  /* border-color: rgba(128, 128, 128, 0.5); */
+  padding: .2rem;
+  border-radius: 0.2rem;
+  border-style: solid;
+  /* overflow-wrap: anywhere;
+  overflow-y:hidden; */
+}
+
+.command_name {
+  color: #603000;
+  font-weight: bold;
 }

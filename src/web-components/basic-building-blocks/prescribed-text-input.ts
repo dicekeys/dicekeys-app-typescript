@@ -45,9 +45,14 @@ class PrescribedTextInputField<
 
   styleOnPrescribedObservableMatch = () => {
     const observables = this.options.observables;
-    const matches = observables.prescribed.value === observables.actual.value;
-    this.primaryElement.style.setProperty("color", matches ? "#008000" : "#000040")
-    this.primaryElement.style.setProperty("background-color", matches ? "#F0F0F0" : "#FFFFFF")
+    const matches = (observables.prescribed.value ?? "") === ( observables.actual.value ?? "");
+    if (matches) {
+      this.primaryElement.classList.remove(style.not_prescribed);
+      this.primaryElement.classList.add(style.matches_prescribed);
+    } else {
+      this.primaryElement.classList.remove(style.matches_prescribed);
+      this.primaryElement.classList.add(style.not_prescribed);
+    }
   }
 
   constructor(options: OPTIONS) {
@@ -87,9 +92,8 @@ export class PrescribedTextInput extends Component<PrescribedTextInputOptions, "
 
   render() {
     super.render(
-      ...(this.options.observables.formula.value ? [
-        Div({class: style.formula}, this.options.observables.formula.value )
-      ] : []),
+      ...(this.options.observables.formula.value ? 
+        [ this.options.observables.formula.value ] : []),
       Div({class: style.text_box_and_toggle},
         new PrescribedTextInputField({class: style.text_box,...this.options}),
         new UsePrescribedTextToggle({

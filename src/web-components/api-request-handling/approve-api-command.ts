@@ -107,7 +107,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     setTimeout( () => this.updateBackgroundOperationsForDerivationOptions(), 1);
     if ( request.command === ApiCalls.Command.getPassword ) {
       (ApproveApiCommand.computeApiCommandWorker.resultPromise as Promise<ApiCalls.GetPasswordSuccessResponse>).then(
-        precomputedResult => this.password.value = (JSON.parse(precomputedResult.seededCryptoObjectAsJson) as PasswordJson).password
+        precomputedResult => this.password.value = (JSON.parse(precomputedResult.passwordJson) as PasswordJson).password
       ).catch( (e: unknown) => 
         this.throwException(e, "precomputing an API command")
       );

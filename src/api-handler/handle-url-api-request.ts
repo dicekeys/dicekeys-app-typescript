@@ -18,7 +18,6 @@ import {
   GenerateSignatureRequest,
   GenerateSignatureSuccessResponseParameterNames,
   GetPasswordRequest,
-  GetPasswordSuccessResponseParameterNames,
   GetSealingKeyRequest,
   GetSecretRequest,
   GetSignatureVerificationKeyRequest,
@@ -32,6 +31,7 @@ import {
   UnsealWithSymmetricKeyRequest,
   UnsealParameterNames,
   UnsealWithUnsealingKeyRequest,
+  SeededCryptoObjectResponseParameterNames
 } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import {
   EncryptedCrossTabState
@@ -39,7 +39,8 @@ import {
 
 interface MarshallCommand<COMMAND extends ApiCalls.Command> {
   (
-    marhsallers: {
+    command: COMMAND,
+    marshaller: {
       add: (fieldName: string, value: string) => void
     },
     response: ApiCalls.ResponseForCommand<COMMAND>,
@@ -49,19 +50,21 @@ interface MarshallCommand<COMMAND extends ApiCalls.Command> {
 // Since TypeScript doesn't do type inference on switch statements well enough,
 // this function allows us to simulate a properly typed switch case statement.
 const commandMarshallers = new Map<ApiCalls.Command, MarshallCommand<ApiCalls.Command>>();
-const addResponseMarshallerForCommand = <COMMAND extends ApiCalls.Command>(
-  forCommand: COMMAND | COMMAND[],
-  callback: MarshallCommand<COMMAND>
+const addResponseMarshallerForCommand = <COMMANDS extends ApiCalls.Command[]>(
+  forCommand: COMMANDS,
+  callback: MarshallCommand<COMMANDS[number]>
 ): void => {
-  for (const command of Array.isArray(forCommand) ? forCommand : [forCommand]) {
+  for (const command of forCommand) {
     commandMarshallers.set(command, callback);
   }
 }
 addResponseMarshallerForCommand(
-  ApiCalls.Command.generateSignature,
-  ({add}, {signature, seededCryptoObjectAsJson}) => {
+  [
+    ApiCalls.Command.generateSignature
+  ],
+  (_, {add}, {signature, signatureVerificationKeyJson}) => {
     add(GenerateSignatureSuccessResponseParameterNames.signature, urlSafeBase64Encode(signature));
-    add(GenerateSignatureSuccessResponseParameterNames.seededCryptoObjectAsJson, seededCryptoObjectAsJson);
+    add(GenerateSignatureSuccessResponseParameterNames.signatureVerificationKeyJson, signatureVerificationKeyJson);
 });
 addResponseMarshallerForCommand(
   [
@@ -74,15 +77,18 @@ addResponseMarshallerForCommand(
     ApiCalls.Command.getUnsealingKey,
     ApiCalls.Command.sealWithSymmetricKey,
   ],
-  ({add}, {seededCryptoObjectAsJson}) => {
-    add(GetPasswordSuccessResponseParameterNames.seededCryptoObjectAsJson, seededCryptoObjectAsJson);
+  (command, {add}, result) => {
+    add(
+      SeededCryptoObjectResponseParameterNames[command],
+      (result as ApiCalls.GetSeededCryptoObjectSuccessResponse<typeof command>)[SeededCryptoObjectResponseParameterNames[command]]
+    );
 });
 addResponseMarshallerForCommand(
   [
     ApiCalls.Command.unsealWithSymmetricKey,
     ApiCalls.Command.unsealWithUnsealingKey,
   ],
-  ({add}, {plaintext}) => {
+  (_, {add}, {plaintext}) => {
     add(UnsealSuccessResponseParameterNames.plaintext, urlSafeBase64Encode(plaintext) );
 });
 
@@ -113,7 +119,7 @@ export const addResponseToUrl = (
 
   // Get the correct marshaller for this command and call it.
   const marshaller = commandMarshallers.get(command);
-  marshaller?.({add}, response);
+  marshaller?.(command, {add}, response);
 
   return url.toString();
 }

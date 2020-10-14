@@ -15,7 +15,7 @@ export type PrescribedTextFieldObservablesOrSpecification<T extends string = str
   PrescribedTextFieldSpecification<T> | PrescribedTextFieldObservables<T, NAME>;
 
 export class PrescribedTextFieldObservables<T extends string = string, NAME extends string = string> {
-  public readonly formula: Observable<Appendable>;  
+  public readonly  formula: Observable<Appendable>;  
   public readonly actual: Observable<T | "">;
   public readonly prescribed: Observable<T | "">;
   public readonly usePrescribed: Observable<boolean>;

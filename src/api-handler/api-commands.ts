@@ -103,21 +103,21 @@ function toJsonAndDelete<RESULT, T extends {delete: () => any, toJson: () => RES
 
 export const getSecret = implementApiCall<ApiCalls.GetSecret>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-    [GetSecretSuccessResponseParameterNames.seededCryptoObjectAsJson]:
+    [GetSecretSuccessResponseParameterNames.secretJson]:
       toJsonAndDelete( 
         seededCryptoModule.Secret.deriveFromSeed(seedString, derivationOptionsJson)
   )}));
 
 export const getPassword = implementApiCall<ApiCalls.GetPassword>(
     (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-      [GetPasswordSuccessResponseParameterNames.seededCryptoObjectAsJson]:
+      [GetPasswordSuccessResponseParameterNames.passwordJson]:
         toJsonAndDelete( 
           seededCryptoModule.Password.deriveFromSeed(seedString, derivationOptionsJson)
     )}));
 
 export const sealWithSymmetricKey = implementApiCall<ApiCalls.SealWithSymmetricKey>(
   (seededCryptoModule, seedString, {plaintext, unsealingInstructions, derivationOptionsJson}) => ({
-      [SealWithSymmetricKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
+      [SealWithSymmetricKeySuccessResponseParameterNames.packagedSealedMessageJson]:
       toJsonAndDelete(
           seededCryptoModule.SymmetricKey.sealWithInstructions(
             plaintext,
@@ -141,7 +141,7 @@ export const unsealWithSymmetricKey = implementApiCall<ApiCalls.UnsealWithSymmet
 
 export const getSealingKey = implementApiCall<ApiCalls.GetSealingKey>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-    [GetSealingKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
+    [GetSealingKeySuccessResponseParameterNames.sealingKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.UnsealingKey.deriveFromSeed(
           seedString,
@@ -153,7 +153,7 @@ export const getSealingKey = implementApiCall<ApiCalls.GetSealingKey>(
 
 export const getUnsealingKey = implementApiCall<ApiCalls.GetUnsealingKey>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-    [GetUnsealingKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
+    [GetUnsealingKeySuccessResponseParameterNames.unsealingKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.UnsealingKey.deriveFromSeed(
           seedString,
@@ -165,7 +165,7 @@ export const getUnsealingKey = implementApiCall<ApiCalls.GetUnsealingKey>(
 
 export const getSigningKey = implementApiCall<ApiCalls.GetSigningKey>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-    [GetSigningKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
+    [GetSigningKeySuccessResponseParameterNames.signingKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.SigningKey.deriveFromSeed(
           seedString,
@@ -177,7 +177,7 @@ export const getSigningKey = implementApiCall<ApiCalls.GetSigningKey>(
 
 export const getSymmetricKey = implementApiCall<ApiCalls.GetSymmetricKey>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-    [GetSymmetricKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
+    [GetSymmetricKeySuccessResponseParameterNames.symmetricKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.SymmetricKey.deriveFromSeed(
           seedString,
@@ -189,7 +189,7 @@ export const getSymmetricKey = implementApiCall<ApiCalls.GetSymmetricKey>(
 
 export const getSignatureVerificationKey = implementApiCall<ApiCalls.GetSignatureVerificationKey>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
-    [GetSignatureVerificationKeySuccessResponseParameterNames.seededCryptoObjectAsJson]:
+    [GetSignatureVerificationKeySuccessResponseParameterNames.signatureVerificationKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.SignatureVerificationKey.deriveFromSeed(
           seedString,
@@ -219,7 +219,7 @@ export const generateSignature = implementApiCall<ApiCalls.GenerateSignature> (
       const signature = signingKey.generateSignature(message);
       return {
         signature,
-        seededCryptoObjectAsJson: signatureVerificationKey.toJson()
+        signatureVerificationKeyJson: signatureVerificationKey.toJson()
       };
     } finally {
       signingKey.delete();
