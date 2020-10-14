@@ -1,5 +1,4 @@
-import style from "./command-simulator.module.css";
-import demoStyle from "./demo.module.css";
+import style from "./demo.module.css";
 import {
   ApiCalls, DerivationOptions, stringToUtf8ByteArray, UrlRequestMetadataParameterNames, urlSafeBase64Decode, urlSafeBase64Encode, utf8ByteArrayToString
 } from "@dicekeys/dicekeys-api-js";
@@ -121,7 +120,7 @@ export class CommandSimulator<
 
   constructor(options: CommandSimulatorOptions<COMMAND>) {
     super (options);
-    this.addClass(demoStyle.command_simulator_card);
+    this.addClass(style.operation_card);
     const command = options.command;
     this.command = command;
     this.plaintextBase64Output = options.outputs?.plaintextBase64Output ?? new Observable<string>();
@@ -205,19 +204,19 @@ export class CommandSimulator<
 
     this.requestId = PrescribedTextFieldObservables.from(
       ApiCalls.RequestMetadataParameterNames.requestId, options.inputs?.requestId ?? {
-        formula: Formula("requestId", "string", Span({class: demoStyle.command_name},"getUniqueId"), "()"),
+        formula: Formula("requestId", "string", Span({class: style.command_name},"getUniqueId"), "()"),
         prescribed: `${++CommandSimulator.numericRequestId
       }`}
     );
 
     const requestUrlFormula: Appendable = Formula('requestUrl', "string",
       `\`https://dicekeys.app?command=`,
-      Span({class: demoStyle.command_in_request_url_formula}, command),
+      Span({class: style.command_in_request_url_formula}, command),
       ...(this.parameterNames.map( (parameterName): Appendable =>
         (
           ["&", parameterName, "=",
           ...((parameterName === "message" || parameterName === "plaintext") ?
-            ["${", Span({class: demoStyle.command_name},"base64urlEncode"), "(", FormulaInputVariable({}, parameterName), ")}"] :
+            ["${", Span({class: style.command_name},"base64urlEncode"), "(", FormulaInputVariable({}, parameterName), ")}"] :
             ["${", FormulaInputVariable({}, parameterName), "}"]
           )])
       )),
@@ -356,7 +355,7 @@ export class CommandSimulator<
   render() {
     const command = this.command;
     super.render(
-      Div({class: demoStyle.command_simulator_card_title}, `${this.command}`),
+      Div({class: style.operation_card_title}, `${this.command}`),
       // FIXME -- conditionally render if not set
       // ...this.prescribedTextInputIfParameterOfCommand(this.seedString),
       // ...this.prescribedTextInputIfParameterOfCommand(this.requestUrl),
@@ -414,7 +413,7 @@ export class CommandSimulator<
       Div({class: style.section},
         Div({class: style["section-header"]}, "Result"),
         ParameterCard({},
-          Div({class: demoStyle.result_label}, "Sent via URL"),
+          Div({class: style.result_label}, "Sent via URL"),
           ResultTextBlock({}).updateFromObservable(this.responseUrl)
         ),
         // Div({},
@@ -423,8 +422,8 @@ export class CommandSimulator<
         // ),
         ...((this.command === ApiCalls.Command.generateSignature) ? [
           ParameterCard({},
-            Div({class: demoStyle.result_label}, "signature"),
-            Div({class: demoStyle.result_value}).withElement( e =>
+            Div({class: style.result_label}, "signature"),
+            Div({class: style.result_value}).withElement( e =>
               this.responseUrlObject.observe( responseUrlObject => 
                 e.textContent = responseUrlObject?.searchParams.get("signature") ?? ""
               )
@@ -433,7 +432,7 @@ export class CommandSimulator<
         ] : []),
         ...((ApiCalls.commandHasJsonResponse(command)) ? [
           ParameterCard({},
-            Div({class: demoStyle.result_label}, ApiCalls.SeededCryptoObjectResponseParameterNames[command]),
+            Div({class: style.result_label}, ApiCalls.SeededCryptoObjectResponseParameterNames[command]),
             ResultTextBlock({}).withElement( e =>
               this.responseUrlObject.observe( responseUrlObject => {
                 try {
@@ -448,17 +447,17 @@ export class CommandSimulator<
         ] : []),
         ...((commandsWithPlaintextResponse.has(this.command)) ? [
           ParameterCard({},
-            Div({class: demoStyle.result_label}, FnCall("base64urlDecode("), "plaintext", FnCall(")")),
+            Div({class: style.result_label}, FnCall("base64urlDecode("), "plaintext", FnCall(")")),
             ResultTextBlock({}).updateFromObservable( this.plaintextStringOutput )
           ),
         ] : []
       ),
       ParameterCard({},
-        Div({class: demoStyle.result_label}, "exception"),
+        Div({class: style.result_label}, "exception"),
         ResultTextBlock({}).updateFromObservable( this.exception )
       ).withElement( e => { this.exception.observe( exception => e.style.display = exception ? "block" : "none" ) }),
       ParameterCard({},
-        Div({class: demoStyle.result_label}, "exceptionMessage"),
+        Div({class: style.result_label}, "exceptionMessage"),
         ResultTextBlock({}).updateFromObservable( this.exceptionMessage )
       ).withElement( e => { this.exceptionMessage.observe( exceptionMessage => e.style.display = exceptionMessage ? "block" : "none" ) })
     ))

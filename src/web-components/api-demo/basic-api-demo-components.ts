@@ -13,8 +13,10 @@ type TypeName = "string" | "string[]" | "string | byte[]"
 export const Formula = (result: string, type: TypeName | undefined, ...derivation: Appendable[]): Appendable => Div({class: style.formula},...([
   Span({class: style.formula_left}, result),
   ...(type ? [Span({class: style.formula_type}, type)] : [] ),
-  Span({class: style.formula_operator}," &larr; "),
-  Span({class: style.formula_right}, ...derivation)
+  ...(derivation.length === 0 ? [] : [
+      Span({class: style.formula_operator}," &larr; "),
+      Span({class: style.formula_right}, ...derivation)
+  ])
 ]));
 
 export const ParameterCard = (options: Attributes<"div">, ...content: Appendable[]) =>

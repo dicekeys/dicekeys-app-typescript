@@ -21,7 +21,7 @@ import {
   FormulaInputVariable,
   ParameterCard
 } from "./basic-api-demo-components"
-import { SealAndUnseal, SymmetricKeySealAndUnseal } from "./multi-command-simulator";
+import { SealAndUnseal, SymmetricKeySealAndUnseal } from "./demos";
 
 interface ApiDemoOptions extends Attributes {
   seedString?: PrescribedTextFieldSpecification<string>;
