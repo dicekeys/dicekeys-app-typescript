@@ -85,7 +85,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
       // Once the diceKey is available, calculate if the proof of prior derivation is valid
       EncryptedCrossTabState.instance?.diceKey.observe( async (diceKey) => {
         if (diceKey) {
-          const seedString = DiceKey.toSeedString(diceKey, this.derivationOptions);
+          const seedString = DiceKey.toSeedString(diceKey, !this.derivationOptions.excludeOrientationOfFaces);
           const {verified} = await ApiRequestContainer.verifyDerivationOptionsWorker.calculate({seedString, derivationOptionsJson});
           this.areDerivationOptionsVerified = verified;
           this.renderSoon();

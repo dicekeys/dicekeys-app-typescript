@@ -16,6 +16,7 @@ import {
   UnsealWithSymmetricKeySuccessResponseParameterNames
 } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 
+
 /**
  * API Pipeline
  * 
@@ -70,9 +71,9 @@ const implementApiCall = <METHOD extends ApiCalls.ApiCall>(
 ) =>
   (seededCryptoModule: SeededCryptoModuleWithHelpers) =>
     (seedString: string) =>
-      (parameters: METHOD["parameters"]) => {
+      (request: METHOD["parameters"]) => {
         try {
-          return implementation(seededCryptoModule, seedString, parameters);
+          return implementation(seededCryptoModule, seedString, request);
         } catch (e) {
           if (typeof e === "number") {
             // The seeded crypto library will throw exception pointers which need
@@ -138,6 +139,25 @@ export const unsealWithSymmetricKey = implementApiCall<ApiCalls.UnsealWithSymmet
     )
   })
 );
+
+// const mutateDerivationOptionsIfNecessary = (
+//   command: ApiCalls.Command,
+//   derivationOptionsJson: string
+// ): string => {
+//   var derivationOptions = DerivationOptions(derivationOptionsJson);
+//   const mutable = !!derivationOptions.mutable;
+//   var mutated: boolean = mutable;
+//   if (mutable) {
+//     derivationOptions = removeMutableFromDerivationOptions(derivationOptions);
+//   }
+//   if (command === ApiCalls.Command.getSealingKey && (mutable || derivationOptionsJson.length === 0)) {
+//     mutated = true;
+//     derivationOptions["uniqueId"] = urlSafeBase64Encode(getRandomBytes(4)); 
+//   }
+//   return mutated ?
+//     jsonStringifyWithSortedFieldOrder(derivationOptions) :
+//     derivationOptionsJson;
+// }
 
 export const getSealingKey = implementApiCall<ApiCalls.GetSealingKey>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({

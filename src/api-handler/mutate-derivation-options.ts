@@ -1,4 +1,5 @@
 import {
+  ApiCalls,
   DerivationOptions,
   urlSafeBase64Encode,
 } from "@dicekeys/dicekeys-api-js";
@@ -16,10 +17,30 @@ import {
  * 
  * @param derivationOptionsOrJson 
  */
-export const areDerivationOptionsMutable = (
+
+ export const derivationOptionsIfMutable = (
+    request: ApiCalls.Request
+  ): DerivationOptions | undefined => {
+    if (ApiCalls.requestHasPackagedSealedMessageParameter(request)) {
+      return undefined;
+    }
+    const derivationOptions = DerivationOptions(request.derivationOptionsJson);
+    if (request.derivationOptionsJson !== "" && !derivationOptions.mutable) {
+      return undefined;
+    }
+    return derivationOptions;
+  }
+
+  /**
+ * Test if derivation options contain a `"proofOfPriorDerivation": "true"`indicating
+ * that the derivationOptionsJson should be modified to contain such proof.
+ * 
+ * @param derivationOptionsOrJson 
+ */
+export const isProofOfPriorDerivationRequired = (
   derivationOptionsOrJson: DerivationOptions | string
 ): boolean =>
-  !!DerivationOptions(derivationOptionsOrJson).mutable
+  DerivationOptions(derivationOptionsOrJson).proofOfPriorDerivation === ""
 
 /**
  * Remove the mutable field from a DerivationOptions object.

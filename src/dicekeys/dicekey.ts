@@ -8,7 +8,6 @@ import {
   InvalidFaceOrientationLettersTrblOrUnknownException,
   FaceOrientationLettersTrbl
 } from "@dicekeys/read-dicekey-js";
-import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 
 
 export const NumberOfFacesInKey = 25;
@@ -161,26 +160,31 @@ const getRandomDiceKey = (numberOfFaces: number = 6): DiceKey => {
 enum DiceKeyInHumanReadableFormType { _ = "" };
 export type DiceKeyInHumanReadableForm = DiceKeyInHumanReadableFormType & string;
 
-export const DiceKeyInHumanReadableForm = (diceKey: DiceKey): DiceKeyInHumanReadableForm =>
+export const DiceKeyInHumanReadableForm = (diceKey: DiceKey, includeOrientations: boolean /* = true FIXME */): DiceKeyInHumanReadableForm =>
   diceKey.map( face =>
     (face.letter ?? "?") +
     (face.digit ?? "?") +
-    (face.orientationAsLowercaseLetterTrbl ?? "?")
+    ( includeOrientations ? ( face.orientationAsLowercaseLetterTrbl ?? "?") : "" )
   ).join("") as DiceKeyInHumanReadableForm
 
 const diceKeyFromHumanReadableForm = (
   humanReadableForm: DiceKeyInHumanReadableForm,
   validationOptions: DiceKeyValidationOptions = {}
 ): DiceKey<Face> => {
-  if (typeof(humanReadableForm) !== "string" || humanReadableForm.length !== 75) {
-    throw new InvalidDiceKeyException("Invalid human-readable-form string length");
+  if (typeof(humanReadableForm) !== "string") {
+    throw new InvalidDiceKeyException("DiceKey in human-readable-form must be a string");
   }
+  const charsPerFace =
+    humanReadableForm.length === 75 ? 3 :
+    humanReadableForm.length === 50 ? 2 :
+    ( () => { throw new InvalidDiceKeyException("Invalid human-readable-form string length"); })();
+
   const diceKey: DiceKey = FacePositions.map( position => {
     const [
       letter,
       digitString,
-      orientationAsLowercaseLetterTrbl
-    ] = humanReadableForm.substr(3 * position, 3).split("");
+      orientationAsLowercaseLetterTrbl = "?"
+    ] = humanReadableForm.substr(charsPerFace * position, charsPerFace).split("");
     const positionObj = {position: position as FacePosition};
     const faceAndOrientation: Face = {
       letter: FaceLetter(letter, positionObj),
@@ -305,23 +309,26 @@ const removeOrientations = <F extends Face = Face>(
 const FaceRotationsNonStationary = [1, 2, 3] as const;
 export function rotateToRotationIndependentForm<F extends Face = Face>(
   diceKey: DiceKey<Face>,
+  includeOrientations: boolean,
   rotateFaceFn: RotateFaceFn<F>
 ): DiceKey;
 export function rotateToRotationIndependentForm(
   diceKey: DiceKey<Face>,
+  includeOrientations: boolean,
 ): DiceKey;
 export function rotateToRotationIndependentForm<F extends Face = Face>(
   diceKey: DiceKey<F>,
+  includeOrientations: boolean,
   rotateFaceFn: RotateFaceFn<F> = defaultRotateFaceFn
 ): DiceKey<F> {
   let rotationIndependentDiceKey: DiceKey<F> = diceKey;
-  let earliestHumanReadableForm: DiceKeyInHumanReadableForm = DiceKey.toHumanReadableForm(diceKey);
+  let earliestHumanReadableForm: DiceKeyInHumanReadableForm = DiceKey.toHumanReadableForm(diceKey, includeOrientations);
   for (const candidateRotation of FaceRotationsNonStationary) {
     // If the candidate rotation would result in the square having a top-left letter
     // that is earlier in sort order (lower unicode character) than the current rotation,
     // replace the current rotation with the candidate rotation.
     const rotatedDiceKey = rotateDiceKey<F>(diceKey, candidateRotation, rotateFaceFn)
-    const humanReadableForm  = DiceKey.toHumanReadableForm(rotatedDiceKey);
+    const humanReadableForm  = DiceKey.toHumanReadableForm(rotatedDiceKey, includeOrientations);
     if (humanReadableForm < earliestHumanReadableForm) {
       earliestHumanReadableForm = humanReadableForm;
       rotationIndependentDiceKey = rotatedDiceKey;
@@ -330,14 +337,14 @@ export function rotateToRotationIndependentForm<F extends Face = Face>(
   return rotationIndependentDiceKey;
 }
 
-const applyDerivationOptions = (
-  diceKey: DiceKey,
-  derivationOptions: DerivationOptions | string
-): DiceKey => {
-  return (DerivationOptions(derivationOptions).excludeOrientationOfFaces) ?
-    removeOrientations(diceKey) :
-    diceKey;
-}
+// const applyDerivationOptions = (
+//   diceKey: DiceKey,
+//   derivationOptions: DerivationOptions | string
+// ): DiceKey => {
+//   return (DerivationOptions(derivationOptions).excludeOrientationOfFaces) ?
+//     removeOrientations(diceKey) :
+//     diceKey;
+// }
 
 /**
  * Create a seed string from a DiceKey and a set of derivation options.
@@ -359,11 +366,11 @@ const applyDerivationOptions = (
  */
 const toSeedString = (
   diceKey: DiceKey,
-  derivationOptionsObjectOrJson: DerivationOptions | string
+  includeOrientations: boolean
 ): DiceKeyInHumanReadableForm => {
-  const preCanonicalDiceKey: DiceKey = applyDerivationOptions(diceKey, derivationOptionsObjectOrJson);
-  const canonicalDiceKey = rotateToRotationIndependentForm(preCanonicalDiceKey); 
-  const humanReadableForm = DiceKeyInHumanReadableForm(canonicalDiceKey);
+//  const preCanonicalDiceKey: DiceKey = applyDerivationOptions(diceKey, derivationOptionsObjectOrJson);
+  const canonicalDiceKey = rotateToRotationIndependentForm(diceKey, includeOrientations); 
+  const humanReadableForm = DiceKeyInHumanReadableForm(canonicalDiceKey, includeOrientations);
   return humanReadableForm;
 }
   
@@ -376,6 +383,6 @@ DiceKey.rotateToRotationIndependentForm = rotateToRotationIndependentForm;
 DiceKey.toStringOf25Triples = DiceKeyInHumanReadableForm;
 DiceKey.removeOrientations = removeOrientations;
 DiceKey.toSeedString = toSeedString;
-DiceKey.applyDerivationOptions = applyDerivationOptions;
+//DiceKey.applyDerivationOptions = applyDerivationOptions;
 DiceKey.cornerIndexesClockwise = [0, 4, 24, 20] as const;
 DiceKey.cornerIndexSet = new Set<number>(DiceKey.cornerIndexesClockwise);

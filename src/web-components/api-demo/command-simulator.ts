@@ -20,15 +20,18 @@ import {
 } from "../basic-building-blocks";
 import { jsonStringifyWithSortedFieldOrder } from "~api-handler/json";
 import {
-  FnCall,
+  FnCallName,
   Formula,
-  FormulaInputVariable,
+  TemplateInputVar,
   Instructions,
   ParameterCard,
-  ResultTextBlock
+  ResultTextBlock, FnCall, InputVar, TemplateString, UrlParameter, ResultLabel
 } from "./basic-api-demo-components"
 import { derivationOptionsJsonForAllowedDomains } from "~dicekeys/derivation-options-json-for-allowed-domains";
-import { SeededCryptoObjectResponseParameterNames } from "@dicekeys/dicekeys-api-js/dist/api-calls";
+import { requestHasDerivationOptionsParameter, SeededCryptoObjectResponseParameterNames } from "@dicekeys/dicekeys-api-js/dist/api-calls";
+import {
+  mutateRequest
+} from "~api-handler/mutate-request";
 
 
 const commandsWithPlaintextResponse = new Set<ApiCalls.Command>([
@@ -136,7 +139,7 @@ export class CommandSimulator<
 
     this.derivationOptionsJson = new PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>(
       ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson, {
-      formula: Formula("derivationOptionsJson", "string", `'{"allow":[{"host":"*.`, FormulaInputVariable({}, "authorizedDomains[i]"), `"}]}'`),
+      formula: Formula("derivationOptionsJson", "string", `'{"allow":[{"host":"*.`, TemplateInputVar("authorizedDomains[i]"), `"}]}'`),
     });
     // Update derivation options based on domains.
     this.authorizedDomains.observe( domains => domains &&
@@ -152,7 +155,7 @@ export class CommandSimulator<
     this.messageString = PrescribedTextFieldObservables.from("messageString", options.inputs?.messageString);
     this.messageBase64 = PrescribedTextFieldObservables.from(
       ApiCalls.GenerateSignatureParameterNames.message, options.inputs?.messageBase64 ?? {
-        formula: Formula("message", "string | byte[]", "base64urlEncode(", FormulaInputVariable({},"messageString"), ")")
+        formula: Formula("message", "string | byte[]",  FnCall("base64urlEncode", InputVar("messageString")))
       });
 
     if (command === ApiCalls.Command.generateSignature) {
@@ -172,7 +175,7 @@ export class CommandSimulator<
 
     this.plaintextBase64 = PrescribedTextFieldObservables.from(
       ApiCalls.SealWithSymmetricKeyParameterNames.plaintext, {
-        formula: Formula("plaintext", "string", "base64urlEncode(", FormulaInputVariable({},"plaintextUtf8"), ")")
+        formula: Formula("plaintext", "string", FnCall("base64urlEncode", InputVar("plaintextUtf8")))
       }
     );
 
@@ -193,7 +196,7 @@ export class CommandSimulator<
 
     this.unsealingInstructions = PrescribedTextFieldObservables.from(
       ApiCalls.SealWithSymmetricKeyParameterNames.unsealingInstructions, options.inputs?.unsealingInstructions ?? {
-        formula: Formula("unsealingInstructions", "string", `'{"allow":[{"host":"*.`, FormulaInputVariable({}, "authorizedDomains[i]"), `"}]}'`)
+        formula: Formula("unsealingInstructions", "string", `'{"allow":[{"host":"*.`, TemplateInputVar("authorizedDomains[i]"), `"}]}'`)
       }
     );
     
@@ -210,16 +213,15 @@ export class CommandSimulator<
     );
 
     const requestUrlFormula: Appendable = Formula('requestUrl', "string",
-      `\`https://dicekeys.app?command=`,
-      Span({class: style.command_in_request_url_formula}, command),
-      ...(this.parameterNames.map( (parameterName): Appendable =>
-        (
-          ["&", parameterName, "=",
-          ...((parameterName === "message" || parameterName === "plaintext") ?
-            ["${", Span({class: style.command_name},"base64urlEncode"), "(", FormulaInputVariable({}, parameterName), ")}"] :
-            ["${", FormulaInputVariable({}, parameterName), "}"]
-          )])
-      )),
+      `\`https://dicekeys.app?`,
+      UrlParameter("command", command),
+      ...(this.parameterNames.map( (parameterName): Appendable => [
+          "&",
+          UrlParameter(parameterName, 
+          (parameterName === "message" || parameterName === "plaintext") ?
+            TemplateString( FnCall("base64urlEncode", InputVar(parameterName))) :
+            TemplateInputVar(parameterName)
+        )])),
       "\`"
     );
 
@@ -315,11 +317,20 @@ export class CommandSimulator<
       return;
     }
     try {
-      const request = getApiRequestFromSearchParams(requestUrl.searchParams);
-      const respondTo = searchParams.get(UrlRequestMetadataParameterNames.respondTo);
-      
+      const respondTo = searchParams.get(UrlRequestMetadataParameterNames.respondTo);      
       const seedString = this.seedString.value;
+      var request = getApiRequestFromSearchParams(requestUrl.searchParams);
       if (seedString && request && respondTo) {
+        if (requestHasDerivationOptionsParameter(request)) {
+          const derivationOptions = DerivationOptions(request.derivationOptionsJson);
+          request = await mutateRequest({
+            seedString,
+            request,
+            // Add a unique id for sealing keys that have no restrictions that would limit anyone
+            // from unsealing them, as having a single key would make users linkable
+            addUniqueId: request.command === ApiCalls.Command.getSealingKey && !derivationOptions.allow
+          });
+        }
         const responseObject = await new ComputeApiCommandWorker().calculate({seedString, request});
         responseObject.requestId = searchParams.get("requestId")!;
         this.responseObject.set(responseObject);
@@ -413,7 +424,7 @@ export class CommandSimulator<
       Div({class: style.section},
         Div({class: style["section-header"]}, "Result"),
         ParameterCard({},
-          Div({class: style.result_label}, "Sent via URL"),
+          ResultLabel("Sent via URL"),
           ResultTextBlock({}).updateFromObservable(this.responseUrl)
         ),
         // Div({},
@@ -422,7 +433,7 @@ export class CommandSimulator<
         // ),
         ...((this.command === ApiCalls.Command.generateSignature) ? [
           ParameterCard({},
-            Div({class: style.result_label}, "signature"),
+            ResultLabel("signature"),
             Div({class: style.result_value}).withElement( e =>
               this.responseUrlObject.observe( responseUrlObject => 
                 e.textContent = responseUrlObject?.searchParams.get("signature") ?? ""
@@ -432,7 +443,7 @@ export class CommandSimulator<
         ] : []),
         ...((ApiCalls.commandHasJsonResponse(command)) ? [
           ParameterCard({},
-            Div({class: style.result_label}, ApiCalls.SeededCryptoObjectResponseParameterNames[command]),
+            ResultLabel(ApiCalls.SeededCryptoObjectResponseParameterNames[command]),
             ResultTextBlock({}).withElement( e =>
               this.responseUrlObject.observe( responseUrlObject => {
                 try {
@@ -447,17 +458,17 @@ export class CommandSimulator<
         ] : []),
         ...((commandsWithPlaintextResponse.has(this.command)) ? [
           ParameterCard({},
-            Div({class: style.result_label}, FnCall("base64urlDecode("), "plaintext", FnCall(")")),
+            ResultLabel(FnCallName("base64urlDecode("), "plaintext", FnCallName(")")),
             ResultTextBlock({}).updateFromObservable( this.plaintextStringOutput )
           ),
         ] : []
       ),
       ParameterCard({},
-        Div({class: style.result_label}, "exception"),
+        ResultLabel("exception"),
         ResultTextBlock({}).updateFromObservable( this.exception )
       ).withElement( e => { this.exception.observe( exception => e.style.display = exception ? "block" : "none" ) }),
       ParameterCard({},
-        Div({class: style.result_label}, "exceptionMessage"),
+        ResultLabel("exceptionMessage"),
         ResultTextBlock({}).updateFromObservable( this.exceptionMessage )
       ).withElement( e => { this.exceptionMessage.observe( exceptionMessage => e.style.display = exceptionMessage ? "block" : "none" ) })
     ))

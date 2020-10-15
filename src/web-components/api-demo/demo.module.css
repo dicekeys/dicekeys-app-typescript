@@ -79,6 +79,7 @@
 .formula {
   color: rgb(64,64,64);
   font-size: 1rem;
+  font-family: monospace;
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
@@ -87,11 +88,13 @@
   flex-wrap: nowrap;
 }
 
-.formula_left {
+.formula_left, .result_label {
+  font-family: sans-serif;
   display: flex;
   flex: none;
   color:rgb(128, 24, 128);
   font-weight: bold;
+  font-size: 80%;
 }
 
 .formula_type {
@@ -107,34 +110,41 @@
 }
 
 .formula_operator {
+  padding-left: .25rem;
+  padding-right: .25rem;
   display: flex;
   flex: none;
   font-weight: bold;
+  font-size: 120%;
   color: black;
 }
 
 .formula_right {
-  display: block;
+  display: inline-block;
   word-break: break-all;
   word-wrap: break-word;
   flex: flex-shrink;
 }
 
+.formula_input_braces {
+  font-family: monospace;
+  color: #000080;
+}
+
 .formula_input {
-  color: rgb(192, 32, 192);
+  display: inline-block;
+  font-family: sans-serif;
+  font-size: 80%;
+  color:rgb(128, 24, 128);
   font-style: italic;
   font-weight: bold;
 }
 
 .command_in_request_url_formula {
-  color:black;
+  display: inline-block;
+  color:#000080;
   font-weight: 700;
-  font-family: consolas, monospace;
-}
-
-.result_label {
-  color:rgb(128, 24, 128);
-  font-weight: bold;
+  font-family: monospace;
 }
 
 .result_value {
@@ -150,7 +160,18 @@
   overflow-y:hidden; */
 }
 
+.url_parameter_name {
+  font-style: italic;
+  color: #606060;
+}
+
+.url_parameter_value {
+  color: black;
+}
+
 .command_name {
   color: #603000;
   font-weight: bold;
+  font-family: sans-serif;
+  font-size: 80%;
 }

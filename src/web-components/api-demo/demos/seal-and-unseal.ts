@@ -7,7 +7,7 @@ import {
 //  LabeledPrescribedTextInput
 } from "../../basic-building-blocks";
 import { CommandSimulator } from "../command-simulator";
-import { FnCall, Formula, FormulaInputVariable, Instructions, ParameterCard, ResultTextBlock } from "../basic-api-demo-components";
+import { FnCall, Formula, InputVar, Instructions, ParameterCard, ResultTextBlock } from "../basic-api-demo-components";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import {
   MultiCommandSimulatorOptions,
@@ -79,9 +79,9 @@ export class SealAndUnseal extends MultiCommandSimulator<SealAndUnsealOptions> {
         ParameterCard({},
           Formula("packagedSealedMessageJson", "string",
             "SealingKey.",
-            FnCall("fromJson"),
-            "(", FormulaInputVariable({},"sealingKeyJson"), ")",
-            ".", FnCall("seal"), "(", FormulaInputVariable({}, "plaintext"), ")",
+            FnCall("fromJson", InputVar("sealingKeyJson")),
+            ".",
+            FnCall("seal", InputVar("plaintext")),
           ),
           ResultTextBlock({}).updateFromObservable( this.packagedSealedMessageJson )
         ),  

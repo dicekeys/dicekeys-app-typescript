@@ -18,8 +18,9 @@ import {
 } from "../basic-building-blocks"
 import {
   Formula,
-  FormulaInputVariable,
-  ParameterCard
+  InputVar,
+  ParameterCard,
+  TemplateInputVar
 } from "./basic-api-demo-components"
 import { SealAndUnseal, SymmetricKeySealAndUnseal } from "./demos";
 
@@ -30,7 +31,7 @@ interface ApiDemoOptions extends Attributes {
 export class ApiDemo extends Component<ApiDemoOptions> {
   
   commaSeparatedAuthorizedDomains = new PrescribedTextFieldObservables<string, "domains">("domains", {
-    formula: Formula("authorizedDomains[]", "string[]", [FormulaInputVariable({}, "authorizedDomain1"), ", ... , ", FormulaInputVariable({}, "authorizedDomainN")]),
+    formula: Formula("authorizedDomains[]", "string[]", [InputVar("authorizedDomain1"), ", ... , ", InputVar("authorizedDomainN")]),
     actual: 'example.pwmgr.app, example.com',
     usePrescribed: false
   });
@@ -45,7 +46,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
 
   respondTo = new PrescribedTextFieldObservables<string, typeof UrlRequestMetadataParameterNames.respondTo>(
     UrlRequestMetadataParameterNames.respondTo, {
-      formula: Formula("respondTo", "string", "'", "https://", FormulaInputVariable({}, "authorizedDomains[i]"), DefaultPermittedPathPrefix, "'")
+      formula: Formula("respondTo", "string", "`", "https://", TemplateInputVar("authorizedDomains[i]"), DefaultPermittedPathPrefix, "`")
     }
   )
 
@@ -53,7 +54,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
     super(options);
     this.seedString = new PrescribedTextFieldObservables(ApiRequestWithSeedParameterNames.seedString,
         {
-          formula: Formula("seed", "string | byte[]", 'DiceKeys.toSeed(', FormulaInputVariable({}, "diceKey"),  ')'),
+          formula: Formula("seed", "string | byte[]", 'DiceKeys.', "toSeed", "(", InputVar("diceKey"),  ')'),
           // prescribed: new URL(window.location.href).searchParams.get(ApiRequestWithSeedParameterNames.seedString) ?? 
           //   "A1tB2rC3bD4lE5tF6rG1bH2lI3tJ4rK5bL6lM1tN2rO3bP4lR5tS6rT1bU2lV3tW4rX5bY6lZ1t",
           prescribed: new URL(window.location.href).searchParams.get(ApiRequestWithSeedParameterNames.seedString) ?? 

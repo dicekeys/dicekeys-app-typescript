@@ -10,8 +10,8 @@ import {
   Component, Appendable
 } from "../../web-component-framework";
 import {
-  areDerivationOptionsMutable
-} from "../../api-handler/mutate-derivation-options"
+  mutateRequest
+} from "../../api-handler/mutate-request";
 import {
   DiceKey,
   DiceKeyInHumanReadableForm,
@@ -49,12 +49,9 @@ import {
 import {
   ComputeApiCommandWorker
 } from "../../workers/call-api-command-worker";
-import {
-  AddDerivationOptionsProofWorker,
-} from "../../workers/call-derivation-options-proof-worker";
-import { jsonStringifyWithSortedFieldOrder } from "../../api-handler/json";
 import { PasswordJson } from "@dicekeys/seeded-crypto-js";
 import { DICEKEY } from "../../web-components/dicekey-styled";
+import { requestHasDerivationOptionsParameter } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
@@ -78,12 +75,11 @@ export interface ApproveApiCommandOptions extends Attributes {
 
 export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
 
-  private readonly derivationOptionsJsonInOriginalRequest: string;  
-  private readonly areDerivationOptionsMutable: boolean;
+//  private readonly derivationOptionsInOriginalRequest: DerivationOptions;
+  private excludeOrientationOfFaces?: boolean;
+  private seedHint?: string;
 
-  private modifiedDerivationOptions: DerivationOptions;
-  
-  private static readonly addDerivationOptionsProofWorker = new AddDerivationOptionsProofWorker();
+  private readonly areDerivationOptionsMutable: boolean;
   private static readonly computeApiCommandWorker = new ComputeApiCommandWorker();
  
 
@@ -96,14 +92,22 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     options: ApproveApiCommandOptions
 ) {
     super(options);
-    const {derivationOptionsJson} = extraRequestDerivationOptionsAndInstructions(this.options.requestContext.request);
-    this.derivationOptionsJsonInOriginalRequest = derivationOptionsJson;
-    this.areDerivationOptionsMutable = areDerivationOptionsMutable(this.derivationOptionsJsonInOriginalRequest);
-    this.modifiedDerivationOptions = DerivationOptions(this.derivationOptionsJsonInOriginalRequest);
+    const requestContext = this.options.requestContext;
+    const request = requestContext.request;
+    const {derivationOptionsJson} = extraRequestDerivationOptionsAndInstructions(request);
+    const derivationOptions = DerivationOptions(derivationOptionsJson);
+    this.areDerivationOptionsMutable = requestHasDerivationOptionsParameter(request) && !!derivationOptions.mutable;
+
+    // Components of derivation that can be modified
+    this.excludeOrientationOfFaces = derivationOptions.excludeOrientationOfFaces;
+    this.seedHint = derivationOptions.seedHint;
+
     // Kick of computation of initial values calculated by workers.
-    const { request } = this.options.requestContext;
-    const seedString = DiceKey.toSeedString(this.options.diceKey, this.modifiedDerivationOptions);
-    ApproveApiCommand.computeApiCommandWorker.calculate({seedString, request});    // After this class is constructed, kick of background calculations.
+    ApproveApiCommand.computeApiCommandWorker.calculate({
+      request,
+      seedString: DiceKey.toSeedString(this.options.diceKey, !this.excludeOrientationOfFaces),
+    });
+    // After this class is constructed, kick of background calculations.
     setTimeout( () => this.updateBackgroundOperationsForDerivationOptions(), 1);
     if ( request.command === ApiCalls.Command.getPassword ) {
       (ApproveApiCommand.computeApiCommandWorker.resultPromise as Promise<ApiCalls.GetPasswordSuccessResponse>).then(
@@ -114,47 +118,25 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     }  
   }
 
-  
-  public getModifiedDerivationOptionsJson = async (): Promise<string> => {
-    if (!this.areDerivationOptionsMutable) {
-      // We weren't allowed to mutate the derivation options so leave them unchanged
-      return this.derivationOptionsJsonInOriginalRequest
-    } else {
-      return (await ApproveApiCommand.addDerivationOptionsProofWorker.calculate({
-        seedString: this.seedString,
-        derivationOptionsJson: jsonStringifyWithSortedFieldOrder(this.modifiedDerivationOptions)
-      })).derivationOptionsJson
-    }
-  }
-
-  public getMutatedRequest = async (): Promise<ApiCalls.RequestMessage> => {
-    const { request } = this.options.requestContext;
-    const derivationOptionsJson = await this.getModifiedDerivationOptionsJson();
-    return "derivationOptionsJson" in request ?
-      // replace the derivationOptionsJson field in the top level of the request
-      {...request, derivationOptionsJson} :
-      // replace the derivationOptionsJson field in the 
-      {...request, packagedSealedMessageJson: JSON.stringify({...(JSON.parse(request.packagedSealedMessageJson)), derivationOptionsJson})}
-  }
-
   private updateBackgroundOperationsForDerivationOptions = async () => {
-    await ApproveApiCommand.computeApiCommandWorker.calculate({seedString: this.seedString, request: await this.getMutatedRequest()});
+    await ApproveApiCommand.computeApiCommandWorker.calculate({
+      seedString: this.seedString,
+      request: await mutateRequest({
+        request: this.options.requestContext.request,
+        seedString: this.seedString,
+        excludeOrientationOfFaces: this.excludeOrientationOfFaces,
+        seedHint: this.seedHint,
+      })
+    });
     this.renderSoon();
   }
 
-  modifyDerivationOptions(newDerivationOptions: Partial<DerivationOptions>) {
-    this.updateBackgroundOperationsForDerivationOptions();
-    if ("excludeOrientationOfFaces" in newDerivationOptions) {
-      this.renderDiceKey();
-    }
-  }
-
   private get diceKey(): DiceKey {
-    return DiceKey.applyDerivationOptions(this.options.diceKey, this.modifiedDerivationOptions);
+    return this.options.diceKey;
   }
 
   private get seedString(): DiceKeyInHumanReadableForm {
-    return DiceKey.toSeedString(this.options.diceKey, this.modifiedDerivationOptions);
+    return DiceKey.toSeedString(this.options.diceKey, !!this.excludeOrientationOfFaces);
   }
 
 
@@ -204,7 +186,12 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
 
   public getResponseReturnUponUsersConsent = async (): Promise<ConsentResponse> => {
     const seedString = this.seedString;
-    const mutatedRequest = await this.getMutatedRequest();
+    const mutatedRequest = await mutateRequest({
+      seedString,
+      request: this.options.requestContext.request,
+      excludeOrientationOfFaces: this.excludeOrientationOfFaces,
+      seedHint: this.seedHint,
+    });
     return {
         seedString,
         mutatedRequest
@@ -217,7 +204,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
       return;
     }
     const diceKeySvg = this.setDiceKeySvg(new DiceKeySvg({
-      diceKey: this.modifiedDerivationOptions.excludeOrientationOfFaces ?
+      diceKey: this.excludeOrientationOfFaces ?
         DiceKey.removeOrientations(this.diceKey) :
         this.diceKey,
       obscureByDefault: true,
@@ -233,7 +220,8 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
 
   handleOrientationCheckboxClicked = (excludeOrientationOfFaces: boolean) => {
     if (this.areDerivationOptionsMutable) {
-      this.modifyDerivationOptions({excludeOrientationOfFaces: excludeOrientationOfFaces})
+      this.excludeOrientationOfFaces = excludeOrientationOfFaces;
+      this.updateBackgroundOperationsForDerivationOptions();
       this.renderDiceKey()
     }
   }
@@ -252,18 +240,18 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
       this.append(
         Div({class: "orientation-widget"},
           Div({}, `Orientation of individual dice`),
-          Label({}, RadioButton({name: "orientation", value: "preserve", ...(!this.modifiedDerivationOptions.excludeOrientationOfFaces ? {checked: ""} : {})}).with( r => r.events.click.on( () => {
-            this.modifiedDerivationOptions.excludeOrientationOfFaces = false;
+          Label({}, RadioButton({name: "orientation", value: "preserve", ...(!this.excludeOrientationOfFaces ? {checked: ""} : {})}).with( r => r.events.click.on( () => {
+            this.excludeOrientationOfFaces = false;
             this.renderSoon();
           }) ), "Preserve"),
           Label({},
             RadioButton({
                 name: "orientation",
                 value:"remove",
-                ...(!!this.modifiedDerivationOptions.excludeOrientationOfFaces ? {checked: ""} : {}),
+                ...(!!this.excludeOrientationOfFaces ? {checked: ""} : {}),
                 events: (events) => {
                   events.click.on( () => {
-                    this.modifiedDerivationOptions.excludeOrientationOfFaces = true;
+                    this.excludeOrientationOfFaces = true;
                     this.renderSoon();
                   })
                 }
@@ -309,7 +297,8 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
               t.primaryElement.setAttribute("size", "60")
               hintTextFieldLabel?.primaryElement.setAttribute("for", t.primaryElementId)
               t.events.change.on( () => {
-                this.modifyDerivationOptions({seedHint: t.value});
+                this.seedHint = t.value;
+                this.updateBackgroundOperationsForDerivationOptions();
               })
             })
           )
