@@ -34,7 +34,7 @@ addEventListener( "message", async (requestMessage) => {
   if (isApiRequestWithSeed(requestMessage.data)) {
     const {seedString, request} = requestMessage.data;
     try {
-      const response = new SeededApiRequest(
+      const response = new SeededApiRequest<ApiCalls.ApiRequestObject>(
         await SeededCryptoModulePromise,
         seedString,
         request

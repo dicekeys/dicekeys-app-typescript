@@ -103,26 +103,26 @@ function toJsonAndDelete<RESULT, T extends {delete: () => any, toJson: () => RES
 }
 
 export const getSecret = implementApiCall<ApiCalls.GetSecret>(
-  (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
+  (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
     [GetSecretSuccessResponseParameterNames.secretJson]:
       toJsonAndDelete( 
         seededCryptoModule.Secret.deriveFromSeed(seedString, derivationOptionsJson)
   )}));
 
 export const getPassword = implementApiCall<ApiCalls.GetPassword>(
-    (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
+    (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
       [GetPasswordSuccessResponseParameterNames.passwordJson]:
         toJsonAndDelete( 
           seededCryptoModule.Password.deriveFromSeed(seedString, derivationOptionsJson)
     )}));
 
 export const sealWithSymmetricKey = implementApiCall<ApiCalls.SealWithSymmetricKey>(
-  (seededCryptoModule, seedString, {plaintext, unsealingInstructions, derivationOptionsJson}) => ({
+  (seededCryptoModule, seedString, {plaintext, unsealingInstructions = "", derivationOptionsJson = ""}) => ({
       [SealWithSymmetricKeySuccessResponseParameterNames.packagedSealedMessageJson]:
       toJsonAndDelete(
           seededCryptoModule.SymmetricKey.sealWithInstructions(
             plaintext,
-            unsealingInstructions ?? "",
+            unsealingInstructions,
             seedString,
             derivationOptionsJson
           )
@@ -141,7 +141,7 @@ export const unsealWithSymmetricKey = implementApiCall<ApiCalls.UnsealWithSymmet
 );
 
 export const getSealingKey = implementApiCall<ApiCalls.GetSealingKey>(
-  (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
+  (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
     [GetSealingKeySuccessResponseParameterNames.sealingKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.UnsealingKey.deriveFromSeed(
@@ -153,7 +153,7 @@ export const getSealingKey = implementApiCall<ApiCalls.GetSealingKey>(
   );
 
 export const getUnsealingKey = implementApiCall<ApiCalls.GetUnsealingKey>(
-  (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
+  (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
     [GetUnsealingKeySuccessResponseParameterNames.unsealingKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.UnsealingKey.deriveFromSeed(
@@ -165,7 +165,7 @@ export const getUnsealingKey = implementApiCall<ApiCalls.GetUnsealingKey>(
   );
 
 export const getSigningKey = implementApiCall<ApiCalls.GetSigningKey>(
-  (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
+  (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
     [GetSigningKeySuccessResponseParameterNames.signingKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.SigningKey.deriveFromSeed(
@@ -177,7 +177,7 @@ export const getSigningKey = implementApiCall<ApiCalls.GetSigningKey>(
   );
 
 export const getSymmetricKey = implementApiCall<ApiCalls.GetSymmetricKey>(
-  (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
+  (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
     [GetSymmetricKeySuccessResponseParameterNames.symmetricKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.SymmetricKey.deriveFromSeed(
@@ -189,7 +189,7 @@ export const getSymmetricKey = implementApiCall<ApiCalls.GetSymmetricKey>(
   );
 
 export const getSignatureVerificationKey = implementApiCall<ApiCalls.GetSignatureVerificationKey>(
-  (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
+  (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
     [GetSignatureVerificationKeySuccessResponseParameterNames.signatureVerificationKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.SignatureVerificationKey.deriveFromSeed(

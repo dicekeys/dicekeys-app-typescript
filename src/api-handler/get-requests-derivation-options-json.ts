@@ -23,6 +23,6 @@ export const extraRequestDerivationOptionsAndInstructions = (
     const {derivationOptionsJson, unsealingInstructions} = packagedSealedMessageJson;
     return  {derivationOptionsJson, unsealingInstructions};
   } else {
-    return {derivationOptionsJson: request.derivationOptionsJson}
+    return {derivationOptionsJson: request.derivationOptionsJson ?? ""}
   }
 }
