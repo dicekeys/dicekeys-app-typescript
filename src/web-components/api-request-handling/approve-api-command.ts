@@ -51,9 +51,9 @@ import {
 } from "../../workers/call-api-command-worker";
 import { PasswordJson } from "@dicekeys/seeded-crypto-js";
 import { DICEKEY } from "../../web-components/dicekey-styled";
-import { requestHasDerivationOptionsParameter } from "@dicekeys/dicekeys-api-js/dist/api-calls";
-
-
+import {
+  mayDerivationOptionsBeModified
+} from "../../api-handler/mutate-derivation-options";
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
 // had a legitimate reason to, removing orientations make it easier and more reliable.
@@ -79,7 +79,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
   private excludeOrientationOfFaces?: boolean;
   private seedHint?: string;
 
-  private readonly areDerivationOptionsMutable: boolean;
+  private readonly mayDerivationOptionsBeModified: boolean;
   private static readonly computeApiCommandWorker = new ComputeApiCommandWorker();
  
 
@@ -96,7 +96,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     const request = requestContext.request;
     const {derivationOptionsJson} = extraRequestDerivationOptionsAndInstructions(request);
     const derivationOptions = DerivationOptions(derivationOptionsJson);
-    this.areDerivationOptionsMutable = requestHasDerivationOptionsParameter(request) && !!request.derivationOptionsJsonMayBeModified;
+    this.mayDerivationOptionsBeModified = mayDerivationOptionsBeModified(request);
 
     // Components of derivation that can be modified
     this.excludeOrientationOfFaces = derivationOptions.excludeOrientationOfFaces;
@@ -219,7 +219,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
   }
 
   handleOrientationCheckboxClicked = (excludeOrientationOfFaces: boolean) => {
-    if (this.areDerivationOptionsMutable) {
+    if (this.mayDerivationOptionsBeModified) {
       this.excludeOrientationOfFaces = excludeOrientationOfFaces;
       this.updateBackgroundOperationsForDerivationOptions();
       this.renderDiceKey()
@@ -236,7 +236,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
         this.renderDiceKey()
       )
     );
-    if (this.areDerivationOptionsMutable) {
+    if (this.mayDerivationOptionsBeModified) {
       this.append(
         Div({class: "orientation-widget"},
           Div({}, `Orientation of individual dice`),
@@ -275,7 +275,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     //   }),
     // );
     var hintPurpose: Appendable | undefined;
-    if (this.areDerivationOptionsMutable && (hintPurpose = describeHintPurpose(this.options.requestContext.request.command)) != null) {
+    if (this.mayDerivationOptionsBeModified && (hintPurpose = describeHintPurpose(this.options.requestContext.request.command)) != null) {
       var cornerCheckbox: Checkbox | undefined;
       var hintTextFieldLabel: Label | undefined;
       this.append(

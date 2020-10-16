@@ -9,27 +9,21 @@ import {
 import {
    SeededCryptoModuleWithHelpers, SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js";
+import { getDefaultValueOfDerivationOptionsJsonMayBeModified } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 
-/**
- * Test if derivation options contain a `"mutable": true` field indicating
- * that the API may return a different set of derivations than were passed to it,
- * adding such fields as [proofOfPriorDerivation].
- * 
- * @param derivationOptionsOrJson 
- */
+export const mayDerivationOptionsBeModified = (
+  request: ApiCalls.Request
+): boolean =>
+  // If derivationOptionsJson is not set or set to an empty string, it may be modified
+  !("derivationOptionsJson" in request) ||
+  !request.derivationOptionsJson ||
+  (
+    // if the field is set, use the value of the field
+    request.derivationOptionsJsonMayBeModified ??
+    // If the field is not set, use the default for this command
+    getDefaultValueOfDerivationOptionsJsonMayBeModified(request.command)
+  );
 
- export const derivationOptionsIfMutable = (
-    request: ApiCalls.Request
-  ): DerivationOptions | undefined => {
-    if (ApiCalls.requestHasPackagedSealedMessageParameter(request)) {
-      return undefined;
-    }
-    const derivationOptions = DerivationOptions(request.derivationOptionsJson);
-    if (request.derivationOptionsJson !== "" && !request.derivationOptionsJsonMayBeModified) {
-      return undefined;
-    }
-    return derivationOptions;
-  }
 
   /**
  * Test if derivation options contain a `"proofOfPriorDerivation": "true"`indicating
