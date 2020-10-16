@@ -140,25 +140,6 @@ export const unsealWithSymmetricKey = implementApiCall<ApiCalls.UnsealWithSymmet
   })
 );
 
-// const mutateDerivationOptionsIfNecessary = (
-//   command: ApiCalls.Command,
-//   derivationOptionsJson: string
-// ): string => {
-//   var derivationOptions = DerivationOptions(derivationOptionsJson);
-//   const mutable = !!derivationOptions.mutable;
-//   var mutated: boolean = mutable;
-//   if (mutable) {
-//     derivationOptions = removeMutableFromDerivationOptions(derivationOptions);
-//   }
-//   if (command === ApiCalls.Command.getSealingKey && (mutable || derivationOptionsJson.length === 0)) {
-//     mutated = true;
-//     derivationOptions["uniqueId"] = urlSafeBase64Encode(getRandomBytes(4)); 
-//   }
-//   return mutated ?
-//     jsonStringifyWithSortedFieldOrder(derivationOptions) :
-//     derivationOptionsJson;
-// }
-
 export const getSealingKey = implementApiCall<ApiCalls.GetSealingKey>(
   (seededCryptoModule, seedString, {derivationOptionsJson}) => ({
     [GetSealingKeySuccessResponseParameterNames.sealingKeyJson]:

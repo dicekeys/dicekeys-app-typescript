@@ -1,3 +1,4 @@
+export * from "./expandable-component";
 export * from "./labeled-prescribed-text-input";
 export * from "./observable-text-input";
 export * from "./prescribed-text-field-observables";

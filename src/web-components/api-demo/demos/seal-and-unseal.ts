@@ -1,18 +1,20 @@
-import style from "../demo.module.css";
+// import style from "../demo.module.css";
 import {
-  Observable, Div
+  Observable
 } from "../../../web-component-framework";
 import {
   PrescribedTextFieldObservables, PrescribedTextInput
 //  LabeledPrescribedTextInput
 } from "../../basic-building-blocks";
 import { CommandSimulator } from "../command-simulator";
-import { FnCall, Formula, InputVar, Instructions, ParameterCard, ResultTextBlock } from "../basic-api-demo-components";
+import { FnCall, Formula, InputVar, Instructions, OperationCard, ParameterCard, ResultTextBlock, TemplateInputVar } from "../basic-api-demo-components";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import {
   MultiCommandSimulatorOptions,
   MultiCommandSimulator
 } from "./multi-command-simulator";
+import { ApiCalls } from "@dicekeys/dicekeys-api-js";
+import { restrictionsJson } from "~dicekeys/restrictions-json";
 
 
 interface SealAndUnsealOptions extends MultiCommandSimulatorOptions {
@@ -24,9 +26,19 @@ export class SealAndUnseal extends MultiCommandSimulator<SealAndUnsealOptions> {
   plaintext = new Observable<string>("Easy as API!");
   packagedSealedMessageJson = new Observable<string>();
 
-  constructor(options: MultiCommandSimulatorOptions) {
+  private unsealingInstructions = PrescribedTextFieldObservables.from(
+    ApiCalls.SealWithSymmetricKeyParameterNames.unsealingInstructions, {
+      formula: Formula("unsealingInstructions", "string", `'{"allow":[{"host":"*.`, TemplateInputVar("authorizedDomains[i]"), `"}]}'`)
+    }
+  );
+
+  constructor(options: SealAndUnsealOptions) {
     super(options);
-    this.sealMessages();
+    this.sealingKeyJson.observe( () => this.seal() );
+    this.plaintext.observe( () => this.seal() );
+    this.authorizedDomains.observe( domains => domains && domains.length > 0 &&
+      this.unsealingInstructions.prescribed.set(restrictionsJson(domains))
+    );
   }
 
   seal = async () => {
@@ -37,18 +49,13 @@ export class SealAndUnseal extends MultiCommandSimulator<SealAndUnsealOptions> {
       if (!plaintext) return;
       const sealingKey = (await SeededCryptoModulePromise).SealingKey.fromJson(sealingKeyJson);
       try {
-        const packagedSealedMessage = sealingKey.seal(plaintext);
+        const packagedSealedMessage = sealingKey.sealWithInstructions(plaintext, this.unsealingInstructions.value ?? "");
         this.packagedSealedMessageJson.set( packagedSealedMessage.toJson() );
         packagedSealedMessage.delete();
       } finally {
         sealingKey.delete();
       }
     } catch {}
-  }
-
-  sealMessages = async () => {
-    this.sealingKeyJson.observe( () => this.seal() );
-    this.plaintext.observe( () => this.seal() );
   }
 
   render() {
@@ -60,6 +67,7 @@ export class SealAndUnseal extends MultiCommandSimulator<SealAndUnsealOptions> {
     super.render(
       new CommandSimulator({
         command: "getSealingKey",
+        getGlobalSealingKey: this.options.useGlobalKey,
         inputs: {
           ...baseInputs
         },
@@ -67,21 +75,29 @@ export class SealAndUnseal extends MultiCommandSimulator<SealAndUnsealOptions> {
           sealingKeyJson: this.sealingKeyJson
         }
       }),
-      Div({class: style.operation_card},
-        Div({class: style.operation_card_title}, `SeededCryptoLibrary::SealingKey::seal`),
-        ParameterCard({},
+      OperationCard(`SeededCryptoLibrary::SealingKey::seal`,
+        ParameterCard(
           Instructions("You will encrypt the following message locally using the seeded cryptography library."),
           new PrescribedTextInput({observables: PrescribedTextFieldObservables.from("plaintext", {
             formula: Formula("plaintext", "string | byte[]"),
             actual: this.plaintext
           })}),
         ),
-        ParameterCard({},
+        ...(this.options.useGlobalKey ? [
+          ParameterCard(
+            Instructions(`Since any application or service can ask the DiceKeys app to use a key with no restrictions
+              in its derivation options, we place the restrictions in the the unsealingInstructions that are attached
+              to the sealed message.`),
+            new PrescribedTextInput({observables: this.unsealingInstructions}),
+          )
+          ] : []
+        ),
+        ParameterCard(
           Formula("packagedSealedMessageJson", "string",
             "SealingKey.",
             FnCall("fromJson", InputVar("sealingKeyJson")),
             ".",
-            FnCall("seal", InputVar("plaintext")),
+            FnCall("seal", InputVar("plaintext"), this.options.useGlobalKey ? [ ", ", InputVar("unsealingInstructions") ] : [] ),
           ),
           ResultTextBlock({}).updateFromObservable( this.packagedSealedMessageJson )
         ),  

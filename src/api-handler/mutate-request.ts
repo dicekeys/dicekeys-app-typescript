@@ -32,7 +32,7 @@ export const mutateRequest = async <REQUEST extends ApiCalls.ApiRequestObject>({
     return request;
   }
   const derivationOptions = DerivationOptions(request.derivationOptionsJson);
-  if (request.derivationOptionsJson !== "" && !derivationOptions.mutable) {
+  if (request.derivationOptionsJson !== "" && !request.derivationOptionsJsonMayBeModified) {
     return request;
   }
 
@@ -60,7 +60,6 @@ export const mutateRequest = async <REQUEST extends ApiCalls.ApiRequestObject>({
         })).derivationOptionsJson
     };
   } else {
-    delete derivationOptions.mutable;
     return {...request, derivationOptionsJson: jsonStringifyWithSortedFieldOrder(derivationOptions)};
   }
 }

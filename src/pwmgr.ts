@@ -10,7 +10,6 @@ import { PasswordJson } from "@dicekeys/seeded-crypto-js";
 
 const pwmgrAppSecretDerivationOptionsJson = JSON.stringify(PasswordDerivationOptions({
   type: "Password",
-  mutable: true,
   excludeOrientationOfFaces: true,
   lengthInWords: 15,
   allow: [{"host": "pwmgr.app"}]

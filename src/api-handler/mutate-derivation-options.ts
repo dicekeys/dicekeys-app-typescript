@@ -25,7 +25,7 @@ import {
       return undefined;
     }
     const derivationOptions = DerivationOptions(request.derivationOptionsJson);
-    if (request.derivationOptionsJson !== "" && !derivationOptions.mutable) {
+    if (request.derivationOptionsJson !== "" && !request.derivationOptionsJsonMayBeModified) {
       return undefined;
     }
     return derivationOptions;
@@ -41,15 +41,6 @@ export const isProofOfPriorDerivationRequired = (
   derivationOptionsOrJson: DerivationOptions | string
 ): boolean =>
   DerivationOptions(derivationOptionsOrJson).proofOfPriorDerivation === ""
-
-/**
- * Remove the mutable field from a DerivationOptions object.
- */
-export const removeMutableFromDerivationOptions = (
-  {mutable, ...immutableDerivationOptions}: DerivationOptions
-): DerivationOptions => immutableDerivationOptions;
-
-
 
 
 export class ProofOfPriorDerivationModule {
@@ -108,9 +99,8 @@ export class ProofOfPriorDerivationModule {
     // Once the proof is provided, the derivation options become immutable
     // since any change will invalidate the proof field.  So, remove any
     // [mutable] field from the [DerivationOptions]
-    const derivationOptions = removeMutableFromDerivationOptions(
-      DerivationOptions(derivationOptionsOrJson)
-    );
+    const derivationOptions =
+      DerivationOptions(derivationOptionsOrJson);
     // Set the proofOfPriorDerivation to a MAC derived from the derivation options.
     derivationOptions.proofOfPriorDerivation = this.generate(seedString, derivationOptions);
     return jsonStringifyWithSortedFieldOrder(derivationOptions);

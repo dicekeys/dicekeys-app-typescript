@@ -96,7 +96,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     const request = requestContext.request;
     const {derivationOptionsJson} = extraRequestDerivationOptionsAndInstructions(request);
     const derivationOptions = DerivationOptions(derivationOptionsJson);
-    this.areDerivationOptionsMutable = requestHasDerivationOptionsParameter(request) && !!derivationOptions.mutable;
+    this.areDerivationOptionsMutable = requestHasDerivationOptionsParameter(request) && !!request.derivationOptionsJsonMayBeModified;
 
     // Components of derivation that can be modified
     this.excludeOrientationOfFaces = derivationOptions.excludeOrientationOfFaces;

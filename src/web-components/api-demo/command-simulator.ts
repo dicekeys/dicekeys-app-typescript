@@ -27,7 +27,7 @@ import {
   ParameterCard,
   ResultTextBlock, FnCall, InputVar, TemplateString, UrlParameter, ResultLabel
 } from "./basic-api-demo-components"
-import { derivationOptionsJsonForAllowedDomains } from "~dicekeys/derivation-options-json-for-allowed-domains";
+import { restrictionsJson } from "~dicekeys/restrictions-json";
 import { requestHasDerivationOptionsParameter, SeededCryptoObjectResponseParameterNames } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import {
   mutateRequest
@@ -47,6 +47,9 @@ export type CommandSimulatorOptions<
   COMMAND extends ApiCalls.Command = ApiCalls.Command
 > = {
   command: COMMAND;
+
+  getGlobalSealingKey?: COMMAND extends typeof ApiCalls.Command.getSealingKey ? boolean : never;
+
   inputs?: {
     seedString?: PrescribedTextFieldObservablesOrSpecification<string, typeof ApiRequestWithSeedParameterNames.seedString>;
     respondTo?: PrescribedTextFieldObservablesOrSpecification<string, typeof UrlRequestMetadataParameterNames.respondTo>;
@@ -58,6 +61,9 @@ export type CommandSimulatorOptions<
     messageBase64?: PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.GenerateSignatureParameterNames.message>
     plaintextString?: PrescribedTextFieldObservablesOrSpecification<string, "plaintextString">;
     plaintextBase64?: PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.plaintext>;
+
+    derivationOptionsJsonMayBeModified?:  Observable<boolean | undefined>;
+
     
     unsealingInstructions?: COMMAND extends (typeof ApiCalls.Command.sealWithSymmetricKey) ?
       PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.unsealingInstructions> :
@@ -90,7 +96,8 @@ export class CommandSimulator<
   readonly respondTo: PrescribedTextFieldObservables<string, typeof UrlRequestMetadataParameterNames.respondTo>;
 
   readonly derivationOptionsJson: PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>;
-  
+  readonly derivationOptionsJsonMayBeModified:  Observable<boolean | undefined>;
+
   messageString: PrescribedTextFieldObservables<string, "messageString">;
   messageBase64: PrescribedTextFieldObservables<string, typeof ApiCalls.GenerateSignatureParameterNames.message> ;
 
@@ -131,6 +138,9 @@ export class CommandSimulator<
     this.authorizedDomains = options.inputs?.authorizedDomains ?? new Observable();
     this.exception = options.outputs?.exception ?? new Observable();
     this.exceptionMessage = options.outputs?.exceptionMessage ?? new Observable();
+    this.derivationOptionsJsonMayBeModified = options.inputs?.derivationOptionsJsonMayBeModified ?? new Observable<boolean | undefined>(
+      this.command === "sealWithSymmetricKey" || this.command === "getSealingKey"
+    )
     this.seedString = PrescribedTextFieldObservables.from(ApiRequestWithSeedParameterNames.seedString, options.inputs?.seedString);
     this.respondTo = PrescribedTextFieldObservables.from(UrlRequestMetadataParameterNames.respondTo, options.inputs?.respondTo);
 
@@ -139,16 +149,16 @@ export class CommandSimulator<
 
     this.derivationOptionsJson = new PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>(
       ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson, {
-      formula: Formula("derivationOptionsJson", "string", `'{"allow":[{"host":"*.`, TemplateInputVar("authorizedDomains[i]"), `"}]}'`),
+        formula: Formula("derivationOptionsJson", "string", `'{"allow":[{"host":"*.`, TemplateInputVar("authorizedDomains[i]"), `"}]}'`),
     });
     // Update derivation options based on domains.
-    this.authorizedDomains.observe( domains => domains &&
-      this.derivationOptionsJson.prescribed.set(derivationOptionsJsonForAllowedDomains(domains)
+    this.authorizedDomains.observe( domains => domains && domains.length > 0 &&
+      this.derivationOptionsJson.prescribed.set(restrictionsJson(domains)
     ));
 
     if (this.derivationOptionsJson && this.options.inputs?.authorizedDomains) {
       this.options.inputs.authorizedDomains.observe( (authorizedDomains) =>
-        this.derivationOptionsJson.prescribed.set(derivationOptionsJsonForAllowedDomains(authorizedDomains ?? []))
+        this.derivationOptionsJson.prescribed.set(restrictionsJson(authorizedDomains ?? []))
       )
     }
 
@@ -220,6 +230,8 @@ export class CommandSimulator<
           UrlParameter(parameterName, 
           (parameterName === "message" || parameterName === "plaintext") ?
             TemplateString( FnCall("base64urlEncode", InputVar(parameterName))) :
+          (parameterName === "derivationOptionsJson" && this.options.getGlobalSealingKey) ?
+            "" :
             TemplateInputVar(parameterName)
         )])),
       "\`"
@@ -280,6 +292,11 @@ export class CommandSimulator<
         url.searchParams.append(parameterName, this.messageBase64.actual.value ?? "");
       } else if (parameterName === "plaintext") {
         url.searchParams.append(parameterName, this.plaintextBase64.actual.value ?? "");
+      } else if (parameterName === "derivationOptionsJsonMayBeModified") {
+        const derivationOptionsJsonMayBeModified = this[parameterName].value;
+        if (derivationOptionsJsonMayBeModified != null) {
+          url.searchParams.append(parameterName, derivationOptionsJsonMayBeModified ? "true" : "false");
+        }
       } else {
         const parameter = this[parameterName];
         const parameterValue = parameter?.actual.value;
@@ -367,24 +384,41 @@ export class CommandSimulator<
     const command = this.command;
     super.render(
       Div({class: style.operation_card_title}, `${this.command}`),
-      // FIXME -- conditionally render if not set
-      // ...this.prescribedTextInputIfParameterOfCommand(this.seedString),
-      // ...this.prescribedTextInputIfParameterOfCommand(this.requestUrl),
+      ////////////
+      // REQUEST
+      ////////////
       Div({class: style.section},
         Div({class: style["section-header"]}, "Request"),
-        ParameterCard({},
+        //
+        // requestId
+        //
+        ParameterCard(
           Instructions("Each request should have a requestId that is unique (random or sequential) so that you can match the response to it."),
           new PrescribedTextInput({style: `width: 16rem;`, observables: this.requestId})
         ),
+        //
+        // Derivation options
+        //
         ...((this.command === ApiCalls.Command.unsealWithSymmetricKey || this.command === ApiCalls.Command.unsealWithUnsealingKey) ?
           [
-            ParameterCard({},
+            ParameterCard(
               Instructions("The sealed message to be unsealed."),
               new PrescribedTextInput({observables: this.packagedSealedMessageJson})
             )
           ] :
+          (this.command === ApiCalls.Command.getSealingKey && this.options.getGlobalSealingKey) ? [
+            ParameterCard(
+              Instructions( 
+                `To get a global sealing key, which can be used for any site and which the user may have pre-derived,
+                you will pass a zero-length string for the `,
+                InputVar(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson),
+                ` parameter.`
+              ),
+            ),
+
+          ] :
           [
-            ParameterCard({},
+            ParameterCard(
               Instructions( 
                 `You can specify the options for deriving secrets via a <a targe="new" href="https://dicekeys.github.io/seeded-crypto/derivation_options_format.html"/>JSON format</a>,
                 which allow you to restrict which apps and services can use the secrets you derive.
@@ -393,37 +427,49 @@ export class CommandSimulator<
             ),
           ]
         ),
+        //
+        // Command-specific input-parameters
+        //
+        // generateSignature
         ...(this.command === ApiCalls.Command.generateSignature ? [
-            ParameterCard({},
+            ParameterCard(
               new PrescribedTextInput({observables: this.messageString}),
             ),
-          ] : []),
-          ...(this.command === ApiCalls.Command.sealWithSymmetricKey ? [
-            ParameterCard({},
-              new PrescribedTextInput({observables: this.plaintextString}),
-            ),
-            ParameterCard({},
-              new PrescribedTextInput({observables: this.unsealingInstructions}),
-            ).withElement( e => {
-              this.derivationOptionsJson.actual.observe( derivationOptionsJson => {
-                try {
-                  if (DerivationOptions(derivationOptionsJson)?.allow) {
-                    e.style.setProperty('display', 'none');
-                    return; 
-                  }
-                } catch {}
-                e.style.setProperty('display','flex')
-              })
-            }),
-          ] : []),
-        ParameterCard({},
+          ] : []
+        ),
+        // sealWithSymmetricKey
+        ...(this.command === ApiCalls.Command.sealWithSymmetricKey ? [
+          ParameterCard(
+            new PrescribedTextInput({observables: this.plaintextString}),
+          ),
+          ParameterCard(
+            new PrescribedTextInput({observables: this.unsealingInstructions}),
+          ).withElement( e => {
+            this.derivationOptionsJson.actual.observe( derivationOptionsJson => {
+              try {
+                if (DerivationOptions(derivationOptionsJson)?.allow) {
+                  e.style.setProperty('display', 'none');
+                  return; 
+                }
+              } catch {}
+              e.style.setProperty('display','flex')
+            })
+          }),
+        ] : []),
+        //
+        // Request URL
+        //
+        ParameterCard(
           this.requestUrl.formula.value,
           ResultTextBlock({}).updateFromObservable(this.requestUrl.actual),
         ),
       ),
+      ///////////
+      // RESULT
+      //////////
       Div({class: style.section},
         Div({class: style["section-header"]}, "Result"),
-        ParameterCard({},
+        ParameterCard(
           ResultLabel("Sent via URL"),
           ResultTextBlock({}).updateFromObservable(this.responseUrl)
         ),
@@ -432,7 +478,7 @@ export class CommandSimulator<
         //   Pre({}).withElement( e => this.responseJson.observe( (responseJson) => e.textContent = responseJson ?? "" ))  
         // ),
         ...((this.command === ApiCalls.Command.generateSignature) ? [
-          ParameterCard({},
+          ParameterCard(
             ResultLabel("signature"),
             Div({class: style.result_value}).withElement( e =>
               this.responseUrlObject.observe( responseUrlObject => 
@@ -442,7 +488,7 @@ export class CommandSimulator<
           ),
         ] : []),
         ...((ApiCalls.commandHasJsonResponse(command)) ? [
-          ParameterCard({},
+          ParameterCard(
             ResultLabel(ApiCalls.SeededCryptoObjectResponseParameterNames[command]),
             ResultTextBlock({}).withElement( e =>
               this.responseUrlObject.observe( responseUrlObject => {
@@ -457,17 +503,17 @@ export class CommandSimulator<
           )
         ] : []),
         ...((commandsWithPlaintextResponse.has(this.command)) ? [
-          ParameterCard({},
+          ParameterCard(
             ResultLabel(FnCallName("base64urlDecode("), "plaintext", FnCallName(")")),
             ResultTextBlock({}).updateFromObservable( this.plaintextStringOutput )
           ),
         ] : []
       ),
-      ParameterCard({},
+      ParameterCard(
         ResultLabel("exception"),
         ResultTextBlock({}).updateFromObservable( this.exception )
       ).withElement( e => { this.exception.observe( exception => e.style.display = exception ? "block" : "none" ) }),
-      ParameterCard({},
+      ParameterCard(
         ResultLabel("exceptionMessage"),
         ResultTextBlock({}).updateFromObservable( this.exceptionMessage )
       ).withElement( e => { this.exceptionMessage.observe( exceptionMessage => e.style.display = exceptionMessage ? "block" : "none" ) })

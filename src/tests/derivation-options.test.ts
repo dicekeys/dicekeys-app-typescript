@@ -11,7 +11,6 @@ import {
 const seedString = "Put this in water and an avocado will grow.";
 
 const someDerivationOptions = DerivationOptions({
-  mutable: true,
   type: "Secret",
   lengthInBytes: 128
 }, {
@@ -23,8 +22,6 @@ describe ("Derivation options ", () => {
   test ("Should verify if unchanged", async () => {
     const proofOfDerivation = await ProofOfPriorDerivationModule.instancePromise;
     const withProof = proofOfDerivation.addToDerivationOptionsJson(seedString, someDerivationOptions);
-    const withProofAsObject = JSON.parse(withProof) as DerivationOptions;
-    expect (typeof withProofAsObject.mutable).toBe("undefined");
     expect(proofOfDerivation.verify(seedString, withProof)).toBe(true);
   });
 

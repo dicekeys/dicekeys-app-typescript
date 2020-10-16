@@ -1,6 +1,6 @@
 import {
-  derivationOptionsJsonForAllowedDomains
-} from "./derivation-options-json-for-allowed-domains";
+  restrictionsJson
+} from "./restrictions-json";
 
 export type SingletonOrArrayOf<T> = T | T[];
 
@@ -38,7 +38,7 @@ export interface PasswordConsumer extends
 }
 
 export const passwordDerivationOptionsJson = (hostOrHosts: SingletonOrArrayOf<string>) => 
-  derivationOptionsJsonForAllowedDomains(asArray(hostOrHosts));
+  restrictionsJson(asArray(hostOrHosts));
 
 export const passwordDerivationOptionsJsonObj = (domains: SingletonOrArrayOf<string>) => ({
   derivationOptionsJson: passwordDerivationOptionsJson(domains)

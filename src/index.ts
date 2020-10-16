@@ -21,7 +21,6 @@ window.addEventListener("load", () => {
         data: {
           "command": ApiCalls.Command.getPassword,
           derivationOptionsJson: JSON.stringify(DerivationOptions({          
-//            mutable: true,
 //            excludeOrientationOfFaces: true,
 //            cornerLetters: "SWDC"
           }))

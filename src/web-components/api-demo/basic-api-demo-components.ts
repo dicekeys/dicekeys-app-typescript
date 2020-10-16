@@ -17,8 +17,8 @@ export const Formula = (result: string, type: TypeName | undefined, ...derivatio
   ])
 ]));
 
-export const ParameterCard = (options: Attributes<"div">, ...content: Appendable[]) =>
-  Div({class: style.parameter_card, ...options}, ...content);
+export const ParameterCard = (...content: Appendable[]) =>
+  Div({class: style.parameter_card}, ...content);
 
 export const ResultLabel = (...content: Appendable[]) =>
   Div({class: style.result_label}, ...content);
@@ -56,3 +56,9 @@ export const FnCall = (name: string, ...content: Appendable[]): Appendable => [
       ...content,
       Span({class: style.formula_input_braces}, ")"),
   ];
+
+export const OperationCard = (title: Appendable, ...content: Appendable[]): Div =>
+  Div({class: style.operation_card},
+    Div({class: style.operation_card_title}, title),
+    ...content
+  );

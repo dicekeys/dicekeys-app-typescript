@@ -141,7 +141,10 @@ export const getApiRequestFromSearchParams = (
     case ApiCalls.Command.generateSignature:
       return {
         command,
-        derivationOptionsJson: requireParam(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson),
+        [ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson]:
+          requireParam(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson),
+        [ApiCalls.DerivationFunctionParameterNames.derivationOptionsJsonMayBeModified]:
+          searchParams.get(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJsonMayBeModified)?.toLocaleLowerCase() === "true",
         message: urlSafeBase64Decode(requireParam(GenerateSignatureParameterNames.message))
       } as GenerateSignatureRequest;
     case ApiCalls.Command.getPassword:
@@ -153,13 +156,19 @@ export const getApiRequestFromSearchParams = (
     case ApiCalls.Command.getUnsealingKey:
       return {
         command,
-        [ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson]: requireParam(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson),
+        [ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson]:
+          requireParam(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson),
+        [ApiCalls.DerivationFunctionParameterNames.derivationOptionsJsonMayBeModified]:
+          searchParams.get(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJsonMayBeModified)?.toLocaleLowerCase() === "true",
       } as GetPasswordRequest | GetSealingKeyRequest | GetSecretRequest | GetSignatureVerificationKeyRequest | GetSigningKeyRequest | GetSymmetricKeyRequest | GetUnsealingKeyRequest;
     case ApiCalls.Command.sealWithSymmetricKey: {
       const unsealingInstructions = searchParams.get(SealWithSymmetricKeyParameterNames.unsealingInstructions) ?? undefined;
       return {
         command,
-        [SealWithSymmetricKeyParameterNames.derivationOptionsJson]: requireParam(SealWithSymmetricKeyParameterNames.derivationOptionsJson),
+        [SealWithSymmetricKeyParameterNames.derivationOptionsJson]:
+          requireParam(SealWithSymmetricKeyParameterNames.derivationOptionsJson),
+        [ApiCalls.DerivationFunctionParameterNames.derivationOptionsJsonMayBeModified]:
+          searchParams.get(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJsonMayBeModified)?.toLocaleLowerCase() === "true",
         [SealWithSymmetricKeyParameterNames.plaintext]: urlSafeBase64Decode(requireParam(SealWithSymmetricKeyParameterNames.plaintext)),
         ...( unsealingInstructions == null ? {} :{unsealingInstructions}
         )

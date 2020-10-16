@@ -1,8 +1,9 @@
+import style from "../demo.module.css";
 import {
   UrlRequestMetadataParameterNames
 } from "@dicekeys/dicekeys-api-js";
 import {
-  Component, Attributes, Observable,
+  Component, Attributes, Observable
 } from "../../../web-component-framework";
 import {
   ApiRequestWithSeedParameterNames,
@@ -10,7 +11,6 @@ import {
 import {
   PrescribedTextFieldObservablesOrSpecification,
   PrescribedTextFieldObservables
-//  LabeledPrescribedTextInput
 } from "../../basic-building-blocks";
 
 
@@ -29,7 +29,7 @@ export class MultiCommandSimulator<OPTIONS extends MultiCommandSimulatorOptions>
 //  readonly derivationOptionsJson: PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>;
 
   constructor(options: OPTIONS) {
-    super(options);
+    super({class: style.scenario_section, ...options});
     this.seedString = PrescribedTextFieldObservables.from(ApiRequestWithSeedParameterNames.seedString, options.seedString);
     this.respondTo = PrescribedTextFieldObservables.from(UrlRequestMetadataParameterNames.respondTo, options.respondTo);
     this.authorizedDomains = options.authorizedDomains;
