@@ -160,7 +160,7 @@ const getRandomDiceKey = (numberOfFaces: number = 6): DiceKey => {
 enum DiceKeyInHumanReadableFormType { _ = "" };
 export type DiceKeyInHumanReadableForm = DiceKeyInHumanReadableFormType & string;
 
-export const DiceKeyInHumanReadableForm = (diceKey: DiceKey, includeOrientations: boolean /* = true FIXME */): DiceKeyInHumanReadableForm =>
+export const DiceKeyInHumanReadableForm = (diceKey: DiceKey, includeOrientations: boolean): DiceKeyInHumanReadableForm =>
   diceKey.map( face =>
     (face.letter ?? "?") +
     (face.digit ?? "?") +
