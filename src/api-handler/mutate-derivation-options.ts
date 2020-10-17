@@ -96,8 +96,10 @@ export class ProofOfPriorDerivationModule {
     const derivationOptions =
       DerivationOptions(derivationOptionsOrJson);
     // Set the proofOfPriorDerivation to a MAC derived from the derivation options.
-    derivationOptions.proofOfPriorDerivation = this.generate(seedString, derivationOptions);
-    return jsonStringifyWithSortedFieldOrder(derivationOptions);
+    return jsonStringifyWithSortedFieldOrder({
+      ...derivationOptions,
+      proofOfPriorDerivation: this.generate(seedString, derivationOptions)
+    });
   }
 
   /**
