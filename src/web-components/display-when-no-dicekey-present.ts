@@ -8,7 +8,7 @@ import {
   DICEKEY
 } from "./dicekey-styled";
 
-export class DisplayWhenNoDiceKeyPresent extends Component<Attributes, HTMLSpanElement> {
+export class DisplayWhenNoDiceKeyPresent extends Component<Attributes> {
   
   public readonly loadDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);
   public readonly typeDiceKeyButtonClicked = new ComponentEvent<[MouseEvent]>(this);

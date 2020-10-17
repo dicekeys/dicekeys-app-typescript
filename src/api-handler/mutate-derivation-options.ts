@@ -1,4 +1,5 @@
 import {
+  ApiCalls,
   DerivationOptions,
   urlSafeBase64Encode,
 } from "@dicekeys/dicekeys-api-js";
@@ -8,27 +9,32 @@ import {
 import {
    SeededCryptoModuleWithHelpers, SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js";
+import { getDefaultValueOfDerivationOptionsJsonMayBeModified } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 
-/**
- * Test if derivation options contain a `"mutable": true` field indicating
- * that the API may return a different set of derivations than were passed to it,
- * adding such fields as [proofOfPriorDerivation].
+export const mayDerivationOptionsBeModified = (
+  request: ApiCalls.Request
+): boolean =>
+  // If derivationOptionsJson is not set or set to an empty string, it may be modified
+  !("derivationOptionsJson" in request) ||
+  !request.derivationOptionsJson ||
+  (
+    // if the field is set, use the value of the field
+    request.derivationOptionsJsonMayBeModified ??
+    // If the field is not set, use the default for this command
+    getDefaultValueOfDerivationOptionsJsonMayBeModified(request.command)
+  );
+
+
+  /**
+ * Test if derivation options contain a `"proofOfPriorDerivation": "true"`indicating
+ * that the derivationOptionsJson should be modified to contain such proof.
  * 
  * @param derivationOptionsOrJson 
  */
-export const areDerivationOptionsMutable = (
+export const isProofOfPriorDerivationRequired = (
   derivationOptionsOrJson: DerivationOptions | string
 ): boolean =>
-  !!DerivationOptions(derivationOptionsOrJson).mutable
-
-/**
- * Remove the mutable field from a DerivationOptions object.
- */
-export const removeMutableFromDerivationOptions = (
-  {mutable, ...immutableDerivationOptions}: DerivationOptions
-): DerivationOptions => immutableDerivationOptions;
-
-
+  DerivationOptions(derivationOptionsOrJson).proofOfPriorDerivation === ""
 
 
 export class ProofOfPriorDerivationModule {
@@ -87,12 +93,13 @@ export class ProofOfPriorDerivationModule {
     // Once the proof is provided, the derivation options become immutable
     // since any change will invalidate the proof field.  So, remove any
     // [mutable] field from the [DerivationOptions]
-    const derivationOptions = removeMutableFromDerivationOptions(
-      DerivationOptions(derivationOptionsOrJson)
-    );
+    const derivationOptions =
+      DerivationOptions(derivationOptionsOrJson);
     // Set the proofOfPriorDerivation to a MAC derived from the derivation options.
-    derivationOptions.proofOfPriorDerivation = this.generate(seedString, derivationOptions);
-    return jsonStringifyWithSortedFieldOrder(derivationOptions);
+    return jsonStringifyWithSortedFieldOrder({
+      ...derivationOptions,
+      proofOfPriorDerivation: this.generate(seedString, derivationOptions)
+    });
   }
 
   /**

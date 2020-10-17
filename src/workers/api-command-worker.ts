@@ -10,7 +10,7 @@ import {
   SeededApiRequest
 } from "../api-handler/seeded-api-request";
 import {
-  ApiCalls
+  ApiCalls,
 } from "@dicekeys/dicekeys-api-js";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 
@@ -21,7 +21,6 @@ export interface ApiRequestWithSeed<REQUEST extends ApiCalls.ApiRequestObject> {
     seedString: string,
     request: REQUEST
 }
-
 export type ExecuteApiResponse<REQUEST extends ApiCalls.ApiRequestObject = ApiCalls.ApiRequestObject> = ApiCalls.ResponseForRequest<REQUEST>;
 
 function isApiRequestWithSeed(t: any) : t is ApiRequestWithSeed<ApiCalls.ApiRequestObject> {
@@ -35,14 +34,18 @@ addEventListener( "message", async (requestMessage) => {
   if (isApiRequestWithSeed(requestMessage.data)) {
     const {seedString, request} = requestMessage.data;
     try {
-      const response = new SeededApiRequest(
+      const response = new SeededApiRequest<ApiCalls.ApiRequestObject>(
         await SeededCryptoModulePromise,
         seedString,
         request
       ).execute();
       (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(response);
     } catch (exception) {
-      (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage({exception, request});
+      console.log("Worker exception", exception, typeof (exception));
+      (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(
+        {exception: exception instanceof Error ?
+          JSON.stringify({name: exception.name, message: exception.message, stack: exception.stack}) :
+          JSON.stringify(exception, undefined, " "), request});
     }
   }
 });

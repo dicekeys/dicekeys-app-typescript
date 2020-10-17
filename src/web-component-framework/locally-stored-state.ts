@@ -2,13 +2,15 @@ import {
   urlSafeBase64Encode, urlSafeBase64Decode, utf8ByteArrayToString
 } from "@dicekeys/dicekeys-api-js"
 import {
+  getRandomBytes
+} from "../dicekeys/get-random-bytes";
+import {
+  Observable
+} from "./observable";
+import {
   SeededCryptoModuleWithHelpers,
   SymmetricKey
 } from "@dicekeys/seeded-crypto-js";
-import {getRandomBytes} from "../dicekeys/get-random-bytes";
-import {
-  Observable
-} from "./observable"
 
 
 const minutesToMs = 60 * 1000;
@@ -23,7 +25,7 @@ const minutesToMs = 60 * 1000;
 //   }
 // }
 
-export abstract class StorageField<T> extends Observable<T> {
+export abstract class StorageField<T> extends Observable<T | undefined> {
   protected static byName = new Map<string, StorageField<any>>();
 
   public readonly name: string;
@@ -55,7 +57,7 @@ export abstract class StorageField<T> extends Observable<T> {
     const lastValue = this.lastValueWritten;
     const currentValue = this.read();
     if (!this.equals(lastValue, currentValue)) {
-      this.changedEvent.send(currentValue);
+      this.changedEvent.send(currentValue, lastValue);
     }
   }
 
@@ -63,22 +65,24 @@ export abstract class StorageField<T> extends Observable<T> {
     if (typeof value === "undefined") {
       this.remove();
     } else {
-      const changed = !this.equals(value, this.lastValueWritten);
+      const previousValue = this.lastValueWritten;
+      const changed = !this.equals(value, previousValue);
       this.lastValueWritten = value;
       localStorage.setItem(this.name, this.encodeToString(value));
       if (changed) {
-        this.changedEvent.send(value);
+        this.changedEvent.send(value, previousValue);
       }
     }
     this.lastValueWritten = value;
   }
 
   remove() {
-    const changed = typeof localStorage.getItem(this.name) !== "undefined";
+    const previousValue = this.read();
+    const changed = typeof previousValue !== "undefined";
     localStorage.removeItem(this.name);
     this.lastValueWritten = undefined;
     if (changed) {
-      this.changedEvent.send(undefined);
+      this.changedEvent.send(undefined, previousValue);
     }
   }
 

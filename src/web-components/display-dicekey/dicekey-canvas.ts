@@ -39,7 +39,7 @@ export const removeAllButCornerLettersFromDiceKey = (diceKey: PartialDiceKey): P
 /**
  * This class implements the component that displays DiceKeys.
  */
-export class DiceKeyCanvas extends Component<DiceKeyCanvasOptions, HTMLCanvasElement> {
+export class DiceKeyCanvas extends Component<DiceKeyCanvasOptions, "canvas"> {
   private get diceKeyDisplayCanvas(): HTMLCanvasElement { return this.primaryElement; }
 
   private get ctx(): CanvasRenderingContext2D {

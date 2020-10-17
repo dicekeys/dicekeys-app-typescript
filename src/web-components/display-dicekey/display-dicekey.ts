@@ -25,7 +25,7 @@ import {
   ComputeApiCommandWorker
 } from "../../workers/call-api-command-worker";
 import {
-    ApiCalls
+    ApiCalls, DerivationOptions
 } from "@dicekeys/dicekeys-api-js";
 import {
   DisplayPassword
@@ -91,7 +91,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
       console.log("Selected password manager", selectedManager?.name);
       // Derive password in background then set it.
       const {derivationOptionsJson} = selectedManager;
-      const seedString = DiceKey.toSeedString(this.options.diceKey, derivationOptionsJson);
+      const seedString = DiceKey.toSeedString(this.options.diceKey, !DerivationOptions(derivationOptionsJson).excludeOrientationOfFaces );
       this.derivationOptionsJson.set(derivationOptionsJson);
       const request: ApiCalls.GetPasswordRequest = {
         command: ApiCalls.Command.getPassword,
@@ -103,7 +103,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
       if ("exception" in result) {
         this.throwException(result.exception, "calculating a password");
       } else {
-        this.password.value = (JSON.parse(result.seededCryptoObjectAsJson) as PasswordJson).password;
+        this.password.value = (JSON.parse(result.passwordJson) as PasswordJson).password;
       }
     }
   }

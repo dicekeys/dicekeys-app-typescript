@@ -1,13 +1,6 @@
-// export enum SubdomainRule {
-//   onlyAllowSubdomains = "onlyAllowSubdomains",
-//   forbidSubdomains = "forbidSubdomains",
-//   allowDomainAndItsSubdomains = "allowDomainAndItsSubdomains"
-// };
-
-// export interface AllowableDomain {
-//   domain: string;
-//   scope?: SubdomainRule;
-// }
+import {
+  restrictionsJson
+} from "./restrictions-json";
 
 export type SingletonOrArrayOf<T> = T | T[];
 
@@ -44,30 +37,17 @@ export interface PasswordConsumer extends
   type: PasswordConsumerType
 }
 
-// const defaultDomains = (hosts: SingletonOrArrayOf<string>) => ({
-//   domains: asArray(hosts).map( host => ({
-//     domain: host,
-//     scope: SubdomainRule.allowDomainAndItsSubdomains
-//   }) ),
-// });
+export const passwordDerivationOptionsJson = (hostOrHosts: SingletonOrArrayOf<string>) => 
+  restrictionsJson(asArray(hostOrHosts));
 
-export const passwordDerivationOptionsJson = (hosts: SingletonOrArrayOf<string>) =>
-`{"allow": [${
-    asArray(hosts)
-      .map( host => `{"host": "*.${host}"}`)
-      .join(" ,")
-  }]}`;
-
-
-export const passwordDerivationOptionsJsonObj = (hosts: SingletonOrArrayOf<string>) => ({
-  derivationOptionsJson: passwordDerivationOptionsJson(hosts)
+export const passwordDerivationOptionsJsonObj = (domains: SingletonOrArrayOf<string>) => ({
+  derivationOptionsJson: passwordDerivationOptionsJson(domains)
 });
 
 const defaultPasswordManagerSecurityParameters = (
-  ...hosts: string[]
+  ...domains: string[]
 ): PasswordConsumerSecurityParameters => ({
-//  ...defaultDomains(hosts),
-  ...passwordDerivationOptionsJsonObj(hosts),
+  ...passwordDerivationOptionsJsonObj(domains),
 });
 
 

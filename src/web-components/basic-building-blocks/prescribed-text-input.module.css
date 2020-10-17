@@ -1,0 +1,43 @@
+.prescribed_text_input {
+  display: flex;
+  flex-direction: column;
+  align-content: stretch;
+  align-items: stretch;
+}
+
+.text_box_and_toggle {
+  margin-top: 0.1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  align-content: stretch;
+  flex: flex-grow;
+  flex-basis: auto;
+}
+
+.toggle_span {
+  user-select: none;
+  border: none;
+  flex-grow: 0;
+}
+
+.text_box {
+  display: flex;
+  flex-grow: 10;
+  flex-shrink : 10;
+  flex-basis: auto;
+  margin-top: .2rem;
+  padding: 0.2rem;
+  border-radius: 0.2rem;
+  border-width: 1px;
+}
+
+.matches_prescribed {
+  color: #008000;
+  background-color: #fefefe;
+}
+
+.not_prescribed {
+  color: #000040;
+  background-color: #ffffe0;
+}

@@ -5,7 +5,7 @@ import {
   Span,
   Attributes
 } from "../web-component-framework";
-import { Component } from "~web-component-framework";
+import { Component } from "../web-component-framework";
 
 class StyledLogo extends Component<Attributes> {
   constructor(
@@ -25,7 +25,7 @@ class StyledLogo extends Component<Attributes> {
   }
 }
 
-export const DICEKEY = () => new StyledLogo("DICE", "KEY");
-export const DICEKEYS = () => new StyledLogo("DICE", "KEYS");
-export const STICKEY = () => new StyledLogo("STIC", "KEY");
-export const STICKEYS = () => new StyledLogo("STIC", "KEYS");
+export const DICEKEY = () => new StyledLogo("Dice", "Key");
+export const DICEKEYS = () => new StyledLogo("Dice", "Keys");
+export const STICKEY = () => new StyledLogo("Stic", "Key");
+export const STICKEYS = () => new StyledLogo("Stic", "Keys");

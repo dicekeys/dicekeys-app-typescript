@@ -64,7 +64,7 @@ export class VerifyDicekey extends Component<VerifyDiceKeyOptions> {
     this.addClass(layoutStyles.centered_column);
   }
 
-  readonly diceKeyScanned = new Observable<DiceKey>().changedEvent.on( this.renderSoon );
+  readonly diceKeyScanned = new Observable<DiceKey | undefined>().changedEvent.on( this.renderSoon );
   readonly doneEvent = new ComponentEvent<[], this>(this);
 
   

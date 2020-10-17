@@ -7,7 +7,7 @@ import {
   MonospaceSpan,
   Span,
 } from "../web-component-framework";
-import { DICEKEY } from "~web-components/dicekey-styled";
+import { DICEKEY } from "../web-components/dicekey-styled";
 
 
 const knownHostSuffixes: [string, string][] = [

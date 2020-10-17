@@ -6,9 +6,6 @@ import {
   Div,
   Observable,
 } from "../../web-component-framework";
-// import {
-//   DiceKeyAppState
-// } from "../state";
 
 const obscuringCharacter = String.fromCharCode(0x25A0); // * ■▓▒░
 const obscurePassword = (password: string): string => {

@@ -12,7 +12,8 @@ window.addEventListener("load", () => {
   EncryptedCrossTabState.instancePromise.then( (appState) => {
     const app = new AppMain({appState});
 
-    window.addEventListener("resize", app.renderSoon );
+    // Removed -- not everything should re-render on resize -- probably just scanning experience?
+    // window.addEventListener("resize", app.renderSoon );
     
     // For testing
     if (false && window.origin.startsWith("http://localhost")) {
@@ -21,7 +22,6 @@ window.addEventListener("load", () => {
         data: {
           "command": ApiCalls.Command.getPassword,
           derivationOptionsJson: JSON.stringify(DerivationOptions({          
-//            mutable: true,
 //            excludeOrientationOfFaces: true,
 //            cornerLetters: "SWDC"
           }))

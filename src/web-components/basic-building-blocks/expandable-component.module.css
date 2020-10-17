@@ -1,0 +1,22 @@
+.expandable_component {
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background-color: rgba(248, 250, 248, 1);
+  margin: 0px;
+  padding: 0px;
+  margin-top: .25rem;
+  margin-bottom: .25rem;
+  padding-left: .25rem;
+  border-radius: .5rem;
+}
+
+.button {
+  padding: 0px;
+  margin: 0px;
+  margin-left: -.25rem; 
+  border: none;
+  color: black;
+  background-color: rgba(0,0,0, 0);
+  outline: none;
+}

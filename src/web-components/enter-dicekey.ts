@@ -28,7 +28,7 @@ export interface EnterDiceKeyOptions extends DiceKeyRenderOptions, Attributes {
 /**
  * This class implements the component that displays DiceKeys.
  */
-export class EnterDiceKey extends Component<EnterDiceKeyOptions, SVGSVGElement> {
+export class EnterDiceKey extends Component<EnterDiceKeyOptions> {
 
   
   // Events

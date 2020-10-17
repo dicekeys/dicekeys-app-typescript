@@ -39,7 +39,7 @@ interface BodyOptions extends Attributes {
   appState: EncryptedCrossTabState;
 }
 
-export class AppMain extends Component<BodyOptions, HTMLElement> {
+export class AppMain extends Component<BodyOptions> {
   appState: EncryptedCrossTabState;
 
 //  action: PageAction = "home";
@@ -108,6 +108,7 @@ export class AppMain extends Component<BodyOptions, HTMLElement> {
 
   async render() {
     super.render();
+
     const diceKey = this.appState.diceKey.value;
     if (Step.getUsersConsent.isInProgress) {
       // If we're in the middle of getting the user's consent for an operation,

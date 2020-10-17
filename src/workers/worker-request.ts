@@ -31,13 +31,20 @@ export class WorkerRequest<REQUEST, RESULT, REQUEST_MESSAGE extends REQUEST = RE
       // The request hasn't changed.
       return this._resultPromise;
     }
-    this.worker?.terminate();
-    const worker = this.workerFactory();
-    this.worker = worker;
     this._result = undefined;
     this._request = request;
     this._resultPromise = new Promise<RESULT>( (resolve, reject) => {
-
+      try {
+        this.worker?.terminate();
+      } catch (_) {
+        // Do nothing if terminate fails on old worker.
+      }
+      try {
+        this.worker = this.workerFactory();
+      } catch (e) {
+        reject(e);
+        return;
+      }  
       const cancel = this._cancel = (e: any = new WorkerAborted()) => {
         if (this.terminate()) { reject(e); }
       };
@@ -47,9 +54,9 @@ export class WorkerRequest<REQUEST, RESULT, REQUEST_MESSAGE extends REQUEST = RE
         this.terminate();
       }
   
-      worker.addEventListener("message", handleMessageEvent);
-      worker.addEventListener("messageerror", cancel );
-      worker.postMessage(this.requestToRequestMessage(request));
+      this.worker.addEventListener("message", handleMessageEvent);
+      this.worker.addEventListener("messageerror", cancel );
+      this.worker.postMessage(this.requestToRequestMessage(request));
     });
     return this.resultPromise!;
   }
