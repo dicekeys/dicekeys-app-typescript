@@ -66,7 +66,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
       this.prescribedDomainName.set( getRegisteredDomain(newUrlOrDomainName) );
     });
 
-  readonly prescribedDomainName = new Observable<string>();
+  readonly prescribedDomainName = new Observable<string | undefined>();
   readonly domainName = new Observable<string>().onChange( (newDomainName: string) => {
     this.prescribedDerivationOptionsJson.set(passwordDerivationOptionsJson(newDomainName));
     this.prescribedName.set(
@@ -76,11 +76,11 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
     this.updateIsValidToSubmit();
   });
 
-  readonly prescribedDerivationOptionsJson = new Observable<string>();
+  readonly prescribedDerivationOptionsJson = new Observable<string | undefined>();
   readonly derivationOptionsJson = new Observable<string>()
     .observe( () => this.updateIsValidToSubmit() );
 
-  readonly prescribedName = new Observable<string>();
+  readonly prescribedName = new Observable<string | undefined>();
   readonly name = new Observable<string>()
     .observe( () => this.updateIsValidToSubmit() );
 

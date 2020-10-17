@@ -13,11 +13,20 @@ export class Observable<T> {
   }
 
   static from = <T>(
-    initialValue: OptionallyObservable<T>
-  ): Observable<T> =>
-    ((initialValue == null) || !(initialValue instanceof Observable)) ?
-      new Observable<T>(initialValue) :
-      initialValue;
+    initialValue: undefined | T | Observable<T> | Observable<T | undefined>,
+    replaceUndefinedWith?: T
+  ): Observable<T> => {
+    if (initialValue instanceof Observable) {
+      if (replaceUndefinedWith != null) {
+        const observable = new Observable<T>();
+        initialValue.observe( observedValue => observable.set(observedValue ?? replaceUndefinedWith) );
+        return observable;
+      } else {
+        return initialValue as Observable<T>;
+      }
+    }
+    return new Observable(initialValue) as Observable<T>;
+  }
 
   /**
    * Calls the callback function with the new value whenever the value changes.

@@ -6,7 +6,7 @@ import {
 export interface PrescribedTextFieldSpecification<T extends string = string> {
   formula?: OptionallyObservable<Appendable>;
   actual?: OptionallyObservable<T | "">;
-  prescribed?: OptionallyObservable<T | "">;
+  prescribed?: Observable<T | ""> | Observable<T | "" | undefined> | T;
   usePrescribed?: OptionallyObservable<boolean>
 //  forceUsePrescribed?: boolean;
 }
@@ -17,7 +17,7 @@ export type PrescribedTextFieldObservablesOrSpecification<T extends string = str
 export class PrescribedTextFieldObservables<T extends string = string, NAME extends string = string> {
   public readonly  formula: Observable<Appendable>;  
   public readonly actual: Observable<T | "">;
-  public readonly prescribed: Observable<T | "">;
+  public readonly prescribed: Observable<T | "" | undefined>;
   public readonly usePrescribed: Observable<boolean>;
 //  public readonly forceUsePrescribed: boolean;
 
@@ -28,10 +28,10 @@ export class PrescribedTextFieldObservables<T extends string = string, NAME exte
     public readonly name: NAME,
     spec: PrescribedTextFieldSpecification<T> = {},
   ) {
-    this.formula = Observable.from(spec.formula ?? "");
-    this.prescribed = Observable.from(spec.prescribed ?? "");
-    this.actual = Observable.from(spec.actual ?? this.prescribed.value ?? "");
-    this.usePrescribed = Observable.from(spec.usePrescribed ?? true);
+    this.formula = Observable.from<Appendable>(spec.formula, "");
+    this.prescribed =  Observable.from<T | "" | undefined>(spec.prescribed as Observable<T | "" | undefined>);
+    this.actual = Observable.from<T | "">(spec.actual ?? this.prescribed.value ?? "", "");
+    this.usePrescribed = Observable.from<boolean>(spec.usePrescribed ?? true, true);
 //    this.forceUsePrescribed = !!spec.forceUsePrescribed;
     this.actual.observe( newActualValue => {
       if ( (newActualValue ?? "") !== (this.prescribed.value ?? "") ) {

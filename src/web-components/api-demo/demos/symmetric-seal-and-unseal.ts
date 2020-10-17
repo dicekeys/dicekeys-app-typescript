@@ -15,7 +15,7 @@ import {
 } from "./multi-command-simulator";
 
 export class SymmetricKeySealAndUnseal extends MultiCommandSimulator<MultiCommandSimulatorOptions> {
-  packagedSealedMessageJson = new Observable<string>();
+  packagedSealedMessageJson = new Observable<string | undefined>();
 
   render() {
     const baseInputs = {
