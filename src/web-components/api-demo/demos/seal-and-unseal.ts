@@ -22,7 +22,7 @@ interface SealAndUnsealOptions extends MultiCommandSimulatorOptions {
 }
 export class SealAndUnseal extends MultiCommandSimulator<SealAndUnsealOptions> {
 
-  sealingKeyJson = new Observable<string>();
+  sealingKeyJson = new Observable<string | undefined>();
   plaintext = new Observable<string>("Easy as API!");
   packagedSealedMessageJson = new Observable<string>();
 

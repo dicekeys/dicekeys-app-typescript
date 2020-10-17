@@ -327,7 +327,7 @@ export class Component<
       this.primaryElement.dispatchEvent(evt);
    }
   }
-  updateFromObservable = (observable: Observable<string>): this => {
+  updateFromObservable = (observable: Observable<string> | Observable<string | undefined>): this => {
     observable.update(this);
     return this;
   }

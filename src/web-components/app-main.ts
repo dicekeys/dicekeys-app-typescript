@@ -33,7 +33,6 @@ import {
   reportException
 } from "./exceptions";
 import { EnterDiceKey } from "./enter-dicekey";
-import { ApiDemo } from "./api-demo/api-demo";
 
 
 interface BodyOptions extends Attributes {
@@ -109,12 +108,6 @@ export class AppMain extends Component<BodyOptions> {
 
   async render() {
     super.render();
-    
-    // Temp demo hack.
-    if (window && true) {
-      this.append(new ApiDemo({onExceptionEvent: reportException}));
-      return;
-    }
 
     const diceKey = this.appState.diceKey.value;
     if (Step.getUsersConsent.isInProgress) {

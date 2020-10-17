@@ -12,6 +12,7 @@ window.addEventListener("load", () => {
   EncryptedCrossTabState.instancePromise.then( (appState) => {
     const app = new AppMain({appState});
 
+    // FIXME -- not everything should re-render on resize -- probably just scanning experience?
     window.addEventListener("resize", app.renderSoon );
     
     // For testing

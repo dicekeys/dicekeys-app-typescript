@@ -1,6 +1,6 @@
-export  const restrictionsJson = (hosts: string[], clientMayRetrieveKey: boolean = false) =>  `{${
+export  const restrictionsJson = (hosts?: string[], clientMayRetrieveKey: boolean = false) => (!hosts || hosts.length === 0) ? "" :  `{${
   clientMayRetrieveKey ? '"clientMayRetrieveKey": true,' : ""
-}"allow":[${
+}"allow":[${ 
   hosts
     .map( host => `{"host":"*.${host}"}`)
     .join(",")

@@ -3,7 +3,7 @@ import {
   UrlRequestMetadataParameterNames
 } from "@dicekeys/dicekeys-api-js";
 import {
-  Component, Attributes, Observable, H1, H2, H3
+  Component, Attributes, Observable, H1, H2, H3, Div
 } from "../../web-component-framework";
 import {
   ApiRequestWithSeedParameterNames,
@@ -18,6 +18,7 @@ import {
   PrescribedTextInput,
 } from "../basic-building-blocks"
 import {
+  FnCall,
   FnCallName,
   Formula,
   InputVar,
@@ -29,7 +30,7 @@ import { SealAndUnseal, SymmetricKeySealAndUnseal } from "./demos";
 import { DICEKEY, DICEKEYS } from "~web-components/dicekey-styled";
 import { CommandSimulator } from "./command-simulator";
 
-interface ApiDemoOptions extends Attributes {
+interface ApiDemoOptions extends Attributes<"body"> {
   seedString?: PrescribedTextFieldSpecification<string>;
 }
 
@@ -56,10 +57,10 @@ export class ApiDemo extends Component<ApiDemoOptions> {
   )
 
   constructor(options: ApiDemoOptions) {
-    super(options);
+    super(options, document.body);
     this.seedString = new PrescribedTextFieldObservables(ApiRequestWithSeedParameterNames.seedString,
         {
-          formula: Formula("seed", "string | byte[]", 'DiceKeys.', "toSeed", "(", InputVar("diceKey"),  ')'),
+          formula: Formula("seed", "string | byte[]", 'DiceKeys.', FnCall("toSeed", InputVar("diceKey"))),
           // prescribed: new URL(window.location.href).searchParams.get(ApiRequestWithSeedParameterNames.seedString) ?? 
           //   "A1tB2rC3bD4lE5tF6rG1bH2lI3tJ4rK5bL6lM1tN2rO3bP4lR5tS6rT1bU2lV3tW4rX5bY6lZ1t",
           prescribed: new URL(window.location.href).searchParams.get(ApiRequestWithSeedParameterNames.seedString) ?? 
@@ -99,7 +100,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
 
     super.render(
       H1({},
-        DICEKEYS(), ` URL-based API Tutorial and Playground`
+        DICEKEYS(), ` URL-based API Tutorial`
       ),
       Instructions(`
         Your application can use this API to ask the `, DICEKEYS(),` App to derive secrets from the user's `, DICEKEY(), `
@@ -126,7 +127,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
         Instructions(` 
           Enter the domain names permitted to receive the results of your API requests.
         `),
-        new PrescribedTextInput({style: `width: 37.5rem;`, observables: this.commaSeparatedAuthorizedDomains}),
+        new PrescribedTextInput({style: `width: 37.5rem;`, observables: this.commaSeparatedAuthorizedDomains}),        
       ),
       ParameterCard(
         Instructions(` 
@@ -135,17 +136,25 @@ export class ApiDemo extends Component<ApiDemoOptions> {
         // (The request will be denied if the URL receiving the response isn't authorized to use the derived keys.)
         new PrescribedTextInput({style: `width: 37.5rem;`, observables: this.respondTo}),
       ),
-      Instructions(`
-        When you call the `, DICEKEYS(),` App, it converts the user's DiceKey into a seed in
-        <a href="https://dicekeys.github.io/seeded-crypto/introduction.html" target="new">this format</a>.
-        You can edit it if you like.
+      Div({style: "margin-top: 0.5rem; font-weight: bold;"}, `
+        To implement this API in your application or service, you will need to own the authorized domains, have a website served by HTTPS,
+        register your application to receive URLS with the `, InputVar("respondTo"), ` prefix, and update your code to handle
+        the responses received via those URLs.
       `),
+      H2({}, `Tutorial Simulation Parameters`),
+      Instructions(`The tutorial below will run live simulations, which require an additional input.`),
       ParameterCard(
+        Instructions(`
+        The `, DICEKEYS(),` App converts users' `, DICEKEY(), ` into seeds in the
+        <a href="https://dicekeys.github.io/seeded-crypto/introduction.html" target="new">format</a> used in this field.
+        For simulations, use the pre-populated default seed or enter one of your own.
+      `),
         new PrescribedTextInput({style: `width: 37.5rem;`, observables: this.seedString}),
     ),
-    H2({}, `Use Cases`),
+    H2({}, `Tutorials for Use Cases`),
       Instructions(`
-        We use the term seal and unseal in place of encrypt and decrypt since our primitives include message authentication.
+        You can find each command documented for each possible use case.
+        Note that in describing use cases, we use the term seal and unseal in place of encrypt and decrypt since our primitives include message authentication.
       `),
 
       //
@@ -155,7 +164,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
           ...baseParams,
           useGlobalKey: true,
         }),
-        H3({}, `Seal and Unseal Data with Public Key Pair`),
+        H3({}, `Seal and Unseal Data with Public Key Pair Derived from the User's `, DICEKEY()),
         Instructions(`
           Use the API's `, FnCallName("getSealingKey"), ` command to get a public-key derived from the user's `, DICEKEY() ,`,
           seal data locally using that sealing key, adding unsealingInstructions to ensure only your application/service can unseal it,
@@ -169,7 +178,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
           ...baseParams,
           useGlobalKey: false,
         }),
-        H3({}, `Seal and Unseal Data with an <i>Application-Exclusive</i> Public Key Pair`),
+        H3({}, `Seal and Unseal Data with an <i>Application-Exclusive</i> Public Key Pair Derived from the User's `, DICEKEY()),
         Instructions(`
           Use the API's `, FnCallName("getSealingKey"), ` command to get a public-key derived exclusively for your service/application
           from the user's `, DICEKEY() ,`,
@@ -183,7 +192,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
         new SymmetricKeySealAndUnseal({
           ...baseParams
         }),
-        H3({}, `Seal and Unseal Data with a Symmetric Key`),
+        H3({}, `Seal and Unseal Data with a Symmetric Key Derived from the User's `, DICEKEY()),
         Instructions(`Seal and unseal messages using a symmetric key derived exclusively for your service/application
           from the user's `, DICEKEY() ,`.`)
       ),
@@ -194,15 +203,15 @@ export class ApiDemo extends Component<ApiDemoOptions> {
           command: "getPassword",
           inputs: baseParams,
         }),
-      H3({}, `Get a Password Derived from the User's `, DICEKEY()),
-        Instructions(`Get a password derived from the user's `, DICEKEY(), `,
-        which can be re-derived as needed in the future exclusively by your service/application.`)
+        H3({}, `Get a Password Derived from the User's `, DICEKEY()),
+          Instructions(`Get a password derived from the user's `, DICEKEY(), `,
+          which can be re-derived as needed in the future exclusively by your service/application.`)
       ),
 
       // GetPassword
       new ExpandableComponent({}, () =>
         new CommandSimulator({
-          command: "getPassword",
+          command: "getSecret",
           inputs: baseParams,
         }),
       H3({}, `Get a Secret Derived from the User's `, DICEKEY()),
@@ -210,7 +219,38 @@ export class ApiDemo extends Component<ApiDemoOptions> {
         which can be re-derived as needed in the future exclusively by your service/application.
         For example, if you want to use a cryptographic algorithmic not supported by the APIs, you could
         derive a secret to use as a seed and use that seed to derive a cryptographic key.
-        `)      ),
+        `)
+      ),
+
+      // Get an unsealingKey
+      new ExpandableComponent({}, () =>
+        new CommandSimulator({
+          command: "getUnsealingKey",
+          inputs: baseParams,
+        }),
+        H3({}, `Get a Sealing and Unsealing Key Pair Derived from the User's `, DICEKEY()),
+        Instructions(`
+          If you want an unsealing key that you can use directly from the seeded cryptography library,
+          without calling the `, DICEKEYS(), ` App,
+          you can call `, FnCallName("getUnsealingKey"), ` with the <i>mayRetrieveKey</i> field of `, InputVar("derivationOptionsJson"),`
+          set to true.
+        `)
+      ),
+
+      // Get a symmetric key
+      new ExpandableComponent({}, () =>
+        new CommandSimulator({
+          command: "getSymmetricKey",
+          inputs: baseParams,
+        }),
+        H3({}, `Get a Symmetric Key Derived from the User's `, DICEKEY()),
+        Instructions(`
+          If you want an symmetric key that you can use directly from the seeded cryptography library,
+          without calling the `, DICEKEYS(), ` App,
+          you can call `, FnCallName("getSymmetricKey"), ` with the <i>mayRetrieveKey</i> field of `, InputVar("derivationOptionsJson"),`
+          set to true.
+        `)
+      ),
     );
   }
 

@@ -45,7 +45,7 @@ export class Observable<T> {
     return this;
   }
 
-  update = (objectToWriteTo: {textContent: string | null}) => {
+  update = (objectToWriteTo: {textContent: string | null | undefined}) => {
     this.observe( newValue => {
       if (newValue != null) {
         objectToWriteTo.textContent = `${newValue}`;
