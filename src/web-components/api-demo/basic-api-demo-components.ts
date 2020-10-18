@@ -6,7 +6,7 @@ import {
   Span
 } from "../../web-component-framework";
 
-type TypeName = "string" | "string[]" | "string | byte[]"
+type TypeName = "string" | "string[]" | "string | byte[]" | "number"
 
 export const Formula = (result: string, type: TypeName | undefined, ...derivation: Appendable[]): Appendable => Div({class: style.formula},...([
   Span({class: style.formula_left}, result),

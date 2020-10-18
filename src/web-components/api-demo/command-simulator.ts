@@ -37,8 +37,7 @@ import {
   Instructions,
   ParameterCard,
   ResultTextBlock, FnCall, InputVar, TemplateString, UrlParameter, ResultLabel
-} from "./basic-api-demo-components"
-import { restrictionsJson } from "~dicekeys/restrictions-json";
+} from "./basic-api-demo-components";
 import { commandRequiresDerivationOptionOfClientMayRetrieveKey, requestHasDerivationOptionsParameter, SeededCryptoObjectResponseParameterNames } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import {
   mutateRequest
@@ -74,6 +73,7 @@ export type CommandSimulatorOptions<
     messageBase64?: PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.GenerateSignatureParameterNames.message>
     plaintextString?: PrescribedTextFieldObservablesOrSpecification<string, "plaintextString">;
     plaintextBase64?: PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.plaintext>;
+    lengthInBytesString?: COMMAND extends "getSecret" ? PrescribedTextFieldObservablesOrSpecification<string, "lengthInBytes"> : never;
 
     derivationOptionsJsonMayBeModified?:  Observable<boolean | undefined>;
 
@@ -117,6 +117,9 @@ export class CommandSimulator<
   plaintextString: PrescribedTextFieldObservables<string, "plaintextString">;
   plaintextBase64: PrescribedTextFieldObservables<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.plaintext>;
 
+  lengthInBytesString: COMMAND extends "getSecret" ? PrescribedTextFieldObservables<string, "lengthInBytes"> : never;
+  lengthInBytes: COMMAND extends "getSecret" ? Observable<number> : never;
+
   unsealingInstructions: PrescribedTextFieldObservables<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.unsealingInstructions>;
 
   packagedSealedMessageJson: PrescribedTextFieldObservables<string, typeof ApiCalls.UnsealParameterNames.packagedSealedMessageJson>;
@@ -141,6 +144,7 @@ export class CommandSimulator<
   exception: Observable<string | undefined>;
   exceptionMessage: Observable<string | undefined>;
 
+
   constructor(options: CommandSimulatorOptions<COMMAND>) {
     super (options);
     this.addClass(style.operation_card);
@@ -154,28 +158,34 @@ export class CommandSimulator<
     this.derivationOptionsJsonMayBeModified = options.inputs?.derivationOptionsJsonMayBeModified ?? new Observable<boolean | undefined>(
       this.command === "sealWithSymmetricKey" || this.command === "getSealingKey"
     )
+    this.lengthInBytesString = ((this.command === "getSecret") ? 
+      PrescribedTextFieldObservables.from("lengthInBytes", options.inputs?.lengthInBytesString ?? {
+        formula: Formula("lengthInBytes", "number"),
+        prescribed: "32"
+      }) : undefined) as COMMAND extends "getSecret" ? PrescribedTextFieldObservables<string, "lengthInBytes"> : never;
+    this.lengthInBytes= ((this.command === "getSecret") ? new Observable() : undefined) as COMMAND extends "getSecret" ? Observable<number> : never;
+    if  (this.lengthInBytes) {
+      this.lengthInBytesString.actual.observe( lengthInBytesString =>
+        this.lengthInBytes?.set( parseInt(lengthInBytesString ?? "32") ?? 32 )
+      )
+    }
     this.seedString = PrescribedTextFieldObservables.from(ApiRequestWithSeedParameterNames.seedString, options.inputs?.seedString);
     this.respondTo = PrescribedTextFieldObservables.from(UrlRequestMetadataParameterNames.respondTo, options.inputs?.respondTo);
 
     this.responseObject = options.outputs?.responseObject ?? new Observable<ApiCalls.ResponseForCommand<COMMAND> | ApiCalls.ExceptionResponse | undefined>();
 
-
     this.derivationOptionsJson = new PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>(
       ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson, {
-        formula: Formula("derivationOptionsJson", "string", `'{${
+        formula: Formula("derivationOptionsJson", "string", `'{${(
           commandRequiresDerivationOptionOfClientMayRetrieveKey(this.command) ? `"clientMayRetrieveKey":true,` : ""
+        ) + (
+          this.command === "getSecret" ? (`"lengthInBytes="` + TemplateInputVar("lengthInBytes") + `",` ) : ""
+        )
         }"allow":[{"host":"*.`, TemplateInputVar("authorizedDomains[i]"), `"}]}'`),
     });
     // Update derivation options based on domains.
-    this.authorizedDomains.observe( domains => domains &&
-      this.derivationOptionsJson.prescribed.set(restrictionsJson(domains ?? [], commandRequiresDerivationOptionOfClientMayRetrieveKey(this.command))
-    ));
-
-    // if (this.derivationOptionsJson && this.options.inputs?.authorizedDomains) {
-    //   this.options.inputs.authorizedDomains.observe( (authorizedDomains) =>
-    //     this.derivationOptionsJson.prescribed.set(restrictionsJson(authorizedDomains ?? [], commandRequiresDerivationOptionOfClientMayRetrieveKey(this.command)))
-    //   )
-    // }
+    this.authorizedDomains.observe( this.updatePrescribedDerivationOptionsJson );
+    this.lengthInBytes?.observe( this.updatePrescribedDerivationOptionsJson );
 
     this.messageString = PrescribedTextFieldObservables.from("messageString", options.inputs?.messageString);
     this.messageBase64 = PrescribedTextFieldObservables.from(
@@ -332,6 +342,24 @@ export class CommandSimulator<
     return url.toString();
   }
 
+  updatePrescribedDerivationOptionsJson = () => {
+    const authorizedDomains = this.authorizedDomains.value ?? [];
+    const lengthInBytes = ("lengthInBytes" in this) ? this.lengthInBytes?.value : undefined;
+    const clientMayRetrieveKey = this.requiresClientMayRetrieveKey;
+      const pdo = DerivationOptions({
+      ...( (authorizedDomains?.length > 0) ? {
+        allow: authorizedDomains.map( host => ({host}) )
+      } : {}),
+      ...( (lengthInBytes != null && lengthInBytes != 32) ? {
+          lengthInBytes
+      } : {}),
+      ...( clientMayRetrieveKey ? {clientMayRetrieveKey: true} : {}),
+      
+    })
+    this.derivationOptionsJson.prescribed.set(jsonStringifyWithSortedFieldOrder(pdo))
+  }
+
+
   updatePrescribedRequestUrl = () => {
     this.requestUrl.prescribed.set(this.prescribedRequestUrl);
   }
@@ -423,6 +451,18 @@ export class CommandSimulator<
           Instructions("Each request should have a requestId that is unique (random or sequential) so that you can match the response to it."),
           new PrescribedTextInput({style: `width: 16rem;`, observables: this.requestId})
         ),
+        //
+        // lengthInBytes
+        //
+        ...((this.command === ApiCalls.Command.getSecret) ?
+          [
+            ParameterCard(
+              Instructions("The length of the secret to derive."),
+              new PrescribedTextInput({observables: this.lengthInBytesString})
+            )
+          ] : []
+        ),
+
         //
         // Derivation options
         //
