@@ -121,8 +121,13 @@ export class CommandSimulator<
   lengthInBytes: COMMAND extends "getSecret" ? Observable<number> : never;
 
   unsealingInstructions: PrescribedTextFieldObservables<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.unsealingInstructions>;
-
   packagedSealedMessageJson: PrescribedTextFieldObservables<string, typeof ApiCalls.UnsealParameterNames.packagedSealedMessageJson>;
+
+  // FUTURE -- add support for password length
+  // wordList?: Observable<string>;
+  // passwordLengthInBitsOrWords?: Observable<"lengthInBits" | "lengthInWords">;
+  // passwordLengthString?: Observable<string>;
+  // passwordLength?: Observable<number>;
 
   private static numericRequestId: number = 0;
   requestId: PrescribedTextFieldObservables<string, typeof ApiCalls.RequestMetadataParameterNames.requestId>;
@@ -140,6 +145,7 @@ export class CommandSimulator<
   plaintextBase64Output: Observable<string | undefined>;
   plaintextStringOutput: Observable<string | undefined>;
   authorizedDomains: Observable<string[]>;
+
 
   exception: Observable<string | undefined>;
   exceptionMessage: Observable<string | undefined>;
@@ -176,12 +182,12 @@ export class CommandSimulator<
 
     this.derivationOptionsJson = new PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>(
       ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson, {
-        formula: Formula("derivationOptionsJson", "string", `'{${(
-          commandRequiresDerivationOptionOfClientMayRetrieveKey(this.command) ? `"clientMayRetrieveKey":true,` : ""
-        ) + (
-          this.command === "getSecret" ? (`"lengthInBytes="` + TemplateInputVar("lengthInBytes") + `",` ) : ""
+        formula: Formula("derivationOptionsJson", "string", 
+          '`{(',
+          ...(commandRequiresDerivationOptionOfClientMayRetrieveKey(this.command) ? [`"clientMayRetrieveKey":true,`] : []),
+          ...(this.command === "getSecret" ? [`"lengthInBytes="`, TemplateInputVar("lengthInBytes"), `",`] : []),
+          ...(this.authorizedDomains.value?.length ?? 0 > 0 ? [`"allow":[{"host":"*.`, TemplateInputVar("authorizedDomains[i]"), `"}]}'`] : []),
         )
-        }"allow":[{"host":"*.`, TemplateInputVar("authorizedDomains[i]"), `"}]}'`),
     });
     // Update derivation options based on domains.
     this.authorizedDomains.observe( this.updatePrescribedDerivationOptionsJson );
@@ -457,7 +463,7 @@ export class CommandSimulator<
         ...((this.command === ApiCalls.Command.getSecret) ?
           [
             ParameterCard(
-              Instructions("The length of the secret to derive."),
+              Instructions("The length of the secret to derive (defaults to 32 and this example only includes the value if set to a different value)."),
               new PrescribedTextInput({observables: this.lengthInBytesString})
             )
           ] : []
@@ -493,7 +499,7 @@ export class CommandSimulator<
           [
             ParameterCard(
               Instructions( 
-                `You can specify the options for deriving secrets via a <a targe="new" href="https://dicekeys.github.io/seeded-crypto/derivation_options_format.html"/>JSON format</a>,
+                `You can specify the options for deriving secrets via a <a target="new" href="https://dicekeys.github.io/seeded-crypto/derivation_options_format.html"/>JSON format</a>,
                 which allow you to restrict which apps and services can use the secrets you derive.
               `),
               new PrescribedTextInput({observables: this.derivationOptionsJson}),

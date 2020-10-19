@@ -62,3 +62,6 @@ export const OperationCard = (title: Appendable, ...content: Appendable[]): Div 
     Div({class: style.operation_card_title}, title),
     ...content
   );
+
+export const UseCaseHeader = (...content: Appendable[]): Div =>
+  Div({class: style.use_case_header}, ...content);

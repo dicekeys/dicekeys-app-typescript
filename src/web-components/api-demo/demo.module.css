@@ -39,6 +39,12 @@
   flex-shrink: 1;
 }
 
+.use_case_header {
+  font-size: 1.15rem;
+  font-weight: bold;
+  font-family: serif;
+}
+
 .operation_card {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
