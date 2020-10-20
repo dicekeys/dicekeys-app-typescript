@@ -2,12 +2,14 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  background-color: rgba(248, 250, 248, 1);
+  background-color: rgba(230, 233, 233, 1);
   margin: 0px;
   padding: 0px;
   margin-top: .25rem;
-  margin-bottom: .25rem;
-  padding-left: .25rem;
+  margin-bottom: .5rem;
+  padding-left: .5rem;
+  padding-right: .5rem;
+  padding-bottom: .25rem;
   border-radius: .5rem;
 }
 

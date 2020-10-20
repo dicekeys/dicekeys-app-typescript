@@ -1,9 +1,8 @@
-//  import styles from "./demo.module.css";
 import {
   UrlRequestMetadataParameterNames
 } from "@dicekeys/dicekeys-api-js";
 import {
-  Component, Attributes, Observable, H1, H2, H3, Div
+  Component, Attributes, Observable, H1, H2, Div
 } from "../../web-component-framework";
 import {
   ApiRequestWithSeedParameterNames,
@@ -24,7 +23,8 @@ import {
   InputVar,
   Instructions,
   ParameterCard,
-  TemplateInputVar
+  TemplateInputVar,
+  UseCaseHeader
 } from "./basic-api-demo-components"
 import { SealAndUnseal, SymmetricKeySealAndUnseal } from "./demos";
 import { DICEKEY, DICEKEYS } from "~web-components/dicekey-styled";
@@ -164,7 +164,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
           ...baseParams,
           useGlobalKey: true,
         }),
-        H3({}, `Seal and Unseal Data with Public Key Pair Derived from the User's `, DICEKEY()),
+        UseCaseHeader(`Seal and Unseal Data with Public Key Pair Derived from the User's `, DICEKEY()),
         Instructions(`
           Use the API's `, FnCallName("getSealingKey"), ` command to get a public-key derived from the user's `, DICEKEY() ,`,
           seal data locally using that sealing key, adding unsealingInstructions to ensure only your application/service can unseal it,
@@ -178,7 +178,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
           ...baseParams,
           useGlobalKey: false,
         }),
-        H3({}, `Seal and Unseal Data with an <i>Application-Exclusive</i> Public Key Pair Derived from the User's `, DICEKEY()),
+        UseCaseHeader(`Seal and Unseal Data with an <i>Application-Exclusive</i> Public Key Pair Derived from the User's `, DICEKEY()),
         Instructions(`
           Use the API's `, FnCallName("getSealingKey"), ` command to get a public-key derived exclusively for your service/application
           from the user's `, DICEKEY() ,`,
@@ -192,7 +192,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
         new SymmetricKeySealAndUnseal({
           ...baseParams
         }),
-        H3({}, `Seal and Unseal Data with a Symmetric Key Derived from the User's `, DICEKEY()),
+        UseCaseHeader(`Seal and Unseal Data with a Symmetric Key Derived from the User's `, DICEKEY()),
         Instructions(`Seal and unseal messages using a symmetric key derived exclusively for your service/application
           from the user's `, DICEKEY() ,`.`)
       ),
@@ -203,7 +203,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
           command: "getPassword",
           inputs: baseParams,
         }),
-        H3({}, `Get a Password Derived from the User's `, DICEKEY()),
+        UseCaseHeader(`Get a Password Derived from the User's `, DICEKEY()),
           Instructions(`Get a password derived from the user's `, DICEKEY(), `,
           which can be re-derived as needed in the future exclusively by your service/application.`)
       ),
@@ -214,7 +214,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
           command: "getSecret",
           inputs: baseParams,
         }),
-      H3({}, `Get a Secret Derived from the User's `, DICEKEY()),
+      UseCaseHeader(`Get a Secret Derived from the User's `, DICEKEY()),
         Instructions(`Get an array of secret bytes derived from the user's `, DICEKEY(), `,
         which can be re-derived as needed in the future exclusively by your service/application.
         For example, if you want to use a cryptographic algorithmic not supported by the APIs, you could
@@ -228,7 +228,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
           command: "getUnsealingKey",
           inputs: baseParams,
         }),
-        H3({}, `Get a Sealing and Unsealing Key Pair Derived from the User's `, DICEKEY()),
+        UseCaseHeader(`Get a Sealing and Unsealing Key Pair Derived from the User's `, DICEKEY()),
         Instructions(`
           If you want an unsealing key that you can use directly from the seeded cryptography library,
           without calling the `, DICEKEYS(), ` App,
@@ -243,7 +243,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
           command: "getSymmetricKey",
           inputs: baseParams,
         }),
-        H3({}, `Get a Symmetric Key Derived from the User's `, DICEKEY()),
+        UseCaseHeader(`Get a Symmetric Key Derived from the User's `, DICEKEY()),
         Instructions(`
           If you want an symmetric key that you can use directly from the seeded cryptography library,
           without calling the `, DICEKEYS(), ` App,

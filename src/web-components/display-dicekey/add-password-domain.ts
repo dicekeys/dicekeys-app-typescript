@@ -13,23 +13,13 @@ import { getRegisteredDomain } from "~domains/get-registered-domain";
 import { addStoredPasswordConsumer, PasswordConsumerType, passwordDerivationOptionsJson } from "~dicekeys/password-consumers";
 // import { FavIcon } from "./fav-icon";
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
-import { ObservableTextInput, ObservableTextInputOptions, PrescribedTextFieldObservables, PrescribedTextInput } from "~web-components/basic-building-blocks";
+import { // ObservableTextInput, ObservableTextInputOptions,
+   PrescribedTextFieldObservables, PrescribedTextInput } from "~web-components/basic-building-blocks";
+import { Instructions } from "~web-components/api-demo/basic-api-demo-components";
 
 export interface AddPasswordDomainOptions extends Attributes {}
 
 export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
-
-  /**
-   * The code supporting the demo page cannot load until the WebAssembly module for the image
-   * processor has been loaded. Pass the module to wire up the page with this class.
-   * @param module The web assembly module that implements the DiceKey image processing.
-   */
-  constructor(
-    options: AddPasswordDomainOptions
-  ) {
-      super(options);
-      this.addClass(styles.add_password_domain);
-  }
 
   public complete = new ComponentEvent<[]>(this);
 
@@ -44,8 +34,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
 
   updateIsValidToSubmit = () => {
     this.isValidToSubmit?.set(!!(
-      this.domainName &&
-      this.domainName.value &&
+      this.domainNamesInDomainNamesField.length > 0 &&
       this.derivationOptionsJson &&
       DerivationOptions(this.derivationOptionsJson.value)
     ));
@@ -61,30 +50,75 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
     this.complete.send();
   }
 
-  readonly urlOrDomainName = new Observable<string>()
-    .onChange( newUrlOrDomainName => {
-      this.prescribedDomainName.set( getRegisteredDomain(newUrlOrDomainName) );
-    });
+  readonly urlOrDomainNames = new Observable<string>("");
 
-  readonly prescribedDomainName = new Observable<string | undefined>();
-  readonly domainName = new Observable<string>().onChange( (newDomainName: string) => {
-    this.prescribedDerivationOptionsJson.set(passwordDerivationOptionsJson(newDomainName));
-    this.prescribedName.set(
-      (newDomainName.split(".")[0]?.charAt(0) ?? "").toLocaleUpperCase() +
-      (newDomainName.split(".")[0]?.substr(1) ?? "")
-    );
-    this.updateIsValidToSubmit();
-  });
+  get domainNamesInUrlOrDomainNamesField(): string[] {
+    return (this.urlOrDomainNames.value ?? "")
+        .split(",")
+        .map( n => n.trim() )
+        .filter( n => !!n )
+        .map( getRegisteredDomain );
+  }
 
-  readonly prescribedDerivationOptionsJson = new Observable<string | undefined>();
-  readonly derivationOptionsJson = new Observable<string>()
-    .observe( () => this.updateIsValidToSubmit() );
+  readonly prescribedDomainNames = new Observable<string>("");
 
-  readonly prescribedName = new Observable<string | undefined>();
-  readonly name = new Observable<string>()
-    .observe( () => this.updateIsValidToSubmit() );
+  get domainNamesInDomainNamesField(): string[] {
+    return (this.domainNamesField?.value ?? "")
+        .split(",")
+        .map( n => n.trim() )
+        .filter( n => !!n )
+  }
+
+  readonly domainNamesField = new Observable<string>("");
+  
+  readonly prescribedDerivationOptionsJson = new Observable<string>();
+  readonly derivationOptionsJson = new Observable<string>("");
+
+  readonly prescribedName = new Observable<string>("");
+  readonly name = new Observable<string>("");
 
   addButton?: HTMLButtonElement;
+
+  readonly domainNamesFieldObservables = new PrescribedTextFieldObservables('domain', {
+    actual: this.domainNamesField,
+    prescribed: this.prescribedDomainNames
+  });
+
+  readonly derivationOptionsFieldObservables = new PrescribedTextFieldObservables('derivation options', {
+    actual: this.derivationOptionsJson,  
+    prescribed: this.prescribedDerivationOptionsJson
+  })
+
+  readonly nameFieldObservables = new PrescribedTextFieldObservables('name', {
+    actual: this.name,
+    prescribed: this.prescribedName
+  });
+
+  constructor(
+    options: AddPasswordDomainOptions
+  ) {
+      super(options);
+      this.addClass(styles.add_password_domain);
+
+      this.urlOrDomainNames.onChange( () => {
+        this.prescribedDomainNames.set( this.domainNamesInUrlOrDomainNamesField.join(", ") );
+      });
+
+      this.domainNamesField.observe( () => {
+        const domainNames = this.domainNamesInDomainNamesField;
+        this.prescribedDerivationOptionsJson.set(passwordDerivationOptionsJson(domainNames));
+        this.prescribedName.set( domainNames.length === 0 ? "" :
+          (domainNames[0].split(".")[0]?.charAt(0) ?? "").toLocaleUpperCase() +
+          (domainNames[0].split(".")[0]?.substr(1) ?? "")
+        );
+        this.updateIsValidToSubmit();
+      });
+
+      this.derivationOptionsJson.observe( () => this.updateIsValidToSubmit() );
+      this.name.observe( () => this.updateIsValidToSubmit() );
+  
+  }
+
 
   // imageContainerDiv?: Div;
   // faviconImage?: HTMLImageElement;
@@ -100,58 +134,61 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
 
   render() {
 
-    super.render();
-    this.addClass(layoutStyles.stretched_column_container)
-    this.append(
-      Div({class: dialogStyles.instructions ,text: `You can fill in all the options simply by pasting the URL of the service you need a password for into the first field.`}),
-      Label({class: styles.item_label},
-        Span({class: styles.label_span},"Enter the domain name or HTTPS URL of the application/service the password is for:"),
-        Div({style: "display: flex; flex-direction: row"},
-          new ObservableTextInput({
+    super.render(
+      Div({class: layoutStyles.stretched_column_container, style: `padding-left: 10vw; padding-right: 10vw;`},
+        Instructions(`
+          The DiceKeys app derives passwords from your DiceKey and a set of options that restrict which sites can use the password.
+          If you paste in the URL or domain name of the site you need a password for, this form will fill in the rest.
+        `),
+        Label({class: styles.item_label},
+          Span({class: styles.label_span},"Enter the domain name or HTTPS URL of the application/service the password is for:"),
+          // Div({style: "display: flex; flex-direction: row"},
+            new PrescribedTextInput({
+              style: `min-width: 40rem;`,
+              observables: new PrescribedTextFieldObservables("urlOrDomainNames", {
+                actual: this.urlOrDomainNames
+              })
+            }),
+          // )
+        ),
+        Label({class: styles.item_label},
+          Span({class: styles.label_span},
+            `The domain name(s) allowed to access the password, derived from the above field by default.
+            Use the default value (in green) if at all possible.  If you customize this value and forget it, you will be unable to re-generate
+            passwords.
+          `),
+          new PrescribedTextInput({
+            style: `min-width: 50vw;`, observables: this.domainNamesFieldObservables
+          }),
+        ),
+        Label({class: styles.item_label},
+          Span({class: styles.label_span},`The password derivation options that will be applied, derived from the above field by default.
+            Use the default value (in green) if at all possible.  If you customize this value and forget it, you will be unable to re-generate
+            passwords.
+          `),
+          new PrescribedTextInput({
             style: `min-width: 50vw;`,
-            observable: this.urlOrDomainName
-          } as ObservableTextInputOptions),
+            observables: this.derivationOptionsFieldObservables,
+          }),
+        ),
+        Label({},
+          Span({class: styles.label_span},`The name you will give to this new password type so that you can identify it in the passwords menu.
+          You can safely customize this value as it will not effect the value of the generated password.`),
+          new PrescribedTextInput({
+            style: `min-width: 50vw;`,
+            observables: this.nameFieldObservables,
+          }),
+        ),
+        Div({class: dialogStyles.decision_button_container},
+          Button({value: "Cancel"}, "Cancel").with( e => {
+            e.events.click.on( this.complete.send )
+          }),
+          Button({value: "Add", disabled: ""}, "Add").with( e => {
+            this.addButton = e.primaryElement;
+            e.events.click.on( this.add )
+          }),
         )
       ),
-      Label({class: styles.item_label},
-        Span({class: styles.label_span},"The domain name with which this password may be shared:"),
-        new PrescribedTextInput({
-          style: `min-width: 50vw;`,
-          observables: new PrescribedTextFieldObservables('domain', {
-            actual: this.domainName,
-            prescribed: this.prescribedDomainName
-          })
-        }),
-      ),
-      Label({class: styles.item_label},
-        Span({class: styles.label_span},"JSON formatted password derivation options:"),
-        new PrescribedTextInput({
-          style: `min-width: 50vw;`,
-          observables: new PrescribedTextFieldObservables('derivation options', {
-            actual: this.derivationOptionsJson,  
-            prescribed: this.prescribedDerivationOptionsJson
-          })
-        }),
-      ),
-      Label({},
-        Span({class: styles.label_span},"The name of this type of password (to appear in the passwords-generation menu):"),
-        new PrescribedTextInput({
-          style: `min-width: 50vw;`,
-          observables: new PrescribedTextFieldObservables('name', {
-            actual: this.name,
-            prescribed: this.prescribedName
-          })
-        }),
-      ),
-      Div({class: dialogStyles.decision_button_container},
-        Button({value: "Cancel"}, "Cancel").with( e => {
-          e.events.click.on( this.complete.send )
-        }),
-        Button({value: "Add", disabled: ""}, "Add").with( e => {
-          this.addButton = e.primaryElement;
-          e.events.click.on( this.add )
-        }),
-      )
     );
   }
 

@@ -6,7 +6,7 @@ import {
   Span
 } from "../../web-component-framework";
 
-type TypeName = "string" | "string[]" | "string | byte[]"
+type TypeName = "string" | "string[]" | "string | byte[]" | "number"
 
 export const Formula = (result: string, type: TypeName | undefined, ...derivation: Appendable[]): Appendable => Div({class: style.formula},...([
   Span({class: style.formula_left}, result),
@@ -62,3 +62,6 @@ export const OperationCard = (title: Appendable, ...content: Appendable[]): Div 
     Div({class: style.operation_card_title}, title),
     ...content
   );
+
+export const UseCaseHeader = (...content: Appendable[]): Div =>
+  Div({class: style.use_case_header}, ...content);
