@@ -45,7 +45,7 @@ class PrescribedTextInputField<
 
   styleOnPrescribedObservableMatch = () => {
     const observables = this.options.observables;
-    const matches = (observables.prescribed.value ?? "") === ( observables.actual.value ?? "");
+    const matches = (observables.prescribed.value) === (observables.actual.value);
     if (matches) {
       this.primaryElement.classList.remove(style.not_prescribed);
       this.primaryElement.classList.add(style.matches_prescribed);

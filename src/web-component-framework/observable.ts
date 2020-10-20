@@ -20,6 +20,7 @@ export class Observable<T> {
       if (replaceUndefinedWith != null) {
         const observable = new Observable<T>();
         initialValue.observe( observedValue => observable.set(observedValue ?? replaceUndefinedWith) );
+        observable.observe( value => initialValue.set( value as T ) );
         return observable;
       } else {
         return initialValue as Observable<T>;
