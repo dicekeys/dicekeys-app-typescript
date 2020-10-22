@@ -31,7 +31,8 @@ const textShade = "#000000";
 const hiddenTextShade = "#B0B0B0";
 const dieSurfaceColor = "#ffffff";
 const dieSurfaceColorHighlighted = "rgb(222, 244, 64)"
-const diceBoxColor = "rgb(5,3,80)"; // actual Pantone color 07C = rgb(10,6,159), but actual product looks much darker than that purported equality
+ // actual Pantone color 07C = rgb(10,6,159), but actual product looks much darker than that purported equality
+const diceBoxColor = "#050350"; // must be in hex format as it is parsed as such in this code.
 
 export interface DiceKeyRenderOptions {
   hide21?: boolean,
@@ -237,7 +238,7 @@ export const renderDiceKey = (
     const x = distanceBetweenDieCenters * (-2 + (index % 5));
     const y = distanceBetweenDieCenters * (-2 + Math.floor(index / 5));
     const isCornerDie = DiceKey.cornerIndexSet.has(index);
-    svgElement.appendChild(renderFace(hide21 && !isCornerDie ? {} : face, {x, y}, {highlightThisDie: index === options.highlightDieAtIndex }));
+    svgElement.appendChild(renderFace((hide21 && !isCornerDie) ? {} : face, {x, y}, {highlightThisDie: index === options.highlightDieAtIndex }));
     if (hide21) {
       svgElement.appendChild(SVG.rect({
         x: x - distanceBetweenDieCenters/2,

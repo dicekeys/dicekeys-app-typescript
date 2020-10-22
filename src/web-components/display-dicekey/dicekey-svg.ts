@@ -58,7 +58,7 @@ export class DiceKeySvg extends Component<DiceKeySvgOptions, "svg"> {
     this.addClass(styles.dicekey_svg);
     this.obscure = new Observable<boolean>(options?.obscureByDefault ?? false)
 
-    if (options.obscureOnClick || ((typeof options.obscureOnClick === "undefined") && options.obscureOnClick)) {
+    if (options.obscureOnClick || ((typeof options.obscureOnClick === "undefined") && options.obscureByDefault)) {
       this.primaryElement.addEventListener("click", () => {
         this.obscure.value = !this.obscure.value;
       }  );

@@ -128,7 +128,8 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
       this.append(
         Div({class: layoutStyles.stretched_column_container},
           new DiceKeySvg({
-            diceKey: this.options.diceKey
+            diceKey: this.options.diceKey,
+            obscureByDefault: true,
           }),
           Div({class: dialogStyles.centered_controls},
             Label({class: styles.create_password_for_label}, "Create a password for ",
