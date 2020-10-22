@@ -1,3 +1,4 @@
+import { Exceptions } from "@dicekeys/dicekeys-api-js";
 // import { browserInfo } from "~utilities/browser";
 import {
   ComponentEvent
@@ -18,6 +19,28 @@ export const videoConstraintsForDevice = (deviceId: string): MediaTrackConstrain
   deviceId,
 });
 
+export class TimeoutException extends Exceptions.NamedException {}
+
+const withTimeout = (timeoutInMs: number = 5000) =>
+  <T>( fn: () => Promise<T> ) => new Promise<T>( (resolve, reject ) => {
+
+    var timeout: ReturnType<typeof setTimeout> | undefined = setTimeout( () => {
+      timeout = undefined;
+      reject(new TimeoutException("Timeout"));
+    }, timeoutInMs);
+    fn().then( result => {
+      if (timeout != null) {
+        clearTimeout(timeout);
+        resolve(result);
+      }
+    }).catch( e => {
+      if (timeout != null) {
+        clearTimeout(timeout);
+        reject(e);
+      }
+    });
+  });
+const with3SecondTimeout = withTimeout(5000);
 
 export type Camera = MediaDeviceInfo & MediaTrackSettings & {name: string, capabilities: MediaTrackCapabilities | undefined};
 
@@ -113,7 +136,7 @@ export class CamerasOnThisDevice {
     const {deviceId} = cameraDevice;
     try {
       // Get a media stream so that we can get settings from the track
-      const stream = await navigator.mediaDevices.getUserMedia({video: videoConstraintsForDevice(deviceId)});
+      const stream = await with3SecondTimeout( () => navigator.mediaDevices.getUserMedia({video: videoConstraintsForDevice(deviceId)}) );
       if (!stream) return;
       const track = stream.getVideoTracks()[0];
       if (!track) return;
@@ -175,7 +198,8 @@ export class CamerasOnThisDevice {
   private _ready: boolean = false; 
   public get ready() { return this._ready; }
   addAttachedAndRemovedDetachedCameras = async (): Promise<void> => {
-    const listOfAllMediaDevices = await navigator.mediaDevices.enumerateDevices();
+    // Give the user 20 seconds to grant camera access the first time.
+    const listOfAllMediaDevices = await withTimeout(20000)( () => navigator.mediaDevices.enumerateDevices() );
 
     const listOfCurrentCameras = listOfAllMediaDevices
       .filter( ({kind}) => kind.toLocaleLowerCase().startsWith('video') );
@@ -197,22 +221,26 @@ export class CamerasOnThisDevice {
     );
     listOfNewlyAttachedCameras.forEach( camera => this.camerasToBeAdded.set(camera.deviceId, camera) )
 
-    if (this.camerasToBeAdded.size > 0) {
-      await Promise.all(
-        // do parallel requests for user media to get camera track settings that
-        // enumerateDevices doesn't offer, and can only be learned via getUserMedia 
-        // followed by getSettings
-        [...this.camerasToBeAdded.values()].map( camera => this.tryAddCamera(camera) )
-      );
-      for (const cameraDevice of this.camerasToBeAdded.values()) {
-        // I hope you're as horrified as I am by the use of await in a loop.
-        // This is our here by last resort since some devices will not let us
-        // inspect cameras in parallel.
-        // This could be bad if a device had 50 cameras attached, so um, maybe this
-        // is an intentional plot to accidentally take down surveillance systems that
-        // might accidentally run this code?  Yeah, that's the ticket!
-        await this.tryAddCamera(cameraDevice);
+    try {
+      if (this.camerasToBeAdded.size > 0) {
+        await withTimeout(8000)( () => Promise.all(
+          // do parallel requests for user media to get camera track settings that
+          // enumerateDevices doesn't offer, and can only be learned via getUserMedia 
+          // followed by getSettings
+          [...this.camerasToBeAdded.values()].map( camera => this.tryAddCamera(camera) )
+        ));
+        for (const cameraDevice of this.camerasToBeAdded.values()) {
+          // I hope you're as horrified as I am by the use of await in a loop.
+          // This is our here by last resort since some devices will not let us
+          // inspect cameras in parallel.
+          // This could be bad if a device had 50 cameras attached, so um, maybe this
+          // is an intentional plot to accidentally take down surveillance systems that
+          // might accidentally run this code?  Yeah, that's the ticket!
+            await with3SecondTimeout( () => this.tryAddCamera(cameraDevice) );
+        }
       }
+    } catch {
+      // FIXME?
     }
     if (
       !this._ready ||
