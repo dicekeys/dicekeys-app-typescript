@@ -6,7 +6,7 @@ import {
   ApiFactory,
   PostMessageApiFactory,
   DerivationOptions,
-  stringToUtf8ByteArray
+  stringToUtf8ByteArray, UnsealingInstructions
 } from "@dicekeys/dicekeys-api-js"
 
 import {
@@ -14,6 +14,7 @@ import {
 } from '../api-handler/handle-api-request'
 import { postMessageApiResponder } from "../api-handler/handle-post-message-api-request";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
+import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
 
 const getUsersConsentApprove = (requestContext: ApiRequestContext): Promise<ConsentResponse> =>
   Promise.resolve({seedString: "a bogus seed", mutatedRequest: requestContext.request } );
@@ -75,8 +76,11 @@ describe("End-to-end API tests using the PostMessage API", () => {
 //    new Promise<UsersConsentResponse>( (respond) => respond(response) );
  // const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
 
-  const derivationOptionsJson = "{}";
-  const derivationOptionsForProtectedKeysJson = JSON.stringify(DerivationOptions({
+  const derivationOptionsJson = jsonStringifyWithSortedFieldOrder(DerivationOptions({
+    allow: [{host: defaultRequestHost}]
+  }));
+  const derivationOptionsForProtectedKeysJson = jsonStringifyWithSortedFieldOrder(DerivationOptions({
+    allow: [{host: defaultRequestHost}],
     clientMayRetrieveKey: true
   }));
   const testMessage = "The secret ingredient is dihydrogen monoxide";
@@ -133,15 +137,9 @@ describe("End-to-end API tests using the PostMessage API", () => {
   test("asymmetricSealAndUnseal", async () => {
     const { sealingKeyJson } = await getSealingKey({derivationOptionsJson});
     const sealingKey = (await SeededCryptoModulePromise).SealingKey.fromJson(sealingKeyJson);
-    const unsealingInstructionsJson = JSON.stringify({
-      "requireUsersConsent": {
-          "question": "Do you want use \"8fsd8pweDmqed\" as your SpoonerMail account password and remove your current password?",
-          "actionButtonLabels": {
-              "allow": "Make my password \"8fsd8pweDmqed\"",
-              "deny": "No"
-          }
-      }
-    });
+    const unsealingInstructionsJson = JSON.stringify(UnsealingInstructions({
+      allow: [{host: defaultRequestHost}]
+    }));
     const packagedSealedPkMessage = sealingKey.sealWithInstructions(testMessageByteArray, unsealingInstructionsJson);
     const {plaintext} = await unsealWithUnsealingKey({packagedSealedMessageJson: packagedSealedPkMessage.toJson()})
     expect(plaintext).toStrictEqual(testMessageByteArray);
@@ -155,15 +153,9 @@ describe("End-to-end API tests using the PostMessage API", () => {
     });
     const unsealingKey = (await SeededCryptoModulePromise).UnsealingKey.fromJson(unsealingKeyJson);
     const sealingKey = unsealingKey.getSealingKey();
-    const unsealingInstructionsJson = JSON.stringify({
-      "requireUsersConsent": {
-          "question": "Do you want use \"8fsd8pweDmqed\" as your SpoonerMail account password and remove your current password?",
-          "actionButtonLabels": {
-              "allow": "Make my password \"8fsd8pweDmqed\"",
-              "deny": "No"
-          }
-      }
-    });
+    const unsealingInstructionsJson = JSON.stringify(UnsealingInstructions({
+      allow: [{host: defaultRequestHost}]
+    }));
     const packagedSealedPkMessage = sealingKey.sealWithInstructions(testMessageByteArray, unsealingInstructionsJson);
     const plaintext = unsealingKey.unseal(packagedSealedPkMessage);
     expect(plaintext).toStrictEqual(testMessageByteArray);

@@ -4,7 +4,7 @@
 import {
   DerivationOptions,
   UrlApi,
-  stringToUtf8ByteArray
+  stringToUtf8ByteArray, UnsealingInstructions, UnsealingKeyDerivationOptions
 } from "@dicekeys/dicekeys-api-js";
 import {
   urlApiResponder
@@ -14,6 +14,7 @@ import {
   ApiRequestContext,
   ConsentResponse 
 } from "../api-handler/handle-api-request";
+import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
 
 const getUsersConsentApprove = (requestContext: ApiRequestContext): Promise<ConsentResponse> =>
   Promise.resolve({seedString: "a bogus seed", mutatedRequest: requestContext.request } );
@@ -36,7 +37,9 @@ const getMockClient = (
 
 describe("End To End Url Api Tests", () => {
 
-  const derivationOptionsJson = "{}";
+  const derivationOptionsJson = jsonStringifyWithSortedFieldOrder(UnsealingKeyDerivationOptions({
+    allow: [{host: defaultRespondToHost}]
+  }));
   const testMessage = "The secret ingredient is dihydrogen monoxide";
   const testMessageByteArray = stringToUtf8ByteArray(testMessage);
 
@@ -69,15 +72,8 @@ describe("End To End Url Api Tests", () => {
     const {sealingKeyJson} = await client.getSealingKey({derivationOptionsJson});
     const seededCrypto = await SeededCryptoModulePromise;
     const sealingKey = seededCrypto.SealingKey.fromJson(sealingKeyJson);
-    const unsealingInstructionsJson = JSON.stringify({
-      "requireUsersConsent": {
-          "question": "Do you want use \"8fsd8pweDmqed\" as your SpoonerMail account password and remove your current password?",
-          "actionButtonLabels": {
-              "allow": "Make my password \"8fsd8pweDmqed\"",
-              "deny": "No"
-          }
-      }
-    });
+    const unsealingInstructionsJson = JSON.stringify(UnsealingInstructions({
+      allow: [{host: defaultRespondToHost}]}));
     const packagedSealedPkMessage = sealingKey.sealWithInstructions(testMessageByteArray, unsealingInstructionsJson);
     const { plaintext } = await client.unsealWithUnsealingKey({packagedSealedMessageJson: packagedSealedPkMessage.toJson()})
     expect(plaintext).toStrictEqual(testMessageByteArray);
