@@ -1,4 +1,4 @@
-import * as SVG from "./svg";
+import * as SVG from "../web-component-framework/svg-component";
 import {
   letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes,
   Face,
@@ -9,6 +9,8 @@ import {
   FaceDimensionsFractional
 } from "@dicekeys/read-dicekey-js";
 import { PartialDiceKey, DiceKey } from "./dicekey";
+import { ObservablePartialDiceKey, ObservablePartialFace } from "../dicekeys/partial-dicekey";
+import { Appendable, Observable, OptionallyObservable } from "~web-component-framework";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
@@ -35,12 +37,14 @@ const dieSurfaceColorHighlighted = "rgb(222, 244, 64)"
 const diceBoxColor = "#050350"; // must be in hex format as it is parsed as such in this code.
 
 export interface DiceKeyRenderOptions {
-  hide21?: boolean,
+  hide21?: OptionallyObservable<boolean>,
+  highlightDieAtIndex?: OptionallyObservable<number | undefined>,
+
   diceBoxColor?: [number, number, number],
-  highlightDieAtIndex?: number,
   showLidTab?: boolean,
   leaveSpaceForTab?: boolean
 }
+
 
 /**
  * Render the face of a die by generating SVG elements for the text, underline, and overline
@@ -53,28 +57,31 @@ export interface DiceKeyRenderOptions {
  * @param face 
  */
 const renderUnitFace = (
-  face: Partial<Face>,
-): SVGElement[] => {
-  const renderedElements = [] as SVGElement[];
+  face: Partial<Face> | ObservablePartialFace,
+): Appendable[] => {
 
   const undoverlineLeft = -FaceDimensionsFractional.undoverlineLength / 2;
   const firstDotLeft = -(FaceDimensionsFractional.undoverlineDotWidth * 11)/2;
-  const {letter, digit} = face;
-  const {underlineCode, overlineCode} = (letter != null && digit != null ) ? getUndoverlineCodes({letter, digit}) : {underlineCode: undefined, overlineCode: undefined};
 
-  // Draw an underline or overline
+  const underline = SVG.g();
+  const overline = SVG.g();
+  const tspan = SVG.tspan("");
+  
+// Draw an underline or overline
   const renderUndoverline = (lineType: "underline" | "overline", code: number | undefined): void => {
     const isOverline = lineType == "overline";
-      // Calculate the coordinates of the black [und|ov]erline rectangle
-      const lineTop = -0.5 + (isOverline ?
-        FaceDimensionsFractional.overlineTop : FaceDimensionsFractional.underlineTop
-      );
+    const undoverline = isOverline ? overline: underline;
+    undoverline.clear();
+    // Calculate the coordinates of the black [und|ov]erline rectangle
+    const lineTop = -0.5 + (isOverline ?
+      FaceDimensionsFractional.overlineTop : FaceDimensionsFractional.underlineTop
+    );
 
     // Adjust from center top top of face, then add distance from top to face to top of dot box
     const undoverlineDotTop = -0.5 + (isOverline ?
       FaceDimensionsFractional.overlineDotTop : FaceDimensionsFractional.underlineDotTop
     );
-    renderedElements.push(
+    undoverline.append(
       SVG.rect({
         x: undoverlineLeft,
         y: lineTop,
@@ -92,7 +99,7 @@ const renderUnitFace = (
         if (((fullCode >> (10 - pos)) & 1) != 0) {
           // Draw a white box at position pos because that bit is 1 in the code
           const undoverlineDotLeft = firstDotLeft + FaceDimensionsFractional.undoverlineDotWidth * pos;
-          renderedElements.push(SVG.rect({
+          undoverline.append(SVG.rect({
             x: undoverlineDotLeft,
             y: undoverlineDotTop,
             width: FaceDimensionsFractional.undoverlineDotWidth,
@@ -103,24 +110,35 @@ const renderUnitFace = (
       }
     }
   }
-  // Render the underline and overline
-  if (underlineCode != null) {
-    renderUndoverline("underline", underlineCode);
+
+  const renderParts = () => {
+    const {letter, digit} = face;
+    tspan.primaryElement.textContent = `${letter ?? ' '}${digit ?? ' '}`;
+    if (letter != null && digit != null ) { 
+      const {underlineCode, overlineCode} = getUndoverlineCodes({letter, digit})
+      renderUndoverline("underline", underlineCode);
+      renderUndoverline("overline", overlineCode);
+    }
   }
-  if (overlineCode != null) {
-    renderUndoverline("overline", overlineCode);
+  renderParts();
+
+  if ("letterField" in face) {
+    face.letterField?.onChange( renderParts );
+    face.digitField?.onChange( renderParts );
   }
 
-  if (letter != null || digit != null) {
-    renderedElements.push(SVG.text({
+  return [
+    underline,
+    overline,
+    SVG.text({
         x: 0,
         y: -0.5 + FaceDimensionsFractional.textBaselineY,
         style: `font-family: ${FontFamily}; fill:${textShade};font-size:${FaceDimensionsFractional.fontSize}px;font-weight:${FontWeight};letter-spacing:${FaceDimensionsFractional.spaceBetweenLetterAndDigit}px;text-anchor:middle;text-align:center;line-height:1;fill-opacity:1;`,
       },
-      SVG.tspan(`${letter ?? ' '}${digit ?? ' '}`)
-    ));
-  }
-  return renderedElements;
+      tspan
+    )
+  ];
+  ;
 }
 
 /**
@@ -134,16 +152,17 @@ const renderUnitFace = (
  * distance from the top of the die to the bottom of the die.
  */
 export const renderFace = (
-  face: Partial<Face>,
+  face: Partial<Face> | ObservablePartialFace,
   center: Point = {x: 0, y: 0},
   {
     highlightThisDie = false,
     linearFractionOfCoverage = 5/8,  
   }: {
-    highlightThisDie?: boolean,
+    highlightThisDie?: OptionallyObservable<boolean>,
     linearFractionOfCoverage?: number,
   } = {}
-): SVGElement =>  {
+): Appendable =>  {
+  const highlightThisDieObservable = Observable.from<boolean>(highlightThisDie);
   const radius = 1 / 12;
   const clockwiseAngle = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTrbl || "?");
   return SVG.g({
@@ -153,15 +172,25 @@ export const renderFace = (
       x: -0.5, y: -0.5,
       width: 1, height: 1,
       rx: radius, ry: radius,
-      style: `fill: ${highlightThisDie ? dieSurfaceColorHighlighted : dieSurfaceColor};` // `stroke: ${textShade}`
-    }),
+    }).withElement( rect =>
+      highlightThisDieObservable.observe( () => 
+        rect.style.setProperty("fill", highlightThisDieObservable.value ? dieSurfaceColorHighlighted : dieSurfaceColor)
+      )
+    ),
     SVG.g({
         transform: `scale(${linearFractionOfCoverage})${
             clockwiseAngle === 0 ? "" : ` rotate(${ clockwiseAngle }, 0, 0)`
           }`
       },
       ...renderUnitFace(face)
-    )
+    ).withElement ( g => {
+      if ("orientationAsLowercaseLetterTrblField" in face) {
+        face.orientationAsLowercaseLetterTrblField.onChange( () => {
+          const clockwiseAngle = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTrbl || "?");
+          g.setAttribute("transform", `scale(${linearFractionOfCoverage})${clockwiseAngle === 0 ? "" : ` rotate(${ clockwiseAngle }, 0, 0)`}`);
+        })
+      }
+    })
   );
 
 }
@@ -174,8 +203,8 @@ export const renderFace = (
  * @param options 
  */
 export const renderDiceKey = (
-  svgElement: SVGSVGElement,
-  diceKey: PartialDiceKey,
+  svgElement: SVG.svg,
+  diceKey: PartialDiceKey | ObservablePartialDiceKey,
   options: DiceKeyRenderOptions = {}
 ): void => {
   const {
@@ -183,6 +212,7 @@ export const renderDiceKey = (
     showLidTab = hide21,
     leaveSpaceForTab = showLidTab
   } = options;
+  const highlightDieAtIndex = Observable.from<number | undefined>(options.highlightDieAtIndex);
   // The linear length of the box dedicated to the tab;
   const tabFraction = leaveSpaceForTab ? 0.1 : 0;
 
@@ -197,16 +227,17 @@ export const renderDiceKey = (
   const distanceBetweenDieCenters = linearSizeOfFace * (1 + distanceBetweenFacesAsFractionOfLinearSizeOfFace);
   const linearSizeOfBoxWithTab = linearSizeOfBox * (1 + tabFraction);
 
+  const rawSvgElement = svgElement.primaryElement;
   // Clear the SVG Element
-  while (svgElement.lastChild) {
-    svgElement.removeChild(svgElement.lastChild);
+  while (rawSvgElement.lastChild) {
+    rawSvgElement.removeChild(rawSvgElement.lastChild);
   }
 
   // new SVG element, viewBox = ...
   const top = -linearSizeOfBox / 2;
   const left = -linearSizeOfBox / 2;
   const radius = linearSizeOfBox / 50;
-  svgElement.setAttribute("viewBox", `${left} ${top} ${linearSizeOfBox} ${linearSizeOfBoxWithTab}`);
+  rawSvgElement.setAttribute("viewBox", `${left} ${top} ${linearSizeOfBox} ${linearSizeOfBoxWithTab}`);
   
   // const marginOfBoxEdgeAsFractionOfLinearSize = 0.03;
   // const linearSizeOfInnerBox = 1 - 2 * marginOfBoxEdgeAsFractionOfLinearSize;
@@ -214,7 +245,7 @@ export const renderDiceKey = (
   // const renderFace = renderFaceFactory(linearFaceSize);
 
   if (showLidTab) {
-    svgElement.appendChild(
+    svgElement.append(
       SVG.circle({
        cx: 0, cy: top + linearSizeOfBox, r: tabFraction * linearSizeOfBox,
        style: `fill: ${diceBoxColor}`
@@ -222,7 +253,7 @@ export const renderDiceKey = (
   }
 
   // Render the blue dice box
-  svgElement.appendChild(
+  svgElement.append(
     SVG.rect({
       x: left, y: top,
       width: linearSizeOfBox, height: linearSizeOfBox,
@@ -234,13 +265,17 @@ export const renderDiceKey = (
   const diceBoxColorRGB = {r, g, b};
 
   diceKey.forEach( (face, index) => {
+    // Create an observable for whether this die is highlighted based on an index match with highlightDieAtIndex.
+    const highlightThisDie = new Observable<boolean>();
+    highlightDieAtIndex.observe( i => highlightThisDie.set(i === index) );
+
     // if obscuring, show only the top left and bottom right dice in canonical form.
     const x = distanceBetweenDieCenters * (-2 + (index % 5));
     const y = distanceBetweenDieCenters * (-2 + Math.floor(index / 5));
     const isCornerDie = DiceKey.cornerIndexSet.has(index);
-    svgElement.appendChild(renderFace((hide21 && !isCornerDie) ? {} : face, {x, y}, {highlightThisDie: index === options.highlightDieAtIndex }));
+    svgElement.append(renderFace((hide21 && !isCornerDie) ? {} : face, {x, y}, {highlightThisDie}));
     if (hide21) {
-      svgElement.appendChild(SVG.rect({
+      svgElement.append(SVG.rect({
         x: x - distanceBetweenDieCenters/2,
         y: y - distanceBetweenDieCenters/2,
         height: distanceBetweenDieCenters, width: distanceBetweenDieCenters,

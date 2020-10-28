@@ -1,0 +1,11 @@
+.EnterDiceKey {
+  background-color: rgba(255, 255, 255, 1);
+  display: flex;
+  flex-basis: 50%;
+  flex-grow: 5;
+  flex-shrink: 5;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-height: 100%;
+}

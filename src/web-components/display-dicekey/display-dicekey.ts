@@ -182,7 +182,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
             InputButton({
               value: "Forget",
               events: (events) => events.click.on( () => {
-                EncryptedCrossTabState.instance?.diceKey.remove();
+                EncryptedCrossTabState.instance?.forgetDiceKey();
                 this.forgetEvent.send();
                 this.remove();    
               })

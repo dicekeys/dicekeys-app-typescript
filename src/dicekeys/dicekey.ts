@@ -269,10 +269,12 @@ type RotateFaceFn<F extends Face> = (
   ) => F;
 
 const defaultRotateFaceFn = <F extends Face>(
-    {orientationAsLowercaseLetterTrbl, ...rest}: F,
+    {orientationAsLowercaseLetterTrbl, letter, digit, ...rest}: F,
     clockwise90DegreeTurnsToRotate: number
 ) => ({
   ...rest,
+  letter,
+  digit,
   // Since we're turning the box clockwise, the rotation of each element rotates as well
   // If it was right-side up (0) and we rotate the box 90, it's now at 90
   // If it was upside down (180), and we rotate it the box 270,

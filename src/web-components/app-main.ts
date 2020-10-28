@@ -25,14 +25,13 @@ import {
 import {
   ApiRequestContext
 } from "../api-handler/handle-api-request";
-import { ScanDiceKey } from "./scanning/scan-dicekey";
 import {
   urlApiResponder
 } from "../api-handler/handle-url-api-request";
 import {
   reportException
 } from "./exceptions";
-import { EnterDiceKey } from "./enter-dicekey";
+import { LoadDiceKey } from "./load-dicekey";
 
 
 interface BodyOptions extends Attributes {
@@ -79,15 +78,14 @@ export class AppMain extends Component<BodyOptions> {
 
   loadDiceKey = async (): Promise<DiceKey> => {
     const appState = await EncryptedCrossTabState.instancePromise;
-    var diceKey = appState.diceKey.value;
+    var diceKey = appState.diceKey;
     if (diceKey) {
       return diceKey;
     }
     this.renderSoon();
     diceKey = await Step.loadDiceKey.start();
-    appState.diceKey.set(diceKey);
-    // FIXME -- store additional state regarding how confidence we are that the DiceKey was read correctly.
-    // wasReadAutomaticallyAndWithoutSignificantErrors <-- derive this by looking at errors corrected
+    appState.diceKey = diceKey;
+    appState.diceKeyState?.hasBeenReadWithoutError.set(true);
     return diceKey;
   }
 
@@ -95,7 +93,7 @@ export class AppMain extends Component<BodyOptions> {
     this.renderSoon(); 
     const diceKey = await Step.enterDiceKey.start();
     const appState = await EncryptedCrossTabState.instancePromise;
-    appState.diceKey.set(diceKey);
+    appState.diceKey = diceKey;
     return diceKey;
   }
 
@@ -109,7 +107,7 @@ export class AppMain extends Component<BodyOptions> {
   async render() {
     super.render();
 
-    const diceKey = this.appState.diceKey.value;
+    const diceKey = this.appState.diceKey;
     if (Step.getUsersConsent.isInProgress) {
       // If we're in the middle of getting the user's consent for an operation,
       // Render the ApiRequestContainer
@@ -127,8 +125,8 @@ export class AppMain extends Component<BodyOptions> {
       // show the component for scanning it.
       this.append(
         Div({class: "request-container"},
-          new EnterDiceKey({onExceptionEvent: reportException}).with( enterDiceKey => { 
-          enterDiceKey.diceKeyEnteredEvent.on( Step.enterDiceKey.complete );
+          new LoadDiceKey({onExceptionEvent: reportException, mode: "manual"}).with( enterDiceKey => { 
+          enterDiceKey.loadedEvent.on( Step.enterDiceKey.complete );
           enterDiceKey.cancelledEvent.on( Step.enterDiceKey.cancel );
         })
       ));
@@ -139,8 +137,8 @@ export class AppMain extends Component<BodyOptions> {
       // show the component for scanning it.
       this.append(
         Div({class: "request-container"},
-          new ScanDiceKey({host: "", onExceptionEvent: reportException}).with( readDiceKey => { 
-          readDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
+          new LoadDiceKey({onExceptionEvent: reportException, mode: "camera"}).with( readDiceKey => { 
+          readDiceKey.loadedEvent.on( Step.loadDiceKey.complete );
         })
       ));
       Step.loadDiceKey.promise?.finally( () => this.renderSoon() );
@@ -161,7 +159,7 @@ export class AppMain extends Component<BodyOptions> {
           this.enterDiceKey();
         });
         homeComponent.createRandomDiceKeyButtonClicked.on( () => {
-          EncryptedCrossTabState.instance?.diceKey.set(DiceKey.fromRandom());
+          EncryptedCrossTabState.instance!.diceKey = DiceKey.fromRandom();
           this.renderSoon();
         });
       }));

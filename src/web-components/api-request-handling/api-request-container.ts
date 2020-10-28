@@ -17,8 +17,8 @@ import {
   API,
 } from "../../phrasing";
 import {
-  ScanDiceKey
-} from "../scanning/scan-dicekey"
+  LoadDiceKey
+} from "../load-dicekey"
 import {
   EncryptedCrossTabState
 } from "../../state";
@@ -83,7 +83,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
     this.derivationOptions = DerivationOptions(derivationOptionsJson);
     if (this.derivationOptions.proofOfPriorDerivation) {
       // Once the diceKey is available, calculate if the proof of prior derivation is valid
-      EncryptedCrossTabState.instance?.diceKey.observe( async (diceKey) => {
+      EncryptedCrossTabState.instance?.diceKeyField.observe( async (diceKey) => {
         if (diceKey) {
           const seedString = DiceKey.toSeedString(diceKey, !this.derivationOptions.excludeOrientationOfFaces);
           const {verified} = await ApiRequestContainer.verifyDerivationOptionsWorker.calculate({seedString, derivationOptionsJson});
@@ -120,9 +120,9 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
     super.render();
     const {request, host} = this.options.requestContext;
     const appState = await EncryptedCrossTabState.instancePromise;
-    const diceKey = appState.diceKey.value;
+    const diceKey = appState.diceKey;
     // Re-render whenever the diceKey value changes.
-    EncryptedCrossTabState.instance?.diceKey.changedEvent.on( this.renderSoon );
+    EncryptedCrossTabState.instance?.diceKeyField.changedEvent.on( this.renderSoon );
 
     this.append(
       Div({class: styles.request_description},
@@ -132,12 +132,14 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
       ( diceKey ?
         new ApproveApiCommand({...this.options, diceKey}).with( e => this.apiResponseSettings = e )
         :
-        new ScanDiceKey({
-          host,
-          derivationOptions: this.derivationOptions,
+        new LoadDiceKey({
+          // host,
+          // derivationOptions: this.derivationOptions,
           onExceptionEvent: this.options.onExceptionEvent
         }).with( e => {
-          e.diceKeyLoadedEvent.on( appState.diceKey.set )
+          e.loadedEvent.on( () => {
+            this.render();
+          })
         })
       ),
       Div({class: dialogStyles.decision_button_container},
