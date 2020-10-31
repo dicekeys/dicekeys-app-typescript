@@ -11,12 +11,14 @@ import {
 
 import { getRegisteredDomain } from "~domains/get-registered-domain";
 import { addStoredPasswordConsumer, PasswordConsumerType, passwordDerivationOptionsJson } from "~dicekeys/password-consumers";
-// import { FavIcon } from "./fav-icon";
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
-import { // ObservableTextInput, ObservableTextInputOptions,
-   PrescribedTextFieldObservables, PrescribedTextInput } from "~web-components/basic-building-blocks";
-import { Instructions } from "~web-components/api-demo/basic-api-demo-components";
+import {
+  Instructions,
+  PrescribedTextFieldObservables,
+  PrescribedTextInput
+} from "~web-components/basic-building-blocks";
 
+   
 export interface AddPasswordDomainOptions extends Attributes {}
 
 export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {

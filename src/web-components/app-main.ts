@@ -31,7 +31,7 @@ import {
 import {
   reportException
 } from "./exceptions";
-import { LoadDiceKey } from "./load-dicekey";
+import { LoadAndStoreDiceKey } from "./load-and-store-dicekey";
 
 
 interface BodyOptions extends Attributes {
@@ -78,23 +78,20 @@ export class AppMain extends Component<BodyOptions> {
 
   loadDiceKey = async (): Promise<DiceKey> => {
     const appState = await EncryptedCrossTabState.instancePromise;
-    var diceKey = appState.diceKey;
-    if (diceKey) {
-      return diceKey;
-    }
     this.renderSoon();
-    diceKey = await Step.loadDiceKey.start();
-    appState.diceKey = diceKey;
-    appState.diceKeyState?.hasBeenReadWithoutError.set(true);
-    return diceKey;
+    var diceKey = appState.diceKey ?? await Step.loadDiceKey.start();
+    // appState.diceKey = diceKey;
+    // appState.diceKeyState?.hasBeenReadWithoutError.set(true);
+    return diceKey!;
   }
 
   enterDiceKey = async (): Promise<DiceKey> => {
     this.renderSoon(); 
     const diceKey = await Step.enterDiceKey.start();
-    const appState = await EncryptedCrossTabState.instancePromise;
-    appState.diceKey = diceKey;
-    return diceKey;
+    this.renderSoon(); 
+    // const appState = await EncryptedCrossTabState.instancePromise;
+    // appState.diceKey = diceKey;
+    return diceKey!;
   }
 
   getUsersApprovalOfApiCommand = (
@@ -125,8 +122,8 @@ export class AppMain extends Component<BodyOptions> {
       // show the component for scanning it.
       this.append(
         Div({class: "request-container"},
-          new LoadDiceKey({onExceptionEvent: reportException, mode: "manual"}).with( enterDiceKey => { 
-          enterDiceKey.loadedEvent.on( Step.enterDiceKey.complete );
+          new LoadAndStoreDiceKey({onExceptionEvent: reportException, mode: "manual"}).with( enterDiceKey => { 
+          enterDiceKey.completedEvent.on( (diceKey) => Step.enterDiceKey.complete(diceKey) );
           enterDiceKey.cancelledEvent.on( Step.enterDiceKey.cancel );
         })
       ));
@@ -137,8 +134,9 @@ export class AppMain extends Component<BodyOptions> {
       // show the component for scanning it.
       this.append(
         Div({class: "request-container"},
-          new LoadDiceKey({onExceptionEvent: reportException, mode: "camera"}).with( readDiceKey => { 
-          readDiceKey.loadedEvent.on( Step.loadDiceKey.complete );
+          new LoadAndStoreDiceKey({onExceptionEvent: reportException, mode: "camera"}).with( readDiceKey => { 
+          readDiceKey.completedEvent.on( (diceKey) => Step.loadDiceKey.complete(diceKey) );
+          readDiceKey.cancelledEvent.on( Step.loadDiceKey.cancel );
         })
       ));
       Step.loadDiceKey.promise?.finally( () => this.renderSoon() );

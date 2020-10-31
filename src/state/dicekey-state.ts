@@ -27,6 +27,7 @@ export class DiceKeyStateStore extends AppStateStore {
 
 
   public readonly nicknameField = this.addStringField("nickname");
+  public readonly desiredPublicKeyCacheSize = this.addField<number>("desiredPublicKeyCacheSize");
   public get nickname() { return this.nicknameField.value }
   public set nickname(newNickname: string | undefined) {
     this.nicknameField.set(newNickname);
@@ -42,8 +43,9 @@ export class DiceKeyStateStore extends AppStateStore {
   public get publicKeySet() { return this.publicKeySetField?.value }
   public set publicKeySet(value: PublicKeySet | undefined) { this.publicKeySetField?.set(value) }
   public readonly hasBeenReadWithoutError = this.addField<boolean>(`hasBeenReadWithoutError`);
-  public readonly hasBeenBackedUpToWords = this.addField<boolean>(`hasBeenReadWithoutError`);
-  public readonly hasBeenBackedUpToReplica = this.addField<boolean>(`hasBeenReadWithoutError`);
+  public readonly hasBeenBackedUpToWords = this.addField<boolean>(`hasBeenBackedUpToWords`);
+  public readonly hasBeenBackedUpToReplica = this.addField<boolean>(`hasBeenBackedUpToReplica`);
+  public readonly dontAskAboutBackupAgain = this.addField<boolean>("dontAskAboutBackupAgain");
   
   public get hasSealingKey() { return (this.publicKeySet?.sealingKeys.length ?? 0) > 0 }
   public get hasSignatureVerificationKey() { return (this.publicKeySet?.signatureVerificationKeys.length ?? 0) > 0 }

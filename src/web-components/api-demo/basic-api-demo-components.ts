@@ -26,9 +26,6 @@ export const ResultLabel = (...content: Appendable[]) =>
 export const ResultTextBlock = (options: Attributes<"div">, ...content: Appendable[]) =>
   Div({class: style.result_value, ...options}, ...content);
 
-export const Instructions = (...content: Appendable[]) =>
-  Div({class: style.instructions}, ...content);
-
 export const UrlParameter = (name: string, ...value: Appendable[]): Appendable => [
   Span({class: style.url_parameter_name}, name),
   "=",

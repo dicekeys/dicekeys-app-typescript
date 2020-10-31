@@ -128,7 +128,7 @@ export class Component<
           []
       ));
     }
-    this.renderSoon();
+    this.renderSoon(0);
   }
 
   protected parentComponent?: Component;
@@ -175,23 +175,38 @@ export class Component<
   }
 
   private renderTimeout?: number | NodeJS.Timeout;
+  #midRender: boolean = false;
+  #renderAgainAfterCurrentRender: boolean = false;
   /**
    * Kick off an element render operation soon
    * (but not immediately, as constructors may need to finish first)
    */
-  renderSoon = () => {
-    if (typeof this.renderTimeout !== "undefined" || this.#removed) {
-      return;
-    }
-    this.renderTimeout = setTimeout( () => {
+  #tryRender = async () => {
+    delete this.renderTimeout;
+    if (this.#removed) return;
+    if (this.#midRender) {
+      // Wait until current render completes and then re-render
+      this.#renderAgainAfterCurrentRender = true;
+    } else {
       try {
-        if (!this.#removed) {
-          this.render();
-        }
+        this.#midRender = true;
+        await this.render();
       } finally {
-        this.renderTimeout = undefined;
+        this.#midRender = false;
+        if (this.#renderAgainAfterCurrentRender) {
+          this.#renderAgainAfterCurrentRender = false;
+          this.renderSoon();
+        }
       }
-    }, 1);
+    }
+  }
+  renderSoon = (delayMs: number = 1) => {
+    if (this.#removed) return;
+    if (this.#midRender) {
+      this.#renderAgainAfterCurrentRender = true;
+    } else if (this.renderTimeout == null) {
+      this.renderTimeout = setTimeout( this.#tryRender, delayMs);
+    }
   }
 
   remove(): boolean {
@@ -212,7 +227,7 @@ export class Component<
     // Give all events a 1000ms to fire, then remove all event listeners
     setTimeout(() => { ComponentEvent.removeAllEventListeners(this) }, 1000);
     //
-    if (this.parent) {
+    if (this.parent && !this.parent.#midRender) {
       this.parent.renderSoon();
     }
     return true;

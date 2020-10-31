@@ -122,7 +122,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
     const appState = await EncryptedCrossTabState.instancePromise;
     const diceKey = appState.diceKey;
     // Re-render whenever the diceKey value changes.
-    EncryptedCrossTabState.instance?.diceKeyField.changedEvent.on( this.renderSoon );
+    EncryptedCrossTabState.instance?.diceKeyField.changedEvent.on( () => this.renderSoon() );
 
     this.append(
       Div({class: styles.request_description},
@@ -138,7 +138,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
           onExceptionEvent: this.options.onExceptionEvent
         }).with( e => {
           e.loadedEvent.on( () => {
-            this.render();
+            this.renderSoon();
           })
         })
       ),

@@ -61,7 +61,7 @@ export class DiceKeyCanvas extends Component<DiceKeyCanvasOptions, "canvas"> {
     this.primaryElement.addEventListener("click", () => {
       obscure.value = !obscure.value;
     }  );
-    obscure.observe( this.renderSoon );
+    obscure.observe( () => this.renderSoon() );
   }
 
   render() {

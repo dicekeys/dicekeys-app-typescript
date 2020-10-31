@@ -34,11 +34,12 @@ export class LoadDiceKey extends Component<LoadDiceKeyOptions> {
 
   constructor(options: LoadDiceKeyOptions) {
     super(options);
-    this.addClass(styles.EnterDiceKey);
+    this.addClass(styles.LoadDiceKey);
     const {
       mode = new Observable<Mode>("camera") 
     } = options;
     this.mode = typeof mode === "string" ? new Observable(mode) : mode;
+    this.mode.onChange( () => this.renderSoon() );
   }
 
   toggleMode = () => this.mode.set( this.mode.value === "camera" ? "manual" : "camera" );
@@ -57,13 +58,7 @@ export class LoadDiceKey extends Component<LoadDiceKeyOptions> {
 
   protected readonly partialDiceKey: ReadOnlyTupleOf25Items<ObservablePartialFace> = Array.from({length: 25}, () => new ObservablePartialFace({orientationAsLowercaseLetterTrbl: 't'})) as ReadOnlyTupleOf25Items<ObservablePartialFace>;
   protected readonly isValid = new Observable<boolean>(false);
-  // #scanDiceKey: ScanDiceKey | undefined;
-  // protected get scanDiceKey(): ScanDiceKey { 
-  //   if (!this.#scanDiceKey) {
-  //     this.#scanDiceKey = new ScanDiceKey({});
-  //   }
-  //   return this.#scanDiceKey!;
-  // }
+
 
   render() {
     const {
@@ -97,11 +92,9 @@ export class LoadDiceKey extends Component<LoadDiceKeyOptions> {
           ...(showChangeModeButton ? [
             Button({
               events: e => e.click.on( this.toggleMode )
-            }, "Switch").with( e => this.mode.observe( mode => {
-              e.textContent = mode === "camera" ? "Enter Manually" : "Scan with Camera"
-              this.renderSoon();
-            }
-            ) )
+            },
+            this.mode.value === "camera" ? "Enter Manually" : "Scan with Camera"
+            )
           ] : []),
           ...(this.mode.value === "manual" ? [
               Button({
@@ -125,8 +118,8 @@ export class LoadDiceKey extends Component<LoadDiceKeyOptions> {
       ] : []),
     );
   }
-
 }
+
 
   //      this.renderHint();      
 

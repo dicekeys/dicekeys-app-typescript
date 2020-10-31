@@ -3,11 +3,12 @@ import {
   Observable
 } from "../../../web-component-framework";
 import {
+  Instructions,
   PrescribedTextFieldObservables, PrescribedTextInput
 //  LabeledPrescribedTextInput
 } from "../../basic-building-blocks";
 import { CommandSimulator } from "../command-simulator";
-import { FnCall, Formula, InputVar, Instructions, OperationCard, ParameterCard, ResultTextBlock, TemplateInputVar } from "../basic-api-demo-components";
+import { FnCall, Formula, InputVar, OperationCard, ParameterCard, ResultTextBlock, TemplateInputVar } from "../basic-api-demo-components";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import {
   MultiCommandSimulatorOptions,

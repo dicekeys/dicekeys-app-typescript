@@ -69,8 +69,8 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
   derivationOptionsJson = new Observable<string>();
   password = new Observable<string>();
 
-  showOnlyAddNewPasswordComponent = new Observable<boolean>(false).changedEvent.on( this.renderSoon );
-  showOnlyVerifyCopyComponent = new Observable<boolean>(false).changedEvent.on( this.renderSoon );
+  showOnlyAddNewPasswordComponent = new Observable<boolean>(false).changedEvent.on( () => this.renderSoon() );
+  showOnlyVerifyCopyComponent = new Observable<boolean>(false).changedEvent.on( () => this.renderSoon() );
 
   // setPassword = (password: string) => {
   //   const pw = password ?? "";

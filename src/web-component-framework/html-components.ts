@@ -180,6 +180,9 @@ export type RadioButton = ReturnType<typeof RadioButton>;
 export const H1 = createHtmlElement("h1");
 export const H2 = createHtmlElement("h2");
 export const H3 = createHtmlElement("h3");
+export const OL = createHtmlElement("ol");
+export const UL = createHtmlElement("ul");
+export const LI = createHtmlElement("li");
 export const Div = createHtmlElement("div");
 export type Div = ReturnType<typeof Div>;
 export const Span = createHtmlElement("span");
@@ -195,6 +198,9 @@ export type Option = ReturnType<typeof Option>;
 export const OptGroup = createHtmlElement("optgroup");
 export type OptGroup = ReturnType<typeof OptGroup>;
 
+export const HtmlObject = createHtmlElement("object");
+export type HtmlObject = ReturnType<typeof HtmlObject>;
+
 export const Label = createHtmlElement<"label", HtmlElementAttributes<"label"> & {for?: string}>("label");
 export type Label = ReturnType<typeof Label>;
 
@@ -205,7 +211,8 @@ export type A = ReturnType<typeof A>;
 export const Video = createHtmlElement("video").with( e => {
   // e.primaryElement.setAttribute("controls","");
   e.primaryElement.setAttribute("autoplay","true");
-});export type Video = ReturnType<typeof Video>;
+});
+export type Video = ReturnType<typeof Video>;
 
 
 export class TextAreaAutoGrowElement extends HtmlElement<"textarea"> {

@@ -62,7 +62,7 @@ export class DiceKeySvg extends Component<DiceKeySvgOptions, "svg"> {
       this.primaryElement.addEventListener("click", () => {
         this.obscure.value = !this.obscure.value;
       }  );
-      this.obscure.observe( this.renderSoon );
+      this.obscure.observe( () => this.renderSoon() );
     }
   }
 
