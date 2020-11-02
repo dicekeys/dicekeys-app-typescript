@@ -1,0 +1,45 @@
+{
+    "editor.tabSize": 2,
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "cSpell.words": [
+        "API's",
+        "Googlebot",
+        "Openbot",
+        "TRBL",
+        "Teoma",
+        "Yammybot",
+        "appendable",
+        "authy",
+        "browserslist",
+        "calibri",
+        "comsuffixattack",
+        "datetime",
+        "deletable",
+        "dicekey",
+        "dicekeys",
+        "erline",
+        "examplesuffixattack",
+        "gsutil",
+        "keepersecurity",
+        "lastpass",
+        "prefixattackexample",
+        "suffixattack",
+        "undoverline",
+        "undoverlines",
+        "webassembly"
+    ],
+    "cSpell.ignoreWords": [
+        "confirmmpw",
+        "dihydrogen",
+        "dmqed",
+        "masterpassword",
+        "messageerror",
+        "nbsp",
+        "passwordreminder",
+        "spooner",
+        "swdc"
+    ],
+    "files.exclude": {
+        "**/node_modules": true
+    }
+}
