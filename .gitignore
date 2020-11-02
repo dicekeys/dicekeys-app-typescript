@@ -1,5 +1,4 @@
 node_modules/
-.vscode/
 .vs/
 .cache/
 dist/
@@ -7,3 +6,10 @@ dist-*/
 test-outputs/
 
 coverage/
+
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
