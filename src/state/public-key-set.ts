@@ -4,8 +4,8 @@ import {
   urlSafeBase64Encode,
 } from "@dicekeys/dicekeys-api-js";
 import { SeededCryptoModuleWithHelpers } from "@dicekeys/seeded-crypto-js";
-import { getRandomBytes } from "~dicekeys/get-random-bytes";
-import { LocalStorageField } from "~web-component-framework/locally-stored-state";
+import { getRandomBytes } from "../dicekeys/get-random-bytes";
+import { LocalStorageField } from "../web-component-framework/locally-stored-state";
 
 
 export const diceKeyIdToNicknameMap = new LocalStorageField<{[keyId: string]: string}>("DiceKeyIdToNickname");
