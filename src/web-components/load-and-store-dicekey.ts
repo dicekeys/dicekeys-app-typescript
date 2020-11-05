@@ -1,14 +1,11 @@
-// import dialogStyles from "./dialog.module.css";
-//import layoutStyles from "./layout.module.css";
-// import styles from "./load-dicekey.module.css";
-
 import { Component, ComponentEvent } from "~web-component-framework";
 import { EncryptedCrossTabState } from "~state";
 import {
   LoadDiceKey, LoadDiceKeyOptions
 } from "./load-dicekey";
-import { BackupNudge } from "./backup-nudge";
+import { BackupNudge } from "./backups/backup-nudge";
 import { DiceKey } from "~dicekeys/dicekey";
+import { ConfigureDiceKey } from "./configure-dicekey";
 
 
 export interface LoadAndStoreDiceKeyOptions extends LoadDiceKeyOptions {
@@ -19,6 +16,7 @@ export class LoadAndStoreDiceKey extends Component<LoadAndStoreDiceKeyOptions> {
 
   cancelledEvent = new ComponentEvent<[], this>(this);
   completedEvent = new ComponentEvent<[DiceKey], this>(this);
+  private backupStepComplete: boolean = false;
 
   constructor(options: LoadAndStoreDiceKeyOptions) {
     super({...options, class: undefined});
@@ -28,10 +26,11 @@ export class LoadAndStoreDiceKey extends Component<LoadAndStoreDiceKeyOptions> {
 
   async render() {
     const appState = await EncryptedCrossTabState.instancePromise;
+    const diceKey = appState.diceKey;
     const diceKeyState = appState.diceKeyState;
     super.render();
     // This is a multi-step process, with different content rendered at each step.
-    if (diceKeyState == null) {
+    if (diceKey == null || diceKeyState == null) {
       // Step 1, load the DiceKey
       this.append(
         new LoadDiceKey({...this.options}).with( c => {
@@ -42,19 +41,36 @@ export class LoadAndStoreDiceKey extends Component<LoadAndStoreDiceKeyOptions> {
 //    } else if (!diceKeyState.nickname || diceKeyState.desiredPublicKeyCacheSize.value == undefined) {
 
     } else if (
+      !this.backupStepComplete &&
       !diceKeyState.hasBeenBackedUpToReplica.value &&
       !diceKeyState.hasBeenBackedUpToWords.value &&
       !diceKeyState.dontAskAboutBackupAgain.value
     ) {
       // Encourage the user to make a backup.
       this.append(
-        new BackupNudge({})
+        new BackupNudge({diceKey, diceKeyState}).with( e => {
+          e.completedEvent.on( () => {
+            this.backupStepComplete = true;
+            this.renderSoon();
+          });
+        })
         // Instructions(`
         //   Make a replica using SticKeys.
         //   Make a replica DiceKey.
         //   Backup to words
         //   You have not yet made a backup of your DiceKey (at least, not using this app on this device).
         // `),
+      )
+    } else if (
+      typeof diceKeyState.nickname === "undefined" ||
+      typeof diceKeyState.desiredPublicKeyCacheSize.value === "undefined"
+    ) {
+      this.append(
+        new ConfigureDiceKey({diceKey, diceKeyState}).with( e => {
+          e.completedEvent.on( () => {
+            this.renderSoon();
+          })
+       })
       )
     } else {
       this.completedEvent.send(appState.diceKey!);

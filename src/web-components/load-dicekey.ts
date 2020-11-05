@@ -1,8 +1,7 @@
-import dialogStyles from "./dialog.module.css";
 //import layoutStyles from "./layout.module.css";
 import styles from "./load-dicekey.module.css";
 
-import { Attributes, Button, Component, ComponentEvent, Div, Observable } from "~web-component-framework";
+import { Attributes, Button, Component, ComponentEvent, Observable } from "~web-component-framework";
 import {
   ScanDiceKey
 } from "./scanning/scan-dicekey";
@@ -12,6 +11,7 @@ import {
 import { DiceKey, ReadOnlyTupleOf25Items } from "~dicekeys/dicekey";
 import { EncryptedCrossTabState } from "~state";
 import { ObservablePartialFace } from "~dicekeys/partial-dicekey";
+import { CenteredControls } from "./basic-building-blocks/dialog";
 
 
 type Mode = "camera" | "manual";
@@ -70,7 +70,7 @@ export class LoadDiceKey extends Component<LoadDiceKeyOptions> {
     super.render(
       (
         (this.mode.value === "camera") ?
-          new ScanDiceKey(options).with( e => e.diceKeyLoadedEvent.on( diceKey => this.completeLoad(diceKey, "camera") )) :
+          new ScanDiceKey(options).with( e => e.diceKeyReadEvent.on( diceKey => this.completeLoad(diceKey, "camera") )) :
           new EnterDiceKey({...options,
             partialDiceKey: this.partialDiceKey,
             isValid: this.isValid,
@@ -80,7 +80,7 @@ export class LoadDiceKey extends Component<LoadDiceKeyOptions> {
           )
       ),
       ...(showOptionsButtons ? [
-        Div({class: dialogStyles.decision_button_container},
+        CenteredControls(
           ...(showCancelButton ? [
             Button({
               events: (events) => events.click.on( () => {

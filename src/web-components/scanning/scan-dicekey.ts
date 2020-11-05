@@ -195,7 +195,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * This event is triggered when the DiceKey has been been scanned
    * successfully.
    */
-  public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], this>(this);
+  public readonly diceKeyReadEvent = new ComponentEvent<[DiceKey], this>(this);
 
   /**
    * We support a delay between when we've successfully scanned a DiceKey
@@ -235,7 +235,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
 
   reportDiceKeyReadAndValidated = () => {
     const diceKey = DiceKey( this.facesRead?.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
-    this.diceKeyLoadedEvent.send(diceKey);
+    this.diceKeyReadEvent.send(diceKey);
     this.remove();
   }
 

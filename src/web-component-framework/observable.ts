@@ -7,7 +7,7 @@ export class Observable<T> {
   public readonly changedEvent: ComponentEvent<[newValue: T, previousValue: T | undefined], this>;
   protected _value: T | undefined;
 
-  constructor(_value?: T) {
+  constructor(_value: T = undefined as T extends undefined ? T : never) {
     this.changedEvent = new ComponentEvent<[newValue: T, previousValue: T | undefined]>(this);
     this.write(_value);
   }

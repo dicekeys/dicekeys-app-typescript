@@ -1,5 +1,4 @@
 import styles from "./add-password-domain.module.css";
-import dialogStyles from "../dialog.module.css";
 import layoutStyles from "../layout.module.css";
 import {
   Attributes,
@@ -17,6 +16,7 @@ import {
   PrescribedTextFieldObservables,
   PrescribedTextInput
 } from "~web-components/basic-building-blocks";
+import { CenteredControls } from "~web-components/basic-building-blocks";
 
    
 export interface AddPasswordDomainOptions extends Attributes {}
@@ -181,7 +181,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
             observables: this.nameFieldObservables,
           }),
         ),
-        Div({class: dialogStyles.decision_button_container},
+        CenteredControls(
           Button({value: "Cancel"}, "Cancel").with( e => {
             e.events.click.on( this.complete.send )
           }),

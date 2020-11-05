@@ -1,4 +1,3 @@
-import dialogStyles from "../dialog.module.css";
 import styles from "./camera-capture.module.css";
 import {
 //  getElementDimensions,
@@ -18,6 +17,7 @@ import {
 //  videoConstraintsForDevice
 } from "./cameras-on-this-device";
 import { browserInfo } from "~utilities/browser";
+import { CenteredControls } from "~web-components/basic-building-blocks";
 // import { browserInfo } from "../utilities/browser";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
@@ -231,7 +231,7 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
           Canvas({class: styles.overlay}).with( c => this.overlayCanvasComponent = c ),
           Video().with( c => this.videoComponent = c ),
         ),
-        Div({class: dialogStyles.centered_controls},
+        CenteredControls(
           Select().withElement( e => {
             this.cameraSelectionMenu = e;
             // Handle user selection of cameras

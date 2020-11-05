@@ -1,5 +1,4 @@
 import styles from "./api-request-container.module.css";
-import dialogStyles from "../dialog.module.css";
 import layoutStyles from "../layout.module.css";
 import {
 //  Exceptions,
@@ -40,6 +39,7 @@ import {
 import {
   shortDescribeCommandsAction
 } from "../../phrasing/api";
+import { CenteredControls } from "~web-components/basic-building-blocks";
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
@@ -142,7 +142,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
           })
         })
       ),
-      Div({class: dialogStyles.decision_button_container},
+      CenteredControls(
       InputButton({value: "Cancel", clickHandler: this.handleCancelButton}),
       diceKey == null ? undefined :
         InputButton({value: shortDescribeCommandsAction(this.options.requestContext.request.command), clickHandler: this.handleContinueButton} )

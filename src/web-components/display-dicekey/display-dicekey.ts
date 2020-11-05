@@ -1,5 +1,4 @@
 import styles from "./display-dicekey.module.css";
-import dialogStyles from "../dialog.module.css";
 import layoutStyles from "../layout.module.css";
 
 import {
@@ -35,7 +34,8 @@ import {
 } from "../../phrasing/ui";
 import { AddPasswordDomain } from "./add-password-domain";
 import { PasswordJson } from "@dicekeys/seeded-crypto-js";
-import { VerifyDicekey } from "./verify-dicekey";
+import { VerifyDiceKey } from "../backups/verify-dicekey";
+import { CenteredControls } from "~web-components/basic-building-blocks";
 
 interface DiceKeySvgViewOptions extends Attributes {
   diceKey: DiceKey;
@@ -70,7 +70,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
   password = new Observable<string>();
 
   showOnlyAddNewPasswordComponent = new Observable<boolean>(false).changedEvent.on( () => this.renderSoon() );
-  showOnlyVerifyCopyComponent = new Observable<boolean>(false).changedEvent.on( () => this.renderSoon() );
+  showOnlyVerifyDiceKeyComponent = new Observable<boolean>(false).changedEvent.on( () => this.renderSoon() );
 
   // setPassword = (password: string) => {
   //   const pw = password ?? "";
@@ -118,10 +118,10 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
       )
       return;
     }
-    if (this.showOnlyVerifyCopyComponent.value) {
+    if (this.showOnlyVerifyDiceKeyComponent.value) {
       this.append(
-        new VerifyDicekey({diceKey: this.options.diceKey}).with( e => {
-          e.doneEvent.on( () => this.showOnlyVerifyCopyComponent.set(false));
+        new VerifyDiceKey({diceKey: this.options.diceKey}).with( e => {
+          e.verifiedEvent.on( () => this.showOnlyVerifyDiceKeyComponent.set(false));
         })
       );
     } else {
@@ -131,7 +131,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
             diceKey: this.options.diceKey,
             obscureByDefault: true,
           }),
-          Div({class: dialogStyles.centered_controls},
+          CenteredControls(
             Label({class: styles.create_password_for_label}, "Create a password for ",
               Select({value: "default"},
                 Option({}),
@@ -172,11 +172,11 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
                 e.style.setProperty("visibility", password && password.length > 0 ? "visible" : "hidden")
             ))
           }),
-          Div({class: dialogStyles.centered_controls},
+          CenteredControls(
             InputButton({
               value: "Verify Copy",
               events: (events) => events.click.on( () =>
-                this.showOnlyVerifyCopyComponent.set(true)
+                this.showOnlyVerifyDiceKeyComponent.set(true)
               )
             }),
             InputButton({

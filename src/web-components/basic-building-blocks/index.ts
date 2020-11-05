@@ -1,3 +1,4 @@
+export * from "./dialog";
 export * from "./expandable-component";
 export * from "./labeled-prescribed-text-input";
 export * from "./observable-text-input";
