@@ -11,7 +11,7 @@ import {
 import { DiceKey, ReadOnlyTupleOf25Items } from "~dicekeys/dicekey";
 import { EncryptedCrossTabState } from "~state";
 import { ObservablePartialFace } from "~dicekeys/partial-dicekey";
-import { CenteredControls } from "./basic-building-blocks/dialog";
+import { CenteredControls } from "./basic-building-blocks";
 
 
 type Mode = "camera" | "manual";

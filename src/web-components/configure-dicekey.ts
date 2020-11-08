@@ -1,8 +1,9 @@
 import { DiceKey } from "~dicekeys/dicekey";
 import { DiceKeyStateStore } from "~state/dicekey-state";
-import { Attributes, Button, Component, ComponentEvent, Label, Observable } from "~web-component-framework";
+import { Attributes, Button, Component, ComponentEvent, Observable } from "~web-component-framework";
 import { ObservableTextInput, ObservableTextInputOptions } from "./basic-building-blocks";
-import { CenteredControls } from "./basic-building-blocks/dialog";
+import { FormCard, InputCard, LabelAboveLeft } from "./basic-building-blocks";
+import { CenteredControls } from "./basic-building-blocks";
 
 export interface ConfigureDiceKeyOptions extends Attributes<"div"> {
   diceKey: DiceKey;
@@ -38,15 +39,23 @@ export class ConfigureDiceKey extends Component<ConfigureDiceKeyOptions> {
 
   render() {
     super.render(
-      Label({}, "Your nickname for this DiceKey", 
-        new ObservableTextInput({
-          observable: this.options.diceKeyState.nicknameField
-        } as ObservableTextInputOptions),
-      ),
-      Label({}, "Number of public keys to store in the app", 
-        new ObservableTextInput({
-          observable: this.desiredPublicKeyCacheSizeStringField
-        } as ObservableTextInputOptions),
+      FormCard(
+        InputCard(
+          LabelAboveLeft("Your nickname for this DiceKey", 
+            new ObservableTextInput({
+              style: `width: 50em;`,
+              observable: this.options.diceKeyState.nicknameField
+            } as ObservableTextInputOptions),
+          ),
+        ),
+        InputCard(
+          LabelAboveLeft("Number of public keys to store in the app", 
+            new ObservableTextInput({
+              style: `width: 4em;`,
+              observable: this.desiredPublicKeyCacheSizeStringField
+            } as ObservableTextInputOptions),
+          ),
+        ),
       ),
       CenteredControls(
         Button({events: (events) => events.click.on( this.completedEvent.send  )

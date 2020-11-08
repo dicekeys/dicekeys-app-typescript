@@ -4,7 +4,7 @@ import { Attributes, Button, Checkbox, Component, ComponentEvent, Div, H2, Label
 import { Overlay } from "~web-components/basic-building-blocks/overlay";
 import { ScanDiceKey } from "~web-components/scanning/scan-dicekey";
 import { ExpandableComponent } from "../basic-building-blocks";
-import { CenteredControls } from "../basic-building-blocks/dialog";
+import { CenteredControls } from "../basic-building-blocks";
 import { DICEKEY, STICKEYS } from "../dicekey-styled";
 import { VerifyDiceKeyButton } from "./verify-dicekey-button"
 // import { EncryptedCrossTabState } from "~state";

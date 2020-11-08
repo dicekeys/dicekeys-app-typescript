@@ -1,0 +1,53 @@
+.form_card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  align-content: center;
+  background-color: #f6f9f9;
+  flex-shrink: 1;
+  padding-left: 1vw;
+  padding-right: 1vw;
+  max-width: 94vw;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-width: 0.25rem;
+  border-color: #404040;
+  border-style: solid;
+  border-radius: 1rem;
+}
+
+.input_card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  background-color: rgba(128, 128, 128, 0.05);
+  border-radius: 0.25rem;
+  padding: .25rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  margin-top: .25rem;
+  margin-bottom: .25rem;
+  border-width: 0.1rem;
+  border-radius: 0.5rem;
+  border-color: rgba(128, 128, 128, .25);
+  border-style: solid;
+}
+
+.label_above_left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.centered_controls, .decision_button_container {
+  margin-top: 2vh;
+  display: flex;
+  flex-direction: row;
+  flex-grow: 5;
+  flex-shrink: 5;
+  justify-content: center;
+  align-items: center;
+}

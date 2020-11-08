@@ -18,7 +18,7 @@ import {
 import { Face, FaceDigit, FaceLetter, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
 import { DiceKeySvg } from "./display-dicekey/dicekey-svg";
 import { ObservablePartialFace } from "~dicekeys/partial-dicekey";
-import { CenteredControls } from "./basic-building-blocks/dialog";
+import { CenteredControls } from "./basic-building-blocks";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
