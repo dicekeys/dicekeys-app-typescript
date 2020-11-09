@@ -2,7 +2,7 @@ import styles from "./add-password-domain.module.css";
 import {
   Attributes,
   Component,
-  ComponentEvent, Button, Observable
+  ComponentEvent, Button, Observable, Label, Checkbox, Div
 } from "../../web-component-framework";
 
 import { getRegisteredDomain } from "~domains/get-registered-domain";
@@ -71,6 +71,10 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         .filter( n => !!n )
   }
 
+  readonly showAdvancedDerivationField = new Observable<boolean>(false);
+  get showAdvancedDerivation() { return !!this.showAdvancedDerivationField.value }
+  set showAdvancedDerivation(value: boolean) { this.showAdvancedDerivationField.set(value) }
+
   readonly domainNamesField = new Observable<string>("");
   
   readonly prescribedDerivationOptionsJson = new Observable<string>();
@@ -123,59 +127,50 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
 
 
   render() {
+    const advancedInputCards: HTMLDivElement[] = [];
+
 
     super.render(
       FormCard(
-//      Div({class: layoutStyles.stretched_column_container, style: `padding-left: 10vw; padding-right: 10vw;`},
         Instructions(`
           The DiceKeys app derives passwords from your DiceKey and a set of options that restrict which sites can use the password.
           If you paste in the URL or domain name of the site you need a password for, this form will fill in the rest.
         `),
         InputCard(
           LabelAboveLeft(
-//        Label({class: styles.item_label},
-//          Span({class: styles.label_span},
             "Enter the domain name or HTTPS URL of the application/service the password is for:", //),
-          // Div({style: "display: flex; flex-direction: row"},
             new PrescribedTextInput({
               style: `min-width: 40rem;`,
               observables: new PrescribedTextFieldObservables("urlOrDomainNames", {
                 actual: this.urlOrDomainNames
               })
             }),
-          // )
         )),
         InputCard(
           LabelAboveLeft(
-//        Label({class: styles.item_label},
-//          Span({class: styles.label_span},
             `The domain name(s) allowed to access the password, derived from the above field by default.
             Use the default value (in green) if at all possible.  If you customize this value and forget it, you will be unable to re-generate
             passwords.
-          `, //),
+          `,
           new PrescribedTextInput({
             style: `min-width: 50vw;`, observables: this.domainNamesFieldObservables
           }),
-        )),
+        )).withElement( e => { e.style.setProperty("display","none"); advancedInputCards.push(e) } ),
         InputCard(
-//        Label({class: styles.item_label},
           LabelAboveLeft(
-          //Span({class: styles.label_span},
             `The password derivation options that will be applied, derived from the above field by default.
             Use the default value (in green) if at all possible.  If you customize this value and forget it, you will be unable to re-generate
             passwords.
-          `, //),
+          `,
           new PrescribedTextInput({
             style: `min-width: 50vw;`,
             observables: this.derivationOptionsFieldObservables,
           }),
-        )),
-        InputCard(
+        )).withElement( e => { e.style.setProperty("display","none"); advancedInputCards.push(e) } ),
+          InputCard(
           LabelAboveLeft(
-//        Label({},
-//          Span({class: styles.label_span},
             `The name you will give to this new password type so that you can identify it in the passwords menu.
-            You can safely customize this value as it will not effect the value of the generated password.`, //),
+            You can safely customize this value as it will not effect the value of the generated password.`,
             new PrescribedTextInput({
               style: `min-width: 50vw;`,
               observables: this.nameFieldObservables,
@@ -183,6 +178,15 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
           )
         ),
         CenteredControls(
+          Label({}, "Show advanced options",
+            Checkbox({
+              ...( this.showAdvancedDerivation ? {checked: "checked"} : {}),
+              events: events => events.click.on( () => {
+                this.showAdvancedDerivation = !this.showAdvancedDerivation;
+                advancedInputCards.forEach( card => card.style.setProperty("display", this.showAdvancedDerivation ? "flex" : "none") )
+              })
+            })
+          ),
           Button({value: "Cancel"}, "Cancel").with( e => {
             e.events.click.on( this.complete.send )
           }),
