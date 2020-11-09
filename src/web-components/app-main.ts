@@ -32,6 +32,8 @@ import {
   reportException
 } from "./exceptions";
 import { LoadAndStoreDiceKey } from "./load-and-store-dicekey";
+import { CameraPermissionsRequiredNotification } from "./scanning/camera-permissions-required-notice";
+
 
 
 interface BodyOptions extends Attributes {
@@ -61,7 +63,8 @@ export class AppMain extends Component<BodyOptions> {
 
     if (new URL(window.location.toString()).searchParams.get(ApiCalls.RequestCommandParameterNames.command)) {      
       urlApiResponder(this.getUsersApprovalOfApiCommand)(window.location.toString())
-    }    
+    }
+
 
   }
 
@@ -103,6 +106,9 @@ export class AppMain extends Component<BodyOptions> {
 
   async render() {
     super.render();
+    this.append(
+      new CameraPermissionsRequiredNotification()
+    );
 
     const diceKey = this.appState.diceKey;
     if (Step.getUsersConsent.isInProgress) {

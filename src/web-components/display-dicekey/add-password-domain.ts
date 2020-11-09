@@ -2,7 +2,7 @@ import styles from "./add-password-domain.module.css";
 import {
   Attributes,
   Component,
-  ComponentEvent, Button, Observable, Label, Checkbox, Div
+  ComponentEvent, Button, Observable, Label, Checkbox,
 } from "../../web-component-framework";
 
 import { getRegisteredDomain } from "~domains/get-registered-domain";

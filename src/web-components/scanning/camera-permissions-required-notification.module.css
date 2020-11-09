@@ -1,0 +1,27 @@
+.notification {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  align-content: center;
+  padding-left: 2vw;
+  padding-right: 2vw;
+  padding-top: 0.25vh;
+  padding-bottom: 0.25vh;
+  background-color: yellow;
+  font-size: 1.5em;
+}
+
+.primary_instruction {
+  display: flex;
+  font-size: 1.5em;
+}
+
+.secondary_instruction {
+  display: flex;
+  font-size: 1.0em;
+}
