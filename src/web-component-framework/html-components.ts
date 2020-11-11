@@ -147,7 +147,7 @@ export class CheckboxOrRadioButton extends InputElement<InputAttributes> {
 
 
 export const RawButton = createHtmlElement("button");
-export const Button = ({onClick, ...options}: Attributes<"button"> & {onClick?: (mouseEvent: MouseEvent) => any}, ...appendable: Appendable[]) =>
+export const Button = ({onClick, ...options}: HtmlElementAttributes<"button"> & {onClick?: (mouseEvent: MouseEvent) => any}, ...appendable: Appendable[]) =>
   RawButton(options, ...appendable).with( e => {
     if (onClick) {
       e.events.click.on( onClick );
