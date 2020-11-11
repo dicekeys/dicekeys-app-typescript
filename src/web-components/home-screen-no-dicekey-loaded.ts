@@ -3,7 +3,7 @@ import layoutStyles from "./layout.module.css";
 import {
   Component,
   ComponentEvent,
-  Button, Attributes, Img
+  Button, Attributes, Img, Div, Span
 } from "../web-component-framework";
 import {
   DICEKEY
@@ -12,6 +12,8 @@ import {
   appHasScannedADiceKeyBefore,
 } from "~state";
 import { LocalStorageField } from "~web-component-framework/locally-stored-state";
+import { DiceKeySvg } from "./display-dicekey/dicekey-svg";
+import { DiceKey } from "~dicekeys/dicekey";
 
 interface HomeScreenOptions extends Attributes<"div"> {}
 
@@ -37,21 +39,31 @@ export class HomeScreenForNoDiceKeyLoaded extends Component<HomeScreenOptions> {
 
   render() {
     super.render();
-    if (!appHasScannedADiceKeyBefore && !hideTutorialForever.value) {
+    if (!appHasScannedADiceKeyBefore() && !hideTutorialForever.value) {
       this.append(
         // FIXME -- show link to assembly tutorial.
-
+        // Button({
+        //   onClick: () => {},
+        // },
+        //   "Order your DiceKey kit"
+        // ),
+        // Button({
+        //   onClick: () => {}},
+        //   "Assemble your DiceKey"
+        // ),
+  
       )
     }
     this.append(
-      Img({
-        style: "max-width: 30vw; max-height: 30vh;",
-        src: RenderedOpenDiceKey
-      }),
-      Button({
-        events: (events) => {
-          events.click.on( this.loadDiceKeyButtonClicked.send )
-        }},
+      Button({onClick: this.loadDiceKeyButtonClicked.send},
+        Div({style: `display: flex; max-height: 20vh; margin-bottom: 1vh; flex-direction: row; justify-content: center; align-items: center;`},
+          Img({
+            style: "max-width: 20vw; max-height: 20vh;",
+            src: RenderedOpenDiceKey
+          }),
+          Span({style: `font-size: 10vh; font-family: sans-serif;`},`&rarr;`),
+          new DiceKeySvg({diceKey: DiceKey.fromRandom(), style: "max-height: 20vh; max-width: 20vh;"}),
+        ),
         "Read in your ",
         DICEKEY() 
       ),
@@ -63,10 +75,9 @@ export class HomeScreenForNoDiceKeyLoaded extends Component<HomeScreenOptions> {
       //   "Type your ", DICEKEY()
       //   ),
       Button({
-        style: "margin-top: 10vh;",
-        events: (events) => {
-          events.click.on( this.createRandomDiceKeyButtonClicked.send )
-      }},
+//        style: "margin-top: 10vh;",
+        onClick: this.createRandomDiceKeyButtonClicked.send
+      },
         "Create a Random ", DICEKEY(), " for Testing",
       ),
       

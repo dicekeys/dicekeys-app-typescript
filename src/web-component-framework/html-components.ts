@@ -130,7 +130,7 @@ export const Input = <
   htmlElementFactory<InputElement<OPTIONS>, "input", OPTIONS>(
     (options?: OPTIONS) => new InputElement<OPTIONS>(type, options)
   )
-  export type Input = ReturnType<typeof Input>;
+export type Input = ReturnType<typeof Input>;
 
 
 export class CheckboxOrRadioButton extends InputElement<InputAttributes> {
@@ -145,7 +145,14 @@ export class CheckboxOrRadioButton extends InputElement<InputAttributes> {
   public set checked(value: boolean) { this.primaryElement.checked = value }
 }
 
-export const Button = createHtmlElement("button");
+
+export const RawButton = createHtmlElement("button");
+export const Button = ({onClick, ...options}: Attributes<"button"> & {onClick?: (mouseEvent: MouseEvent) => any}, ...appendable: Appendable[]) =>
+  RawButton(options, ...appendable).with( e => {
+    if (onClick) {
+      e.events.click.on( onClick );
+    }
+  });
 export type Button = ReturnType<typeof Button>;
 
 

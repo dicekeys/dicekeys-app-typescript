@@ -1,7 +1,8 @@
 .dicekey_svg {
   display: flex;
-  width: 96vw;
-  height: 96vh;
+  width: 100%;
+  /* width: 96vw;
+  height: 96vh; */
   flex-basis: 75vh;
   flex-grow: 5;
   flex-shrink: 5;

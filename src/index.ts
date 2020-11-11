@@ -16,7 +16,7 @@ window.addEventListener("load", () => {
     // window.addEventListener("resize", app.renderSoon );
     
     // For testing
-    if (true && window.origin.startsWith("http://localhost")) {
+    if (false && window.origin.startsWith("http://localhost")) {
       app.handleApiMessageEvent({
         origin: "https://localhost",
         data: {
