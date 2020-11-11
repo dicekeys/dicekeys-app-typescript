@@ -6,7 +6,7 @@ import {
 } from "@dicekeys/seeded-crypto-js";
 import {
   diceKeyIdToNicknameMap
-} from "./dicekey-nicknames"
+} from "./known-dicekeys"
 import {
   PublicKeySet,
   PopulatePublicKeyCacheFn, populatePublicKeyCacheFnFactory

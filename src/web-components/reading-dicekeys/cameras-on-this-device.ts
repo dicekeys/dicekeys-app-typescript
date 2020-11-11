@@ -138,13 +138,23 @@ export class CamerasOnThisDevice {
       // Get a media stream so that we can get settings from the track
       const stream = await with3SecondTimeout( () => navigator.mediaDevices.getUserMedia({video: videoConstraintsForDevice(deviceId)}) );
       if (!stream) return;
-      const track = stream.getVideoTracks()[0];
+      const tracks = stream.getVideoTracks();
+      if (!tracks || tracks.length === 0) {
+        return;
+      }
+      const track = tracks[0];
       if (!track) return;
-      const settings: MediaTrackSettings = track.getSettings();
-      const capabilities: MediaTrackCapabilities = track.getCapabilities?.() ;
-      stream?.getTracks().forEach(track => track.stop() );
+      const {settings, capabilities} = (() => {
+        try {
+          const settings: MediaTrackSettings = track.getSettings();
+          const capabilities: MediaTrackCapabilities = track.getCapabilities?.() ;
+          return {settings, capabilities};
+        } finally {
+          tracks.forEach( track => track.stop() );
+          stream.stop?.();
+        }  
+      })();
       // try for firefox
-      stream?.stop?.();
       if (!settings) return;          
       const cameraWithoutName = {
         ...settings,
@@ -239,7 +249,8 @@ export class CamerasOnThisDevice {
             await with3SecondTimeout( () => this.tryAddCamera(cameraDevice) );
         }
       }
-    } catch {
+    } catch (e) {
+      console.log("Exception identifying cameras on this device", e)
       // FIXME?
     }
     if (

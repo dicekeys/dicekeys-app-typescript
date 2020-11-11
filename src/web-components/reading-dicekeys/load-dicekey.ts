@@ -4,14 +4,14 @@ import styles from "./load-dicekey.module.css";
 import { Attributes, Button, Component, ComponentEvent, Observable } from "~web-component-framework";
 import {
   ScanDiceKey
-} from "./scanning/scan-dicekey";
+} from "./scan-dicekey";
 import {
   EnterDiceKey
 } from "./enter-dicekey"
 import { DiceKey, ReadOnlyTupleOf25Items } from "~dicekeys/dicekey";
 import { EncryptedCrossTabState } from "~state";
 import { ObservablePartialFace } from "~dicekeys/partial-dicekey";
-import { CenteredControls } from "./basic-building-blocks";
+import { CenteredControls } from "~/web-components/basic-building-blocks";
 
 
 type Mode = "camera" | "manual";
@@ -39,7 +39,9 @@ export class LoadDiceKey extends Component<LoadDiceKeyOptions> {
       mode = new Observable<Mode>("camera") 
     } = options;
     this.mode = typeof mode === "string" ? new Observable(mode) : mode;
-    this.mode.onChange( () => this.renderSoon() );
+    this.mode.onChange( () =>
+      this.renderSoon()
+    );
   }
 
   toggleMode = () => this.mode.set( this.mode.value === "camera" ? "manual" : "camera" );

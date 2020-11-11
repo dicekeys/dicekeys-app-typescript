@@ -30,7 +30,7 @@ export const imageCaptureSupported: boolean = (typeof ImageCapture === "function
 
 const minScanningDimensions = {
   width: 1024,
-  height: 768
+  height: 720
 }
 
 interface ScanDiceKeyOptions extends CameraCaptureOptions {

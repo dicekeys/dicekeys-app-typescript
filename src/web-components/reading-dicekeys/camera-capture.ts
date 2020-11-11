@@ -307,10 +307,14 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     if (!track.enabled) {
       throw new Error("Cannot set camera because track is not enabled.");
     }
-    if (track.muted ) {
-      throw new Error("Cannot set camera because track is muted.");
-    }
   }
+
+  // private throwIfTrackNotReadableOrMuted = (track: MediaStreamTrack | undefined): void => {
+  //   this.throwIfTrackNotReadable(track);
+  //   if (track?.muted ) {
+  //     throw new Error("Cannot set camera because track is muted.");
+  //   }
+  // }
 
   /**
    * Set the current camera
@@ -356,23 +360,22 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     }
 
     try {
-      const track = this.mediaStream?.getVideoTracks()[0];
+      const tracks = this.mediaStream.getVideoTracks();
+      const track = tracks[0];
       this.throwIfTrackNotReadable(track);
       const {
         height, width
       } = track.getSettings();
       if (this.videoPlayer) {
-        this.videoPlayer.srcObject = this.mediaStream!;
+        this.videoPlayer.srcObject = this.mediaStream;
       }
       if (track && this.useImageCapture) {
         this.imageCapture = new ImageCapture(track);
       } else if (this.videoPlayer) {
         this.videoPlayer.style.setProperty("display", "block");
         this.videoPlayer.style.setProperty("visibility", "visible");
-        if (height && width) {
-          // this.videoPlayer!.width = Math.min( width, 1024 );
-          // this.videoPlayer!.height = Math.min( height, 1024 );
-        }
+        this.videoPlayer.width = Math.min( width ?? 1024, 1024 );
+        this.videoPlayer.height = Math.min( height ?? 1024, 1024 );
       }
     } catch (e) {
       return this.throwException(e, `Setting camera after getUserMedia completes, ${JSON.stringify(mediaTrackConstraints)}`);
@@ -388,7 +391,6 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
       if (this.camerasDeviceId == null) {
         return;
       }
-      this.throwIfTrackNotReadable(track);
       if (track == null || track.readyState !== "live" || !track.enabled || track.muted) {
         if (track?.muted) {
           console.log("Track muted");
@@ -458,24 +460,23 @@ export class CameraCapture extends Component<CameraCaptureOptions> {
     }
     return await new Promise<ImageData>( (resolve, reject) => {
       var interval: ReturnType<typeof setInterval> | undefined;
-      const complete = () => {
+      const complete = (actionToTakeIfPromiseNotYetResolvedOrRejected: () => any) => {
         const notYetComplete = interval != null;
         if (notYetComplete) {
           clearInterval(interval!);
           interval = undefined;
+          actionToTakeIfPromiseNotYetResolvedOrRejected();
         }
         return notYetComplete;
       }
       interval = setInterval( async () => {
         try {
           const imageData = await this.getFrameOrUndefinedIfNotReady();
-          if (imageData != null && complete()) {
-            resolve (imageData);
+          if (imageData != null) {
+            complete( () => resolve (imageData) );
           }
         } catch (e) {
-          if (complete()) {
-            reject(e);
-          }
+          complete( ()  => reject(e) );
         }
       }, 100);
     });

@@ -1,4 +1,4 @@
-import layoutStyles from "./layout.module.css";
+import layoutStyles from "../layout.module.css";
 import styles from "./enter-dicekey.module.css";
 import {
   Attributes,
@@ -7,18 +7,18 @@ import {
   ComponentEvent,
   Div,
   Observable,
-} from "../web-component-framework";
+} from "~/web-component-framework";
 import {
   DiceKeyRenderOptions
-} from "../dicekeys/render-to-svg";
+} from "~/dicekeys/render-to-svg";
 import {
   DiceKey,
   ReadOnlyTupleOf25Items,
-} from "../dicekeys/dicekey";
+} from "~/dicekeys/dicekey";
 import { Face, FaceDigit, FaceLetter, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
-import { DiceKeySvg } from "./display-dicekey/dicekey-svg";
-import { ObservablePartialFace } from "~dicekeys/partial-dicekey";
-import { CenteredControls } from "./basic-building-blocks";
+import { DiceKeySvg } from "~/web-components/display-dicekey/dicekey-svg";
+import { ObservablePartialFace } from "~/dicekeys/partial-dicekey";
+import { CenteredControls } from "~/web-components/basic-building-blocks";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 

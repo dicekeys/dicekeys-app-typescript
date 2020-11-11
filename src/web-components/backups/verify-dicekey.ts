@@ -9,7 +9,7 @@ import {
 } from "../../dicekeys/dicekey";
 import {
   ScanDiceKey
-} from "../scanning/scan-dicekey";
+} from "../reading-dicekeys/scan-dicekey";
 import { Face } from "@dicekeys/read-dicekey-js";
 import { CenteredControls } from "~web-components/basic-building-blocks";
 

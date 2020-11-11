@@ -10,8 +10,8 @@ import {
   DiceKeySvgView
 } from "./display-dicekey/display-dicekey";
 import {
-  DisplayWhenNoDiceKeyPresent
-} from "./display-when-no-dicekey-present";
+  HomeScreenForNoDiceKeyLoaded
+} from "./home-screen-no-dicekey-loaded";
 import {
   DiceKey
 } from "../dicekeys/dicekey";
@@ -32,7 +32,7 @@ import {
   reportException
 } from "./exceptions";
 import { LoadAndStoreDiceKey } from "./load-and-store-dicekey";
-import { CameraPermissionsRequiredNotification } from "./scanning/camera-permissions-required-notice";
+import { CameraPermissionsRequiredNotification } from "./reading-dicekeys/camera-permissions-required-notice";
 
 
 
@@ -41,15 +41,10 @@ interface BodyOptions extends Attributes {
 }
 
 export class AppMain extends Component<BodyOptions> {
-  appState: EncryptedCrossTabState;
-
-//  action: PageAction = "home";
 
   constructor(options: BodyOptions) {
     super(options, document.body);
     this.addClass(styles.AppMain);
-    const {appState} = options;
-    this.appState = appState;
 
     window.addEventListener("message", messageEvent => this.handleMessageEvent(messageEvent) );
     // Let the parent know we're ready for messages. // FIXME document in API
@@ -105,18 +100,19 @@ export class AppMain extends Component<BodyOptions> {
   }
 
   async render() {
+    const {appState} = this.options;
     super.render();
     this.append(
       new CameraPermissionsRequiredNotification()
     );
 
-    const diceKey = this.appState.diceKey;
+    const diceKey = appState.diceKey;
     if (Step.getUsersConsent.isInProgress) {
       // If we're in the middle of getting the user's consent for an operation,
       // Render the ApiRequestContainer
       this.append(
         new ApiRequestContainer(
-          {requestContext: Step.getUsersConsent.options, onExceptionEvent: reportException}
+          {appState, requestContext: Step.getUsersConsent.options, onExceptionEvent: reportException}
         ).with ( apiRequest => {
           apiRequest.userApprovedEvent.on( Step.getUsersConsent.complete )
           apiRequest.userCancelledEvent.on( () => Step.getUsersConsent.cancel(new Exceptions.UserDeclinedToAuthorizeOperation("User cancelled")) )
@@ -155,7 +151,7 @@ export class AppMain extends Component<BodyOptions> {
     } else {
       // There is no DiceKey present and the user has the option to start scanning one
       // or to create a random one
-      this.append(new DisplayWhenNoDiceKeyPresent().with( homeComponent  => {
+      this.append(new HomeScreenForNoDiceKeyLoaded({}).with( homeComponent  => {
         homeComponent.loadDiceKeyButtonClicked.on( () => {
           this.loadDiceKey();
         });
