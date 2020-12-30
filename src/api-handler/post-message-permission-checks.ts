@@ -5,6 +5,7 @@ import {
   UnsealingInstructions,
   WebBasedApplicationIdentity
 } from "@dicekeys/dicekeys-api-js";
+import { Command } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import {
   extraRequestDerivationOptionsAndInstructions
 } from "./get-requests-derivation-options-json";
@@ -66,19 +67,28 @@ export const throwIfHostNotPermitted = (host: string) => {
   return (request: ApiCalls.ApiRequestObject): void => {
     const {derivationOptionsJson, unsealingInstructions} = extraRequestDerivationOptionsAndInstructions(request);
 
-    if (request.command === "getSealingKey" && !request.derivationOptionsJson) {
+    if (request.command === Command.getSealingKey && !request.derivationOptionsJson) {
       // There's no derivation options to check since the request is for a global sealing key
       // that can be used with unsealingInstructions to restrict who can decrypt it.
-    } else {
-      const {allow = []} = DerivationOptions(derivationOptionsJson);
-      throwIfNotOnAllowList(allow);
+      return
     }
+    
+    const allowFromDerivationOptions = DerivationOptions(derivationOptionsJson).allow;
+    const allowFromUnsealingInstructions = UnsealingInstructions(unsealingInstructions).allow;
+
     // Unsealing operations have two possible allow lists, both embedded in the packageSealedMessage parameter:
     //   - like all other operations, an allow list may be placed in derivation options.
     //   = unique to these operations, an allow list may be placed in the unsealing instructions.
-    if (unsealingInstructions) {
-      const {allow = []} = UnsealingInstructions(unsealingInstructions);
-      throwIfNotOnAllowList(allow);
+    if (!allowFromDerivationOptions && !(request.command === Command.unsealWithUnsealingKey && allowFromUnsealingInstructions)) {
+      throw new Exceptions.ClientNotAuthorizedException(
+        `The derivationOptionsJson must have an allow clause.`
+      );
+    }
+    if (allowFromDerivationOptions) {
+      throwIfNotOnAllowList(allowFromDerivationOptions)
+    } 
+    if (request.command === Command.unsealWithUnsealingKey && allowFromUnsealingInstructions) {
+      throwIfNotOnAllowList(allowFromUnsealingInstructions)
     }
   }
 }

@@ -5,6 +5,7 @@ import {
   WebBasedApplicationIdentity,
   AuthenticationRequirements, ApiCalls
 } from "@dicekeys/dicekeys-api-js";
+import { Command } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import { extraRequestDerivationOptionsAndInstructions } from "./get-requests-derivation-options-json";
 import {
   doesHostMatchRequirement
@@ -81,18 +82,34 @@ export const throwIfUrlNotPermitted = (host: string, path: string, hostValidated
   const throwIfNotOnAllowList = throwIfUrlNotOnAllowList(host, path, hostValidatedViaAuthToken);
   return (request: ApiCalls.ApiRequestObject): void => {
     const {derivationOptionsJson, unsealingInstructions} = extraRequestDerivationOptionsAndInstructions(request);
-    if (derivationOptionsJson && request.command === "getSealingKey") {
+
+    if (request.command === Command.getSealingKey && !request.derivationOptionsJson) {
       // There's no derivation options to check since the request is for a global sealing key
       // that can be used with unsealingInstructions to restrict who can decrypt it.
-    } else {
-      throwIfNotOnAllowList(DerivationOptions(derivationOptionsJson));
+      return
+    }
+
+    const derivationOptions = DerivationOptions(derivationOptionsJson);
+    const parsedUnsealingInstructions = UnsealingInstructions(unsealingInstructions);
+
+    // Unsealing operations have two possible allow lists, both embedded in the packageSealedMessage parameter:
+    //   - like all other operations, an allow list may be placed in derivation options.
+    //   = unique to these operations, an allow list may be placed in the unsealing instructions.
+    if (!derivationOptions && !(request.command === Command.unsealWithUnsealingKey && parsedUnsealingInstructions)) {
+      throw new Exceptions.ClientNotAuthorizedException(
+        `The derivationOptionsJson must have an allow clause.`
+      );
+    }
+
+    if (derivationOptions) {
+      throwIfNotOnAllowList(derivationOptions);
     }
 
     // Unsealing operations have two possible allow lists, both embedded in the packageSealedMessage parameter:
     //   - like all other operations, an allow list may be placed in derivation options.
     //   = unique to these operations, an allow list may be placed in the unsealing instructions.
-    if (unsealingInstructions) {
-      throwIfNotOnAllowList(UnsealingInstructions(unsealingInstructions));
+    if (request.command === Command.unsealWithUnsealingKey && parsedUnsealingInstructions) {
+      throwIfNotOnAllowList(parsedUnsealingInstructions)
     }
   }
 }
