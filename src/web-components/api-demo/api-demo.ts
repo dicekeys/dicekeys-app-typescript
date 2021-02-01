@@ -15,17 +15,17 @@ import {
   PrescribedTextFieldSpecification,
   PrescribedTextFieldObservables,
   PrescribedTextInput,
+  Instructions
 } from "../basic-building-blocks"
 import {
   FnCall,
   FnCallName,
   Formula,
   InputVar,
-  Instructions,
   ParameterCard,
   TemplateInputVar,
   UseCaseHeader
-} from "./basic-api-demo-components"
+} from "./basic-api-demo-components";
 import { SealAndUnseal, SymmetricKeySealAndUnseal } from "./demos";
 import { DICEKEY, DICEKEYS } from "~web-components/dicekey-styled";
 import { CommandSimulator } from "./command-simulator";

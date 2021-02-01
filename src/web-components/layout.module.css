@@ -4,11 +4,11 @@
 }
 
 .centered_column {
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
   align-content: center;
   flex-shrink: 5;
-  flex-grow: 5;
+  /* flex-grow: 5; */
   flex-grow: 5;
   flex-shrink: 5;
 }

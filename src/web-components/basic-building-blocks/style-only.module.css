@@ -1,0 +1,14 @@
+
+.instructions {
+  font-family: "Calibri", "Roboto", sans-serif;
+  font-size: 1.33rem;
+  margin-bottom: 1.5rem;
+}
+
+.question {
+  font-family: "Calibri", "Roboto", sans-serif;
+  font-size: 1.33rem;
+  font-weight: bold;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}

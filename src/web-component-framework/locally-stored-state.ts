@@ -29,11 +29,9 @@ export abstract class StorageField<T> extends Observable<T | undefined> {
   protected static byName = new Map<string, StorageField<any>>();
 
   public readonly name: string;
-//  public readonly changedEvent: ValueChangedComponentEvent<T>;
   constructor (public readonly nameSuffix: string) {
     super(undefined);
     this.name =`${this.constructor.name}::${nameSuffix}`;
-//    this.changedEvent = new ValueChangedComponentEvent(this);
     StorageField.byName.set(this.name, this);
   }
 
@@ -96,10 +94,10 @@ export abstract class StorageField<T> extends Observable<T | undefined> {
 
 }
 
-export class LocalStorageStringField extends StorageField<string> {
+export class LocalStorageStringField<FIELD_TYPE extends string = string> extends StorageField<FIELD_TYPE> {
   // The required encode and decode functions are no-ops that just leave the string in place
   encodeToString = (valueThatIsAlreadyAString: string) => valueThatIsAlreadyAString;
-  decodeFromString = (valueThatIsAlreadyAString: string) => valueThatIsAlreadyAString;
+  decodeFromString = (valueThatIsAlreadyAString: FIELD_TYPE) => valueThatIsAlreadyAString;
 }
 
 export class LocalStorageField<T> extends StorageField<T> {
@@ -256,8 +254,12 @@ export class EncryptedStorageField<T> extends StorageField<T> {
 
 
 export class AppStateStore {
-  protected addStringField = (name: string) => new LocalStorageStringField(name); 
-  protected addField = <T>(name: string) => new LocalStorageField<T>(name); 
+  constructor(
+    protected readonly rewriteFieldName: (fieldName: string) => string = (fieldName: string) => fieldName
+  ) {}
+
+  protected addStringField = <FIELD_TYPE extends string = string>(name: string) => new LocalStorageStringField<FIELD_TYPE>(this.rewriteFieldName(name)); 
+  protected addField = <T>(name: string) => new LocalStorageField<T>(this.rewriteFieldName(name));
 }
 
 /**
@@ -279,10 +281,11 @@ export class AppStateStore {
 export class EncryptedAppStateStore extends AppStateStore {
   protected readonly symmetricKey: SymmetricKey;
   constructor(
-    seededCryptoModule: SeededCryptoModuleWithHelpers,
-    expireAfterMinutesUnused?: number
+    protected readonly seededCryptoModule: SeededCryptoModuleWithHelpers,
+    expireAfterMinutesUnused?: number,
+    rewriteFieldName?: (fieldName: string) => string
   ) {
-    super();
+    super(rewriteFieldName);
     this.symmetricKey = getSessionEncryptionSymmetricKey(this.constructor.name, seededCryptoModule, expireAfterMinutesUnused);
   }
 

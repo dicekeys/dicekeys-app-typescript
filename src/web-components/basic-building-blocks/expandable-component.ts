@@ -4,19 +4,19 @@ import {
 } from "../../web-component-framework";
 
 
-export interface ExpandableComponentOptions extends Attributes<"button"> {
+export interface ExpandableComponentOptions extends Attributes<"div"> {
   expanded?: OptionallyObservable<boolean>;
 }
 const expandMeIcon = "&#x25B6;"; // right arrow
 const contractMeIcon = "&#x25BC;" // down arrow
-export class ExpandableComponent<OPTIONS extends ExpandableComponentOptions> extends Component<OPTIONS> {
+export class ExpandableComponent extends Component<ExpandableComponentOptions> {
 
   expanded: Observable<boolean>;
   private componentToShowWhenExpanded?: Component;
   private readonly introductoryContentToShowAboveExpander: Appendable[];
 
   constructor(
-    options: OPTIONS,
+    options: ExpandableComponentOptions,
     private renderComponentToShowWhenExpanded: () => Component,
     ...introductoryContentToShowAboveExpander: Appendable[]
   ) {

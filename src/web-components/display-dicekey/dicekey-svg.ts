@@ -1,5 +1,5 @@
 import styles from "./dicekey-svg.module.css";
-import * as SVG from "../../dicekeys/svg";
+import * as SVG from "../../web-component-framework/svg-component";
 
 import {
   Attributes,
@@ -53,7 +53,7 @@ export class DiceKeySvg extends Component<DiceKeySvgOptions, "svg"> {
   constructor(
     options: DiceKeySvgOptions
   ) {
-    super(options, SVG.svg({}));
+    super(options, document.createElementNS("http://www.w3.org/2000/svg", "svg"));
     // const sizeStr = this.size.toString();
     this.addClass(styles.dicekey_svg);
     this.obscure = new Observable<boolean>(options?.obscureByDefault ?? false)
@@ -62,7 +62,7 @@ export class DiceKeySvg extends Component<DiceKeySvgOptions, "svg"> {
       this.primaryElement.addEventListener("click", () => {
         this.obscure.value = !this.obscure.value;
       }  );
-      this.obscure.observe( this.renderSoon );
+      this.obscure.observe( () => this.renderSoon() );
     }
   }
 
@@ -78,7 +78,7 @@ export class DiceKeySvg extends Component<DiceKeySvgOptions, "svg"> {
       fontColor: "#00A000",
       fontWeight: 600,
     }
-    renderDiceKey(this.primaryElement, this.options.diceKey, 
+    renderDiceKey(this, this.options.diceKey, 
       {
         leaveSpaceForTab: this.mayObscure,
         ...this.options,
@@ -86,7 +86,7 @@ export class DiceKeySvg extends Component<DiceKeySvgOptions, "svg"> {
     if (this.obscure.value && overlayMessage) {
       const {message, fontColor = "#000000", fontSizeAsFractionOfBoxSize = 1/12 , fontWeight = "normal", fontFamily = FontFamily} = overlayMessage;
       const fontSize = fontSizeAsFractionOfBoxSize * this.primaryElement.viewBox.baseVal.width;
-      this.primaryElement.appendChild(SVG.text({
+      this.append(SVG.text({
           x: 0, y: fontSize * 0.3,
           style: `text-anchor: middle; text-align: center; fill: ${fontColor}; font: ${ fontWeight } ${ fontSize }px ${ fontFamily }, monospace`
         },

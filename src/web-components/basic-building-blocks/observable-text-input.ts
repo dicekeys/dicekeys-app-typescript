@@ -13,7 +13,7 @@ export type ObservableTextInputOptions = NonNullable<Parameters<typeof TextInput
 
 
 export class ObservableTextInput<
-OPTIONS extends ObservableTextInputOptions = ObservableTextInputOptions
+  OPTIONS extends ObservableTextInputOptions = ObservableTextInputOptions
 > extends Component<OPTIONS, "input"> {
 
 public readonly observable: Observable<string>;
@@ -27,6 +27,9 @@ constructor(options?: OPTIONS) {
       return element;
     })()
     );
+    if (this.options.observable?.value) {
+      this.primaryElement.value = this.options.observable?.value;
+    }
     this.observable = this.options.observable ?? new Observable<string>(this.options.value);
     if (this.options.observable && this.options.value) {
       this.options.observable.set(this.options.value);

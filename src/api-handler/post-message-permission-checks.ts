@@ -5,6 +5,7 @@ import {
   UnsealingInstructions,
   WebBasedApplicationIdentity
 } from "@dicekeys/dicekeys-api-js";
+import { Command } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import {
   extraRequestDerivationOptionsAndInstructions
 } from "./get-requests-derivation-options-json";
@@ -45,11 +46,7 @@ export const isHostOnAllowList = (
 
 export const throwIfHostNotOnAllowList =
   (host: string) =>
-    (allowList: WebBasedApplicationIdentity[] | undefined): void => {
-      if (allowList == null) {
-        // There's no allow list requirement so host can't be forbidden
-        return;
-      }
+    (allowList: WebBasedApplicationIdentity[]): void => {
       if (!isHostOnAllowList(host, allowList)) {
         throw new Exceptions.ClientNotAuthorizedException(
           `Client '${host}' is not among list of allowed hosts: ${JSON.stringify(allowList)}`
@@ -69,13 +66,29 @@ export const throwIfHostNotPermitted = (host: string) => {
   const throwIfNotOnAllowList = throwIfHostNotOnAllowList(host);
   return (request: ApiCalls.ApiRequestObject): void => {
     const {derivationOptionsJson, unsealingInstructions} = extraRequestDerivationOptionsAndInstructions(request);
-    throwIfNotOnAllowList(DerivationOptions(derivationOptionsJson).allow);
+
+    if (request.command === Command.getSealingKey && !request.derivationOptionsJson) {
+      // There's no derivation options to check since the request is for a global sealing key
+      // that can be used with unsealingInstructions to restrict who can decrypt it.
+      return
+    }
+    
+    const allowFromDerivationOptions = DerivationOptions(derivationOptionsJson).allow;
+    const allowFromUnsealingInstructions = UnsealingInstructions(unsealingInstructions).allow;
 
     // Unsealing operations have two possible allow lists, both embedded in the packageSealedMessage parameter:
     //   - like all other operations, an allow list may be placed in derivation options.
     //   = unique to these operations, an allow list may be placed in the unsealing instructions.
-    if (unsealingInstructions) {
-      throwIfNotOnAllowList(UnsealingInstructions(unsealingInstructions).allow);
+    if (!allowFromDerivationOptions && !(request.command === Command.unsealWithUnsealingKey && allowFromUnsealingInstructions)) {
+      throw new Exceptions.ClientNotAuthorizedException(
+        `The derivationOptionsJson must have an allow clause.`
+      );
+    }
+    if (allowFromDerivationOptions) {
+      throwIfNotOnAllowList(allowFromDerivationOptions)
+    } 
+    if (request.command === Command.unsealWithUnsealingKey && allowFromUnsealingInstructions) {
+      throwIfNotOnAllowList(allowFromUnsealingInstructions)
     }
   }
 }

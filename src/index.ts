@@ -21,7 +21,8 @@ window.addEventListener("load", () => {
         origin: "https://localhost",
         data: {
           "command": ApiCalls.Command.getPassword,
-          derivationOptionsJson: JSON.stringify(DerivationOptions({          
+          derivationOptionsJson: JSON.stringify(DerivationOptions({  
+            allow: [{host: "localhost"}]        
 //            excludeOrientationOfFaces: true,
 //            cornerLetters: "SWDC"
           }))

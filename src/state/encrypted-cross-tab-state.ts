@@ -7,7 +7,7 @@ import {
 } from "../dicekeys/dicekey";
 import {
   SeededCryptoModuleWithHelpers,
-  SeededCryptoModulePromise
+  SeededCryptoModulePromise,
 } from "@dicekeys/seeded-crypto-js";
 import {
   urlSafeBase64Encode
@@ -15,8 +15,13 @@ import {
 import {
   randomBytes
 } from "crypto";
+import {
+  DiceKeyStateStore
+} from "./dicekey-state";
 
 const defaultAppStageExpirationTimeInMinutes = 30;
+
+
 
 export class EncryptedCrossTabState extends EncryptedAppStateStore {
   constructor(
@@ -27,7 +32,7 @@ export class EncryptedCrossTabState extends EncryptedAppStateStore {
     // Erase the DiceKey if all windows are closed.
     window.addEventListener("unload", () => {
       if (this.windowsOpen.countOfOthers === 0 && window.origin.indexOf("localhost") === -1 ) {
-        this.diceKey.remove();
+        this.diceKeyField.remove();
       }
     });
   }
@@ -35,8 +40,40 @@ export class EncryptedCrossTabState extends EncryptedAppStateStore {
   /**
    * 
    */
-  public readonly diceKey = this.addEncryptedField<DiceKey>("dicekey");
+  #keyId: string | undefined;
+  #diceKeyState: DiceKeyStateStore | undefined;
+  public readonly diceKeyField = this.addEncryptedField<DiceKey>("dicekey");
+  public get diceKey(): DiceKey | undefined { return this.diceKeyField.value; }
+  public get seed(): string | undefined { 
+    const diceKey = this.diceKey;
+    return (diceKey == null) ? undefined : DiceKey.toSeedString(diceKey, true)
+  }
+  public set diceKey(diceKey: DiceKey | undefined) {
+    // Remove any observables and use a pure Face now that the DiceKey is final.
+    diceKey = diceKey?.map( ({letter, digit, orientationAsLowercaseLetterTrbl}) =>
+      ({letter, digit, orientationAsLowercaseLetterTrbl}) ) as DiceKey;
+    this.diceKeyField.set(diceKey);
+    this.#keyId = diceKey == null ? undefined :
+      urlSafeBase64Encode(
+        this.seededCryptoModule.Secret.deriveFromSeed(this.seed!, "").secretBytes
+    );
+    this.#diceKeyState = this.#keyId == undefined ? undefined :
+        DiceKeyStateStore.instanceFor(this.seededCryptoModule, this.#keyId);
+  }
+  
+  public forgetDiceKey = (): void => {
+    this.diceKeyField.remove();
+    this.#keyId = undefined;
+    this.#diceKeyState = undefined;
+  }
+
   public readonly windowsOpen = new TabsAndWindowsSharingThisState("windows-sharing-dicekeys-app-state");
+
+  
+  public get keyId() { return this.#keyId; }
+  public get diceKeyState() { return this.#diceKeyState }
+  
+
 
   private static authenticationFieldName = (authenticationToken: string) =>
     `authenticationToken:${authenticationToken}`;

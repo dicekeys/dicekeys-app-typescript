@@ -1,5 +1,5 @@
+import RenderedOpenDiceKey from "~/images/RenderedOpenDiceKey.png";
 import styles from "./api-request-container.module.css";
-import dialogStyles from "../dialog.module.css";
 import layoutStyles from "../layout.module.css";
 import {
 //  Exceptions,
@@ -8,7 +8,9 @@ import {
 import {
   Component, Attributes,
   Div, InputButton,
-  ComponentEvent
+  ComponentEvent,
+  Button,
+  Img
 } from "../../web-component-framework";
 import {
   DiceKey,
@@ -17,8 +19,8 @@ import {
   API,
 } from "../../phrasing";
 import {
-  ScanDiceKey
-} from "../scanning/scan-dicekey"
+  LoadAndStoreDiceKey
+} from "../load-and-store-dicekey";
 import {
   EncryptedCrossTabState
 } from "../../state";
@@ -40,6 +42,7 @@ import {
 import {
   shortDescribeCommandsAction
 } from "../../phrasing/api";
+import { CenteredControls, Instructions } from "~web-components/basic-building-blocks";
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
@@ -56,7 +59,8 @@ import {
 // accounts.
 
 export interface ApiRequestOptions extends Attributes {
-  requestContext: ApiRequestContext
+  requestContext: ApiRequestContext,
+  appState: EncryptedCrossTabState,
 }
 
 export class ApiRequestContainer extends Component<ApiRequestOptions> {
@@ -64,7 +68,14 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
 
   public readonly derivationOptions: DerivationOptions;
   private areDerivationOptionsVerified: boolean | undefined;
-  private static verifyDerivationOptionsWorker = new VerifyDerivationOptionsWorker()
+  private static verifyDerivationOptionsWorker = new VerifyDerivationOptionsWorker();
+
+  private userAskedToLoadDiceKey: boolean = false;
+  private handleLoadCompleteOrCancel = () => {
+    this.userAskedToLoadDiceKey = false;
+    this.renderSoon();
+
+  }
 
   public userApprovedEvent = new ComponentEvent<[ConsentResponse]>(this);
   public userCancelledEvent = new ComponentEvent(this);
@@ -83,7 +94,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
     this.derivationOptions = DerivationOptions(derivationOptionsJson);
     if (this.derivationOptions.proofOfPriorDerivation) {
       // Once the diceKey is available, calculate if the proof of prior derivation is valid
-      EncryptedCrossTabState.instance?.diceKey.observe( async (diceKey) => {
+      EncryptedCrossTabState.instance?.diceKeyField.observe( async (diceKey) => {
         if (diceKey) {
           const seedString = DiceKey.toSeedString(diceKey, !this.derivationOptions.excludeOrientationOfFaces);
           const {verified} = await ApiRequestContainer.verifyDerivationOptionsWorker.calculate({seedString, derivationOptionsJson});
@@ -113,38 +124,50 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
     }
     const consentResponse = await this.apiResponseSettings.getResponseReturnUponUsersConsent();
     this.userApprovedEvent.send(consentResponse);
-    // FIXME this.remove();
   }
 
   async render() {
-    super.render();
-    const {request, host} = this.options.requestContext;
-    const appState = await EncryptedCrossTabState.instancePromise;
-    const diceKey = appState.diceKey.value;
-    // Re-render whenever the diceKey value changes.
-    EncryptedCrossTabState.instance?.diceKey.changedEvent.on( this.renderSoon );
-
-    this.append(
-      Div({class: styles.request_description},
-        Div({class: styles.request_choice}, API.describeRequestChoice(request.command, host, !!this.areDerivationOptionsVerified) ),
-        Div({class: styles.request_promise}, API.describeDiceKeyAccessRestrictions(host) ),
-      ),
-      ( diceKey ?
-        new ApproveApiCommand({...this.options, diceKey}).with( e => this.apiResponseSettings = e )
-        :
-        new ScanDiceKey({
-          host,
-          derivationOptions: this.derivationOptions,
+    const {requestContext, appState} = this.options;
+    const {request, host} =requestContext;
+    const diceKey = appState.diceKey;
+    super.render(
+      (!diceKey && this.userAskedToLoadDiceKey) ?
+        // Load a DiceKey
+        new LoadAndStoreDiceKey({
           onExceptionEvent: this.options.onExceptionEvent
         }).with( e => {
-          e.diceKeyLoadedEvent.on( appState.diceKey.set )
+          e.completedEvent.on( this.handleLoadCompleteOrCancel );
+          e.cancelledEvent.on( this.handleLoadCompleteOrCancel );
         })
-      ),
-      Div({class: dialogStyles.decision_button_container},
-      InputButton({value: "Cancel", clickHandler: this.handleCancelButton}),
-      diceKey == null ? undefined :
-        InputButton({value: shortDescribeCommandsAction(this.options.requestContext.request.command), clickHandler: this.handleContinueButton} )
-      ),
+      : [
+        // Show request
+        Div({class: styles.request_description},
+          Div({class: styles.request_choice}, API.describeRequestChoice(request.command, host, !!this.areDerivationOptionsVerified) ),
+          Div({class: styles.request_promise}, API.describeDiceKeyAccessRestrictions(host) ),
+        ),
+        ( diceKey ?
+          new ApproveApiCommand({...this.options, diceKey}).with( e => this.apiResponseSettings = e )
+          :
+          Div({class: layoutStyles.centered_column},
+            Img({src: RenderedOpenDiceKey, style: 'max-width: 25vw; max-height: 25vh;',
+              events: events => events.click.on( () => {
+                this.userAskedToLoadDiceKey = true; this.renderSoon(); } ),
+            }),
+            Instructions(
+              `To allow this action, you'll first need to load your DiceKey.`
+            ),
+            Button({events: events => events.click.on( () => {
+              this.userAskedToLoadDiceKey = true;
+              this.renderSoon();
+            })}, `Load DiceKey`)
+          )
+        ),
+        CenteredControls(
+        InputButton({value: "Cancel", clickHandler: this.handleCancelButton}),
+        diceKey == null ? undefined :
+          InputButton({value: shortDescribeCommandsAction(this.options.requestContext.request.command), clickHandler: this.handleContinueButton} )
+        ),
+      ]
     );
   }
 }

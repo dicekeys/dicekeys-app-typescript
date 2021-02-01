@@ -25,6 +25,7 @@ import {
   throwIfUrlNotPermitted,
 } from "../../api-handler/url-permission-checks";
 import {
+  Instructions,
   PrescribedTextFieldObservablesOrSpecification,
   PrescribedTextFieldObservables,
   PrescribedTextInput
@@ -34,7 +35,6 @@ import {
   FnCallName,
   Formula,
   TemplateInputVar,
-  Instructions,
   ParameterCard,
   ResultTextBlock, FnCall, InputVar, TemplateString, UrlParameter, ResultLabel
 } from "./basic-api-demo-components";

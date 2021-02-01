@@ -3,7 +3,6 @@ import {
   Component,
   ComponentEvent,
   Div,
-  MonospaceSpan,
   Observable,
   Span
 } from "../../web-component-framework"
@@ -21,10 +20,6 @@ import {
     TerminateSessionRequest,
     FaceReadWithImageIfErrorFound
 } from "../../workers/dicekey-image-frame-worker"
-import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
-import {
-  describeHost
-} from "../../phrasing/api";
 import {
   CameraCapture, CameraCaptureOptions
 } from "./camera-capture"
@@ -35,14 +30,12 @@ export const imageCaptureSupported: boolean = (typeof ImageCapture === "function
 
 const minScanningDimensions = {
   width: 1024,
-  height: 768
+  height: 720
 }
 
 interface ScanDiceKeyOptions extends CameraCaptureOptions {
   msDelayBetweenSuccessAndClosure?: number;
-  host?: string;
-  derivationOptions?: DerivationOptions;
-  dieRenderingCanvasSize?: number;
+//  dieRenderingCanvasSize?: number;
 }
 
 /**
@@ -202,7 +195,7 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
    * This event is triggered when the DiceKey has been been scanned
    * successfully.
    */
-  public readonly diceKeyLoadedEvent = new ComponentEvent<[DiceKey], this>(this);
+  public readonly diceKeyReadEvent = new ComponentEvent<[DiceKey], this>(this);
 
   /**
    * We support a delay between when we've successfully scanned a DiceKey
@@ -242,47 +235,14 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
 
   reportDiceKeyReadAndValidated = () => {
     const diceKey = DiceKey( this.facesRead?.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
-    this.diceKeyLoadedEvent.send(diceKey);
+    this.diceKeyReadEvent.send(diceKey);
     this.remove();
-  }
-
-  renderHint = () => {
-    const {seedHint, cornerLetters} = this.options.derivationOptions || {};
-    const {host} = this.options;
-
-    this.append(
-      Div({class: styles.scan_instruction}, `Use your camera to read your `, DICEKEY())
-    )
-
-    if (host && seedHint) {
-      this.append(
-        Div({class: styles.hint},
-          "According to ",
-          describeHost(host),
-          ", you provided the following hint to identify your DiceKey: ",
-          MonospaceSpan().setInnerText(seedHint)
-        )
-      );
-    } else if (host && cornerLetters && cornerLetters.length === 4) {
-      this.append(
-        Div({class: styles.hint},
-          "According to ",
-          describeHost(host),
-          ", you previously used a DiceKey with the letters ",
-          MonospaceSpan().setInnerText(cornerLetters.substr(0, 3).split("").join(", ")),
-          ", and ",
-          MonospaceSpan().setInnerText(cornerLetters[3]),
-          " at each corner."
-        ),
-      );
-    }
   }
 
   render() {
     super.render();
     if (!this.allFacesReadHaveMajorityValues) {
       // This image needs to be scanned
-      this.renderHint();      
       this.append(
       // Frame size warning
       Div({
@@ -314,7 +274,6 @@ export class ScanDiceKey extends Component<ScanDiceKeyOptions> {
       // The scan phase is complete, but there are errors to correct.
       const faceToValidate = this.facesReadThatContainErrorsAndHaveNotBeenValidated[0];
       const imageDataRgba = faceToValidate.squareImageAsRgbaArray!;
-//      const imageOfFaceToValidate = this.errorImages.get(faceToValidate.uniqueIdentifier);
       if (imageDataRgba.length == 0) {
         // This exception indicates a coding error, as the code is designed this should never occur
         throw new Error("Assertion failure: no image of face to validate");

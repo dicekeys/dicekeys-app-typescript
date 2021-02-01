@@ -10,8 +10,8 @@ import {
   DiceKeySvgView
 } from "./display-dicekey/display-dicekey";
 import {
-  DisplayWhenNoDiceKeyPresent
-} from "./display-when-no-dicekey-present";
+  HomeScreenForNoDiceKeyLoaded
+} from "./home-screen-no-dicekey-loaded";
 import {
   DiceKey
 } from "../dicekeys/dicekey";
@@ -25,14 +25,15 @@ import {
 import {
   ApiRequestContext
 } from "../api-handler/handle-api-request";
-import { ScanDiceKey } from "./scanning/scan-dicekey";
 import {
   urlApiResponder
 } from "../api-handler/handle-url-api-request";
 import {
   reportException
 } from "./exceptions";
-import { EnterDiceKey } from "./enter-dicekey";
+import { LoadAndStoreDiceKey } from "./load-and-store-dicekey";
+import { CameraPermissionsRequiredNotification } from "./reading-dicekeys/camera-permissions-required-notice";
+
 
 
 interface BodyOptions extends Attributes {
@@ -40,15 +41,10 @@ interface BodyOptions extends Attributes {
 }
 
 export class AppMain extends Component<BodyOptions> {
-  appState: EncryptedCrossTabState;
-
-//  action: PageAction = "home";
 
   constructor(options: BodyOptions) {
     super(options, document.body);
     this.addClass(styles.AppMain);
-    const {appState} = options;
-    this.appState = appState;
 
     window.addEventListener("message", messageEvent => this.handleMessageEvent(messageEvent) );
     // Let the parent know we're ready for messages. // FIXME document in API
@@ -62,7 +58,8 @@ export class AppMain extends Component<BodyOptions> {
 
     if (new URL(window.location.toString()).searchParams.get(ApiCalls.RequestCommandParameterNames.command)) {      
       urlApiResponder(this.getUsersApprovalOfApiCommand)(window.location.toString())
-    }    
+    }
+
 
   }
 
@@ -79,24 +76,20 @@ export class AppMain extends Component<BodyOptions> {
 
   loadDiceKey = async (): Promise<DiceKey> => {
     const appState = await EncryptedCrossTabState.instancePromise;
-    var diceKey = appState.diceKey.value;
-    if (diceKey) {
-      return diceKey;
-    }
     this.renderSoon();
-    diceKey = await Step.loadDiceKey.start();
-    appState.diceKey.set(diceKey);
-    // FIXME -- store additional state regarding how confidence we are that the DiceKey was read correctly.
-    // wasReadAutomaticallyAndWithoutSignificantErrors <-- derive this by looking at errors corrected
-    return diceKey;
+    var diceKey = appState.diceKey ?? await Step.loadDiceKey.start();
+    // appState.diceKey = diceKey;
+    // appState.diceKeyState?.hasBeenReadWithoutError.set(true);
+    return diceKey!;
   }
 
   enterDiceKey = async (): Promise<DiceKey> => {
     this.renderSoon(); 
     const diceKey = await Step.enterDiceKey.start();
-    const appState = await EncryptedCrossTabState.instancePromise;
-    appState.diceKey.set(diceKey);
-    return diceKey;
+    this.renderSoon(); 
+    // const appState = await EncryptedCrossTabState.instancePromise;
+    // appState.diceKey = diceKey;
+    return diceKey!;
   }
 
   getUsersApprovalOfApiCommand = (
@@ -107,15 +100,19 @@ export class AppMain extends Component<BodyOptions> {
   }
 
   async render() {
+    const {appState} = this.options;
     super.render();
+    this.append(
+      new CameraPermissionsRequiredNotification()
+    );
 
-    const diceKey = this.appState.diceKey.value;
+    const diceKey = appState.diceKey;
     if (Step.getUsersConsent.isInProgress) {
       // If we're in the middle of getting the user's consent for an operation,
       // Render the ApiRequestContainer
       this.append(
         new ApiRequestContainer(
-          {requestContext: Step.getUsersConsent.options, onExceptionEvent: reportException}
+          {appState, requestContext: Step.getUsersConsent.options, onExceptionEvent: reportException}
         ).with ( apiRequest => {
           apiRequest.userApprovedEvent.on( Step.getUsersConsent.complete )
           apiRequest.userCancelledEvent.on( () => Step.getUsersConsent.cancel(new Exceptions.UserDeclinedToAuthorizeOperation("User cancelled")) )
@@ -127,8 +124,8 @@ export class AppMain extends Component<BodyOptions> {
       // show the component for scanning it.
       this.append(
         Div({class: "request-container"},
-          new EnterDiceKey({onExceptionEvent: reportException}).with( enterDiceKey => { 
-          enterDiceKey.diceKeyEnteredEvent.on( Step.enterDiceKey.complete );
+          new LoadAndStoreDiceKey({onExceptionEvent: reportException, mode: "manual"}).with( enterDiceKey => { 
+          enterDiceKey.completedEvent.on( (diceKey) => Step.enterDiceKey.complete(diceKey) );
           enterDiceKey.cancelledEvent.on( Step.enterDiceKey.cancel );
         })
       ));
@@ -139,8 +136,9 @@ export class AppMain extends Component<BodyOptions> {
       // show the component for scanning it.
       this.append(
         Div({class: "request-container"},
-          new ScanDiceKey({host: "", onExceptionEvent: reportException}).with( readDiceKey => { 
-          readDiceKey.diceKeyLoadedEvent.on( Step.loadDiceKey.complete );
+          new LoadAndStoreDiceKey({onExceptionEvent: reportException, mode: "camera"}).with( readDiceKey => { 
+          readDiceKey.completedEvent.on( (diceKey) => Step.loadDiceKey.complete(diceKey) );
+          readDiceKey.cancelledEvent.on( Step.loadDiceKey.cancel );
         })
       ));
       Step.loadDiceKey.promise?.finally( () => this.renderSoon() );
@@ -153,7 +151,7 @@ export class AppMain extends Component<BodyOptions> {
     } else {
       // There is no DiceKey present and the user has the option to start scanning one
       // or to create a random one
-      this.append(new DisplayWhenNoDiceKeyPresent().with( homeComponent  => {
+      this.append(new HomeScreenForNoDiceKeyLoaded({}).with( homeComponent  => {
         homeComponent.loadDiceKeyButtonClicked.on( () => {
           this.loadDiceKey();
         });
@@ -161,7 +159,7 @@ export class AppMain extends Component<BodyOptions> {
           this.enterDiceKey();
         });
         homeComponent.createRandomDiceKeyButtonClicked.on( () => {
-          EncryptedCrossTabState.instance?.diceKey.set(DiceKey.fromRandom());
+          EncryptedCrossTabState.instance!.diceKey = DiceKey.fromRandom();
           this.renderSoon();
         });
       }));

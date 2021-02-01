@@ -1,22 +1,24 @@
 import styles from "./add-password-domain.module.css";
-import dialogStyles from "../dialog.module.css";
-import layoutStyles from "../layout.module.css";
 import {
   Attributes,
   Component,
-  Label,
-  Span,
-  ComponentEvent, Div, Button, Observable
+  ComponentEvent, Button, Observable, Label, Checkbox,
 } from "../../web-component-framework";
 
 import { getRegisteredDomain } from "~domains/get-registered-domain";
 import { addStoredPasswordConsumer, PasswordConsumerType, passwordDerivationOptionsJson } from "~dicekeys/password-consumers";
-// import { FavIcon } from "./fav-icon";
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
-import { // ObservableTextInput, ObservableTextInputOptions,
-   PrescribedTextFieldObservables, PrescribedTextInput } from "~web-components/basic-building-blocks";
-import { Instructions } from "~web-components/api-demo/basic-api-demo-components";
+import {
+  FormCard,
+  InputCard,
+  Instructions,
+  LabelAboveLeft,
+  PrescribedTextFieldObservables,
+  PrescribedTextInput
+} from "~web-components/basic-building-blocks";
+import { CenteredControls } from "~web-components/basic-building-blocks";
 
+   
 export interface AddPasswordDomainOptions extends Attributes {}
 
 export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
@@ -69,6 +71,10 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         .filter( n => !!n )
   }
 
+  readonly showAdvancedDerivationField = new Observable<boolean>(false);
+  get showAdvancedDerivation() { return !!this.showAdvancedDerivationField.value }
+  set showAdvancedDerivation(value: boolean) { this.showAdvancedDerivationField.set(value) }
+
   readonly domainNamesField = new Observable<string>("");
   
   readonly prescribedDerivationOptionsJson = new Observable<string>();
@@ -120,66 +126,67 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
   }
 
 
-  // imageContainerDiv?: Div;
-  // faviconImage?: HTMLImageElement;
-
-
-  // private deriveImage = () => {
-  //   this.imageContainerDiv?.clear();
-  //   this.imageContainerDiv?.append(
-  //     new FavIcon({domain: this.derivedDomain})
-  //   );
-  // }
-
-
   render() {
+    const advancedInputCards: HTMLDivElement[] = [];
+
 
     super.render(
-      Div({class: layoutStyles.stretched_column_container, style: `padding-left: 10vw; padding-right: 10vw;`},
+      FormCard(
         Instructions(`
           The DiceKeys app derives passwords from your DiceKey and a set of options that restrict which sites can use the password.
           If you paste in the URL or domain name of the site you need a password for, this form will fill in the rest.
         `),
-        Label({class: styles.item_label},
-          Span({class: styles.label_span},"Enter the domain name or HTTPS URL of the application/service the password is for:"),
-          // Div({style: "display: flex; flex-direction: row"},
+        InputCard(
+          LabelAboveLeft(
+            "Enter the domain name or HTTPS URL of the application/service the password is for:", //),
             new PrescribedTextInput({
               style: `min-width: 40rem;`,
               observables: new PrescribedTextFieldObservables("urlOrDomainNames", {
                 actual: this.urlOrDomainNames
               })
             }),
-          // )
-        ),
-        Label({class: styles.item_label},
-          Span({class: styles.label_span},
+        )),
+        InputCard(
+          LabelAboveLeft(
             `The domain name(s) allowed to access the password, derived from the above field by default.
             Use the default value (in green) if at all possible.  If you customize this value and forget it, you will be unable to re-generate
             passwords.
-          `),
+          `,
           new PrescribedTextInput({
             style: `min-width: 50vw;`, observables: this.domainNamesFieldObservables
           }),
-        ),
-        Label({class: styles.item_label},
-          Span({class: styles.label_span},`The password derivation options that will be applied, derived from the above field by default.
+        )).withElement( e => { e.style.setProperty("display","none"); advancedInputCards.push(e) } ),
+        InputCard(
+          LabelAboveLeft(
+            `The password derivation options that will be applied, derived from the above field by default.
             Use the default value (in green) if at all possible.  If you customize this value and forget it, you will be unable to re-generate
             passwords.
-          `),
+          `,
           new PrescribedTextInput({
             style: `min-width: 50vw;`,
             observables: this.derivationOptionsFieldObservables,
           }),
+        )).withElement( e => { e.style.setProperty("display","none"); advancedInputCards.push(e) } ),
+          InputCard(
+          LabelAboveLeft(
+            `The name you will give to this new password type so that you can identify it in the passwords menu.
+            You can safely customize this value as it will not effect the value of the generated password.`,
+            new PrescribedTextInput({
+              style: `min-width: 50vw;`,
+              observables: this.nameFieldObservables,
+            }),
+          )
         ),
-        Label({},
-          Span({class: styles.label_span},`The name you will give to this new password type so that you can identify it in the passwords menu.
-          You can safely customize this value as it will not effect the value of the generated password.`),
-          new PrescribedTextInput({
-            style: `min-width: 50vw;`,
-            observables: this.nameFieldObservables,
-          }),
-        ),
-        Div({class: dialogStyles.decision_button_container},
+        CenteredControls(
+          Label({}, "Show advanced options",
+            Checkbox({
+              ...( this.showAdvancedDerivation ? {checked: "checked"} : {}),
+              events: events => events.click.on( () => {
+                this.showAdvancedDerivation = !this.showAdvancedDerivation;
+                advancedInputCards.forEach( card => card.style.setProperty("display", this.showAdvancedDerivation ? "flex" : "none") )
+              })
+            })
+          ),
           Button({value: "Cancel"}, "Cancel").with( e => {
             e.events.click.on( this.complete.send )
           }),
