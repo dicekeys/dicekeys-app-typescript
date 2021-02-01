@@ -30,9 +30,7 @@
   "dependencies": {
     "@dicekeys/dicekeys-api-js": "0.0.107",
     "@dicekeys/read-dicekey-js": "0.0.34",
-    "@dicekeys/seeded-crypto-js": "^0.1.32",
-    "@types/parcel-env": "0.0.0",
-    "madge": "^3.11.0"
+    "@dicekeys/seeded-crypto-js": "^0.1.32"
   },
   "browserslist": [
     "last 1 Chrome versions"
@@ -43,12 +41,14 @@
     "@types/jest": "^25.2.2",
     "@types/jsdom": "^16.2.4",
     "@types/node": "^14.6.4",
+    "@types/parcel-env": "0.0.0",
     "@types/w3c-image-capture": "^1.0.2",
     "autoprefixer": "^9.8.6",
     "canvas": "^2.6.1",
     "core-js": "^3.6.5",
     "jest": "^26.4.2",
     "jsdom": "^16.4.0",
+    "madge": "^3.11.0",
     "node-fetch": "^2.6.1",
     "nodemon": "^2.0.3",
     "parcel-bundler": "^1.12.4",

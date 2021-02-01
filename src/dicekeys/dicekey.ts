@@ -160,12 +160,19 @@ const getRandomDiceKey = (numberOfFaces: number = 6): DiceKey => {
 enum DiceKeyInHumanReadableFormType { _ = "" };
 export type DiceKeyInHumanReadableForm = DiceKeyInHumanReadableFormType & string;
 
+export const FaceInHumanReadableForm = (face: Face, includeOrientations: boolean = true): string => 
+  (face.letter ?? "?") +
+  (face.digit ?? "?") +
+  ( includeOrientations ? ( face.orientationAsLowercaseLetterTrbl ?? "?") : "" );
+
+export const FaceFromHumanReadableForm = (hrf: string, options?: {position?: number}): Face => ({
+  letter: FaceLetter(hrf[0], options),
+  digit: FaceDigit(hrf[1], options),
+  orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrblOrUnknown(hrf[2], options)
+})
+
 export const DiceKeyInHumanReadableForm = (diceKey: DiceKey, includeOrientations: boolean): DiceKeyInHumanReadableForm =>
-  diceKey.map( face =>
-    (face.letter ?? "?") +
-    (face.digit ?? "?") +
-    ( includeOrientations ? ( face.orientationAsLowercaseLetterTrbl ?? "?") : "" )
-  ).join("") as DiceKeyInHumanReadableForm
+  diceKey.map( face => FaceInHumanReadableForm(face, includeOrientations) ).join("") as DiceKeyInHumanReadableForm
 
 const diceKeyFromHumanReadableForm = (
   humanReadableForm: DiceKeyInHumanReadableForm,

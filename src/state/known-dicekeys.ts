@@ -1,7 +1,7 @@
 import { LocalStorageField } from "../web-component-framework/locally-stored-state";
 
 
-export const diceKeyIdToNicknameMap = new LocalStorageField<{[keyId: string]: string}>("DiceKeyIdToNickname");
+export const diceKeyIdToCenterFace = new LocalStorageField<{[keyId: string]: string}>("DiceKeyIdToCenterFace");
 
-export const appHasScannedADiceKeyBefore = () => Object.keys(diceKeyIdToNicknameMap.value ?? {}).length > 0;
+export const appHasScannedADiceKeyBefore = () => Object.keys(diceKeyIdToCenterFace.value ?? {}).length > 0;
 

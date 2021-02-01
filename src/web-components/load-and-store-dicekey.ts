@@ -5,7 +5,7 @@ import {
 } from "~/web-components/reading-dicekeys/load-dicekey";
 import { BackupNudge } from "./backups/backup-nudge";
 import { DiceKey } from "~dicekeys/dicekey";
-import { ConfigureDiceKey } from "./configure-dicekey";
+//import { ConfigureDiceKey } from "./configure-dicekey";
 
 
 export interface LoadAndStoreDiceKeyOptions extends LoadDiceKeyOptions {
@@ -61,17 +61,16 @@ export class LoadAndStoreDiceKey extends Component<LoadAndStoreDiceKeyOptions> {
         //   You have not yet made a backup of your DiceKey (at least, not using this app on this device).
         // `),
       )
-    } else if (
-      typeof diceKeyState.nickname === "undefined" ||
-      typeof diceKeyState.desiredPublicKeyCacheSize.value === "undefined"
-    ) {
-      this.append(
-        new ConfigureDiceKey({diceKey, diceKeyState}).with( e => {
-          e.completedEvent.on( () => {
-            this.renderSoon();
-          })
-       })
-      )
+    // } else if (
+    //   typeof diceKeyState.desiredPublicKeyCacheSize.value === "undefined"
+    // ) {
+    //   this.append(
+    //     new ConfigureDiceKey({diceKey, diceKeyState}).with( e => {
+    //       e.completedEvent.on( () => {
+    //         this.renderSoon();
+    //       })
+    //    })
+    //   )
     } else {
       this.completedEvent.send(appState.diceKey!);
       const desiredPublicKeyCacheSize = diceKeyState.desiredPublicKeyCacheSize.value;

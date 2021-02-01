@@ -4,9 +4,9 @@ import {
 import {
   SeededCryptoModuleWithHelpers,
 } from "@dicekeys/seeded-crypto-js";
-import {
-  diceKeyIdToNicknameMap
-} from "./known-dicekeys"
+// import {
+//   diceKeyIdToNicknameMap
+// } from "./known-dicekeys"
 import {
   PublicKeySet,
   PopulatePublicKeyCacheFn, populatePublicKeyCacheFnFactory
@@ -25,20 +25,20 @@ export class DiceKeyStateStore extends AppStateStore {
     this.populatePublicKeyCache = populatePublicKeyCacheFnFactory(this.seededCryptoModule,  this);
   }
 
-
-  public readonly nicknameField = this.addStringField("nickname");
+  public centerDieHumanReadableForm = this.addStringField("centerDie");
+//  public readonly nicknameField = this.addStringField("nickname");
   public readonly desiredPublicKeyCacheSize = this.addField<number>("desiredPublicKeyCacheSize");
-  public get nickname() { return this.nicknameField.value }
-  public set nickname(newNickname: string | undefined) {
-    this.nicknameField.set(newNickname);
-    const newMap = diceKeyIdToNicknameMap.value ?? {};
-    if (newNickname != null) {
-      newMap[this.keyId] = newNickname
-    } else {
-      delete newMap[this.keyId];
-    }
-    diceKeyIdToNicknameMap.set(newMap);
-  }
+  // public get nickname() { return this.nicknameField.value }
+  // public set nickname(newNickname: string | undefined) {
+  //   this.nicknameField.set(newNickname);
+  //   const newMap = diceKeyIdToNicknameMap.value ?? {};
+  //   if (newNickname != null) {
+  //     newMap[this.keyId] = newNickname
+  //   } else {
+  //     delete newMap[this.keyId];
+  //   }
+  //   diceKeyIdToNicknameMap.set(newMap);
+  // }
   public readonly publicKeySetField = this.addField<PublicKeySet>("publicKeySet");
   public get publicKeySet() { return this.publicKeySetField?.value }
   public set publicKeySet(value: PublicKeySet | undefined) { this.publicKeySetField?.set(value) }
