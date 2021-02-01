@@ -6,7 +6,11 @@ import {
 } from "../../web-component-framework";
 
 import { getRegisteredDomain } from "~domains/get-registered-domain";
-import { addStoredPasswordConsumer, PasswordConsumerType, passwordDerivationOptionsJson } from "~dicekeys/password-consumers";
+import {
+  addStoredPasswordConsumer,
+  //, PasswordConsumerType,
+  passwordDerivationOptionsJson
+} from "~dicekeys/password-consumers";
 import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
 import {
   FormCard,
@@ -45,7 +49,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
   add = () => {
     if (!this.isValidToSubmit.value || !this.name.value || ! this.derivationOptionsJson.value) return;
     addStoredPasswordConsumer({
-      type: PasswordConsumerType.UserEntered,
+      // type: PasswordConsumerType.UserEntered,
       name: this.name.value,
       derivationOptionsJson: this.derivationOptionsJson.value
     });

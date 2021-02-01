@@ -4,7 +4,8 @@ import layoutStyles from "../layout.module.css";
 import {
   Component, Attributes,
   ComponentEvent,
-  InputButton, Div, Label, Select, Option, Observable, OptGroup, TextInput
+  InputButton, Div, Label, Select, Option, Observable,// OptGroup,
+  TextInput
 } from "../../web-component-framework";
 import {
   DiceKeySvg
@@ -17,8 +18,8 @@ import {
 } from "../../dicekeys/dicekey";
 import {
   getPasswordConsumers,
-  getPasswordConsumersGroupedByType,
-  PasswordConsumerType
+  // getPasswordConsumersGroupedByType,
+  // PasswordConsumerType
 } from "../../dicekeys/password-consumers";
 import {
   ComputeApiCommandWorker
@@ -29,9 +30,9 @@ import {
 import {
   DisplayPassword
 } from "./password-field"
-import {
-  describePasswordConsumerType
-} from "../../phrasing/ui";
+// import {
+//   describePasswordConsumerType
+// } from "../../phrasing/ui";
 import { AddPasswordDomain } from "./add-password-domain";
 import { PasswordJson } from "@dicekeys/seeded-crypto-js";
 import { VerifyDiceKey } from "../backups/verify-dicekey";
@@ -135,20 +136,22 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
             Label({class: styles.create_password_for_label}, "Create a password for ",
               Select({value: "default"},
                 Option({}),
-                getPasswordConsumersGroupedByType().map( ([groupType, consumers]) => 
-                  OptGroup({label: describePasswordConsumerType(groupType)},
-                    ...consumers.map( pwm => 
-                        Option({value: pwm.name},
+                getPasswordConsumers().map( //([groupType, consumers]) => 
+  //                OptGroup({label: describePasswordConsumerType(groupType)},
+//                    ...consumers.map( pwm => 
+                        ({name}) =>
+                        Option({value: name},
                           // Option doesn't support images, but on platforms where it does...
                           // new FavIcon({domain: 
                           //   DerivationOptions(pwm.derivationOptionsJson).allow?.map( x => x.host ) ?? []
                           // }),
-                          pwm.name) ),
-                    ...groupType !== PasswordConsumerType.UserEntered ? [] : [
+                          name)
+                  ),
+//                    ...groupType !== PasswordConsumerType.UserEntered ? [] : [
                       Option({value: keyAddNewPassword}, "Add new")
-                    ]
-                  )
-                )
+//                    ]
+//                  )
+//                )
               ).with( select => {
                 select.events.change.on( () => this.onPasswordManagerSelectChanged(select.primaryElement.value ))
               })
