@@ -1,0 +1,16 @@
+{
+  "applinks": {
+      "details": [
+           {
+             "appIDs": [ "com.dicekeys" ],
+             "components": [
+               {
+                  "/": "/",
+                  "?": { "command": "?*" },
+                  "comment": "Matches any URL with a command"
+               }
+             ]
+           }
+       ]
+   },
+}
