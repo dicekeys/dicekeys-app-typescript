@@ -1,6 +1,6 @@
 
 const deepCanonicalizeObjectFieldOrder = <T>(item: T): T =>
-  item instanceof ArrayBuffer || item instanceof Uint8Array || item instanceof Uint8ClampedArray || item instanceof Uint32Array || item instanceof BigUint64Array ?
+  item instanceof ArrayBuffer || item instanceof Uint8Array || item instanceof Uint8ClampedArray || item instanceof Uint32Array || (typeof BigUint64Array != "undefined" && item instanceof BigUint64Array) ?
     item :
   Array.isArray(item) ?
       // copy array, processing each item recursively
