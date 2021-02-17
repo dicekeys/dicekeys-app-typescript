@@ -346,19 +346,10 @@ export function rotateToRotationIndependentForm<F extends Face = Face>(
   return rotationIndependentDiceKey;
 }
 
-// const applyDerivationOptions = (
-//   diceKey: DiceKey,
-//   derivationOptions: DerivationOptions | string
-// ): DiceKey => {
-//   return (DerivationOptions(derivationOptions).excludeOrientationOfFaces) ?
-//     removeOrientations(diceKey) :
-//     diceKey;
-// }
-
 /**
- * Create a seed string from a DiceKey and a set of derivation options.
+ * Create a seed string from a DiceKey and a recipe in JSON format.
  * 
- * If the derivation options specify `"excludeOrientationOfFaces": true`, then
+ * If the recipe specifies `"excludeOrientationOfFaces": true`, then
  * the first step will remove all orientations from the DiceKey.
  * 
  * The second step is to rotate the DiceKey to canonical orientation. Since
@@ -371,13 +362,12 @@ export function rotateToRotationIndependentForm<F extends Face = Face>(
  * 
  * 
  * @param diceKey 
- * @param derivationOptions 
+ * @param recipeObject 
  */
 const toSeedString = (
   diceKey: DiceKey,
   includeOrientations: boolean
 ): DiceKeyInHumanReadableForm => {
-//  const preCanonicalDiceKey: DiceKey = applyDerivationOptions(diceKey, derivationOptionsObjectOrJson);
   const canonicalDiceKey = rotateToRotationIndependentForm(diceKey, includeOrientations); 
   const humanReadableForm = DiceKeyInHumanReadableForm(canonicalDiceKey, includeOrientations);
   return humanReadableForm;
@@ -392,6 +382,5 @@ DiceKey.rotateToRotationIndependentForm = rotateToRotationIndependentForm;
 DiceKey.toStringOf25Triples = DiceKeyInHumanReadableForm;
 DiceKey.removeOrientations = removeOrientations;
 DiceKey.toSeedString = toSeedString;
-//DiceKey.applyDerivationOptions = applyDerivationOptions;
 DiceKey.cornerIndexesClockwise = [0, 4, 24, 20] as const;
 DiceKey.cornerIndexSet = new Set<number>(DiceKey.cornerIndexesClockwise);

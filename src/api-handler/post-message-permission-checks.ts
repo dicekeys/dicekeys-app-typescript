@@ -68,24 +68,24 @@ export const throwIfHostNotPermitted = (host: string) => {
     const {recipe, unsealingInstructions} = extraRequestRecipeAndInstructions(request);
 
     if (request.command === Command.getSealingKey && !request.recipe) {
-      // There's no derivation options to check since the request is for a global sealing key
+      // There's no recipe to check since the request is for a global sealing key
       // that can be used with unsealingInstructions to restrict who can decrypt it.
       return
     }
     
-    const allowFromDerivationOptions = Recipe(recipe).allow;
+    const allowFieldFromRecipe = Recipe(recipe).allow;
     const allowFromUnsealingInstructions = UnsealingInstructions(unsealingInstructions).allow;
 
     // Unsealing operations have two possible allow lists, both embedded in the packageSealedMessage parameter:
-    //   - like all other operations, an allow list may be placed in derivation options.
+    //   - like all other operations, an allow list may be placed in recipe.
     //   = unique to these operations, an allow list may be placed in the unsealing instructions.
-    if (!allowFromDerivationOptions && !(request.command === Command.unsealWithUnsealingKey && allowFromUnsealingInstructions)) {
+    if (!allowFieldFromRecipe && !(request.command === Command.unsealWithUnsealingKey && allowFromUnsealingInstructions)) {
       throw new Exceptions.ClientNotAuthorizedException(
         `The recipe must have an allow clause.`
       );
     }
-    if (allowFromDerivationOptions) {
-      throwIfNotOnAllowList(allowFromDerivationOptions)
+    if (allowFieldFromRecipe) {
+      throwIfNotOnAllowList(allowFieldFromRecipe)
     } 
     if (request.command === Command.unsealWithUnsealingKey && allowFromUnsealingInstructions) {
       throwIfNotOnAllowList(allowFromUnsealingInstructions)

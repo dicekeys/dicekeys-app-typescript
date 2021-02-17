@@ -9,7 +9,7 @@ import {
 } from "../api-handler/handle-api-request";
 // import {
 //   ApiCommandParameters,
-//   SeedStringAndDerivationOptionsForApprovedApiCommand
+//   SeedStringAndrecipeObjectForApprovedApiCommand
 // } from "../api-handler/permission-checked-seed-accessor";
 /**
  * Represent an application step that is awaiting completion as a promise
@@ -127,21 +127,3 @@ export const enterDiceKey = new StepState<DiceKey, undefined>();
  * A step for obtaining user's consent.
  */
 export const getUsersConsent = new StepState<ConsentResponse, ApiRequestContext>();
-
-// /**
-//  * A step for the user modifying derivation options
-//  */
-// export const getUsersApprovedDerivationOptions =
-//   new StepState<
-//     UsersApprovedSeedAndDerivationOptions,
-//     UsersApprovalAndModificationOfDerivationOptionsParameters
-//   >();
-
-  /**
- * A step for completing an API command
- */
-// export const apiCommand =
-// new StepState<
-//   void,
-//   ApiRequestContext
-// >();

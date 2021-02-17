@@ -17,7 +17,7 @@ const commandsRequiringMay = [
 
 describe ("API Permission Checks", () => {
     for (const command of commandsRequiringMay) {
-      test (`Cannot ${command} unless clientMayRetrieveKey derivation option set`, () => {
+      test (`Cannot ${command} unless clientMayRetrieveKey recipe field set to true`, () => {
         expect( () => throwIfClientMayNotRetrieveKey({
           command,
           recipe: JSON.stringify(Recipe({
@@ -27,7 +27,7 @@ describe ("API Permission Checks", () => {
     }
 
     for (const command of commandsRequiringMay) {
-      test (`Can ${command} if clientMayRetrieveKey derivation option set`, () => {
+      test (`Can ${command} if clientMayRetrieveKey recipe field set to true`, () => {
         throwIfClientMayNotRetrieveKey({
           command,
           recipe: JSON.stringify(Recipe({

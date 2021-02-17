@@ -8,7 +8,7 @@ import "regenerator-runtime/runtime";
 
 import {
   ProofOfPriorDerivationModule
-} from "../api-handler/mutate-derivation-options"
+} from "../api-handler/mutate-recipe"
 
 /**
  * A request to process an image frame while scanning dicekeys

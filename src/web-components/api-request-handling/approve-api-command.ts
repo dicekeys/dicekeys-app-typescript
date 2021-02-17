@@ -53,7 +53,7 @@ import { PasswordJson } from "@dicekeys/seeded-crypto-js";
 import { DICEKEY } from "../../web-components/dicekey-styled";
 import {
   mayRecipeBeModified
-} from "../../api-handler/mutate-derivation-options";
+} from "../../api-handler/mutate-recipe";
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
 // had a legitimate reason to, removing orientations make it easier and more reliable.
@@ -75,7 +75,7 @@ export interface ApproveApiCommandOptions extends Attributes {
 
 export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
 
-//  private readonly derivationOptionsInOriginalRequest: Recipe;
+//  private readonly recipeObjectInOriginalRequest: Recipe;
   private excludeOrientationOfFaces?: boolean;
   private seedHint?: string;
 
@@ -95,12 +95,12 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     const requestContext = this.options.requestContext;
     const request = requestContext.request;
     const {recipe} = extraRequestRecipeAndInstructions(request);
-    const derivationOptions = Recipe(recipe);
+    const recipeObject = Recipe(recipe);
     this.mayRecipeBeModified = mayRecipeBeModified(request);
 
     // Components of derivation that can be modified
-    this.excludeOrientationOfFaces = derivationOptions.excludeOrientationOfFaces;
-    this.seedHint = derivationOptions.seedHint;
+    this.excludeOrientationOfFaces = recipeObject.excludeOrientationOfFaces;
+    this.seedHint = recipeObject.seedHint;
 
     // Kick of computation of initial values calculated by workers.
     ApproveApiCommand.computeApiCommandWorker.calculate({
@@ -158,7 +158,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
   //   for (var i=2; i <= letterCount; i++) fromLetters *= i;
   //   const fromDigits = 6 ** 25;
   //   const fromOrientations: number = 
-  //     this.derivationOptions.excludeOrientationOfFaces ? 1 :
+  //     this.recipeObject.excludeOrientationOfFaces ? 1 :
   //     4 ** 25;
   //   return fromLetters * fromDigits * fromOrientations;
   // }

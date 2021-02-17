@@ -26,15 +26,15 @@ export const mayRecipeBeModified = (
 
 
   /**
- * Test if derivation options contain a `"proofOfPriorDerivation": "true"`indicating
+ * Test if the recipe contains a `"proofOfPriorDerivation": "true"`indicating
  * that the recipe should be modified to contain such proof.
  * 
- * @param derivationOptionsOrJson 
+ * @param recipe 
  */
 export const isProofOfPriorDerivationRequired = (
-  derivationOptionsOrJson: Recipe | string
+  recipe: Recipe | string
 ): boolean =>
-  Recipe(derivationOptionsOrJson).proofOfPriorDerivation === ""
+  Recipe(recipe).proofOfPriorDerivation === ""
 
 
 export class ProofOfPriorDerivationModule {
@@ -56,13 +56,13 @@ export class ProofOfPriorDerivationModule {
  * using these Recipe before.
  * 
  * @param seedString 
- * @param derivationOptions 
+ * @param recipe 
  */
   protected generate = (
     seedString: string,
-    derivationOptions: Recipe
+    recipe: Recipe
   ): string => {
-    const copyOfRecipe = {...derivationOptions};
+    const copyOfRecipe = {...recipe};
     copyOfRecipe.proofOfPriorDerivation = "";
     const recipeToAddProofTo = jsonStringifyWithSortedFieldOrder(copyOfRecipe);
     const firstHash = this.seededCryptoModule.Recipe.derivePrimarySecret(
@@ -83,22 +83,22 @@ export class ProofOfPriorDerivationModule {
    * the seedString.
    * 
    * @param seedString The seed string used to derive a key or secret.
-   * @param derivationOptionsOrJson Derivation options in either JSON format or
+   * @param recipe Recipe in either JSON format or
    * as JSON already parsed into a JavaScript object. 
    */
   addToRecipeJson = (
     seedString: string,
-    derivationOptionsOrJson: Recipe | string
+    recipeObjOrJsonString: Recipe | string
   ): string => {
-    // Once the proof is provided, the derivation options become immutable
+    // Once the proof is provided, the recipe becomes immutable
     // since any change will invalidate the proof field.  So, remove any
     // [mutable] field from the [Recipe]
-    const derivationOptions =
-      Recipe(derivationOptionsOrJson);
-    // Set the proofOfPriorDerivation to a MAC derived from the derivation options.
+    const recipe =
+      Recipe(recipeObjOrJsonString);
+    // Set the proofOfPriorDerivation to a MAC derived from the recipe.
     return jsonStringifyWithSortedFieldOrder({
-      ...derivationOptions,
-      proofOfPriorDerivation: this.generate(seedString, derivationOptions)
+      ...recipe,
+      proofOfPriorDerivation: this.generate(seedString, recipe)
     });
   }
 
@@ -108,20 +108,20 @@ export class ProofOfPriorDerivationModule {
    * field against a hash of the Recipe and the SeedString.
    * 
    * @param seedString 
-   * @param derivationOptionsOrJson 
+   * @param recipe 
    */
   verify = (
     seedString: string,
-    derivationOptionsOrJson: Recipe | string
+    recipeObjOrJsonString: Recipe | string
   ): boolean => {
-    const derivationOptions = Recipe(derivationOptionsOrJson);
-    const {proofOfPriorDerivation} = derivationOptions;
+    const recipe = Recipe(recipeObjOrJsonString);
+    const {proofOfPriorDerivation} = recipe;
 
     if (proofOfPriorDerivation == null) {
       return false;
     }
     const reDerivedProofOfPriorDerivation =
-      this.generate(seedString, derivationOptions);
+      this.generate(seedString, recipe);
 
     return proofOfPriorDerivation === reDerivedProofOfPriorDerivation;
   }

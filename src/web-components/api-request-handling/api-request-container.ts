@@ -66,7 +66,7 @@ export interface ApiRequestOptions extends Attributes {
 export class ApiRequestContainer extends Component<ApiRequestOptions> {
   protected messageElementId = this.uniqueNodeId("message");
 
-  public readonly derivationOptions: Recipe;
+  public readonly recipeObject: Recipe;
   private areRecipeVerified: boolean | undefined;
   private static verifyRecipeWorker = new VerifyRecipeWorker();
 
@@ -91,12 +91,12 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
     super(options);
     this.addClass(layoutStyles.stretched_column_container);
     const {recipe} = extraRequestRecipeAndInstructions(this.options.requestContext.request);
-    this.derivationOptions = Recipe(recipe);
-    if (this.derivationOptions.proofOfPriorDerivation) {
+    this.recipeObject = Recipe(recipe);
+    if (this.recipeObject.proofOfPriorDerivation) {
       // Once the diceKey is available, calculate if the proof of prior derivation is valid
       EncryptedCrossTabState.instance?.diceKeyField.observe( async (diceKey) => {
         if (diceKey) {
-          const seedString = DiceKey.toSeedString(diceKey, !this.derivationOptions.excludeOrientationOfFaces);
+          const seedString = DiceKey.toSeedString(diceKey, !this.recipeObject.excludeOrientationOfFaces);
           const {verified} = await ApiRequestContainer.verifyRecipeWorker.calculate({seedString, recipe});
           this.areRecipeVerified = verified;
           this.renderSoon();

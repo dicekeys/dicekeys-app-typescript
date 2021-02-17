@@ -141,10 +141,6 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
 //                    ...consumers.map( pwm => 
                         ({name}) =>
                         Option({value: name},
-                          // Option doesn't support images, but on platforms where it does...
-                          // new FavIcon({domain: 
-                          //   DerivationOptions(pwm.derivationOptionsJson).allow?.map( x => x.host ) ?? []
-                          // }),
                           name)
                   ),
 //                    ...groupType !== PasswordConsumerType.UserEntered ? [] : [
@@ -158,10 +154,10 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
             )
           ),
           Div({class: layoutStyles.centered_column},
-            TextInput({class: styles.derivation_options_input}).with( e => {
-              this.recipeJson.observe( ( newDerivationOptionsJson => {
-                e.primaryElement.style.setProperty("visibility", newDerivationOptionsJson && newDerivationOptionsJson.length > 0 ? "visible" : "hidden");
-                e.value = newDerivationOptionsJson ?? "";
+            TextInput({class: styles.recipe_input}).with( e => {
+              this.recipeJson.observe( ( newRecipe => {
+                e.primaryElement.style.setProperty("visibility", newRecipe && newRecipe.length > 0 ? "visible" : "hidden");
+                e.value = newRecipe ?? "";
               })) 
             })
           ),

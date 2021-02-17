@@ -35,22 +35,10 @@ export interface PasswordConsumer extends
   PasswordConsumerContentInjectionParameters
 {
   name: string;
-//  type: PasswordConsumerType
 }
 
-export const passwordDerivationOptionsJson = (hostOrHosts: SingletonOrArrayOf<string>) => 
+export const passwordRecipeJson = (hostOrHosts: SingletonOrArrayOf<string>) => 
   restrictionsJson(asArray(hostOrHosts));
-
-// export const passwordDerivationOptionsJsonObj = (domains: SingletonOrArrayOf<string>) => ({
-//   derivationOptionsJson: passwordDerivationOptionsJson(domains)
-// });
-
-// const defaultPasswordManagerSecurityParameters = (
-//   ...domains: string[]
-// ): PasswordConsumerSecurityParameters => ({
-//   ...passwordDerivationOptionsJsonObj(domains),
-// });
-
 
 const defaultPasswordConsumerList: PasswordConsumer[] = DerivationRecipeTemplateList
   .filter( r => r.type == "Password" )
@@ -58,81 +46,6 @@ const defaultPasswordConsumerList: PasswordConsumer[] = DerivationRecipeTemplate
     name: name,
     recipe: recipeJson  
 }) )
-//   {
-//     name: "1Password",
-//     type: PasswordConsumerType.PasswordManager,
-
-//     ...defaultPasswordManagerSecurityParameters("1password.com"),
-
-//     masterPasswordFieldSelector: "#master-password, #custom-master-password",
-//     masterPasswordConfirmationFieldSelector: "confirm-master-password",
-//     hintFieldSelector: undefined,
-//   },
-//   {
-//     name: "Apple",
-//     type: PasswordConsumerType.IdentityProvider,
-//     ...defaultPasswordManagerSecurityParameters("apple.com"),
-//   },
-//   {
-//     name: "Authy",
-//     type: PasswordConsumerType.AuthenticatorApp,
-
-//     ...defaultPasswordManagerSecurityParameters("authy.com"),
-//   },
-//   {
-//     name: "Bitwarden",
-//     type: PasswordConsumerType.PasswordManager,
-
-//     ...defaultPasswordManagerSecurityParameters("bitwarden.com"),
-
-//     masterPasswordFieldSelector: "#masterPassword",
-//     masterPasswordConfirmationFieldSelector: "#masterPasswordRetype",
-//     hintFieldSelector: "#hint",
-//   },
-//   {
-//     name: "Facebook",
-//     type: PasswordConsumerType.IdentityProvider,
-
-//     ...defaultPasswordManagerSecurityParameters("facebook.com"),
-//   },
-//   {
-//     name: "Google",
-//     type: PasswordConsumerType.IdentityProvider,
-
-//     ...defaultPasswordManagerSecurityParameters("google.com"),
-//   },
-//   {
-//     name: "Keeper",
-//     type: PasswordConsumerType.PasswordManager,
-
-//     ...defaultPasswordManagerSecurityParameters("keepersecurity.com", "keepersecurity.eu"),
-//     masterPasswordRuleCompliancePrefix: "A1! ",
-
-//     elementToAugmentSelector: `.password > label`,
-//     masterPasswordFieldSelector: `input[type='password'][name='pass'], input[type='text'][name='pass'], textarea[name='master_pass']`,
-//     // masterPasswordConfirmationFieldSelector: undefined, // no confirmation field in this UX
-//     // hintFieldSelector: undefined, // no hint interface in this UX
-//   },
-//   {
-//     name: "LastPass",
-//     type: PasswordConsumerType.PasswordManager,
-
-//     ...defaultPasswordManagerSecurityParameters("lastpass.com"),
-//     masterPasswordRuleCompliancePrefix: "A1! ",
-
-//     elementToAugmentSelector: `input[name='password'] + label`,
-//     masterPasswordFieldSelector: "#masterpassword, input:not(.VK_no_animate)[name='password']",
-//     masterPasswordConfirmationFieldSelector: "#confirmmpw",
-//     hintFieldSelector: "#passwordreminder",
-//   },
-//   {
-//     name: "Microsoft",
-//     type: PasswordConsumerType.IdentityProvider,
-
-//     ...defaultPasswordManagerSecurityParameters("microsoft.com","live.com"),
-//   }
-// ]
-
 
 const passwordConsumersStorageKey = "dicekeys:password-consumers.ts:PasswordConsumers"
 const getStoredPasswordConsumers = (): PasswordConsumer[] => {

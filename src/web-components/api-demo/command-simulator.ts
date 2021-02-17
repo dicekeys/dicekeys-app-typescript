@@ -38,7 +38,7 @@ import {
   ParameterCard,
   ResultTextBlock, FnCall, InputVar, TemplateString, UrlParameter, ResultLabel
 } from "./basic-api-demo-components";
-import { commandRequiresDerivationOptionOfClientMayRetrieveKey, requestHasRecipeParameter, SeededCryptoObjectResponseParameterNames } from "@dicekeys/dicekeys-api-js/dist/api-calls";
+import { commandRequiresRecipeToSetClientMayRetrieveKey, requestHasRecipeParameter, SeededCryptoObjectResponseParameterNames } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import {
   mutateRequest
 } from "~api-handler/mutate-request";
@@ -108,7 +108,7 @@ export class CommandSimulator<
   readonly seedString: PrescribedTextFieldObservables<string, typeof ApiRequestWithSeedParameterNames.seedString>;
   readonly respondTo: PrescribedTextFieldObservables<string, typeof UrlRequestMetadataParameterNames.respondTo>;
 
-  readonly recipe: PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.recipe>;
+  readonly recipe: PrescribedTextFieldObservables<string, typeof ApiCalls.RecipeFunctionParameterNames.recipe>;
   readonly recipeMayBeModified:  Observable<boolean | undefined>;
 
   messageString: PrescribedTextFieldObservables<string, "messageString">;
@@ -180,16 +180,16 @@ export class CommandSimulator<
 
     this.responseObject = options.outputs?.responseObject ?? new Observable<ApiCalls.ResponseForCommand<COMMAND> | ApiCalls.ExceptionResponse | undefined>();
 
-    this.recipe = new PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.recipe>(
-      ApiCalls.DerivationFunctionParameterNames.recipe, {
+    this.recipe = new PrescribedTextFieldObservables<string, typeof ApiCalls.RecipeFunctionParameterNames.recipe>(
+      ApiCalls.RecipeFunctionParameterNames.recipe, {
         formula: Formula("recipe", "string", 
           '`{(',
-          ...(commandRequiresDerivationOptionOfClientMayRetrieveKey(this.command) ? [`"clientMayRetrieveKey":true,`] : []),
+          ...(commandRequiresRecipeToSetClientMayRetrieveKey(this.command) ? [`"clientMayRetrieveKey":true,`] : []),
           ...(this.command === "getSecret" ? [`"lengthInBytes="`, TemplateInputVar("lengthInBytes"), `",`] : []),
           ...(this.authorizedDomains.value?.length ?? 0 > 0 ? [`"allow":[{"host":"*.`, TemplateInputVar("authorizedDomains[i]"), `"}]}'`] : []),
         )
     });
-    // Update derivation options based on domains.
+    // Update recipe based on domains.
     this.authorizedDomains.observe( this.updatePrescribedRecipeJson );
     this.lengthInBytes?.observe( this.updatePrescribedRecipeJson );
 
@@ -254,7 +254,7 @@ export class CommandSimulator<
     );
 
     const requestUrlFormula: Appendable = Formula('requestUrl', "string",
-      `\`https://dicekeys.app?`,
+      `\`https://dicekeys.app/?`,
       UrlParameter("command", command),
       ...(this.parameterNames.map( (parameterName): Appendable =>
         ((parameterName === "recipe" || parameterName === "recipeMayBeModified") && this.options.getGlobalSealingKey) ? [] : [
@@ -395,13 +395,13 @@ export class CommandSimulator<
         throwIfUrlNotPermitted(respondToUrl.host, respondToUrl.pathname, false);
         throwIfClientMayNotRetrieveKey(request);
         if (requestHasRecipeParameter(request)) {
-          const derivationOptions = Recipe(request.recipe);
+          const recipeObject = Recipe(request.recipe);
           request = await mutateRequest({
             seedString,
             request,
             // Add a unique id for sealing keys that have no restrictions that would limit anyone
             // from unsealing them, as having a single key would make users linkable
-            addUniqueId: request.command === ApiCalls.Command.getSealingKey && !derivationOptions.allow
+            addUniqueId: request.command === ApiCalls.Command.getSealingKey && !recipeObject.allow
           });
         }
         const responseObject = await new ComputeApiCommandWorker().calculate({seedString, request});
@@ -425,7 +425,7 @@ export class CommandSimulator<
 
   get requiresRecipeJson(): boolean {
     return !!this.command &&
-      ApiCalls.DerivationFunctionParameterNames.recipe in ApiCalls.ParameterNames[this.command];
+      ApiCalls.RecipeFunctionParameterNames.recipe in ApiCalls.ParameterNames[this.command];
   }
 
   get requiresMessage(): boolean { return this.command === ApiCalls.Command.sealWithSymmetricKey };
@@ -434,7 +434,7 @@ export class CommandSimulator<
            this.command === ApiCalls.Command.unsealWithSymmetricKey;
   }
   get requiresClientMayRetrieveKey(): boolean {
-    return !!this.command && ApiCalls.commandRequiresDerivationOptionOfClientMayRetrieveKey(this.command);
+    return !!this.command && ApiCalls.commandRequiresRecipeToSetClientMayRetrieveKey(this.command);
   }
 
   commandHasParameter = (parameterName: string): boolean =>
@@ -470,7 +470,7 @@ export class CommandSimulator<
         ),
 
         //
-        // Derivation options
+        // Recipe
         //
         ...((this.command === ApiCalls.Command.unsealWithSymmetricKey || this.command === ApiCalls.Command.unsealWithUnsealingKey) ?
           [
@@ -482,14 +482,14 @@ export class CommandSimulator<
           (this.command === ApiCalls.Command.getSealingKey && this.options.getGlobalSealingKey) ? [
             ParameterCard(
               Instructions( 
-                `Calls to `, FnCallName("getSealingKey"),` normally take a `, InputVar(ApiCalls.DerivationFunctionParameterNames.recipe),`
+                `Calls to `, FnCallName("getSealingKey"),` normally take a `, InputVar(ApiCalls.RecipeFunctionParameterNames.recipe),`
                 parameter with an <i>allow</i> field restricting which applications/services may use the derived key. Such requests require
                 the user to get access to their `, DICEKEY(), ` to derive the new key.
               `),
               Instructions(`
                 To instead get a global sealing key, which the user may have pre-derived and have available without accessing their `, DICEKEY(), `
                 do not pass the `,
-                InputVar(ApiCalls.DerivationFunctionParameterNames.recipe),
+                InputVar(ApiCalls.RecipeFunctionParameterNames.recipe),
                 ` parameter.  The `, DICEKEYS() ,` App may use an existing key with a pre-chosen recipe.
                 In this example, we assume it derived multiple keys with different uniqueId fields to ensure keys are not linkable.`
               ),

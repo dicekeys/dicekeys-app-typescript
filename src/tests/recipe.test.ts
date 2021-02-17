@@ -3,7 +3,7 @@ import {
 } from "@dicekeys/dicekeys-api-js";
 import {
   ProofOfPriorDerivationModule
-} from "../api-handler/mutate-derivation-options";
+} from "../api-handler/mutate-recipe";
 import {
   jsonStringifyWithSortedFieldOrder
 } from "../api-handler/json"
@@ -17,7 +17,7 @@ const someRecipe = Recipe({
   someExtraSalt: "totally"
 });
 
-describe ("Derivation options ", () => {
+describe ("Recipe ", () => {
 
   test ("Should verify if unchanged", async () => {
     const proofOfDerivation = await ProofOfPriorDerivationModule.instancePromise;

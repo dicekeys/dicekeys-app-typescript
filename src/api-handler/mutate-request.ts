@@ -31,35 +31,35 @@ export const mutateRequest = async <REQUEST extends ApiCalls.ApiRequestObject>({
   if (!ApiCalls.requestHasRecipeParameter(request)) {
     return request;
   }
-  const derivationOptions = Recipe(request.recipe);
+  const recipe = Recipe(request.recipe);
   if (request.recipe !== "" && !request.recipeMayBeModified) {
     return request;
   }
 
   if (excludeOrientationOfFaces) {
-    derivationOptions.excludeOrientationOfFaces = true;
+    recipe.excludeOrientationOfFaces = true;
   } else if (excludeOrientationOfFaces === false) {
-    delete derivationOptions.excludeOrientationOfFaces;
+    delete recipe.excludeOrientationOfFaces;
   }
 
   if (seedHint) {
-    derivationOptions.seedHint = seedHint;
+    recipe.seedHint = seedHint;
   } else {
-    delete derivationOptions.seedHint;
+    delete recipe.seedHint;
   }
 
   if (addUniqueId) {
-    (derivationOptions as {uniqueId: string}).uniqueId = urlSafeBase64Encode(getRandomBytes(8))
+    (recipe as {uniqueId: string}).uniqueId = urlSafeBase64Encode(getRandomBytes(8))
   }
 
-  if (derivationOptions.proofOfPriorDerivation === "") {
+  if (recipe.proofOfPriorDerivation === "") {
     return {...request,
       recipe: (await addRecipeProofWorker.calculate({
           seedString,
-          recipe: jsonStringifyWithSortedFieldOrder(derivationOptions),
+          recipe: jsonStringifyWithSortedFieldOrder(recipe),
         })).recipe
     };
   } else {
-    return {...request, recipe: jsonStringifyWithSortedFieldOrder(derivationOptions)};
+    return {...request, recipe: jsonStringifyWithSortedFieldOrder(recipe)};
   }
 }

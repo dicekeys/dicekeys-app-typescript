@@ -9,7 +9,7 @@ import { getRegisteredDomain } from "~domains/get-registered-domain";
 import {
   addStoredPasswordConsumer,
   //, PasswordConsumerType,
-  passwordDerivationOptionsJson
+  passwordRecipeJson
 } from "~dicekeys/password-consumers";
 import { Recipe } from "@dicekeys/dicekeys-api-js";
 import {
@@ -81,7 +81,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
 
   readonly domainNamesField = new Observable<string>("");
   
-  readonly prescribedDerivationOptionsJson = new Observable<string>();
+  readonly prescribedRecipeJson = new Observable<string>();
   readonly recipeJson = new Observable<string>("");
 
   readonly prescribedName = new Observable<string>("");
@@ -94,9 +94,9 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
     prescribed: this.prescribedDomainNames
   });
 
-  readonly derivationOptionsFieldObservables = new PrescribedTextFieldObservables('derivation options', {
+  readonly recipeObjectFieldObservables = new PrescribedTextFieldObservables('recipe', {
     actual: this.recipeJson,  
-    prescribed: this.prescribedDerivationOptionsJson
+    prescribed: this.prescribedRecipeJson
   })
 
   readonly nameFieldObservables = new PrescribedTextFieldObservables('name', {
@@ -116,7 +116,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
 
       this.domainNamesField.observe( () => {
         const domainNames = this.domainNamesInDomainNamesField;
-        this.prescribedDerivationOptionsJson.set(passwordDerivationOptionsJson(domainNames));
+        this.prescribedRecipeJson.set(passwordRecipeJson(domainNames));
         this.prescribedName.set( domainNames.length === 0 ? "" :
           (domainNames[0].split(".")[0]?.charAt(0) ?? "").toLocaleUpperCase() +
           (domainNames[0].split(".")[0]?.substr(1) ?? "")
@@ -162,13 +162,13 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         )).withElement( e => { e.style.setProperty("display","none"); advancedInputCards.push(e) } ),
         InputCard(
           LabelAboveLeft(
-            `The password derivation options that will be applied, derived from the above field by default.
+            `The recipe that will be applied, derived from the above field by default.
             Use the default value (in green) if at all possible.  If you customize this value and forget it, you will be unable to re-generate
             passwords.
           `,
           new PrescribedTextInput({
             style: `min-width: 50vw;`,
-            observables: this.derivationOptionsFieldObservables,
+            observables: this.recipeObjectFieldObservables,
           }),
         )).withElement( e => { e.style.setProperty("display","none"); advancedInputCards.push(e) } ),
           InputCard(

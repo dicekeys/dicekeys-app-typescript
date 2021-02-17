@@ -68,9 +68,9 @@ export const shortDescribeCommandsAction = (
 export const describeCommandsAction = (
   command: ApiCalls.Command,
   host: string,
-  areDerivationOptionsSigned: boolean
+  arerecipeObjectSigned: boolean
 ): Appendable => {
-  const createOrRecreate = areDerivationOptionsSigned ?
+  const createOrRecreate = arerecipeObjectSigned ?
     "recreate" : "create";
   const hostComponent = describeHost(host);
   // use your DiceKey to 
