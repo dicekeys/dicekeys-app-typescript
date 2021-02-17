@@ -73,14 +73,14 @@ export type PrescribedTextInputOptions = PrescribedTextInputFieldOptions
 export class PrescribedTextInput extends Component<PrescribedTextInputOptions, "div"> {
 
   readonly showUsePrescribedButton = new Observable<boolean>();
-  #updateUsingPrescribed = () => {
-    this.showUsePrescribedButton.set(this.options.observables.usePrescribed.value == false && !!this.options.observables.prescribed.value);
-  } 
   constructor(options: PrescribedTextInputFieldOptions) {
     super(options, document.createElement("div"));
     this.addClass(style.prescribed_text_input);
-    options.observables.prescribed.onChange( () => this.#updateUsingPrescribed() );
-    options.observables.usePrescribed.observe( () => this.#updateUsingPrescribed() );
+    const updateUsingPrescribed = () => {
+      this.showUsePrescribedButton.set(this.options.observables.usePrescribed.value == false && !!this.options.observables.prescribed.value);
+    } 
+      options.observables.prescribed.onChange( () => updateUsingPrescribed() );
+    options.observables.usePrescribed.observe( () => updateUsingPrescribed() );
   }
 
   get observable() { return this.options.observables.actual };

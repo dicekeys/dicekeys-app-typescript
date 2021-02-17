@@ -38,7 +38,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
   
   commaSeparatedAuthorizedDomains = new PrescribedTextFieldObservables<string, "domains">("domains", {
     formula: Formula("authorizedDomains[]", "string[]", [InputVar("authorizedDomain1"), ", ... , ", InputVar("authorizedDomainN")]),
-    actual: 'example.pwmgr.app, example.com',
+    actual: `${ window.location.hostname }`,//'example.pwmgr.app, example.com',
     usePrescribed: false
   });
 

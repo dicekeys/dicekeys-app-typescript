@@ -11,7 +11,7 @@ import {
   SecretJson
 } from "@dicekeys/dicekeys-api-js";
 import {
-  Component, Attributes, Observable, Div, Appendable, Span
+  Component, Attributes, Observable, Div, Appendable, Span, A
 } from "../../web-component-framework";
 import {
   ApiRequestWithSeedParameterNames,
@@ -540,6 +540,7 @@ export class CommandSimulator<
         //
         ParameterCard(
           this.requestUrl.formula.value,
+          A(undefined, "send this request to the DiceKeys app").withElement( e => this.requestUrl.actual.observe( newValue => e.setAttribute("href", newValue ?? ""))),
           ResultTextBlock({}).updateFromObservable(this.requestUrl.actual),
         ),
       ),
