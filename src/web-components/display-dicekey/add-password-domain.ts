@@ -11,7 +11,7 @@ import {
   //, PasswordConsumerType,
   passwordDerivationOptionsJson
 } from "~dicekeys/password-consumers";
-import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
+import { Recipe } from "@dicekeys/dicekeys-api-js";
 import {
   FormCard,
   InputCard,
@@ -41,17 +41,17 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
   updateIsValidToSubmit = () => {
     this.isValidToSubmit?.set(!!(
       this.domainNamesInDomainNamesField.length > 0 &&
-      this.derivationOptionsJson &&
-      DerivationOptions(this.derivationOptionsJson.value)
+      this.recipeJson &&
+      Recipe(this.recipeJson.value)
     ));
   }
 
   add = () => {
-    if (!this.isValidToSubmit.value || !this.name.value || ! this.derivationOptionsJson.value) return;
+    if (!this.isValidToSubmit.value || !this.name.value || ! this.recipeJson.value) return;
     addStoredPasswordConsumer({
       // type: PasswordConsumerType.UserEntered,
       name: this.name.value,
-      derivationOptionsJson: this.derivationOptionsJson.value
+      recipe: this.recipeJson.value
     });
     this.complete.send();
   }
@@ -82,7 +82,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
   readonly domainNamesField = new Observable<string>("");
   
   readonly prescribedDerivationOptionsJson = new Observable<string>();
-  readonly derivationOptionsJson = new Observable<string>("");
+  readonly recipeJson = new Observable<string>("");
 
   readonly prescribedName = new Observable<string>("");
   readonly name = new Observable<string>("");
@@ -95,7 +95,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
   });
 
   readonly derivationOptionsFieldObservables = new PrescribedTextFieldObservables('derivation options', {
-    actual: this.derivationOptionsJson,  
+    actual: this.recipeJson,  
     prescribed: this.prescribedDerivationOptionsJson
   })
 
@@ -124,7 +124,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         this.updateIsValidToSubmit();
       });
 
-      this.derivationOptionsJson.observe( () => this.updateIsValidToSubmit() );
+      this.recipeJson.observe( () => this.updateIsValidToSubmit() );
       this.name.observe( () => this.updateIsValidToSubmit() );
   
   }

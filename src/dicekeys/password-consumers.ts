@@ -18,7 +18,7 @@ export interface PasswordConsumerContentInjectionParameters {
 }
 
 export interface PasswordConsumerSecurityParameters {
-  derivationOptionsJson: string,
+  recipe: string,
 //  domains: AllowableDomain[];
 //  masterPasswordRuleCompliancePrefix?: string;
 }
@@ -56,7 +56,7 @@ const defaultPasswordConsumerList: PasswordConsumer[] = DerivationRecipeTemplate
   .filter( r => r.type == "Password" )
   .map( ({name, recipeJson}) => ({
     name: name,
-    derivationOptionsJson: recipeJson  
+    recipe: recipeJson  
 }) )
 //   {
 //     name: "1Password",
@@ -143,7 +143,7 @@ const getStoredPasswordConsumers = (): PasswordConsumer[] => {
     return []
   }
   return passwordConsumerArray.filter( consumer =>
-    typeof consumer.derivationOptionsJson === "string" &&
+    typeof consumer.recipe === "string" &&
     typeof consumer.name === "string"
   )
 }

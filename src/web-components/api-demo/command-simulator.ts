@@ -1,7 +1,7 @@
 import style from "./demo.module.css";
 import {
   ApiCalls,
-  DerivationOptions,
+  Recipe,
   stringToUtf8ByteArray,
   UrlRequestMetadataParameterNames,
   urlSafeBase64Decode,
@@ -38,7 +38,7 @@ import {
   ParameterCard,
   ResultTextBlock, FnCall, InputVar, TemplateString, UrlParameter, ResultLabel
 } from "./basic-api-demo-components";
-import { commandRequiresDerivationOptionOfClientMayRetrieveKey, requestHasDerivationOptionsParameter, SeededCryptoObjectResponseParameterNames } from "@dicekeys/dicekeys-api-js/dist/api-calls";
+import { commandRequiresDerivationOptionOfClientMayRetrieveKey, requestHasRecipeParameter, SeededCryptoObjectResponseParameterNames } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import {
   mutateRequest
 } from "~api-handler/mutate-request";
@@ -75,7 +75,7 @@ export type CommandSimulatorOptions<
     plaintextBase64?: PrescribedTextFieldObservablesOrSpecification<string, typeof ApiCalls.SealWithSymmetricKeyParameterNames.plaintext>;
     lengthInBytesString?: COMMAND extends "getSecret" ? PrescribedTextFieldObservablesOrSpecification<string, "lengthInBytes"> : never;
 
-    derivationOptionsJsonMayBeModified?:  Observable<boolean | undefined>;
+    recipeMayBeModified?:  Observable<boolean | undefined>;
 
     
     unsealingInstructions?: COMMAND extends (typeof ApiCalls.Command.sealWithSymmetricKey) ?
@@ -108,8 +108,8 @@ export class CommandSimulator<
   readonly seedString: PrescribedTextFieldObservables<string, typeof ApiRequestWithSeedParameterNames.seedString>;
   readonly respondTo: PrescribedTextFieldObservables<string, typeof UrlRequestMetadataParameterNames.respondTo>;
 
-  readonly derivationOptionsJson: PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>;
-  readonly derivationOptionsJsonMayBeModified:  Observable<boolean | undefined>;
+  readonly recipe: PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.recipe>;
+  readonly recipeMayBeModified:  Observable<boolean | undefined>;
 
   messageString: PrescribedTextFieldObservables<string, "messageString">;
   messageBase64: PrescribedTextFieldObservables<string, typeof ApiCalls.GenerateSignatureParameterNames.message> ;
@@ -161,7 +161,7 @@ export class CommandSimulator<
     this.authorizedDomains = options.inputs?.authorizedDomains ?? new Observable();
     this.exception = options.outputs?.exception ?? new Observable<string | undefined>();
     this.exceptionMessage = options.outputs?.exceptionMessage ?? new Observable();
-    this.derivationOptionsJsonMayBeModified = options.inputs?.derivationOptionsJsonMayBeModified ?? new Observable<boolean | undefined>(
+    this.recipeMayBeModified = options.inputs?.recipeMayBeModified ?? new Observable<boolean | undefined>(
       this.command === "sealWithSymmetricKey" || this.command === "getSealingKey"
     )
     this.lengthInBytesString = ((this.command === "getSecret") ? 
@@ -180,9 +180,9 @@ export class CommandSimulator<
 
     this.responseObject = options.outputs?.responseObject ?? new Observable<ApiCalls.ResponseForCommand<COMMAND> | ApiCalls.ExceptionResponse | undefined>();
 
-    this.derivationOptionsJson = new PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson>(
-      ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson, {
-        formula: Formula("derivationOptionsJson", "string", 
+    this.recipe = new PrescribedTextFieldObservables<string, typeof ApiCalls.DerivationFunctionParameterNames.recipe>(
+      ApiCalls.DerivationFunctionParameterNames.recipe, {
+        formula: Formula("recipe", "string", 
           '`{(',
           ...(commandRequiresDerivationOptionOfClientMayRetrieveKey(this.command) ? [`"clientMayRetrieveKey":true,`] : []),
           ...(this.command === "getSecret" ? [`"lengthInBytes="`, TemplateInputVar("lengthInBytes"), `",`] : []),
@@ -190,8 +190,8 @@ export class CommandSimulator<
         )
     });
     // Update derivation options based on domains.
-    this.authorizedDomains.observe( this.updatePrescribedDerivationOptionsJson );
-    this.lengthInBytes?.observe( this.updatePrescribedDerivationOptionsJson );
+    this.authorizedDomains.observe( this.updatePrescribedRecipeJson );
+    this.lengthInBytes?.observe( this.updatePrescribedRecipeJson );
 
     this.messageString = PrescribedTextFieldObservables.from("messageString", options.inputs?.messageString);
     this.messageBase64 = PrescribedTextFieldObservables.from(
@@ -257,7 +257,7 @@ export class CommandSimulator<
       `\`https://dicekeys.app?`,
       UrlParameter("command", command),
       ...(this.parameterNames.map( (parameterName): Appendable =>
-        ((parameterName === "derivationOptionsJson" || parameterName === "derivationOptionsJsonMayBeModified") && this.options.getGlobalSealingKey) ? [] : [
+        ((parameterName === "recipe" || parameterName === "recipeMayBeModified") && this.options.getGlobalSealingKey) ? [] : [
           "&",
           UrlParameter(parameterName, 
           (parameterName === "message" || parameterName === "plaintext") ?
@@ -269,7 +269,7 @@ export class CommandSimulator<
 
     this.requestUrl = new PrescribedTextFieldObservables<string, "requestUrl">("requestUrl", {formula: requestUrlFormula});
     this.requestUrl.prescribed.set( this.prescribedRequestUrl );
-    for (const requestUrlShouldObserve of  [this.derivationOptionsJson, this.messageBase64, this.plaintextBase64, this.unsealingInstructions, this.packagedSealedMessageJson, this.requestUrl] as const) {
+    for (const requestUrlShouldObserve of  [this.recipe, this.messageBase64, this.plaintextBase64, this.unsealingInstructions, this.packagedSealedMessageJson, this.requestUrl] as const) {
       requestUrlShouldObserve?.actual.onChange( () => this.requestUrl.prescribed.set(
          this.prescribedRequestUrl) );
     }
@@ -310,9 +310,9 @@ export class CommandSimulator<
       // We only include the unsealingInstructions parameter if there are instructions
       allParameterNames = allParameterNames.filter( pname => pname != "unsealingInstructions");
     }
-    if ("derivationOptionsJson" in ApiCalls.ParameterNames[this.command] && !this.derivationOptionsJson.actual.value) {
+    if ("recipe" in ApiCalls.ParameterNames[this.command] && !this.recipe.actual.value) {
       // We only include the unsealingInstructions parameter if there are instructions
-      allParameterNames = allParameterNames.filter( pname => pname != "derivationOptionsJson");
+      allParameterNames = allParameterNames.filter( pname => pname != "recipe");
     }
     return allParameterNames;
   }
@@ -325,13 +325,13 @@ export class CommandSimulator<
         url.searchParams.append(parameterName, this.messageBase64.actual.value ?? "");
       } else if (parameterName === "plaintext") {
         url.searchParams.append(parameterName, this.plaintextBase64.actual.value ?? "");
-      } else if (parameterName === "derivationOptionsJsonMayBeModified") {
-        const derivationOptionsJsonMayBeModified = this[parameterName].value;
-        if (derivationOptionsJsonMayBeModified != null) {
-          url.searchParams.append(parameterName, derivationOptionsJsonMayBeModified ? "true" : "false");
+      } else if (parameterName === "recipeMayBeModified") {
+        const recipeMayBeModified = this[parameterName].value;
+        if (recipeMayBeModified != null) {
+          url.searchParams.append(parameterName, recipeMayBeModified ? "true" : "false");
         }
-      } else if (parameterName === "derivationOptionsJson" && !this[parameterName].value ) {
-        // Don't send the derivationOptionsJson parameter if it's undefined or an empty string
+      } else if (parameterName === "recipe" && !this[parameterName].value ) {
+        // Don't send the recipe parameter if it's undefined or an empty string
       } else {
         const parameter = this[parameterName];
         const parameterValue = parameter?.actual.value;
@@ -348,11 +348,11 @@ export class CommandSimulator<
     return url.toString();
   }
 
-  updatePrescribedDerivationOptionsJson = () => {
+  updatePrescribedRecipeJson = () => {
     const authorizedDomains = this.authorizedDomains.value ?? [];
     const lengthInBytes = ("lengthInBytes" in this) ? this.lengthInBytes?.value : undefined;
     const clientMayRetrieveKey = this.requiresClientMayRetrieveKey;
-      const pdo = DerivationOptions({
+      const pdo = Recipe({
       ...( (authorizedDomains?.length > 0) ? {
         allow: authorizedDomains.map( host => ({host}) )
       } : {}),
@@ -362,7 +362,7 @@ export class CommandSimulator<
       ...( clientMayRetrieveKey ? {clientMayRetrieveKey: true} : {}),
       
     })
-    this.derivationOptionsJson.prescribed.set(jsonStringifyWithSortedFieldOrder(pdo))
+    this.recipe.prescribed.set(jsonStringifyWithSortedFieldOrder(pdo))
   }
 
 
@@ -394,8 +394,8 @@ export class CommandSimulator<
         const respondToUrl = new URL(respondTo);
         throwIfUrlNotPermitted(respondToUrl.host, respondToUrl.pathname, false);
         throwIfClientMayNotRetrieveKey(request);
-        if (requestHasDerivationOptionsParameter(request)) {
-          const derivationOptions = DerivationOptions(request.derivationOptionsJson);
+        if (requestHasRecipeParameter(request)) {
+          const derivationOptions = Recipe(request.recipe);
           request = await mutateRequest({
             seedString,
             request,
@@ -423,9 +423,9 @@ export class CommandSimulator<
     }
   }
 
-  get requiresDerivationOptionsJson(): boolean {
+  get requiresRecipeJson(): boolean {
     return !!this.command &&
-      ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson in ApiCalls.ParameterNames[this.command];
+      ApiCalls.DerivationFunctionParameterNames.recipe in ApiCalls.ParameterNames[this.command];
   }
 
   get requiresMessage(): boolean { return this.command === ApiCalls.Command.sealWithSymmetricKey };
@@ -482,15 +482,15 @@ export class CommandSimulator<
           (this.command === ApiCalls.Command.getSealingKey && this.options.getGlobalSealingKey) ? [
             ParameterCard(
               Instructions( 
-                `Calls to `, FnCallName("getSealingKey"),` normally take a `, InputVar(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson),`
+                `Calls to `, FnCallName("getSealingKey"),` normally take a `, InputVar(ApiCalls.DerivationFunctionParameterNames.recipe),`
                 parameter with an <i>allow</i> field restricting which applications/services may use the derived key. Such requests require
                 the user to get access to their `, DICEKEY(), ` to derive the new key.
               `),
               Instructions(`
                 To instead get a global sealing key, which the user may have pre-derived and have available without accessing their `, DICEKEY(), `
                 do not pass the `,
-                InputVar(ApiCalls.DerivationFunctionParameterNames.derivationOptionsJson),
-                ` parameter.  The `, DICEKEYS() ,` App may use an existing key with a pre-chosen derivationOptionsJson.
+                InputVar(ApiCalls.DerivationFunctionParameterNames.recipe),
+                ` parameter.  The `, DICEKEYS() ,` App may use an existing key with a pre-chosen recipe.
                 In this example, we assume it derived multiple keys with different uniqueId fields to ensure keys are not linkable.`
               ),
             ),
@@ -502,7 +502,7 @@ export class CommandSimulator<
                 `You can specify the options for deriving secrets via a <a target="new" href="https://dicekeys.github.io/seeded-crypto/derivation_options_format.html"/>JSON format</a>,
                 which allow you to restrict which apps and services can use the secrets you derive.
               `),
-              new PrescribedTextInput({observables: this.derivationOptionsJson}),
+              new PrescribedTextInput({observables: this.recipe}),
             ),
           ]
         ),
@@ -524,9 +524,9 @@ export class CommandSimulator<
           ParameterCard(
             new PrescribedTextInput({observables: this.unsealingInstructions}),
           ).withElement( e => {
-            this.derivationOptionsJson.actual.observe( derivationOptionsJson => {
+            this.recipe.actual.observe( recipe => {
               try {
-                if (DerivationOptions(derivationOptionsJson)?.allow) {
+                if (Recipe(recipe)?.allow) {
                   e.style.setProperty('display', 'none');
                   return; 
                 }

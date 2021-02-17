@@ -1,6 +1,6 @@
 import {
   ApiCalls,
-  DerivationOptions,
+  Recipe,
   urlSafeBase64Encode,
 } from "@dicekeys/dicekeys-api-js";
 import {
@@ -9,32 +9,32 @@ import {
 import {
    SeededCryptoModuleWithHelpers, SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js";
-import { getDefaultValueOfDerivationOptionsJsonMayBeModified } from "@dicekeys/dicekeys-api-js/dist/api-calls";
+import { getDefaultValueOfRecipeMayBeModified } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 
-export const mayDerivationOptionsBeModified = (
+export const mayRecipeBeModified = (
   request: ApiCalls.Request
 ): boolean =>
-  // If derivationOptionsJson is not set or set to an empty string, it may be modified
-  !("derivationOptionsJson" in request) ||
-  !request.derivationOptionsJson ||
+  // If recipe is not set or set to an empty string, it may be modified
+  !("recipe" in request) ||
+  !request.recipe ||
   (
     // if the field is set, use the value of the field
-    request.derivationOptionsJsonMayBeModified ??
+    request.recipeMayBeModified ??
     // If the field is not set, use the default for this command
-    getDefaultValueOfDerivationOptionsJsonMayBeModified(request.command)
+    getDefaultValueOfRecipeMayBeModified(request.command)
   );
 
 
   /**
  * Test if derivation options contain a `"proofOfPriorDerivation": "true"`indicating
- * that the derivationOptionsJson should be modified to contain such proof.
+ * that the recipe should be modified to contain such proof.
  * 
  * @param derivationOptionsOrJson 
  */
 export const isProofOfPriorDerivationRequired = (
-  derivationOptionsOrJson: DerivationOptions | string
+  derivationOptionsOrJson: Recipe | string
 ): boolean =>
-  DerivationOptions(derivationOptionsOrJson).proofOfPriorDerivation === ""
+  Recipe(derivationOptionsOrJson).proofOfPriorDerivation === ""
 
 
 export class ProofOfPriorDerivationModule {
@@ -53,31 +53,31 @@ export class ProofOfPriorDerivationModule {
 
   /**
  * Generate a proof that this seed has been used to derive a key
- * using these DerivationOptions before.
+ * using these Recipe before.
  * 
  * @param seedString 
  * @param derivationOptions 
  */
   protected generate = (
     seedString: string,
-    derivationOptions: DerivationOptions
+    derivationOptions: Recipe
   ): string => {
-    const copyOfDerivationOptions = {...derivationOptions};
-    copyOfDerivationOptions.proofOfPriorDerivation = "";
-    const derivationOptionsJsonToAddProofTo = jsonStringifyWithSortedFieldOrder(copyOfDerivationOptions);
-    const firstHash = this.seededCryptoModule.DerivationOptions.derivePrimarySecret(
+    const copyOfRecipe = {...derivationOptions};
+    copyOfRecipe.proofOfPriorDerivation = "";
+    const recipeToAddProofTo = jsonStringifyWithSortedFieldOrder(copyOfRecipe);
+    const firstHash = this.seededCryptoModule.Recipe.derivePrimarySecret(
       seedString,
-      derivationOptionsJsonToAddProofTo
+      recipeToAddProofTo
     );
-    const secondHash = this.seededCryptoModule.DerivationOptions.derivePrimarySecret(
+    const secondHash = this.seededCryptoModule.Recipe.derivePrimarySecret(
       urlSafeBase64Encode(firstHash),
-      derivationOptionsJsonToAddProofTo
+      recipeToAddProofTo
     );
     return urlSafeBase64Encode(secondHash);
   }
 
   /**
-   * Augment the JSON DerivationOptions string with proof that the DiceKeys
+   * Augment the JSON Recipe string with proof that the DiceKeys
    * app has derived a secret or key using these options before by setting the
    * `proofOfPriorDerivation` to a secret value which cannot be derived without
    * the seedString.
@@ -86,15 +86,15 @@ export class ProofOfPriorDerivationModule {
    * @param derivationOptionsOrJson Derivation options in either JSON format or
    * as JSON already parsed into a JavaScript object. 
    */
-  addToDerivationOptionsJson = (
+  addToRecipeJson = (
     seedString: string,
-    derivationOptionsOrJson: DerivationOptions | string
+    derivationOptionsOrJson: Recipe | string
   ): string => {
     // Once the proof is provided, the derivation options become immutable
     // since any change will invalidate the proof field.  So, remove any
-    // [mutable] field from the [DerivationOptions]
+    // [mutable] field from the [Recipe]
     const derivationOptions =
-      DerivationOptions(derivationOptionsOrJson);
+      Recipe(derivationOptionsOrJson);
     // Set the proofOfPriorDerivation to a MAC derived from the derivation options.
     return jsonStringifyWithSortedFieldOrder({
       ...derivationOptions,
@@ -104,17 +104,17 @@ export class ProofOfPriorDerivationModule {
 
   /**
    * Verify that a secret or key has previously been derived with the same
-   * seedString and DerivationOptions by checking the [proofOfPriorDerivation]
-   * field against a hash of the DerivationOptions and the SeedString.
+   * seedString and Recipe by checking the [proofOfPriorDerivation]
+   * field against a hash of the Recipe and the SeedString.
    * 
    * @param seedString 
    * @param derivationOptionsOrJson 
    */
   verify = (
     seedString: string,
-    derivationOptionsOrJson: DerivationOptions | string
+    derivationOptionsOrJson: Recipe | string
   ): boolean => {
-    const derivationOptions = DerivationOptions(derivationOptionsOrJson);
+    const derivationOptions = Recipe(derivationOptionsOrJson);
     const {proofOfPriorDerivation} = derivationOptions;
 
     if (proofOfPriorDerivation == null) {

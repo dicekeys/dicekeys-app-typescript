@@ -3,7 +3,7 @@ import styles from "./api-request-container.module.css";
 import layoutStyles from "../layout.module.css";
 import {
 //  Exceptions,
-  DerivationOptions
+  Recipe
 } from "@dicekeys/dicekeys-api-js";
 import {
   Component, Attributes,
@@ -34,11 +34,11 @@ import {
   ConsentResponse
 } from "../../api-handler/handle-api-request";
 import {
-  extraRequestDerivationOptionsAndInstructions
-} from "../../api-handler/get-requests-derivation-options-json";
+  extraRequestRecipeAndInstructions
+} from "../../api-handler/get-requests-recipe";
 import {
-  VerifyDerivationOptionsWorker,
-} from "../../workers/call-derivation-options-proof-worker";
+  VerifyRecipeWorker,
+} from "../../workers/call-recipe-proof-worker";
 import {
   shortDescribeCommandsAction
 } from "../../phrasing/api";
@@ -66,9 +66,9 @@ export interface ApiRequestOptions extends Attributes {
 export class ApiRequestContainer extends Component<ApiRequestOptions> {
   protected messageElementId = this.uniqueNodeId("message");
 
-  public readonly derivationOptions: DerivationOptions;
-  private areDerivationOptionsVerified: boolean | undefined;
-  private static verifyDerivationOptionsWorker = new VerifyDerivationOptionsWorker();
+  public readonly derivationOptions: Recipe;
+  private areRecipeVerified: boolean | undefined;
+  private static verifyRecipeWorker = new VerifyRecipeWorker();
 
   private userAskedToLoadDiceKey: boolean = false;
   private handleLoadCompleteOrCancel = () => {
@@ -90,21 +90,21 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
   ) {
     super(options);
     this.addClass(layoutStyles.stretched_column_container);
-    const {derivationOptionsJson} = extraRequestDerivationOptionsAndInstructions(this.options.requestContext.request);
-    this.derivationOptions = DerivationOptions(derivationOptionsJson);
+    const {recipe} = extraRequestRecipeAndInstructions(this.options.requestContext.request);
+    this.derivationOptions = Recipe(recipe);
     if (this.derivationOptions.proofOfPriorDerivation) {
       // Once the diceKey is available, calculate if the proof of prior derivation is valid
       EncryptedCrossTabState.instance?.diceKeyField.observe( async (diceKey) => {
         if (diceKey) {
           const seedString = DiceKey.toSeedString(diceKey, !this.derivationOptions.excludeOrientationOfFaces);
-          const {verified} = await ApiRequestContainer.verifyDerivationOptionsWorker.calculate({seedString, derivationOptionsJson});
-          this.areDerivationOptionsVerified = verified;
+          const {verified} = await ApiRequestContainer.verifyRecipeWorker.calculate({seedString, recipe});
+          this.areRecipeVerified = verified;
           this.renderSoon();
         }
       });
     } else {
       // The DiceKey Does not have a proof of prior derivation.
-      this.areDerivationOptionsVerified = false;
+      this.areRecipeVerified = false;
     }
 
   }
@@ -142,7 +142,7 @@ export class ApiRequestContainer extends Component<ApiRequestOptions> {
       : [
         // Show request
         Div({class: styles.request_description},
-          Div({class: styles.request_choice}, API.describeRequestChoice(request.command, host, !!this.areDerivationOptionsVerified) ),
+          Div({class: styles.request_choice}, API.describeRequestChoice(request.command, host, !!this.areRecipeVerified) ),
           Div({class: styles.request_promise}, API.describeDiceKeyAccessRestrictions(host) ),
         ),
         ( diceKey ?

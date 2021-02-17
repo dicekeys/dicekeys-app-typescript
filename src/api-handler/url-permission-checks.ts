@@ -1,12 +1,12 @@
 import {
-  DerivationOptions,
+  Recipe,
   Exceptions,
   UnsealingInstructions,
   WebBasedApplicationIdentity,
   AuthenticationRequirements, ApiCalls
 } from "@dicekeys/dicekeys-api-js";
 import { Command } from "@dicekeys/dicekeys-api-js/dist/api-calls";
-import { extraRequestDerivationOptionsAndInstructions } from "./get-requests-derivation-options-json";
+import { extraRequestRecipeAndInstructions } from "./get-requests-recipe";
 import {
   doesHostMatchRequirement
 } from "./post-message-permission-checks";
@@ -20,7 +20,7 @@ const doesPathMatchRequirement = (
   if (pathExpected.length > 0 && pathExpected[0] != "/") {
     // Paths must start with a "/".  If the path requirement didn't start with a "/",
     // we'll insert one assuming this was a mistake by the developer of the client software
-    // that created the derivationOptionsJson string.
+    // that created the recipe string.
     pathExpected = "/" + pathExpected;
   }
   if (pathExpected.endsWith("/*")) {
@@ -81,15 +81,15 @@ export const throwIfUrlNotOnAllowList =
 export const throwIfUrlNotPermitted = (host: string, path: string, hostValidatedViaAuthToken: boolean) => {
   const throwIfNotOnAllowList = throwIfUrlNotOnAllowList(host, path, hostValidatedViaAuthToken);
   return (request: ApiCalls.ApiRequestObject): void => {
-    const {derivationOptionsJson, unsealingInstructions} = extraRequestDerivationOptionsAndInstructions(request);
+    const {recipe, unsealingInstructions} = extraRequestRecipeAndInstructions(request);
 
-    if (request.command === Command.getSealingKey && !request.derivationOptionsJson) {
+    if (request.command === Command.getSealingKey && !request.recipe) {
       // There's no derivation options to check since the request is for a global sealing key
       // that can be used with unsealingInstructions to restrict who can decrypt it.
       return
     }
 
-    const derivationOptions = DerivationOptions(derivationOptionsJson);
+    const derivationOptions = Recipe(recipe);
     const parsedUnsealingInstructions = UnsealingInstructions(unsealingInstructions);
 
     // Unsealing operations have two possible allow lists, both embedded in the packageSealedMessage parameter:
@@ -97,7 +97,7 @@ export const throwIfUrlNotPermitted = (host: string, path: string, hostValidated
     //   = unique to these operations, an allow list may be placed in the unsealing instructions.
     if (!derivationOptions && !(request.command === Command.unsealWithUnsealingKey && parsedUnsealingInstructions)) {
       throw new Exceptions.ClientNotAuthorizedException(
-        `The derivationOptionsJson must have an allow clause.`
+        `The recipe must have an allow clause.`
       );
     }
 

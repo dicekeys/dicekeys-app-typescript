@@ -3,7 +3,7 @@ import layoutStyles from "../layout.module.css";
 
 import {
 //  Exceptions,
-  DerivationOptions, ApiCalls
+  Recipe, ApiCalls
 } from "@dicekeys/dicekeys-api-js";
 import {
   Attributes,
@@ -41,8 +41,8 @@ import {
 //   DiceKeyAppState
 // } from "../../state";
 import {
-  extraRequestDerivationOptionsAndInstructions
-} from "../../api-handler/get-requests-derivation-options-json";
+  extraRequestRecipeAndInstructions
+} from "../../api-handler/get-requests-recipe";
 import {
   ApiRequestContext, ConsentResponse
 } from "../../api-handler/handle-api-request";
@@ -52,7 +52,7 @@ import {
 import { PasswordJson } from "@dicekeys/seeded-crypto-js";
 import { DICEKEY } from "../../web-components/dicekey-styled";
 import {
-  mayDerivationOptionsBeModified
+  mayRecipeBeModified
 } from "../../api-handler/mutate-derivation-options";
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
@@ -75,11 +75,11 @@ export interface ApproveApiCommandOptions extends Attributes {
 
 export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
 
-//  private readonly derivationOptionsInOriginalRequest: DerivationOptions;
+//  private readonly derivationOptionsInOriginalRequest: Recipe;
   private excludeOrientationOfFaces?: boolean;
   private seedHint?: string;
 
-  private readonly mayDerivationOptionsBeModified: boolean;
+  private readonly mayRecipeBeModified: boolean;
   private static readonly computeApiCommandWorker = new ComputeApiCommandWorker();
  
 
@@ -94,9 +94,9 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     super(options);
     const requestContext = this.options.requestContext;
     const request = requestContext.request;
-    const {derivationOptionsJson} = extraRequestDerivationOptionsAndInstructions(request);
-    const derivationOptions = DerivationOptions(derivationOptionsJson);
-    this.mayDerivationOptionsBeModified = mayDerivationOptionsBeModified(request);
+    const {recipe} = extraRequestRecipeAndInstructions(request);
+    const derivationOptions = Recipe(recipe);
+    this.mayRecipeBeModified = mayRecipeBeModified(request);
 
     // Components of derivation that can be modified
     this.excludeOrientationOfFaces = derivationOptions.excludeOrientationOfFaces;
@@ -108,7 +108,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
       seedString: DiceKey.toSeedString(this.options.diceKey, !this.excludeOrientationOfFaces),
     });
     // After this class is constructed, kick of background calculations.
-    setTimeout( () => this.updateBackgroundOperationsForDerivationOptions(), 1);
+    setTimeout( () => this.updateBackgroundOperationsForRecipe(), 1);
     if ( request.command === ApiCalls.Command.getPassword ) {
       (ApproveApiCommand.computeApiCommandWorker.resultPromise as Promise<ApiCalls.GetPasswordSuccessResponse>).then(
         precomputedResult => this.password.value = (JSON.parse(precomputedResult.passwordJson) as PasswordJson).password
@@ -118,7 +118,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     }  
   }
 
-  private updateBackgroundOperationsForDerivationOptions = async () => {
+  private updateBackgroundOperationsForRecipe = async () => {
     await ApproveApiCommand.computeApiCommandWorker.calculate({
       seedString: this.seedString,
       request: await mutateRequest({
@@ -219,9 +219,9 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
   }
 
   handleOrientationCheckboxClicked = (excludeOrientationOfFaces: boolean) => {
-    if (this.mayDerivationOptionsBeModified) {
+    if (this.mayRecipeBeModified) {
       this.excludeOrientationOfFaces = excludeOrientationOfFaces;
-      this.updateBackgroundOperationsForDerivationOptions();
+      this.updateBackgroundOperationsForRecipe();
       this.renderDiceKey()
     }
   }
@@ -236,7 +236,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
         this.renderDiceKey()
       )
     );
-    if (this.mayDerivationOptionsBeModified) {
+    if (this.mayRecipeBeModified) {
       this.append(
         Div({class: "orientation-widget"},
           Div({}, `Orientation of individual dice`),
@@ -275,7 +275,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     //   }),
     // );
     var hintPurpose: Appendable | undefined;
-    if (this.mayDerivationOptionsBeModified && (hintPurpose = describeHintPurpose(this.options.requestContext.request.command)) != null) {
+    if (this.mayRecipeBeModified && (hintPurpose = describeHintPurpose(this.options.requestContext.request.command)) != null) {
       var cornerCheckbox: Checkbox | undefined;
       var hintTextFieldLabel: Label | undefined;
       this.append(
@@ -298,7 +298,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
               hintTextFieldLabel?.primaryElement.setAttribute("for", t.primaryElementId)
               t.events.change.on( () => {
                 this.seedHint = t.value;
-                this.updateBackgroundOperationsForDerivationOptions();
+                this.updateBackgroundOperationsForRecipe();
               })
             })
           )

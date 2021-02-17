@@ -1,6 +1,6 @@
 import {
   ApiCalls,
-  DerivationOptions
+  Recipe
 } from "@dicekeys/dicekeys-api-js";
 import {
   throwIfClientMayNotRetrieveKey,
@@ -20,7 +20,7 @@ describe ("API Permission Checks", () => {
       test (`Cannot ${command} unless clientMayRetrieveKey derivation option set`, () => {
         expect( () => throwIfClientMayNotRetrieveKey({
           command,
-          derivationOptionsJson: JSON.stringify(DerivationOptions({
+          recipe: JSON.stringify(Recipe({
           }))
         })).toThrow();
       })
@@ -30,7 +30,7 @@ describe ("API Permission Checks", () => {
       test (`Can ${command} if clientMayRetrieveKey derivation option set`, () => {
         throwIfClientMayNotRetrieveKey({
           command,
-          derivationOptionsJson: JSON.stringify(DerivationOptions({
+          recipe: JSON.stringify(Recipe({
             clientMayRetrieveKey: true
           }))
         });
@@ -43,49 +43,49 @@ describe ("API Permission Checks", () => {
 
     throwIfHostNotPermitted("example.com")({
       command: ApiCalls.Command.getSecret,
-      derivationOptionsJson: JSON.stringify(DerivationOptions({
+      recipe: JSON.stringify(Recipe({
         allow: [{host: "example.com"}]
       }))
     })
 
     throwIfHostNotPermitted("example.com")({
       command: ApiCalls.Command.getSecret,
-      derivationOptionsJson: JSON.stringify(DerivationOptions({
+      recipe: JSON.stringify(Recipe({
         allow: [{host: "example.com"}, {host: "other.com"}]
       }))
     })
 
     throwIfHostNotPermitted("example.com")({
       command: ApiCalls.Command.getSecret,
-      derivationOptionsJson: JSON.stringify(DerivationOptions({
+      recipe: JSON.stringify(Recipe({
         allow: [{host: "other.com"}, {host: "example.com"}]
       }))
     })
 
     expect( () => throwIfHostNotPermitted("example.comsuffixattack")({
       command: ApiCalls.Command.getSecret,
-      derivationOptionsJson: JSON.stringify(DerivationOptions({
+      recipe: JSON.stringify(Recipe({
         allow: [{host: "example.com"}, {host: "other.com"}]
       }))
     })).toThrow()
 
     expect( () => throwIfHostNotPermitted("example.com.suffixattack")({
       command: ApiCalls.Command.getSecret,
-      derivationOptionsJson: JSON.stringify(DerivationOptions({
+      recipe: JSON.stringify(Recipe({
         allow: [{host: "example.com"}, {host: "other.com"}]
       }))
     })).toThrow()
     
     expect( () => throwIfHostNotPermitted("examplesuffixattack.com")({
       command: ApiCalls.Command.getSecret,
-      derivationOptionsJson: JSON.stringify(DerivationOptions({
+      recipe: JSON.stringify(Recipe({
         allow: [{host: "example.com"}, {host: "other.com"}]
       }))
     })).toThrow()
 
     expect( () => throwIfHostNotPermitted("prefixattackexample.com.suffix")({
       command: ApiCalls.Command.getSecret,
-      derivationOptionsJson: JSON.stringify(DerivationOptions({
+      recipe: JSON.stringify(Recipe({
         allow: [{host: "example.com"}, {host: "other.com"}]
       }))
     })).toThrow()

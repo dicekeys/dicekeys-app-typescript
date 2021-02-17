@@ -1,17 +1,17 @@
 
 
 import { getRandomBytes } from "~dicekeys/get-random-bytes";
-import { AddDerivationOptionsProofWorker } from "~workers/call-derivation-options-proof-worker";
+import { AddRecipeProofWorker } from "~workers/call-recipe-proof-worker";
 import {
   ApiCalls,
-  DerivationOptions,
+  Recipe,
   urlSafeBase64Encode,
 } from "@dicekeys/dicekeys-api-js";
 import {
   jsonStringifyWithSortedFieldOrder
 } from "./json";
 
-const addDerivationOptionsProofWorker = new AddDerivationOptionsProofWorker();
+const addRecipeProofWorker = new AddRecipeProofWorker();
 
 export const mutateRequest = async <REQUEST extends ApiCalls.ApiRequestObject>({
     seedString,
@@ -28,11 +28,11 @@ export const mutateRequest = async <REQUEST extends ApiCalls.ApiRequestObject>({
     addUniqueId?: boolean
   }
 ): Promise<REQUEST> => {
-  if (!ApiCalls.requestHasDerivationOptionsParameter(request)) {
+  if (!ApiCalls.requestHasRecipeParameter(request)) {
     return request;
   }
-  const derivationOptions = DerivationOptions(request.derivationOptionsJson);
-  if (request.derivationOptionsJson !== "" && !request.derivationOptionsJsonMayBeModified) {
+  const derivationOptions = Recipe(request.recipe);
+  if (request.recipe !== "" && !request.recipeMayBeModified) {
     return request;
   }
 
@@ -54,12 +54,12 @@ export const mutateRequest = async <REQUEST extends ApiCalls.ApiRequestObject>({
 
   if (derivationOptions.proofOfPriorDerivation === "") {
     return {...request,
-      derivationOptionsJson: (await addDerivationOptionsProofWorker.calculate({
+      recipe: (await addRecipeProofWorker.calculate({
           seedString,
-          derivationOptionsJson: jsonStringifyWithSortedFieldOrder(derivationOptions),
-        })).derivationOptionsJson
+          recipe: jsonStringifyWithSortedFieldOrder(derivationOptions),
+        })).recipe
     };
   } else {
-    return {...request, derivationOptionsJson: jsonStringifyWithSortedFieldOrder(derivationOptions)};
+    return {...request, recipe: jsonStringifyWithSortedFieldOrder(derivationOptions)};
   }
 }

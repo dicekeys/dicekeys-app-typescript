@@ -1,5 +1,5 @@
 import {
-  DerivationOptions,
+  Recipe,
   ApiCalls,
   Exceptions,
   UnsealingInstructions,
@@ -7,8 +7,8 @@ import {
 } from "@dicekeys/dicekeys-api-js";
 import { Command } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import {
-  extraRequestDerivationOptionsAndInstructions
-} from "./get-requests-derivation-options-json";
+  extraRequestRecipeAndInstructions
+} from "./get-requests-recipe";
 
 export const doesHostMatchRequirement = (
   {hostExpected, hostObserved}: {hostExpected: string, hostObserved: string}
@@ -65,15 +65,15 @@ export const throwIfHostNotOnAllowList =
 export const throwIfHostNotPermitted = (host: string) => {
   const throwIfNotOnAllowList = throwIfHostNotOnAllowList(host);
   return (request: ApiCalls.ApiRequestObject): void => {
-    const {derivationOptionsJson, unsealingInstructions} = extraRequestDerivationOptionsAndInstructions(request);
+    const {recipe, unsealingInstructions} = extraRequestRecipeAndInstructions(request);
 
-    if (request.command === Command.getSealingKey && !request.derivationOptionsJson) {
+    if (request.command === Command.getSealingKey && !request.recipe) {
       // There's no derivation options to check since the request is for a global sealing key
       // that can be used with unsealingInstructions to restrict who can decrypt it.
       return
     }
     
-    const allowFromDerivationOptions = DerivationOptions(derivationOptionsJson).allow;
+    const allowFromDerivationOptions = Recipe(recipe).allow;
     const allowFromUnsealingInstructions = UnsealingInstructions(unsealingInstructions).allow;
 
     // Unsealing operations have two possible allow lists, both embedded in the packageSealedMessage parameter:
@@ -81,7 +81,7 @@ export const throwIfHostNotPermitted = (host: string) => {
     //   = unique to these operations, an allow list may be placed in the unsealing instructions.
     if (!allowFromDerivationOptions && !(request.command === Command.unsealWithUnsealingKey && allowFromUnsealingInstructions)) {
       throw new Exceptions.ClientNotAuthorizedException(
-        `The derivationOptionsJson must have an allow clause.`
+        `The recipe must have an allow clause.`
       );
     }
     if (allowFromDerivationOptions) {

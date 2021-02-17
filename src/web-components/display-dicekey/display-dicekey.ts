@@ -25,7 +25,7 @@ import {
   ComputeApiCommandWorker
 } from "../../workers/call-api-command-worker";
 import {
-    ApiCalls, DerivationOptions
+    ApiCalls, Recipe
 } from "@dicekeys/dicekeys-api-js";
 import {
   DisplayPassword
@@ -67,7 +67,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
   containerElement?: HTMLDivElement;
   passwordDivElement?: HTMLDivElement;
 
-  derivationOptionsJson = new Observable<string>();
+  recipeJson = new Observable<string>();
   password = new Observable<string>();
 
   showOnlyAddNewPasswordComponent = new Observable<boolean>(false).changedEvent.on( () => this.renderSoon() );
@@ -91,12 +91,12 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
     if (selectedManager != null) {
       console.log("Selected password manager", selectedManager?.name);
       // Derive password in background then set it.
-      const {derivationOptionsJson} = selectedManager;
-      const seedString = DiceKey.toSeedString(this.options.diceKey, !DerivationOptions(derivationOptionsJson).excludeOrientationOfFaces );
-      this.derivationOptionsJson.set(derivationOptionsJson);
+      const {recipe} = selectedManager;
+      const seedString = DiceKey.toSeedString(this.options.diceKey, !Recipe(recipe).excludeOrientationOfFaces );
+      this.recipeJson.set(recipe);
       const request: ApiCalls.GetPasswordRequest = {
         command: ApiCalls.Command.getPassword,
-        derivationOptionsJson
+        recipe
       };
       console.log("Issuing request", seedString, request);
       const result = await DiceKeySvgView.computerPasswordRequestWorker.calculate({seedString, request});
@@ -159,7 +159,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
           ),
           Div({class: layoutStyles.centered_column},
             TextInput({class: styles.derivation_options_input}).with( e => {
-              this.derivationOptionsJson.observe( ( newDerivationOptionsJson => {
+              this.recipeJson.observe( ( newDerivationOptionsJson => {
                 e.primaryElement.style.setProperty("visibility", newDerivationOptionsJson && newDerivationOptionsJson.length > 0 ? "visible" : "hidden");
                 e.value = newDerivationOptionsJson ?? "";
               })) 

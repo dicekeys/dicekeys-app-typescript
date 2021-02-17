@@ -103,28 +103,28 @@ function toJsonAndDelete<RESULT, T extends {delete: () => any, toJson: () => RES
 }
 
 export const getSecret = implementApiCall<ApiCalls.GetSecret>(
-  (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
+  (seededCryptoModule, seedString, {recipe = ""}) => ({
     [GetSecretSuccessResponseParameterNames.secretJson]:
       toJsonAndDelete( 
-        seededCryptoModule.Secret.deriveFromSeed(seedString, derivationOptionsJson)
+        seededCryptoModule.Secret.deriveFromSeed(seedString, recipe)
   )}));
 
 export const getPassword = implementApiCall<ApiCalls.GetPassword>(
-    (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
+    (seededCryptoModule, seedString, {recipe = ""}) => ({
       [GetPasswordSuccessResponseParameterNames.passwordJson]:
         toJsonAndDelete( 
-          seededCryptoModule.Password.deriveFromSeed(seedString, derivationOptionsJson)
+          seededCryptoModule.Password.deriveFromSeed(seedString, recipe)
     )}));
 
 export const sealWithSymmetricKey = implementApiCall<ApiCalls.SealWithSymmetricKey>(
-  (seededCryptoModule, seedString, {plaintext, unsealingInstructions = "", derivationOptionsJson = ""}) => ({
+  (seededCryptoModule, seedString, {plaintext, unsealingInstructions = "", recipe = ""}) => ({
       [SealWithSymmetricKeySuccessResponseParameterNames.packagedSealedMessageJson]:
       toJsonAndDelete(
           seededCryptoModule.SymmetricKey.sealWithInstructions(
             plaintext,
             unsealingInstructions,
             seedString,
-            derivationOptionsJson
+            recipe
           )
       )
     })
@@ -141,60 +141,60 @@ export const unsealWithSymmetricKey = implementApiCall<ApiCalls.UnsealWithSymmet
 );
 
 export const getSealingKey = implementApiCall<ApiCalls.GetSealingKey>(
-  (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
+  (seededCryptoModule, seedString, {recipe = ""}) => ({
     [GetSealingKeySuccessResponseParameterNames.sealingKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.UnsealingKey.deriveFromSeed(
           seedString,
-          derivationOptionsJson
+          recipe
         ).getSealingKey()
       )
     })
   );
 
 export const getUnsealingKey = implementApiCall<ApiCalls.GetUnsealingKey>(
-  (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
+  (seededCryptoModule, seedString, {recipe = ""}) => ({
     [GetUnsealingKeySuccessResponseParameterNames.unsealingKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.UnsealingKey.deriveFromSeed(
           seedString,
-          derivationOptionsJson
+          recipe
         )
       )
     })
   );
 
 export const getSigningKey = implementApiCall<ApiCalls.GetSigningKey>(
-  (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
+  (seededCryptoModule, seedString, {recipe = ""}) => ({
     [GetSigningKeySuccessResponseParameterNames.signingKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.SigningKey.deriveFromSeed(
           seedString,
-          derivationOptionsJson
+          recipe
         )
       )
     })
   );
 
 export const getSymmetricKey = implementApiCall<ApiCalls.GetSymmetricKey>(
-  (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
+  (seededCryptoModule, seedString, {recipe = ""}) => ({
     [GetSymmetricKeySuccessResponseParameterNames.symmetricKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.SymmetricKey.deriveFromSeed(
           seedString,
-          derivationOptionsJson
+          recipe
         )
       )
     })
   );
 
 export const getSignatureVerificationKey = implementApiCall<ApiCalls.GetSignatureVerificationKey>(
-  (seededCryptoModule, seedString, {derivationOptionsJson = ""}) => ({
+  (seededCryptoModule, seedString, {recipe = ""}) => ({
     [GetSignatureVerificationKeySuccessResponseParameterNames.signatureVerificationKeyJson]:
       toJsonAndDelete(
         seededCryptoModule.SignatureVerificationKey.deriveFromSeed(
           seedString,
-          derivationOptionsJson
+          recipe
         )
       )
     })
@@ -211,9 +211,9 @@ export const unsealWithUnsealingKey = implementApiCall<ApiCalls.UnsealWithUnseal
 );
 
 export const generateSignature = implementApiCall<ApiCalls.GenerateSignature> (
-  (seededCryptoModule, seedString, {derivationOptionsJson, message}) => {
+  (seededCryptoModule, seedString, {recipe, message}) => {
     const signingKey = seededCryptoModule.SigningKey.deriveFromSeed(
-        seedString, derivationOptionsJson
+        seedString, recipe
     );
     const signatureVerificationKey = signingKey.getSignatureVerificationKey();
     try {

@@ -2,13 +2,12 @@ import {
   Component,
 } from "./web-component-framework"
 import {
-//  DerivationOptions,
   getPassword,
-  PasswordDerivationOptions
+  PasswordRecipe
 } from "@dicekeys/dicekeys-api-js"
 import { PasswordJson } from "@dicekeys/seeded-crypto-js";
 
-const pwmgrAppSecretDerivationOptionsJson = JSON.stringify(PasswordDerivationOptions({
+const pwmgrAppSecretRecipeJson = JSON.stringify(PasswordRecipe({
   type: "Password",
   excludeOrientationOfFaces: true,
   lengthInWords: 15,
@@ -28,7 +27,7 @@ export class PasswordManagerSignIn extends Component {
 
   getPasswordFromDiceKey = async() => {
     try {
-      const {passwordJson} = await getPassword({derivationOptionsJson: pwmgrAppSecretDerivationOptionsJson});
+      const {passwordJson} = await getPassword({recipe: pwmgrAppSecretRecipeJson});
       this.passwordTextElement.value = (JSON.parse(passwordJson) as PasswordJson).password;
       // const secret = (await SeededCryptoModulePromise).Secret.fromJsObject(secretFields);
       // secret.delete();
