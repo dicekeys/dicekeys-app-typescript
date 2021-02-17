@@ -17,9 +17,6 @@ import { CenteredControls } from "~/web-components/basic-building-blocks";
 type Mode = "camera" | "manual";
 
 export interface LoadDiceKeyOptions extends Attributes<"div"> {
-//  msDelayBetweenSuccessAndClosure?: number;
-//  host?: string;
-//  derivationOptions?: DerivationOptions;
   showCancelButton?: boolean;
   showChangeModeButton?: boolean;
   mode?: Mode | Observable<Mode>;
@@ -121,38 +118,3 @@ export class LoadDiceKey extends Component<LoadDiceKeyOptions> {
     );
   }
 }
-
-
-  //      this.renderHint();      
-
-  // renderHint = () => {
-  //   const {seedHint, cornerLetters} = this.options.derivationOptions || {};
-  //   const {host} = this.options;
-
-  //   this.append(
-  //     Div({class: styles.scan_instruction}, `Use your camera to read your `, DICEKEY())
-  //   )
-
-  //   if (host && seedHint) {
-  //     this.append(
-  //       Div({class: styles.hint},
-  //         "According to ",
-  //         describeHost(host),
-  //         ", you provided the following hint to identify your DiceKey: ",
-  //         MonospaceSpan().setInnerText(seedHint)
-  //       )
-  //     );
-  //   } else if (host && cornerLetters && cornerLetters.length === 4) {
-  //     this.append(
-  //       Div({class: styles.hint},
-  //         "According to ",
-  //         describeHost(host),
-  //         ", you previously used a DiceKey with the letters ",
-  //         MonospaceSpan().setInnerText(cornerLetters.substr(0, 3).split("").join(", ")),
-  //         ", and ",
-  //         MonospaceSpan().setInnerText(cornerLetters[3]),
-  //         " at each corner."
-  //       ),
-  //     );
-  //   }
-  // }

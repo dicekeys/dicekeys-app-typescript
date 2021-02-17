@@ -2,9 +2,9 @@
  * @jest-environment jsdom
  */
 import {
-  DerivationOptions,
+  Recipe,
   UrlApi,
-  stringToUtf8ByteArray, UnsealingInstructions, UnsealingKeyDerivationOptions
+  stringToUtf8ByteArray, UnsealingInstructions, UnsealingKeyRecipe
 } from "@dicekeys/dicekeys-api-js";
 import {
   urlApiResponder
@@ -37,7 +37,7 @@ const getMockClient = (
 
 describe("End To End Url Api Tests", () => {
 
-  const derivationOptionsJson = jsonStringifyWithSortedFieldOrder(UnsealingKeyDerivationOptions({
+  const recipe = jsonStringifyWithSortedFieldOrder(UnsealingKeyRecipe({
     allow: [{host: defaultRespondToHost}]
   }));
   const testMessage = "The secret ingredient is dihydrogen monoxide";
@@ -46,7 +46,7 @@ describe("End To End Url Api Tests", () => {
   test("symmetricKeySealAndUnseal", async () => {
     const client = getMockClient();
     const {packagedSealedMessageJson} = await client.sealWithSymmetricKey({
-      derivationOptionsJson,
+      recipe,
       plaintext: testMessageByteArray
     });
     const { plaintext } = await client.unsealWithSymmetricKey({packagedSealedMessageJson});
@@ -56,10 +56,10 @@ describe("End To End Url Api Tests", () => {
   test("fun signAndVerify", async () => {
     const client = getMockClient();
     const sig = await client.generateSignature({
-      derivationOptionsJson,
+      recipe,
       message: testMessageByteArray
     })
-    const {signatureVerificationKeyJson} = await client.getSignatureVerificationKey({derivationOptionsJson})
+    const {signatureVerificationKeyJson} = await client.getSignatureVerificationKey({recipe})
     const seededCrypto = await SeededCryptoModulePromise;
     const signatureVerificationKey = seededCrypto.SignatureVerificationKey.fromJson(signatureVerificationKeyJson);
     expect(signatureVerificationKey.signatureVerificationKeyBytes).toStrictEqual( (await SeededCryptoModulePromise).SignatureVerificationKey.fromJson(sig.signatureVerificationKeyJson).signatureVerificationKeyBytes);
@@ -69,7 +69,7 @@ describe("End To End Url Api Tests", () => {
 
   test("fun asymmetricSealAndUnseal", async () => {
     const client = getMockClient();
-    const {sealingKeyJson} = await client.getSealingKey({derivationOptionsJson});
+    const {sealingKeyJson} = await client.getSealingKey({recipe});
     const seededCrypto = await SeededCryptoModulePromise;
     const sealingKey = seededCrypto.SealingKey.fromJson(sealingKeyJson);
     const unsealingInstructionsJson = JSON.stringify(UnsealingInstructions({
@@ -82,27 +82,27 @@ describe("End To End Url Api Tests", () => {
 
   test("getSecretWithHandshake", async () => {
     const client = getMockClient();
-    const derivationOptions = DerivationOptions({
+    const recipeObj = Recipe({
       requireAuthenticationHandshake: true,
       allow: [{host: defaultRespondToHost}],
       lengthInBytes: 13
     });
-    const derivationOptionsJson = JSON.stringify(derivationOptions);
-    const {secretJson} = await client.getSecret({derivationOptionsJson});
+    const recipe = JSON.stringify(recipeObj);
+    const {secretJson} = await client.getSecret({recipe});
     const secret = (await SeededCryptoModulePromise).Secret.fromJson(secretJson);
     expect(secret.secretBytes.length).toBe(13);
   });
 
   test("getPasswordWithHandshake", async () => {
     const client = getMockClient();
-    const derivationOptions = DerivationOptions({
+    const recipeObj = Recipe({
       requireAuthenticationHandshake: true,
       allow: [{host: defaultRespondToHost}],
       lengthInWords: 15
     });
-    const {passwordJson} = await client.getPassword({derivationOptionsJson: JSON.stringify(derivationOptions)});
+    const {passwordJson} = await client.getPassword({recipe: JSON.stringify(recipeObj)});
     const password = (await SeededCryptoModulePromise).Password.fromJson(passwordJson)
-    expect(password.derivationOptionsJson).toBeDefined();
+    expect(password.recipe).toBeDefined();
     expect(password.password.length).toBeGreaterThan(15);
   });
 

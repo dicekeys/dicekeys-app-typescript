@@ -1,19 +1,19 @@
 import {
-  ApiCalls, DerivationOptions, Exceptions
+  ApiCalls, Recipe, Exceptions
 } from "@dicekeys/dicekeys-api-js";
-import { requestRequiresDerivationOptionOfClientMayRetrieveKey } from "@dicekeys/dicekeys-api-js/dist/api-calls";
+import { requestRequiresRecipeToSetClientMayRetrieveKey } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 
 
 /**
  * Validate that the client is not receiving a key which operations should be
  * performed in the DiceKeys app without setting "clientMayRetrieveKey": true
- * in the derivation options.
+ * in the recipe.
  */
 export const throwIfClientMayNotRetrieveKey = (request: ApiCalls.ApiRequestObject) => {
   if (
-    requestRequiresDerivationOptionOfClientMayRetrieveKey(request) &&
-    !DerivationOptions(request.derivationOptionsJson).clientMayRetrieveKey
+    requestRequiresRecipeToSetClientMayRetrieveKey(request) &&
+    !Recipe(request.recipe).clientMayRetrieveKey
   ) {
-    throw new Exceptions.ClientMayRetrieveKeyNotSetInDerivationOptions()
+    throw new Exceptions.ClientMayRetrieveKeyNotSetInRecipe()
   }
 }

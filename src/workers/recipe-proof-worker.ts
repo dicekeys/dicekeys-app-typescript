@@ -8,14 +8,14 @@ import "regenerator-runtime/runtime";
 
 import {
   ProofOfPriorDerivationModule
-} from "../api-handler/mutate-derivation-options"
+} from "../api-handler/mutate-recipe"
 
 /**
  * A request to process an image frame while scanning dicekeys
  */
 export interface VerifyRequest {
   seedString: string;
-  derivationOptionsJson: string;
+  recipe: string;
 }
 
 export interface VerifyRequestMessage extends VerifyRequest {
@@ -28,7 +28,7 @@ export interface VerifyResponse {
 
 export interface AddProofRequest {
   seedString: string;
-  derivationOptionsJson: string;
+  recipe: string;
 }
 
 export interface AddProofRequestMessage extends AddProofRequest {
@@ -36,7 +36,7 @@ export interface AddProofRequestMessage extends AddProofRequest {
 }
 
 export interface AddProofResponse {
-  derivationOptionsJson: string;
+  recipe: string;
 }
 
 const isVerifyRequest = (data: any): data is VerifyRequestMessage =>
@@ -50,13 +50,13 @@ addEventListener( "message", async (requestMessage) =>
   ProofOfPriorDerivationModule.instancePromise.then( proofOfPriorDerivationModule => {
     const {data} = requestMessage;
     if (isVerifyRequest(data)) {
-      const {seedString, derivationOptionsJson} = data;
-      const result: VerifyResponse = {verified: proofOfPriorDerivationModule.verify(seedString, derivationOptionsJson)};
+      const {seedString, recipe} = data;
+      const result: VerifyResponse = {verified: proofOfPriorDerivationModule.verify(seedString, recipe)};
       (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(result);
     } else if (isAddProofRequest(data)) {
-      const {seedString, derivationOptionsJson} = data;
+      const {seedString, recipe} = data;
       const result: AddProofResponse = {
-        derivationOptionsJson: proofOfPriorDerivationModule.addToDerivationOptionsJson(seedString, derivationOptionsJson)
+        recipe: proofOfPriorDerivationModule.addToRecipeJson(seedString, recipe)
       };
       (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(result);
     }

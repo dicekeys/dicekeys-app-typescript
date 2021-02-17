@@ -1,17 +1,17 @@
 
 
 import { getRandomBytes } from "~dicekeys/get-random-bytes";
-import { AddDerivationOptionsProofWorker } from "~workers/call-derivation-options-proof-worker";
+import { AddRecipeProofWorker } from "~workers/call-recipe-proof-worker";
 import {
   ApiCalls,
-  DerivationOptions,
+  Recipe,
   urlSafeBase64Encode,
 } from "@dicekeys/dicekeys-api-js";
 import {
   jsonStringifyWithSortedFieldOrder
 } from "./json";
 
-const addDerivationOptionsProofWorker = new AddDerivationOptionsProofWorker();
+const addRecipeProofWorker = new AddRecipeProofWorker();
 
 export const mutateRequest = async <REQUEST extends ApiCalls.ApiRequestObject>({
     seedString,
@@ -28,38 +28,38 @@ export const mutateRequest = async <REQUEST extends ApiCalls.ApiRequestObject>({
     addUniqueId?: boolean
   }
 ): Promise<REQUEST> => {
-  if (!ApiCalls.requestHasDerivationOptionsParameter(request)) {
+  if (!ApiCalls.requestHasRecipeParameter(request)) {
     return request;
   }
-  const derivationOptions = DerivationOptions(request.derivationOptionsJson);
-  if (request.derivationOptionsJson !== "" && !request.derivationOptionsJsonMayBeModified) {
+  const recipe = Recipe(request.recipe);
+  if (request.recipe !== "" && !request.recipeMayBeModified) {
     return request;
   }
 
   if (excludeOrientationOfFaces) {
-    derivationOptions.excludeOrientationOfFaces = true;
+    recipe.excludeOrientationOfFaces = true;
   } else if (excludeOrientationOfFaces === false) {
-    delete derivationOptions.excludeOrientationOfFaces;
+    delete recipe.excludeOrientationOfFaces;
   }
 
   if (seedHint) {
-    derivationOptions.seedHint = seedHint;
+    recipe.seedHint = seedHint;
   } else {
-    delete derivationOptions.seedHint;
+    delete recipe.seedHint;
   }
 
   if (addUniqueId) {
-    (derivationOptions as {uniqueId: string}).uniqueId = urlSafeBase64Encode(getRandomBytes(8))
+    (recipe as {uniqueId: string}).uniqueId = urlSafeBase64Encode(getRandomBytes(8))
   }
 
-  if (derivationOptions.proofOfPriorDerivation === "") {
+  if (recipe.proofOfPriorDerivation === "") {
     return {...request,
-      derivationOptionsJson: (await addDerivationOptionsProofWorker.calculate({
+      recipe: (await addRecipeProofWorker.calculate({
           seedString,
-          derivationOptionsJson: jsonStringifyWithSortedFieldOrder(derivationOptions),
-        })).derivationOptionsJson
+          recipe: jsonStringifyWithSortedFieldOrder(recipe),
+        })).recipe
     };
   } else {
-    return {...request, derivationOptionsJson: jsonStringifyWithSortedFieldOrder(derivationOptions)};
+    return {...request, recipe: jsonStringifyWithSortedFieldOrder(recipe)};
   }
 }

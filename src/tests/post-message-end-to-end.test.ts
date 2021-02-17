@@ -5,7 +5,7 @@ import {
   ApiCalls,
   ApiFactory,
   PostMessageApiFactory,
-  DerivationOptions,
+  SecretRecipe, PasswordRecipe,
   stringToUtf8ByteArray, UnsealingInstructions
 } from "@dicekeys/dicekeys-api-js"
 
@@ -76,10 +76,10 @@ describe("End-to-end API tests using the PostMessage API", () => {
 //    new Promise<UsersConsentResponse>( (respond) => respond(response) );
  // const requestUsersConsentWillApprove = requestUsersConsent(UsersConsentResponse.Allow);
 
-  const derivationOptionsJson = jsonStringifyWithSortedFieldOrder(DerivationOptions({
+  const recipe = jsonStringifyWithSortedFieldOrder(SecretRecipe({
     allow: [{host: defaultRequestHost}]
   }));
-  const derivationOptionsForProtectedKeysJson = jsonStringifyWithSortedFieldOrder(DerivationOptions({
+  const recipeForProtectedKeysJson = jsonStringifyWithSortedFieldOrder(SecretRecipe({
     allow: [{host: defaultRequestHost}],
     clientMayRetrieveKey: true
   }));
@@ -88,7 +88,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
 
   test("symmetricKeySealAndUnseal", async () => {
     const {packagedSealedMessageJson} = await sealWithSymmetricKey({
-      derivationOptionsJson,
+      recipe,
       plaintext: testMessageByteArray
     });
     const {plaintext} = await unsealWithSymmetricKey({packagedSealedMessageJson});
@@ -99,7 +99,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
   
   test("Local symmetric key seal and remote unseal", async () => {
     const {symmetricKeyJson} = await getSymmetricKey({
-      derivationOptionsJson: derivationOptionsForProtectedKeysJson
+      recipe: recipeForProtectedKeysJson
     });
     const symmetricKey = (await SeededCryptoModulePromise).SymmetricKey.fromJson(symmetricKeyJson);
     const packagedSealedMessage = symmetricKey.seal(testMessageByteArray);
@@ -109,8 +109,8 @@ describe("End-to-end API tests using the PostMessage API", () => {
 
   test("Remote sign and verify", async () => {
     const {signature, signatureVerificationKeyJson: initialSignatureVerificationKeyJson} =
-      (await generateSignature({derivationOptionsJson, message: testMessageByteArray}));
-    const {signatureVerificationKeyJson} = await getSignatureVerificationKey({derivationOptionsJson})
+      (await generateSignature({recipe, message: testMessageByteArray}));
+    const {signatureVerificationKeyJson} = await getSignatureVerificationKey({recipe})
     const signatureVerificationKey = (await SeededCryptoModulePromise)
       .SignatureVerificationKey.fromJson(signatureVerificationKeyJson);
     expect(signatureVerificationKey.signatureVerificationKeyBytes).toStrictEqual( (await SeededCryptoModulePromise).SignatureVerificationKey.fromJson(initialSignatureVerificationKeyJson).signatureVerificationKeyBytes);
@@ -121,11 +121,11 @@ describe("End-to-end API tests using the PostMessage API", () => {
 
   
   test("Local sign and verify", async () => {
-    const {signingKeyJson} = await getSigningKey({derivationOptionsJson: derivationOptionsForProtectedKeysJson});
+    const {signingKeyJson} = await getSigningKey({recipe: recipeForProtectedKeysJson});
     const signingKey = (await SeededCryptoModulePromise).SigningKey.fromJson(signingKeyJson);
     const signature = signingKey.generateSignature(testMessageByteArray);
     const {signatureVerificationKeyJson} = await getSignatureVerificationKey({
-      derivationOptionsJson: derivationOptionsForProtectedKeysJson
+      recipe: recipeForProtectedKeysJson
     })
     const signatureVerificationKey = (await SeededCryptoModulePromise)
       .SignatureVerificationKey.fromJson(signatureVerificationKeyJson);
@@ -135,7 +135,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
   });
 
   test("asymmetricSealAndUnseal", async () => {
-    const { sealingKeyJson } = await getSealingKey({derivationOptionsJson});
+    const { sealingKeyJson } = await getSealingKey({recipe});
     const sealingKey = (await SeededCryptoModulePromise).SealingKey.fromJson(sealingKeyJson);
     const unsealingInstructionsJson = JSON.stringify(UnsealingInstructions({
       allow: [{host: defaultRequestHost}]
@@ -149,7 +149,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
   
   test("Local Asymmetric Seal And Unseal", async () => {
     const {unsealingKeyJson} = await getUnsealingKey({
-      derivationOptionsJson: derivationOptionsForProtectedKeysJson
+      recipe: recipeForProtectedKeysJson
     });
     const unsealingKey = (await SeededCryptoModulePromise).UnsealingKey.fromJson(unsealingKeyJson);
     const sealingKey = unsealingKey.getSealingKey();
@@ -164,26 +164,26 @@ describe("End-to-end API tests using the PostMessage API", () => {
 
 
   test("getSecret", async () => {
-    const derivationOptions = DerivationOptions({
+    const recipe = SecretRecipe({
       allow: [{host: defaultRequestHost}],
       lengthInBytes: 13
     });
-    const {secretJson} = await getSecret({derivationOptionsJson: JSON.stringify(derivationOptions)});
+    const {secretJson} = await getSecret({recipe: JSON.stringify(recipe)});
     const secret = (await SeededCryptoModulePromise).Secret.fromJson(secretJson);
     expect(secret.secretBytes.length).toBe(13);
   });
 
   
   test("getPassword", async () => {
-    const derivationOptions = DerivationOptions({
+    const recipe = PasswordRecipe({
       allow: [{host: defaultRequestHost}],
       lengthInWords: 13
     });
     const {passwordJson} = await getPassword({
-      derivationOptionsJson: JSON.stringify(derivationOptions)
+      recipe: JSON.stringify(recipe)
     });
     const password = (await SeededCryptoModulePromise).Password.fromJson(passwordJson);
-    expect(derivationOptionsJson).toBeDefined();
+    expect(recipe).toBeDefined();
     expect(password.password.substr(0,2)).toBe("13");
   });
 

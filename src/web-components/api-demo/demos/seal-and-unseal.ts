@@ -87,7 +87,7 @@ export class SealAndUnseal extends MultiCommandSimulator<SealAndUnsealOptions> {
         ...(this.options.useGlobalKey ? [
           ParameterCard(
             Instructions(`Since any application or service can ask the DiceKeys app to use a key with no restrictions
-              in its derivation options, we place the restrictions in the the unsealingInstructions that are attached
+              in its recipe, we place the restrictions in the the unsealingInstructions that are attached
               to the sealed message.`),
             new PrescribedTextInput({observables: this.unsealingInstructions}),
           )

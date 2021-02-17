@@ -90,7 +90,7 @@ export class LoadAndStoreDiceKey extends Component<LoadAndStoreDiceKeyOptions> {
   //      this.renderHint();      
 
   // renderHint = () => {
-  //   const {seedHint, cornerLetters} = this.options.derivationOptions || {};
+  //   const {seedHint, cornerLetters} = this.options.recipeObject || {};
   //   const {host} = this.options;
 
   //   this.append(

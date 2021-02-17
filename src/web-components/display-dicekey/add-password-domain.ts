@@ -6,8 +6,12 @@ import {
 } from "../../web-component-framework";
 
 import { getRegisteredDomain } from "~domains/get-registered-domain";
-import { addStoredPasswordConsumer, PasswordConsumerType, passwordDerivationOptionsJson } from "~dicekeys/password-consumers";
-import { DerivationOptions } from "@dicekeys/dicekeys-api-js";
+import {
+  addStoredPasswordConsumer,
+  //, PasswordConsumerType,
+  passwordRecipeJson
+} from "~dicekeys/password-consumers";
+import { Recipe } from "@dicekeys/dicekeys-api-js";
 import {
   FormCard,
   InputCard,
@@ -37,17 +41,17 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
   updateIsValidToSubmit = () => {
     this.isValidToSubmit?.set(!!(
       this.domainNamesInDomainNamesField.length > 0 &&
-      this.derivationOptionsJson &&
-      DerivationOptions(this.derivationOptionsJson.value)
+      this.recipeJson &&
+      Recipe(this.recipeJson.value)
     ));
   }
 
   add = () => {
-    if (!this.isValidToSubmit.value || !this.name.value || ! this.derivationOptionsJson.value) return;
+    if (!this.isValidToSubmit.value || !this.name.value || ! this.recipeJson.value) return;
     addStoredPasswordConsumer({
-      type: PasswordConsumerType.UserEntered,
+      // type: PasswordConsumerType.UserEntered,
       name: this.name.value,
-      derivationOptionsJson: this.derivationOptionsJson.value
+      recipe: this.recipeJson.value
     });
     this.complete.send();
   }
@@ -77,8 +81,8 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
 
   readonly domainNamesField = new Observable<string>("");
   
-  readonly prescribedDerivationOptionsJson = new Observable<string>();
-  readonly derivationOptionsJson = new Observable<string>("");
+  readonly prescribedRecipeJson = new Observable<string>();
+  readonly recipeJson = new Observable<string>("");
 
   readonly prescribedName = new Observable<string>("");
   readonly name = new Observable<string>("");
@@ -90,9 +94,9 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
     prescribed: this.prescribedDomainNames
   });
 
-  readonly derivationOptionsFieldObservables = new PrescribedTextFieldObservables('derivation options', {
-    actual: this.derivationOptionsJson,  
-    prescribed: this.prescribedDerivationOptionsJson
+  readonly recipeObjectFieldObservables = new PrescribedTextFieldObservables('recipe', {
+    actual: this.recipeJson,  
+    prescribed: this.prescribedRecipeJson
   })
 
   readonly nameFieldObservables = new PrescribedTextFieldObservables('name', {
@@ -112,7 +116,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
 
       this.domainNamesField.observe( () => {
         const domainNames = this.domainNamesInDomainNamesField;
-        this.prescribedDerivationOptionsJson.set(passwordDerivationOptionsJson(domainNames));
+        this.prescribedRecipeJson.set(passwordRecipeJson(domainNames));
         this.prescribedName.set( domainNames.length === 0 ? "" :
           (domainNames[0].split(".")[0]?.charAt(0) ?? "").toLocaleUpperCase() +
           (domainNames[0].split(".")[0]?.substr(1) ?? "")
@@ -120,7 +124,7 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         this.updateIsValidToSubmit();
       });
 
-      this.derivationOptionsJson.observe( () => this.updateIsValidToSubmit() );
+      this.recipeJson.observe( () => this.updateIsValidToSubmit() );
       this.name.observe( () => this.updateIsValidToSubmit() );
   
   }
@@ -158,13 +162,13 @@ export class AddPasswordDomain extends Component<AddPasswordDomainOptions> {
         )).withElement( e => { e.style.setProperty("display","none"); advancedInputCards.push(e) } ),
         InputCard(
           LabelAboveLeft(
-            `The password derivation options that will be applied, derived from the above field by default.
+            `The recipe that will be applied, derived from the above field by default.
             Use the default value (in green) if at all possible.  If you customize this value and forget it, you will be unable to re-generate
             passwords.
           `,
           new PrescribedTextInput({
             style: `min-width: 50vw;`,
-            observables: this.derivationOptionsFieldObservables,
+            observables: this.recipeObjectFieldObservables,
           }),
         )).withElement( e => { e.style.setProperty("display","none"); advancedInputCards.push(e) } ),
           InputCard(

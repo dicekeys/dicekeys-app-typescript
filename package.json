@@ -18,9 +18,9 @@
     "build-pwmgr": "rimraf dist-pwmgr & parcel build src/pwmgr.html --no-minify --out-dir dist-pwmgr/ --out-file index.html",
     "build:live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
     "upload-pwmgr": "gsutil -m cp dist-pwmgr/* gs://pwmgr.app/",
-    "upload-production": "gsutil -m cp dist-app/* gs://dicekeys.app/ & gsutil setmeta -h \"Cache-Control:no-store\" gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/*.js",
+    "upload-production": "gsutil -m cp dist-app/* gs://dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/*.js",
     "update-production": "npm run -s build-app & npm run -s upload-production",
-    "upload-staging": "gsutil -m cp -z js dist-app/* gs://staging.dicekeys.app/ & gsutil setmeta -h \"Cache-Control:no-store; Content-Type: text/html\" gs://staging.dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://staging.dicekeys.app/*.js",
+    "upload-staging": "gsutil -m cp dist-app/* gs://staging.dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://staging.dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://staging.dicekeys.app/*.js",
     "update-staging": "npm run -s build-app & npm run -s upload-staging",
     "update-pwmgr": "npm run -s build-pwmgr & npm run -s upload-pwmgr"
   },
@@ -28,9 +28,9 @@
   "author": "Stuart Schechter <stuart@dicekeys.com>",
   "license": "UNLICENSED. All rights reserved",
   "dependencies": {
-    "@dicekeys/dicekeys-api-js": "0.0.107",
+    "@dicekeys/dicekeys-api-js": "^0.1.3",
     "@dicekeys/read-dicekey-js": "0.0.34",
-    "@dicekeys/seeded-crypto-js": "^0.1.32"
+    "@dicekeys/seeded-crypto-js": "^0.2.1"
   },
   "browserslist": [
     "last 1 Chrome versions"
@@ -51,7 +51,7 @@
     "madge": "^3.11.0",
     "node-fetch": "^2.6.1",
     "nodemon": "^2.0.3",
-    "parcel-bundler": "^1.12.4",
+    "parcel-bundler": "^1.3.1",
     "postcss-modules": "^3.2.2",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.3.0",

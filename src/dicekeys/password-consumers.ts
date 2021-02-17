@@ -1,3 +1,4 @@
+import { DerivationRecipeTemplateList } from "./derivation-recipe-templates";
 import {
   restrictionsJson
 } from "./restrictions-json";
@@ -17,116 +18,34 @@ export interface PasswordConsumerContentInjectionParameters {
 }
 
 export interface PasswordConsumerSecurityParameters {
-  derivationOptionsJson: string,
+  recipe: string,
 //  domains: AllowableDomain[];
-  masterPasswordRuleCompliancePrefix?: string;
+//  masterPasswordRuleCompliancePrefix?: string;
 }
 
-export enum PasswordConsumerType {
-  PasswordManager = "PasswordManager",
-  IdentityProvider = "IdentityProvider",
-  AuthenticatorApp = "AuthenticatorApp",
-  UserEntered = "UserEntered"
-}
+// export enum PasswordConsumerType {
+//   PasswordManager = "PasswordManager",
+//   IdentityProvider = "IdentityProvider",
+//   AuthenticatorApp = "AuthenticatorApp",
+//   UserEntered = "UserEntered"
+// }
 
 export interface PasswordConsumer extends
   PasswordConsumerSecurityParameters,
   PasswordConsumerContentInjectionParameters
 {
   name: string;
-  type: PasswordConsumerType
 }
 
-export const passwordDerivationOptionsJson = (hostOrHosts: SingletonOrArrayOf<string>) => 
+export const passwordRecipeJson = (hostOrHosts: SingletonOrArrayOf<string>) => 
   restrictionsJson(asArray(hostOrHosts));
 
-export const passwordDerivationOptionsJsonObj = (domains: SingletonOrArrayOf<string>) => ({
-  derivationOptionsJson: passwordDerivationOptionsJson(domains)
-});
-
-const defaultPasswordManagerSecurityParameters = (
-  ...domains: string[]
-): PasswordConsumerSecurityParameters => ({
-  ...passwordDerivationOptionsJsonObj(domains),
-});
-
-
-const defaultPasswordConsumerList: PasswordConsumer[] = [
-  {
-    name: "1Password",
-    type: PasswordConsumerType.PasswordManager,
-
-    ...defaultPasswordManagerSecurityParameters("1password.com"),
-
-    masterPasswordFieldSelector: "#master-password, #custom-master-password",
-    masterPasswordConfirmationFieldSelector: "confirm-master-password",
-    hintFieldSelector: undefined,
-  },
-  {
-    name: "Apple",
-    type: PasswordConsumerType.IdentityProvider,
-    ...defaultPasswordManagerSecurityParameters("apple.com"),
-  },
-  {
-    name: "Authy",
-    type: PasswordConsumerType.AuthenticatorApp,
-
-    ...defaultPasswordManagerSecurityParameters("authy.com"),
-  },
-  {
-    name: "Bitwarden",
-    type: PasswordConsumerType.PasswordManager,
-
-    ...defaultPasswordManagerSecurityParameters("bitwarden.com"),
-
-    masterPasswordFieldSelector: "#masterPassword",
-    masterPasswordConfirmationFieldSelector: "#masterPasswordRetype",
-    hintFieldSelector: "#hint",
-  },
-  {
-    name: "Facebook",
-    type: PasswordConsumerType.IdentityProvider,
-
-    ...defaultPasswordManagerSecurityParameters("facebook.com"),
-  },
-  {
-    name: "Google",
-    type: PasswordConsumerType.IdentityProvider,
-
-    ...defaultPasswordManagerSecurityParameters("google.com"),
-  },
-  {
-    name: "Keeper",
-    type: PasswordConsumerType.PasswordManager,
-
-    ...defaultPasswordManagerSecurityParameters("keepersecurity.com", "keepersecurity.eu"),
-    masterPasswordRuleCompliancePrefix: "A1! ",
-
-    elementToAugmentSelector: `.password > label`,
-    masterPasswordFieldSelector: `input[type='password'][name='pass'], input[type='text'][name='pass'], textarea[name='master_pass']`,
-    // masterPasswordConfirmationFieldSelector: undefined, // no confirmation field in this UX
-    // hintFieldSelector: undefined, // no hint interface in this UX
-  },
-  {
-    name: "LastPass",
-    type: PasswordConsumerType.PasswordManager,
-
-    ...defaultPasswordManagerSecurityParameters("lastpass.com"),
-    masterPasswordRuleCompliancePrefix: "A1! ",
-
-    elementToAugmentSelector: `input[name='password'] + label`,
-    masterPasswordFieldSelector: "#masterpassword, input:not(.VK_no_animate)[name='password']",
-    masterPasswordConfirmationFieldSelector: "#confirmmpw",
-    hintFieldSelector: "#passwordreminder",
-  },
-  {
-    name: "Microsoft",
-    type: PasswordConsumerType.IdentityProvider,
-
-    ...defaultPasswordManagerSecurityParameters("microsoft.com","live.com"),
-  }
-]
-
+const defaultPasswordConsumerList: PasswordConsumer[] = DerivationRecipeTemplateList
+  .filter( r => r.type == "Password" )
+  .map( ({name, recipeJson}) => ({
+    name: name,
+    recipe: recipeJson  
+}) )
 
 const passwordConsumersStorageKey = "dicekeys:password-consumers.ts:PasswordConsumers"
 const getStoredPasswordConsumers = (): PasswordConsumer[] => {
@@ -137,7 +56,7 @@ const getStoredPasswordConsumers = (): PasswordConsumer[] => {
     return []
   }
   return passwordConsumerArray.filter( consumer =>
-    typeof consumer.derivationOptionsJson === "string" &&
+    typeof consumer.recipe === "string" &&
     typeof consumer.name === "string"
   )
 }
@@ -159,24 +78,24 @@ export const getPasswordConsumers = (): PasswordConsumer[] => [
   ...getStoredPasswordConsumers(),
 ].sort( (a, b) =>
   // First sort by type
-  a.type.localeCompare(b.type) ||
+  // a.type.localeCompare(b.type) ||
   // the by name
   a.name.localeCompare(b.name)
 )
 
 
-export const getPasswordConsumersGroupedByType = (): [PasswordConsumerType, PasswordConsumer[]][] =>
-getPasswordConsumers().reduce( (result, passwordConsumer) => {
-    if (result.length > 0 && result[0][0] === passwordConsumer.type) {
-      // The password consumer is of the same type as the list
-      // we are currently appending to
-      result[0][1].push(passwordConsumer)
-    } else {
-      // This is a new password consumer type, so start a new list.
-      result.unshift([passwordConsumer.type, [passwordConsumer]]);
-    }
-    return result;
-  }, [[PasswordConsumerType.UserEntered,[]]] as [PasswordConsumerType, PasswordConsumer[]][]).reverse();
+// export const getPasswordConsumersGroupedByType = (): [PasswordConsumerType, PasswordConsumer[]][] =>
+// getPasswordConsumers().reduce( (result, passwordConsumer) => {
+//     if (result.length > 0 && result[0][0] === passwordConsumer.type) {
+//       // The password consumer is of the same type as the list
+//       // we are currently appending to
+//       result[0][1].push(passwordConsumer)
+//     } else {
+//       // This is a new password consumer type, so start a new list.
+//       result.unshift([passwordConsumer.type, [passwordConsumer]]);
+//     }
+//     return result;
+//   }, [[PasswordConsumerType.UserEntered,[]]] as [PasswordConsumerType, PasswordConsumer[]][]).reverse();
 
 // export const getPasswordManagerFoHostName = (hostName: string): PasswordConsumer | undefined => {
 //   const lowercaseHostName = hostName.toLocaleLowerCase();

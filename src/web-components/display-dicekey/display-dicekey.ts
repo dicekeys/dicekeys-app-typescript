@@ -4,7 +4,8 @@ import layoutStyles from "../layout.module.css";
 import {
   Component, Attributes,
   ComponentEvent,
-  InputButton, Div, Label, Select, Option, Observable, OptGroup, TextInput
+  InputButton, Div, Label, Select, Option, Observable,// OptGroup,
+  TextInput
 } from "../../web-component-framework";
 import {
   DiceKeySvg
@@ -17,21 +18,21 @@ import {
 } from "../../dicekeys/dicekey";
 import {
   getPasswordConsumers,
-  getPasswordConsumersGroupedByType,
-  PasswordConsumerType
+  // getPasswordConsumersGroupedByType,
+  // PasswordConsumerType
 } from "../../dicekeys/password-consumers";
 import {
   ComputeApiCommandWorker
 } from "../../workers/call-api-command-worker";
 import {
-    ApiCalls, DerivationOptions
+    ApiCalls, Recipe
 } from "@dicekeys/dicekeys-api-js";
 import {
   DisplayPassword
 } from "./password-field"
-import {
-  describePasswordConsumerType
-} from "../../phrasing/ui";
+// import {
+//   describePasswordConsumerType
+// } from "../../phrasing/ui";
 import { AddPasswordDomain } from "./add-password-domain";
 import { PasswordJson } from "@dicekeys/seeded-crypto-js";
 import { VerifyDiceKey } from "../backups/verify-dicekey";
@@ -66,7 +67,7 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
   containerElement?: HTMLDivElement;
   passwordDivElement?: HTMLDivElement;
 
-  derivationOptionsJson = new Observable<string>();
+  recipeJson = new Observable<string>();
   password = new Observable<string>();
 
   showOnlyAddNewPasswordComponent = new Observable<boolean>(false).changedEvent.on( () => this.renderSoon() );
@@ -90,12 +91,12 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
     if (selectedManager != null) {
       console.log("Selected password manager", selectedManager?.name);
       // Derive password in background then set it.
-      const {derivationOptionsJson} = selectedManager;
-      const seedString = DiceKey.toSeedString(this.options.diceKey, !DerivationOptions(derivationOptionsJson).excludeOrientationOfFaces );
-      this.derivationOptionsJson.set(derivationOptionsJson);
+      const {recipe} = selectedManager;
+      const seedString = DiceKey.toSeedString(this.options.diceKey, !Recipe(recipe).excludeOrientationOfFaces );
+      this.recipeJson.set(recipe);
       const request: ApiCalls.GetPasswordRequest = {
         command: ApiCalls.Command.getPassword,
-        derivationOptionsJson
+        recipe
       };
       console.log("Issuing request", seedString, request);
       const result = await DiceKeySvgView.computerPasswordRequestWorker.calculate({seedString, request});
@@ -135,30 +136,28 @@ export class DiceKeySvgView extends Component<DiceKeySvgViewOptions> {
             Label({class: styles.create_password_for_label}, "Create a password for ",
               Select({value: "default"},
                 Option({}),
-                getPasswordConsumersGroupedByType().map( ([groupType, consumers]) => 
-                  OptGroup({label: describePasswordConsumerType(groupType)},
-                    ...consumers.map( pwm => 
-                        Option({value: pwm.name},
-                          // Option doesn't support images, but on platforms where it does...
-                          // new FavIcon({domain: 
-                          //   DerivationOptions(pwm.derivationOptionsJson).allow?.map( x => x.host ) ?? []
-                          // }),
-                          pwm.name) ),
-                    ...groupType !== PasswordConsumerType.UserEntered ? [] : [
+                getPasswordConsumers().map( //([groupType, consumers]) => 
+  //                OptGroup({label: describePasswordConsumerType(groupType)},
+//                    ...consumers.map( pwm => 
+                        ({name}) =>
+                        Option({value: name},
+                          name)
+                  ),
+//                    ...groupType !== PasswordConsumerType.UserEntered ? [] : [
                       Option({value: keyAddNewPassword}, "Add new")
-                    ]
-                  )
-                )
+//                    ]
+//                  )
+//                )
               ).with( select => {
                 select.events.change.on( () => this.onPasswordManagerSelectChanged(select.primaryElement.value ))
               })
             )
           ),
           Div({class: layoutStyles.centered_column},
-            TextInput({class: styles.derivation_options_input}).with( e => {
-              this.derivationOptionsJson.observe( ( newDerivationOptionsJson => {
-                e.primaryElement.style.setProperty("visibility", newDerivationOptionsJson && newDerivationOptionsJson.length > 0 ? "visible" : "hidden");
-                e.value = newDerivationOptionsJson ?? "";
+            TextInput({class: styles.recipe_input}).with( e => {
+              this.recipeJson.observe( ( newRecipe => {
+                e.primaryElement.style.setProperty("visibility", newRecipe && newRecipe.length > 0 ? "visible" : "hidden");
+                e.value = newRecipe ?? "";
               })) 
             })
           ),

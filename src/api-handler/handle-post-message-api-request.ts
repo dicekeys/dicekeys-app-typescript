@@ -35,7 +35,7 @@ export const postMessageApiResponder = (
     (
       (response) => window.opener.postMessage(response, origin)
     );
-  // The host must match any requirements in the derivation options and
+  // The host must match any requirements in the recipe and
   // (for unseal operations) the UnsealingInstructions.      
   const host = origin.startsWith("https://") ? origin.substr(8) :
     origin.startsWith("http://localhost") ? "localhost" : // useful for test

@@ -41,20 +41,19 @@ export class HomeScreenForNoDiceKeyLoaded extends Component<HomeScreenOptions> {
     super.render();
     if (!appHasScannedADiceKeyBefore() && !hideTutorialForever.value) {
       this.append(
-        // FIXME -- show link to assembly tutorial.
-        Button({
-            onClick: () => {},
-            disabled: ""
-          },
-          "Order your DiceKey kit"
-        ),
-        Button({
-            onClick: () => {},
-            disabled: "",
-          },
-          "Assemble your DiceKey"
-        ),
-  
+        // Button({
+        //     onClick: () => {},
+        //     disabled: ""
+        //   },
+        //   "Order your DiceKey kit"
+        // ),
+        /* FIXME -- add assembly instructions */
+        // Button({
+        //     onClick: () => {},
+        //     disabled: "",
+        //   },
+        //   "Assemble your DiceKey"
+        // ),
       )
     }
     this.append(

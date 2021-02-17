@@ -44,8 +44,8 @@ export class ApiDemo extends Component<ApiDemoOptions> {
 
   authorizedDomains: Observable<string[]>;
 
-  // derivationOptionsJson = new PrescribedTextFieldObservables<string, "domains">("domains", {
-  //   formula: Formula("derivationOptionsJson", `'{"allow":[{"host":"*.`, FormulaInputVariable({}, "authorizedDomains[i]"), `"}]}'`)
+  // recipeJson = new PrescribedTextFieldObservables<string, "domains">("domains", {
+  //   formula: Formula("recipeJson", `'{"allow":[{"host":"*.`, FormulaInputVariable({}, "authorizedDomains[i]"), `"}]}'`)
   // });
 
   seedString: PrescribedTextFieldObservables<string, typeof ApiRequestWithSeedParameterNames.seedString>;
@@ -76,7 +76,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
         )
       );
     this.authorizedDomains.observe( authorizedDomains =>
-//      this.derivationOptionsJson.prescribed.set(derivationOptionsJsonForAllowedDomains(this.domains));
+//      this.recipeJson.prescribed.set(recipeJsonForAllowedDomains(this.domains));
       this.respondTo.prescribed.set(`${window.location.protocol}//${
           (authorizedDomains && authorizedDomains.length > 0) ? authorizedDomains[0] : window.location.host
         }${DefaultPermittedPathPrefix}`)
@@ -232,7 +232,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
         Instructions(`
           If you want an unsealing key that you can use directly from the seeded cryptography library,
           without calling the `, DICEKEYS(), ` App,
-          you can call `, FnCallName("getUnsealingKey"), ` with the <i>mayRetrieveKey</i> field of `, InputVar("derivationOptionsJson"),`
+          you can call `, FnCallName("getUnsealingKey"), ` with the <i>mayRetrieveKey</i> field of `, InputVar("recipeJson"),`
           set to true.
         `)
       ),
@@ -247,7 +247,7 @@ export class ApiDemo extends Component<ApiDemoOptions> {
         Instructions(`
           If you want an symmetric key that you can use directly from the seeded cryptography library,
           without calling the `, DICEKEYS(), ` App,
-          you can call `, FnCallName("getSymmetricKey"), ` with the <i>mayRetrieveKey</i> field of `, InputVar("derivationOptionsJson"),`
+          you can call `, FnCallName("getSymmetricKey"), ` with the <i>mayRetrieveKey</i> field of `, InputVar("recipeJson"),`
           set to true.
         `)
       ),
