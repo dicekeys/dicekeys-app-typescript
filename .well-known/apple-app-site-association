@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [ "CTDV6HX5KK.com.dicekeys" ],
+        "components": [
+          {
+            "/": "/",
+            "?": { "command": "?*" },
+            "comment": "Matches any URL with a command"
+          }
+        ]
+      }
+    ]
+  }
+}
