@@ -59,7 +59,7 @@
   flex-shrink: 0;
 }
 
-.footer_button {
+.footer_button, .footer_button_selected {
   display: flex;
   flex-direction: column;
   justify-content: stretch;
@@ -70,7 +70,11 @@
   padding-left: 0;
 }
 
-.fixed_height_icon {
+.footer_button_selected {
+  filter: invert(100%);
+}
+
+.footer_icon {
   display: flex;
   flex-basis: 0;
   flex-grow: 1;

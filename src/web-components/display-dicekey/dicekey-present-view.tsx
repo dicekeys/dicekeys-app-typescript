@@ -14,7 +14,6 @@ import imageOfBackup from "../../images/Backup to DiceKey.svg";
 const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
 
 enum DiceKeyPresentSubViewSelected {
-  Default,
   Display,
   Backup,
   SeedHardwareKey,
@@ -26,7 +25,7 @@ class DiceKeyPresentNavigationState {
 
   constructor() { makeAutoObservable(this) }
 
-  subView = DiceKeyPresentSubViewSelected.Default;
+  subView = DiceKeyPresentSubViewSelected.Display;
 
 }
 
@@ -46,12 +45,16 @@ const DiceKeyPresentViewHeader = observer( ( props: DiceKeyPresentProps) => {
 });
 
 const DiceKeyPresentViewFooter = observer( ( props: DiceKeyPresentProps) => {
+  const footerButtonCLassDisplay = props.navigationState.subView == DiceKeyPresentSubViewSelected.Display ? css.footer_button_selected : css.footer_button;
+  const footerButtonCLassBackup = props.navigationState.subView == DiceKeyPresentSubViewSelected.Backup ? css.footer_button_selected : css.footer_button;
+  const footerButtonCLassDerive = props.navigationState.subView == DiceKeyPresentSubViewSelected.Derive ? css.footer_button_selected : css.footer_button;
+  const footerButtonCLassSeed = props.navigationState.subView == DiceKeyPresentSubViewSelected.SeedHardwareKey ? css.footer_button_selected : css.footer_button;
   return (
   <div className={css.nav_footer}>
-    <div className={css.footer_button}><img className={css.fixed_height_icon} src={imageOfDiceKeyIcon}/><div>DiceKey</div></div>
-    <div className={css.footer_button}><img className={css.fixed_height_icon} src={imageOfUsbKey}/><div>SoloKey</div></div>
-    <div className={css.footer_button}><img className={css.fixed_height_icon} src={imageOfSecretWithArrow}/><div>Secrets</div></div>
-    <div className={css.footer_button}><img className={css.fixed_height_icon} src={imageOfBackup}/>Backup</div>
+    <div className={footerButtonCLassDisplay}><img className={css.footer_icon} src={imageOfDiceKeyIcon}/><div>DiceKey</div></div>
+    <div className={footerButtonCLassSeed}><img className={css.footer_icon} src={imageOfUsbKey}/><div>SoloKey</div></div>
+    <div className={footerButtonCLassDerive}><img className={css.footer_icon} src={imageOfSecretWithArrow}/><div>Secrets</div></div>
+    <div className={footerButtonCLassBackup}><img className={css.footer_icon} src={imageOfBackup}/>Backup</div>
   </div>
   );
 });
