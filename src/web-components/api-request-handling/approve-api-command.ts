@@ -16,9 +16,9 @@ import {
   DiceKey,
   DiceKeyInHumanReadableForm,
 } from "../../dicekeys/dicekey";
-import {
-  DiceKeySvg
-} from "../display-dicekey/dicekey-svg";
+// import {
+//   DiceKeySvg
+// } from "../display-dicekey/dicekey-svg";
 import {
   DisplayPassword
 } from "../display-dicekey/password-field";
@@ -181,7 +181,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
 
   password = new Observable<string>();
   obscurePassword = new Observable<boolean>(true);
-  private setDiceKeySvg = this.replaceableChild<DiceKeySvg>();
+//  private setDiceKeySvg = this.replaceableChild<DiceKeySvg>();
 
 
   public getResponseReturnUponUsersConsent = async (): Promise<ConsentResponse> => {
@@ -203,19 +203,19 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     if (!this.diceKey) {
       return;
     }
-    const diceKeySvg = this.setDiceKeySvg(new DiceKeySvg({
-      diceKey: this.excludeOrientationOfFaces ?
-        DiceKey.removeOrientations(this.diceKey) :
-        this.diceKey,
-      obscureByDefault: true,
-      overlayMessage: {
-        message: "press to open box",
-        fontFamily: "Sans-Serif",
-        fontColor: "#00A000",
-        fontWeight: 600,
-      }
-    }));
-    return diceKeySvg;
+    // const diceKeySvg = this.setDiceKeySvg(new DiceKeySvg({
+    //   diceKey: this.excludeOrientationOfFaces ?
+    //     DiceKey.removeOrientations(this.diceKey) :
+    //     this.diceKey,
+    //   obscureByDefault: true,
+    //   overlayMessage: {
+    //     message: "press to open box",
+    //     fontFamily: "Sans-Serif",
+    //     fontColor: "#00A000",
+    //     fontWeight: 600,
+    //   }
+    // }));
+    // return diceKeySvg;
   }
 
   handleOrientationCheckboxClicked = (excludeOrientationOfFaces: boolean) => {
@@ -233,7 +233,7 @@ export class ApproveApiCommand extends Component<ApproveApiCommandOptions> {
     //var orientationCheckbox: Checkbox;
     this.append(
       Div({class: styles.dicekey_container},
-        this.renderDiceKey()
+//        this.renderDiceKey()
       )
     );
     if (this.mayRecipeBeModified) {

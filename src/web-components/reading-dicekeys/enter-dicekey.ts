@@ -8,17 +8,18 @@ import {
   Div,
   Observable,
 } from "~/web-component-framework";
-import {
-  DiceKeyRenderOptions
-} from "~/dicekeys/render-to-svg";
+// import {
+//   DiceKeyRenderOptions
+// } from "~/dicekeys/render-to-svg";
 import {
   DiceKey,
   ReadOnlyTupleOf25Items,
 } from "~/dicekeys/dicekey";
 import { Face, FaceDigit, FaceLetter, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
-import { DiceKeySvg } from "~/web-components/display-dicekey/dicekey-svg";
+//import { DiceKeySvg } from "~/web-components/display-dicekey/dicekey-svg";
 import { ObservablePartialFace } from "~/dicekeys/partial-dicekey";
 import { CenteredControls } from "~/web-components/basic-building-blocks";
+import { DiceKeyRenderOptions } from "~web-components/display-dicekey/dicekey-view";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
@@ -99,7 +100,7 @@ export class EnterDiceKey extends Component<EnterDiceKeyOptions> {
   render() {
     super.render();
     this.append(
-      new DiceKeySvg({...this.options, diceKey: this.partialDiceKey, highlightDieAtIndex: this.currentFaceIndex}),
+//      new DiceKeySvg({...this.options, diceKey: this.partialDiceKey, highlightDieAtIndex: this.currentFaceIndex}),
       Div({
         class: styles.key_hints,
         text: `To rotate the current face, use either < >, - +, or CTRL arrow (right and left arrows).`

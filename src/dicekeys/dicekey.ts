@@ -6,7 +6,8 @@ import {
   Clockwise90DegreeRotationsFromUpright,
   FaceOrientationLetterTrblOrUnknown,
   InvalidFaceOrientationLettersTrblOrUnknownException,
-  FaceOrientationLettersTrbl
+  FaceOrientationLettersTrbl,
+  FaceDigits
 } from "@dicekeys/read-dicekey-js";
 
 
@@ -384,3 +385,10 @@ DiceKey.removeOrientations = removeOrientations;
 DiceKey.toSeedString = toSeedString;
 DiceKey.cornerIndexesClockwise = [0, 4, 24, 20] as const;
 DiceKey.cornerIndexSet = new Set<number>(DiceKey.cornerIndexesClockwise);
+DiceKey.centerLetterAndDigit = (diceKey: DiceKey) => diceKey[12].letter + diceKey[12].digit;
+DiceKey.nickname = (diceKey: DiceKey) => `DiceKey with ${DiceKey.centerLetterAndDigit(diceKey)} in center`;
+DiceKey.testExample = DiceKey( [...Array(25).keys()].map( (i)  => ({
+  letter: FaceLetters[i],
+  digit: FaceDigits[i % 6],
+  orientationAsLowercaseLetterTrbl: "trbl"[i % 4]
+} as Face ) ));

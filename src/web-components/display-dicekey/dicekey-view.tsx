@@ -1,4 +1,4 @@
-
+import css from "./dicekey-view.module.css"
 import React from "react";
 import { observer } from "mobx-react";
 import {
@@ -62,6 +62,7 @@ const UndoverlineGroupView = ({lineType, code}: { lineType: "underline" | "overl
     isOverline ?
     FaceDimensionsFractional.overlineTop : FaceDimensionsFractional.underlineTop
   );
+  const dotTop = lineTop + (FaceDimensionsFractional.undoverlineThickness - FaceDimensionsFractional.undoverlineDotHeight)/2;
   const undoverlineLeft = -FaceDimensionsFractional.undoverlineLength / 2;
   const firstDotLeft = -(FaceDimensionsFractional.undoverlineDotWidth * 11)/2;
   
@@ -77,8 +78,9 @@ const UndoverlineGroupView = ({lineType, code}: { lineType: "underline" | "overl
       />
       { positionsSetOf11BitCode(code).map( (pos) => (
         <rect
+          key={`position ${pos}`}
           x={firstDotLeft + FaceDimensionsFractional.undoverlineDotWidth * pos}
-          y={lineTop}
+          y={dotTop}
           width={FaceDimensionsFractional.undoverlineDotWidth}
           height={FaceDimensionsFractional.undoverlineDotHeight}
           fill={dieSurfaceColor}
@@ -89,6 +91,13 @@ const UndoverlineGroupView = ({lineType, code}: { lineType: "underline" | "overl
     </g>
   );
 };
+
+const UnderlineGroupView = ({code}: { code: number | undefined }) => (
+  <UndoverlineGroupView lineType={"underline"} code={code} />
+)
+const OverlineGroupView = ({code}: { code: number | undefined }) => (
+  <UndoverlineGroupView lineType={"overline"} code={code} />
+)
 
 
 
@@ -110,8 +119,8 @@ const UnitFaceGroupView = observer( ({face}: {face: Partial<Face>}) => {
 
   return (
     <g>
-      <UndoverlineGroupView lineType={"underline"} code={underlineCode} />
-      <UndoverlineGroupView lineType={"overline"} code={overlineCode} />
+      <UnderlineGroupView code={underlineCode} />
+      <OverlineGroupView code={overlineCode} />
       <text
           x={0}
           y={-FaceDimensionsFractional.undoverlineLength / 2 + FaceDimensionsFractional.textBaselineY}
@@ -124,7 +133,7 @@ const UnitFaceGroupView = observer( ({face}: {face: Partial<Face>}) => {
   //        textAlign={'center'}
   //        lineHeight={1}
           fillOpacity={1}
-        ><tspan>{letter ?? ' ' + digit ?? ' '}</tspan
+        ><tspan>{(letter ?? ' ') + (digit ?? ' ')}</tspan
       ></text>
     </g>
   );
@@ -199,7 +208,7 @@ export const DiceKeyView = observer( ({
     // const diceBoxColorRGB = {r, g, b};  
   
     return (
-      <svg viewBox={`${left} ${top} ${linearSizeOfBox} ${linearSizeOfBoxWithTab}`}>
+      <svg className={css.dicekey_svg} viewBox={`${left} ${top} ${linearSizeOfBox} ${linearSizeOfBoxWithTab}`}>
         { (!showLidTab) ? null : (
           // Lid tab as circle
           <circle
@@ -218,6 +227,7 @@ export const DiceKeyView = observer( ({
         {
           diceKey.map( (face, index) => (
             <FaceGroupView
+              key={index}
               face={face}
               center={{
                 x: distanceBetweenDieCenters * (-2 + (index % 5)),

@@ -15,16 +15,6 @@ import {
 
 const minutesToMs = 60 * 1000;
 
-
-// export class ValueChangedComponentEvent<T> extends ComponentEvent<[T | undefined], StorageField<T>> {
-//   constructor(field: StorageField<T>) { super(field); }
-
-//   onChangeAndInitialValue = (callback: (value: T | undefined) => any) => {
-//     callback(this.parent.value);
-//     return this.on(callback);
-//   }
-// }
-
 export abstract class StorageField<T> extends Observable<T | undefined> {
   protected static byName = new Map<string, StorageField<any>>();
 
