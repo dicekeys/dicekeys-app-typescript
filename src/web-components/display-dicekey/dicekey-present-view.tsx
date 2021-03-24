@@ -10,6 +10,7 @@ import imageOfDiceKeyIcon from "../../images/DiceKey Icon.svg";
 import imageOfUsbKey from "../../images/USB Key.svg";
 import imageOfSecretWithArrow from "../../images/Secret with Arrow.svg";
 import imageOfBackup from "../../images/Backup to DiceKey.svg";
+import { DerivationView, DerivationViewState } from "./derivation-view";
 
 const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
 
@@ -23,10 +24,18 @@ enum DiceKeyPresentSubViewSelected {
 
 class DiceKeyPresentNavigationState {
 
-  constructor() { makeAutoObservable(this) }
+  constructor(
+    initialSubView: DiceKeyPresentSubViewSelected = DiceKeyPresentSubViewSelected.Display
+  ) {
+    this.subView = initialSubView;
+    makeAutoObservable(this)
+  }
 
-  subView = DiceKeyPresentSubViewSelected.Display;
+  subView: DiceKeyPresentSubViewSelected;
 
+  navigateTo = (dest: DiceKeyPresentSubViewSelected) => {
+    this.subView = dest;
+  }
 }
 
 interface DiceKeyPresentProps {
@@ -66,7 +75,17 @@ export const DiceKeyPresentView = observer( ( props: DiceKeyPresentProps) => {
       <div className={css.spacer}/>
       <div className={css.view_content_region}>
         <div className={css.default_view_content}>
-          <DiceKeyView diceKey={props.diceKey}/>
+          {(() => {
+            switch(props.navigationState.subView) {
+              case DiceKeyPresentSubViewSelected.Display: return (
+                <DiceKeyView diceKey={props.diceKey}/>
+              );
+              case DiceKeyPresentSubViewSelected.Derive: return (
+                <DerivationView derivationViewState={new DerivationViewState()} />
+              );
+              default: return null;
+            }
+          })()}
         </div>
       </div>
       <div className={css.spacer}/>
@@ -78,5 +97,5 @@ export const DiceKeyPresentView = observer( ( props: DiceKeyPresentProps) => {
 (window as {testComponent?: {}}).testComponent = {
   ...((window as {testComponent?: {}}).testComponent ?? {}),
   DiceKeyPresentView: () => {
-    ReactDOM.render(<DiceKeyPresentView diceKey={DiceKey.testExample} navigationState={new DiceKeyPresentNavigationState()} />, document.getElementById("app-container"))
+    ReactDOM.render(<DiceKeyPresentView diceKey={DiceKey.testExample} navigationState={new DiceKeyPresentNavigationState(DiceKeyPresentSubViewSelected.Derive)} />, document.getElementById("app-container"))
 }};
