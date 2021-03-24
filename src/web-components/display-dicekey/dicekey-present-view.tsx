@@ -1,3 +1,4 @@
+import css from "./dicekey-present-view.module.css";
 import React from "react";
 import ReactDOM from "react-dom";
 import {makeAutoObservable} from "mobx";
@@ -5,7 +6,6 @@ import { observer  } from "mobx-react";
 import { isElectron } from "../../utilities/is-electron";
 import { DiceKey } from "../../dicekeys/dicekey";
 import { DiceKeyView } from "./dicekey-view";
-import css from "./dicekey-present-view.module.css";
 import imageOfDiceKeyIcon from "../../images/DiceKey Icon.svg";
 import imageOfUsbKey from "../../images/USB Key.svg";
 import imageOfSecretWithArrow from "../../images/Secret with Arrow.svg";
@@ -53,20 +53,21 @@ const DiceKeyPresentViewHeader = observer( ( props: DiceKeyPresentProps) => {
   );
 });
 
-const DiceKeyPresentViewFooter = observer( ( props: DiceKeyPresentProps) => {
-  const footerButtonCLassDisplay = props.navigationState.subView == DiceKeyPresentSubViewSelected.Display ? css.footer_button_selected : css.footer_button;
-  const footerButtonCLassBackup = props.navigationState.subView == DiceKeyPresentSubViewSelected.Backup ? css.footer_button_selected : css.footer_button;
-  const footerButtonCLassDerive = props.navigationState.subView == DiceKeyPresentSubViewSelected.Derive ? css.footer_button_selected : css.footer_button;
-  const footerButtonCLassSeed = props.navigationState.subView == DiceKeyPresentSubViewSelected.SeedHardwareKey ? css.footer_button_selected : css.footer_button;
-  return (
+const FooterButtonView = observer( ( props: DiceKeyPresentProps & {subView: DiceKeyPresentSubViewSelected, imageSrc: string, labelStr: string} ) => (
+  <div
+    className={props.navigationState.subView == props.subView ? css.footer_button_selected : css.footer_button}
+    onClick={() => props.navigationState.navigateTo(props.subView)}
+  ><img className={css.footer_icon} src={props.imageSrc}/><div>{props.labelStr}</div></div>
+));
+
+const DiceKeyPresentViewFooter = observer( ( props: DiceKeyPresentProps) => (
   <div className={css.nav_footer}>
-    <div className={footerButtonCLassDisplay}><img className={css.footer_icon} src={imageOfDiceKeyIcon}/><div>DiceKey</div></div>
-    <div className={footerButtonCLassSeed}><img className={css.footer_icon} src={imageOfUsbKey}/><div>SoloKey</div></div>
-    <div className={footerButtonCLassDerive}><img className={css.footer_icon} src={imageOfSecretWithArrow}/><div>Secrets</div></div>
-    <div className={footerButtonCLassBackup}><img className={css.footer_icon} src={imageOfBackup}/>Backup</div>
+    <FooterButtonView {...props} labelStr={`DiceKey`} subView={DiceKeyPresentSubViewSelected.Display} imageSrc={imageOfDiceKeyIcon}/>
+    <FooterButtonView {...props} labelStr={`SoloKey`} subView={DiceKeyPresentSubViewSelected.SeedHardwareKey} imageSrc={imageOfUsbKey}/>
+    <FooterButtonView {...props} labelStr={`Secret`} subView={DiceKeyPresentSubViewSelected.Derive} imageSrc={imageOfSecretWithArrow}/>
+    <FooterButtonView {...props} labelStr={`Backup`} subView={DiceKeyPresentSubViewSelected.Backup} imageSrc={imageOfBackup}/>
   </div>
-  );
-});
+));
 
 export const DiceKeyPresentView = observer( ( props: DiceKeyPresentProps) => {
   return (

@@ -1,0 +1,55 @@
+.vstack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hstack {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.vertical_labeled_field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.field_row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+.sequence_number_text_field {
+  width: 4rem;
+  text-align: right;
+  border: none;
+  margin-right: 2px;
+  margin-left: 2px;
+}
+
+.label_below {
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: gray;
+  text-align: center;
+  margin-top: 2px;
+}
+
+.form_item {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+}
+
+.form_content {
+  margin-right: 0px;
+}
+
+.form_description {
+  margin-left: 2rem;
+  align-content: flex-start;
+  font-size: 1.25rem;
+}
