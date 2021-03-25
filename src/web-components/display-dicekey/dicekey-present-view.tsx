@@ -82,7 +82,7 @@ export const DiceKeyPresentView = observer( ( props: DiceKeyPresentProps) => {
                 <DiceKeyView diceKey={props.diceKey}/>
               );
               case DiceKeyPresentSubViewSelected.Derive: return (
-                <DerivationView/>
+                <DerivationView seedString={DiceKey.toSeedString(props.diceKey, true)} />
               );
               default: return null;
             }
