@@ -10,7 +10,7 @@ import imageOfDiceKeyIcon from "../../images/DiceKey Icon.svg";
 import imageOfUsbKey from "../../images/USB Key.svg";
 import imageOfSecretWithArrow from "../../images/Secret with Arrow.svg";
 import imageOfBackup from "../../images/Backup to DiceKey.svg";
-import { DerivationView, DerivationViewState } from "./derivation-view";
+import { DerivationView } from "./derivation-view";
 
 const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
 
@@ -82,7 +82,7 @@ export const DiceKeyPresentView = observer( ( props: DiceKeyPresentProps) => {
                 <DiceKeyView diceKey={props.diceKey}/>
               );
               case DiceKeyPresentSubViewSelected.Derive: return (
-                <DerivationView derivationViewState={new DerivationViewState()} />
+                <DerivationView/>
               );
               default: return null;
             }

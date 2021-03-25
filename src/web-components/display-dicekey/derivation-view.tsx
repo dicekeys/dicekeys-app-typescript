@@ -1,9 +1,10 @@
 import css from "./derivation-view.module.css";
 import React from "react";
 import ReactDOM from "react-dom";
-import {makeAutoObservable} from "mobx";
+import {action, makeAutoObservable} from "mobx";
 import { observer  } from "mobx-react";
 import { DerivationRecipeTemplateList } from "../../dicekeys/derivation-recipe-templates";
+import { addSequenceNumberToRecipeJson, DerivationRecipe } from "../../dicekeys/derivation-recipe";
 
 
 interface NumericTextFieldProps {
@@ -61,28 +62,29 @@ export const SequenceNumberFormFieldView = observer( ({sequenceNumberState}: {se
   </div>
 ));
 
-/*
-struct SequenceNumberField: View {
-    @Binding var sequenceNumber: Int
 
-    var body: some View {
-        HStack {
-            Spacer()
-            SequenceNumberView(sequenceNumber: $sequenceNumber)
-            Spacer(minLength: 30)
-            Text("If you need multiple passwords for a single website or service, change the sequence number to create additional passwords.")
-                .foregroundColor(Color.formInstructions)
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-                .minimumScaleFactor(0.01)
-                .scaledToFit()
-                .lineLimit(4)
-            Spacer()
-        }
-    }
+interface RecipeBuilderState {
+  error?: Error;
+  recipe?: string;
 }
-*/
 
+export class RecipeBuilderForTemplateState implements RecipeBuilderState {
+  template: DerivationRecipe;
+  sequenceNumber: number;
+  setSequenceNumber = action( (newSequenceNumber: number) => {
+    this.sequenceNumber = newSequenceNumber;
+  });
+
+  get recipe(): string {
+    return addSequenceNumberToRecipeJson(this.template.recipeJson, this.sequenceNumber);
+  }
+
+  constructor(template: DerivationRecipe, sequenceNumber: number = 1) {
+    this.template = template;
+    this.sequenceNumber = sequenceNumber;
+    makeAutoObservable(this);
+  }
+}
 
 export class DerivationViewState {
 
@@ -93,12 +95,24 @@ export class DerivationViewState {
 
 }
 
-interface DerivationViewProps {
-  derivationViewState: DerivationViewState
-}
-export const DerivationView = observer( ( props: DerivationViewProps) => {
+export const RecipeBuilderForTemplateView = observer( ( props: {state: RecipeBuilderForTemplateState}) => {
+  const state = props.state || new RecipeBuilderForTemplateState(DerivationRecipeTemplateList[0]);
   return (
-    <SequenceNumberFormFieldView sequenceNumberState={props.derivationViewState}  />
+    <div>
+      <SequenceNumberFormFieldView sequenceNumberState={state} />
+      <div>{ state.recipe }</div>
+    </div>
   );
 });
 
+interface DerivationViewProps {
+  state?: RecipeBuilderForTemplateState
+}
+
+
+export const DerivationView = observer( ( props: DerivationViewProps) => {
+  const state = props.state || new RecipeBuilderForTemplateState(DerivationRecipeTemplateList[0]);
+  return (
+      <RecipeBuilderForTemplateView state={state} />
+  );
+});
