@@ -1,3 +1,5 @@
+import { Face, FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
+import { DiceKey } from "~dicekeys/dicekey";
 import {english} from "./word-lists/english";
 
 const invertedEnglish: {[word in string]: number} = english.reduce( (result, word, index) => {
@@ -56,7 +58,7 @@ export const toBip39Array = async (data32Bytes: Uint8ClampedArray): Promise<stri
 export const toBip39StringSpacedSeparated = async (data32Bytes: Uint8ClampedArray): Promise<string> =>
 	(await toBip39Array(data32Bytes)).join(" ");
 
-export const bip39WordsToIndexes = (wordArray: string[]): number[] =>
+const bip39WordsToIndexes = (wordArray: string[]): number[] =>
 	wordArray.map( word => {
 		const index = invertedEnglish[word.toLocaleLowerCase()]
 		if (typeof(index) !== "number") {
@@ -64,7 +66,7 @@ export const bip39WordsToIndexes = (wordArray: string[]): number[] =>
 		}
 		return index;
 	})
-export const bip39WordsToByteArray = async (wordArray: string[]): Promise<Uint8ClampedArray> => {
+const bip39WordsToByteArray = async (wordArray: string[]): Promise<Uint8ClampedArray> => {
 	const wordIndexes = bip39WordsToIndexes(wordArray);
 	const bytes = arrayOf11BitNumbersToUint8ClampedArray(wordIndexes);
 	if (bytes.length < 33) {
@@ -77,3 +79,25 @@ export const bip39WordsToByteArray = async (wordArray: string[]): Promise<Uint8C
 	}
 	return data32Bytes;
 }
+const bip39StringToWords = (bip39: string): string[] => bip39
+	// Split on any sequence of white space characters (space, tab, CR, LF)
+	.split(/[ \t\r\n]+/);
+const fromBip39StringToByteArray = (bip39: string) => bip39WordsToByteArray(bip39StringToWords(bip39));
+const fromBip39StringTo11BitNumbers = async (bip39: string): Promise<number[]> =>
+	uint8ClampedArrayToArrayOf11BitNumbers(await fromBip39StringToByteArray(bip39));
+
+const faceFrom11BitNumber = (faceAs11BitNumber: number): Face => ({
+	letter: FaceLetters[ (faceAs11BitNumber >> 6) & 0x1f],
+	digit: FaceDigits[ (faceAs11BitNumber >> 2) & 0x7 ],
+	orientationAsLowercaseLetterTrbl: FaceOrientationLettersTrbl[faceAs11BitNumber & 0x3]
+} as Face );
+
+export const bip39StringToDiceKey = async (bip39: string): Promise<DiceKey> => DiceKey(
+	(await fromBip39StringTo11BitNumbers(bip39)).slice(0, 25)
+	.map( faceFrom11BitNumber );
+
+	const faceTo11BitNumber = (face: Face): Number =>
+		(FaceLetters.indexOf(face.letter) << 6) |
+		(FaceDigits.indexOf(face.digit) << 2) | 
+		(face.orientationAsLowercaseLetterTrbl === "?" ? 0 : FaceOrientationLettersTrbl.indexOf(face.orientationAsLowercaseLetterTrbl));
+	
