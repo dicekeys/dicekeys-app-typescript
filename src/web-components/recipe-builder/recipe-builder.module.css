@@ -1,3 +1,12 @@
+.recipe_name {
+  font-size: 1.75rem;
+}
+
+.recipe_header {
+  margin-top: .5rem;
+  font-size: 1.5rem;
+}
+
 .vstack {
   display: flex;
   flex-direction: column;
