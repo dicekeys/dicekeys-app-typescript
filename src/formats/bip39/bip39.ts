@@ -1,5 +1,5 @@
 import { Face, FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
-import { DiceKey } from "~dicekeys/dicekey";
+import { DiceKey } from "../../dicekeys/dicekey";
 import {english} from "./word-lists/english";
 
 const invertedEnglish: {[word in string]: number} = english.reduce( (result, word, index) => {
@@ -7,7 +7,10 @@ const invertedEnglish: {[word in string]: number} = english.reduce( (result, wor
 	return result;
 }, {} as {[word in string]: number});
 
-const adjustBitSize= (srcBits: number, dstBits: number) => (source: number[]): number[] => {
+/**
+ * Convert an array of numbers of width srcBits bits to numbers dstBits bits, zero-padding the end if necessary
+ */
+const convertArrayBitWidth= (srcBits: number, dstBits: number) => (source: number[]): number[] => {
 	let bitsLeftInDestNumber = 0;
 	let bitsLeftInSourceNumber = 0;
 	let srcNumbersLeft = [...source];
@@ -26,36 +29,38 @@ const adjustBitSize= (srcBits: number, dstBits: number) => (source: number[]): n
 			bitsLeftInSourceNumber = srcBits;
 		}
 		const numBitsToCopy = Math.min(bitsLeftInDestNumber, bitsLeftInSourceNumber);
-		const bitsLeftInByteAfterCopy = bitsLeftInSourceNumber - numBitsToCopy;
-		const bitsLeftInNumberAfterCopy = bitsLeftInDestNumber - numBitsToCopy;
+		const bitsLeftInByteSourceNumberCopy = bitsLeftInSourceNumber - numBitsToCopy;
+		const bitsLeftInDestNumberAfterCopy = bitsLeftInDestNumber - numBitsToCopy;
 		const bitsToCopy =
 			// Shift bits right to exclude bits on right that won't be copied
-			( srcNumber >> bitsLeftInByteAfterCopy ) & 
+			( srcNumber >> bitsLeftInByteSourceNumberCopy ) & 
 			// mask to include only rightmost numBitsToCopy
 			((1 << numBitsToCopy) - 1);
 		// Copy into numbers
-		destNumbers[destNumbers.lastIndex] |= (bitsToCopy << bitsLeftInNumberAfterCopy);
+		destNumbers[destNumbers.length - 1] |= (bitsToCopy << bitsLeftInDestNumberAfterCopy);
+		// Adjust bit counters
+		bitsLeftInSourceNumber = bitsLeftInByteSourceNumberCopy;
+		bitsLeftInDestNumber = bitsLeftInDestNumberAfterCopy;
 	}
 }
 
-const adjustBitSize8to11 = adjustBitSize(8, 11);
-const adjustBitSize11to8 = adjustBitSize(11, 8);
-const uint8ClampedArrayToArrayOf11BitNumbers = (srcArray: Uint8ClampedArray): number[] => adjustBitSize8to11([...srcArray]);
-const arrayOf11BitNumbersToUint8ClampedArray = (srcArray: number[]): Uint8ClampedArray => new Uint8ClampedArray(adjustBitSize11to8([...srcArray]));
+const convertArrayOf8BitNumbersTo11BitNumbers = convertArrayBitWidth(8, 11);
+const convertArrayOf11BitNumbersTo8BitNumbers = convertArrayBitWidth(11, 8);
+const convertArrayOf8BitNumbersTo10BitNumbers = convertArrayBitWidth(8, 10);
+const convertArrayOf10BitNumbersTo8BitNumbers = convertArrayBitWidth(10, 8);
 
 export class ChecksumError extends Error {}
 
-export const toBip39Array = async (data32Bytes: Uint8ClampedArray): Promise<string[]> => {
+const toBip39Array = async (data32Bytes: Uint8ClampedArray): Promise<string[]> => {
 	if (data32Bytes.length != 32) {
-		// FIXME throw.
-		return [];
+		throw new Error("Bip39 implementation only supports 32-byte arrays")
 	}
 	const checksum = new Uint8ClampedArray((await crypto.subtle.digest('SHA-256', data32Bytes)).slice(0, 1) );
-	const wordIndexes = uint8ClampedArrayToArrayOf11BitNumbers(Uint8ClampedArray.from([...data32Bytes, ...checksum]));
+	const wordIndexes = convertArrayOf8BitNumbersTo11BitNumbers([...data32Bytes, ...checksum]);
 	const bip39Array = wordIndexes.map( i => english[i] );
 	return bip39Array;
 }
-export const toBip39StringSpacedSeparated = async (data32Bytes: Uint8ClampedArray): Promise<string> =>
+export const toBip39 = async (data32Bytes: Uint8ClampedArray): Promise<string> =>
 	(await toBip39Array(data32Bytes)).join(" ");
 
 const bip39WordsToIndexes = (wordArray: string[]): number[] =>
@@ -66,9 +71,10 @@ const bip39WordsToIndexes = (wordArray: string[]): number[] =>
 		}
 		return index;
 	})
+
 const bip39WordsToByteArray = async (wordArray: string[]): Promise<Uint8ClampedArray> => {
-	const wordIndexes = bip39WordsToIndexes(wordArray);
-	const bytes = arrayOf11BitNumbersToUint8ClampedArray(wordIndexes);
+		const wordIndexes = bip39WordsToIndexes(wordArray);
+	const bytes = new Uint8ClampedArray(convertArrayOf11BitNumbersTo8BitNumbers(wordIndexes));
 	if (bytes.length < 33) {
 		throw new Error("Invalid length");
 	}
@@ -79,25 +85,37 @@ const bip39WordsToByteArray = async (wordArray: string[]): Promise<Uint8ClampedA
 	}
 	return data32Bytes;
 }
+
 const bip39StringToWords = (bip39: string): string[] => bip39
 	// Split on any sequence of white space characters (space, tab, CR, LF)
 	.split(/[ \t\r\n]+/);
-const fromBip39StringToByteArray = (bip39: string) => bip39WordsToByteArray(bip39StringToWords(bip39));
-const fromBip39StringTo11BitNumbers = async (bip39: string): Promise<number[]> =>
-	uint8ClampedArrayToArrayOf11BitNumbers(await fromBip39StringToByteArray(bip39));
 
-const faceFrom11BitNumber = (faceAs11BitNumber: number): Face => ({
-	letter: FaceLetters[ (faceAs11BitNumber >> 6) & 0x1f],
-	digit: FaceDigits[ (faceAs11BitNumber >> 2) & 0x7 ],
-	orientationAsLowercaseLetterTrbl: FaceOrientationLettersTrbl[faceAs11BitNumber & 0x3]
+export const bip39ToByteArray = (bip39: string) => bip39WordsToByteArray(bip39StringToWords(bip39));
+
+const fromBip39StringTo10BitNumbers = async (bip39: string): Promise<number[]> =>
+convertArrayOf8BitNumbersTo10BitNumbers([...await bip39ToByteArray(bip39)]);
+
+const faceFromNumber0to599 = (faceAs10BitNumber: number): Face => ({
+	letter: FaceLetters[ Math.floor( faceAs10BitNumber / 24 ) ],
+	digit: FaceDigits[ (Math.floor( faceAs10BitNumber / 4 ) % 6) ],
+	orientationAsLowercaseLetterTrbl: FaceOrientationLettersTrbl[faceAs10BitNumber % 4]
 } as Face );
 
-export const bip39StringToDiceKey = async (bip39: string): Promise<DiceKey> => DiceKey(
-	(await fromBip39StringTo11BitNumbers(bip39)).slice(0, 25)
-	.map( faceFrom11BitNumber );
+export const faceToNumber0to599 = (face: Face): number =>
+	(FaceLetters.indexOf(face.letter) * 24) +
+	(FaceDigits.indexOf(face.digit) * 4) +
+	(face.orientationAsLowercaseLetterTrbl === "?" ? 0 : FaceOrientationLettersTrbl.indexOf(face.orientationAsLowercaseLetterTrbl));
 
-	const faceTo11BitNumber = (face: Face): Number =>
-		(FaceLetters.indexOf(face.letter) << 6) |
-		(FaceDigits.indexOf(face.digit) << 2) | 
-		(face.orientationAsLowercaseLetterTrbl === "?" ? 0 : FaceOrientationLettersTrbl.indexOf(face.orientationAsLowercaseLetterTrbl));
-	
+
+export const bip39StringToDiceKey = async (bip39: string): Promise<DiceKey> => DiceKey(
+	(await fromBip39StringTo10BitNumbers(bip39))
+	.slice(0, 25)
+	.map( faceFromNumber0to599 )
+);
+
+export const diceKeyToBip39WordArray = (diceKey: DiceKey): Promise<string[]> =>
+	toBip39Array( new Uint8ClampedArray(  convertArrayOf10BitNumbersTo8BitNumbers( diceKey.map( faceToNumber0to599 ) ) ));
+
+export const diceKeyToBip39String = (diceKey: DiceKey): Promise<string> =>
+	toBip39( new Uint8ClampedArray(  convertArrayOf10BitNumbersTo8BitNumbers( diceKey.map( faceToNumber0to599 ) ) ));
+

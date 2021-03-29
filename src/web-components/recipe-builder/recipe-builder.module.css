@@ -40,11 +40,12 @@
 }
 
 .label_below {
-  border-top-width: 1px;
+  /* border-top-width: 1px;
   border-top-style: solid;
-  border-top-color: gray;
+  border-top-color: gray; */
   text-align: center;
-  margin-top: 2px;
+  margin-top: 1px;
+  margin-bottom: 4px;
 }
 
 .form_item {
@@ -61,4 +62,32 @@
   margin-left: 2rem;
   align-content: flex-start;
   font-size: 1.25rem;
+}
+
+.derived_value_row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.derived_value_label {
+  font-style: italic;
+  width: 5rem;
+  text-align: right;
+  margin-right: 0.5rem;
+  align-self: flex-start
+}
+
+.derived_value_contents {
+  font-family: monospace;
+  align-self: center;
+}
+
+.derived_value_contents_json {
+  font-family: monospace;
+  white-space: pre;
+}
+
+.host_name_text_field {
+  min-width: 20rem;
 }

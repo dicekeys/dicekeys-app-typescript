@@ -25,9 +25,9 @@ export const NumericTextField = (props: NumericTextFieldProps) => {
   )
 };
 
-interface SequenceNumberState {
-  sequenceNumber: number;
-  setSequenceNumber: (newSequenceNumber: number) => void
+export interface SequenceNumberState {
+  sequenceNumber?: number;
+  setSequenceNumber: (newSequenceNumber: number | undefined) => void
 }
 
 export const SequenceNumberView = observer( ({sequenceNumberState}: {sequenceNumberState: SequenceNumberState}) => {
@@ -35,14 +35,14 @@ export const SequenceNumberView = observer( ({sequenceNumberState}: {sequenceNum
     <div className={css.field_row}>
       <div className={css.vertical_labeled_field}>
         <div className={css.hstack}>
-          <button onClick={ () => sequenceNumberState.setSequenceNumber( Math.max(1, sequenceNumberState.sequenceNumber - 1 )) } >-</button>
+          <button onClick={ () => sequenceNumberState.setSequenceNumber( Math.max(1, (sequenceNumberState.sequenceNumber ?? 1) - 1 )) } >-</button>
           <NumericTextField
             className={ css.sequence_number_text_field }
-            value={ sequenceNumberState.sequenceNumber }
+            value={ sequenceNumberState.sequenceNumber ?? 1 }
             setValue={ value => sequenceNumberState.sequenceNumber = value }
             isValid={ stringValue => parseInt(stringValue) > 0 }
           />
-          <button onClick={ () => sequenceNumberState.setSequenceNumber( sequenceNumberState.sequenceNumber + 1 ) } >+</button>
+          <button onClick={ () => sequenceNumberState.setSequenceNumber( (sequenceNumberState.sequenceNumber ?? 1)  + 1 ) } >+</button>
         </div>
         <label className={css.label_below}>Sequence Number</label>
       </div>

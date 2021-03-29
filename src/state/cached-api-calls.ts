@@ -1,23 +1,35 @@
 import { action, makeAutoObservable, ObservableMap } from "mobx";
 import { ComputeApiCommandWorker } from "../workers/call-api-command-worker";
-import { ApiCalls, PasswordJson } from "@dicekeys/dicekeys-api-js";
+import { ApiCalls, PasswordJson, SecretJson } from "@dicekeys/dicekeys-api-js";
 import { requestHasPackagedSealedMessageParameter, requestHasRecipeParameter } from "@dicekeys/dicekeys-api-js/dist/api-calls";
+import { ApiRequestContainer } from "~web-components/api-request-handling/api-request-container";
+
+export const hexStringToUint8ClampedArray = (hexString: string): Uint8ClampedArray =>
+  new Uint8ClampedArray(hexString.match(/.{1,2}/g)!.map( (byte) => parseInt(byte, 16)));
+
+export const uint8ClampedArrayToHexString = (bytes: Uint8ClampedArray) =>
+  bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
+
+export class AsyncResultObservable<T> {
+  result?: T = undefined;
+  exception?: any = undefined;
+
+  constructor(fn: () => Promise<T>) {
+    makeAutoObservable(this);
+    fn()
+      .then( (result) => this.result = result )
+      .catch( (exception) => this.exception = exception );
+  }
+}
 
 export class CachedApiCalls {
-  private cache = new ObservableMap<string, {result: ApiCalls.ApiCallResult | undefined}>();
+  private cache = new ObservableMap<string, AsyncResultObservable<ApiCalls.Response>>();
 
-  private createEntryForResult = action ( (
-    key: string
-  ) => {
-    this.cache.set(key, makeAutoObservable({result: undefined}));
-  });
-
-  private setResult = action( <T extends ApiCalls.Request = ApiCalls.Request>(
-    key: string,
-    result: ApiCalls.ResultForRequest<T> | undefined
-  ) => {
-    this.cache.get(key)!.result = result;
-  });
+  private calculate = action (
+      (key: string, fn: () => Promise<ApiCalls.Response>): void => {
+        this.cache.set(key, new AsyncResultObservable(fn));
+      }
+  );
 
   getResultForRecipe = <T extends ApiCalls.Request = ApiCalls.Request>(
     request: T
@@ -28,29 +40,45 @@ export class CachedApiCalls {
       ""
     }`;
     if (this.cache.has(key)) {
-      return (this.cache.get(key) as {result?: ApiCalls.ResultForRequest<T>}).result;
+      return this.cache.get(key)!.result as ApiCalls.ResultForRequest<T>;
     }
-    this.createEntryForResult(key);
-    new ComputeApiCommandWorker().calculate({seedString: this.seedString, request}).then( result => {
-      if ("exception" in result) {
-        // this.throwException(result.exception, "calculating a password");
-      } else {
-        console.log(`setResult ${key} ${result}`)
-        this.setResult<T>(key, result as ApiCalls.ResultForRequest<T>);
-      }
-    }).catch( e => {
-      console.log(`Exception in API command worker ${e}`);
-    });
+    this.calculate(key, () => new ComputeApiCommandWorker().calculate({seedString: this.seedString, request}));
     return this.cache.get(key)?.result as (ApiCalls.ResultForRequest<T> | undefined);
   }
 
-  getPasswordForRecipe = (recipe: string): string | undefined => {
-    const apiResponse = this.getResultForRecipe({
-      command: ApiCalls.Command.getPassword,
-      recipe
-    } as ApiCalls.GetPasswordRequest);
-    return apiResponse && apiResponse.passwordJson ? (JSON.parse(apiResponse.passwordJson) as PasswordJson).password : undefined;
+  getJsonForRecipe =
+    <R extends (ApiCalls.GetPasswordRequest | ApiCalls.GetSecretRequest | ApiCalls.GetUnsealingKeyRequest | ApiCalls.GetSymmetricKeyRequest | ApiCalls.GetSigningKeyRequest)>(
+     command: R["command"], recipe: string
+    ): ApiCalls.ResultForRequest<R> | undefined => {
+    return this.getResultForRecipe<R>({command, recipe} as R)
   }
+
+  getPasswordJsonForRecipe = (recipe: string): string | undefined =>
+    this.getResultForRecipe({command: ApiCalls.Command.getPassword, recipe})?.passwordJson;
+
+  getPasswordForRecipe = (recipe: string): string | undefined => {
+    const passwordJson = this.getPasswordJsonForRecipe(recipe); 
+    return passwordJson ? (JSON.parse(passwordJson) as PasswordJson).password : undefined;
+  }
+
+  getSecretJsonForRecipe = (recipe: string): string | undefined =>
+    this.getResultForRecipe({command: ApiCalls.Command.getSecret, recipe})?.secretJson;
+
+  getSecretJsonObjForRecipe = (recipe: string): SecretJson | undefined => {
+    const secretJson = this.getSecretJsonForRecipe(recipe);
+    return secretJson ? (JSON.parse(secretJson) as SecretJson) : undefined;
+  }
+
+  getSecretBytesForRecipe = (recipe: string): Uint8ClampedArray | undefined => {
+    const secretBytesHex = this.getSecretJsonObjForRecipe(recipe)?.secretBytes;
+    return secretBytesHex ? hexStringToUint8ClampedArray(secretBytesHex) : undefined;
+  }
+
+  getSymmetricKeyJsonForRecipe = (recipe: string): string | undefined =>
+  this.getResultForRecipe({command: ApiCalls.Command.getSymmetricKey, recipe})?.symmetricKeyJson;
+
+  getUnsealingKeyJsonForRecipe = (recipe: string): string | undefined =>
+  this.getResultForRecipe({command: ApiCalls.Command.getUnsealingKey, recipe})?.unsealingKeyJson;
 
   constructor(private seedString: string) {
     makeAutoObservable(this);

@@ -22,5 +22,5 @@ const addFieldToEndOfJsonObjectString = (fieldName: string, doNotAddIfValueIs?: 
   return prefixUpToFinalClosingBrace + `${commaIfObjectNonEmpty}"${fieldName}":${fieldValueString}` + suffixIncludingFinalCloseBrace;
 }
 
-export const addLengthInCharsToRecipeJson: (recipeWithoutLengthInChars: string, lengthInChars: number) => string = addFieldToEndOfJsonObjectString("lengthInChars", 0); 
-export const addSequenceNumberToRecipeJson: (recipeWithoutSequenceNumber: string, sequenceNumber: number) => string = addFieldToEndOfJsonObjectString("#", 1);
+export const addLengthInCharsToRecipeJson: (recipeWithoutLengthInChars: string, lengthInChars?: number) => string = addFieldToEndOfJsonObjectString("lengthInChars", 0); 
+export const addSequenceNumberToRecipeJson: (recipeWithoutSequenceNumber: string, sequenceNumber?: number) => string = addFieldToEndOfJsonObjectString("#", 1);
