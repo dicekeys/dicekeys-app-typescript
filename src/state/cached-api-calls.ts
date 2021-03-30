@@ -2,7 +2,6 @@ import { action, makeAutoObservable, ObservableMap } from "mobx";
 import { ComputeApiCommandWorker } from "../workers/call-api-command-worker";
 import { ApiCalls, PasswordJson, SecretJson } from "@dicekeys/dicekeys-api-js";
 import { requestHasPackagedSealedMessageParameter, requestHasRecipeParameter } from "@dicekeys/dicekeys-api-js/dist/api-calls";
-import { ApiRequestContainer } from "~web-components/api-request-handling/api-request-container";
 
 export const hexStringToUint8ClampedArray = (hexString: string): Uint8ClampedArray =>
   new Uint8ClampedArray(hexString.match(/.{1,2}/g)!.map( (byte) => parseInt(byte, 16)));
