@@ -1,0 +1,67 @@
+import { action, makeAutoObservable } from "mobx";
+import { withDefined } from "../../utilities/if-defined";
+
+
+type SetObservableBoundsFunction = (newBounds: DOMRectReadOnly) => any;
+export class ObservableBounds {
+  contentRect: DOMRectReadOnly = new DOMRectReadOnly();
+
+  private setBounds = action ( (newBounds: DOMRectReadOnly) => {
+    this.contentRect = newBounds;
+  })
+
+  private constructor() {
+    makeAutoObservable(this);
+  }
+
+  static create = (): [ObservableBounds, SetObservableBoundsFunction] => {
+    const observableBounds = new ObservableBounds();
+    const setObservableBounds = observableBounds.setBounds;
+    return [observableBounds, setObservableBounds];
+  }
+}
+
+
+class ReactObservableBounds {
+  private element?: HTMLElement = undefined;
+  observableBounds: ObservableBounds;
+  private setObservableBounds: SetObservableBoundsFunction;
+  private resizeObserver?: ResizeObserver;
+
+  static create = (): [ObservableBounds, (element?: HTMLElement | null) => void] => {
+    const {observableBounds, setElementRef} = new ReactObservableBounds();
+    return [observableBounds, setElementRef];
+  }
+  
+  private constructor() {
+    [this.observableBounds, this.setObservableBounds] = ObservableBounds.create();
+  }
+  private resizeObserverCallback: ResizeObserverCallback = ( entries ) => entries.forEach( entry => {
+      if (entry.target === this.element) {
+        this.setObservableBounds(entry.contentRect);
+      }
+    })
+
+  private clearElement = action( () => {
+    withDefined( this.element, element => {
+      this.resizeObserver?.unobserve(element)
+      this.element = undefined;
+    });
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = undefined;
+  })
+
+  private setElementRef = action( (element?: HTMLElement | null) => {
+    if (!element) {
+      this.clearElement();
+    } else if ( element !== this.element) {
+      this.clearElement();
+      this.element = element;
+      this.setObservableBounds(element.getBoundingClientRect());
+      this.resizeObserver = new ResizeObserver(this.resizeObserverCallback);
+      this.resizeObserver.observe( element );
+    }
+  })
+}
+
+export const createReactObservableBounds = ReactObservableBounds.create;
