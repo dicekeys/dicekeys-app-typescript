@@ -1,7 +1,7 @@
 import React from "react";
 import { action, autorun, makeAutoObservable, runInAction } from "mobx";
 import { observer } from "mobx-react";
-import { MakeThisElementsBoundsObservable } from "~web-components/basics/bounds";
+import { MakeThisElementsBoundsObservable } from "../../web-components/basics/bounds";
 import { FrameGrabber } from "./frame-grabber";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
@@ -43,13 +43,13 @@ export class MediaStreamState {
 }
 
 export interface CameraCaptureProperties {
-  mediaStreamState?: MediaStreamState;
+  mediaStreamState: MediaStreamState;
   onVideoElementRef?: (e: HTMLVideoElement | null) => any;
   onFrameCaptured?: (frame: ImageData) => any;
   makeThisElementsBoundsObservable?: MakeThisElementsBoundsObservable;
 }
 
-export const CameraCapture = observer ( (props: React.PropsWithoutRef<CameraCaptureProperties>) => {
+export const CameraCaptureView = observer ( (props: React.PropsWithoutRef<CameraCaptureProperties>) => {
   const frameGrabber = new FrameGrabber(props.onFrameCaptured);
 
   const withVideoElementRef = (videoElement: HTMLVideoElement) => autorun( () => {
@@ -57,11 +57,11 @@ export const CameraCapture = observer ( (props: React.PropsWithoutRef<CameraCapt
     props.makeThisElementsBoundsObservable?.(videoElement);
     frameGrabber.setVideoElement(videoElement);
     if (videoElement) {
-      videoElement.srcObject = (props.mediaStreamState?.mediaStream ?? null );
+      videoElement.srcObject = props.mediaStreamState?.mediaStream ?? null;
     }
   });
 
   return (
-    <video ref={withVideoElementRef} />
+    <video autoPlay={true} ref={withVideoElementRef} />
   )
 });

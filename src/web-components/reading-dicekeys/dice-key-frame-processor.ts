@@ -2,12 +2,13 @@ import {
   FaceRead, renderFacesRead
 } from "@dicekeys/read-dicekey-js";
 import {
-  TupleOf25Items, allDiceErrorTypes, allFacesReadHaveMajorityValues
-} from "../../dicekeys";
+  allDiceErrorTypes, allFacesReadHaveMajorityValues
+} from "../../dicekeys/faces-read";
 import {
     ProcessFrameResponse,
     FaceReadWithImageIfErrorFound} from "../../workers/dicekey-image-frame-worker"
 import { action, makeAutoObservable } from "mobx";
+import { TupleOf25Items } from "../../dicekeys";
 
 export class DiceKeyFrameProcessorState {
   facesRead?: FaceRead[];
@@ -37,7 +38,7 @@ export class DiceKeyFrameProcessorState {
    */
   private framesSinceErrorsNarrowedToJustBitErrors: number | undefined;
 
-  
+
   constructor() {
     makeAutoObservable(this);
   }

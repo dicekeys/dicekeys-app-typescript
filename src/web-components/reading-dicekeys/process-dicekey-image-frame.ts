@@ -57,18 +57,20 @@ class DiceKeyFrameWorkerClient {
     // First construct a request
     const request: ProcessFrameRequest = {
       requestId,
-      width, height, rgbImageAsArrayBuffer,
+      width, height,
+      rgbImageAsArrayBuffer,
       action: "processRGBAImageFrame",
       sessionId: this.cameraSessionId!,
     };
     // The mark the objects that can be transferred to the worker.
     // This eliminates the need to copy the big memory buffer over, but the worker will now own the memory.
-    const transferrableObjectsWithinRequest: Transferable[] =  [request.rgbImageAsArrayBuffer];
+    const transferrableObjectsWithinRequest: Transferable[] = []; // [request.rgbImageAsArrayBuffer];
     // Send the request to the worker
     this.frameWorker.postMessage(request, transferrableObjectsWithinRequest);
     const response = (await this.workerMessageReceivedEvent.promiseOfNextOccurrence(
       message => "action" in message.data && message.data.action === "processRGBAImageFrame" 
     )).data as ProcessFrameResponse;
+    console.log(`Worker response ${JSON.stringify(response)}`)
     return response;
   }
 }

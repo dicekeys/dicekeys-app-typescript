@@ -1,5 +1,5 @@
 import { Exceptions } from "@dicekeys/dicekeys-api-js";
-import {makeAutoObservable, ObservableMap} from "mobx";
+import {makeAutoObservable, ObservableMap, runInAction} from "mobx";
 // import { browserInfo } from "~utilities/browser";
 // import {
 //   ComponentEvent
@@ -188,18 +188,22 @@ export class CamerasOnThisDevice {
         ...cameraWithoutName,
         name
       };
-      this.camerasToBeAdded.delete(deviceId);
-      this.unreadableCameraDevices.delete(deviceId);
-      this.camerasByDeviceId.set(deviceId, camera);
+      runInAction( () => {
+        this.camerasToBeAdded.delete(deviceId);
+        this.unreadableCameraDevices.delete(deviceId);
+        this.camerasByDeviceId.set(deviceId, camera);
+      });
 //      this.cameraListProcessingStatusUpdated.send();
       return camera;
     } catch (e) {
-      if (this.unreadableCameraDevices.has(deviceId)) {
-        this.unreadableCameraDevices.get(deviceId)?.exceptions.unshift(e);
-      } else {
-        this.unreadableCameraDevices.set(deviceId, {cameraDevice, exceptions: [e]});
-//        this.cameraListProcessingStatusUpdated.send();
-      }
+      runInAction( () => {
+        if (this.unreadableCameraDevices.has(deviceId)) {
+          this.unreadableCameraDevices.get(deviceId)?.exceptions.unshift(e);
+        } else {
+          this.unreadableCameraDevices.set(deviceId, {cameraDevice, exceptions: [e]});
+  //        this.cameraListProcessingStatusUpdated.send();
+        }
+      });
     }
     return;
   }

@@ -1,6 +1,6 @@
 import { FaceRead, FaceReadError } from "@dicekeys/read-dicekey-js";
 import { action, makeAutoObservable } from "mobx";
-import { FaceReadWithImageIfErrorFound } from "~workers/dicekey-image-frame-worker";
+import { FaceReadWithImageIfErrorFound } from "../workers/dicekey-image-frame-worker";
 import { TupleOf25Items } from "./dicekey";
 
 
