@@ -1,8 +1,9 @@
 import { Exceptions } from "@dicekeys/dicekeys-api-js";
+import {makeAutoObservable, ObservableMap} from "mobx";
 // import { browserInfo } from "~utilities/browser";
-import {
-  ComponentEvent
-} from "../../web-component-framework"
+// import {
+//   ComponentEvent
+// } from "../../web-component-framework"
 
  // Safari may require 640 or 1280, see 
  // https://stackoverflow.com/questions/46981889/how-to-resolve-ios-11-safari-getusermedia-invalid-constraint-issue
@@ -84,6 +85,7 @@ export class CamerasOnThisDevice {
   }
 
   private constructor() {
+    makeAutoObservable(this);
     this.addAttachedAndRemovedDetachedCameras();
     // Start getting a list of cameras
     // Make sure we update the camera list whenever a camera is added or removed
@@ -97,16 +99,16 @@ export class CamerasOnThisDevice {
    * An event triggered whenever there's an update to the
    * status of building the detailed list of cameras.
    */
-  public cameraListProcessingStatusUpdated = new ComponentEvent<[]>(this);
+//  public cameraListProcessingStatusUpdated = new ComponentEvent<[]>(this);
 
   /**
    * An event triggered whenever the list of cameras changes
    */
-  public cameraListUpdated = new ComponentEvent<[Camera[]]>(this);
+  //public cameraListUpdated = new ComponentEvent<[Camera[]]>(this);
 
-  public readonly camerasToBeAdded = new Map<string, MediaDeviceInfo>();
-  public readonly camerasByDeviceId = new Map<string, Camera>();
-  public readonly unreadableCameraDevices = new Map<string, {cameraDevice: MediaDeviceInfo, exceptions: any[]}>();
+  public readonly camerasToBeAdded = new ObservableMap<string, MediaDeviceInfo>();
+  public readonly camerasByDeviceId = new ObservableMap<string, Camera>();
+  public readonly unreadableCameraDevices = new ObservableMap<string, {cameraDevice: MediaDeviceInfo, exceptions: any[]}>();
 
   /**
    * A list of cameras sorted by direction (back-facing first, front-facing last)
@@ -118,7 +120,7 @@ export class CamerasOnThisDevice {
     return sortedCameras;
   }
 
-  private cameraDeviceIdToCameraNumber = new Map<string, number>();
+  private cameraDeviceIdToCameraNumber = new ObservableMap<string,number>(); // new Map<string, number>();
   private getCameraNumber = (deviceId: string): number => {
     if (!this.cameraDeviceIdToCameraNumber.has(deviceId)) {
       this.cameraDeviceIdToCameraNumber.set(deviceId, this.cameraDeviceIdToCameraNumber.size +1);
@@ -189,14 +191,14 @@ export class CamerasOnThisDevice {
       this.camerasToBeAdded.delete(deviceId);
       this.unreadableCameraDevices.delete(deviceId);
       this.camerasByDeviceId.set(deviceId, camera);
-      this.cameraListProcessingStatusUpdated.send();
+//      this.cameraListProcessingStatusUpdated.send();
       return camera;
     } catch (e) {
       if (this.unreadableCameraDevices.has(deviceId)) {
         this.unreadableCameraDevices.get(deviceId)?.exceptions.unshift(e);
       } else {
         this.unreadableCameraDevices.set(deviceId, {cameraDevice, exceptions: [e]});
-        this.cameraListProcessingStatusUpdated.send();
+//        this.cameraListProcessingStatusUpdated.send();
       }
     }
     return;
@@ -260,7 +262,7 @@ export class CamerasOnThisDevice {
     ) {
       this._ready = true;
       // A change to the list has been made so send an update event
-      this.cameraListUpdated.send(this.cameras);
+//      this.cameraListUpdated.send(this.cameras);
     }
   }
 

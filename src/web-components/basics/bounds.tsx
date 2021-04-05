@@ -1,6 +1,7 @@
 import { action, makeAutoObservable } from "mobx";
 import { withDefined } from "../../utilities/if-defined";
 
+export type MakeThisElementsBoundsObservable = (element?: HTMLElement | null) => void;
 
 type SetObservableBoundsFunction = (newBounds: DOMRectReadOnly) => any;
 export class ObservableBounds {
@@ -28,7 +29,7 @@ class ReactObservableBounds {
   private setObservableBounds: SetObservableBoundsFunction;
   private resizeObserver?: ResizeObserver;
 
-  static create = (): [ObservableBounds, (element?: HTMLElement | null) => void] => {
+  static create = (): [ObservableBounds, MakeThisElementsBoundsObservable] => {
     const {observableBounds, setElementRef} = new ReactObservableBounds();
     return [observableBounds, setElementRef];
   }
@@ -51,7 +52,7 @@ class ReactObservableBounds {
     this.resizeObserver = undefined;
   })
 
-  private setElementRef = action( (element?: HTMLElement | null) => {
+  private setElementRef: MakeThisElementsBoundsObservable = action( (element?: HTMLElement | null) => {
     if (!element) {
       this.clearElement();
     } else if ( element !== this.element) {

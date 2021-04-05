@@ -1,0 +1,12 @@
+import React from "react";
+import { observer } from "mobx-react";
+import { ObservableBounds } from "./bounds";
+import css from "./overlay-canvas.module.css";
+
+export const OverlayCanvas = observer ( ( props: {bounds: ObservableBounds} & React.DetailedHTMLProps<React.CanvasHTMLAttributes<HTMLCanvasElement>, HTMLCanvasElement>) => {
+  const {bounds, ...canvasProps} = props;
+  const {width, height, left, top} = bounds.contentRect;
+  return (
+    <canvas className={css.overlay} width={width} height={height} style={{left, top}} {...canvasProps} />
+  );
+});

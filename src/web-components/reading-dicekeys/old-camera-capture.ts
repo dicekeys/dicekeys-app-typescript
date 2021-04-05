@@ -1,0 +1,508 @@
+// import styles from "./camera-capture.module.css";
+// import {
+// //  getElementDimensions,
+//   Component, Attributes,
+//   Canvas,
+//   Div,
+//   Select,
+//   Option,
+//   Video, ComponentEvent
+// } from "../../web-component-framework";
+// import {
+//   CamerasBeingInspected
+// } from "./cameras-being-inspected";
+// import {
+//   Camera,
+//   CamerasOnThisDevice,
+// //  videoConstraintsForDevice
+// } from "./cameras-on-this-device";
+// import { browserInfo } from "~utilities/browser";
+// import { CenteredControls } from "~web-components/basic-building-blocks";
+// // import { browserInfo } from "../utilities/browser";
+
+// export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
+
+// export interface CameraCaptureOptions extends Attributes {
+//   maxWidth?: number;
+//   maxHeight?: number;
+//   fixAspectRatioToWidthOverHeight?: number;
+// }
+
+
+// // const getDefaultCameraDimensions = (): {width: number, height: number} => {
+// //   const {browser} = browserInfo;
+// //   switch (browser) {
+// //     case "Safari": return {
+// //       width: 1280,
+// //       height: 1280
+// //     };
+// //     case "Firefox": return {
+// //       width: 1280,
+// //       height: 1280,
+// //     };
+// //     default: return {
+// //       width: 1024,
+// //       height: 1024
+// //     };
+// //   }
+// // }
+// // const defaultCameraDimensions = getDefaultCameraDimensions();
+
+// /**
+//  * This component scans scans images using the device camera(s).
+//  * 
+//  * When possible, it will use the ImageCapture interface to grab frames
+//  * at a resolution that's high enough to minimize the impact of errors
+//  * while low enough to not make processing intolerably slow.
+//  * Typically 768x768 or 1024x1024 (square units to fit a square DiceKey).
+//  * 
+//  * ## Implementation notes
+//  * This component will always render a Video element, even though that Video
+//  * element will not be displayed when we're grabbing frames using
+//  * ImageCapture and rendering them by drawing them to a canvas.
+//  * If we don't send the camera data to a video element and grab frames too
+//  * slowly, some browsers will mute the camera image.  Ensuring the camera
+//  * stream is always sent to a video element, even if that video element
+//  * is not rendered, seems to address that problem.
+//  */
+// export class CameraCapture extends Component<CameraCaptureOptions> {
+//   /**
+//    * This separate module tracks the cameras attached to the device
+//    */
+//   private readonly camerasBeingInspected: CamerasBeingInspected = new CamerasBeingInspected({});
+
+//   /**
+//    * The id of the camera from which the current video feed originates.
+//    */
+//   camerasDeviceId: string | undefined;
+
+//   /**
+//    * Set to true when we are able to use the ImageCapture API to grab
+//    * frames from the camera and images are rendered into a canvas
+//    */
+//   private useImageCapture: boolean = imageCaptureSupported && false; // FIXME default off
+//   /**
+//    * Set to true when raw input frames are sent directly to a video element
+//    * and then captured by scraping them out of the video element
+//    */
+//   public get isRenderedOverVideo(): boolean {return !this.useImageCapture };
+
+//   /**
+//    * When ImageCapture is not available and we render raw video feeds, we
+//    * overlay a translucent image displaying what we were and were not able
+//    * to read from the last analyzed frame using this canvas element, which
+//    * is at a higher z-index than the video below it.
+//    */
+//   private overlayCanvasComponent?: Canvas;
+//   public get overlayCanvas() {return this.overlayCanvasComponent?.primaryElement};
+//   // private get overlayCanvasCtx() {return this.overlayCanvas?.getContext("2d")};
+
+//   /**
+//    * For rendering raw camera input to the screen
+//    */
+//   private videoComponent?: Video;
+
+//   private cameraSelectionMenu?: HTMLSelectElement;
+//   private get videoPlayer() {return this.videoComponent?.primaryElement}
+  
+//   /**
+//    * A re-usable canvas into which to capture image frames
+//    */
+//   private readonly captureCanvas: HTMLCanvasElement = document.createElement("canvas");
+//   private captureCanvasCtx?: CanvasRenderingContext2D = this.captureCanvas.getContext("2d")!;
+
+//   /**
+//    * The media stream from the current camera
+//    */
+//   private mediaStream?: MediaStream;
+
+//   /**
+//    * The ImageCapture object used to grab frames from the camera
+//    * (not supported by all browsers.  We fallback to rendering
+//    * to a video element and then capturing frames out of the
+//    * video rendered to the screen.)
+//    */
+//   private imageCapture?: ImageCapture;
+
+//   // Set to true when the first frame has been drawn.
+//   // Allows us to draw first ImageCapture frame loaded without delay.
+//   // FIXME remove private hasAnImageBeenDrawnOntoTheOverlayCanvas = false;
+
+
+//   public noCamerasFoundEvent = new ComponentEvent<[], this>(this);
+//   public camerasMuteEvent = new ComponentEvent<[], this>(this);
+
+  
+  
+//   /**
+//    * The code supporting the demo page cannot until the WebAssembly module for the image
+//    * processor has been loaded. Pass the module to wire up the page with this class.
+//    * @param module The web assembly module that implements the DiceKey image processing.
+//    */
+//   constructor(
+//     options: CameraCaptureOptions
+//   ) {
+//     super(options);
+
+//     //
+//     // Initialize the list of device cameras
+//     CamerasOnThisDevice.instance.cameraListUpdated.on( (cameras) => this.onCameraListUpdate(cameras) )
+//     if (CamerasOnThisDevice.instance.cameras.length > 0) {
+//       this.setCamera(CamerasOnThisDevice.instance.cameras[0]);
+//     } 
+//   }  
+//   /**
+//    * Update the selection menu of cameras
+//    */
+//   renderCameraList = (cameras: Camera[] = CamerasOnThisDevice.instance.cameras) => {
+//     if (!this.cameraSelectionMenu) {
+//       return;
+//     }
+
+//     if (cameras.length < 2) {
+//       // There's only one camera option, so hide the camera-selection field.
+//       this.cameraSelectionMenu.style.setProperty("display", "none");
+//       return;
+//     }
+
+//     this.cameraSelectionMenu.style.setProperty("display", "block");
+
+//     // Remove all child elements (select options)
+//     this.cameraSelectionMenu.innerHTML = '';
+//     // Replace old child elements with updated select options
+//     this.cameraSelectionMenu.append(
+//       ...cameras.map( (camera) => Option({text: camera.name, value: camera.deviceId}).primaryElement )
+//     );
+//     this.cameraSelectionMenu.value = this.camerasDeviceId || "";
+//     this.cameraSelectionMenu.style.setProperty("visibility", "visible");
+//   }
+
+
+//   private onCameraListUpdate = (cameras: Camera[]): void => {
+//     if (!this.overlayCanvas || !this.cameraSelectionMenu || this.removed) {
+//       this.renderSoon();
+//       return;
+//     }
+//     if (cameras.length == 0) {
+//       this.camerasDeviceId = undefined;
+//       this.renderSoon();
+//     }
+//     // Whenever there's an update to the camera list, if we don't have an
+//     // active camera, set the active camera to the first camera in the list.
+//     if (cameras.length > 0) {
+//       // no longer need to show the list of cameras
+//       this.camerasBeingInspected?.remove()
+//       if (!this.mediaStream) {
+//         this.setCamera(cameras[0]);
+//       }
+//     }
+//     // And update the rendered camera list
+//     this.renderCameraList(cameras);
+//   }
+
+
+//   render() {
+//     super.render();
+//     if (CamerasOnThisDevice.instance.cameras.length == 0) {
+//       if (CamerasOnThisDevice.instance.ready) {
+//         // We've loaded all the cameras and found there are none
+//         this.append(
+//           Div({style: "color: #ff8080; font-size: 1.75rem; max-width: 70vw;"},
+//             "Either no cameras are connected or your browser is denying access to them.",
+//             document.createElement("br"),
+//             document.createElement("br"),
+//             "Please make sure cameras are connected, no other apps are using them, and that the app is permitted to access them.",
+//             document.createElement("br"),
+//             "Then press the refresh button in your browser."
+//           )
+//         );
+//       } else {
+//         // We're still loading the cameras
+//         this.append(
+//           Div({},
+//             this.camerasBeingInspected,
+//           )
+//         )
+//       }
+//     } else {
+//       // Render an overlay and a camera for the video experience
+//       this.append(
+//         Div({},
+//           Canvas({class: styles.overlay}).with( c => this.overlayCanvasComponent = c ),
+//           Video().with( c => this.videoComponent = c ),
+//         ),
+//         CenteredControls(
+//           Select().withElement( e => {
+//             this.cameraSelectionMenu = e;
+//             // Handle user selection of cameras
+//             // The deviceID of the camera was stored in the value name of the option,
+//             // so it can be retrieved from the value field fo the select element
+//             e.addEventListener("change", (_event) => this.setCameraByDeviceId(this.cameraSelectionMenu?.value) );
+//           }),
+//         ),
+//       );
+//       this.onCameraListUpdate(CamerasOnThisDevice.instance.cameras);
+//     }
+//   }
+
+//   remove() {
+//     if (this.videoPlayer) {
+//       this.videoPlayer.srcObject = null;
+//     }
+//     if (!super.remove()) {
+//       // This element has already been removed
+//       return false;
+//     }
+//     // If there's an existing stream, terminate it
+//     this.mediaStream?.getVideoTracks().forEach( track => track.stop() ); // FIXME - was this needed?:  track.readyState === "live" && track.enabled && 
+//     // try for firefox
+//     this.mediaStream?.stop?.();
+
+//     this.mediaStream = undefined;
+//     // remove successful
+//     return true;
+//   }
+
+//   setCameraByDeviceId = (deviceId: string | undefined ) => {
+//     if (deviceId == null) {
+//       return;
+//     }
+//     const camera = CamerasOnThisDevice.instance.camerasByDeviceId.get(deviceId);
+//     if (camera) {
+//       this.setCamera(camera);
+//     }
+//   }
+
+//   setCamera = (camera: Camera) => {
+//     const {deviceId} = camera;
+//     const ideal = browserInfo.browser === "Safari" ? 1080: 1024;
+//     if (camera) {
+//       this.setCameraByConstraints({
+//         deviceId,
+//         width: {
+//           ideal,
+// //          ideal: Math.min(camera.capabilities?.width?.max ?? defaultCameraDimensions.width, defaultCameraDimensions.width),
+//           max: 1280,
+// //          min: 640,
+//         },
+//         height: {
+// //          ideal: Math.min(camera.capabilities?.height?.max ?? defaultCameraDimensions.height, defaultCameraDimensions.height),
+//           ideal,
+//           max: 1280,
+// //          min: 640
+//         },
+//         aspectRatio: {ideal: 1},
+//         // advanced: [{focusDistance: {ideal: 0}}]
+//       });
+//     }
+//   }
+
+//   private throwIfTrackNotReadable = (track: MediaStreamTrack | undefined): void => {
+//     if (track == null) {
+//       throw new Error("Cannot set camera because track is null.");
+//     }
+//     if (track.readyState !== "live") {
+//       throw new Error("Cannot set camera because track is not in live state.");
+//     }
+//     if (!track.enabled) {
+//       throw new Error("Cannot set camera because track is not enabled.");
+//     }
+//   }
+
+//   // private throwIfTrackNotReadableOrMuted = (track: MediaStreamTrack | undefined): void => {
+//   //   this.throwIfTrackNotReadable(track);
+//   //   if (track?.muted ) {
+//   //     throw new Error("Cannot set camera because track is muted.");
+//   //   }
+//   // }
+
+//   /**
+//    * Set the current camera
+//    */
+//   setCameraByConstraints = async (
+//     mediaTrackConstraints: MediaTrackConstraints & {deviceId: string}
+//   ) => {
+//     if (this.imageCapture) {
+//       this.imageCapture = undefined;
+//     }
+//     if (this.camerasDeviceId === mediaTrackConstraints.deviceId) {
+//       return;
+//     }
+//     this.camerasDeviceId = mediaTrackConstraints.deviceId;
+//     const oldMediaStream = this.mediaStream;
+//     this.mediaStream = undefined;
+//     // If there's an existing stream, terminate it
+//     if (this.videoPlayer) {
+//       this.videoPlayer.srcObject = null;
+//     }
+//     oldMediaStream?.getVideoTracks().forEach(track => {
+// //      if (track.readyState === "live" && track.enabled) {
+//         try {
+//           track.stop();
+//         } catch (e) {
+//           console.log("Exception stopping track", e);
+//         }
+// //      }
+//     });
+//     // try for firefox
+//     oldMediaStream?.stop?.();
+
+//     // Now set the new stream
+//     try {
+//       console.log("Calling getUserMedia", mediaTrackConstraints);
+//       this.mediaStream = await navigator.mediaDevices.getUserMedia({video: mediaTrackConstraints});
+//     }  catch (e) {
+//       return this.throwException(e, `navigator.mediaDevices.getUserMedia: ${
+//         "\n\n" +
+//         "Setting constraints " + JSON.stringify(mediaTrackConstraints, undefined, "\t") + "\n\n" +
+//         "For cameras " + JSON.stringify(CamerasOnThisDevice.instance.cameras, undefined, "\t")
+//       }`);
+//     }
+
+//     try {
+//       const tracks = this.mediaStream.getVideoTracks();
+//       const track = tracks[0];
+//       this.throwIfTrackNotReadable(track);
+//       const {
+//         height, width
+//       } = track.getSettings();
+//       if (this.videoPlayer) {
+//         this.videoPlayer.srcObject = this.mediaStream;
+//       }
+//       if (track && this.useImageCapture) {
+//         this.imageCapture = new ImageCapture(track);
+//       } else if (this.videoPlayer) {
+//         this.videoPlayer.style.setProperty("display", "block");
+//         this.videoPlayer.style.setProperty("visibility", "visible");
+//         this.videoPlayer.width = Math.min( width ?? 1024, 1024 );
+//         this.videoPlayer.height = Math.min( height ?? 1024, 1024 );
+//       }
+//     } catch (e) {
+//       return this.throwException(e, `Setting camera after getUserMedia completes, ${JSON.stringify(mediaTrackConstraints)}`);
+//     }
+//     this.renderCameraList();
+//     return;
+//   }
+
+//   private getFrameUsingImageCapture = async (): Promise<ImageData | undefined> => {
+//     try {
+//       const track = this.imageCapture?.track;
+//       ///console.log("getFrameUsingImageCapture", (Date.now() % 100000) / 1000);
+//       if (this.camerasDeviceId == null) {
+//         return;
+//       }
+//       if (track == null || track.readyState !== "live" || !track.enabled || track.muted) {
+//         if (track?.muted) {
+//           console.log("Track muted");
+//           // For some reason, if we don't read enough frames fast enough, browser may mute the
+//           // track.  If they do, just re-open the camera.
+//           if (this.camerasDeviceId) {
+//             console.log("Resetting camera");
+//             this.setCameraByDeviceId(this.camerasDeviceId);
+//           }
+//           track?.addEventListener("unmute", () => { console.log("Track unmuted"); } );
+//         }
+//         return;
+//       }
+//       var bitMap: ImageBitmap | undefined;
+//       try {
+//         // image capture isn't ready
+//         bitMap = await this.imageCapture!.grabFrame();
+//       } catch {
+//         return;
+//       }
+//       // console.log("Frame grabbed", (Date.now() % 100000) / 1000);
+//       const {width, height} = bitMap;
+//       // console.log(`Grabbing frame with dimensions ${width}x${height}`)
+//       if (this.captureCanvas!.width != width || this.captureCanvas!.height != height) {
+//         [this.captureCanvas!.width, this.captureCanvas!.height] = [width, height];
+//         this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
+//       }
+//       this.captureCanvasCtx!.drawImage(bitMap, 0, 0);
+//       return this.captureCanvasCtx!.getImageData(0, 0, width, height);
+//     } catch (e) {
+//       this.throwException(e, `getFrameUsingImageCapture`);
+//       return undefined;
+//     }
+//   };
+
+//   private getFrameFromVideoPlayer = (): ImageData | undefined => {
+//     if (!this.videoPlayer) {
+//       return;
+//     }
+//     if (this.videoPlayer!.videoWidth == 0 || this.videoPlayer!.videoHeight == 0) {
+//       // There's no need to take action if there's no video
+//       return;
+//     }
+
+//     // Ensure the capture canvas is the size of the video being retrieved
+//     if (this.captureCanvas!.width != this.videoPlayer!.videoWidth || this.captureCanvas!.height != this.videoPlayer!.videoHeight) {
+//         [this.captureCanvas!.width, this.captureCanvas!.height] = [this.videoPlayer!.videoWidth, this.videoPlayer!.videoHeight];
+//         this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
+//     }
+//     this.captureCanvasCtx!.drawImage(this.videoPlayer!, 0, 0);
+//     return this.captureCanvasCtx!.getImageData(0, 0, this.captureCanvas!.width, this.captureCanvas!.height);
+//   }
+
+//   private getFrameOrUndefinedIfNotReady = async (): Promise<ImageData | undefined> => {
+//     if (this.removed) {
+//       // The element is no longer displaying and so processing should stop.
+//       return undefined;
+//     }
+//     return await (this.useImageCapture ?
+//       this.getFrameUsingImageCapture() : this.getFrameFromVideoPlayer());
+//   }
+
+//   getFrame = async (): Promise<ImageData> => {
+//     const imageData = await this.getFrameOrUndefinedIfNotReady();
+//     if (imageData != null) {
+//       return imageData;
+//     }
+//     return await new Promise<ImageData>( (resolve, reject) => {
+//       var interval: ReturnType<typeof setInterval> | undefined;
+//       const complete = (actionToTakeIfPromiseNotYetResolvedOrRejected: () => any) => {
+//         const notYetComplete = interval != null;
+//         if (notYetComplete) {
+//           clearInterval(interval!);
+//           interval = undefined;
+//           actionToTakeIfPromiseNotYetResolvedOrRejected();
+//         }
+//         return notYetComplete;
+//       }
+//       interval = setInterval( async () => {
+//         try {
+//           const imageData = await this.getFrameOrUndefinedIfNotReady();
+//           if (imageData != null) {
+//             complete( () => resolve (imageData) );
+//           }
+//         } catch (e) {
+//           complete( ()  => reject(e) );
+//         }
+//       }, 100);
+//     });
+//   }
+
+//    getOverlayCanvasCtx = (width: number, height:number): CanvasRenderingContext2D | undefined => {
+//     if (!this.overlayCanvas) {
+//       return
+//     }
+//     const parentElement = this.overlayCanvas.parentElement;
+//     if (this.overlayCanvas.width != width) {
+//       this.overlayCanvas.setAttribute("width", width.toString());
+//     }
+//     if (this.overlayCanvas.height != height) {
+//       this.overlayCanvas.setAttribute("height", height.toString());
+//     } 
+//     if (parentElement) {
+//       if (this.overlayCanvas.style.getPropertyValue("left") !== parentElement.offsetLeft.toString()) {
+//         this.overlayCanvas.style.setProperty("left",this.overlayCanvas.parentElement!.offsetLeft.toString())
+//       }
+//       if (this.overlayCanvas.style.getPropertyValue("top") !== parentElement.offsetTop.toString()) {
+//         this.overlayCanvas.style.setProperty("top",this.overlayCanvas.parentElement!.offsetTop.toString())
+//       }
+//     }
+//     return this.overlayCanvas.getContext("2d") ?? undefined;
+//   }
+
+
+// };

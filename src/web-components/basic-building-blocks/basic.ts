@@ -5,7 +5,6 @@ import {
   Label
 } from "~web-component-framework";
 
-
 export const FormCard = (...appendable: Appendable[]) =>
   Div({class: style.form_card}, ...appendable);
 

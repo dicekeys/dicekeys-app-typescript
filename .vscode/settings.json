@@ -17,6 +17,7 @@
         "calibri",
         "canonicalize",
         "ciphertext",
+        "component",
         "comsuffixattack",
         "datetime",
         "deletable",
@@ -44,7 +45,9 @@
         "suffixattack",
         "undoverline",
         "undoverlines",
-        "webassembly"
+        "unmount",
+        "webassembly",
+        "will"
     ],
     "cSpell.ignoreWords": [
         "confirmmpw",
