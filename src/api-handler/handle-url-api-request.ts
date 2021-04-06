@@ -33,9 +33,7 @@ import {
   UnsealWithUnsealingKeyRequest,
   SeededCryptoObjectResponseParameterNames
 } from "@dicekeys/dicekeys-api-js/dist/api-calls";
-import {
-  EncryptedCrossTabState
-} from "../state";
+import { addAuthenticationToken, getUrlForAuthenticationToken } from "../state/authentication-token-state";
 
 interface MarshallCommand<COMMAND extends ApiCalls.Command> {
   (
@@ -195,7 +193,7 @@ const getApiRequestContextFromUrl = (
   const requestId = searchParams.get(ApiCalls.RequestMetadataParameterNames.requestId);
   const authToken = searchParams.get(UrlRequestMetadataParameterNames.authToken!) ?? undefined;
   if (authToken != null ) {
-    const authUrl = EncryptedCrossTabState.instance?.getUrlForAuthenticationToken(authToken);
+    const authUrl = getUrlForAuthenticationToken(authToken);
     if (authUrl != null) {
       respondTo = authUrl;
       hostValidatedViaAuthToken = true;
@@ -236,7 +234,7 @@ export const urlApiResponder = (
     const requestId = requestUrl.searchParams.get(ApiCalls.RequestMetadataParameterNames.requestId);
     if (typeof respondTo === "string" && typeof requestId === "string") {
       const responseUrl = new URL(respondTo);
-      const authToken = EncryptedCrossTabState.instance?.addAuthenticationToken(respondTo);
+      const authToken = addAuthenticationToken(respondTo);
       responseUrl.searchParams.set(ResponseMetadataParameterNames.requestId, requestId);
       if (authToken) {
         responseUrl.searchParams.set(UrlRequestMetadataParameterNames.authToken!, authToken);

@@ -3,7 +3,6 @@ import { toBip39, bip39ToByteArray, diceKeyToBip39String, bip39StringToDiceKey a
 
 import { Crypto } from "@peculiar/webcrypto"
 global.crypto = new Crypto();
-console.log("Configured global.crypto");
 
 const testVectorsFromSpec: [string, string][] = [
 	[

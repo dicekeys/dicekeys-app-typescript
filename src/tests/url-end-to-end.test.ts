@@ -16,6 +16,9 @@ import {
 } from "../api-handler/handle-api-request";
 import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
 
+import { Crypto } from "@peculiar/webcrypto"
+global.crypto = new Crypto();
+
 const getUsersConsentApprove = (requestContext: ApiRequestContext): Promise<ConsentResponse> =>
   Promise.resolve({seedString: "a bogus seed", mutatedRequest: requestContext.request } );
   

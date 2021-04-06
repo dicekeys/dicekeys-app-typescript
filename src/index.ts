@@ -1,7 +1,3 @@
-
-import {
-  EncryptedCrossTabState
-} from "./state/encrypted-cross-tab-state"
 import {
   AppMain
 } from "./web-components/app-main";
