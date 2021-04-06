@@ -1,13 +1,14 @@
 import React from "react";
 import { makeAutoObservable } from "mobx";
 import { observer  } from "mobx-react";
-import { CachedApiCalls, uint8ClampedArrayToHexString } from "../../state/cached-api-calls";
+import { CachedApiCalls } from "../../state/cached-api-calls";
 import { RecipeBuilderCommonState } from "./recipe-builder-common-state";
 import { RecipeBuilderForTemplateState, RecipeBuilderForTemplateView } from "./recipe-builder-template";
 import { DerivationRecipeTemplateList } from "../../dicekeys/derivation-recipe-templates";
 import { RecipeBuilderCustomState, RecipeBuilderCustomView } from "./recipe-builder-custom";
 import css from "./recipe-builder.module.css";
 import { toBip39 } from "../../formats/bip39/bip39";
+import { uint8ClampedArrayToHexString } from "../../utilities/convert";
 
 export enum RecipeBuilderType {
   Custom,

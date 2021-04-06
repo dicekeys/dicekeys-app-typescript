@@ -56,11 +56,11 @@ class DiceKeyFrameWorkerClient {
     // Ask the background worker to process the bitmap.
     // First construct a request
     const request: ProcessFrameRequest = {
+      action: "processRGBAImageFrame",
+      sessionId: this.cameraSessionId,
       requestId,
       width, height,
       rgbImageAsArrayBuffer,
-      action: "processRGBAImageFrame",
-      sessionId: this.cameraSessionId!,
     };
     // The mark the objects that can be transferred to the worker.
     // This eliminates the need to copy the big memory buffer over, but the worker will now own the memory.

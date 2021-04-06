@@ -1,29 +1,30 @@
-import {
-  FaceLetter, FaceDigit, FaceOrientationLetterTrbl, Face
-} from "@dicekeys/read-dicekey-js";
-import { TupleOf25Items } from "./dicekey";
-import { Observable } from "~web-component-framework";
+// import {
+//   FaceLetter, FaceDigit, FaceOrientationLetterTrbl, Face
+// } from "@dicekeys/read-dicekey-js";
+// import { makeAutoObservable } from "mobx";
+// import { TupleOf25Items } from "./dicekey";
 
-export class ObservablePartialFace implements Partial<Face> {
-  readonly letterField: Observable<FaceLetter | undefined>;
-  readonly digitField: Observable<FaceDigit | undefined>;
-  readonly orientationAsLowercaseLetterTrblField: Observable<FaceOrientationLetterTrbl | undefined>;
+// export class ObservablePartialFace implements Partial<Face> {
+//   readonly letter: FaceLetter | undefined;
+//   readonly digit: FaceDigit | undefined;
+//   readonly orientationAsLowercaseLetterTrblField: FaceOrientationLetterTrbl | undefined;
 
-  get letter() { return this.letterField.value }
-  set letter(letter: FaceLetter | undefined) { this.letterField.set(letter) }
+//   get letter() { return this.letterField.value }
+//   set letter(letter: FaceLetter | undefined) { this.letterField.set(letter) }
 
-  get digit() { return this.digitField.value }
-  set digit(digit: FaceDigit | undefined) { this.digitField.set(digit) }
+//   get digit() { return this.digitField.value }
+//   set digit(digit: FaceDigit | undefined) { this.digitField.set(digit) }
 
-  get orientationAsLowercaseLetterTrbl() { return this.orientationAsLowercaseLetterTrblField.value }
-  set orientationAsLowercaseLetterTrbl(orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl | undefined) { this.orientationAsLowercaseLetterTrblField.set(orientationAsLowercaseLetterTrbl) }
+//   get orientationAsLowercaseLetterTrbl() { return this.orientationAsLowercaseLetterTrblField.value }
+//   set orientationAsLowercaseLetterTrbl(orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl | undefined) { this.orientationAsLowercaseLetterTrblField.set(orientationAsLowercaseLetterTrbl) }
 
-  constructor(partialFace: Partial<Face>) {
-    this.letterField = new Observable<FaceLetter | undefined>(partialFace.letter);
-    this.digitField = new Observable<FaceDigit | undefined>(partialFace.digit);
-    const orientationAsLowercaseLetterTrbl = partialFace.orientationAsLowercaseLetterTrbl == "?" ? undefined : partialFace.orientationAsLowercaseLetterTrbl;
-    this.orientationAsLowercaseLetterTrblField = new Observable<FaceOrientationLetterTrbl | undefined>(orientationAsLowercaseLetterTrbl);
-  }
-}
+//   constructor(partialFace: Partial<Face>) {
+//     this.letterField = new FaceLetter | undefined>(partialFace.letter);
+//     this.digitField = new FaceDigit | undefined>(partialFace.digit);
+//     const orientationAsLowercaseLetterTrbl = partialFace.orientationAsLowercaseLetterTrbl == "?" ? undefined : partialFace.orientationAsLowercaseLetterTrbl;
+//     this.orientationAsLowercaseLetterTrblField = new FaceOrientationLetterTrbl | undefined>(orientationAsLowercaseLetterTrbl);
+//     makeAutoObservable(this);
+//   }
+// }
 
-export type ObservablePartialDiceKey = TupleOf25Items<ObservablePartialFace>;
+// export type ObservablePartialDiceKey = TupleOf25Items<ObservablePartialFace>;

@@ -1,116 +1,117 @@
 import {
-  EncryptedAppStateStore,
-  TabsAndWindowsSharingThisState,
-} from "../web-component-framework/locally-stored-state";
-import {
   DiceKey
 } from "../dicekeys/dicekey";
-import {
-  SeededCryptoModuleWithHelpers,
-  SeededCryptoModulePromise,
-} from "@dicekeys/seeded-crypto-js";
-import {
-  urlSafeBase64Encode
-} from "@dicekeys/dicekeys-api-js";
-import {
-  randomBytes
-} from "crypto";
-import {
-  DiceKeyStateStore
-} from "./dicekey-state";
+import { action, makeAutoObservable } from "mobx";
+import { autoSave, autoSaveEncrypted } from "./core/auto-save";
+import { AllAppWindowsAndTabsAreClosingEvent } from "./core/all-windows-closing-event";
 
-const defaultAppStageExpirationTimeInMinutes = 30;
+export const DiceKeyStore = new (class DiceKeyStore {
+  diceKeysByKeyId: {[keyId: string]: DiceKey} = {};
 
+  addDiceKeyForKeyId = action ( (keyId: string, diceKey: DiceKey) => {
+    this.diceKeysByKeyId[keyId] = diceKey;
+  });
 
+  addDiceKey = async (diceKey: DiceKey) =>
+    this.addDiceKeyForKeyId(await DiceKey.keyId(diceKey), diceKey);
 
-export class EncryptedCrossTabState extends EncryptedAppStateStore {
-  constructor(
-    seededCryptoModule: SeededCryptoModuleWithHelpers,
-    expireAfterMinutesUnused: number
-  ) {
-    super (seededCryptoModule, expireAfterMinutesUnused);
-    // Erase the DiceKey if all windows are closed.
-    window.addEventListener("unload", () => {
-      if (this.windowsOpen.countOfOthers === 0 && window.origin.indexOf("localhost") === -1 ) {
-        this.diceKeyField.remove();
-      }
-    });
+  removeDiceKeyForKeyId = action ( (keyId: string) => {
+    delete this.diceKeysByKeyId[keyId];
+  });
+
+  removeDiceKey = async (diceKeyOrKeyId: DiceKey | string) => {
+    const keyId = typeof(diceKeyOrKeyId) === "string" ? diceKeyOrKeyId : await DiceKey.keyId(diceKeyOrKeyId);
+    this.removeDiceKeyForKeyId(keyId);
+  };
+
+  removeAll = action ( () => {
+    this.diceKeysByKeyId = {}
+  });
+  
+  constructor() {
+    makeAutoObservable(this);
+    autoSaveEncrypted(this, "DiceKeyStore");
+    AllAppWindowsAndTabsAreClosingEvent.on( () => {
+      // Empty the store if all app windows are closing.
+      this.removeAll();
+    })
+  }
+})();
+
+export class CurrentDiceKeyState {
+  constructor() {
+    makeAutoObservable(this);
+    autoSave(this, "CurrentDiceKeyState");
   }
 
-  /**
-   * 
-   */
-  #keyId: string | undefined;
-  #diceKeyState: DiceKeyStateStore | undefined;
-  public readonly diceKeyField = this.addEncryptedField<DiceKey>("dicekey");
-  public get diceKey(): DiceKey | undefined { return this.diceKeyField.value; }
+  keyId: string | undefined;
+  public get diceKey(): DiceKey | undefined {
+    return this.keyId ? DiceKeyStore.diceKeysByKeyId[this.keyId] : undefined;
+  };
+
   public get seed(): string | undefined { 
     const diceKey = this.diceKey;
     return (diceKey == null) ? undefined : DiceKey.toSeedString(diceKey, true)
   }
-  public set diceKey(diceKey: DiceKey | undefined) {
-    // Remove any observables and use a pure Face now that the DiceKey is final.
-    diceKey = diceKey?.map( ({letter, digit, orientationAsLowercaseLetterTrbl}) =>
-      ({letter, digit, orientationAsLowercaseLetterTrbl}) ) as DiceKey;
-    this.diceKeyField.set(diceKey);
-    this.#keyId = diceKey == null ? undefined :
-      urlSafeBase64Encode(
-        this.seededCryptoModule.Secret.deriveFromSeed(this.seed!, "").secretBytes
-    );
-    this.#diceKeyState = this.#keyId == undefined ? undefined :
-        DiceKeyStateStore.instanceFor(this.seededCryptoModule, this.#keyId);
-  }
-  
-  public forgetDiceKey = (): void => {
-    this.diceKeyField.remove();
-    this.#keyId = undefined;
-    this.#diceKeyState = undefined;
-  }
 
-  public readonly windowsOpen = new TabsAndWindowsSharingThisState("windows-sharing-dicekeys-app-state");
+  setKeyId = action( (keyId?: string) => {
+    this.keyId = keyId;
+  });
 
-  
-  public get keyId() { return this.#keyId; }
-  public get diceKeyState() { return this.#diceKeyState }
-  
-
-
-  private static authenticationFieldName = (authenticationToken: string) =>
-    `authenticationToken:${authenticationToken}`;
-
-  
-  addAuthenticationToken = (respondToUrl: string): string => {
-    const authToken: string = ((): string => {
-      if (global.window && window.crypto) {
-        const randomBytes = new Uint8Array(20);
-        crypto.getRandomValues(randomBytes);
-        return urlSafeBase64Encode(randomBytes);
-      } else {
-        return urlSafeBase64Encode((randomBytes(20)));
-      }
-    })();
-    const field = this.addEncryptedField<string>(EncryptedCrossTabState.authenticationFieldName(authToken));
-    field.value = respondToUrl;
-    return authToken;
-  };
-
-  getUrlForAuthenticationToken = (
-    authToken: string
-  ) : string | undefined =>
-    this.addEncryptedField<string>(EncryptedCrossTabState.authenticationFieldName(authToken)).value;
-
-
-  private static instanceWritable: EncryptedCrossTabState | undefined;
-  public static readonly instancePromise: Promise<EncryptedCrossTabState> = (async () => {
-    const seededCryptoModule = await SeededCryptoModulePromise;
-    EncryptedCrossTabState.instanceWritable = new EncryptedCrossTabState(
-      seededCryptoModule,
-      defaultAppStageExpirationTimeInMinutes
-    );
-    return EncryptedCrossTabState.instanceWritable;
-  })();
-  public static get instance(): EncryptedCrossTabState | undefined {
-    return EncryptedCrossTabState.instanceWritable;
+  setDiceKey = async (diceKey?: DiceKey) => {
+    if (typeof diceKey === "undefined") {
+      this.setKeyId();
+    } else {
+      const keyId = await DiceKey.keyId(diceKey);
+      DiceKeyStore.addDiceKeyForKeyId(keyId, diceKey);
+    }
   }
 }
+  
+
+// class AuthenticationTokens {
+
+//   constructor() {
+//     makeAutoObservable(this);
+//     autoSaveEncrypted(this, "AuthenticationTokens");\    
+//   }
+
+//   private static authenticationFieldName = (authenticationToken: string) =>
+//     `authenticationToken:${authenticationToken}`;
+
+  
+//   addAuthenticationToken = (respondToUrl: string): string => {
+//     const authToken: string = ((): string => {
+//       if (global.window && window.crypto) {
+//         const randomBytes = new Uint8Array(20);
+//         crypto.getRandomValues(randomBytes);
+//         return urlSafeBase64Encode(randomBytes);
+//       } else {
+//         return urlSafeBase64Encode((randomBytes(20)));
+//       }
+//     })();
+//     const field = this.addEncryptedField<string>(EncryptedCrossTabState.authenticationFieldName(authToken));
+//     field.value = respondToUrl;
+//     return authToken;
+//   };
+
+//   getUrlForAuthenticationToken = (
+//     authToken: string
+//   ) : string | undefined =>
+//     this.addEncryptedField<string>(EncryptedCrossTabState.authenticationFieldName(authToken)).value;
+
+
+//   private static instanceWritable: EncryptedCrossTabState | undefined;
+//   public static readonly instancePromise: Promise<EncryptedCrossTabState> = (async () => {
+//     const seededCryptoModule = await SeededCryptoModulePromise;
+//     EncryptedCrossTabState.instanceWritable = new EncryptedCrossTabState(
+//       seededCryptoModule,
+//       defaultAppStageExpirationTimeInMinutes
+//     );
+//     return EncryptedCrossTabState.instanceWritable;
+//   })();
+//   public static get instance(): EncryptedCrossTabState | undefined {
+//     return EncryptedCrossTabState.instanceWritable;
+//   }
+// }
 

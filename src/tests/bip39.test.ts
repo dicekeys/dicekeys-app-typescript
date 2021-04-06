@@ -1,5 +1,9 @@
-import { DiceKey } from "~dicekeys/dicekey";
+import { DiceKey } from "../dicekeys";
 import { toBip39, bip39ToByteArray, diceKeyToBip39String, bip39StringToDiceKey as bip39ToDiceKey } from "../formats/bip39/bip39";
+
+import { Crypto } from "@peculiar/webcrypto"
+global.crypto = new Crypto();
+console.log("Configured global.crypto");
 
 const testVectorsFromSpec: [string, string][] = [
 	[

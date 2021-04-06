@@ -9,7 +9,7 @@ import {
   FaceOrientationLettersTrbl,
   FaceDigits
 } from "@dicekeys/read-dicekey-js";
-
+import { uint8ClampedArrayToHexString } from "../utilities/convert";
 
 export const NumberOfFacesInKey = 25;
 
@@ -387,6 +387,9 @@ DiceKey.cornerIndexesClockwise = [0, 4, 24, 20] as const;
 DiceKey.cornerIndexSet = new Set<number>(DiceKey.cornerIndexesClockwise);
 DiceKey.centerLetterAndDigit = (diceKey: DiceKey) => diceKey[12].letter + diceKey[12].digit;
 DiceKey.nickname = (diceKey: DiceKey) => `DiceKey with ${DiceKey.centerLetterAndDigit(diceKey)} in center`;
+DiceKey.keyId = (diceKey: DiceKey): Promise<string> =>
+  crypto.subtle.digest("SHA-256",  new TextEncoder().encode(DiceKey.toSeedString(diceKey, true))).then( hash =>
+    uint8ClampedArrayToHexString(new Uint8ClampedArray(hash.slice(0, 8))));
 DiceKey.testExample = DiceKey( [...Array(25).keys()].map( (i)  => ({
   letter: FaceLetters[i],
   digit: FaceDigits[i % 6],

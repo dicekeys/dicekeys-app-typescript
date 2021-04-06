@@ -47,6 +47,7 @@
         "undoverlines",
         "unmount",
         "webassembly",
+        "webcrypto",
         "will"
     ],
     "cSpell.ignoreWords": [

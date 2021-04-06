@@ -2,12 +2,7 @@ import { action, makeAutoObservable, ObservableMap } from "mobx";
 import { ComputeApiCommandWorker } from "../workers/call-api-command-worker";
 import { ApiCalls, PasswordJson, SecretJson } from "@dicekeys/dicekeys-api-js";
 import { requestHasPackagedSealedMessageParameter, requestHasRecipeParameter } from "@dicekeys/dicekeys-api-js/dist/api-calls";
-
-export const hexStringToUint8ClampedArray = (hexString: string): Uint8ClampedArray =>
-  new Uint8ClampedArray(hexString.match(/.{1,2}/g)!.map( (byte) => parseInt(byte, 16)));
-
-export const uint8ClampedArrayToHexString = (bytes: Uint8ClampedArray) =>
-  bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
+import { hexStringToUint8ClampedArray } from "~utilities/convert";
 
 export class AsyncResultObservable<T> {
   result?: T = undefined;

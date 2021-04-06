@@ -17,16 +17,16 @@ const convertArrayBitWidth= (srcBits: number, dstBits: number) => (source: numbe
 	let srcNumber: number = 0;
 	const destNumbers: number[] = [];
 	while (true) {
-		if (bitsLeftInDestNumber <= 0) {
-			destNumbers.push(0);
-			bitsLeftInDestNumber = dstBits;
-		}
 		if (bitsLeftInSourceNumber <= 0) {
 			if (srcNumbersLeft.length == 0) {
 				return destNumbers;
 			}
 			srcNumber = srcNumbersLeft.shift()!;
 			bitsLeftInSourceNumber = srcBits;
+		}
+		if (bitsLeftInDestNumber <= 0) {
+			destNumbers.push(0);
+			bitsLeftInDestNumber = dstBits;
 		}
 		const numBitsToCopy = Math.min(bitsLeftInDestNumber, bitsLeftInSourceNumber);
 		const bitsLeftInByteSourceNumberCopy = bitsLeftInSourceNumber - numBitsToCopy;
