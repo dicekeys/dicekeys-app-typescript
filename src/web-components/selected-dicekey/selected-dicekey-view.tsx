@@ -16,15 +16,17 @@ const SubViews = Navigation.SelectedDiceKeySubViews
 // const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
 
 interface SelectedDiceKeyViewProps {
-  diceKey: DiceKey;
+  onBack: () => any;
   navigationState: Navigation.SelectedDiceKeyViewState;
 }
 
 const SelectedDiceKeyViewHeader = observer( ( props: SelectedDiceKeyViewProps) => {
+  const diceKey = props.navigationState.diceKey;
+  if (!diceKey) return null;
   return (
     <div className={css.nav_header}>
-      <span className={css.nav_side}>&#8592;</span>
-      <span className={css.nav_center}>{DiceKey.nickname(props.diceKey)}</span>
+      <span className={css.nav_side} onClick={ props.onBack } >&#8592;</span>
+      <span className={css.nav_center}>{DiceKey.nickname(diceKey)}</span>
       <span className={css.nav_side}></span>
     </div>
   );
@@ -53,6 +55,8 @@ const SelectedDiceKeyViewStateFooter = observer( ( props: SelectedDiceKeyViewPro
 });
 
 export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) => {
+  const diceKey = props.navigationState.diceKey;
+  if (!diceKey) return null;
   return (
     <div className={css.view_top_level}>
       <SelectedDiceKeyViewHeader {...props} />
@@ -62,10 +66,10 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
           {(() => {
             switch(props.navigationState.subView) {
               case Navigation.SelectedDiceKeySubViews.DisplayDiceKey: return (
-                <DiceKeyView diceKey={props.diceKey}/>
+                <DiceKeyView diceKey={diceKey}/>
               );
               case Navigation.SelectedDiceKeySubViews.DeriveSecrets: return (
-                <DerivationView seedString={DiceKey.toSeedString(props.diceKey, true)} />
+                <DerivationView seedString={DiceKey.toSeedString(diceKey, true)} />
               );
               default: return null;
             }
@@ -81,8 +85,7 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
 (window as {testComponent?: {}}).testComponent = {
   ...((window as {testComponent?: {}}).testComponent ?? {}),
   SelectedDiceKeyViewState: async () => {
-    ReactDOM.render(<SelectedDiceKeyView
-      diceKey={DiceKey.testExample}
+    ReactDOM.render(<SelectedDiceKeyView onBack={ () => alert("Get back!" ) }
       navigationState={new Navigation.SelectedDiceKeyViewState( () => {}, (await DiceKey.keyId(DiceKey.testExample)), Navigation.SelectedDiceKeySubViews.DeriveSecrets)}
     />, document.getElementById("app-container"))
 }};

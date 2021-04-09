@@ -1,13 +1,16 @@
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8">
     <!-- Send users to iOS/MacOS app if available -->
     <meta name="apple-itunes-app" content="app-id=1545123216">
     <link rel="icon" href="favicon.svg">
     <title>DiceKeys App</title>
-    <script src="index.ts"></script>
+    <script src="web-components/app-home-view.tsx"></script>
+    <script>window.addEventListener('load', () => {
+      window.testComponent.AppTopLevelRoutingView() 
+    });</script>
     <link rel="stylesheet" href="dicekeys.css"/>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inconsolata"/>
   </head>
-  <body></body>
+  <body style="margin: 0px; padding: 0px;"><div id="app-container"></div></body>
 </html>

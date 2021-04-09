@@ -5,7 +5,7 @@ import { DiceKeyStore } from "../../state/stores/dicekey-store";
 import { SelectedDiceKeyViewState } from "./selected-dicekey-view-state";
 
 export enum SubViewsOfTopLevel {
-  TopLevelView,
+  AppHomeView,
   AssemblyInstructions,
   LoadDicekey,
   DiceKeyView
@@ -14,20 +14,20 @@ export enum SubViewsOfTopLevel {
 type SubViews = SubViewsOfTopLevel;
 const SubViews = SubViewsOfTopLevel;
 
-export class TopLevelNavigation extends HasSubViews<SubViews> {
+export class AppTopLevelState extends HasSubViews<SubViews> {
 
   selectedDiceKeyViewState?: SelectedDiceKeyViewState = undefined;
 
   get subView(): SubViews {
     switch(this._subView) {
       case SubViews.DiceKeyView:
-        return (this.selectedDiceKeyViewState && this.selectedDiceKeyViewState.diceKey) ? this._subView : SubViews.TopLevelView
+        return (this.selectedDiceKeyViewState && this.selectedDiceKeyViewState.diceKey) ? this._subView : SubViews.AppHomeView
       default:
         return this._subView
     }
   }
 
-  navigateToTopLevelView = this.navigateToSubView(SubViews.TopLevelView);
+  navigateToTopLevelView = this.navigateToSubView(SubViews.AppHomeView);
   navigateToAssemblyInstructions = this.navigateToSubView(SubViews.AssemblyInstructions)
   navigateToLoadDiceKey = this.navigateToSubView(SubViews.LoadDicekey)
 
@@ -45,7 +45,7 @@ export class TopLevelNavigation extends HasSubViews<SubViews> {
   }
 
   constructor() {
-    super(SubViews.TopLevelView);
+    super(SubViews.AppHomeView);
     makeObservable(this, {
       subView: override,
     });

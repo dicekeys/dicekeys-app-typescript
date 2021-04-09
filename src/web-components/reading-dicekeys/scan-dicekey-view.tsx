@@ -34,7 +34,7 @@ type ScanDiceKeyViewProps = React.PropsWithoutRef<{
   onDiceKeyRead?: (facesRead: TupleOf25Items<FaceRead>) => any
 }>;
 
-const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) =>  {
+export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) =>  {
   const frameProcessorState = new DiceKeyFrameProcessorState(props.onDiceKeyRead);
   const mediaStreamState = new MediaStreamState();
   const onFrameCaptured = async (framesImageData: ImageData, canvasRenderingContext: CanvasRenderingContext2D): Promise<void> => {
