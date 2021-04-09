@@ -1,16 +1,18 @@
 import { urlSafeBase64Encode } from "@dicekeys/dicekeys-api-js";
 import { action, makeAutoObservable } from "mobx";
 import { CustomEvent } from "../../utilities/event";
-import { getRandomBytes } from "../../dicekeys";
+import { getRandomBytes } from "../../utilities/get-random-bytes";
 import { autoSave } from "./auto-save";
 
-const myWindowId = urlSafeBase64Encode((getRandomBytes(20)));
+const myWindowId = urlSafeBase64Encode(getRandomBytes(20));
 const heartbeatFrequencyInMs = 5000;
 let heartbeatInterval: any;
-const WindowsOpen = new (class WindowsOpen {
-	private openWindowIds: {[windowId: string]: number} = {};
 
-	onAllWindowsClosing = new CustomEvent<[]>(this);
+export const AllAppWindowsAndTabsAreClosingEvent = new CustomEvent<[], undefined>(undefined);
+
+//const WindowsOpen =
+new (class WindowsOpen {
+	private openWindowIds: {[windowId: string]: number} = {};
 
 	private sendHeartbeat = action( () => {
 		this.openWindowIds[myWindowId] = (new Date()).getTime() + (2 * heartbeatFrequencyInMs);
@@ -20,7 +22,7 @@ const WindowsOpen = new (class WindowsOpen {
 		clearInterval(heartbeatInterval);
 		delete this.openWindowIds[myWindowId];
 		if (!this.areOtherWindowsOpen) {
-			this.onAllWindowsClosing.send();
+			AllAppWindowsAndTabsAreClosingEvent.send();
 		}
 	})
 
@@ -41,4 +43,3 @@ const WindowsOpen = new (class WindowsOpen {
     });
 	}
 })();
-export const AllAppWindowsAndTabsAreClosingEvent = WindowsOpen.onAllWindowsClosing;

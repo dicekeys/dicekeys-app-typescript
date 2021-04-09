@@ -2,7 +2,7 @@ import { action, makeAutoObservable, ObservableMap } from "mobx";
 import { ComputeApiCommandWorker } from "../workers/call-api-command-worker";
 import { ApiCalls, PasswordJson, SecretJson } from "@dicekeys/dicekeys-api-js";
 import { requestHasPackagedSealedMessageParameter, requestHasRecipeParameter } from "@dicekeys/dicekeys-api-js/dist/api-calls";
-import { hexStringToUint8ClampedArray } from "~utilities/convert";
+import { hexStringToUint8ClampedArray } from "../utilities/convert";
 
 export class AsyncResultObservable<T> {
   result?: T = undefined;

@@ -1,9 +1,9 @@
 import {
   DiceKey
-} from "../dicekeys/dicekey";
+} from "../../dicekeys/dicekey";
 import { action, makeAutoObservable } from "mobx";
-import { autoSaveEncrypted } from "./core/auto-save";
-import { AllAppWindowsAndTabsAreClosingEvent } from "./core/all-windows-closing-event";
+import { autoSaveEncrypted } from "../core/auto-save";
+import { AllAppWindowsAndTabsAreClosingEvent } from "../core/all-windows-closing-event";
 
 export const DiceKeyStore = new (class DiceKeyStore {
   diceKeysByKeyId: {[keyId: string]: DiceKey} = {};

@@ -1,6 +1,6 @@
 import { urlSafeBase64Encode } from "@dicekeys/dicekeys-api-js";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
-import { getRandomBytes } from "../../dicekeys";
+import { getRandomBytes } from "../../utilities/get-random-bytes";
 
 const minutesToMs = 60 * 1000;
 
@@ -11,7 +11,7 @@ const getSessionEncryptionSymmetricKey = async (
   const keySeedCookieName = `encrypted-state-key-seed::${nameSuffix}`;
   
   const createKeySeed = (): string => {
-    return urlSafeBase64Encode((getRandomBytes(20)));
+    return urlSafeBase64Encode(getRandomBytes(20));
   }
 
   const setSessionKeySeedCookie = (value: string): string => {

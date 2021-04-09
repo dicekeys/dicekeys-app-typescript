@@ -1,6 +1,6 @@
 
 
-import { getRandomBytes } from "~dicekeys/get-random-bytes";
+import { getRandomBytes } from "~utilities/get-random-bytes";
 import { AddRecipeProofWorker } from "~workers/call-recipe-proof-worker";
 import {
   ApiCalls,

@@ -33,7 +33,7 @@ import {
   UnsealWithUnsealingKeyRequest,
   SeededCryptoObjectResponseParameterNames
 } from "@dicekeys/dicekeys-api-js/dist/api-calls";
-import { addAuthenticationToken, getUrlForAuthenticationToken } from "../state/authentication-token-state";
+import { addAuthenticationToken, getUrlForAuthenticationToken } from "../state/stores/authentication-token-store";
 
 interface MarshallCommand<COMMAND extends ApiCalls.Command> {
   (

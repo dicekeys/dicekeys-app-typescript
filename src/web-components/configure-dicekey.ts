@@ -1,5 +1,5 @@
 import { DiceKey, FaceInHumanReadableForm } from "~dicekeys/dicekey";
-import { DiceKeyStateStore } from "~state/dicekey-state";
+import { DiceKeyStateStore } from "~state/stores/dicekey-state";
 import { Attributes, Button, Component, ComponentEvent, Observable } from "~web-component-framework";
 import { ObservableTextInput, ObservableTextInputOptions } from "./basic-building-blocks";
 import { FormCard, InputCard, LabelAboveLeft } from "./basic-building-blocks";

@@ -1,4 +1,4 @@
-import {getRandomUInt32} from "./get-random-bytes";
+import {getRandomUInt32} from "../utilities/get-random-bytes";
 import {
   FaceLetter, FaceLetters, InvalidFaceLetterException,
   FaceDigit, InvalidFaceDigitException,
