@@ -1,4 +1,5 @@
 import {getRandomUInt32} from "../utilities/get-random-bytes";
+import { uint8ClampedArrayToHexString } from "../utilities/convert";
 import {
   FaceLetter, FaceLetters, InvalidFaceLetterException,
   FaceDigit, InvalidFaceDigitException,
@@ -9,7 +10,6 @@ import {
   FaceOrientationLettersTrbl,
   FaceDigits
 } from "@dicekeys/read-dicekey-js";
-import { uint8ClampedArrayToHexString } from "../utilities/convert";
 
 export const NumberOfFacesInKey = 25;
 

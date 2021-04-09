@@ -21,7 +21,7 @@ import {
 // } from "../display-dicekey/dicekey-svg";
 import {
   DisplayPassword
-} from "../display-dicekey/password-field";
+} from "../selected-dicekey/password-field";
 import {
 //  describeFrameOfReferenceForReallyBigNumber,
   describeHintPurpose, describeHost

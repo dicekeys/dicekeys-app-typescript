@@ -7,6 +7,8 @@ import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
 import { MediaStreamState } from "./camera-capture-view";
 import { CamerasOnThisDevice } from "./cameras-on-this-device";
 import { runInAction } from "mobx";
+import { Face, FaceRead } from "@dicekeys/read-dicekey-js";
+import { DiceKey, TupleOf25Items } from "../../dicekeys/dicekey";
 
 interface CameraSelectionViewProps {
   onCameraSelected?: (camerasDeviceId: string) => any;
@@ -28,8 +30,12 @@ const CameraSelectionView = observer ( (props: React.PropsWithoutRef<CameraSelec
   )
 });
 
-const ScanDiceKeyView = observer ( (_props: React.PropsWithoutRef<{}>) =>  {
-  const frameProcessorState = new DiceKeyFrameProcessorState();
+type ScanDiceKeyViewProps = React.PropsWithoutRef<{
+  onDiceKeyRead?: (facesRead: TupleOf25Items<FaceRead>) => any
+}>;
+
+const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) =>  {
+  const frameProcessorState = new DiceKeyFrameProcessorState(props.onDiceKeyRead);
   const mediaStreamState = new MediaStreamState();
   const onFrameCaptured = async (framesImageData: ImageData, canvasRenderingContext: CanvasRenderingContext2D): Promise<void> => {
     frameProcessorState.handleProcessedCameraFrame(await processDiceKeyImageFrame(framesImageData), canvasRenderingContext);
@@ -64,7 +70,12 @@ const ScanDiceKeyView = observer ( (_props: React.PropsWithoutRef<{}>) =>  {
 (window as {testComponent?: {}}).testComponent = {
   ...((window as {testComponent?: {}}).testComponent ?? {}),
   ScanDiceKeyView: () => {
-    ReactDOM.render(<ScanDiceKeyView />, document.getElementById("app-container"))
+    ReactDOM.render(<ScanDiceKeyView onDiceKeyRead={ (facesRead) => {
+      const diceKey: DiceKey = facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face>;
+      const hrf = DiceKey.toHumanReadableForm(diceKey, true);
+      console.log(`Read ${hrf}`);
+      alert(`Read ${hrf}`);
+    }} />, document.getElementById("app-container"))
 }};
 
 

@@ -12,7 +12,7 @@ import {
 } from "../../dicekeys/dicekey";
 import { Face, FaceDigit, FaceLetter, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
 import { CenteredControls } from "~/web-components/basics";
-import { DiceKeyRenderOptions, DiceKeyView } from "../../web-components/display-dicekey/dicekey-view";
+import { DiceKeyRenderOptions, DiceKeyView } from "../selected-dicekey/dicekey-view";
 // export const FontFamily = "Inconsolata";
 // export const FontWeight = "700";
 

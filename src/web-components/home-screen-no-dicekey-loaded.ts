@@ -12,7 +12,7 @@ import {
   appHasScannedADiceKeyBefore,
 } from "~state";
 import { LocalStorageField } from "~web-component-framework/locally-stored-state";
-import { DiceKeySvg } from "./display-dicekey/dicekey-svg";
+import { DiceKeySvg } from "./selected-dicekey/dicekey-svg";
 import { DiceKey } from "~dicekeys/dicekey";
 
 interface HomeScreenOptions extends Attributes<"div"> {}

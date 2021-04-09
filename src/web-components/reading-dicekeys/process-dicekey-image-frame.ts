@@ -70,7 +70,6 @@ class DiceKeyFrameWorkerClient {
     const response = (await this.workerMessageReceivedEvent.promiseOfNextOccurrence(
       message => "action" in message.data && message.data.action === "processRGBAImageFrame" 
     )).data as ProcessFrameResponse;
-    console.log(`Worker response ${JSON.stringify(response)}`)
     return response;
   }
 }

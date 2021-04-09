@@ -20,12 +20,21 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
  // private overlayCanvasElement: HTMLCanvasElement | null = null;
   private renderingContext?: CanvasRenderingContext2D;
 
-  onFrameCaptured = (frame: ImageData) => {
+  onFrameCaptured = async (frame: ImageData) => {
     const renderingContext = this.renderingContext;
+    // const c = this.testCanvasIllustratingFramesCaptured;
+    // if (c) {
+    //   c.width = frame.width;
+    //   c.height = frame.height;
+    //   const ctx = c.getContext("2d");
+    //   ctx?.putImageData(frame, 0, 0);
+    // }
     if (renderingContext) {
-      this.props.onFrameCaptured?.(frame, renderingContext);
+      await this.props.onFrameCaptured?.(frame, renderingContext);
     }
   }
+
+  // testCanvasIllustratingFramesCaptured?: HTMLCanvasElement
 
   render() {
     const [videoElementBounds, makeThisVideoElementsBoundsObservable] = createReactObservableBounds();
@@ -38,9 +47,9 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
           makeThisElementsBoundsObservable={makeThisVideoElementsBoundsObservable}
         />
         <OverlayCanvas bounds={videoElementBounds} ref={ e => {
-          // this.overlayCanvasElement = e
           this.renderingContext = e?.getContext("2d") ?? undefined;
         }} />
+        {/* <canvas ref={c => this.testCanvasIllustratingFramesCaptured = c ?? undefined}/> */}
       </div>
     );
   }

@@ -39,9 +39,18 @@ export class DiceKeyFrameProcessorState {
   private framesSinceErrorsNarrowedToJustBitErrors: number | undefined;
 
 
-  constructor() {
+  constructor(private onDiceKeyRead?: (facesRead: TupleOf25Items<FaceRead>) => any) {
     makeAutoObservable(this);
   }
+
+  private scanningSuccessful = action ( (): true => {
+    this.scanningSuccessfulEnoughToTerminate = true;
+    if (this.bestFacesRead && this.onDiceKeyRead) {
+      this.onDiceKeyRead(this.bestFacesRead as TupleOf25Items<FaceRead>)
+      this.onDiceKeyRead = undefined;
+    }
+    return true;
+  })
 
   /**
    * This logic determines whether we've met the conditions for scanning,
@@ -64,7 +73,7 @@ export class DiceKeyFrameProcessorState {
     if (errorTypes.length === 0) {
       // All faces have majority values and no errors found -- we're done
       this.bestFacesRead = facesRead;
-      return this.scanningSuccessfulEnoughToTerminate = true;
+      return this.scanningSuccessful();
     }
 
     const errorsAreOnlyBitErrors = errorTypes.every( e =>
@@ -88,24 +97,21 @@ export class DiceKeyFrameProcessorState {
     // giving up on correcting the error.
     if (!this.bestFacesRead || allDiceErrorTypes(this.bestFacesRead).length >= errorTypes.length)
     this.bestFacesRead = facesRead;
-    return this.scanningSuccessfulEnoughToTerminate = (
+    if (
       Date.now() - this.msSinceErrorsNarrowedToJustBitErrors > 1000 &&
       ++this.framesSinceErrorsNarrowedToJustBitErrors >= 4
-    );
+    ) {
+      return this.scanningSuccessful();
+    } else {
+      return false;
+    }
   });
-
-  // reportDiceKeyReadAndValidated = () => {
-  //   const diceKey = DiceKey( this.facesRead?.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face> );
-  //   this.diceKeyReadEvent.send(diceKey);
-  //   this.remove();
-  // }
-
 
   /**
    * Handle frames processed by the web worker, displaying the received
    * overlay image above the video image.
    */
-  handleProcessedCameraFrame = action ( (response: ProcessFrameResponse, overlayCanvasCtx: CanvasRenderingContext2D ) => {
+  handleProcessedCameraFrame = action ( (response: ProcessFrameResponse, overlayCanvasCtx: CanvasRenderingContext2D ): void => {
     const {width, height, facesReadObjectArray, exception} = response;
     if (exception != null) {
       return;
@@ -124,12 +130,6 @@ export class DiceKeyFrameProcessorState {
         this.frameProcessedTimesMs.shift();
       }
     }
- 
-    // Render the frame onto the screen
-    overlayCanvasCtx.clearRect(0, 0, width, height);
-    if (this.facesRead) {
-      renderFacesRead(overlayCanvasCtx, this.facesRead, {});
-    }
 
     const facesRead = facesReadObjectArray?.map( faceReadObject => {
       const faceRead: FaceReadWithImageIfErrorFound = FaceRead.fromJsonObject(faceReadObject);
@@ -137,5 +137,11 @@ export class DiceKeyFrameProcessorState {
       return faceRead;
     }) as TupleOf25Items<FaceReadWithImageIfErrorFound>;
     this.processFacesRead(facesRead);
+
+    // Render the frame onto the screen
+   overlayCanvasCtx.clearRect(0, 0, width, height);
+    if (this.facesRead) {
+      renderFacesRead(overlayCanvasCtx, this.facesRead, {});
+    }
   });
 };

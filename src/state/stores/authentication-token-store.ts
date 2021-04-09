@@ -1,5 +1,5 @@
 import { urlSafeBase64Encode } from "@dicekeys/dicekeys-api-js";
-import { getRandomBytes } from "../../dicekeys";
+import { getRandomBytes } from "../../utilities/get-random-bytes";
 
 const authenticationFieldName = (authenticationToken: string) =>
   `authenticationToken:${authenticationToken}`;

@@ -8,7 +8,7 @@ import {
 } from "./api-request-handling/api-request-container";
 import {
   DiceKeySvgView
-} from "./display-dicekey/display-dicekey";
+} from "./selected-dicekey/display-dicekey";
 import {
   HomeScreenForNoDiceKeyLoaded
 } from "./home-screen-no-dicekey-loaded";
