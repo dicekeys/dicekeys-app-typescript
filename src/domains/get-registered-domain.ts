@@ -1,4 +1,6 @@
-import {readFileSync} from 'fs'
+// import {readFileSync} from 'fs'
+
+import publicSuffixListDataContents from "./public_suffix_list.dat.txt";
 
 const domainRegexp = new RegExp("(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]");
 const isValidDomain = (candidate: string): boolean => domainRegexp.test(candidate);
@@ -21,7 +23,7 @@ const topLevelDomainLabelMap: LabelMap = {};
  * https://publicsuffix.org/list/public_suffix_list.dat
  * which we cache in the code base so that we don't have to perform online queries.
  */
-const publicSuffixListDataContents = readFileSync(__dirname + "/public_suffix_list.dat.txt", "utf-8");
+// const publicSuffixListDataContents = readFileSync(__dirname + "/public_suffix_list.dat.txt", "utf-8");
 publicSuffixListDataContents.split("\n").forEach( rawLine => {
   // We may need to strip ine feeds
   const line = rawLine.trim();

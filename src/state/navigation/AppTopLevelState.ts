@@ -1,8 +1,8 @@
 import { action, makeObservable, override, runInAction } from "mobx";
-import { DiceKey } from "../../dicekeys";
+import { DiceKey } from "../../dicekeys/dicekey";
 import { HasSubViews } from "../core";
-import { DiceKeyStore } from "../../state/stores/dicekey-store";
-import { SelectedDiceKeyViewState } from "./selected-dicekey-view-state";
+import { DiceKeyStore } from "../stores/dicekey-store";
+import { SelectedDiceKeyViewState } from "./SelectedDiceKeyViewState";
 
 export enum SubViewsOfTopLevel {
   AppHomeView,

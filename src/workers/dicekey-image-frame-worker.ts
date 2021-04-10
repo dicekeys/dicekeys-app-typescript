@@ -9,9 +9,10 @@ import "regenerator-runtime/runtime";
 import {
     DiceKeyImageProcessor,
     DiceKeyImageProcessorModuleWithHelpers,
-    DiceKeyImageProcessorModulePromise, FaceReadJson, FaceRead
+    DiceKeyImageProcessorModulePromise, FaceRead
 } from "@dicekeys/read-dicekey-js"
 import { TupleOf25Items } from "../dicekeys/dicekey";
+import { FaceReadJsonObjectWithImageIfErrorFound } from "~dicekeys";
 
 /**
  * A request to process an image frame while scanning dicekeys
@@ -37,9 +38,6 @@ export interface TerminateSessionRequest {
 export interface ReadyMessage {
     action: "workerReady"
 }
-
-export type FaceReadJsonObjectWithImageIfErrorFound = FaceReadJson & {squareImageAsRgbaArray?: Uint8ClampedArray};
-export type FaceReadWithImageIfErrorFound = FaceRead & {squareImageAsRgbaArray?: Uint8ClampedArray};
 
 /**
  * A response with the result of processing a camera frame
