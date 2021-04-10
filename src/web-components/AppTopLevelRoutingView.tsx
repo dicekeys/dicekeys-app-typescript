@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import React from "react";
 import { DiceKey, TupleOf25Items } from "../dicekeys/dicekey";
 import {AppTopLevelState, SubViewsOfTopLevel} from "../state/navigation";
-import { ScanDiceKeyView } from "./reading-dicekeys/scan-dicekey-view";
+import { ScanDiceKeyView } from "./reading-dicekeys/ScanDiceKeyView";
 import { SelectedDiceKeyView } from "./selected-dicekey/selected-dicekey-view";
 import { AppHomeView } from "./AppHomeView";
 

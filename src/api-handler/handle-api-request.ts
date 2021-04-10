@@ -11,8 +11,50 @@ import { SeededApiRequest } from "./seeded-api-request";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 
 export interface ApiRequestContext {
-  host: string,
-  request: ApiCalls.RequestMessage,
+  readonly host: string,
+  readonly request: ApiCalls.RequestMessage,
+}
+
+export abstract class QueuedApiRequest implements ApiRequestContext {
+  constructor(
+    public readonly host: string,
+    public readonly request: ApiCalls.RequestMessage,
+  ) {}
+
+  mutatedRequest?: ApiCalls.RequestMessage;
+
+  abstract throwIfClientNotPermitted: (request: ApiCalls.ApiRequestObject) => void;
+  abstract transmitResponse: (response: ApiCalls.Response) => Promise<void>;
+
+  getResponse = async (seedString: string) => {
+    const request = this.mutatedRequest ?? this.request;
+    const response = (typeof global.Worker !== "undefined") ?
+      // We're in an environment with web workers. Await a remote execute
+      (await new ComputeApiCommandWorker().calculate({seedString, request})) :
+      // We have no choice but to run synchronously in this process
+      // (fortunately, that means we're non-interactive and just testing)
+      new SeededApiRequest(await SeededCryptoModulePromise, seedString, request).execute();
+    return response;
+  }
+
+  sendError = async (e: any) => {
+    const exception: string = 
+      (typeof e === "string") ?
+        e :
+    (typeof e === "object" && "name" in e && typeof e.name === "string") ?
+        e.name :
+      "unknown";
+    const message: string | undefined = 
+      (typeof e === "object" && "message" in e && typeof e.message === "string") ?
+        e.message : "unknown";
+    const stack: string | undefined = 
+    (typeof e === "object" && "stack" in e && typeof e.stack === "string") ?
+      e.stack : undefined;
+    const { requestId } = this.request;
+    await this.transmitResponse({
+      requestId, exception, message, stack
+    });
+  }
 }
 
 export interface ConsentResponse<REQUEST extends ApiCalls.ApiRequestObject = ApiCalls.ApiRequestObject> {
