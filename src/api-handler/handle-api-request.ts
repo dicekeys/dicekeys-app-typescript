@@ -18,12 +18,14 @@ export interface ApiRequestContext {
 export abstract class QueuedApiRequest implements ApiRequestContext {
   constructor(
     public readonly host: string,
-    public readonly request: ApiCalls.RequestMessage,
+    public readonly originalRequest: ApiCalls.RequestMessage,
   ) {}
 
   mutatedRequest?: ApiCalls.RequestMessage;
 
-  abstract throwIfClientNotPermitted: (request: ApiCalls.ApiRequestObject) => void;
+  get request(): ApiCalls.RequestMessage { return this.mutatedRequest ?? this.originalRequest }
+
+  abstract throwIfClientNotPermitted: () => void;
   abstract transmitResponse: (response: ApiCalls.Response) => Promise<void>;
 
   getResponse = async (seedString: string) => {
