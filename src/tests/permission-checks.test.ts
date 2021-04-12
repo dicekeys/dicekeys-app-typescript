@@ -7,7 +7,7 @@ import {
 } from "../api-handler/handle-api-request"
 import {
   throwIfHostNotPermitted
-} from "../api-handler/post-message-permission-checks";
+} from "../api-handler/handle-post-message-api-request";
 
 const commandsRequiringMay = [
   ApiCalls.Command.getSymmetricKey,

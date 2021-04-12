@@ -8,65 +8,66 @@ import {
   SecretRecipe, PasswordRecipe,
   stringToUtf8ByteArray, UnsealingInstructions
 } from "@dicekeys/dicekeys-api-js"
-
-import {
-  ConsentResponse, ApiRequestContext
-} from '../api-handler/handle-api-request'
-import { postMessageApiResponder } from "../api-handler/handle-post-message-api-request";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
+import { QueuedPostMessageApiRequest, PostMessageRequestEvent } from "../api-handler/handle-post-message-api-request";
 
-const getUsersConsentApprove = (requestContext: ApiRequestContext): Promise<ConsentResponse> =>
-  Promise.resolve({seedString: "a bogus seed", mutatedRequest: requestContext.request } );
 
+const defaultSeedString = "a bogus seed";
 const defaultRequestHost = "client.app";
 const defaultRequestOrigin = `https://${defaultRequestHost}`;
 
-const mockClient = (
-  requestOrigin: string = defaultRequestOrigin,
-  getUsersConsent: (request: ApiRequestContext) => Promise<ConsentResponse>
-) => {
-  const mockServer = postMessageApiResponder(
-    getUsersConsent,
-    (response) =>
-      PostMessageApiFactory.handlePossibleResultMessage(
-        {
-          origin: "https://dicekeys.com",
-          data: response
-        } as MessageEvent
-      )
-  );
 
+class MockQueuedPostMessageApiRequest extends QueuedPostMessageApiRequest {
+
+  transmitResponse = (response: ApiCalls.Response) => window.opener.postMessage(response, this.origin)
+
+  constructor(
+    requestEvent: PostMessageRequestEvent,
+    mockTransmitResponse: (response: ApiCalls.Response) => any
+  ) {
+    super(requestEvent);
+    this.transmitResponse = mockTransmitResponse;
+  }
+}
+
+const getMockClient = (
+  requestOrigin: string = defaultRequestOrigin,
+  seedString: string = defaultSeedString
+) => {
   return PostMessageApiFactory.postMessageApiCallFactory(
     <CALL extends ApiCalls.ApiCall>(
       request: ApiCalls.RequestMessage<CALL> & PostMessageApiFactory.PostMessageRequestMetadata 
     ): Promise<ApiCalls.ApiCallResult<CALL>> => {
-      const resultPromise = PostMessageApiFactory.addPostMessageApiPromise<ApiCalls.ApiCallResult<CALL>>(request.requestId)
-      
-      mockServer({
+
+      const requestEvent = {
         origin: requestOrigin,
         data: request
-      } as MessageEvent);
-
-      return resultPromise;
+      } as PostMessageRequestEvent;
+      
+      return new Promise<ApiCalls.ApiCallResult<CALL>>( resolve => {
+        const requestObj = new MockQueuedPostMessageApiRequest(requestEvent, response => resolve(response as ApiCalls.ApiCallResult<CALL>));
+        requestObj.respond(seedString);
+      });
     }
   )
 }
 
-const defaultTestCall = PostMessageApiFactory.postMessageApiCallFactory(
-  mockClient(defaultRequestOrigin, getUsersConsentApprove)
-);
-const generateSignature = ApiFactory.apiCallFactory<ApiCalls.GenerateSignature>("generateSignature", defaultTestCall);
-const getSealingKey = ApiFactory.apiCallFactory<ApiCalls.GetSealingKey>("getSealingKey", defaultTestCall);
-const getSecret = ApiFactory.apiCallFactory<ApiCalls.GetSecret>("getSecret", defaultTestCall);
-const getPassword = ApiFactory.apiCallFactory<ApiCalls.GetPassword>("getPassword", defaultTestCall);
-const getSignatureVerificationKey = ApiFactory.apiCallFactory<ApiCalls.GetSignatureVerificationKey>("getSignatureVerificationKey", defaultTestCall);
-const getSigningKey = ApiFactory.apiCallFactory<ApiCalls.GetSigningKey>("getSigningKey", defaultTestCall);
-const getSymmetricKey = ApiFactory.apiCallFactory<ApiCalls.GetSymmetricKey>("getSymmetricKey", defaultTestCall);
-const getUnsealingKey = ApiFactory.apiCallFactory<ApiCalls.GetUnsealingKey>("getUnsealingKey", defaultTestCall);
-const sealWithSymmetricKey = ApiFactory.apiCallFactory<ApiCalls.SealWithSymmetricKey>("sealWithSymmetricKey", defaultTestCall);
-const unsealWithSymmetricKey = ApiFactory.apiCallFactory<ApiCalls.UnsealWithSymmetricKey>("unsealWithSymmetricKey", defaultTestCall);
-const unsealWithUnsealingKey = ApiFactory.apiCallFactory<ApiCalls.UnsealWithUnsealingKey>("unsealWithUnsealingKey", defaultTestCall);
+const mockClient = getMockClient(); 
+// PostMessageApiFactory.postMessageApiCallFactory(
+//   mockClient(defaultRequestOrigin)
+// );
+const generateSignature = ApiFactory.apiCallFactory<ApiCalls.GenerateSignature>("generateSignature", mockClient);
+const getSealingKey = ApiFactory.apiCallFactory<ApiCalls.GetSealingKey>("getSealingKey", mockClient);
+const getSecret = ApiFactory.apiCallFactory<ApiCalls.GetSecret>("getSecret", mockClient);
+const getPassword = ApiFactory.apiCallFactory<ApiCalls.GetPassword>("getPassword", mockClient);
+const getSignatureVerificationKey = ApiFactory.apiCallFactory<ApiCalls.GetSignatureVerificationKey>("getSignatureVerificationKey", mockClient);
+const getSigningKey = ApiFactory.apiCallFactory<ApiCalls.GetSigningKey>("getSigningKey", mockClient);
+const getSymmetricKey = ApiFactory.apiCallFactory<ApiCalls.GetSymmetricKey>("getSymmetricKey", mockClient);
+const getUnsealingKey = ApiFactory.apiCallFactory<ApiCalls.GetUnsealingKey>("getUnsealingKey", mockClient);
+const sealWithSymmetricKey = ApiFactory.apiCallFactory<ApiCalls.SealWithSymmetricKey>("sealWithSymmetricKey", mockClient);
+const unsealWithSymmetricKey = ApiFactory.apiCallFactory<ApiCalls.UnsealWithSymmetricKey>("unsealWithSymmetricKey", mockClient);
+const unsealWithUnsealingKey = ApiFactory.apiCallFactory<ApiCalls.UnsealWithUnsealingKey>("unsealWithUnsealingKey", mockClient);
 
 
 describe("End-to-end API tests using the PostMessage API", () => {
