@@ -3,8 +3,8 @@ import {
   Recipe
 } from "@dicekeys/dicekeys-api-js";
 import {
-  throwIfClientMayNotRetrieveKey,
-} from "../api-handler/permission-checks"
+  QueuedApiRequest
+} from "../api-handler/handle-api-request"
 import {
   throwIfHostNotPermitted
 } from "../api-handler/post-message-permission-checks";
@@ -18,22 +18,22 @@ const commandsRequiringMay = [
 describe ("API Permission Checks", () => {
     for (const command of commandsRequiringMay) {
       test (`Cannot ${command} unless clientMayRetrieveKey recipe field set to true`, () => {
-        expect( () => throwIfClientMayNotRetrieveKey({
+        expect( () => QueuedApiRequest.throwIfClientMayNotRetrieveKey({
           command,
           recipe: JSON.stringify(Recipe({
           }))
-        })).toThrow();
+        } as ApiCalls.RequestMessage )).toThrow();
       })
     }
 
     for (const command of commandsRequiringMay) {
       test (`Can ${command} if clientMayRetrieveKey recipe field set to true`, () => {
-        throwIfClientMayNotRetrieveKey({
+        QueuedApiRequest.throwIfClientMayNotRetrieveKey({
           command,
           recipe: JSON.stringify(Recipe({
             clientMayRetrieveKey: true
           }))
-        });
+        } as ApiCalls.RequestMessage);
       })
     }
   

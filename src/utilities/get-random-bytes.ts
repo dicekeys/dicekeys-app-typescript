@@ -1,7 +1,7 @@
 // import {randomBytes} from "crypto";
 
 export const getRandomBytes: (numberOfBytes: number) => Uint8Array =
-  (window && window.crypto) ? 
+  (typeof window !== "undefined" && window.crypto) ? 
   (
     (numberOfBytes: number) => {
       const bytes = new Uint8Array(numberOfBytes);

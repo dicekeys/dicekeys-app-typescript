@@ -1,17 +1,16 @@
 import {
   ApiCalls,
   Exceptions,
+  GetAuthTokenRequest,
+  UrlApiMetaCommand,
   UrlRequestMetadataParameterNames,
-  urlSafeBase64Decode, urlSafeBase64Encode,
-  UrlApiMetaCommand
+  urlSafeBase64Decode, urlSafeBase64Encode
 } from "@dicekeys/dicekeys-api-js";
 import {
   throwIfUrlNotPermitted
 } from "./url-permission-checks";
 import {
-  handleApiRequest,
-  ApiRequestContext,
-  ConsentResponse
+  QueuedApiRequest
 } from "./handle-api-request";
 import {
   GenerateSignatureParameterNames,
@@ -35,107 +34,25 @@ import {
 } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import { addAuthenticationToken, getUrlForAuthenticationToken } from "../state/stores/authentication-token-store";
 
-interface MarshallCommand<COMMAND extends ApiCalls.Command> {
-  (
-    command: COMMAND,
-    marshaller: {
-      add: (fieldName: string, value: string) => void
-    },
-    response: ApiCalls.ResponseForCommand<COMMAND>,
-  ): void
-}
 
-// Since TypeScript doesn't do type inference on switch statements well enough,
-// this function allows us to simulate a properly typed switch case statement.
-const commandMarshallers = new Map<ApiCalls.Command, MarshallCommand<ApiCalls.Command>>();
-const addResponseMarshallerForCommand = <COMMANDS extends ApiCalls.Command[]>(
-  forCommand: COMMANDS,
-  callback: MarshallCommand<COMMANDS[number]>
-): void => {
-  for (const command of forCommand) {
-    commandMarshallers.set(command, callback);
-  }
-}
-addResponseMarshallerForCommand(
-  [
-    ApiCalls.Command.generateSignature
-  ],
-  (_, {add}, {signature, signatureVerificationKeyJson}) => {
-    add(GenerateSignatureSuccessResponseParameterNames.signature, urlSafeBase64Encode(signature));
-    add(GenerateSignatureSuccessResponseParameterNames.signatureVerificationKeyJson, signatureVerificationKeyJson);
-});
-addResponseMarshallerForCommand(
-  [
-    ApiCalls.Command.getPassword,
-    ApiCalls.Command.getSealingKey,
-    ApiCalls.Command.getSecret,
-    ApiCalls.Command.getSignatureVerificationKey,
-    ApiCalls.Command.getSigningKey,
-    ApiCalls.Command.getSymmetricKey,
-    ApiCalls.Command.getUnsealingKey,
-    ApiCalls.Command.sealWithSymmetricKey,
-  ],
-  (command, {add}, result) => {
-    add(
-      SeededCryptoObjectResponseParameterNames[command],
-      (result as ApiCalls.GetSeededCryptoObjectSuccessResponse<typeof command>)[SeededCryptoObjectResponseParameterNames[command]]
-    );
-});
-addResponseMarshallerForCommand(
-  [
-    ApiCalls.Command.unsealWithSymmetricKey,
-    ApiCalls.Command.unsealWithUnsealingKey,
-  ],
-  (_, {add}, {plaintext}) => {
-    add(UnsealSuccessResponseParameterNames.plaintext, urlSafeBase64Encode(plaintext) );
-});
-
-export const addResponseToUrl = (
-  command: ApiCalls.Command,
-  responseUrl: string,
-  response: ApiCalls.Response,
-): string => {
-  // Construct a response URL onto which we can add response parameters
-  const url = new URL(responseUrl);
-  // Syntactic sugar for marshalling responses into the URL
-  const add = (name: string, value: string) => url.searchParams.set(name, value);
-  // Always copy the requestId back into the response
-  add(ResponseMetadataParameterNames.requestId, response.requestId);
-
-  // Marshall exceptions if thrown.
-  if ("exception" in response) {
-    const {exception, message, stack} = response;
-    add(ApiCalls.ExceptionResponseParameterNames.exception, exception);
-    if (message != null) {
-      add(ApiCalls.ExceptionResponseParameterNames.message!, message);
-    }
-    if (stack != null) {
-      add(ApiCalls.ExceptionResponseParameterNames.stack!, stack);
-    }
-    return url.toString();
-  }
-
-  // Get the correct marshaller for this command and call it.
-  const marshaller = commandMarshallers.get(command);
-  marshaller?.(command, {add}, response);
-
-  return url.toString();
-}
-
-export const getApiRequestFromSearchParams = (
+const getApiRequestFromSearchParams = (
   searchParams: URLSearchParams
-): ApiCalls.ApiRequestObject | undefined => {
+): ApiCalls.ApiRequestObject | GetAuthTokenRequest | undefined => {
   const command = searchParams.get(ApiCalls.RequestCommandParameterNames.command) ?? undefined;
   if (command == null) {
     return undefined;
   }
-  if (!(command in ApiCalls.Command)) {
+  if (!(command in ApiCalls.Command) && command !== UrlApiMetaCommand.getAuthToken) {
     throw new Exceptions.InvalidCommand(`Invalid API command: ${command}`);
   }
   const requireParam = (paramName: string) => searchParams.get(paramName) ??
     (() => { throw new Exceptions.MissingParameter(`Command ${command} missing parameter ${paramName}.`);} )();
   
   switch (command) {
+    case UrlApiMetaCommand.getAuthToken:
+      return {
+        command
+      } as GetAuthTokenRequest
     case ApiCalls.Command.generateSignature:
       return {
         command,
@@ -184,9 +101,9 @@ export const getApiRequestFromSearchParams = (
   throw new Exceptions.InvalidCommand(command);
 }
 
-const getApiRequestContextFromUrl = (
+const decodeRequestFromUrlIfPresent = (
   requestUrl: URL
-): undefined | (ApiRequestContext & {hostValidatedViaAuthToken: boolean, respondTo: string, origin: string, pathname: string}) => {
+) => {
   const {searchParams} = requestUrl;
   var respondTo = searchParams.get(UrlRequestMetadataParameterNames.respondTo);
   var hostValidatedViaAuthToken = false;
@@ -194,14 +111,13 @@ const getApiRequestContextFromUrl = (
   const authToken = searchParams.get(UrlRequestMetadataParameterNames.authToken!) ?? undefined;
   if (authToken != null ) {
     const authUrl = getUrlForAuthenticationToken(authToken);
-    if (authUrl != null) {
-      respondTo = authUrl;
+    if (authUrl === respondTo) {
       hostValidatedViaAuthToken = true;
     }
   }
   if (typeof requestId !== "string" || typeof respondTo !== "string") {
     // This is not a request.  Ignore this message event.
-    return;
+    return undefined;
   }
   const request = getApiRequestFromSearchParams(requestUrl.searchParams);
   if (request == null) {
@@ -209,56 +125,250 @@ const getApiRequestContextFromUrl = (
   }
   const {origin, host, pathname} = new URL(respondTo);
   return {
-    request: {...request, requestId},
+    originalRequest: {...request, requestId},
     host,
     hostValidatedViaAuthToken,
     respondTo,
     origin,
     pathname
   }
+};
+
+type GetAuthTokenCommand = typeof UrlApiMetaCommand.getAuthToken
+type CommandsAndMetaCommands = ApiCalls.Command | GetAuthTokenCommand;
+
+interface ResponseForGetAuthToken {
+  command: typeof UrlApiMetaCommand.getAuthToken;
+  authToken: string;
 }
 
-/**
- * 
- * @param getUsersConsent 
- * @param transmitResponseUrl Set only when testing.  By default, opens a window to to response URL
- */
-export const urlApiResponder = (
-  getUsersConsent: (requestContext: ApiRequestContext) => Promise<ConsentResponse>,
-  transmitResponseUrl: (response: string) => any = (url: string) => window.location.replace(url)
-) => (candidateRequestUrl: string) => {
-  const requestUrl = new URL(candidateRequestUrl);
-  if (requestUrl.searchParams.get(ApiCalls.RequestCommandParameterNames.command) === UrlApiMetaCommand.getAuthToken) {
-    // Special case request for authentication tokens.
-    const respondTo = requestUrl.searchParams.get(UrlRequestMetadataParameterNames.respondTo);
-    const requestId = requestUrl.searchParams.get(ApiCalls.RequestMetadataParameterNames.requestId);
-    if (typeof respondTo === "string" && typeof requestId === "string") {
-      const responseUrl = new URL(respondTo);
-      const authToken = addAuthenticationToken(respondTo);
-      responseUrl.searchParams.set(ResponseMetadataParameterNames.requestId, requestId);
-      if (authToken) {
-        responseUrl.searchParams.set(UrlRequestMetadataParameterNames.authToken!, authToken);
-      }
-      transmitResponseUrl(responseUrl.toString());
-    }
-    return;
-  }
-  const processedRequest = getApiRequestContextFromUrl(requestUrl);
-  if (processedRequest == null) {
-    return;
-  }
-  const {pathname, respondTo, hostValidatedViaAuthToken, ...requestContext} = processedRequest;
-  const {host} = requestContext;
+interface MarshallCommand<COMMAND extends CommandsAndMetaCommands> {
+  (
+    command: COMMAND,
+    marshaller: {
+      add: (fieldName: string, value: string) => void
+    },
+    response: COMMAND extends GetAuthTokenCommand ? ResponseForGetAuthToken : ApiCalls.ResponseForCommand<Exclude<COMMAND, GetAuthTokenCommand>>,
+  ): void
+}
 
-  const transmitResponse = (response: ApiCalls.Response) => {
-    const marshalledResponseUrl = addResponseToUrl( requestContext.request.command, respondTo, response);
-    transmitResponseUrl(marshalledResponseUrl.toString())
-  };
-  const throwIfClientNotPermitted = throwIfUrlNotPermitted(host, pathname, hostValidatedViaAuthToken);
-  return handleApiRequest(
-    throwIfClientNotPermitted,
-    getUsersConsent,
-    transmitResponse,
-    requestContext
-  )
+// Since TypeScript doesn't do type inference on switch statements well enough,
+// this function allows us to simulate a properly typed switch case statement.
+const commandMarshallers = new Map<CommandsAndMetaCommands, MarshallCommand<ApiCalls.Command>>();
+const addResponseMarshallerForCommand = <COMMANDS extends CommandsAndMetaCommands[]>(
+  forCommand: COMMANDS,
+  callback: MarshallCommand<COMMANDS[number]>
+): void => {
+  for (const command of forCommand) {
+    commandMarshallers.set(command, callback);
+  }
+}
+addResponseMarshallerForCommand(
+  [
+    UrlApiMetaCommand.getAuthToken
+  ],
+  (_, {add}, {authToken}) => {
+    add("authToken", authToken);
+});
+addResponseMarshallerForCommand(
+  [
+    ApiCalls.Command.generateSignature
+  ],
+  (_, {add}, {signature, signatureVerificationKeyJson}) => {
+    add(GenerateSignatureSuccessResponseParameterNames.signature, urlSafeBase64Encode(signature));
+    add(GenerateSignatureSuccessResponseParameterNames.signatureVerificationKeyJson, signatureVerificationKeyJson);
+});
+addResponseMarshallerForCommand(
+  [
+    ApiCalls.Command.getPassword,
+    ApiCalls.Command.getSealingKey,
+    ApiCalls.Command.getSecret,
+    ApiCalls.Command.getSignatureVerificationKey,
+    ApiCalls.Command.getSigningKey,
+    ApiCalls.Command.getSymmetricKey,
+    ApiCalls.Command.getUnsealingKey,
+    ApiCalls.Command.sealWithSymmetricKey,
+  ],
+  (command, {add}, result) => {
+    add(
+      SeededCryptoObjectResponseParameterNames[command],
+      (result as ApiCalls.GetSeededCryptoObjectSuccessResponse<typeof command>)[SeededCryptoObjectResponseParameterNames[command]]
+    );
+});
+addResponseMarshallerForCommand(
+  [
+    ApiCalls.Command.unsealWithSymmetricKey,
+    ApiCalls.Command.unsealWithUnsealingKey,
+  ],
+  (_, {add}, {plaintext}) => {
+    add(UnsealSuccessResponseParameterNames.plaintext, urlSafeBase64Encode(plaintext) );
+});
+
+const addResponseToUrl = (
+  command: ApiCalls.Command,
+  responseUrl: string,
+  response: ApiCalls.Response,
+): URL => {
+  // Construct a response URL onto which we can add response parameters
+  const url = new URL(responseUrl);
+  // Syntactic sugar for marshalling responses into the URL
+  const add = (name: string, value: string) => url.searchParams.set(name, value);
+  // Always copy the requestId back into the response
+  add(ResponseMetadataParameterNames.requestId, response.requestId);
+
+  // Marshall exceptions if thrown.
+  if ("exception" in response) {
+    const {exception, message, stack} = response;
+    add(ApiCalls.ExceptionResponseParameterNames.exception, exception);
+    if (message != null) {
+      add(ApiCalls.ExceptionResponseParameterNames.message!, message);
+    }
+    if (stack != null) {
+      add(ApiCalls.ExceptionResponseParameterNames.stack!, stack);
+    }
+    return url;
+  }
+
+  // Get the correct marshaller for this command and call it.
+  const marshaller = commandMarshallers.get(command);
+  marshaller?.(command, {add}, response);
+
+  return url;
+}
+
+
+// const getApiRequestContextFromUrl = (
+//   requestUrl: URL
+// ): undefined | (ApiRequestContext & {hostValidatedViaAuthToken: boolean, respondTo: string, origin: string, pathname: string}) => {
+//   const {searchParams} = requestUrl;
+//   var respondTo = searchParams.get(UrlRequestMetadataParameterNames.respondTo);
+//   var hostValidatedViaAuthToken = false;
+//   const requestId = searchParams.get(ApiCalls.RequestMetadataParameterNames.requestId);
+//   const authToken = searchParams.get(UrlRequestMetadataParameterNames.authToken!) ?? undefined;
+//   if (authToken != null ) {
+//     const authUrl = getUrlForAuthenticationToken(authToken);
+//     if (authUrl != null) {
+//       respondTo = authUrl;
+//       hostValidatedViaAuthToken = true;
+//     }
+//   }
+//   if (typeof requestId !== "string" || typeof respondTo !== "string") {
+//     // This is not a request.  Ignore this message event.
+//     return;
+//   }
+//   const request = getApiRequestFromSearchParams(requestUrl.searchParams);
+//   if (request == null) {
+//     return undefined;
+//   }
+//   const {origin, host, pathname} = new URL(respondTo);
+//   return {
+//     request: {...request, requestId},
+//     host,
+//     hostValidatedViaAuthToken,
+//     respondTo,
+//     origin,
+//     pathname
+//   }
+// }
+
+// /**
+//  * 
+//  * @param getUsersConsent 
+//  * @param transmitResponseUrl Set only when testing.  By default, opens a window to to response URL
+//  */
+// export const urlApiResponder = (
+//   getUsersConsent: (requestContext: ApiRequestContext) => Promise<ConsentResponse>,
+//   transmitResponseUrl: (response: string) => any = (url: string) => window.location.replace(url)
+// ) => (candidateRequestUrl: string) => {
+//   const requestUrl = new URL(candidateRequestUrl);
+//   if (requestUrl.searchParams.get(ApiCalls.RequestCommandParameterNames.command) === UrlApiMetaCommand.getAuthToken) {
+//     // Special case request for authentication tokens.
+//     const respondTo = requestUrl.searchParams.get(UrlRequestMetadataParameterNames.respondTo);
+//     const requestId = requestUrl.searchParams.get(ApiCalls.RequestMetadataParameterNames.requestId);
+//     if (typeof respondTo === "string" && typeof requestId === "string") {
+//       const responseUrl = new URL(respondTo);
+//       const authToken = addAuthenticationToken(respondTo);
+//       responseUrl.searchParams.set(ResponseMetadataParameterNames.requestId, requestId);
+//       if (authToken) {
+//         responseUrl.searchParams.set(UrlRequestMetadataParameterNames.authToken!, authToken);
+//       }
+//       transmitResponseUrl(responseUrl.toString());
+//     }
+//     return;
+//   }
+//   const processedRequest = getApiRequestContextFromUrl(requestUrl);
+//   if (processedRequest == null) {
+//     return;
+//   }
+//   const {pathname, respondTo, hostValidatedViaAuthToken, ...requestContext} = processedRequest;
+//   const {host} = requestContext;
+
+//   const transmitResponse = (response: ApiCalls.Response) => {
+//     const marshalledResponseUrl = addResponseToUrl( requestContext.request.command, respondTo, response);
+//     transmitResponseUrl(marshalledResponseUrl.toString())
+//   };
+//   const throwIfClientNotPermitted = throwIfUrlNotPermitted(host, pathname, hostValidatedViaAuthToken);
+//   return handleApiRequest(
+//     throwIfClientNotPermitted,
+//     getUsersConsent,
+//     transmitResponse,
+//     requestContext
+//   )
+// }
+
+export class QueuedUrlApiRequest extends QueuedApiRequest {
+  readonly host: string;
+  readonly originalRequest: ApiCalls.RequestMessage;
+  readonly origin: string;
+  readonly pathname: string;
+  readonly hostValidatedViaAuthToken: boolean;
+  readonly respondTo: string;
+
+  transmitResponseUrl: (responseURL: URL) => any = (url: URL) => window.location.replace(url.toString());
+
+  throwIfClientNotPermitted: () => void = () => throwIfUrlNotPermitted(this.host, this.pathname, this.hostValidatedViaAuthToken)(this.request);
+
+  transmitResponse = (response: ApiCalls.Response) => {
+    const marshalledResponseUrl = addResponseToUrl( this.request.command, this.respondTo, response);
+    this.transmitResponseUrl(marshalledResponseUrl)
+  }
+
+  constructor(
+    requestUrl: URL
+  ) {
+    super();
+    const decoded = decodeRequestFromUrlIfPresent(requestUrl);
+    if (!decoded) {
+      throw "Invalid request URL"
+    }
+    // Should a future version of TypeScript be able to recognize that Object.assign will initialize all the
+    // object's parameters, we could replace the below assignments with:
+    //   Object.assign(this, decoded);
+    const {originalRequest, host, hostValidatedViaAuthToken, respondTo, origin, pathname} = decoded;
+    this.originalRequest = originalRequest as ApiCalls.RequestMessage;
+    this.host = host;
+    this.hostValidatedViaAuthToken = hostValidatedViaAuthToken;
+    this.respondTo = respondTo;
+    this.origin = origin;
+    this.pathname = pathname;
+  }
+
+  /**
+   * Get the correct response for a request, spawning a working to do the computation
+   * and then caching the result so that it need only be computed once..
+   * @param seedString The cryptographic seed for the operation
+   * @returns A promise for the requests corresponding response object
+   * @throws Exceptions when a request is not permitted.
+   */
+  async getResponse(seedString: string): Promise<ApiCalls.Response> {
+    if (this.request.command === UrlApiMetaCommand.getAuthToken) {
+      // getAuthToken is unique to URL requests  Send an authToken that
+      // proves the recipient is able to receive responses at the respondTo URL.
+      const {requestId} = this.request;
+      const authToken = addAuthenticationToken(this.respondTo);
+      return {requestId, authToken} as any as ApiCalls.Response;
+    } else {
+      return await super.getResponse(seedString);
+    }
+  }
 }

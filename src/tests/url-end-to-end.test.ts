@@ -7,34 +7,39 @@ import {
   stringToUtf8ByteArray, UnsealingInstructions, UnsealingKeyRecipe
 } from "@dicekeys/dicekeys-api-js";
 import {
-  urlApiResponder
+  QueuedUrlApiRequest
 } from "../api-handler/handle-url-api-request";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
-import {
-  ApiRequestContext,
-  ConsentResponse 
-} from "../api-handler/handle-api-request";
 import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
 
 import { Crypto } from "@peculiar/webcrypto"
 global.crypto = new Crypto();
 
-const getUsersConsentApprove = (requestContext: ApiRequestContext): Promise<ConsentResponse> =>
-  Promise.resolve({seedString: "a bogus seed", mutatedRequest: requestContext.request } );
+const defaultSeedString = "a bogus seed";
+
+// const getUsersConsentApprove = (requestContext: ApiRequestContext): Promise<ConsentResponse> =>
+//   Promise.resolve({seedString: defaultSeedString, mutatedRequest: requestContext.request } );
   
 const defaultRespondToHost = "client.app";
 const defaultRespondToUrl = `https://${defaultRespondToHost}/--derived-secret-api--/handle-response`;
 const defaultServerUrl = "https://dicekeys.app/"
 
-const getMockClient = (
-  getUsersConsent: (request: ApiRequestContext) => Promise<ConsentResponse> = getUsersConsentApprove
-) => {
+class MockQueuedUrlApiRequest extends QueuedUrlApiRequest {
+
+  transmitResponseUrl: (responseUrl: URL) => any;
+
+  constructor(requestUrl: URL, mockTransmitResponseUrl: (responseUrl: URL) => any) {
+    super(requestUrl);
+    this.transmitResponseUrl = mockTransmitResponseUrl;
+  }
+}
+
+const getMockClient = (seedString: string = defaultSeedString) => {
   var client: UrlApi;
-  const mockServer = urlApiResponder(
-    getUsersConsent,
-    (response) => client.handleResult(new URL(response))
-  );
-  client = new UrlApi(defaultServerUrl, defaultRespondToUrl, url => mockServer(url.toString()));
+  client = new UrlApi(defaultServerUrl, defaultRespondToUrl, url => {
+    const requestObj = new MockQueuedUrlApiRequest(url, client.handleResult);
+    requestObj.respond(seedString);
+  });
   return client;
 }
 

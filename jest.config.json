@@ -7,7 +7,8 @@
       "**/(*.)+(test).+(ts)"
     ],
     "transform": {
-      "^.+\\.(ts|tsx)$": "ts-jest"
+      "^.+\\.(ts|tsx)$": "ts-jest",
+      "^.+\\.(txt)$": "jest-raw-loader"
     },
     "moduleDirectories": ["node_modules", "src"],
     "collectCoverage": true,

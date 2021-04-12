@@ -52,6 +52,7 @@
     "canvas": "^2.6.1",
     "core-js": "^3.6.5",
     "jest": "^26.4.2",
+    "jest-raw-loader": "^1.0.1",
     "jsdom": "^16.4.0",
     "madge": "^4.0.2",
     "node-fetch": "^2.6.1",
