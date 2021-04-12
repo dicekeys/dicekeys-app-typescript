@@ -1,8 +1,8 @@
 import React from "react";
 import { action, autorun, makeAutoObservable, runInAction } from "mobx";
 import { observer } from "mobx-react";
-import { MakeThisElementsBoundsObservable } from "../../web-components/basics/bounds";
-import { FrameGrabber } from "./frame-grabber";
+import { MakeThisElementsBoundsObservable } from "../basics/bounds";
+import { FrameGrabber } from "./FrameGrabber";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 

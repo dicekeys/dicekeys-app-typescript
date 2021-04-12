@@ -6,7 +6,10 @@ import {
 } from "../../dicekeys/faces-read";
 import {
     ProcessFrameResponse,
-    FaceReadWithImageIfErrorFound} from "../../workers/dicekey-image-frame-worker"
+} from "../../workers/dicekey-image-frame-worker";
+import {
+  FaceReadWithImageIfErrorFound
+} from "../../dicekeys/faces-read"
 import { action, makeAutoObservable } from "mobx";
 import { TupleOf25Items } from "../../dicekeys";
 

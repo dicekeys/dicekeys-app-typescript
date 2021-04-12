@@ -2,7 +2,7 @@ import React from "react";
 import {observer} from "mobx-react";
 import {
   CamerasOnThisDevice
-} from "./cameras-on-this-device";
+} from "./CamerasOnThisDevice";
 import css from "./cameras-being-inspected.module.css";
 
 // export interface CamerasBeingInspectedOptions extends React.Props{}

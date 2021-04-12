@@ -1,9 +1,9 @@
 import React from "react";
 
 import { observer } from "mobx-react";
-import { OverlayCanvas } from "../../web-components/basics/overlay-canvas";
-import { createReactObservableBounds } from "../../web-components/basics/bounds";
-import { MediaStreamState, CameraCaptureView } from "./camera-capture-view";
+import { OverlayCanvas } from "../basics/overlay-canvas";
+import { createReactObservableBounds } from "../basics/bounds";
+import { MediaStreamState, CameraCaptureView } from "./CameraCaptureView";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 

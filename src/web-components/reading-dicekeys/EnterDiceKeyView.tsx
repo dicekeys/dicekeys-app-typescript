@@ -3,29 +3,16 @@ import layoutStyles from "../layout.module.css";
 import styles from "./enter-dicekey.module.css";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
-// import {
-//   DiceKeyRenderOptions
-// } from "~/dicekeys/render-to-svg";
+
 import {
   DiceKey,
   ReadOnlyTupleOf25Items,
 } from "../../dicekeys/dicekey";
 import { Face, FaceDigit, FaceLetter, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
-import { CenteredControls } from "~/web-components/basics";
-import { DiceKeyRenderOptions, DiceKeyView } from "../selected-dicekey/dicekey-view";
-// export const FontFamily = "Inconsolata";
-// export const FontWeight = "700";
+import { CenteredControls } from "../../web-components/basics";
+import { DiceKeyView } from "../selected-dicekey/DiceKeyView";
 
-
-export interface EnterDiceKeyOptions extends DiceKeyRenderOptions {
-  onDiceKeyEntered: (diceKey: DiceKey) => void,
-  onCancelled: () => void,
-//  partialDiceKey?: ReadOnlyTupleOf25Items<ObservablePartialFace>;
-//  isValid?: boolean;
-  showButtons?: boolean
-}
-
-class EnterDiceKeyState {
+export class EnterDiceKeyState {
   currentFaceIndex: number = 0;
 
   get isValid(): boolean {
@@ -124,18 +111,11 @@ class EnterDiceKeyState {
 /**
  * This class implements the component that allows manual entry of DiceKeys.
  */
-export const EnterDiceKey = observer( (props: React.PropsWithChildren<EnterDiceKeyOptions & {state?: EnterDiceKeyState}>) => {
-  const state = props.state ?? new EnterDiceKeyState();
-
-  return (
+export const EnterDiceKeyView = observer( ({state}: React.PropsWithoutRef<{state: EnterDiceKeyState}>) => (
     <div className={layoutStyles.stretched_column_container} onKeyDown={ (e) => state.keyDownListener(e) }>
       <div className={styles.key_hints}>
         To rotate the current face, use either &lt; &gt;, - +, or CTRL arrow (right and left arrows).
       </div>
       <DiceKeyView diceKey={state.partialDiceKey} />
-      <CenteredControls>
-        {props.children}
-      </CenteredControls>
-    </div>
-  )
-});
+     </div>
+  ));

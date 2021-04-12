@@ -3,8 +3,8 @@ import React from "react";
 import { action, makeAutoObservable } from "mobx";
 import { observer  } from "mobx-react";
 import { DerivationRecipeType } from "../../dicekeys/derivation-recipe";
-import { SequenceNumberFormFieldView, SequenceNumberState } from "./recipe-builder-sequence-number";
-import { RecipeBuilderCommonState } from "./recipe-builder-common-state";
+import { SequenceNumberFormFieldView, SequenceNumberState } from "./SequenceNumberView";
+import { RecipeBuilderCommonState } from "./RecipeBuilderCommonState";
 
 const getHostRestrictionsArrayAsString = (hosts: string[]): string =>
   `[${hosts

@@ -1,11 +1,10 @@
-import { Face, FaceRead } from "@dicekeys/read-dicekey-js";
 import { observer } from "mobx-react";
 import React from "react";
-import { DiceKey, TupleOf25Items } from "../dicekeys/dicekey";
+import { DiceKey } from "../dicekeys/dicekey";
 import {AppTopLevelState, SubViewsOfTopLevel} from "../state/navigation";
-import { ScanDiceKeyView } from "./reading-dicekeys/ScanDiceKeyView";
 import { SelectedDiceKeyView } from "./selected-dicekey/selected-dicekey-view";
 import { AppHomeView } from "./AppHomeView";
+import { LoadDiceKeyView, LoadDiceKeyState } from "./reading-dicekeys/LoadDiceKeyView";
 
 const DefaultAppTopLevelState = new AppTopLevelState();
 
@@ -14,8 +13,7 @@ interface AppTopLevelRoutingViewProps {
 }
 export const AppTopLevelRoutingView = observer ( (props: AppTopLevelRoutingViewProps) => {
   const appTopLevelState = props.appTopLevelState ?? DefaultAppTopLevelState;
-  const onDiceKeyRead = (facesRead: TupleOf25Items<FaceRead>) => {
-    const diceKey = DiceKey( facesRead.map( f => f.toFace() ) as TupleOf25Items<Face> );
+  const onDiceKeyRead = (diceKey: DiceKey) => {
     appTopLevelState.navigateToSelectedDiceKeyView(diceKey);
   }
 
@@ -24,7 +22,7 @@ export const AppTopLevelRoutingView = observer ( (props: AppTopLevelRoutingViewP
       <AppHomeView {...{appTopLevelState}}/>
     );
     case SubViewsOfTopLevel.LoadDicekey: return (
-      <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } />
+      <LoadDiceKeyView onDiceKeyRead={ onDiceKeyRead } state={new LoadDiceKeyState("manual")} />
     )
     case SubViewsOfTopLevel.AssemblyInstructions: return (
       null

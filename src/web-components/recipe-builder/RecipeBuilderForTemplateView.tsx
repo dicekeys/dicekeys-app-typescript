@@ -2,8 +2,8 @@ import React from "react";
 import { action, makeAutoObservable } from "mobx";
 import { observer  } from "mobx-react";
 import { addSequenceNumberToRecipeJson, DerivationRecipe, DerivationRecipeType } from "../../dicekeys/derivation-recipe";
-import { SequenceNumberFormFieldView, SequenceNumberState} from "./recipe-builder-sequence-number";
-import { RecipeBuilderCommonState } from "./recipe-builder-common-state";
+import { SequenceNumberFormFieldView, SequenceNumberState} from "./SequenceNumberView";
+import { RecipeBuilderCommonState } from "./RecipeBuilderCommonState";
 
 export class RecipeBuilderForTemplateState implements RecipeBuilderCommonState, SequenceNumberState {
   template: DerivationRecipe;

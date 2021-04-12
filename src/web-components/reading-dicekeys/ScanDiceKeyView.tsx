@@ -1,13 +1,13 @@
+import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import ReactDOM from "react-dom";
 import React from "react";
-import { CameraCaptureWithOverlay } from "./camera-capture-with-overlay";
-import { DiceKeyFrameProcessorState } from "./dice-key-frame-processor";
-import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
-import { MediaStreamState } from "./camera-capture-view";
-import { CamerasOnThisDevice } from "./cameras-on-this-device";
-import { runInAction } from "mobx";
 import { Face, FaceRead } from "@dicekeys/read-dicekey-js";
+import { CameraCaptureWithOverlay } from "./CameraCaptureWithOverlay";
+import { DiceKeyFrameProcessorState } from "./DiceKeyFrameProcessorState";
+import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
+import { MediaStreamState } from "./CameraCaptureView";
+import { CamerasOnThisDevice } from "./CamerasOnThisDevice";
 import { DiceKey, TupleOf25Items } from "../../dicekeys/dicekey";
 
 interface CameraSelectionViewProps {

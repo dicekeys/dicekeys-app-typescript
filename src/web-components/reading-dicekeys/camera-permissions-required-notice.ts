@@ -8,7 +8,7 @@ import {
 } from "~/web-component-framework"
 import {
   CamerasOnThisDevice  
-} from "./cameras-on-this-device"
+} from "./CamerasOnThisDevice"
 
 const gracePeriodBeforeAssumingCameraLoadFailedInMs = 4000; // 4 seconds
 const camerasOnThisDevice = CamerasOnThisDevice.instance;

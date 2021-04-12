@@ -2,7 +2,7 @@ import { Component, ComponentEvent } from "~web-component-framework";
 import { EncryptedCrossTabState } from "~state";
 import {
   LoadDiceKey, LoadDiceKeyOptions
-} from "~/web-components/reading-dicekeys/load-dicekey";
+} from "~web-components/reading-dicekeys/LoadDiceKeyView";
 import { BackupNudge } from "./backups/backup-nudge";
 import { DiceKey } from "~dicekeys/dicekey";
 //import { ConfigureDiceKey } from "./configure-dicekey";
