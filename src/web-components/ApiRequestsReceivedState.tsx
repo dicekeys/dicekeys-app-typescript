@@ -2,7 +2,7 @@
 import { makeAutoObservable } from "mobx";
 import {
   ApiRequestContext
-} from "../api-handler/handle-api-request";
+} from "../api-handler/QueuedApiRequest";
 
 export class ApiRequestsReceivedState {
 

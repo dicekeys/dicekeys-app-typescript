@@ -4,8 +4,9 @@ import {
 import {
   ComputeApiCommandWorker
 } from "../workers/call-api-command-worker"
-import { SeededApiRequest } from "./seeded-api-request";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
+import { SeededApiCommands } from "./SeededApiCommands";
+import { ApiRequestObject } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 
 export interface ApiRequestContext {
   readonly host: string,
@@ -82,7 +83,7 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
       (await new ComputeApiCommandWorker().calculate({seedString, request})) :
       // We have no choice but to run synchronously in this process
       // (fortunately, that means we're non-interactive and just testing)
-      new SeededApiRequest(await SeededCryptoModulePromise, seedString, request).execute();
+      new SeededApiCommands(await SeededCryptoModulePromise, seedString).executeRequest<ApiRequestObject>(request);
       const {requestId} = this.request;
       return {requestId, ...response};
   }

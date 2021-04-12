@@ -8,7 +8,7 @@ import {
 } from "@dicekeys/dicekeys-api-js";
 import {
   QueuedUrlApiRequest
-} from "../api-handler/handle-url-api-request";
+} from "../api-handler/QueuedUrlApiRequest";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
 

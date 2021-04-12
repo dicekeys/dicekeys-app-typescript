@@ -4,10 +4,10 @@ import {
 } from "@dicekeys/dicekeys-api-js";
 import {
   QueuedApiRequest
-} from "../api-handler/handle-api-request"
+} from "../api-handler/QueuedApiRequest"
 import {
   throwIfHostNotPermitted
-} from "../api-handler/handle-post-message-api-request";
+} from "../api-handler/QueuedPostMessageApiRequest";
 
 const commandsRequiringMay = [
   ApiCalls.Command.getSymmetricKey,

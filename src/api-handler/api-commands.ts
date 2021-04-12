@@ -1,5 +1,5 @@
 import {
-  SeededCryptoModuleWithHelpers, SeededCryptoModulePromise,
+  SeededCryptoModuleWithHelpers,
 } from "@dicekeys/seeded-crypto-js";
 import {
   ApiCalls
@@ -228,47 +228,3 @@ export const generateSignature = implementApiCall<ApiCalls.GenerateSignature> (
     }
   });
 
-/**
- * Implements the server-side API calls
- *
- * Internally, this class does not have access to the user's raw seeds (DiceKeys).
- * Rather, the commands are to be seeded only after permission checks are complete.
- *
- * The caller is responsible for catching exceptions
- */
-export class SeededApiCommands {
-  public generateSignature;
-  public getSealingKey;
-  public getUnsealingKey;
-  public getSecret;
-  public getSignatureVerificationKey;
-  public getSigningKey;
-  public getSymmetricKey;
-  public getPassword;
-  public sealWithSymmetricKey;
-  public unsealWithSymmetricKey;
-  public unsealWithUnsealingKey;
-  
-  constructor(
-    private seededCryptoModule: SeededCryptoModuleWithHelpers,
-    seedString: string,
-  ) {
-    seedString = seedString;
-    this.generateSignature = generateSignature(this.seededCryptoModule)(seedString);
-    this.getSealingKey = getSealingKey(this.seededCryptoModule)(seedString);
-    this.getUnsealingKey = getUnsealingKey(this.seededCryptoModule)(seedString);
-    this.getSecret = getSecret(this.seededCryptoModule)(seedString);
-    this.getSignatureVerificationKey = getSignatureVerificationKey(this.seededCryptoModule)(seedString);
-    this.getSigningKey = getSigningKey(this.seededCryptoModule)(seedString);
-    this.getSymmetricKey = getSymmetricKey(this.seededCryptoModule)(seedString);
-    this.getPassword = getPassword(this.seededCryptoModule)(seedString);
-    this.sealWithSymmetricKey = sealWithSymmetricKey(this.seededCryptoModule)(seedString);
-    this.unsealWithSymmetricKey = unsealWithSymmetricKey(this.seededCryptoModule)(seedString);
-    this.unsealWithUnsealingKey = unsealWithUnsealingKey(this.seededCryptoModule)(seedString);
-  }
-
-  static async create(seedString: string) {
-    return new SeededApiCommands(await SeededCryptoModulePromise, seedString);
-  }
-
-}

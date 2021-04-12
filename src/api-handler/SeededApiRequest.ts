@@ -1,6 +1,6 @@
 import {
   SeededApiCommands
-} from "./seeded-api-commands"
+} from "./SeededApiCommands"
 import {
   SeededCryptoModuleWithHelpers
 } from "@dicekeys/seeded-crypto-js";

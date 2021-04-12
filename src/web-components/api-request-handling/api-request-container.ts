@@ -29,10 +29,10 @@ import {
 } from "./approve-api-command";
 import {
   ApiRequestContext
-} from "../../api-handler/handle-api-request";
+} from "../../api-handler/QueuedApiRequest";
 import {
   ConsentResponse
-} from "../../api-handler/handle-api-request";
+} from "../../api-handler/QueuedApiRequest";
 import {
   extraRequestRecipeAndInstructions
 } from "../../api-handler/get-requests-recipe";

@@ -11,7 +11,7 @@ import {
 } from "./url-permission-checks";
 import {
   QueuedApiRequest
-} from "./handle-api-request";
+} from "./QueuedApiRequest";
 import {
   GenerateSignatureParameterNames,
   GenerateSignatureRequest,

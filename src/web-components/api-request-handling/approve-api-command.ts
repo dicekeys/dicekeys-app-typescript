@@ -45,7 +45,7 @@ import {
 } from "../../api-handler/get-requests-recipe";
 import {
   ApiRequestContext, ConsentResponse
-} from "../../api-handler/handle-api-request";
+} from "../../api-handler/QueuedApiRequest";
 import {
   ComputeApiCommandWorker
 } from "../../workers/call-api-command-worker";

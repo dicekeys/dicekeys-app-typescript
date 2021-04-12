@@ -9,7 +9,7 @@ import { Command } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import { extraRequestRecipeAndInstructions } from "./get-requests-recipe";
 import {
   doesHostMatchRequirement
-} from "./handle-post-message-api-request";
+} from "./QueuedPostMessageApiRequest";
 
 export const DefaultPermittedPathPrefix = `/--derived-secret-api--/`; 
 const DefaultPermittedPathList = [`${ DefaultPermittedPathPrefix}*`];

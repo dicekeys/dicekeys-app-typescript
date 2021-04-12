@@ -35,6 +35,9 @@ export class SeededApiCommands {
     return new SeededApiCommands(await SeededCryptoModulePromise, seedString);
   }
 
+  
+  
+
   public get generateSignature() { return ApiCommands.generateSignature(this.seededCryptoModule)(this.#seedString); }
   public get getSealingKey() { return ApiCommands.getSealingKey(this.seededCryptoModule)(this.#seedString); }
   public get getUnsealingKey() { return ApiCommands.getUnsealingKey(this.seededCryptoModule)(this.#seedString); }
@@ -47,7 +50,7 @@ export class SeededApiCommands {
   public get unsealWithSymmetricKey() { return ApiCommands.unsealWithSymmetricKey(this.seededCryptoModule)(this.#seedString); }
   public get unsealWithUnsealingKey() { return ApiCommands.unsealWithUnsealingKey(this.seededCryptoModule)(this.#seedString); }
 
-  executeRequest = <REQUEST extends ApiCalls.ApiRequestObject>(
+  executeRequest = <REQUEST extends ApiCalls.ApiRequestObject = ApiCalls.ApiRequestObject>(
     request: REQUEST & ApiCalls.ApiRequestObject
   ): ApiCalls.ResultForRequest<REQUEST> => {
     switch (request.command) {

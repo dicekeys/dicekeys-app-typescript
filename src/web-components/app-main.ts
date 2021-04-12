@@ -21,13 +21,13 @@ import {
 } from "../state"
 import {
   postMessageApiResponder
-} from "../api-handler/handle-post-message-api-request";
+} from "../api-handler/QueuedPostMessageApiRequest";
 import {
   ApiRequestContext
-} from "../api-handler/handle-api-request";
+} from "../api-handler/QueuedApiRequest";
 import {
   urlApiResponder
-} from "../api-handler/handle-url-api-request";
+} from "../api-handler/QueuedUrlApiRequest";
 import {
   reportException
 } from "./exceptions";

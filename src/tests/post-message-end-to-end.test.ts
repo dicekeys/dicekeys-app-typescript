@@ -10,7 +10,7 @@ import {
 } from "@dicekeys/dicekeys-api-js"
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
-import { QueuedPostMessageApiRequest, PostMessageRequestEvent } from "../api-handler/handle-post-message-api-request";
+import { QueuedPostMessageApiRequest, PostMessageRequestEvent } from "../api-handler/QueuedPostMessageApiRequest";
 
 
 const defaultSeedString = "a bogus seed";

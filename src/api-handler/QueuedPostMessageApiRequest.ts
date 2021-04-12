@@ -1,6 +1,6 @@
 import {
   QueuedApiRequest
-} from "./handle-api-request";
+} from "./QueuedApiRequest";
 import { PostMessageRequestMetadata } from "@dicekeys/dicekeys-api-js/dist/post-message-api-factory";
 import {
   Recipe,
