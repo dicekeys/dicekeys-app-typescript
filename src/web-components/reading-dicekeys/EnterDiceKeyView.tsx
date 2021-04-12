@@ -9,7 +9,6 @@ import {
   ReadOnlyTupleOf25Items,
 } from "../../dicekeys/dicekey";
 import { Face, FaceDigit, FaceLetter, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
-import { CenteredControls } from "../../web-components/basics";
 import { DiceKeyView } from "../selected-dicekey/DiceKeyView";
 
 export class EnterDiceKeyState {
@@ -36,7 +35,7 @@ export class EnterDiceKeyState {
   private get nextFace(): Partial<Face> { return this.partialDiceKey[this.nextFaceIndex]; }
 
 
-  keyDownListener = action( (event: React.KeyboardEvent) => {
+  keyDownListener = action( (event: KeyboardEvent) => {
     const upperKey = event.key.toUpperCase();
     if (FaceLetter.isValid(upperKey)) {
       if (this.currentFace.letter != null && this.currentFace.digit != null && this.nextFace.letter == null) {
@@ -111,11 +110,26 @@ export class EnterDiceKeyState {
 /**
  * This class implements the component that allows manual entry of DiceKeys.
  */
-export const EnterDiceKeyView = observer( ({state}: React.PropsWithoutRef<{state: EnterDiceKeyState}>) => (
-    <div className={layoutStyles.stretched_column_container} onKeyDown={ (e) => state.keyDownListener(e) }>
-      <div className={styles.key_hints}>
-        To rotate the current face, use either &lt; &gt;, - +, or CTRL arrow (right and left arrows).
+export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.Component<React.PropsWithoutRef<{state: EnterDiceKeyState}>> {
+
+  keyboardListener = (keyboardEvent: KeyboardEvent) => this.props.state.keyDownListener(keyboardEvent)
+
+  componentDidMount() {
+    document.addEventListener("keydown", this.keyboardListener);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("keydown", this.keyboardListener);
+  }
+
+  render() {
+    return (
+      <div className={layoutStyles.stretched_column_container}>
+        <div className={styles.key_hints}>
+          To rotate the current face, use either &lt; &gt;, - +, or CTRL arrow (right and left arrows).
+        </div>
+        <DiceKeyView diceKey={this.props.state.partialDiceKey} />
       </div>
-      <DiceKeyView diceKey={state.partialDiceKey} />
-     </div>
-  ));
+    );
+  }
+});
