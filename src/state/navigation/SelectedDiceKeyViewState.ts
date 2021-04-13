@@ -14,7 +14,7 @@ export enum SelectedDiceKeySubViews {
 export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubViews> {
 
   public get diceKey(): DiceKey | undefined {
-    return this.keyId ? DiceKeyStore.diceKeysByKeyId[this.keyId] : undefined;
+    return this.keyId ? DiceKeyStore.diceKeyForKeyId(this.keyId) : undefined;
   };
 
   constructor(

@@ -213,6 +213,8 @@ export class CamerasOnThisDevice {
    */
   private _ready: boolean = false; 
   public get ready() { return this._ready; }
+  public get readyAndNonEmpty() { return this.ready && this.cameras.length > 0 }
+
   addAttachedAndRemovedDetachedCameras = async (): Promise<void> => {
     // Give the user 20 seconds to grant camera access the first time.
     const listOfAllMediaDevices = await withTimeout(20000)( () => navigator.mediaDevices.enumerateDevices() );
@@ -265,8 +267,6 @@ export class CamerasOnThisDevice {
       listOfNewlyAttachedCameras.length > 0
     ) {
       this._ready = true;
-      // A change to the list has been made so send an update event
-//      this.cameraListUpdated.send(this.cameras);
     }
   }
 

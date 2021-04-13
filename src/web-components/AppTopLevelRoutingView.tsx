@@ -2,7 +2,7 @@ import { observer } from "mobx-react";
 import React from "react";
 import { DiceKey } from "../dicekeys/dicekey";
 import {AppTopLevelState, SubViewsOfTopLevel} from "../state/navigation";
-import { SelectedDiceKeyView } from "./selected-dicekey/selected-dicekey-view";
+import { SelectedDiceKeyView } from "./selected-dicekey/SelectedDiceKeyView";
 import { AppHomeView } from "./AppHomeView";
 import { LoadDiceKeyView, LoadDiceKeyState } from "./reading-dicekeys/LoadDiceKeyView";
 

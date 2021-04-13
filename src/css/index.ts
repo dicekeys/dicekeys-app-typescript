@@ -1,1 +1,3 @@
-export * as Layout from "./Layout.module.css"
+import Layout from "./Layout.module.css";
+
+export {Layout}

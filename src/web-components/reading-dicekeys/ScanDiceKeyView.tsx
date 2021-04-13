@@ -1,3 +1,4 @@
+import cssRequiredNotice from "./camera-permissions-required-notification.module.css";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import ReactDOM from "react-dom";
@@ -34,7 +35,24 @@ type ScanDiceKeyViewProps = React.PropsWithoutRef<{
   onDiceKeyRead?: (facesRead: TupleOf25Items<FaceRead>) => any
 }>;
 
+const PermissionRequiredView = () => {
+  return (
+    <div className={cssRequiredNotice.notification}>
+      <div className={cssRequiredNotice.primary_instruction}>
+        You need to grant &ldquo;allow always&rdquo; permission to your device's cameras to scan DiceKeys.
+      </div>
+      <div className={cssRequiredNotice.secondary_instruction}>
+       If this message does not go away after granting permissions, refresh this page.
+      </div>
+    </div>
+  )
+}
+
 export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) =>  {
+  if (!CamerasOnThisDevice.instance.readyAndNonEmpty) {
+    return ( <PermissionRequiredView/> )
+  }
+
   const frameProcessorState = new DiceKeyFrameProcessorState(props.onDiceKeyRead);
   const mediaStreamState = new MediaStreamState();
   const onFrameCaptured = async (framesImageData: ImageData, canvasRenderingContext: CanvasRenderingContext2D): Promise<void> => {

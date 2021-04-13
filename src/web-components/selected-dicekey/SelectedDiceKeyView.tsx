@@ -9,7 +9,7 @@ import imageOfDiceKeyIcon from "../../images/DiceKey Icon.svg";
 import imageOfUsbKey from "../../images/USB Key.svg";
 import imageOfSecretWithArrow from "../../images/Secret with Arrow.svg";
 import imageOfBackup from "../../images/Backup to DiceKey.svg";
-import { DerivationView } from "./derivation-view";
+import { DerivationView } from "./DerivationView";
 import { Navigation } from "../../state";
 const SubViews = Navigation.SelectedDiceKeySubViews
 

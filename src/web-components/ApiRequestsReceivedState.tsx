@@ -1,12 +1,12 @@
 
 import { makeAutoObservable } from "mobx";
 import {
-  ApiRequestContext
+  QueuedApiRequest
 } from "../api-handler/QueuedApiRequest";
 
 export class ApiRequestsReceivedState {
 
-  apiRequestsReceived: ApiRequestContext[] = [];
+  apiRequestsReceived: QueuedApiRequest[] = [];
 
   constructor() {
     makeAutoObservable(this);

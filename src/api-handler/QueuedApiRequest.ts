@@ -113,6 +113,13 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
   }
 
   /**
+   * Send user declined
+   */
+  sendUserDeclined = () => {
+    this.sendError( new Exceptions.UserDeclinedToAuthorizeOperation() );
+  }
+
+  /**
    * Responds to the request, sending a success response if the request is legal
    * (authorization checks pass) and successful, or sending an error triple
    * otherwise.

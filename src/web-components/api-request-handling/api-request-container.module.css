@@ -20,3 +20,11 @@
   color: #001000;
   text-align: center;
 }
+
+.known_application_name {
+  font-family: serif;
+}
+
+.host_name {
+  font-family: monospace;
+}

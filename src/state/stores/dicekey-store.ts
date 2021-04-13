@@ -6,7 +6,7 @@ import { autoSaveEncrypted } from "../core/auto-save";
 import { AllAppWindowsAndTabsAreClosingEvent } from "../core/all-windows-closing-event";
 
 export const DiceKeyStore = new (class DiceKeyStore {
-  diceKeysByKeyId: {[keyId: string]: DiceKey} = {};
+  protected diceKeysByKeyId: {[keyId: string]: DiceKey} = {};
 
   addDiceKeyForKeyId = action ( (keyId: string, diceKey: DiceKey) => {
     this.diceKeysByKeyId[keyId] = diceKey;
@@ -27,7 +27,18 @@ export const DiceKeyStore = new (class DiceKeyStore {
   removeAll = action ( () => {
     this.diceKeysByKeyId = {}
   });
-  
+
+  get keyIds(): string[] { return Object.keys(this.diceKeysByKeyId) }
+
+  get keysIdsAndNicknames() {
+    return Object.entries(this.diceKeysByKeyId)
+      .map( ([keyId, diceKey]) =>
+        ({keyId, nickname: DiceKey.nickname(diceKey) })
+      );
+  }
+ 
+  diceKeyForKeyId = (keyId: string): DiceKey | undefined => this.diceKeysByKeyId[keyId];
+
   constructor() {
     makeAutoObservable(this);
     autoSaveEncrypted(this, "DiceKeyStore");

@@ -40,12 +40,12 @@ const GlobalSharedObscurePasswordState = new (class GlobalSharedObscurePasswordS
 })()
 
 
-export interface DisplayPasswordProps {
+export interface CopyablePasswordFieldViewProps {
   password: string;
   showCopyIcon?: boolean;
 }
 
-export const DisplayPassword = observer( (props: DisplayPasswordProps) => {
+export const CopyablePasswordFieldView = observer( (props: CopyablePasswordFieldViewProps) => {
   const copyToClipboard = action ( () => {
     navigator.clipboard.writeText(props.password);
     // FUTURE - provide user notification that copy happened.
