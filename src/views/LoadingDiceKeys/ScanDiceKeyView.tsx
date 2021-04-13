@@ -52,17 +52,20 @@ const PermissionRequiredView = () => {
   )
 }
 
-export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) =>  {
-  if (!CamerasOnThisDevice.instance.readyAndNonEmpty) {
-    return ( <PermissionRequiredView/> )
+export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Component<ScanDiceKeyViewProps>  {
+
+  frameProcessorState: DiceKeyFrameProcessorState;
+  mediaStreamState = new MediaStreamState();
+  onFrameCaptured = async (framesImageData: ImageData, canvasRenderingContext: CanvasRenderingContext2D): Promise<void> => {
+    this.frameProcessorState.handleProcessedCameraFrame(await processDiceKeyImageFrame(framesImageData), canvasRenderingContext);
   }
 
-  const frameProcessorState = new DiceKeyFrameProcessorState(props.onDiceKeyRead);
-  const mediaStreamState = new MediaStreamState();
-  const onFrameCaptured = async (framesImageData: ImageData, canvasRenderingContext: CanvasRenderingContext2D): Promise<void> => {
-    frameProcessorState.handleProcessedCameraFrame(await processDiceKeyImageFrame(framesImageData), canvasRenderingContext);
+  constructor(props: ScanDiceKeyView["props"]) {
+    super(props);
+    this.frameProcessorState = new DiceKeyFrameProcessorState(props.onDiceKeyRead);
   }
-  const onCameraSelected = (deviceId: string ) => {
+  
+  onCameraSelected = (deviceId: string ) => {
     const mediaTrackConstraints: MediaTrackConstraints = {
       deviceId,
       width: {
@@ -78,15 +81,27 @@ export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) =>  {
       aspectRatio: {ideal: 1},
       // advanced: [{focusDistance: {ideal: 0}}]
     };
-    mediaStreamState.setMediaStreamFromConstraints(mediaTrackConstraints);
+    this.mediaStreamState.setMediaStreamFromConstraints(mediaTrackConstraints);
   }
-  return (
-    <div className={Layout.ColumnStretched}>
-      <CameraCaptureWithOverlay {...{onFrameCaptured, mediaStreamState} } />
-      <CameraSelectionView {...{onCameraSelected}} />
-    </div>
-  );
-});
+
+  componentWillUnmount() {
+    this.mediaStreamState.clearMediaStream();
+  }
+
+  render() {
+    if (!CamerasOnThisDevice.instance.readyAndNonEmpty) {
+      return ( <PermissionRequiredView/> )
+    }
+
+    return (
+      <div className={Layout.ColumnStretched}>
+        <CameraCaptureWithOverlay onFrameCaptured={this.onFrameCaptured} mediaStreamState={this.mediaStreamState} />
+        <CameraSelectionView onCameraSelected={this.onCameraSelected} />
+      </div>
+    );
+  }
+})
+};
 
 
 (window as {testComponent?: {}}).testComponent = {
