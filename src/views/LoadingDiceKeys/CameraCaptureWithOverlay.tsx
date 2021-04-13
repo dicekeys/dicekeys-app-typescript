@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import { OverlayCanvas } from "../basics/overlay-canvas";
 import { createReactObservableBounds } from "../basics/bounds";
 import { MediaStreamState, CameraCaptureView } from "./CameraCaptureView";
+import { Layout } from "../../css";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
@@ -40,7 +41,7 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
     const [videoElementBounds, makeThisVideoElementsBoundsObservable] = createReactObservableBounds();
 
     return (
-      <div>
+      <div className={Layout.ColumnCentered}>
         <CameraCaptureView
           onFrameCaptured={this.onFrameCaptured}
           mediaStreamState={this.props.mediaStreamState}

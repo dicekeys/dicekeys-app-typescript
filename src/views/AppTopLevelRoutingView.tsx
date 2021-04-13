@@ -5,6 +5,7 @@ import {AppTopLevelState, SubViewsOfTopLevel} from "../state/navigation";
 import { SelectedDiceKeyView } from "./WithSelectedDiceKey/SelectedDiceKeyView";
 import { AppHomeView } from "./AppHomeView";
 import { LoadDiceKeyView, LoadDiceKeyState } from "./LoadingDiceKeys/LoadDiceKeyView";
+import {Layout} from "../css";
 
 const DefaultAppTopLevelState = new AppTopLevelState();
 
@@ -32,3 +33,9 @@ export const AppTopLevelRoutingView = observer ( (props: AppTopLevelRoutingViewP
     );
   }
 });
+
+export const AppTopLevelView = observer ( (props: AppTopLevelRoutingViewProps) => (
+  <div className={Layout.PrimaryView} >
+    <AppTopLevelRoutingView {...props} />
+  </div>
+));

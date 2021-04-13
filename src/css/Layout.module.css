@@ -7,7 +7,7 @@
   align-content: center;
 }
 
-.ColumnCentered, .ColumnStretched {
+.ColumnCentered, .ColumnStretched, .PaddedStretchedColumn {
   display: flex;
   flex-direction: column;
 }
@@ -21,13 +21,17 @@
   flex-grow: 5;
   flex-shrink: 5;
 }
-.ColumnStretched {
+
+.ColumnStretched, .PaddedStretchedColumn{
   flex-grow: 5;
   flex-shrink: 5;
-  flex-basis: 50vh;
+  flex-basis: 100%;
   justify-content: stretch;
   align-content: stretch;
   align-items: stretch;
-  min-height: 92vh;
-  max-height: 92vh;
+  margin: 1.5rem;
+}
+
+.PaddedStretchedColumn {
+  margin: 1.5rem;
 }

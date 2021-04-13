@@ -1,6 +1,6 @@
 import ReactDOM from "react-dom";
 import * as React from "react";
-import {AppTopLevelRoutingView} from "./views/AppTopLevelRoutingView";
+import {AppTopLevelView} from "./views/AppTopLevelRoutingView";
 import { ErrorHandler } from "~views/ErrorHandler";
 import { ErrorState } from "~views/ErrorState";
 // import { postMessageApiResponder } from "~api-handler/handle-post-message-api-request";
@@ -21,7 +21,7 @@ const ApplicationErrorState = new ErrorState();
 window.addEventListener('load', () => {
   ReactDOM.render((
     <ErrorHandler errorState={ApplicationErrorState}>
-      <AppTopLevelRoutingView />
+      <AppTopLevelView />
     </ErrorHandler>
   ), document.getElementById("app-container"));
 });

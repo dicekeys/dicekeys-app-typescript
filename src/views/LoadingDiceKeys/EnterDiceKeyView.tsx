@@ -1,5 +1,5 @@
 import React from "react";
-import layoutStyles from "../layout.module.css";
+import {Layout} from "../../css";
 import styles from "./enter-dicekey.module.css";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
@@ -34,6 +34,9 @@ export class EnterDiceKeyState {
   private get nextFaceIndex(): number { return (this.currentFaceIndex! + 1) % 25; }
   private get nextFace(): Partial<Face> { return this.partialDiceKey[this.nextFaceIndex]; }
 
+  setCurrentFaceIndex = action ( (index: number) => {
+    this.currentFaceIndex = index;
+  });
 
   keyDownListener = action( (event: KeyboardEvent) => {
     const upperKey = event.key.toUpperCase();
@@ -124,11 +127,15 @@ export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.C
 
   render() {
     return (
-      <div className={layoutStyles.stretched_column_container}>
+      <div className={Layout.ColumnStretched}>
         <div className={styles.key_hints}>
           To rotate the current face, use either &lt; &gt;, - +, or CTRL arrow (right and left arrows).
         </div>
-        <DiceKeyView diceKey={this.props.state.partialDiceKey} />
+        <DiceKeyView
+          diceKey={this.props.state.partialDiceKey}
+          highlightDieAtIndex={this.props.state.currentFaceIndex}
+          onFaceClicked={ (index) => this.props.state.setCurrentFaceIndex(index)  }  
+        />
       </div>
     );
   }

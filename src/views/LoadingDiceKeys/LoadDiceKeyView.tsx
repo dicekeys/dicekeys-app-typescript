@@ -9,6 +9,7 @@ import { DiceKey } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import { CenteredControls } from "../basics";
+import { Layout } from "../../css";
 
 
 type Mode = "camera" | "manual";
@@ -57,7 +58,7 @@ export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
   }
 
   return (
-    <div>
+    <div className={Layout.ColumnStretched}>
       <LoadDiceKeySubView {...props} {...{state}} />
       <CenteredControls>
         { onCancelled ? (

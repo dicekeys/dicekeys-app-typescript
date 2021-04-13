@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "./api-request-container.module.css";
-import layoutStyles from "../layout.module.css";
+import {Layout} from "../../css";
 import {
   ApiCalls} from "@dicekeys/dicekeys-api-js";
 import {
@@ -106,7 +106,7 @@ const ApproveApiRequestViewProps = observer( (props: ApproveApiRequestViewProps)
   }
 
   return (
-    <div className={layoutStyles.stretched_column_container}>
+    <div className={Layout.ColumnStretched}>
       <div className={styles.request_description}>
         <RequestDescriptionView {...{command, host}} />
         <KeyAccessRestrictionsView host={host} />

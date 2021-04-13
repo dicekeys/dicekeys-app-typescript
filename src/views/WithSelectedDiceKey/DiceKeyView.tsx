@@ -37,10 +37,11 @@ const dieSurfaceColorHighlighted = "rgb(222, 244, 64)"
 const diceBoxColor = "#050350"; // must be in hex format as it is parsed as such in this code.
 
 export interface DiceKeyRenderOptions {
-  highlightDieAtIndex?: number,
-  diceBoxColor?: [number, number, number],
-  showLidTab?: boolean,
-  leaveSpaceForTab?: boolean
+  highlightDieAtIndex?: number;
+  diceBoxColor?: [number, number, number];
+  showLidTab?: boolean;
+  leaveSpaceForTab?: boolean;
+  onFaceClicked?: (dieIndex: number) => any;
 }
 
 /**
@@ -153,8 +154,10 @@ export const FaceGroupView = observer( ({
     face,
     center = {x: 0, y: 0},
     highlightThisDie = false,
-    linearFractionOfCoverage = 5/8
+    linearFractionOfCoverage = 5/8,
+    onFaceClicked,
   } : {
+    onFaceClicked?: () => any,
     face: Partial<Face>,
     center?: Point,
     highlightThisDie?: boolean,
@@ -162,8 +165,12 @@ export const FaceGroupView = observer( ({
   }) => {
   const radius = 1 / 12;
   const clockwiseAngle = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTrbl || "?");
+  const optionalOnClickHandler = onFaceClicked ? {onClick: ((e: React.MouseEvent) => {
+    onFaceClicked();
+    e.preventDefault();
+  })} : {};
   return (
-    <g transform={`translate(${center.x}, ${center.y})`}>
+    <g transform={`translate(${center.x}, ${center.y})`} {...optionalOnClickHandler} >
       <rect 
       x={-0.5} y={-0.5}
       width={1} height={1}
@@ -185,7 +192,8 @@ export const DiceKeyView = observer( ({
   ) => {
     const {
       showLidTab = false,
-      leaveSpaceForTab =showLidTab
+      leaveSpaceForTab = showLidTab,
+      onFaceClicked,
     } = options;
     const tabFraction = leaveSpaceForTab ? 0.1 : 0;
 
@@ -227,6 +235,7 @@ export const DiceKeyView = observer( ({
         {
           diceKey.map( (face, index) => (
             <FaceGroupView
+              {...(onFaceClicked ? ({onFaceClicked: () => onFaceClicked(index) }) : {})}
               key={index}
               face={face}
               center={{

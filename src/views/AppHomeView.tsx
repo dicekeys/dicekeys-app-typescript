@@ -15,31 +15,29 @@ interface AppHomeViewProps {
 export const AppHomeView = observer ( (props: AppHomeViewProps) => {
   const {appTopLevelState} = props;
   return (
-    <div className={Layout.PrimaryView} >
-      <div className={Layout.ColumnCentered}>
-        {/* 
-          Load DiceKey button
-          */}
-        <button className={css.SubViewButton}
-          onClick={ appTopLevelState.navigateToLoadDiceKey }
-        >
-          <img src={LoadDiceKeyImage} className={css.SubViewButtonImage} />
-          <div className={css.SubViewButtonLabel}>Load DiceKey</div>
-        </button>
-        {/* 
-          Assembly instructions button
-          */}
-        <button className={css.SubViewButton}
-          onClick={ appTopLevelState.navigateToAssemblyInstructions }
-        >
-          <div className={css.ImageRow}>
-            <img src={AssemblyImage1} className={css.SubViewButtonImage} />
-            <img src={AssemblyImage2} className={css.SubViewButtonImage} />
-            <img src={AssemblyImage3} className={css.SubViewButtonImage} />
-          </div>
-          <div className={css.SubViewButtonLabel}>Assembly Instructions</div>
-        </button>
-      </div>
+    <div className={Layout.ColumnCentered}>
+      {/* 
+        Load DiceKey button
+        */}
+      <button className={css.SubViewButton}
+        onClick={ appTopLevelState.navigateToLoadDiceKey }
+      >
+        <img src={LoadDiceKeyImage} className={css.SubViewButtonImage} />
+        <div className={css.SubViewButtonLabel}>Load DiceKey</div>
+      </button>
+      {/* 
+        Assembly instructions button
+        */}
+      <button className={css.SubViewButton}
+        onClick={ appTopLevelState.navigateToAssemblyInstructions }
+      >
+        <div className={css.ImageRow}>
+          <img src={AssemblyImage1} className={css.SubViewButtonImage} />
+          <img src={AssemblyImage2} className={css.SubViewButtonImage} />
+          <img src={AssemblyImage3} className={css.SubViewButtonImage} />
+        </div>
+        <div className={css.SubViewButtonLabel}>Assembly Instructions</div>
+      </button>
     </div>
   )
 });

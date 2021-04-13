@@ -43,10 +43,10 @@
 }
 
 .centered_controls, .decision_button_container {
-  margin-top: 2vh;
+  margin: 1rem;
   display: flex;
   flex-direction: row;
-  flex-grow: 5;
+  flex-grow: 1;
   align-self: stretch;
   justify-content: center;
   align-items: center;

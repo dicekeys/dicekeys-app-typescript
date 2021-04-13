@@ -10,6 +10,8 @@ import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
 import { MediaStreamState } from "./CameraCaptureView";
 import { CamerasOnThisDevice } from "./CamerasOnThisDevice";
 import { DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
+import { Layout } from "../../css";
+import { CenteredControls } from "~views/basics";
 
 interface CameraSelectionViewProps {
   onCameraSelected?: (camerasDeviceId: string) => any;
@@ -23,11 +25,13 @@ const CameraSelectionView = observer ( (props: React.PropsWithoutRef<CameraSelec
     });
   }
   return (
-    <select value={cameras[0]?.deviceId ?? ""} onChange={ (e) => props.onCameraSelected?.(e.target.value)} >
-      { cameras.map( camera => (
-        <option key={camera.deviceId} value={camera.deviceId}>{ camera.name }</option>
-      ))}
-    </select>
+    <CenteredControls>
+      <select value={cameras[0]?.deviceId ?? ""} onChange={ (e) => props.onCameraSelected?.(e.target.value)} >
+        { cameras.map( camera => (
+          <option key={camera.deviceId} value={camera.deviceId}>{ camera.name }</option>
+        ))}
+      </select>
+    </CenteredControls>
   )
 });
 
@@ -77,7 +81,7 @@ export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) =>  {
     mediaStreamState.setMediaStreamFromConstraints(mediaTrackConstraints);
   }
   return (
-    <div>
+    <div className={Layout.ColumnStretched}>
       <CameraCaptureWithOverlay {...{onFrameCaptured, mediaStreamState} } />
       <CameraSelectionView {...{onCameraSelected}} />
     </div>

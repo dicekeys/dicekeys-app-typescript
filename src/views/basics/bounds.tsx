@@ -39,7 +39,7 @@ class ReactObservableBounds {
   }
   private resizeObserverCallback: ResizeObserverCallback = ( entries ) => entries.forEach( entry => {
       if (entry.target === this.element) {
-        this.setObservableBounds(entry.contentRect);
+        this.setObservableBounds(entry.target.getBoundingClientRect());
       }
     })
 
