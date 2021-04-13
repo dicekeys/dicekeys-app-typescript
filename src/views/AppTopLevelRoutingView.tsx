@@ -1,10 +1,10 @@
 import { observer } from "mobx-react";
 import React from "react";
-import { DiceKey } from "../dicekeys/dicekey";
+import { DiceKey } from "../dicekeys/DiceKey";
 import {AppTopLevelState, SubViewsOfTopLevel} from "../state/navigation";
-import { SelectedDiceKeyView } from "./selected-dicekey/SelectedDiceKeyView";
+import { SelectedDiceKeyView } from "./WithSelectedDiceKey/SelectedDiceKeyView";
 import { AppHomeView } from "./AppHomeView";
-import { LoadDiceKeyView, LoadDiceKeyState } from "./reading-dicekeys/LoadDiceKeyView";
+import { LoadDiceKeyView, LoadDiceKeyState } from "./LoadingDiceKeys/LoadDiceKeyView";
 
 const DefaultAppTopLevelState = new AppTopLevelState();
 

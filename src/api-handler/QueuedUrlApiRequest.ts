@@ -32,7 +32,7 @@ import {
   UnsealWithUnsealingKeyRequest,
   SeededCryptoObjectResponseParameterNames
 } from "@dicekeys/dicekeys-api-js/dist/api-calls";
-import { addAuthenticationToken, getUrlForAuthenticationToken } from "../state/stores/authentication-token-store";
+import { addAuthenticationToken, getUrlForAuthenticationToken } from "../state/stores/AuthenticationTokens";
 
 
 const getApiRequestFromSearchParams = (

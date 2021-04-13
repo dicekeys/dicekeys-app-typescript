@@ -1,7 +1,7 @@
 import { action, makeObservable, override, runInAction } from "mobx";
-import { DiceKey } from "../../dicekeys/dicekey";
+import { DiceKey } from "../../dicekeys/DiceKey";
 import { HasSubViews } from "../core";
-import { DiceKeyStore } from "../stores/dicekey-store";
+import { DiceKeyMemoryStore } from "../stores/DiceKeyMemoryStore";
 import { SelectedDiceKeyViewState } from "./SelectedDiceKeyViewState";
 
 export enum SubViewsOfTopLevel {
@@ -39,7 +39,7 @@ export class AppTopLevelState extends HasSubViews<SubViews> {
   navigateToSelectedDiceKeyView = async (diceKey: DiceKey) => {
     const keyId = await DiceKey.keyId(diceKey);
     runInAction( () => {
-      DiceKeyStore.addDiceKeyForKeyId(keyId, diceKey);
+      DiceKeyMemoryStore.addDiceKeyForKeyId(keyId, diceKey);
       this.navigateToSelectedDiceKeyViewForKeyId(keyId);
     });
   }

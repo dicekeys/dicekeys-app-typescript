@@ -3,13 +3,13 @@ import {
 } from "@dicekeys/read-dicekey-js";
 import {
   allDiceErrorTypes, allFacesReadHaveMajorityValues
-} from "../../dicekeys/faces-read";
+} from "../../dicekeys/FacesRead";
 import {
     ProcessFrameResponse,
 } from "../../workers/dicekey-image-frame-worker";
 import {
   FaceReadWithImageIfErrorFound
-} from "../../dicekeys/faces-read"
+} from "../../dicekeys/FacesRead"
 import { action, makeAutoObservable } from "mobx";
 import { TupleOf25Items } from "../../dicekeys";
 

@@ -9,7 +9,7 @@ import { DiceKeyFrameProcessorState } from "./DiceKeyFrameProcessorState";
 import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
 import { MediaStreamState } from "./CameraCaptureView";
 import { CamerasOnThisDevice } from "./CamerasOnThisDevice";
-import { DiceKey, TupleOf25Items } from "../../dicekeys/dicekey";
+import { DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
 
 interface CameraSelectionViewProps {
   onCameraSelected?: (camerasDeviceId: string) => any;

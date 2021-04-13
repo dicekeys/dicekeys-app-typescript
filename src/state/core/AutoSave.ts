@@ -1,5 +1,5 @@
 import { autorun, runInAction, set, toJS } from 'mobx'
-import { decryptJsonStorageField, encryptJsonStorageField } from './session-encryption-key'
+import { decryptJsonStorageField, encryptJsonStorageField } from './EncryptedStorageFields'
 
 
 export function autoSave<T>(_this: T, name: string) {

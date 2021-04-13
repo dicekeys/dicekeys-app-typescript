@@ -1,4 +1,4 @@
-import { DerivationRecipeType } from "../../dicekeys/derivation-recipe";
+import { DerivationRecipeType } from "../../dicekeys/DerivationRecipe";
 
 export interface RecipeBuilderCommonState {
   type: DerivationRecipeType;

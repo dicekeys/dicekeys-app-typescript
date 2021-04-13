@@ -8,7 +8,7 @@
 //   PublicKeySet,
 //   PopulatePublicKeyCacheFn, populatePublicKeyCacheFnFactory
 // } from "./public-key-set";
-import { autoSave } from "../core/auto-save";
+import { autoSave } from "../core/AutoSave";
 import { makeAutoObservable } from "mobx";
 
 export class DiceKeyStateStore {

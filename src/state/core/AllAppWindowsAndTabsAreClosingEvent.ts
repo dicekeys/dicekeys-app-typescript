@@ -2,7 +2,7 @@ import { urlSafeBase64Encode } from "@dicekeys/dicekeys-api-js";
 import { action, makeAutoObservable } from "mobx";
 import { CustomEvent } from "../../utilities/event";
 import { getRandomBytes } from "../../utilities/get-random-bytes";
-import { autoSave } from "./auto-save";
+import { autoSave } from "./AutoSave";
 
 const myWindowId = urlSafeBase64Encode(getRandomBytes(20));
 const heartbeatFrequencyInMs = 5000;

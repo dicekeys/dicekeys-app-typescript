@@ -1,11 +1,11 @@
 import {
   DiceKey
-} from "../../dicekeys/dicekey";
+} from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
-import { autoSaveEncrypted } from "../core/auto-save";
-import { AllAppWindowsAndTabsAreClosingEvent } from "../core/all-windows-closing-event";
+import { autoSaveEncrypted } from "../core/AutoSave";
+import { AllAppWindowsAndTabsAreClosingEvent } from "../core/AllAppWindowsAndTabsAreClosingEvent";
 
-export const DiceKeyStore = new (class DiceKeyStore {
+export const DiceKeyMemoryStore = new (class DiceKeyStore {
   protected diceKeysByKeyId: {[keyId: string]: DiceKey} = {};
 
   addDiceKeyForKeyId = action ( (keyId: string, diceKey: DiceKey) => {

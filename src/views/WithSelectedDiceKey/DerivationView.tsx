@@ -1,6 +1,6 @@
 import React from "react";
 import { observer  } from "mobx-react";
-import { RecipeBuilderView } from "../recipe-builder";
+import { RecipeBuilderView } from "../Recipes";
 
 
 interface DerivationViewProps {

@@ -4,7 +4,7 @@ import { observer  } from "mobx-react";
 import { CachedApiCalls } from "../../api-handler/CachedApiCalls";
 import { RecipeBuilderCommonState } from "./RecipeBuilderCommonState";
 import { RecipeBuilderForTemplateState, RecipeBuilderForTemplateView } from "./RecipeBuilderForTemplateView";
-import { DerivationRecipeTemplateList } from "../../dicekeys/derivation-recipe-templates";
+import { DerivationRecipeTemplateList } from "../../dicekeys/DerivationRecipeTemplateList";
 import { RecipeBuilderCustomState, RecipeBuilderCustomView } from "./RecipeBuilderCustomView";
 import css from "./recipe-builder.module.css";
 import { toBip39 } from "../../formats/bip39/bip39";

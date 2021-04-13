@@ -1,9 +1,5 @@
 import { Exceptions } from "@dicekeys/dicekeys-api-js";
 import {makeAutoObservable, ObservableMap, runInAction} from "mobx";
-// import { browserInfo } from "~utilities/browser";
-// import {
-//   ComponentEvent
-// } from "../../web-component-framework"
 
  // Safari may require 640 or 1280, see 
  // https://stackoverflow.com/questions/46981889/how-to-resolve-ios-11-safari-getusermedia-invalid-constraint-issue
@@ -266,7 +262,9 @@ export class CamerasOnThisDevice {
       deviceIdsOfRemovedCameras.length > 0 ||
       listOfNewlyAttachedCameras.length > 0
     ) {
-      this._ready = true;
+      runInAction( () => {
+        this._ready = true;
+      });
     }
   }
 

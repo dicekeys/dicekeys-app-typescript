@@ -10,7 +10,7 @@ import {
   UndoverlineCodes, getUndoverlineCodes,
   FaceDimensionsFractional
 } from "@dicekeys/read-dicekey-js";
-import { PartialDiceKey } from "../../dicekeys/dicekey";
+import { PartialDiceKey } from "../../dicekeys/DiceKey";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 

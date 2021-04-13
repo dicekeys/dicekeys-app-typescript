@@ -1,8 +1,8 @@
 import ReactDOM from "react-dom";
 import * as React from "react";
-import {AppTopLevelRoutingView} from "./web-components/AppTopLevelRoutingView";
-import { ErrorHandler } from "~web-components/ErrorHandler";
-import { ErrorState } from "~web-components/ErrorState";
+import {AppTopLevelRoutingView} from "./views/AppTopLevelRoutingView";
+import { ErrorHandler } from "~views/ErrorHandler";
+import { ErrorState } from "~views/ErrorState";
 // import { postMessageApiResponder } from "~api-handler/handle-post-message-api-request";
 // import {
 //   urlApiResponder

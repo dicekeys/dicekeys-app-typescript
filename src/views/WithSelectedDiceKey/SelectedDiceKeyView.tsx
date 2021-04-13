@@ -3,7 +3,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { observer  } from "mobx-react";
 //import { isElectron } from "../../utilities/is-electron";
-import { DiceKey } from "../../dicekeys/dicekey";
+import { DiceKey } from "../../dicekeys/DiceKey";
 import { DiceKeyView } from "./DiceKeyView";
 import imageOfDiceKeyIcon from "../../images/DiceKey Icon.svg";
 import imageOfUsbKey from "../../images/USB Key.svg";

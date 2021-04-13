@@ -1,7 +1,7 @@
 
 
-import { getRandomBytes } from "~utilities/get-random-bytes";
-import { AddRecipeProofWorker } from "~workers/call-recipe-proof-worker";
+import { getRandomBytes } from "../utilities/get-random-bytes";
+import { AddRecipeProofWorker } from "../workers/call-recipe-proof-worker";
 import {
   ApiCalls,
   Recipe,

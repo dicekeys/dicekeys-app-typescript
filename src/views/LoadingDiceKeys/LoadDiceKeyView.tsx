@@ -5,10 +5,10 @@ import {
 import {
   EnterDiceKeyView, EnterDiceKeyState
 } from "./EnterDiceKeyView"
-import { DiceKey } from "../../dicekeys/dicekey";
+import { DiceKey } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
-import { CenteredControls } from "../../web-components/basics";
+import { CenteredControls } from "../basics";
 
 
 type Mode = "camera" | "manual";

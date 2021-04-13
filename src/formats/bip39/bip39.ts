@@ -1,5 +1,5 @@
 import { Face, FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
-import { DiceKey } from "../../dicekeys/dicekey";
+import { DiceKey } from "../../dicekeys/DiceKey";
 import {english} from "./word-lists/english";
 
 const invertedEnglish: {[word in string]: number} = english.reduce( (result, word, index) => {

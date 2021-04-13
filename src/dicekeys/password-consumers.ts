@@ -1,4 +1,4 @@
-import { DerivationRecipeTemplateList } from "./derivation-recipe-templates";
+import { DerivationRecipeTemplateList } from "./DerivationRecipeTemplateList";
 import {
   restrictionsJson
 } from "./restrictions-json";

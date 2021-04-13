@@ -10,7 +10,7 @@ import {
   ApiCalls,
 } from "@dicekeys/dicekeys-api-js";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
-import { SeededApiCommands } from "~api-handler/SeededApiCommands";
+import { SeededApiCommands } from "../api-handler/SeededApiCommands";
 import { ApiRequestObject } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 
 /**

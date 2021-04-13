@@ -1,6 +1,6 @@
 import { computed, makeObservable } from "mobx";
 import { DiceKey } from "../../dicekeys";
-import { DiceKeyStore } from "../stores/dicekey-store";
+import { DiceKeyMemoryStore } from "../stores/DiceKeyMemoryStore";
 import { HasSubViews } from "../core";
 
 export enum SelectedDiceKeySubViews {
@@ -14,7 +14,7 @@ export enum SelectedDiceKeySubViews {
 export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubViews> {
 
   public get diceKey(): DiceKey | undefined {
-    return this.keyId ? DiceKeyStore.diceKeyForKeyId(this.keyId) : undefined;
+    return this.keyId ? DiceKeyMemoryStore.diceKeyForKeyId(this.keyId) : undefined;
   };
 
   constructor(
@@ -35,7 +35,7 @@ export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubView
 
   static create = async (goBack: () => any, diceKey: DiceKey): Promise<SelectedDiceKeyViewState> => {
     const keyId = await DiceKey.keyId(diceKey);
-    DiceKeyStore.addDiceKeyForKeyId(keyId, diceKey);
+    DiceKeyMemoryStore.addDiceKeyForKeyId(keyId, diceKey);
     return new SelectedDiceKeyViewState(goBack, keyId);
   }
 

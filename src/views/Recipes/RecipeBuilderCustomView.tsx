@@ -2,7 +2,7 @@ import css from "./recipe-builder.module.css";
 import React from "react";
 import { action, makeAutoObservable } from "mobx";
 import { observer  } from "mobx-react";
-import { DerivationRecipeType } from "../../dicekeys/derivation-recipe";
+import { DerivationRecipeType } from "../../dicekeys/DerivationRecipe";
 import { SequenceNumberFormFieldView, SequenceNumberState } from "./SequenceNumberView";
 import { RecipeBuilderCommonState } from "./RecipeBuilderCommonState";
 

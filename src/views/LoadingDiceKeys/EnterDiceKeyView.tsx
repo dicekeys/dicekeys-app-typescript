@@ -7,9 +7,9 @@ import { observer } from "mobx-react";
 import {
   DiceKey,
   ReadOnlyTupleOf25Items,
-} from "../../dicekeys/dicekey";
+} from "../../dicekeys/DiceKey";
 import { Face, FaceDigit, FaceLetter, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
-import { DiceKeyView } from "../selected-dicekey/DiceKeyView";
+import { DiceKeyView } from "../WithSelectedDiceKey/DiceKeyView";
 
 export class EnterDiceKeyState {
   currentFaceIndex: number = 0;

@@ -1,7 +1,7 @@
 import React from "react";
 import { action, makeAutoObservable } from "mobx";
 import { observer  } from "mobx-react";
-import { addSequenceNumberToRecipeJson, DerivationRecipe, DerivationRecipeType } from "../../dicekeys/derivation-recipe";
+import { addSequenceNumberToRecipeJson, DerivationRecipe, DerivationRecipeType } from "../../dicekeys/DerivationRecipe";
 import { SequenceNumberFormFieldView, SequenceNumberState} from "./SequenceNumberView";
 import { RecipeBuilderCommonState } from "./RecipeBuilderCommonState";
 
