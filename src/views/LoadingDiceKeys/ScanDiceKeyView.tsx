@@ -64,7 +64,7 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
     super(props);
     this.frameProcessorState = new DiceKeyFrameProcessorState(props.onDiceKeyRead);
   }
-  
+
   onCameraSelected = (deviceId: string ) => {
     const mediaTrackConstraints: MediaTrackConstraints = {
       deviceId,
@@ -100,8 +100,7 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
       </div>
     );
   }
-})
-};
+});
 
 
 (window as {testComponent?: {}}).testComponent = {
