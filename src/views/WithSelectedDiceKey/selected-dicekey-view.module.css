@@ -45,11 +45,25 @@
   flex-shrink: 0;
 }
 
-.nav_side {
+.NavLeftSide, .NavRightSide {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   min-width: 10%;
   max-width: 25%;
   flex-basis: 25%;
   flex-shrink: 1;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.NavLeftSide {
+  justify-content: start;
+  cursor: pointer;
+}
+
+.NavRightSide {
+  justify-content: end;
 }
 
 .nav_center {
@@ -67,6 +81,7 @@
   height: 100%;
   padding-right: 0;
   padding-left: 0;
+  cursor: pointer;
 }
 
 .footer_button_selected {

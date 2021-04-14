@@ -24,9 +24,9 @@ const SelectedDiceKeyViewHeader = observer( ( props: SelectedDiceKeyViewProps) =
   if (!diceKey) return null;
   return (
     <div className={css.nav_header}>
-      <span className={css.nav_side} onClick={ props.navigationState.goBack } >&#8592;</span>
+      <span className={css.NavLeftSide} onClick={ props.navigationState.goBack } >&#8592;</span>
       <span className={css.nav_center}>{DiceKey.nickname(diceKey)}</span>
-      <span className={css.nav_side}></span>
+      <span className={css.NavRightSide}></span>
     </div>
   );
 });

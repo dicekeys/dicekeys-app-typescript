@@ -13,7 +13,7 @@ export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
   protected diceKeysByKeyId: {[keyId: string]: DiceKey};
 
   addDiceKeyForKeyId = action ( (keyId: string, diceKey: DiceKey) => {
-    console.log(`addDiceKeyForKeyId(${keyId}) ${diceKey}`);
+    // console.log(`addDiceKeyForKeyId(${keyId}) ${diceKey}`);
     this.diceKeysByKeyId[keyId] = diceKey;
   });
 
@@ -21,7 +21,7 @@ export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
     this.addDiceKeyForKeyId(await DiceKey.keyId(diceKey), diceKey);
 
   removeDiceKeyForKeyId = action ( (keyId: string) => {
-    console.log(`removeDiceKeyForKeyId(${keyId})`);
+    // console.log(`removeDiceKeyForKeyId(${keyId})`);
     delete this.diceKeysByKeyId[keyId];
   });
 
@@ -31,7 +31,7 @@ export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
   };
 
   removeAll = action ( () => {
-    console.log(`Remove all`);
+    // console.log(`Remove all`);
     this.diceKeysByKeyId = {}
   });
 
@@ -46,7 +46,7 @@ export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
  
   diceKeyForKeyId = (keyId: string): DiceKey | undefined => {
     const result = this.diceKeysByKeyId[keyId];
-    console.log(`${this.objId} ${keyId} ${result} from ${JSON.stringify(toJS(this.diceKeysByKeyId))} `);
+    // console.log(`${this.objId} ${keyId} ${result} from ${JSON.stringify(toJS(this.diceKeysByKeyId))} `);
     return result;
   }
 
