@@ -11,7 +11,7 @@ import {
   FaceReadWithImageIfErrorFound
 } from "../../dicekeys/FacesRead"
 import { action, makeAutoObservable } from "mobx";
-import { TupleOf25Items } from "../../dicekeys";
+import { TupleOf25Items } from "../../dicekeys/DiceKey";
 
 export class DiceKeyFrameProcessorState {
   facesRead?: FaceRead[];

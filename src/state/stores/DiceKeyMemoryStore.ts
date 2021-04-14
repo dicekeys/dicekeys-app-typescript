@@ -1,7 +1,7 @@
 import {
   DiceKey
 } from "../../dicekeys/DiceKey";
-import { action, makeAutoObservable, runInAction, toJS } from "mobx";
+import { action, makeAutoObservable, toJS } from "mobx";
 import { autoSaveEncrypted } from "../core/AutoSave";
 import { AllAppWindowsAndTabsAreClosingEvent } from "../core/AllAppWindowsAndTabsAreClosingEvent";
 import { isRunningInPreviewMode } from "~utilities/is-preview";

@@ -1,7 +1,6 @@
 import cssRequiredNotice from "./camera-permissions-required-notification.module.css";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
-import ReactDOM from "react-dom";
 import React from "react";
 import { Face, FaceRead } from "@dicekeys/read-dicekey-js";
 import { CameraCaptureWithOverlay } from "./CameraCaptureWithOverlay";
