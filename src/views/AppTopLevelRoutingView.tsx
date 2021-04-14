@@ -23,13 +23,13 @@ export const AppTopLevelRoutingView = observer ( (props: AppTopLevelRoutingViewP
       <AppHomeView {...{appTopLevelState}}/>
     );
     case SubViewsOfTopLevel.LoadDicekey: return (
-      <LoadDiceKeyView onDiceKeyRead={ onDiceKeyRead } state={new LoadDiceKeyState("manual")} />
+      <LoadDiceKeyView onDiceKeyRead={ onDiceKeyRead } state={new LoadDiceKeyState("camera")} />
     )
     case SubViewsOfTopLevel.AssemblyInstructions: return (
       null
     )
     case SubViewsOfTopLevel.DiceKeyView: return (
-      <SelectedDiceKeyView onBack={ () => appTopLevelState.navigateToTopLevelView() } navigationState={appTopLevelState.selectedDiceKeyViewState!} />
+      <SelectedDiceKeyView navigationState={appTopLevelState.selectedDiceKeyViewState!} />
     );
   }
 });

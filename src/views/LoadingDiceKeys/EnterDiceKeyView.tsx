@@ -140,3 +140,14 @@ export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.C
     );
   }
 });
+
+// http://localhost:1234/?component=EnterDiceKeyView
+
+export const Preview_EnterDiceKeyView = () => {
+  const state = new EnterDiceKeyState();
+  return (
+    <div className={Layout.PrimaryView}>
+      <EnterDiceKeyView state={state}/>
+    </div>
+  )
+}

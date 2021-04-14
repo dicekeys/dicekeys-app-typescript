@@ -13,12 +13,12 @@
   padding-top: 0.25vh;
   padding-bottom: 0.25vh;
   background-color: yellow;
-  font-size: 1.5em;
+  font-size: 1.5rem
 }
 
 .primary_instruction {
   display: flex;
-  font-size: 1.5em;
+  font-size: 1.5rem
 }
 
 .secondary_instruction {

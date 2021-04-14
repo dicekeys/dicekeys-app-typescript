@@ -11,7 +11,8 @@ export class DerivationRecipe {
   }
 }
 
-const addFieldToEndOfJsonObjectString = (fieldName: string, doNotAddIfValueIs?: string | number) => (originalJsonObjectString: string, fieldValue?: string | number): string => {
+const addFieldToEndOfJsonObjectString = (fieldName: string, doNotAddIfValueIs?: string | number) =>
+  (originalJsonObjectString: string, fieldValue?: string | number): string => {
   if (typeof fieldValue == "undefined" || fieldValue == doNotAddIfValueIs) return originalJsonObjectString;
   const lastClosingBraceIndex = originalJsonObjectString.lastIndexOf("}");
   if (lastClosingBraceIndex < 0) {return originalJsonObjectString }

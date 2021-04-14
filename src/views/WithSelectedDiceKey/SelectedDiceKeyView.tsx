@@ -1,8 +1,6 @@
 import css from "./selected-dicekey-view.module.css";
 import React from "react";
-import ReactDOM from "react-dom";
 import { observer  } from "mobx-react";
-//import { isElectron } from "../../utilities/is-electron";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DiceKeyView } from "./DiceKeyView";
 import imageOfDiceKeyIcon from "../../images/DiceKey Icon.svg";
@@ -11,12 +9,13 @@ import imageOfSecretWithArrow from "../../images/Secret with Arrow.svg";
 import imageOfBackup from "../../images/Backup to DiceKey.svg";
 import { DerivationView } from "./DerivationView";
 import { Navigation } from "../../state";
+import { SeedHardwareKeyView, SeedHardwareKeyViewState } from "./SeedHardwareKeyView";
+import { AsyncResultObservable } from "../../api-handler/AsyncResultObservable";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 // const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
 
 interface SelectedDiceKeyViewProps {
-  onBack: () => any;
   navigationState: Navigation.SelectedDiceKeyViewState;
 }
 
@@ -25,7 +24,7 @@ const SelectedDiceKeyViewHeader = observer( ( props: SelectedDiceKeyViewProps) =
   if (!diceKey) return null;
   return (
     <div className={css.nav_header}>
-      <span className={css.nav_side} onClick={ props.onBack } >&#8592;</span>
+      <span className={css.nav_side} onClick={ props.navigationState.goBack } >&#8592;</span>
       <span className={css.nav_center}>{DiceKey.nickname(diceKey)}</span>
       <span className={css.nav_side}></span>
     </div>
@@ -71,6 +70,12 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
               case Navigation.SelectedDiceKeySubViews.DeriveSecrets: return (
                 <DerivationView seedString={DiceKey.toSeedString(diceKey, true)} />
               );
+              case Navigation.SelectedDiceKeySubViews.SeedHardwareKey: return (
+                <SeedHardwareKeyView diceKey={diceKey} seedHardwareKeyViewState={ new SeedHardwareKeyViewState(DiceKey.toSeedString(diceKey, true)) } />
+              );
+              case Navigation.SelectedDiceKeySubViews.Backup: return (
+                null
+              );
               default: return null;
             }
           })()}
@@ -82,10 +87,21 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
   );
 });
 
-(window as {testComponent?: {}}).testComponent = {
-  ...((window as {testComponent?: {}}).testComponent ?? {}),
-  SelectedDiceKeyViewState: async () => {
-    ReactDOM.render(<SelectedDiceKeyView onBack={ () => alert("Get back!" ) }
-      navigationState={new Navigation.SelectedDiceKeyViewState( () => {}, (await DiceKey.keyId(DiceKey.testExample)), Navigation.SelectedDiceKeySubViews.DeriveSecrets)}
-    />, document.getElementById("app-container"))
-}};
+
+
+const Preview_SelectedDiceKeyViewWithNavigationStateAsync = observer ( ({navigationState}: {navigationState: AsyncResultObservable<Navigation.SelectedDiceKeyViewState>}) => {
+  if (!navigationState.result) return null;
+  return (
+    <SelectedDiceKeyView navigationState={navigationState.result} />
+  );
+});
+
+export const Preview_SelectedDiceKeyView = () => {
+  const navigationState = new AsyncResultObservable(Navigation.SelectedDiceKeyViewState.create(
+      () => alert("Back off man, I'm a scientist!"),
+      DiceKey.testExample
+    ));
+  return (
+    <Preview_SelectedDiceKeyViewWithNavigationStateAsync navigationState={navigationState}/>
+  );
+};

@@ -1,14 +1,19 @@
 import {
   DiceKey
 } from "../../dicekeys/DiceKey";
-import { action, makeAutoObservable } from "mobx";
+import { action, makeAutoObservable, runInAction, toJS } from "mobx";
 import { autoSaveEncrypted } from "../core/AutoSave";
 import { AllAppWindowsAndTabsAreClosingEvent } from "../core/AllAppWindowsAndTabsAreClosingEvent";
+import { isRunningInPreviewMode } from "~utilities/is-preview";
 
-export const DiceKeyMemoryStore = new (class DiceKeyStore {
-  protected diceKeysByKeyId: {[keyId: string]: DiceKey} = {};
+export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
+  static objIdS: number = 1;
+  protected objId = DiceKeyMemoryStore.objIdS++;
+
+  protected diceKeysByKeyId: {[keyId: string]: DiceKey};
 
   addDiceKeyForKeyId = action ( (keyId: string, diceKey: DiceKey) => {
+    console.log(`addDiceKeyForKeyId(${keyId}) ${diceKey}`);
     this.diceKeysByKeyId[keyId] = diceKey;
   });
 
@@ -16,6 +21,7 @@ export const DiceKeyMemoryStore = new (class DiceKeyStore {
     this.addDiceKeyForKeyId(await DiceKey.keyId(diceKey), diceKey);
 
   removeDiceKeyForKeyId = action ( (keyId: string) => {
+    console.log(`removeDiceKeyForKeyId(${keyId})`);
     delete this.diceKeysByKeyId[keyId];
   });
 
@@ -25,6 +31,7 @@ export const DiceKeyMemoryStore = new (class DiceKeyStore {
   };
 
   removeAll = action ( () => {
+    console.log(`Remove all`);
     this.diceKeysByKeyId = {}
   });
 
@@ -37,11 +44,21 @@ export const DiceKeyMemoryStore = new (class DiceKeyStore {
       );
   }
  
-  diceKeyForKeyId = (keyId: string): DiceKey | undefined => this.diceKeysByKeyId[keyId];
+  diceKeyForKeyId = (keyId: string): DiceKey | undefined => {
+    const result = this.diceKeysByKeyId[keyId];
+    console.log(`${this.objId} ${keyId} ${result} from ${JSON.stringify(toJS(this.diceKeysByKeyId))} `);
+    return result;
+  }
 
   constructor() {
+    this.diceKeysByKeyId = {};
     makeAutoObservable(this);
-    autoSaveEncrypted(this, "DiceKeyStore");
+    if (isRunningInPreviewMode()) {
+      // When running in encrypted mode, we don't want an empty
+      // encrypted store to overwrite state we loaded when
+      // initializing the preview.
+      autoSaveEncrypted(this, "DiceKeyStore");
+    }
     AllAppWindowsAndTabsAreClosingEvent.on( () => {
       // Empty the store if all app windows are closing.
       this.removeAll();

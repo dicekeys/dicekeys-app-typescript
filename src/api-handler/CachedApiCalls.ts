@@ -3,25 +3,14 @@ import { ComputeApiCommandWorker } from "../workers/call-api-command-worker";
 import { ApiCalls, PasswordJson, SecretJson } from "@dicekeys/dicekeys-api-js";
 import { requestHasPackagedSealedMessageParameter, requestHasRecipeParameter } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import { hexStringToUint8ClampedArray } from "../utilities/convert";
-
-export class AsyncResultObservable<T> {
-  result?: T = undefined;
-  exception?: any = undefined;
-
-  constructor(fn: () => Promise<T>) {
-    makeAutoObservable(this);
-    fn()
-      .then( (result) => this.result = result )
-      .catch( (exception) => this.exception = exception );
-  }
-}
+import { AsyncResultObservable } from "./AsyncResultObservable";
 
 export class CachedApiCalls {
   private cache = new ObservableMap<string, AsyncResultObservable<ApiCalls.Response>>();
 
   private calculate = action (
       (key: string, fn: () => Promise<ApiCalls.Response>): void => {
-        this.cache.set(key, new AsyncResultObservable(fn));
+        this.cache.set(key, new AsyncResultObservable(fn()));
       }
   );
 

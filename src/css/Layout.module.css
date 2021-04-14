@@ -4,12 +4,32 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   align-content: center;
+}
+
+.MarginsAroundForm {
+  margin: 2rem;
+}
+
+.LeftJustifiedColumn {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: flex-start;
+  width: fit-content;
 }
 
 .ColumnCentered, .ColumnStretched, .PaddedStretchedColumn {
   display: flex;
   flex-direction: column;
+}
+
+.RowCentered {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
 }
 
 .ColumnCentered {

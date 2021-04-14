@@ -2,15 +2,21 @@
   Make sure the page takes up the full height and uses flex mode.
 */
 html {
-  display: flex; min-width: 100%; min-height: 100%;
+  display: flex;
+  font-size: 1.5vw;
 }
+
+body {
+  margin: 0px; padding: 0px;
+}
+
 option, select {
-  font-size: 1.4rem;
+  font-size: 1rem;
 }
 label {
-  font-size: 1.4rem;
+  font-size: 1rem;
 }
-video {
+/* video {
   max-width: 1024px;
   max-height: 1024px;
   display: block;
@@ -23,6 +29,11 @@ input[type=button], button {
   padding-right: 10px;
   padding-top: 5px;
   padding-bottom: 5px;
-  font-size: 1.5em;
+  font-size: 1.5rem
   border-radius: 5px;
+} */
+
+button {
+  cursor: pointer;
+  font-size: 1rem;
 }

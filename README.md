@@ -27,10 +27,11 @@ We inject state into these components through their React props (React's name fo
 We borrow from environments like SwiftUI, which allow you to run and inspect individual components by rendering previews, by manually
 creating preview HTML files for key components that operate only on the subset of the application state that required for those views.
 
-For example, to preview the ScanDiceKeyView, run
+For example, to preview the `ScanDiceKeyView` in isolation, run
 ```
-parcel src/Views/LoadingDiceKeys/ScanDiceKeyView.test.html
+parcel src/preview.html
 ```
+Then load [http://localhost:1234/?component=ScanDiceKeyView](http://localhost:1234/?component=ScanDiceKeyView)
 
 
 ## Security notes

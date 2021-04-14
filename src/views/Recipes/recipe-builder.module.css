@@ -1,10 +1,10 @@
 .recipe_name {
-  font-size: 1.75rem;
+  font-size: 1.4rem;
 }
 
 .recipe_header {
   margin-top: .5rem;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 .vstack {
@@ -37,6 +37,7 @@
   border: none;
   margin-right: 2px;
   margin-left: 2px;
+  font-size: 1rem;
 }
 
 .label_below {
@@ -89,5 +90,5 @@
 }
 
 .host_name_text_field {
-  min-width: 20rem;
+  min-width: 15rem;
 }

@@ -1,5 +1,5 @@
 import { computed, makeObservable } from "mobx";
-import { DiceKey } from "../../dicekeys";
+import { DiceKey } from "../../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../stores/DiceKeyMemoryStore";
 import { HasSubViews } from "../core";
 
@@ -33,11 +33,14 @@ export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubView
   navigateToSeedHardwareKey = this.navigateToSubView(SelectedDiceKeySubViews.SeedHardwareKey);
   navigateToDeriveSecrets = this.navigateToSubView(SelectedDiceKeySubViews.DeriveSecrets);
 
-  static create = async (goBack: () => any, diceKey: DiceKey): Promise<SelectedDiceKeyViewState> => {
+  static create = async (
+    goBack: () => any,
+    diceKey: DiceKey,
+    initialSubView: SelectedDiceKeySubViews | undefined = undefined
+  ): Promise<SelectedDiceKeyViewState> => {
     const keyId = await DiceKey.keyId(diceKey);
     DiceKeyMemoryStore.addDiceKeyForKeyId(keyId, diceKey);
-    return new SelectedDiceKeyViewState(goBack, keyId);
+    return new SelectedDiceKeyViewState(goBack, keyId, initialSubView);
   }
 
-  
 }

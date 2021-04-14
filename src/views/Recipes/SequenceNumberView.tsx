@@ -1,6 +1,7 @@
 import css from "./recipe-builder.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
+import { CharButton, CharButtonToolTip } from "../../views/basics";
 
 interface NumericTextFieldProps {
   value: number;
@@ -35,14 +36,17 @@ export const SequenceNumberView = observer( ({sequenceNumberState}: {sequenceNum
     <div className={css.field_row}>
       <div className={css.vertical_labeled_field}>
         <div className={css.hstack}>
-          <button onClick={ () => sequenceNumberState.setSequenceNumber( Math.max(1, (sequenceNumberState.sequenceNumber ?? 1) - 1 )) } >-</button>
+          <CharButton style={{visibility: (sequenceNumberState.sequenceNumber ?? 1 ) > 1 ? "visible" : "hidden"}}
+            onClick={ () => sequenceNumberState.setSequenceNumber( Math.max(1, (sequenceNumberState.sequenceNumber ?? 1) - 1 )) }
+            >-<CharButtonToolTip>- 1 = { sequenceNumberState.sequenceNumber! - 1}</CharButtonToolTip></CharButton>
           <NumericTextField
             className={ css.sequence_number_text_field }
             value={ sequenceNumberState.sequenceNumber ?? 1 }
             setValue={ value => sequenceNumberState.sequenceNumber = value }
             isValid={ stringValue => parseInt(stringValue) > 0 }
           />
-          <button onClick={ () => sequenceNumberState.setSequenceNumber( (sequenceNumberState.sequenceNumber ?? 1)  + 1 ) } >+</button>
+          <CharButton onClick={ () => sequenceNumberState.setSequenceNumber( (sequenceNumberState.sequenceNumber ?? 1)  + 1 ) }
+            >+<CharButtonToolTip>+ 1 = { (sequenceNumberState.sequenceNumber ?? 1) + 1 }</CharButtonToolTip></CharButton>
         </div>
         <label className={css.label_below}>Sequence Number</label>
       </div>

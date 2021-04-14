@@ -170,7 +170,7 @@ export const FaceGroupView = observer( ({
     e.preventDefault();
   })} : {};
   return (
-    <g transform={`translate(${center.x}, ${center.y})`} {...optionalOnClickHandler} >
+    <g transform={`translate(${center.x}, ${center.y})`} {...optionalOnClickHandler} style={!!onFaceClicked ? {cursor: "pointer"} : {}} >
       <rect 
       x={-0.5} y={-0.5}
       width={1} height={1}

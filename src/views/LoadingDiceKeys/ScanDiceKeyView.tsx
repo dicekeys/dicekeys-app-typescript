@@ -102,17 +102,25 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
   }
 });
 
+export const Preview_ScanDiceKeyView = () => (
+  <ScanDiceKeyView onDiceKeyRead={ (facesRead) => {
+    const diceKey: DiceKey = facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face>;
+    const hrf = DiceKey.toHumanReadableForm(diceKey, true);
+    console.log(`Read ${hrf}`);
+    alert(`Read ${hrf}`);
+  }} />
+);
 
-(window as {testComponent?: {}}).testComponent = {
-  ...((window as {testComponent?: {}}).testComponent ?? {}),
-  ScanDiceKeyView: () => {
-    ReactDOM.render(<ScanDiceKeyView onDiceKeyRead={ (facesRead) => {
-      const diceKey: DiceKey = facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face>;
-      const hrf = DiceKey.toHumanReadableForm(diceKey, true);
-      console.log(`Read ${hrf}`);
-      alert(`Read ${hrf}`);
-    }} />, document.getElementById("app-container"))
-}};
+// (window as {testComponent?: {}}).testComponent = {
+//   ...((window as {testComponent?: {}}).testComponent ?? {}),
+//   ScanDiceKeyView: () => {
+//     ReactDOM.render(<ScanDiceKeyView onDiceKeyRead={ (facesRead) => {
+//       const diceKey: DiceKey = facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face>;
+//       const hrf = DiceKey.toHumanReadableForm(diceKey, true);
+//       console.log(`Read ${hrf}`);
+//       alert(`Read ${hrf}`);
+//     }} />, document.getElementById("app-container"))
+// }};
 
 
 

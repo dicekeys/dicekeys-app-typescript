@@ -11,11 +11,11 @@
   max-height: 100%;
 }
 .hint {
-  font-size: 1.25em;
+  font-size: 1.25rem
   /* text-align: center; */
 }
 .scan_instruction {
-  font-size: 1.35em;
+  font-size: 1.35rem
   font-weight: 500;
   text-align: center;
   color: #f8f8ff;
