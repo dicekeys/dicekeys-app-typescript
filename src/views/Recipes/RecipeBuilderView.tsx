@@ -9,6 +9,7 @@ import { RecipeBuilderCustomState, RecipeBuilderCustomView } from "./RecipeBuild
 import css from "./recipe-builder.module.css";
 import { toBip39 } from "../../formats/bip39/bip39";
 import { uint8ClampedArrayToHexString } from "../../utilities/convert";
+import { GeneratedPasswordView, GeneratedSecretView } from "../../views/basics";
 
 export enum RecipeBuilderType {
   Custom,
@@ -51,7 +52,9 @@ export const Bip39View = ( props: {secret: Uint8ClampedArray}) => {
   return (
     <div className={css.derived_value_row}>
       <div className={css.derived_value_label}>Bip39:</div>
-      <div className={css.derived_value_contents}>{ bip39 }</div>
+      <div style={{fontSize: "0.75vw"}}>
+        <GeneratedSecretView value={bip39 ?? ""} showCopyIcon={true}  />
+      </div>
     </div>
 );
 }
@@ -59,7 +62,8 @@ export const Bip39View = ( props: {secret: Uint8ClampedArray}) => {
 export const JsonFieldView = ({json}: {json?: string}) => json ? (
   <div className={css.derived_value_row}>
   <div className={css.derived_value_label}>JSON:</div>
-  <div className={css.derived_value_contents_json}>{ JSON.stringify(JSON.parse(json), undefined, 2) }</div>
+  <GeneratedSecretView value={JSON.stringify(JSON.parse(json), undefined, 2)} />
+  {/* <div className={css.derived_value_contents_json}>{ JSON.stringify(JSON.parse(json), undefined, 2) }</div> */}
   </div>
 ) : null;
 
@@ -76,7 +80,7 @@ export const DerivedValueView = observer( ( props: {precalculatedApiCalls: Cache
         <JsonFieldView json={api.getPasswordJsonForRecipe(recipe)} />
         <div className={css.derived_value_row}>
           <div className={css.derived_value_label}>Password:</div>
-          <div className={css.derived_value_contents}>{ password }</div>
+          <GeneratedPasswordView value={password}/>
         </div>
       </div>
     );
@@ -89,7 +93,7 @@ export const DerivedValueView = observer( ( props: {precalculatedApiCalls: Cache
         <JsonFieldView json={api.getSecretJsonForRecipe(recipe)} />
         <div className={css.derived_value_row}>
           <div className={css.derived_value_label}>Hex:</div>
-          <div className={css.derived_value_contents}>{ uint8ClampedArrayToHexString(secret) }</div>
+          <GeneratedSecretView value={ uint8ClampedArrayToHexString(secret) } />
         </div>
         <Bip39View secret={secret} />
       </div>

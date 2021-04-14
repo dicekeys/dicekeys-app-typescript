@@ -88,4 +88,5 @@ export const GeneratedTextFieldViewWithSharedToggleState =
     );
 
 export const GeneratedPasswordView = GeneratedTextFieldViewWithSharedToggleState(new GlobalSharedToggleState("Password", true));
+export const GeneratedSecretView = GeneratedTextFieldViewWithSharedToggleState(new GlobalSharedToggleState("Secret", true));
 export const GeneratedDiceKeySeedFieldView = GeneratedTextFieldViewWithSharedToggleState(new GlobalSharedToggleState("DiceKeySeed", true));
