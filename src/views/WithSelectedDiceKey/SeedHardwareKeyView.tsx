@@ -7,9 +7,10 @@ import { addSequenceNumberToRecipeJson } from "../../dicekeys/DerivationRecipe";
 import { SequenceNumberFormFieldView } from "../Recipes/SequenceNumberView";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { uint8ArrayToHexString } from "../../utilities/convert";
-import { GlobalSharedToggleState, GeneratedTextFieldViewWithSharedToggleState, GeneratedTextFieldView } from "../basics/GeneratedTextField";
+import { GeneratedTextFieldViewWithSharedToggleState, GeneratedTextFieldView, DiceKeyAsSeedView } from "../basics/GeneratedTextField";
 import { Layout, Text } from "../../css";
-import { AsyncResultObservable } from "~api-handler/AsyncResultObservable";
+import { AsyncResultObservable } from "../../api-handler/AsyncResultObservable";
+import { GlobalSharedToggleState } from "../../state";
 
 
 const seedSecurityKeyRecipeTemplate = `{"purpose":"seedSecurityKey"}`;
@@ -53,21 +54,33 @@ interface SeedHardwareKeyViewProps {
   seedHardwareKeyViewState: SeedHardwareKeyViewState
 }
 
-const GeneratedSecurityKeySeedView = GeneratedTextFieldViewWithSharedToggleState(new GlobalSharedToggleState("SecurityKeyField", true));
+const GeneratedSecurityKeySeedView = GeneratedTextFieldViewWithSharedToggleState({toggleState: new GlobalSharedToggleState.GlobalSharedToggleState("SecurityKeyField", true)});
 
 export const SeedHardwareKeyView = observer( ( props: SeedHardwareKeyViewProps) => {
   return (
     <div className={Layout.MarginsAroundForm} >
       <div className={Layout.LeftJustifiedColumn}>
-        <h2>Recipe Constructor</h2>
+        <p>
+          A <i>seed</i> secret used to grow other secrets.
+          Combining a seed and a recipe always creates the same output, so as long as you keep a seed an a recipe around you can re-create the same output again.
+          We use your DiceKey and a recipe to create a root key to store in your SoloKey or other hardware security key.
+        </p>
+
+        <h2>Recipe Options</h2>
         <SequenceNumberFormFieldView sequenceNumberState={props.seedHardwareKeyViewState} />
-        <h2>Recipe</h2>
-        <GeneratedTextFieldView value={ props.seedHardwareKeyViewState.recipe } showCopyIcon={true} />
-        <h2>Seed to Write Into Security Key</h2>
+
+        <h2>Recipe for Generating your Root Hardware Key</h2>
+        <GeneratedTextFieldView value={ props.seedHardwareKeyViewState.recipe } />
+
+        <h2>Seed</h2>
+        <div>Your DiceKey represented in a text format:</div>
+        <DiceKeyAsSeedView value={DiceKey.toSeedString(props.diceKey, true)} />
+
+        <h2>Root Hardware Key Generated</h2>
         <GeneratedSecurityKeySeedView value={props.seedHardwareKeyViewState.hexSeed ?? "" } />
         <div className={Text.Regrets} style={{marginTop: "2rem"}}>
           <div>Your browser prohibits this app from writing to USB devices.</div>
-          <div>To seed a security key, you will need to use Android app or desktop app.</div>
+          <div>To seed a security key, you will need to use the Android or desktop app.</div>
         </div>
       </div>
     </div>

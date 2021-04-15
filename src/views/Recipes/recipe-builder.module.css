@@ -3,6 +3,8 @@
 }
 
 .recipe_header {
+  display: flex;
+  flex-direction:row;
   margin-top: .5rem;
   font-size: 1.25rem;
 }

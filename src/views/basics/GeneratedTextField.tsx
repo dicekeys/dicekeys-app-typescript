@@ -1,12 +1,14 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { action, makeAutoObservable } from "mobx";
-import { autoSave } from "../../state/core";
 import {Layout} from "../../css";
-import { CharButton, CharButtonToolTip } from "./CharButton";
+import { CopyButtonProps, ObscureButtonProps, CopyButton, ObscureButton } from "./CharButton";
+import { GlobalSharedToggleState } from "../../state";
 
 const obscuringCharacter = String.fromCharCode(0x25A0); // * ■▓▒░
-const obscureValue = (password: string): string => {
+
+type ObscuringFunction = (unobscuredValue: string) => string;
+
+const defaultObscuringFunction = (password: string): string => {
   const words = password.split(' ');
   const obscuredWords = words.map( word => word.split("").map( _ => obscuringCharacter).join("")); // * ▓▒░
   const sortedObscuredWords = obscuredWords.sort();
@@ -27,66 +29,56 @@ const obscureValue = (password: string): string => {
 // The hint does make it possible for others to know that you used the same  DiceKey for multiple
 // accounts.
 
-export interface CopyableFieldProps {
-  value: string;
-  showCopyIcon?: boolean;
-}
+export type GeneratedTextFieldViewProps = Partial<ObscureButtonProps> & CopyButtonProps & {
+  obscuringFunction?: ObscuringFunction
+};
 
-export interface GeneratedTextFieldViewProps extends CopyableFieldProps {
-  obscureValue?: boolean;
-  toggleObscureValue?: () => any;
-}
-export const GeneratedTextFieldView  = observer( (props: GeneratedTextFieldViewProps) => {
-  const copyToClipboard = action ( () => {
-    navigator.clipboard.writeText(props.value);
-    // FUTURE - provide user notification that copy happened.
-  });
-  return (    
+export const GeneratedTextFieldView  = observer( (props: GeneratedTextFieldViewProps) => (
     <div className={Layout.RowCentered}>
-      <div key={"value"} style={{fontFamily: "monospace"}}>{ props.obscureValue ? obscureValue(props.value) : props.value }</div>
-      { props.obscureValue !== undefined && props.toggleObscureValue ? (
-        <CharButton style={ props.obscureValue ? {textDecoration: "line-through"} : {}}
-          onClick={props.toggleObscureValue}
-        >&#x1F441;<CharButtonToolTip>{ props.obscureValue ? "show" : "hide" }</CharButtonToolTip></CharButton>
-      ) : undefined }
-      { !props.showCopyIcon ? undefined : (
-        <CharButton onClick={copyToClipboard}>&#128203;<CharButtonToolTip>Copy to clipboard</CharButtonToolTip></CharButton>
-      )}
+      <div key={"value"} style={{fontFamily: "monospace"}}>{ props.obscureValue ? (props.obscuringFunction ?? defaultObscuringFunction)(props.value) : props.value }</div>
+      <ObscureButton {...props} />
+      <CopyButton {...props}/>
     </div>
-  );
-});
+  ));
 
-export class GlobalSharedToggleState {
-  value: boolean;
+export const SecretFieldsCommonObscureButton = observer ( () => (
+  <ObscureButton obscureValue={GlobalSharedToggleState.ObscureSecretFields.value} toggleObscureValue={GlobalSharedToggleState.ObscureSecretFields.toggle} />
+));
+export const SecretFieldWithCommonObscureState = observer ((props: CopyButtonProps) => (
+  <GeneratedTextFieldView {...props} obscureValue={ GlobalSharedToggleState.ObscureSecretFields.value } />
+));
 
-  toggle = action ( () => {
-    this.value = !this.value;
-  })
-
-  constructor(name: string, defaultValue: boolean = false) {
-    this.value = defaultValue
-    makeAutoObservable(this);
-    autoSave(this, `GlobalSharedToggleState:${name}`)
-  }
-}
 
 const GeneratedTextFieldViewWithSharedToggleStatePreCurry = observer (
-  (props: CopyableFieldProps & {toggleState: GlobalSharedToggleState}) => {
-    return (
-      <GeneratedTextFieldView value={props.value} showCopyIcon={props.showCopyIcon ?? true}
-        obscureValue={ props.toggleState.value }
-        toggleObscureValue={ props.toggleState.toggle }
+  (({toggleState, ...props}: CopyButtonProps & {toggleState: GlobalSharedToggleState.GlobalSharedToggleState}) => (
+      <GeneratedTextFieldView {...props}
+        obscureValue={ toggleState.value }
+        toggleObscureValue={ toggleState.toggle }
       /> 
     )
-  }
-);
+  ));
+
 
 export const GeneratedTextFieldViewWithSharedToggleState =
-  (toggleState: GlobalSharedToggleState) =>
-    (props: CopyableFieldProps) => (
-      <GeneratedTextFieldViewWithSharedToggleStatePreCurry {...{toggleState, ...props}} />
+  ({toggleState, ...defaultProps}: {toggleState: GlobalSharedToggleState.GlobalSharedToggleState} & Partial<GeneratedTextFieldViewProps>) =>
+    (props: CopyButtonProps) => (
+      <GeneratedTextFieldViewWithSharedToggleStatePreCurry {...{toggleState, ...defaultProps, ...props}} />
     );
 
-export const GeneratedPasswordView = GeneratedTextFieldViewWithSharedToggleState(new GlobalSharedToggleState("Password", true));
-export const GeneratedSecretView = GeneratedTextFieldViewWithSharedToggleState(new GlobalSharedToggleState("Secret", true));
-export const GeneratedDiceKeySeedFieldView = GeneratedTextFieldViewWithSharedToggleState(new GlobalSharedToggleState("DiceKeySeed", true));
+export const GeneratedPasswordView = GeneratedTextFieldViewWithSharedToggleState({toggleState: new GlobalSharedToggleState.GlobalSharedToggleState("Password", true)});
+// export const GeneratedSecretView = GeneratedTextFieldViewWithSharedToggleState(new GlobalSharedToggleState("Secret", true));
+export const GeneratedDiceKeySeedFieldView = GeneratedTextFieldViewWithSharedToggleState({toggleState: new GlobalSharedToggleState.GlobalSharedToggleState("DiceKeySeed", true)});
+
+const obscureDiceKeyInHumanReadableForm = (s: string) =>
+  // The 12 triples before the center face should be obscured
+  s.slice(0, 12*3).split("").map( _ => obscuringCharacter).join("") +
+  // The first two characters (letter and digit) of the center face should not be obscured
+  s.slice(12*3, 12*3 + 2) +
+  // The orientation character of the center face and the last 12 faces should be obscured
+  s.slice(12*3 + 2).split("").map( _ => obscuringCharacter).join("");
+
+export const DiceKeyAsSeedView = GeneratedTextFieldViewWithSharedToggleState({
+  toggleState: GlobalSharedToggleState.ObscureDiceKey,
+  hideCopyButton: true,
+  obscuringFunction: obscureDiceKeyInHumanReadableForm
+});

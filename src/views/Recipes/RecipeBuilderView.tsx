@@ -9,7 +9,7 @@ import { RecipeBuilderCustomState, RecipeBuilderCustomView } from "./RecipeBuild
 import css from "./recipe-builder.module.css";
 import { toBip39 } from "../../formats/bip39/bip39";
 import { uint8ClampedArrayToHexString } from "../../utilities/convert";
-import { GeneratedPasswordView, GeneratedSecretView } from "../../views/basics";
+import { GeneratedPasswordView, SecretFieldsCommonObscureButton, SecretFieldWithCommonObscureState } from "../../views/basics";
 
 export enum RecipeBuilderType {
   Custom,
@@ -53,7 +53,7 @@ export const Bip39View = ( props: {secret: Uint8ClampedArray}) => {
     <div className={css.derived_value_row}>
       <div className={css.derived_value_label}>Bip39:</div>
       <div style={{fontSize: "0.75vw"}}>
-        <GeneratedSecretView value={bip39 ?? ""} showCopyIcon={true}  />
+        <SecretFieldWithCommonObscureState value={bip39 ?? ""} />
       </div>
     </div>
 );
@@ -62,7 +62,7 @@ export const Bip39View = ( props: {secret: Uint8ClampedArray}) => {
 export const JsonFieldView = ({json}: {json?: string}) => json ? (
   <div className={css.derived_value_row}>
   <div className={css.derived_value_label}>JSON:</div>
-  <GeneratedSecretView value={JSON.stringify(JSON.parse(json), undefined, 2)} />
+  <SecretFieldWithCommonObscureState value={JSON.stringify(JSON.parse(json), undefined, 2)} />
   {/* <div className={css.derived_value_contents_json}>{ JSON.stringify(JSON.parse(json), undefined, 2) }</div> */}
   </div>
 ) : null;
@@ -93,7 +93,7 @@ export const DerivedValueView = observer( ( props: {precalculatedApiCalls: Cache
         <JsonFieldView json={api.getSecretJsonForRecipe(recipe)} />
         <div className={css.derived_value_row}>
           <div className={css.derived_value_label}>Hex:</div>
-          <GeneratedSecretView value={ uint8ClampedArrayToHexString(secret) } />
+          <SecretFieldWithCommonObscureState value={ uint8ClampedArrayToHexString(secret) } />
         </div>
         <Bip39View secret={secret} />
       </div>
@@ -145,7 +145,7 @@ export const RecipeBuilderView = observer( ( props: {seedString: string, viewSta
       }
       <div className={css.recipe_header}>Internal Recipe Format</div>
       <RawRecipeView state={subState} />
-      <div className={css.recipe_header}>Derived value</div>
+      <div className={css.recipe_header}>Derived values <SecretFieldsCommonObscureButton/></div>
       <DerivedValueView state={subState} precalculatedApiCalls={precalculatedApiCalls} />
     </div>
   );
