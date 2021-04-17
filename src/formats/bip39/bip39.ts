@@ -2,7 +2,7 @@ import { Face, FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dice
 import { DiceKey } from "../../dicekeys/DiceKey";
 import {english} from "./word-lists/english";
 
-const invertedEnglish: {[word in string]: number} = english.reduce( (result, word, index) => {
+const invertedEnglish: Record<string, number> = english.reduce( (result, word, index) => {
 	result[word] = index;
 	return result;
 }, {} as {[word in string]: number});

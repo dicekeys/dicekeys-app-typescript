@@ -1,9 +1,9 @@
 // import {readFileSync} from 'fs'
 
-import publicSuffixListDataContents from "./public_suffix_list.dat.txt";
+import {PublicSuffixDataList} from "./public_suffix_list";
 
 const domainRegexp = new RegExp("(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]");
-const isValidDomain = (candidate: string): boolean => domainRegexp.test(candidate);
+const isValidDomainRexExp = (candidate: string): boolean => domainRegexp.test(candidate);
 
 type LabelMap = {[domain: string]: LabelMap} & {isTerminalNode?: boolean};
 /**
@@ -24,7 +24,7 @@ const topLevelDomainLabelMap: LabelMap = {};
  * which we cache in the code base so that we don't have to perform online queries.
  */
 // const publicSuffixListDataContents = readFileSync(__dirname + "/public_suffix_list.dat.txt", "utf-8");
-publicSuffixListDataContents.split("\n").forEach( rawLine => {
+PublicSuffixDataList.split("\n").forEach( rawLine => {
   // We may need to strip ine feeds
   const line = rawLine.trim();
   // Ignore empty lines or comments (which start //, but / is enough to be sure it's a comment)
@@ -54,7 +54,7 @@ publicSuffixListDataContents.split("\n").forEach( rawLine => {
  * 
  * @param domain A domain name
  */
-const getDepthOfPublicSuffix = (domain: string): number => {
+export const getDepthOfPublicSuffix = (domain: string): number => {
   const labelsFromTopToBottom = domain.split(".").reverse();
   var depth = 0;
   var depthOfPublicSuffix = 0;
@@ -83,7 +83,18 @@ export const getDomainFromDomainOrUrlString = (domainOrUrl: string): string => {
     }
   } catch {
   }
-  return isValidDomain(domainOrUrl) ? domainOrUrl : "";
+  return isValidDomainRexExp(domainOrUrl) ? domainOrUrl : "";
+}
+
+export const isValidDomain = (candidate: string): boolean => {
+  try {
+    const hostname = new URL(`https://${candidate}/`).hostname;
+    if (hostname != candidate) return false;
+    const suffixLength = getDepthOfPublicSuffix(candidate);
+    return suffixLength > 0;
+  } catch {
+    return false;
+  }
 }
 
 /**

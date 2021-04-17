@@ -3,7 +3,7 @@ import { action, makeAutoObservable } from "mobx";
 import { observer  } from "mobx-react";
 //import { DiceKey, addSequenceNumberToRecipeJson } from "../../dicekeys";
 import { DiceKey } from "../../dicekeys/DiceKey";
-import { addSequenceNumberToRecipeJson } from "../../dicekeys/DerivationRecipe";
+import { addSequenceNumberToRecipeJson } from "../../dicekeys/SavedRecipe";
 import { SequenceNumberFormFieldView } from "../Recipes/SequenceNumberView";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { uint8ArrayToHexString } from "../../utilities/convert";
@@ -24,7 +24,7 @@ export class SeedHardwareKeyViewState {
   });
 
   get recipe(): string {
-    return addSequenceNumberToRecipeJson(seedSecurityKeyRecipeTemplate, this.sequenceNumber);
+    return addSequenceNumberToRecipeJson(seedSecurityKeyRecipeTemplate, this.sequenceNumber)!;
   }
 
   get hexSeedAsyncResultObservable(): AsyncResultObservable<string> {    
@@ -67,7 +67,7 @@ export const SeedHardwareKeyView = observer( ( props: SeedHardwareKeyViewProps) 
         </p>
 
         <h2>Recipe Options</h2>
-        <SequenceNumberFormFieldView sequenceNumberState={props.seedHardwareKeyViewState} />
+        <SequenceNumberFormFieldView state={props.seedHardwareKeyViewState} />
 
         <h2>Recipe for Generating your Root Hardware Key</h2>
         <GeneratedTextFieldView value={ props.seedHardwareKeyViewState.recipe } />
