@@ -1,5 +1,5 @@
 import css from "./selected-dicekey-view.module.css";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DiceKeyView } from "./DiceKeyView";
@@ -7,10 +7,9 @@ import imageOfDiceKeyIcon from "../../images/DiceKey Icon.svg";
 import imageOfUsbKey from "../../images/USB Key.svg";
 import imageOfSecretWithArrow from "../../images/Secret with Arrow.svg";
 import imageOfBackup from "../../images/Backup to DiceKey.svg";
-import { DerivationView } from "./DerivationView";
+import { DerivationView } from "../Recipes/DerivationView";
 import { Navigation } from "../../state";
 import { SeedHardwareKeyView, SeedHardwareKeyViewState } from "./SeedHardwareKeyView";
-import { AsyncResultObservable } from "../../api-handler/AsyncResultObservable";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 // const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
@@ -88,20 +87,17 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
 });
 
 
-
-const Preview_SelectedDiceKeyViewWithNavigationStateAsync = observer ( ({navigationState}: {navigationState: AsyncResultObservable<Navigation.SelectedDiceKeyViewState>}) => {
-  if (!navigationState.result) return null;
-  return (
-    <SelectedDiceKeyView navigationState={navigationState.result} />
-  );
-});
-
 export const Preview_SelectedDiceKeyView = () => {
-  const navigationState = new AsyncResultObservable(Navigation.SelectedDiceKeyViewState.create(
-      () => alert("Back off man, I'm a scientist!"),
-      DiceKey.testExample
-    ));
+  const [navigationState, setNavigationState] = useState<Navigation.SelectedDiceKeyViewState | undefined>();
+  useEffect( () => {
+    if (!navigationState) {
+      Navigation.SelectedDiceKeyViewState.create(
+        () => alert("Back off man, I'm a scientist!"),
+        DiceKey.testExample
+      ).then( navState => setNavigationState(navState) )
+    }})
+  if (navigationState == null) return null;
   return (
-    <Preview_SelectedDiceKeyViewWithNavigationStateAsync navigationState={navigationState}/>
+    <SelectedDiceKeyView navigationState={navigationState} />
   );
 };

@@ -17,7 +17,7 @@ export class DiceKeyStateStore {
     protected readonly keyId: string
   ) {
     makeAutoObservable(this);
-    autoSave(this, `DiceKeyStateStore:${keyId}`)
+    autoSave(this, `DiceKeyStateStore:${keyId}`, true)
   }
 
   centerDieHumanReadableForm?: string;

@@ -3,9 +3,9 @@ import { isRunningInPreviewMode } from '../../utilities/is-preview'
 import { decryptJsonStorageField, encryptJsonStorageField } from './EncryptedStorageFields'
 
 
-export function autoSave<T>(_this: T, name: string) {
+export function autoSave<T>(_this: T, name: string, dontLoadOnPreview: boolean = false) {
 	// We don't load or save state in preview mode
-	if (isRunningInPreviewMode()) return;
+	if (dontLoadOnPreview && isRunningInPreviewMode()) return;
 
 	const storedJson = localStorage.getItem(name)
 	if (storedJson) {
@@ -17,9 +17,9 @@ export function autoSave<T>(_this: T, name: string) {
 	})
 }
 
-export function autoSaveEncrypted<T>(_this: T, name: string) {
+export function autoSaveEncrypted<T>(_this: T, name: string, dontLoadOnPreview: boolean = false) {
 	// We don't load or save state in preview mode
-	if (isRunningInPreviewMode()) return;
+	if (dontLoadOnPreview && isRunningInPreviewMode()) return;
 
 	const encryptedStoredJson = localStorage.getItem(name);
 	if (encryptedStoredJson) {

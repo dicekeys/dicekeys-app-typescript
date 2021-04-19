@@ -35,9 +35,9 @@ export const JsonFieldView = ({json}: {json?: string}) => json ? (
   </div>
 ) : null;
 
-export const RecipesDerivedValuesView = observer( ( props: {precalculatedApiCalls: CachedApiCalls, state: {type?: DerivationRecipeType, recipe?: string, purpose?: string}}) => {
+export const RecipesDerivedValuesView = observer( ( props: {cachedApiCalls: CachedApiCalls, state: {type?: DerivationRecipeType, recipe?: string, purpose?: string}}) => {
   const {type, recipe} = props.state;
-  const api = props.precalculatedApiCalls;
+  const api = props.cachedApiCalls;
   if (!recipe || !type) { return null; }
 
   if (type === "Password") {

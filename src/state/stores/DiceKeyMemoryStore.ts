@@ -49,7 +49,7 @@ export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
   constructor() {
     this.diceKeysByKeyId = {};
     makeAutoObservable(this);
-    autoSaveEncrypted(this, "DiceKeyStore");
+    autoSaveEncrypted(this, "DiceKeyStore", true);
     AllAppWindowsAndTabsAreClosingEvent.on( () => {
       // Empty the store if all app windows are closing.
       this.removeAll();

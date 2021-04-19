@@ -5,22 +5,10 @@ import { RecipeStore } from "~state/stores/RecipeStore";
 import { addHostsToRecipeJson, addLengthInCharsToRecipeJson, addPurposeToRecipeJson,
   addSequenceNumberToRecipeJson, SavedRecipe, DerivationRecipeType
 } from "../../dicekeys/SavedRecipe";
-import { SequenceNumberState } from "./SequenceNumberView";
 import { getRegisteredDomain, isValidDomain } from "~domains/get-registered-domain";
+import { NumericTextFieldState } from "~views/basics/NumericTextFieldView";
 
-// export interface RecipeBuilderState extends Partial<DerivationRecipe> {
-//   type: DerivationRecipeType;
-// //  error?: Error;
-//   recipe?: string;
-//   name?: string;
-// }
-
-// interface RecipeTypeState {
-//   type?: DerivationRecipeType;
-//   setType: (type: DerivationRecipeType) => void
-// }
-
-type PartialSavedRecipe = Pick<SavedRecipe, "type"> & Partial<SavedRecipe>;
+export type PartialSavedRecipe = Pick<SavedRecipe, "type"> & Partial<SavedRecipe>;
 
 export interface PurposeFieldState {
   purpose?: string;
@@ -75,26 +63,17 @@ export class SelectedRecipeState {
   constructor() {
     makeAutoObservable(this);
   }
+}
 
-  // get template(): RecipeTemplate | undefined {
-  //   if (this.selectedTemplateIdentifier === undefined) return;
-  //   if (this.selectedTemplateIdentifier.startsWith(savedPrefix)) {
-  //     const name = this.selectedTemplateIdentifier.substr(savedPrefix.length);
-  //     return RecipeStore.recipeForName(name)
-  //   } else if (this.selectedTemplateIdentifier.startsWith(templatePrefix)) {
-  //     const name = this.selectedTemplateIdentifier.substr(templatePrefix.length);
-  //     return DerivationRecipeTemplateList.filter( t => t.name === name )[0];
-  //   } else if (this.selectedTemplateIdentifier === "Password") {
-  //     return {type: "Password"}
-  //   } else if (this.selectedTemplateIdentifier === "Seed") {
-  //     return {type: "Secret"}
-  //   } else {
-  //     return;
-  //   }
-  }
-//}
+export type DiceKeysAppSecretRecipe = Recipe & {
+  // FIXME -- definition of recipe out of date in API, fix that and remove this hack
+  lengthInChars?: number;
+  // Sequence numbers
+  '#'?: number;
+  purpose?: string;
+}
 
-export class RecipeBuilderState implements Partial<SavedRecipe>, SequenceNumberState, /* RecipeTypeState,*/ PurposeFieldState {
+export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeState,*/ PurposeFieldState {
   constructor(public selectedRecipeState: SelectedRecipeState) {
     makeAutoObservable(this);
   }
@@ -102,13 +81,7 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, SequenceNumberS
   // private _type?: DerivationRecipeType;
 
 //  setTemplate = action ( (template: RecipeTemplate) => this.template = template );
-  get templateRecipe(): Recipe & {
-    // FIXME -- definition of recipe out of date in API, fix that and remove this hack
-    lengthInChars?: number;
-    // Sequence numbers
-    '#'?: number;
-    purpose?: string;
-  } { return Recipe( this.template?.recipeJson ) }
+  get templateRecipe(): DiceKeysAppSecretRecipe { return Recipe( this.template?.recipeJson ) }
 
   get type(): DerivationRecipeType | undefined { return this.template?.type ?? this.templateRecipe.type }
 
@@ -118,13 +91,15 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, SequenceNumberS
 
   // get mayEditType(): boolean { return !this.template.type }
   //get mayEditSequenceNumber(): boolean { return this.templateSequenceNumber === undefined }
-  private _sequenceNumber?: number;
-  get sequenceNumber(): number | undefined { return this._sequenceNumber /* ?? this.templateSequenceNumber */ }
-  setSequenceNumber = action( (newSequenceNumber?: number) => {
-    //if (this.mayEditSequenceNumber) {
-      this._sequenceNumber = newSequenceNumber;
-    //}
-  });
+//  private _sequenceNumber = NumericTextFieldState;
+  sequenceNumberState = new NumericTextFieldState(2);
+//  get sequenceNumber(): number | undefined { return this._sequenceNumber /* ?? this.templateSequenceNumber */ }
+  get sequenceNumber(): number | undefined { return this.sequenceNumberState.numericValue } 
+  // setSequenceNumber = action( (newSequenceNumber?: number) => {
+  //   //if (this.mayEditSequenceNumber) {
+  //     this._sequenceNumber = newSequenceNumber;
+  //   //}
+  // });
 
   get prescribedPurposeField(): string {
     const {allow, purpose} = this.templateRecipe ?? {} as SavedRecipe;
@@ -133,13 +108,15 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, SequenceNumberS
   }
 
   get mayEditLengthInChars(): boolean { return this.type === "Password" && this.templateLengthInChars === undefined }
-  private _lengthInChars?: number;
-  get lengthInChars(): number | undefined { return this._lengthInChars ?? this.templateLengthInChars }
-  setLengthInChars = action( (newLengthInChars?: number) => {
-    if (this.mayEditLengthInChars) {
-      this._lengthInChars = newLengthInChars;
-    }
-  });
+  // private _lengthInChars?: number;
+  // get lengthInChars(): number | undefined { return this._lengthInChars ?? this.templateLengthInChars }
+  // setLengthInChars = action( (newLengthInChars?: number) => {
+  //   if (this.mayEditLengthInChars) {
+  //     this._lengthInChars = newLengthInChars;
+  //   }
+  // });
+  lengthInCharsState = new NumericTextFieldState(16);
+  get lengthInChars(): number | undefined { return this.lengthInCharsState.numericValue }
 
   get mayEditPurpose(): boolean { return this.templateRecipe.allow === undefined && this.templateRecipe?.purpose === undefined }
   private _purpose?: string;
@@ -151,7 +128,7 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, SequenceNumberS
   get prescribedName(): string | undefined {
     const baseName = this.template?.name ?? this.purpose ?? this.hosts?.join(", ");
     if (typeof(baseName) === "undefined") return;
-    const sequenceNumber = this.sequenceNumber! > 1  ? ` ${this.sequenceNumber}` : "";
+    const sequenceNumber = this.sequenceNumber! > 1  ? ` (${this.sequenceNumber})` : "";
     return `${baseName}${sequenceNumber}`
   }
 

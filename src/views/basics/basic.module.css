@@ -1,3 +1,22 @@
+.view_top_level {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: stretch;
+  height: 100vh;
+  padding: 0;
+}
+
+.PreviewContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: stretch;
+  height: 100vh;
+  padding: 2vh;
+}
+
+
 .form_card {
   display: flex;
   flex-direction: column;
@@ -50,4 +69,40 @@
   align-self: stretch;
   justify-content: center;
   align-items: center;
+}
+
+.hstack {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.vertical_labeled_field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.field_row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+.sequence_number_text_field {
+  width: 4rem;
+  text-align: right;
+  border: none;
+  margin-right: 2px;
+  margin-left: 2px;
+  font-size: 1rem;
+}
+
+.label_below {
+  /* border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: gray; */
+  text-align: center;
+  margin-top: 1px;
+  margin-bottom: 4px;
 }

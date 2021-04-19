@@ -41,7 +41,7 @@ export const RecipeBuilderSettingsView = observer( ( {state}: {state: RecipeBuil
       {/* <RecipeTypeFieldView recipeTypeState={props.state} /> */}
       <PurposeFieldView state={state} />
       <LengthInCharsFormFieldView state={state} />
-      <SequenceNumberFormFieldView state={state} />
+      <SequenceNumberFormFieldView state={state.sequenceNumberState} />
     </div>
   );
 });
