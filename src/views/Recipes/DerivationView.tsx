@@ -3,7 +3,7 @@ import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderView } from ".";
 import { CachedApiCalls } from "../../api-handler/CachedApiCalls";
-import { DiceKeysAppSecretRecipe, RecipeBuilderState, SelectedRecipeState } from "./RecipeBuilderState";
+import { DiceKeysAppSecretRecipe, RecipeBuilderState, savedRecipeIdentifier, SelectedRecipeState } from "./RecipeBuilderState";
 import { RecipeTypeSelectorView } from "./RecipeTypeSelectorView";
 import { SavedRecipe } from "~dicekeys";
 import { DiceKey } from "~dicekeys/DiceKey";
@@ -12,16 +12,26 @@ import { AndClause, SecretFieldsCommonObscureButton } from "../../views/basics";
 import { RecipeStore } from "~state/stores/RecipeStore";
 import { action } from "mobx";
 
-export const SavedRecipeView = observer( ( props: {state: RecipeBuilderState}) => {
-  const {name = props.state.prescribedName, recipeJson, type} = props.state;
-  const save = type && name && recipeJson && type.length > 0 && name.length > 0 && recipeJson.length > 0 ? action ( () => {
+export const SavedRecipeView = observer( ( props: {recipeBuilderState: RecipeBuilderState, selectedRecipeState: SelectedRecipeState}) => {
+  const {name = props.recipeBuilderState.prescribedName, recipeJson, type} = props.recipeBuilderState;
+  if (!type || typeof recipeJson === "undefined") {
+    return null;
+  }
+  const save = recipeJson && name != null && name.length > 0 && recipeJson.length > 0 ? action ( () => {
     RecipeStore.addRecipe({name, type, recipeJson});
+    props.selectedRecipeState.setSelectedRecipeIdentifier(savedRecipeIdentifier(name));
     alert(`Added ${type}:${name}:${recipeJson}`)
   }) : undefined;
+  const disableSaveButton = typeof name === "undefined" || name.length === 0 ||
+    (
+      props.selectedRecipeState.savedRecipe?.name == props.recipeBuilderState.name &&
+      props.selectedRecipeState.savedRecipe?.type == props.recipeBuilderState.type &&
+      props.selectedRecipeState.savedRecipe?.recipeJson == props.recipeBuilderState.recipeJson
+    )
   return (
     <div>
-      <input type="text" className={css.recipe_name} placeholder={ props.state.name } onInput={ (e) => props.state.setName( e.currentTarget.value )} />
-      <button disabled={!save} onClick={save}>save</button>
+      <input type="text" className={css.recipe_name} placeholder={ props.recipeBuilderState.name } onInput={ (e) => props.recipeBuilderState.setName( e.currentTarget.value )} />
+      <button disabled={disableSaveButton} onClick={save}>{ props.recipeBuilderState.name && RecipeStore.recipeForName(props.recipeBuilderState.name) ? "replace" : "save" }</button>
     </div>
     )
   }
@@ -75,30 +85,30 @@ interface DerivationViewProps {
   seedString: string;
 }
 
-export const DerivationViewWithState = observer( ( {selectedRecipeState, builderState, cachedApiCalls}: {
+export const DerivationViewWithState = observer( ( {selectedRecipeState, recipeBuilderState, cachedApiCalls}: {
   selectedRecipeState: SelectedRecipeState,
-  builderState: RecipeBuilderState,
+  recipeBuilderState: RecipeBuilderState,
   cachedApiCalls: CachedApiCalls,
 }) => (
   <div>
     <RecipeTypeSelectorView state={selectedRecipeState} />
     <div className={css.recipe_header}>Internal Recipe Format</div>
-    <RawRecipeView state={builderState} />
-    <div>{ builderState.type && describeRecipe({type: builderState.type, recipeJson: builderState.recipeJson ?? ""}) }</div>
+    <RawRecipeView state={recipeBuilderState} />
+    <div>{ recipeBuilderState.type && describeRecipe({type: recipeBuilderState.type, recipeJson: recipeBuilderState.recipeJson ?? ""}) }</div>
     <div className={css.recipe_header}>Derived values <SecretFieldsCommonObscureButton/></div>
-    <RecipesDerivedValuesView {...{cachedApiCalls, state: builderState}} />
-    <SavedRecipeView state={builderState} />
+    <RecipesDerivedValuesView {...{cachedApiCalls, state: recipeBuilderState}} />
+    <SavedRecipeView {...{recipeBuilderState, selectedRecipeState}} />
 
     { selectedRecipeState.isSaved ? ("Offer to delete this!") : null }
-    <RecipeBuilderView state={builderState} cachedApiCalls={cachedApiCalls} />
+    <RecipeBuilderView state={recipeBuilderState} cachedApiCalls={cachedApiCalls} />
   </div>
 ));
 export const DerivationView = observer ( (props: DerivationViewProps) => {
   const selectedRecipeState = new SelectedRecipeState();
-  const builderState =  new RecipeBuilderState(selectedRecipeState);
+  const recipeBuilderState =  new RecipeBuilderState(selectedRecipeState);
   const cachedApiCalls = new CachedApiCalls(props.seedString)
   return (
-    <DerivationViewWithState {...{selectedRecipeState, builderState, cachedApiCalls}}/>
+    <DerivationViewWithState {...{selectedRecipeState, recipeBuilderState, cachedApiCalls}}/>
   )
 });
 

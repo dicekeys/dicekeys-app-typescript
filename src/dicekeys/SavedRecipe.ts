@@ -14,7 +14,7 @@ export class SavedRecipe {
 const addFieldToEndOfJsonObjectString = (fieldName?: string, doNotAddIfValueIs?: string | number) =>
   (originalJsonObjectString: string | undefined, fieldValue?: string | number): string | undefined => {
   if (typeof fieldValue == "undefined" || fieldValue == doNotAddIfValueIs) return originalJsonObjectString;
-  const srcString = originalJsonObjectString ?? "{}";
+  const srcString = (typeof originalJsonObjectString === "undefined" || originalJsonObjectString.length === 0) ? "{}" : originalJsonObjectString;
   const lastClosingBraceIndex = srcString.lastIndexOf("}");
   if (lastClosingBraceIndex < 0) {return srcString }
   const prefixUpToFinalClosingBrace = srcString.substr(0, lastClosingBraceIndex);

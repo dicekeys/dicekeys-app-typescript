@@ -54,7 +54,7 @@ export class SelectedRecipeState {
     } else if (isTemplateRecipeIdentifier(recipeIdentifier)) {
       return this.templateRecipe;
     } else if (recipeIdentifier !== undefined) {
-      return {type: recipeIdentifier}
+      return {type: recipeIdentifier, recipeJson: ""}
     } else {
       return;
     }

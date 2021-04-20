@@ -35,17 +35,17 @@ export const JsonFieldView = ({json}: {json?: string}) => json ? (
   </div>
 ) : null;
 
-export const RecipesDerivedValuesView = observer( ( props: {cachedApiCalls: CachedApiCalls, state: {type?: DerivationRecipeType, recipe?: string, purpose?: string}}) => {
-  const {type, recipe} = props.state;
+export const RecipesDerivedValuesView = observer( ( props: {cachedApiCalls: CachedApiCalls, state: {type?: DerivationRecipeType, recipeJson?: string}}) => {
+  const {type, recipeJson} = props.state;
   const api = props.cachedApiCalls;
-  if (!recipe || !type) { return null; }
+  if (!recipeJson || !type) { return null; }
 
   if (type === "Password") {
-    const password = api.getPasswordForRecipe(recipe);
+    const password = api.getPasswordForRecipe(recipeJson);
     if (typeof(password) === "undefined") { return null; }
     return (
       <div>
-        <JsonFieldView json={api.getPasswordJsonForRecipe(recipe)} />
+        <JsonFieldView json={api.getPasswordJsonForRecipe(recipeJson)} />
         <div className={css.derived_value_row}>
           <div className={css.derived_value_label}>Password:</div>
           <GeneratedPasswordView value={password}/>
@@ -54,11 +54,11 @@ export const RecipesDerivedValuesView = observer( ( props: {cachedApiCalls: Cach
     );
     
   } else if (type === "Secret") {
-    const secret = api.getSecretBytesForRecipe(recipe);
+    const secret = api.getSecretBytesForRecipe(recipeJson);
     if (typeof(secret) === "undefined") { return null; }
     return (
       <div>
-        <JsonFieldView json={api.getSecretJsonForRecipe(recipe)} />
+        <JsonFieldView json={api.getSecretJsonForRecipe(recipeJson)} />
         <div className={css.derived_value_row}>
           <div className={css.derived_value_label}>Hex:</div>
           <SecretFieldWithCommonObscureState value={ uint8ClampedArrayToHexString(secret) } />
@@ -70,14 +70,14 @@ export const RecipesDerivedValuesView = observer( ( props: {cachedApiCalls: Cach
   } else if (type === "SymmetricKey") {
     return (
       <div>
-        <JsonFieldView json={api.getSymmetricKeyJsonForRecipe(recipe)} />
+        <JsonFieldView json={api.getSymmetricKeyJsonForRecipe(recipeJson)} />
       </div>
     );
 
   } else if (type === "UnsealingKey") {
     return (
       <div>
-        <JsonFieldView json={api.getUnsealingKeyJsonForRecipe(recipe)} />
+        <JsonFieldView json={api.getUnsealingKeyJsonForRecipe(recipeJson)} />
       </div>
     );
   }
