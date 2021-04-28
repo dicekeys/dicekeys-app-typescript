@@ -11,7 +11,7 @@ export class SavedRecipe {
   }
 }
 
-const addFieldToEndOfJsonObjectString = (fieldName?: string, doNotAddIfValueIs?: string | number) =>
+const addFieldToEndOfJsonObjectString = (fieldName: string, quote: boolean = false, doNotAddIfValueIs: string | number | undefined = undefined) =>
   (originalJsonObjectString: string | undefined, fieldValue?: string | number): string | undefined => {
   if (typeof fieldValue == "undefined" || fieldValue == doNotAddIfValueIs) return originalJsonObjectString;
   const srcString = (typeof originalJsonObjectString === "undefined" || originalJsonObjectString.length === 0) ? "{}" : originalJsonObjectString;
@@ -20,14 +20,14 @@ const addFieldToEndOfJsonObjectString = (fieldName?: string, doNotAddIfValueIs?:
   const prefixUpToFinalClosingBrace = srcString.substr(0, lastClosingBraceIndex);
   const suffixIncludingFinalCloseBrace = srcString.substr(lastClosingBraceIndex);
   const commaIfObjectNonEmpty = srcString.indexOf(":") > 0 ? "," : "";
-  const fieldValueString = typeof fieldValue == "string" ? `"${fieldValue.replace("\"", "\\\"")}"` : `${fieldValue}`;
+  const fieldValueString = typeof fieldValue == "string" && quote ? `"${fieldValue.replace(/\"/g, "\\\"")}"` : `${fieldValue}`;
   return prefixUpToFinalClosingBrace + `${commaIfObjectNonEmpty}"${fieldName}":${fieldValueString}` + suffixIncludingFinalCloseBrace;
 }
 
-export const addLengthInCharsToRecipeJson: <T extends string | undefined>(recipeWithoutLengthInChars: T, lengthInChars?: number) => string | undefined = addFieldToEndOfJsonObjectString("lengthInChars", 0); 
-export const addSequenceNumberToRecipeJson: <T extends string | undefined>(recipeWithoutSequenceNumber: T, sequenceNumber?: number) => string | undefined = addFieldToEndOfJsonObjectString("#", 1);
-export const addPurposeToRecipeJson: <T extends string | undefined>(recipeWithoutPurpose: T, purpose?: string) => string | undefined = addFieldToEndOfJsonObjectString("purpose");
-export const addAllowToRecipeJson: <T extends string | undefined>(recipeWithoutAllow: T, allow?: string) => string | undefined = addFieldToEndOfJsonObjectString("allow");
+export const addLengthInCharsToRecipeJson: <T extends string | undefined>(recipeWithoutLengthInChars: T, lengthInChars?: number) => string | undefined = addFieldToEndOfJsonObjectString("lengthInChars", false, 0); 
+export const addSequenceNumberToRecipeJson: <T extends string | undefined>(recipeWithoutSequenceNumber: T, sequenceNumber?: number) => string | undefined = addFieldToEndOfJsonObjectString("#", false, 1);
+export const addPurposeToRecipeJson: <T extends string | undefined>(recipeWithoutPurpose: T, purpose?: string) => string | undefined = addFieldToEndOfJsonObjectString("purpose", true);
+export const addAllowToRecipeJson: <T extends string | undefined>(recipeWithoutAllow: T, allow?: string) => string | undefined = addFieldToEndOfJsonObjectString("allow", false);
 
 const getHostRestrictionsArrayAsString = (hosts: string[]): string =>
   `[${hosts
@@ -37,6 +37,6 @@ const getHostRestrictionsArrayAsString = (hosts: string[]): string =>
 
 export const addHostsToRecipeJson = (recipeWithoutAllow: string | undefined, hosts: string[]): string | undefined => {
   if (hosts.length === 0) return recipeWithoutAllow;
-  const allow = `"allow":${getHostRestrictionsArrayAsString(hosts.sort())}`;
+  const allow = getHostRestrictionsArrayAsString(hosts.sort());
   return addAllowToRecipeJson(recipeWithoutAllow, allow);
 }

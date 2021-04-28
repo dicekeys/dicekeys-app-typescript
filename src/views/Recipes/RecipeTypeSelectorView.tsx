@@ -5,6 +5,7 @@ import { DerivationRecipeType } from "../../dicekeys/SavedRecipe";
 import { DerivationRecipeTemplateList } from "../../dicekeys/DerivationRecipeTemplateList";
 import { RecipeStore } from "~state/stores/RecipeStore";
 import { savedRecipeIdentifier, SelectedRecipeState, SelectedRecipeIdentifier, templateRecipeIdentifier } from "./RecipeBuilderState";
+import { describeRecipeType } from "./DescribeRecipe";
 
 const SavedRecipesOptGroup = observer( () => {
   const savedRecipes = RecipeStore.recipes;
@@ -19,11 +20,12 @@ const SavedRecipesOptGroup = observer( () => {
 })
 
 export const RecipeTypeSelectorView = observer( ({state}: {state: SelectedRecipeState}) => {
-  const recipeTypesToSelectFrom: [DerivationRecipeType, string][] = [
-    ["Password", "Password"],
-    ["Secret", "Seed or other secret"],
-    ["SymmetricKey", "Cryptographic key (symmetric)"],
-    ["UnsealingKey", "Cryptographic key (public/private)"],
+  const recipeTypesToSelectFrom: DerivationRecipeType[] = [
+    "Password",
+    "Secret",
+    "SigningKey",
+    "SymmetricKey",
+    "UnsealingKey"
   ]
   return (
     <div className={css.field_row}>
@@ -38,14 +40,14 @@ export const RecipeTypeSelectorView = observer( ({state}: {state: SelectedRecipe
               ))}
             </optgroup>
             <optgroup key={"Custom recipes"} label={"Custom"}>
-              { recipeTypesToSelectFrom.map( ([recipeType, recipeName]) => (
-                <option key={ recipeType } value={ recipeType } >{ recipeName }</option>
+              { recipeTypesToSelectFrom.map( (recipeType) => (
+                <option key={ recipeType } value={ recipeType } >{ describeRecipeType(recipeType) }</option>
               ))}              
             </optgroup>
           </select>  
           {/* <button onClick={ () => sequenceNumberState.setSequenceNumber( Math.max(1, (sequenceNumberState.sequenceNumber ?? 1) - 1 )) } >-</button> */}
         </div>
-        <label className={css.label_below}>Secret type</label>
+        {/* <label className={css.label_below}>Secret type</label> */}
       </div>
     </div>
   );
