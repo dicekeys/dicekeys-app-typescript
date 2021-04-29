@@ -18,20 +18,19 @@ export class NumericTextFieldState {
     const numericValue = parseInt(this.textValue);
     return numericValue >= this.minValue ? numericValue : undefined;
   }
-  get minusOne(): number | undefined {
-    if (this.numericValue && this.numericValue > this.minValue) {
-      return this.numericValue - 1;
-    } else {
-      return;
-    }
+  get minusOne(): number {
+    return this.numericValue != null && this.numericValue - 1 > this.minValue ?
+      this.numericValue - 1 :
+      (this.defaultValue ?? this.minValue);
   }
   get plusOne(): number {
-    return this.numericValue ? this.numericValue + 1 : this.minValue;
+    return this.numericValue != null ? this.numericValue + 1 : (this.defaultValue ?? this.minValue);
   }
   constructor(
     public readonly minValue: number = 0,
+    private defaultValue?: number,
     private setNumericValue?: (value: number | undefined) => any,
-    initialValue?: string | number
+    initialValue?: string,
   ) {
     this.textValue = `${initialValue ?? ""}`
     makeAutoObservable(this);
@@ -59,7 +58,7 @@ export const NumberPlusMinusView = observer( ({state, textFieldClassName}: {
 }) => (
   <div className={css.hstack}>
     <CharButton
-        style={{visibility: state.numericValue !== undefined ? "visible" : "hidden"}}
+        style={{visibility: state.numericValue! > state.minValue ? "visible" : "hidden"}}
         onClick={ () => state.setValue(state.minusOne) }
       >-<CharButtonToolTip>- 1 = {state.minusOne ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
     <NumericTextField className={ textFieldClassName } state={state} />

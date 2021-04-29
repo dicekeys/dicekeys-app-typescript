@@ -1,7 +1,7 @@
 import React from "react";
 import { observer  } from "mobx-react";
 import { CachedApiCalls } from "../../api-handler/CachedApiCalls";
-import { RecipeBuilderState } from "./RecipeBuilderState";
+import { DiceKeysAppSecretRecipe, RecipeBuilderState } from "./RecipeBuilderState";
 import css from "./recipe-builder.module.css";
 import { toBip39 } from "../../formats/bip39/bip39";
 import { uint8ClampedArrayToHexString } from "../../utilities/convert";
@@ -10,8 +10,54 @@ import { DerivationRecipeType } from "~dicekeys";
 import { GlobalSharedToggleState } from "~state";
 import { AsyncCalculation } from "~utilities/AsyncCalculation";
 
+
+export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
+  const recipe = JSON.parse(recipeJson || "{}") as DiceKeysAppSecretRecipe;
+  var ingredients: (JSX.Element | string)[] = [recipeJson ?? ""];
+  const replace = (stringToReplace: string, replacementElement: JSX.Element) => {
+    ingredients = ingredients.reduce( (result, item ) => {
+      if (typeof item !== "string" || item.indexOf(stringToReplace) < 0) {
+        result.push(item);
+      } else {
+        const indexOfString = item.indexOf(stringToReplace);
+        const prefix = item.substr(0, indexOfString);
+        const suffix = item.substr(indexOfString + stringToReplace.length);
+        result.push(prefix, replacementElement, suffix);
+      }
+      return result;
+    }, [] as (JSX.Element | string)[])
+  }
+  const sequenceNumber = recipe["#"];
+  if (sequenceNumber != null && sequenceNumber >= 2) {
+    replace(`"#":${sequenceNumber}`, (<>"#":<span className={css.sequence_number_span}>{sequenceNumber}</span></>));
+  }
+  const lengthInChars = recipe.lengthInChars;
+  if (lengthInChars != null) {
+    replace(`"lengthInChars":${lengthInChars}`, (<>"lengthInChars":<span className={css.length_span}>{lengthInChars}</span></>));
+  }
+  const purpose = recipe.purpose;
+  if (purpose != null) {
+    const jsonEncodedPurpose = JSON.stringify(purpose)
+    const jsonEscapedPurpose = jsonEncodedPurpose.substr(1, jsonEncodedPurpose.length - 2);
+    replace(`"purpose":${JSON.stringify(purpose)}`, (<>"purpose":"<span className={css.host_name_span}>{jsonEscapedPurpose}</span>"</>));
+  }
+  const allow = recipe.allow;
+  if (allow != null) {
+    allow.forEach( ({host}) => {
+      replace(`"host":"${host}"`, (<>"host":<span className={css.host_name_span}>{host}</span></>));
+    });
+  }
+  return (
+    <>
+      {ingredients.map( (item, index) => (
+        <span key={`${index}`}>{item}</span>
+      ))}
+    </>
+  );
+}
+
 export const RawRecipeView = observer( ( props: {state: RecipeBuilderState}) => (
-  <div>{ props.state.recipeJson }</div>
+  <div><EnhancedRecipeView recipeJson={ props.state.recipeJson  }/></div>
 ));
 
 const Bip39Calculation = new AsyncCalculation<string>();

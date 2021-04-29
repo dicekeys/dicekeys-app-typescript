@@ -41,7 +41,7 @@ export const RecipeDescriptionView = (partialSavedRecipe: Omit<SavedRecipe, "nam
   return (
     <>Create a {describeRecipeType(type).toLocaleLowerCase()}
       { !recipe.purpose ? null : (
-        <> for the purpose of <span className={css.host_name_span}>{ recipe.purpose }</span></>
+        <> for the purpose of &lsquo;<span className={css.host_name_span}>{ recipe.purpose }</span>&rsquo;</>
       )}{ withClauses.length == 0 ? null : (
         <> with <AndClause items={withClauses}/></>
       )}{ !recipe.allow || recipe.allow.length == 0 ? null : (

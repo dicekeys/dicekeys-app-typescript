@@ -5,12 +5,6 @@ import { RecipeBuilderState } from "./RecipeBuilderState";
 import { RecipeBuilderSettingsView } from "./RecipeBuilderSettingsView";
 import css from "./recipe-builder.module.css";
 
-
-export const RawRecipeView = observer( ( props: {state: RecipeBuilderState}) => (
-  <div>{ props.state.recipeJson }</div>
-));
-
-
 export const RecipeView = observer( ( props: {
     state: RecipeBuilderState /*, builderState: RecipeBuilderState */
     cachedApiCalls: CachedApiCalls
