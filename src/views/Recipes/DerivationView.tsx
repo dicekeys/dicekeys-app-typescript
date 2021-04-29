@@ -49,8 +49,6 @@ export const SavedRecipeView = observer( ( props: {recipeBuilderState: RecipeBui
   }
 );
 
-
-
 interface DerivationViewProps {
   seedString: string;
 }
