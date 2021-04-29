@@ -108,13 +108,6 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeSt
   }
 
   get mayEditLengthInChars(): boolean { return this.type === "Password" && this.templateLengthInChars === undefined }
-  // private _lengthInChars?: number;
-  // get lengthInChars(): number | undefined { return this._lengthInChars ?? this.templateLengthInChars }
-  // setLengthInChars = action( (newLengthInChars?: number) => {
-  //   if (this.mayEditLengthInChars) {
-  //     this._lengthInChars = newLengthInChars;
-  //   }
-  // });
   lengthInCharsState = new NumericTextFieldState(16);
   get lengthInChars(): number | undefined { return this.lengthInCharsState.numericValue }
 

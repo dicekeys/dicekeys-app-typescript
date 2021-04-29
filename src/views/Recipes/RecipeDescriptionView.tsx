@@ -2,6 +2,7 @@ import React from "react";
 import { AndClause } from "~views/basics";
 import { SavedRecipe } from "../../dicekeys";
 import { DiceKeysAppSecretRecipe } from "./RecipeBuilderState";
+import css from "./recipe-builder.module.css";
 
 export const describeRecipeType = (type: SavedRecipe["type"]): string => {
   switch (type) {
@@ -14,7 +15,13 @@ export const describeRecipeType = (type: SavedRecipe["type"]): string => {
   }
 }
 
-export const describeRecipe = (partialSavedRecipe: Omit<SavedRecipe, "name">) => {
+const HostNameView = ({host}: {host: string}) => (
+  host.startsWith("*.") ?
+  (<><span className={css.host_name_span}>{ host.substring(2) }</span></>) :
+  (<><span className={css.host_name_span}>{ host }</span> (excluding subdomains)</>)
+)
+
+export const RecipeDescriptionView = (partialSavedRecipe: Omit<SavedRecipe, "name">) => {
   const {type, recipeJson} = partialSavedRecipe;
   let recipe: DiceKeysAppSecretRecipe = (() => {
     try {
@@ -26,23 +33,21 @@ export const describeRecipe = (partialSavedRecipe: Omit<SavedRecipe, "name">) =>
   })();
   const withClauses: JSX.Element[] = [];
   if (type === "Password" && recipe.lengthInChars) {
-    withClauses.push((<> a maximum length of <i>{ recipe.lengthInChars }</i> characters</>));
+    withClauses.push((<> a maximum length of <span className={css.length_span}>{ recipe.lengthInChars }</span> characters</>));
   }
   if (recipe["#"]) {
-    withClauses.push((<> sequence number <i>{recipe["#"]}</i></>));
+    withClauses.push((<> sequence number <span className={css.sequence_number_span}>{recipe["#"]}</span></>));
   }  
   return (
     <>Create a {describeRecipeType(type).toLocaleLowerCase()}
       { !recipe.purpose ? null : (
-        <> for the purpose of <i>{ recipe.purpose }</i></>
+        <> for the purpose of <span className={css.host_name_span}>{ recipe.purpose }</span></>
       )}{ withClauses.length == 0 ? null : (
         <> with <AndClause items={withClauses}/></>
       )}{ !recipe.allow || recipe.allow.length == 0 ? null : (
-        <> accessible to  <AndClause items={recipe.allow.map( ({host}) => 
-        host.startsWith("*.") ?
-          (<><i>{ host.substring(2) }</i></>) :
-          (<><i>{ host }</i> (excluding subdomains)</>)
+        <> that <AndClause items={recipe.allow.map( ({host}) => (<HostNameView {...{host}}/>)
         )}/>
+        &nbsp;may request
       </>)}.</>
   );
 }

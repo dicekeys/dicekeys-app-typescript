@@ -5,7 +5,7 @@ import { DerivationRecipeType } from "../../dicekeys/SavedRecipe";
 import { DerivationRecipeTemplateList } from "../../dicekeys/DerivationRecipeTemplateList";
 import { RecipeStore } from "~state/stores/RecipeStore";
 import { savedRecipeIdentifier, SelectedRecipeState, SelectedRecipeIdentifier, templateRecipeIdentifier } from "./RecipeBuilderState";
-import { describeRecipeType } from "./DescribeRecipe";
+import { describeRecipeType } from "./RecipeDescriptionView";
 
 const SavedRecipesOptGroup = observer( () => {
   const savedRecipes = RecipeStore.recipes;

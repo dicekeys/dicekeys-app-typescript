@@ -33,7 +33,7 @@
   align-items: baseline;
 }
 
-.sequence_number_text_field {
+.sequence_number_text_field, .length_text_field {
   width: 4rem;
   text-align: right;
   border: none;
@@ -91,6 +91,54 @@
   white-space: pre;
 }
 
+.host_name_span /* , .host_name_text_field */ {
+  text-decoration: underline;
+  text-decoration-thickness: 0.1rem;
+  text-decoration-color: rgb(128, 0, 128, 1);
+}
+
+.host_name_text_field {
+  background-color: rgba(128, 0, 128, 0.1);
+}
+
+.length_span {
+  text-decoration: underline;
+  text-decoration-thickness: 0.1rem;
+  text-decoration-color: rgba(196, 196, 0,1);
+}
+
+.length_text_field {
+  background-color: rgba(196, 196, 0, 0.1);
+}
+
+.sequence_number_span {
+  text-decoration: underline;
+  text-decoration-thickness: 0.1rem;
+  text-decoration-color: rgba(0, 128, 0, 1);
+}
+
+.sequence_number_text_field {
+  background-color: rgba(0, 128, 0, .1);
+}
+
 .host_name_text_field {
   min-width: 15rem;
+}
+
+.derived_value_header {
+  text-align: right;
+  font-weight: 500;  
+}
+
+.derived_value_contents, .derived_value_contents_json_pre {
+  font-family: monospace;
+  max-width: 60vw;
+  overflow-wrap: anywhere;
+}
+
+/* .derived_value_contents {
+} */
+
+.derived_value_contents_json_pre {
+  white-space: pre-wrap;
 }

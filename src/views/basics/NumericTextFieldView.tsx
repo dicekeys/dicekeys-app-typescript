@@ -53,24 +53,17 @@ export const NumericTextField = observer ( (props: NumericTextFieldProps) => {
   )
 });
 
-export const NumberPlusMinusView = observer( (props: {label: string, state: NumericTextFieldState}) => {
-  const {
-    label, state
-  } = props;
-  return (
-    <div className={css.field_row}>
-      <div className={css.vertical_labeled_field}>
-        <div className={css.hstack}>
-          <CharButton
-              style={{visibility: state.numericValue !== undefined ? "visible" : "hidden"}}
-              onClick={ () => state.setValue(state.minusOne) }
-            >-<CharButtonToolTip>- 1 = {state.minusOne ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
-          <NumericTextField className={ css.sequence_number_text_field } state={state} />
-          <CharButton onClick={ () => state.setValue( state.plusOne ) }
-          >+<CharButtonToolTip>+ 1 = { state.plusOne }</CharButtonToolTip></CharButton>
-        </div>
-        <label className={css.label_below}>{label}</label>
-      </div>
-    </div>
-  );
-});
+export const NumberPlusMinusView = observer( ({state, textFieldClassName}: {
+  state: NumericTextFieldState
+  textFieldClassName: string
+}) => (
+  <div className={css.hstack}>
+    <CharButton
+        style={{visibility: state.numericValue !== undefined ? "visible" : "hidden"}}
+        onClick={ () => state.setValue(state.minusOne) }
+      >-<CharButtonToolTip>- 1 = {state.minusOne ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
+    <NumericTextField className={ textFieldClassName } state={state} />
+    <CharButton onClick={ () => state.setValue( state.plusOne ) }
+    >+<CharButtonToolTip>+ 1 = { state.plusOne }</CharButtonToolTip></CharButton>
+  </div>
+));

@@ -12,20 +12,20 @@ export const CharButtonToolTip = (props: React.PropsWithChildren<{}>) => (
 )
 
 export interface CopyButtonProps {
-  value: string;
+  value?: string;
   hideCopyButton?: boolean;
 }
-// const hasCopyButtonProps = (props: Partial<CopyButtonProps>): props is CopyButtonProps =>
-//   props.showCopyIcon === true
 
 export const CopyButton = observer ( (props: CopyButtonProps) => {
   if (props.hideCopyButton) return null;
   const copyToClipboard = action ( () => {
-    navigator.clipboard.writeText(props.value);
+    if (props.value != null) {
+      navigator.clipboard.writeText(props.value);
+    }
     // FUTURE - provide user notification that copy happened.
   });
   return (
-   <CharButton onClick={copyToClipboard}>&#128203;<CharButtonToolTip>Copy to clipboard</CharButtonToolTip></CharButton>
+   <CharButton hidden={props.value == null} onClick={copyToClipboard}>&#128203;<CharButtonToolTip>Copy to clipboard</CharButtonToolTip></CharButton>
   );
 });
 

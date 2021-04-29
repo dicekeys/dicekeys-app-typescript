@@ -89,15 +89,6 @@
   align-items: baseline;
 }
 
-.sequence_number_text_field {
-  width: 4rem;
-  text-align: right;
-  border: none;
-  margin-right: 2px;
-  margin-left: 2px;
-  font-size: 1rem;
-}
-
 .label_below {
   /* border-top-width: 1px;
   border-top-style: solid;

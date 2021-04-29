@@ -3,7 +3,8 @@ import { ComputeApiCommandWorker } from "../workers/call-api-command-worker";
 import { ApiCalls, PasswordJson, SecretJson } from "@dicekeys/dicekeys-api-js";
 import { requestHasPackagedSealedMessageParameter, requestHasRecipeParameter } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import { hexStringToUint8ClampedArray } from "../utilities/convert";
-import { AsyncResultObservable } from "./AsyncResultObservable";
+import { AsyncResultObservable } from "../utilities/AsyncResultObservable";
+
 
 export class CachedApiCalls {
   private cache = new ObservableMap<string, AsyncResultObservable<ApiCalls.Response>>();

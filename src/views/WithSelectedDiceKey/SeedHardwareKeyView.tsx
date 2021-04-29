@@ -3,15 +3,15 @@ import { makeAutoObservable } from "mobx";
 import { observer  } from "mobx-react";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { addSequenceNumberToRecipeJson } from "../../dicekeys/SavedRecipe";
-import { SequenceNumberFormFieldView } from "../Recipes/SequenceNumberView";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { uint8ArrayToHexString } from "../../utilities/convert";
 import { GeneratedTextFieldViewWithSharedToggleState, GeneratedTextFieldView, DiceKeyAsSeedView } from "../basics/GeneratedTextField";
 import { Layout, Text } from "../../css";
-import { AsyncResultObservable } from "../../api-handler/AsyncResultObservable";
+import { AsyncResultObservable } from "../../utilities/AsyncResultObservable";
 import { GlobalSharedToggleState } from "../../state";
-import { NumericTextFieldState } from "~views/basics/NumericTextFieldView";
-
+import { NumberPlusMinusView, NumericTextFieldState } from "~views/basics/NumericTextFieldView";
+import { RecipeFieldView } from "~views/Recipes/RecipeBuilderSettingsView";
+import recipeCSS from "../Recipes/recipe-builder.module.css";
 
 const seedSecurityKeyRecipeTemplate = `{"purpose":"seedSecurityKey"}`;
 
@@ -66,8 +66,13 @@ export const SeedHardwareKeyView = observer( ( props: SeedHardwareKeyViewProps) 
         </p>
 
         <h2>Recipe Options</h2>
-        <SequenceNumberFormFieldView state={props.seedHardwareKeyViewState.sequenceNumberState} />
-
+        <RecipeFieldView
+          label={"Sequence Number"}
+          description={`Change the sequence number to create a different seed.`}  
+        >
+          <NumberPlusMinusView textFieldClassName={recipeCSS.sequence_number_text_field} state={props.seedHardwareKeyViewState.sequenceNumberState} />
+        </RecipeFieldView>
+        
         <h2>Recipe for Generating your Root Hardware Key</h2>
         <GeneratedTextFieldView value={ props.seedHardwareKeyViewState.recipe } />
 
