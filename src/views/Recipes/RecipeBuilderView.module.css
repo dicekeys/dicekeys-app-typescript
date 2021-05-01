@@ -1,0 +1,155 @@
+
+.RecipeFields {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-content: flex-end;
+  align-items: c;
+}
+
+.RecipeField, .RecipeFieldSelected {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 0.1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.RecipeField {
+  background-color: rgba(224, 224, 224, 1);
+}
+
+.RecipeFieldSelected, .RecipeHelpContent {
+  /* border-top-color: gray;
+  border-top-width: 0.075rem;
+  border-top-style: solid; */
+  background-color: rgba(248, 248, 248, 1);
+}
+
+.FieldName {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: baseline;
+  margin-top: 1px;
+  margin-bottom: 4px;
+}
+
+
+/* .FieldName:focus {
+  outline:0;
+} */
+
+.FieldName:active {
+  background: gray
+}
+
+.FieldToolTip {
+  /* display: flex;
+  flex-direction: row; */
+  display: block;
+  position: absolute;
+  visibility: hidden;
+  max-width: 50vw;
+  margin-top: 20px;
+  background: rgba(192,192,192,.75);
+  color: rgba(0, 0, 0, .75);
+  text-align: center;
+  padding: 3px;
+  border-radius: 3px;
+  z-index: 1;
+}
+
+.FieldName:hover .FieldToolTip {
+  transform: translateY(-200%);
+  visibility: visible;
+}
+
+.RecipeBuilderBlock {
+  margin-top: 1rem;
+  background-color: rgba(224,224,224,1);
+}
+
+.RecipeHelpBlock {
+  display: flex;
+  align-self: center;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  width: 75vw;
+  height: 4rem;
+}
+
+.RecipeHelpContent {
+  display: block;
+  width: 95%;
+  /* width: auto; */
+  padding-bottom: .25rem;
+  margin-left: .5rem;
+  margin-right: .5rem;
+}
+
+
+.RawRecipeView {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-content: center;
+  height: 2rem;
+}
+
+.RawRecipeLabel {
+  margin-right: 0.5rem;
+  font-style: italic;
+  user-select: none;
+}
+
+.RawRecipeValue {
+  overflow-wrap: break-word;
+  font-family: monospace;
+}
+
+.RecipeDescriptionView {
+  min-height: "2rem";
+}
+/* 
+.JsonView {
+  white-space: pre;
+} */
+
+.host_name_text_field {
+  background-color: rgba(128, 0, 128, 0.1);
+}
+
+.sequence_number_text_field {
+  background-color: rgba(0, 128, 0, .1);
+}
+
+.length_span {
+  text-decoration: underline;
+  text-decoration-thickness: 0.1rem;
+  text-decoration-color: rgba(196, 196, 0,1);
+}
+
+.length_text_field {
+  background-color: rgba(196, 196, 0, 0.1);
+}
+
+.sequence_number_span {
+  text-decoration: underline;
+  text-decoration-thickness: 0.1rem;
+  text-decoration-color: rgba(0, 128, 0, 1);
+}
+
+
+.host_name_span /* , .host_name_text_field */ {
+  text-decoration: underline;
+  text-decoration-thickness: 0.1rem;
+  text-decoration-color: rgb(128, 0, 128, 1);
+}
+
+.host_name_text_field {
+  min-width: 15rem;
+}

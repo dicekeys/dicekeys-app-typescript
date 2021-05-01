@@ -7,7 +7,6 @@ import { RecipeBuilderState, savedRecipeIdentifier, SelectedRecipeState } from "
 import { RecipeTypeSelectorView } from "./RecipeTypeSelectorView";
 import { DiceKey } from "~dicekeys/DiceKey";
 import { RawRecipeView, RecipesDerivedValuesView } from "./RecipesDerivedValuesView";
-import { SecretFieldsCommonObscureButton } from "../../views/basics";
 import { RecipeStore } from "~state/stores/RecipeStore";
 import { action } from "mobx";
 import { RecipeDescriptionView } from "./RecipeDescriptionView";
@@ -60,16 +59,13 @@ export const DerivationViewWithState = observer( ( {selectedRecipeState, recipeB
 }) => (
   <div>
     <RecipeTypeSelectorView state={selectedRecipeState} />
-    <div style={{minHeight: "2rem"}}>{
-        recipeBuilderState.type ?
-          RecipeDescriptionView({type: recipeBuilderState.type, recipeJson: recipeBuilderState.recipeJson ?? ""}) :
-          "Select recipe to use to derive secret" }</div>
+    <RecipeBuilderView state={recipeBuilderState} />
     <RawRecipeView state={recipeBuilderState} />
-    <RecipeBuilderView state={recipeBuilderState} cachedApiCalls={cachedApiCalls} />
-    <div className={css.recipe_header}>Derived values <SecretFieldsCommonObscureButton/></div>
-    <RecipesDerivedValuesView {...{cachedApiCalls, state: recipeBuilderState}} />
+    <RecipeDescriptionView type={recipeBuilderState.type} recipeJson={recipeBuilderState.recipeJson} /> 
+    {/* <div className={css.recipe_header}>Derived values <SecretFieldsCommonObscureButton/></div> */}
     {/* <div className={css.recipe_header}>Internal Recipe Format</div> */}
     <SavedRecipeView {...{recipeBuilderState, selectedRecipeState}} />
+    <RecipesDerivedValuesView {...{cachedApiCalls, state: recipeBuilderState}} />
   </div>
 ));
 export const DerivationView = observer ( (props: DerivationViewProps) => {

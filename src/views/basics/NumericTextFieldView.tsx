@@ -21,10 +21,10 @@ export class NumericTextFieldState {
     const numericValue = parseInt(this.textValue);
     return numericValue >= this.minValue ? numericValue : undefined;
   }
-  get minusOne(): number {
+  get minusOne(): number | undefined {
     return this.numericValue != null && this.numericValue - 1 > this.minValue ?
       this.numericValue - 1 :
-      (this.defaultValue ?? this.minValue);
+      undefined;
   }
   get plusOne(): number {
     return this.numericValue != null ? this.numericValue + 1 : (this.defaultValue ?? this.minValue);
@@ -60,11 +60,15 @@ export const NumericTextField = observer ( (props: NumericTextFieldProps) => {
   return (
     <input
       className={props.className}
+      type="text"
+      value={props.state.textValue}
       style={typeof props.state.numericValue == "number" ? {} :{color: "red"}}
-      placeholder={"none"} type="text" value={props.state.textValue} onInput={ e => {
+      placeholder={"none"}
+      onInput={ e => {
         props.state.setValue(e.currentTarget.value);
         props.onFocusedOrChanged?.();
       } }
+      onFocus={ () => props.onFocusedOrChanged?.() }
     />
   )
 });
@@ -76,7 +80,7 @@ export const NumberPlusMinusView = observer( ({state, textFieldClassName, onFocu
 }) => (
   <div className={css.hstack}>
     <CharButton
-        style={{visibility: state.numericValue! > state.minValue ? "visible" : "hidden"}}
+        style={{visibility: state.numericValue != null ? "visible" : "hidden"}}
         onClick={ () => { state.setValue(state.minusOne); onFocusedOrChanged?.() } }
       >-<CharButtonToolTip>- 1 = {state.minusOne ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
     <NumericTextField className={ textFieldClassName } state={state} onFocusedOrChanged={onFocusedOrChanged} />

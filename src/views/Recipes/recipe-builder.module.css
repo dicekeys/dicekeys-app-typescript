@@ -51,13 +51,7 @@
   margin-bottom: 4px;
 }
 
-.RecipeField {
-  display: flex;
-  margin-left: 1rem;
-  margin-right: 1rem;
-  flex-direction: column;
-  align-items: center;
-}
+
 
 .form_content {
   margin-right: 0px;
@@ -83,113 +77,33 @@
   align-self: flex-start
 }
 
-.derived_value_contents {
-  font-family: monospace;
-  align-self: center;
-}
 
-.derived_value_contents_json {
-  font-family: monospace;
-  white-space: pre;
-}
 
-.host_name_span /* , .host_name_text_field */ {
-  text-decoration: underline;
-  text-decoration-thickness: 0.1rem;
-  text-decoration-color: rgb(128, 0, 128, 1);
-}
 
-.host_name_text_field {
-  background-color: rgba(128, 0, 128, 0.1);
-}
-
-.length_span {
-  text-decoration: underline;
-  text-decoration-thickness: 0.1rem;
-  text-decoration-color: rgba(196, 196, 0,1);
-}
-
-.length_text_field {
-  background-color: rgba(196, 196, 0, 0.1);
-}
-
-.sequence_number_span {
-  text-decoration: underline;
-  text-decoration-thickness: 0.1rem;
-  text-decoration-color: rgba(0, 128, 0, 1);
-}
-
-.sequence_number_text_field {
-  background-color: rgba(0, 128, 0, .1);
-}
-
-.host_name_text_field {
-  min-width: 15rem;
-}
-
-.derived_value_header {
-  text-align: right;
-  font-weight: 500;  
-}
-
-.derived_value_contents, .derived_value_contents_json_pre {
-  font-family: monospace;
-  max-width: 60vw;
-  overflow-wrap: anywhere;
-}
 
 /* .derived_value_contents {
 } */
 
-.derived_value_contents_json_pre {
+/* .derived_value_contents_json_pre {
   white-space: pre-wrap;
-}
-
-
-.FieldName {
-  text-align: center;
-  margin-top: 1px;
-  margin-bottom: 4px;
-}
-
-/* .FieldName:focus {
-  outline:0;
 } */
 
-.FieldName:active {
-  background: gray
-}
 
-.FieldToolTip {
-  /* display: flex;
-  flex-direction: row; */
-  display: block;
-  position: absolute;
-  visibility: hidden;
-  max-width: 50vw;
-  margin-top: 20px;
-  background: rgba(192,192,192,.75);
-  color: rgba(0, 0, 0, .75);
-  text-align: center;
-  padding: 3px;
-  border-radius: 3px;
-  z-index: 1;
-}
-
-.FieldName:hover .FieldToolTip {
-  transform: translateY(-200%);
-  visibility: visible;
-}
-
-.RecipeFields {
+.RawRecipeView {
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  align-items: flex-end;
+  justify-content: start;
+  align-content: center;
+  height: 2rem;
 }
 
-.RecipeHelpBlock {
-  align-self: center;
-  width: 75vw;
-  height: 4rem;
+.RawRecipeLabel {
+  margin-right: 0.5rem;
+  font-style: italic;
+  user-select: none;
+}
+
+.RawRecipeValue {
+  overflow-wrap: break-word;
+  font-family: monospace;
 }

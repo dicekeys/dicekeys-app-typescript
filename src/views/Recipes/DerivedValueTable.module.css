@@ -1,0 +1,22 @@
+
+.DerivedValueTable {
+  max-width: 70vw;
+}
+
+.DerivedValueTable th {
+  text-align: right;
+  font-weight: 500;  
+}
+
+.DerivedValueTable th {
+  text-align: right;
+  font-weight: 500; 
+  user-select: none; 
+}
+
+.DerivedValueTable td {
+  font-family: monospace;
+  max-width: 60vw;
+  overflow-wrap: anywhere;
+  /* align-self: center; */
+}

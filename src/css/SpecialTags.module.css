@@ -6,7 +6,8 @@
   border: none;
   margin: 0.1rem;
   height: 1.5rem;
-  width: 1.5rem;;
+  width: 1.5rem;
+  user-select: none;
 }
 
 .CharButton:focus {

@@ -2,7 +2,7 @@ import React from "react";
 import { AndClause } from "~views/basics";
 import { SavedRecipe } from "../../dicekeys";
 import { DiceKeysAppSecretRecipe } from "./RecipeBuilderState";
-import css from "./recipe-builder.module.css";
+import css from "./RecipeBuilderView.module.css";
 
 export const describeRecipeType = (type: SavedRecipe["type"]): string => {
   switch (type) {
@@ -21,11 +21,11 @@ const HostNameView = ({host}: {host: string}) => (
   (<><span className={css.host_name_span}>{ host }</span> (excluding subdomains)</>)
 )
 
-export const RecipeDescriptionView = (partialSavedRecipe: Omit<SavedRecipe, "name">) => {
-  const {type, recipeJson} = partialSavedRecipe;
+export const RecipeDescriptionContentView = ({type, recipeJson}: Partial<SavedRecipe>) => {
+  if (!type) return <></>;
   let recipe: DiceKeysAppSecretRecipe = (() => {
     try {
-      return JSON.parse(recipeJson) as DiceKeysAppSecretRecipe;
+      return JSON.parse(recipeJson ?? "{}") as DiceKeysAppSecretRecipe;
     } catch {
       console.log(`Invalid recipe JSON: ${recipeJson}`)
       return {};
@@ -39,15 +39,21 @@ export const RecipeDescriptionView = (partialSavedRecipe: Omit<SavedRecipe, "nam
     withClauses.push((<> sequence number <span className={css.sequence_number_span}>{recipe["#"]}</span></>));
   }  
   return (
-    <>Create a {describeRecipeType(type).toLocaleLowerCase()}
+    <>Creates a {describeRecipeType(type).toLocaleLowerCase()}
       { !recipe.purpose ? null : (
         <> for the purpose of &lsquo;<span className={css.host_name_span}>{ recipe.purpose }</span>&rsquo;</>
-      )}{ withClauses.length == 0 ? null : (
-        <> with <AndClause items={withClauses}/></>
       )}{ !recipe.allow || recipe.allow.length == 0 ? null : (
-        <> that <AndClause items={recipe.allow.map( ({host}) => (<HostNameView {...{host}}/>)
-        )}/>
-        &nbsp;may request
-      </>)}.</>
+        <> for use by <AndClause items={recipe.allow.map( ({host}) => (<HostNameView {...{host}}/>)
+          )}/>
+        </>)
+      }{ withClauses.length == 0 ? null : (
+        <> with <AndClause items={withClauses}/></>
+      )}.</>
   );
 }
+
+export const RecipeDescriptionView = (props: Partial<SavedRecipe>) => (
+  <div className={css.RecipeDescriptionView} >
+    <RecipeDescriptionContentView {...props} />
+  </div>
+)

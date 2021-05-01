@@ -10,7 +10,7 @@ import { Layout, Text } from "../../css";
 import { AsyncResultObservable } from "../../utilities/AsyncResultObservable";
 import { GlobalSharedToggleState } from "../../state";
 import { NumberPlusMinusView, NumericTextFieldState } from "~views/basics/NumericTextFieldView";
-import { RecipeFieldView } from "~views/Recipes/RecipeBuilderSettingsView";
+import { RecipeFieldView } from "~views/Recipes/RecipeBuilderView";
 import recipeCSS from "../Recipes/recipe-builder.module.css";
 
 const seedSecurityKeyRecipeTemplate = `{"purpose":"seedSecurityKey"}`;
