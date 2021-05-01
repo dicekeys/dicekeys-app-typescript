@@ -10,6 +10,14 @@ body {
   margin: 0px; padding: 0px;
 }
 
+app_container {
+  display: flex;
+  width: 100vw;
+  flex-direction: column;
+  align-content: center;
+}
+
+
 option, select {
   font-size: 1rem;
 }

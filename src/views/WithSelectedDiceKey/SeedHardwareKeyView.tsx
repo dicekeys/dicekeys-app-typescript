@@ -18,7 +18,7 @@ const seedSecurityKeyRecipeTemplate = `{"purpose":"seedSecurityKey"}`;
 
 export class SeedHardwareKeyViewState {
   readonly seedString: string;
-  sequenceNumberState = new NumericTextFieldState(2);
+  sequenceNumberState = new NumericTextFieldState({minValue: 2});
   get sequenceNumber() { return this.sequenceNumberState.numericValue }
 
 
@@ -68,7 +68,8 @@ export const SeedHardwareKeyView = observer( ( props: SeedHardwareKeyViewProps) 
         <h2>Recipe Options</h2>
         <RecipeFieldView
           label={"Sequence Number"}
-          description={`Change the sequence number to create a different seed.`}  
+          field="#"
+//          description={`Change the sequence number to create a different seed.`}  
         >
           <NumberPlusMinusView textFieldClassName={recipeCSS.sequence_number_text_field} state={props.seedHardwareKeyViewState.sequenceNumberState} />
         </RecipeFieldView>

@@ -73,33 +73,38 @@ export type DiceKeysAppSecretRecipe = Recipe & {
   purpose?: string;
 }
 
+
+export class RecipeFieldHelpState {
+
+	constructor() {
+		makeAutoObservable(this);
+	}
+}
+
+export type RecipeFieldType = keyof DiceKeysAppSecretRecipe;
+
 export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeState,*/ PurposeFieldState {
   constructor(public selectedRecipeState: SelectedRecipeState) {
     makeAutoObservable(this);
   }
   get template(): PartialSavedRecipe | undefined { return this.selectedRecipeState.template}
-  // private _type?: DerivationRecipeType;
 
-//  setTemplate = action ( (template: RecipeTemplate) => this.template = template );
-  get templateRecipe(): DiceKeysAppSecretRecipe { return Recipe( this.template?.recipeJson ) }
+	get templateRecipe(): DiceKeysAppSecretRecipe { return Recipe( this.template?.recipeJson ) }
 
   get type(): DerivationRecipeType | undefined { return this.template?.type ?? this.templateRecipe.type }
 
-
-//  get templateSequenceNumber(): number | undefined { return this.templateRecipe["#"] }
   get templateLengthInChars(): number | undefined { return this.templateRecipe.lengthInChars }
 
-  // get mayEditType(): boolean { return !this.template.type }
-  //get mayEditSequenceNumber(): boolean { return this.templateSequenceNumber === undefined }
-//  private _sequenceNumber = NumericTextFieldState;
-  sequenceNumberState = new NumericTextFieldState(2);
-//  get sequenceNumber(): number | undefined { return this._sequenceNumber /* ?? this.templateSequenceNumber */ }
+  sequenceNumberState = new NumericTextFieldState({minValue: 2});
   get sequenceNumber(): number | undefined { return this.sequenceNumberState.numericValue } 
-  // setSequenceNumber = action( (newSequenceNumber?: number) => {
-  //   //if (this.mayEditSequenceNumber) {
-  //     this._sequenceNumber = newSequenceNumber;
-  //   //}
-  // });
+
+
+	helpToDisplay?: RecipeFieldType;
+
+	showHelpFor = action ( (recipeField?: RecipeFieldType) => {
+		this.helpToDisplay = recipeField;
+	} )
+	showHelpForFn = (recipeField?: RecipeFieldType) => () => this.showHelpFor(recipeField);
 
   get prescribedPurposeField(): string {
     const {allow, purpose} = this.templateRecipe ?? {} as SavedRecipe;
@@ -108,14 +113,13 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeSt
   }
 
   get mayEditLengthInChars(): boolean { return this.type === "Password" && this.templateLengthInChars === undefined }
-  lengthInCharsState = new NumericTextFieldState(16, 64);
+  lengthInCharsState = new NumericTextFieldState({minValue: 16, defaultValue: 64});
   get lengthInChars(): number | undefined { return this.lengthInCharsState.numericValue }
 
   get mayEditPurpose(): boolean { return this.templateRecipe.allow === undefined && this.templateRecipe?.purpose === undefined }
   private _purpose?: string;
   get purpose(): string | undefined { return this._purpose ?? this.templateRecipe?.purpose; }
   setPurpose = action ( (purpose?: string) => this._purpose = purpose );
-
 
   private _nameField?: string;
   get prescribedName(): string | undefined {

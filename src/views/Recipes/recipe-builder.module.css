@@ -51,10 +51,12 @@
   margin-bottom: 4px;
 }
 
-.form_item {
+.RecipeField {
   display: flex;
-  flex-direction: row;
-  justify-content: start;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  flex-direction: column;
+  align-items: center;
 }
 
 .form_content {
@@ -141,4 +143,53 @@
 
 .derived_value_contents_json_pre {
   white-space: pre-wrap;
+}
+
+
+.FieldName {
+  text-align: center;
+  margin-top: 1px;
+  margin-bottom: 4px;
+}
+
+/* .FieldName:focus {
+  outline:0;
+} */
+
+.FieldName:active {
+  background: gray
+}
+
+.FieldToolTip {
+  /* display: flex;
+  flex-direction: row; */
+  display: block;
+  position: absolute;
+  visibility: hidden;
+  max-width: 50vw;
+  margin-top: 20px;
+  background: rgba(192,192,192,.75);
+  color: rgba(0, 0, 0, .75);
+  text-align: center;
+  padding: 3px;
+  border-radius: 3px;
+  z-index: 1;
+}
+
+.FieldName:hover .FieldToolTip {
+  transform: translateY(-200%);
+  visibility: visible;
+}
+
+.RecipeFields {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.RecipeHelpBlock {
+  align-self: center;
+  width: 75vw;
+  height: 4rem;
 }

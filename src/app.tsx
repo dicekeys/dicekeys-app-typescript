@@ -23,7 +23,7 @@ window.addEventListener('load', () => {
     <ErrorHandler errorState={ApplicationErrorState}>
       <AppTopLevelView />
     </ErrorHandler>
-  ), document.getElementById("app-container"));
+  ), document.getElementById("app_container"));
 });
 
 
