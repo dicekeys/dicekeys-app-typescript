@@ -8,7 +8,7 @@ const obscuringCharacter = String.fromCharCode(0x25A0); // * ■▓▒░
 
 type ObscuringFunction = (unobscuredValue: string) => string;
 
-const defaultObscuringFunction = (password: string): string => {
+export const defaultObscuringFunction = (password: string): string => {
   const words = password.split(' ');
   const obscuredWords = words.map( word => word.split("").map( _ => obscuringCharacter).join("")); // * ▓▒░
   const sortedObscuredWords = obscuredWords.sort();

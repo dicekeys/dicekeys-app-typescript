@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import { action } from "mobx";
 
 export const CharButton = (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
-  <button className={SpecialTags.CharButton} {...props}/>
+  <button className={SpecialTags.CharButton} {...props} tabIndex={-1} />
 );
 
 export const CharButtonToolTip = (props: React.PropsWithChildren<{}>) => (

@@ -22,7 +22,7 @@ const HostNameView = ({host}: {host: string}) => (
 )
 
 export const RecipeDescriptionContentView = ({type, recipeJson}: Partial<SavedRecipe>) => {
-  if (!type) return <></>;
+  if (!type || !recipeJson) return <></>;
   let recipe: DiceKeysAppSecretRecipe = (() => {
     try {
       return JSON.parse(recipeJson ?? "{}") as DiceKeysAppSecretRecipe;

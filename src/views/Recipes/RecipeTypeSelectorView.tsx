@@ -3,8 +3,8 @@ import React from "react";
 import { observer  } from "mobx-react";
 import { DerivationRecipeType } from "../../dicekeys/SavedRecipe";
 import { DerivationRecipeTemplateList } from "../../dicekeys/DerivationRecipeTemplateList";
-import { RecipeStore } from "~state/stores/RecipeStore";
-import { savedRecipeIdentifier, SelectedRecipeState, SelectedRecipeIdentifier, templateRecipeIdentifier } from "./RecipeBuilderState";
+import { RecipeStore } from "../../state/stores/RecipeStore";
+import { savedRecipeIdentifier, SelectedRecipeState, SelectedRecipeIdentifier, templateRecipeIdentifier, RecipeBuilderState } from "./RecipeBuilderState";
 import { describeRecipeType } from "./RecipeDescriptionView";
 
 const SavedRecipesOptGroup = observer( () => {
@@ -19,7 +19,10 @@ const SavedRecipesOptGroup = observer( () => {
   );  
 })
 
-export const RecipeTypeSelectorView = observer( ({state}: {state: SelectedRecipeState}) => {
+export const RecipeTypeSelectorView = observer( ({selectedRecipeState, recipeBuilderState}: {
+  selectedRecipeState: SelectedRecipeState,
+  recipeBuilderState: RecipeBuilderState,
+}) => {
   const recipeTypesToSelectFrom: DerivationRecipeType[] = [
     "Password",
     "Secret",
@@ -28,10 +31,17 @@ export const RecipeTypeSelectorView = observer( ({state}: {state: SelectedRecipe
     "UnsealingKey"
   ]
   return (
-    <div className={css.field_row}>
+    <div className={css.field_row}
+      onMouseEnter={recipeBuilderState.showHelpForFn(undefined)}
+    >
       <div className={css.vertical_labeled_field}>
         <div className={css.hstack}>
-          <select value={ state.recipeIdentifier } onChange={ (e) => state.setSelectedRecipeIdentifier(e.currentTarget.value as SelectedRecipeIdentifier | undefined) }>
+          <select value={ selectedRecipeState.recipeIdentifier }
+          onChange={ (e) => {
+            selectedRecipeState.setSelectedRecipeIdentifier(e.currentTarget.value as SelectedRecipeIdentifier | undefined);
+            recipeBuilderState.showHelpFor(undefined);
+          }
+        }>
             <option key="none"></option>
             <SavedRecipesOptGroup/>
             <optgroup key={"Built-in recipes"} label={"Built-in recipes"}>

@@ -52,7 +52,9 @@ export class NumericTextFieldState {
 
 export interface NumericTextFieldProps {
   state: NumericTextFieldState;
+  size?: number;
   className?: string;
+  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
   onFocusedOrChanged?: () => any;
 };
 
@@ -61,6 +63,7 @@ export const NumericTextField = observer ( (props: NumericTextFieldProps) => {
     <input
       className={props.className}
       type="text"
+      size={props.size ?? 4}
       value={props.state.textValue}
       style={typeof props.state.numericValue == "number" ? {} :{color: "red"}}
       placeholder={"none"}
@@ -68,23 +71,56 @@ export const NumericTextField = observer ( (props: NumericTextFieldProps) => {
         props.state.setValue(e.currentTarget.value);
         props.onFocusedOrChanged?.();
       } }
+      onKeyDown={ props.onKeyDown }
       onFocus={ () => props.onFocusedOrChanged?.() }
     />
   )
 });
 
-export const NumberPlusMinusView = observer( ({state, textFieldClassName, onFocusedOrChanged}: {
+
+export const NumberPlusMinusView = observer( ({state, textFieldClassName, size, onFocusedOrChanged}: {
   state: NumericTextFieldState,
   textFieldClassName: string,
+  size?: number,
   onFocusedOrChanged?: () => any
-}) => (
-  <div className={css.hstack}>
-    <CharButton
-        style={{visibility: state.numericValue != null ? "visible" : "hidden"}}
-        onClick={ () => { state.setValue(state.minusOne); onFocusedOrChanged?.() } }
-      >-<CharButtonToolTip>- 1 = {state.minusOne ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
-    <NumericTextField className={ textFieldClassName } state={state} onFocusedOrChanged={onFocusedOrChanged} />
-    <CharButton onClick={ () => { state.setValue( state.plusOne); onFocusedOrChanged?.() } }
-    >+<CharButtonToolTip>+ 1 = { state.plusOne }</CharButtonToolTip></CharButton>
-  </div>
-));
+}) => {
+  const setValue = action ((newValue: number | undefined) => {
+    state.setValue(newValue);
+    onFocusedOrChanged?.()    
+  });
+  const subtractOne = () => setValue(state.minusOne);
+  const addOne = () => setValue(state.plusOne);
+  return (
+    <div className={css.hstack}>
+      <CharButton hidden={state.numericValue == null} onClick={ subtractOne  }
+        >-<CharButtonToolTip>- 1 = {state.minusOne ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
+      <NumericTextField
+        className={ textFieldClassName }
+        size={size} state={state}
+        onFocusedOrChanged={onFocusedOrChanged}
+        onKeyDown={ e => {
+          switch (e.key) {
+            case "ArrowUp":
+            case "+":
+            case "=":
+            case ".":
+            case ">":
+              addOne();
+              e.preventDefault();
+              break;
+            case "ArrowDown":
+            case "-":
+            case "_":
+            case ",":
+            case "<":
+              subtractOne();
+              e.preventDefault();
+              break;
+            default:
+          }
+        } }
+      />
+      <CharButton onClick={ addOne }
+      >+<CharButtonToolTip>+ 1 = { state.plusOne }</CharButtonToolTip></CharButton>
+    </div>
+)});

@@ -1,10 +1,76 @@
+.DerivationView {
+  max-width: 80vw;
+}
+
+.DeleteButton, .SaveButton {
+  border-radius: 0.25rem;
+}
+
+.SaveButton {
+  margin-left: .25rem;
+  margin-right: 0.25rem;
+}
+
+.RecipeName {
+  min-width: 12rem;
+  /* font-size: 1.4rem; */
+}
+
+.RecipeBuilderBlock {
+  /* margin-top: 1rem; */
+  padding: 1rem;
+  background-color: rgba(248,248,248,1);
+  max-width: 85w;
+  border-radius: 0.5rem;
+}
+
+.RecipeAndExplanationBlock {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 4rem;
+}
+
+.RecipeFormFrame {
+  background-color: rgba(224, 224, 224, 1);
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.RecipeHelpBlock {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  width: 75vw;
+}
+
+.RecipeHelpContent {
+  display: flex;
+  align-self: stretch;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  align-content: flex-start;
+  height: 3rem;
+  /* width: auto; */
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0.5rem;
+}
 
 .RecipeFields {
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-content: flex-end;
-  align-items: c;
+  align-items: center;
 }
 
 .RecipeField, .RecipeFieldSelected {
@@ -12,20 +78,22 @@
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
-  padding-top: 0.1rem;
+  padding-top: 0.5rem;
   padding-left: 1rem;
   padding-right: 1rem;
 }
 
-.RecipeField {
+/* .RecipeField {
   background-color: rgba(224, 224, 224, 1);
-}
+} */
 
 .RecipeFieldSelected, .RecipeHelpContent {
   /* border-top-color: gray;
   border-top-width: 0.075rem;
   border-top-style: solid; */
   background-color: rgba(248, 248, 248, 1);
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
 }
 
 .FieldName {
@@ -67,37 +135,11 @@
   visibility: visible;
 }
 
-.RecipeBuilderBlock {
-  margin-top: 1rem;
-  background-color: rgba(224,224,224,1);
-}
-
-.RecipeHelpBlock {
-  display: flex;
-  align-self: center;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-  width: 75vw;
-  height: 4rem;
-}
-
-.RecipeHelpContent {
-  display: block;
-  width: 95%;
-  /* width: auto; */
-  padding-bottom: .25rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
-}
-
-
 .RawRecipeView {
   display: flex;
   flex-direction: row;
   justify-content: start;
-  align-content: center;
-  height: 2rem;
+  /* align-items: flex-end; */
 }
 
 .RawRecipeLabel {
@@ -112,18 +154,27 @@
 }
 
 .RecipeDescriptionView {
-  min-height: "2rem";
+  display: block;
 }
-/* 
-.JsonView {
-  white-space: pre;
-} */
 
-.host_name_text_field {
+
+.PurposeOrHostNameTextField, .SequenceNumberTextField, .LengthTextField {
+  font-size: 1.1rem;
+}
+
+.SequenceNumberTextField, .LengthTextField {
+  text-align: right;
+}
+
+.LengthTextField {
+  background-color: rgba(196, 196, 0, 0.1);
+}
+
+.PurposeOrHostNameTextField {
   background-color: rgba(128, 0, 128, 0.1);
 }
 
-.sequence_number_text_field {
+.SequenceNumberTextField {
   background-color: rgba(0, 128, 0, .1);
 }
 
@@ -133,23 +184,46 @@
   text-decoration-color: rgba(196, 196, 0,1);
 }
 
-.length_text_field {
-  background-color: rgba(196, 196, 0, 0.1);
-}
-
 .sequence_number_span {
   text-decoration: underline;
   text-decoration-thickness: 0.1rem;
   text-decoration-color: rgba(0, 128, 0, 1);
 }
-
-
-.host_name_span /* , .host_name_text_field */ {
+.host_name_span /* , .PurposeOrHostNameTextField */ {
   text-decoration: underline;
   text-decoration-thickness: 0.1rem;
   text-decoration-color: rgb(128, 0, 128, 1);
 }
 
-.host_name_text_field {
+.PurposeOrHostNameTextField {
   min-width: 15rem;
+}
+
+.DerivedValueBlock {
+  padding: 1rem;
+  min-height: 10vh;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-content: flex-start;
+  font-family: monospace;
+  overflow-wrap: anywhere;
+}
+
+.DerivedValueHeader {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.DerivedValue {
+  display: block;
+  font-family: monospace;
+  width: 100%;
+  overflow-wrap: anywhere;
+  /* overflow-y: scroll; */
+  white-space: pre-wrap;
+  border: 1px solid gray;
+  /* border-bottom: 1px solid gray;
+  border-left: 1px solid gray;
+  border-right: 1px solid gray; */
 }
