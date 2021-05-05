@@ -1,4 +1,5 @@
 import css from "./recipe-builder.module.css";
+import xcss from "./RecipeBuilderView.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { DerivationRecipeType } from "../../dicekeys/SavedRecipe";
@@ -36,13 +37,17 @@ export const RecipeTypeSelectorView = observer( ({selectedRecipeState, recipeBui
     >
       <div className={css.vertical_labeled_field}>
         <div className={css.hstack}>
-          <select value={ selectedRecipeState.recipeIdentifier }
-          onChange={ (e) => {
-            selectedRecipeState.setSelectedRecipeIdentifier(e.currentTarget.value as SelectedRecipeIdentifier | undefined);
-            recipeBuilderState.showHelpFor(undefined);
-          }
-        }>
-            <option key="none"></option>
+          <select
+            className={xcss.SelectRecipe}
+            value={ selectedRecipeState.recipeIdentifier ?? "" }
+            placeholder={"Placeholder"}
+            onChange={ (e) => {
+              selectedRecipeState.setSelectedRecipeIdentifier(e.currentTarget.value as SelectedRecipeIdentifier | undefined);
+              recipeBuilderState.showHelpFor(undefined);
+            }}
+          >
+            <option key="none" disabled={true} hidden={true} value="">Select Recipe</option>
+            {/* <option key="spacer" disabled={true} value="-"></option> */}
             <SavedRecipesOptGroup/>
             <optgroup key={"Built-in recipes"} label={"Built-in recipes"}>
               { DerivationRecipeTemplateList.map( template => (

@@ -81,7 +81,7 @@ export const RecipeFieldHelpContent = observer ( ( {state}: {state: RecipeBuilde
     case "#": return (
       <>If you need more than one {secretType} for this purpose, add a sequence number.</>);
     case "purpose": return (<>
-        The purpose of the secret.
+        The purpose of the {secretType}.
         If specified as a URL or comma-separate list of host names, the website(s) or app(s)
         associated with the URL will be able to request the generated {secretType}.
       </>);

@@ -14,6 +14,7 @@ export const RecipesDerivedValuesView = observer( ( props: {state: RecipeBuilder
         <>
           <div className={css.DerivedValueHeader}>
             <select
+              className={css.SelectDerivedField}
               value={props.state.outputFieldForType[type]}
               onChange={ (e) => props.state.setOutputField(e.currentTarget.value as OutputFormat<typeof type>) }
             >

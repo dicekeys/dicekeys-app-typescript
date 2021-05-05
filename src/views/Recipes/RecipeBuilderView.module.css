@@ -21,7 +21,9 @@
   padding: 1rem;
   background-color: rgba(248,248,248,1);
   max-width: 85w;
-  border-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
 }
 
 .RecipeAndExplanationBlock {
@@ -201,7 +203,7 @@
 
 .DerivedValueBlock {
   padding: 1rem;
-  min-height: 10vh;
+  min-height: 15vh;
   flex-direction: column;
   justify-content: flex-start;
   align-content: flex-start;
@@ -223,7 +225,19 @@
   /* overflow-y: scroll; */
   white-space: pre-wrap;
   border: 1px solid gray;
+  padding: 0.25rem;
+
   /* border-bottom: 1px solid gray;
   border-left: 1px solid gray;
   border-right: 1px solid gray; */
+}
+
+.SelectDerivedField, .SelectRecipe {
+  border: none;
+  background-color: rgba(248, 248, 248, 1);
+  padding-top: 0.05rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;;
 }
