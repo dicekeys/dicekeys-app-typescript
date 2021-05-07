@@ -1,11 +1,21 @@
-import css from "./RecipeBuilderView.module.css";
+import css from "./RecipeBuilderView.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState, RecipeFieldType } from "./RecipeBuilderState";
 import { NumberPlusMinusView } from "~views/basics/NumericTextFieldView";
-import { describeRecipeType, RecipeDescriptionView } from "./RecipeDescriptionView";
+import { RecipeDescriptionView } from "./RecipeDescriptionView";
 import { SaveRecipeView } from "./SaveRecipeView";
 import { LabeledEnhancedRecipeView } from "./EnhancedRecipeView";
+import { describeRecipeType } from "./DescribeRecipeType";
+import { RecipeTypeSelectorView } from "./RecipeTypeSelectorView";
+
+// TO DO
+
+// Switch between manual fields and raw recipe
+// Load templates directly into fields
+// compare resulting recipeJson to see if still matches template/saved version
+// Add/remove field?
+
 
 export const RecipeFieldDescription = (props: React.PropsWithChildren<{}>) => (
   <div className={css.FieldToolTip}>{props.children}</div>
@@ -52,14 +62,34 @@ export const PurposeFieldView = observer( ({state}: {
   );
 });
 
-export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
-  const field = "#";
-  return (
-    <RecipeFieldView {...{state, field}} label={"Seq. #"} >
-      <NumberPlusMinusView textFieldClassName={css.SequenceNumberTextField} state={state.sequenceNumberState}
-        onFocusedOrChanged={state.showHelpForFn(field)} />
-    </RecipeFieldView>
-  )});
+// export const TypeFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
+//   const field = "#";
+//   return (
+//     <RecipeFieldView {...{state, field}} label={"Seq. #"} >
+//       <select
+//         value={state.type}
+//         onClick={ state.showHelpForFn(field) }
+//         onChange={ (e) => {
+//           const type = e.currentTarget.value as DerivationRecipeType | undefined;
+//           state.setType(type);
+//           state.showHelpFor(field);
+//       }}>
+//         <option key={"none"} value="" ></option>
+//         { recipeTypes.map( ({key, name}) => (
+//           <option key={key} value={key} >{name}</option>
+//         )) }
+//       </select>
+//     </RecipeFieldView>
+//   )});
+
+  export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
+    const field = "#";
+    return (
+      <RecipeFieldView {...{state, field}} label={"Seq. #"} >
+        <NumberPlusMinusView textFieldClassName={css.SequenceNumberTextField} state={state.sequenceNumberState}
+          onFocusedOrChanged={state.showHelpForFn(field)} />
+      </RecipeFieldView>
+    )});
 
 
 export const LengthInCharsFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
@@ -76,7 +106,7 @@ export const LengthInCharsFormFieldView = observer( ({state}: {state: RecipeBuil
 export const RecipeFieldHelpContent = observer ( ( {state}: {state: RecipeBuilderState}) => {
   const secretType = state.type === "Password" ? "password" :
     state.type === "Secret" ? "secret" :
-    "key"
+    "password, secret, or key"
   switch(state.helpToDisplay) {
     case "#": return (
       <>If you need more than one {secretType} for this purpose, add a sequence number.</>);
@@ -91,7 +121,7 @@ export const RecipeFieldHelpContent = observer ( ( {state}: {state: RecipeBuilde
     default: return state.type == null ? (<>
       Choose a recipe or template above.
     </>) : (<>
-      The fields below change the recipe used to derive a {describeRecipeType(state.type)}.
+      The fields below change the recipe used to derive the {describeRecipeType(state.type).toLocaleLowerCase()}.
     </>);
   }
 });
@@ -101,6 +131,7 @@ export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState
   return (
     <div className={css.RecipeBuilderBlock}>
       <div className={css.RecipeFormFrame}>
+        <RecipeTypeSelectorView {...{state}} />
         <div className={css.RecipeHelpBlock}>
           <div className={css.RecipeHelpContent}>
             <RecipeFieldHelpContent {...{state}} />

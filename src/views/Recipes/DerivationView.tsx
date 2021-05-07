@@ -1,10 +1,10 @@
-import css from "./RecipeBuilderView.module.css";
+import css from "./RecipeBuilderView.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderView } from ".";
 import { CachedApiCalls } from "../../api-handler/CachedApiCalls";
 import { RecipeBuilderState, SelectedRecipeState } from "./RecipeBuilderState";
-import { RecipeTypeSelectorView } from "./RecipeTypeSelectorView";
+import { RecipeTemplateSelectorView } from "./RecipeTemplateSelectorView";
 import { DiceKey } from "~dicekeys/DiceKey";
 import { RecipesDerivedValuesView } from "./RecipesDerivedValuesView";
 
@@ -17,7 +17,7 @@ export const DerivationViewWithState = observer( ( {selectedRecipeState, recipeB
   recipeBuilderState: RecipeBuilderState
 }) => (
   <div className={css.DerivationView}>
-    <RecipeTypeSelectorView selectedRecipeState={selectedRecipeState} recipeBuilderState={recipeBuilderState} />
+    <RecipeTemplateSelectorView {...{selectedRecipeState, recipeBuilderState}} />
     <RecipeBuilderView state={recipeBuilderState} />
     <RecipesDerivedValuesView {...{state: recipeBuilderState}} />
   </div>

@@ -1,19 +1,10 @@
 import React from "react";
 import { AndClause } from "~views/basics";
 import { SavedRecipe } from "../../dicekeys";
+import { describeRecipeType } from "./DescribeRecipeType";
 import { DiceKeysAppSecretRecipe } from "./RecipeBuilderState";
-import css from "./RecipeBuilderView.module.css";
+import css from "./RecipeBuilderView.css";
 
-export const describeRecipeType = (type: SavedRecipe["type"]): string => {
-  switch (type) {
-    case "Secret": return "Seed or other secret";
-    case "SigningKey": return "Cryptographic key (public/private signing/authentication)";
-    case "SymmetricKey": return "Cryptographic key (symmetric)";
-    case "UnsealingKey": return "Cryptographic key (public/private encryption)";
-    case "Password": return "Password";
-    default: return type;
-  }
-}
 
 const HostNameView = ({host}: {host: string}) => (
   host.startsWith("*.") ?

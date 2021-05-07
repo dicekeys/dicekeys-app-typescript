@@ -169,7 +169,7 @@
 }
 
 .LengthTextField {
-  background-color: rgba(196, 196, 0, 0.1);
+  background-color: rgba(0, 64, 196, 0.1);
 }
 
 .PurposeOrHostNameTextField {
@@ -177,24 +177,24 @@
 }
 
 .SequenceNumberTextField {
-  background-color: rgba(0, 128, 0, .1);
+  background-color: rgba(16, 148, 16, .1);
 }
 
 .length_span {
   text-decoration: underline;
-  text-decoration-thickness: 0.1rem;
-  text-decoration-color: rgba(196, 196, 0,1);
+  text-decoration-thickness: 0.15rem;
+  text-decoration-color: rgba(0, 64, 196, 0.5);
 }
 
 .sequence_number_span {
   text-decoration: underline;
-  text-decoration-thickness: 0.1rem;
-  text-decoration-color: rgba(0, 128, 0, 1);
+  text-decoration-thickness: 0.15rem;
+  text-decoration-color: rgba(16, 148, 16, 0.5);
 }
 .host_name_span /* , .PurposeOrHostNameTextField */ {
   text-decoration: underline;
-  text-decoration-thickness: 0.1rem;
-  text-decoration-color: rgb(128, 0, 128, 1);
+  text-decoration-thickness: 0.15rem;
+  text-decoration-color: rgb(128, 0, 128, 0.5);
 }
 
 .PurposeOrHostNameTextField {
@@ -233,6 +233,7 @@
 }
 
 .SelectDerivedField, .SelectRecipe {
+  align-self: flex-start;
   border: none;
   background-color: rgba(248, 248, 248, 1);
   padding-top: 0.05rem;

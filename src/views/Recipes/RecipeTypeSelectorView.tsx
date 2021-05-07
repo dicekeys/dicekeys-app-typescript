@@ -1,69 +1,31 @@
-import css from "./recipe-builder.module.css";
-import xcss from "./RecipeBuilderView.module.css";
+import css from "./RecipeBuilderView.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { DerivationRecipeType } from "../../dicekeys/SavedRecipe";
-import { DerivationRecipeTemplateList } from "../../dicekeys/DerivationRecipeTemplateList";
-import { RecipeStore } from "../../state/stores/RecipeStore";
-import { savedRecipeIdentifier, SelectedRecipeState, SelectedRecipeIdentifier, templateRecipeIdentifier, RecipeBuilderState } from "./RecipeBuilderState";
-import { describeRecipeType } from "./RecipeDescriptionView";
+import { RecipeBuilderState } from "./RecipeBuilderState";
+import { DerivableObjectNameList, describeRecipeType } from "./DescribeRecipeType";
 
-const SavedRecipesOptGroup = observer( () => {
-  const savedRecipes = RecipeStore.recipes;
-  if (savedRecipes.length ==0) return null;
-  return (
-    <optgroup key={"Saved Recipes"} label={"Saved Recipes"}>
-      { savedRecipes.map( savedRecipe => (
-        <option key={ savedRecipe.name } value={ savedRecipeIdentifier(savedRecipe.name)} >{ savedRecipe.name }</option>
-      ))}
-    </optgroup>
-  );  
-})
 
-export const RecipeTypeSelectorView = observer( ({selectedRecipeState, recipeBuilderState}: {
-  selectedRecipeState: SelectedRecipeState,
-  recipeBuilderState: RecipeBuilderState,
+export const RecipeTypeSelectorView = observer( ({state}: {
+  state: RecipeBuilderState,
 }) => {
-  const recipeTypesToSelectFrom: DerivationRecipeType[] = [
-    "Password",
-    "Secret",
-    "SigningKey",
-    "SymmetricKey",
-    "UnsealingKey"
-  ]
   return (
-    <div className={css.field_row}
-      onMouseEnter={recipeBuilderState.showHelpForFn(undefined)}
-    >
-      <div className={css.vertical_labeled_field}>
-        <div className={css.hstack}>
-          <select
-            className={xcss.SelectRecipe}
-            value={ selectedRecipeState.recipeIdentifier ?? "" }
-            placeholder={"Placeholder"}
-            onChange={ (e) => {
-              selectedRecipeState.setSelectedRecipeIdentifier(e.currentTarget.value as SelectedRecipeIdentifier | undefined);
-              recipeBuilderState.showHelpFor(undefined);
-            }}
-          >
-            <option key="none" disabled={true} hidden={true} value="">Select Recipe</option>
-            {/* <option key="spacer" disabled={true} value="-"></option> */}
-            <SavedRecipesOptGroup/>
-            <optgroup key={"Built-in recipes"} label={"Built-in recipes"}>
-              { DerivationRecipeTemplateList.map( template => (
-                <option key={template.name} value={templateRecipeIdentifier(template.name)} >{ template.name }</option>
-              ))}
-            </optgroup>
-            <optgroup key={"Custom recipes"} label={"Custom"}>
-              { recipeTypesToSelectFrom.map( (recipeType) => (
-                <option key={ recipeType } value={ recipeType } >{ describeRecipeType(recipeType) }</option>
-              ))}              
-            </optgroup>
-          </select>  
-          {/* <button onClick={ () => sequenceNumberState.setSequenceNumber( Math.max(1, (sequenceNumberState.sequenceNumber ?? 1) - 1 )) } >-</button> */}
-        </div>
-        {/* <label className={css.label_below}>Secret type</label> */}
-      </div>
+    <div style={{display: "flex", alignSelf: "flex-start", flexDirection: "row", justifyContent: "flex-start"}}>
+      Derive a&nbsp;
+      <select
+        className={css.SelectRecipe}
+        value={ state.type ?? "" }
+        onMouseEnter={state.showHelpForFn(undefined)}
+        onChange={ (e) => {
+          state.setType(e.currentTarget.value as DerivationRecipeType | undefined);
+          state.showHelpFor(undefined);
+        }}
+      >
+        <option key="none" disabled={true} hidden={true} value="">...</option>
+        { DerivableObjectNameList.map( (recipeType) => (
+          <option key={ recipeType } value={ recipeType } >{ describeRecipeType(recipeType) }</option>
+        ))}              
+      </select>
     </div>
   );
 });

@@ -130,7 +130,9 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeSt
 
 	get templateRecipe(): DiceKeysAppSecretRecipe { return Recipe( this.template?.recipeJson ) }
 
-  get type(): DerivationRecipeType | undefined { return this.template?.type ?? this.templateRecipe.type }
+  _type: DerivationRecipeType | undefined;
+  get type(): DerivationRecipeType | undefined { return this._type ?? this.template?.type ?? this.templateRecipe.type }
+  setType = action( (type: DerivationRecipeType | undefined) => { this._type = type; } )
 
   //////////////////////////////////////////
   // helpToDisplay while building a recipe
@@ -236,7 +238,7 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeSt
     } catch {}
     const {allow} = this.templateRecipe;
     if (allow && allow.length! > 0) {
-      return allow.map(({host}) => host)
+      return allow.map(({host}) => host).sort()
     }
     return undefined;
   }
