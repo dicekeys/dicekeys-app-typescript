@@ -27,11 +27,6 @@ export const RecipesDerivedValuesView = observer( ( props: {state: RecipeBuilder
             <span style={{width: "1rem"}}></span>
             <SecretFieldsCommonObscureButton />
             </div>
-          {/* <textarea
-            contentEditable={false}
-            className={css.DerivedValue}
-            value={GlobalSharedToggleState.ObscureSecretFields.value ? defaultObscuringFunction(derivedValue ?? "") : derivedValue}
-          /> */}
           <div className={css.DerivedValue}>
             <OptionallyObscuredTextView value={derivedValue} obscureValue={ GlobalSharedToggleState.ObscureSecretFields.value } />
           </div>

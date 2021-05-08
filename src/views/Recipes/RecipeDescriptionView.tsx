@@ -1,8 +1,7 @@
 import React from "react";
 import { AndClause } from "~views/basics";
-import { SavedRecipe } from "../../dicekeys";
+import { DiceKeysAppSecretRecipe, SavedRecipe } from "../../dicekeys";
 import { describeRecipeType } from "./DescribeRecipeType";
-import { DiceKeysAppSecretRecipe } from "./RecipeBuilderState";
 import css from "./RecipeBuilderView.css";
 
 

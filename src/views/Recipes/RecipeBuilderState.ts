@@ -1,11 +1,11 @@
-import { Recipe } from "@dicekeys/dicekeys-api-js";
 import { action, makeAutoObservable } from "mobx";
-import { DerivationRecipeTemplateList } from "../../dicekeys/DerivationRecipeTemplateList";
 import { RecipeStore } from "~state/stores/RecipeStore";
-import { addHostsToRecipeJson, addLengthInCharsToRecipeJson, addPurposeToRecipeJson,
-  addSequenceNumberToRecipeJson, SavedRecipe, DerivationRecipeType
+import {
+  BuiltInRecipes,
+  SavedRecipe, DerivationRecipeType, DiceKeysAppSecretRecipe, RecipeFieldType, getRecipeJson,
+  purposeToListOfHosts,
+  purposeToBuiltInRecipe
 } from "../../dicekeys/SavedRecipe";
-import { getRegisteredDomain, isValidDomain } from "~domains/get-registered-domain";
 import { NumericTextFieldState } from "~views/basics/NumericTextFieldView";
 import { CachedApiCalls } from "~api-handler/CachedApiCalls";
 
@@ -14,12 +14,11 @@ const spaceJson = (spaces: number = 2) => (json: string | undefined): string | u
 }
 const doubleSpaceJson = spaceJson(2);
 
-
 export type PartialSavedRecipe = Pick<SavedRecipe, "type"> & Partial<SavedRecipe>;
 
 export interface PurposeFieldState {
-  purpose?: string;
-  setPurpose: (purpose?: string) => void
+  purposeField?: string;
+  setPurposeField: (purpose?: string) => void
 }
 
 
@@ -80,8 +79,8 @@ export class SelectedRecipeState {
   get templateRecipe(): SavedRecipe | undefined {
     if (!isTemplateRecipeIdentifier(this.recipeIdentifier)) return;
     const name = this.recipeIdentifier.substr(templatePrefix.length);
-    return DerivationRecipeTemplateList.filter( t => t.name === name )[0];
-}
+    return BuiltInRecipes.filter( t => t.name === name )[0];
+  }
 
   get template(): PartialSavedRecipe | undefined {
     const {recipeIdentifier} = this;
@@ -101,13 +100,7 @@ export class SelectedRecipeState {
   }
 }
 
-export type DiceKeysAppSecretRecipe = Recipe & {
-  // FIXME -- definition of recipe out of date in API, fix that and remove this hack
-  lengthInChars?: number;
-  // Sequence numbers
-  '#'?: number;
-  purpose?: string;
-}
+
 
 
 export class RecipeFieldHelpState {
@@ -117,7 +110,6 @@ export class RecipeFieldHelpState {
 	}
 }
 
-export type RecipeFieldType = keyof DiceKeysAppSecretRecipe;
 
 /**
  * State for building and displaying recipes
@@ -126,12 +118,12 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeSt
   constructor(public selectedRecipeState: SelectedRecipeState, protected readonly cachedApiCalls: CachedApiCalls) {
     makeAutoObservable(this);
   }
-  get template(): PartialSavedRecipe | undefined { return this.selectedRecipeState.template}
+  // get template(): PartialSavedRecipe | undefined { return this.selectedRecipeState.template}
 
-	get templateRecipe(): DiceKeysAppSecretRecipe { return Recipe( this.template?.recipeJson ) }
+	// get templateRecipe(): DiceKeysAppSecretRecipe { return Recipe( this.template?.recipeJson ) }
 
   _type: DerivationRecipeType | undefined;
-  get type(): DerivationRecipeType | undefined { return this._type ?? this.template?.type ?? this.templateRecipe.type }
+  get type(): DerivationRecipeType | undefined { return this._type } // ?? this.template?.type ?? this.templateRecipe.type
   setType = action( (type: DerivationRecipeType | undefined) => { this._type = type; } )
 
   //////////////////////////////////////////
@@ -166,20 +158,28 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeSt
   sequenceNumberState = new NumericTextFieldState({minValue: 2});
   get sequenceNumber(): number | undefined { return this.sequenceNumberState.numericValue } 
 
-  //////////////////////////////////////////
-  // LengthInChars field ("lengthInChars")
-  //////////////////////////////////////////
-  get templateLengthInChars(): number | undefined { return this.templateRecipe.lengthInChars }
-  get mayEditLengthInChars(): boolean { return this.type === "Password" && this.templateLengthInChars === undefined }
+  /////////////////////////////////////////////////////////////
+  // LengthInChars field ("lengthInChars") for Passwords only
+  /////////////////////////////////////////////////////////////
+//  get templateLengthInChars(): number | undefined { return this.type !== "Password" ? undefined : this.templateRecipe.lengthInChars }
+  get mayEditLengthInChars(): boolean { return this.type === "Password" } // && this.templateLengthInChars === undefined
   lengthInCharsState = new NumericTextFieldState({minValue: 16, defaultValue: 64});
   get lengthInChars(): number | undefined { return this.lengthInCharsState.numericValue }
+
+  ///////////////////////////////////////////////////////////
+  // LengthInBytes field ("lengthInBytes") for Secrets only
+  ///////////////////////////////////////////////////////////
+//  get templateLengthInBytes(): number | undefined { return this.type !== "Secret" ? undefined : this.templateRecipe.lengthInBytes }
+  get mayEditLengthInBytes(): boolean { return this.type === "Secret" } //  && this.templateLengthInBytes === undefined
+  lengthInBytesState = new NumericTextFieldState({minValue: 4, incrementBy: 16, defaultValue: 32});
+  get lengthInBytes(): number | undefined { return this.lengthInBytesState.numericValue }
 
   /////////////////////////////////
   // Name field ("name")
   /////////////////////////////////
   private _nameField?: string;
   get prescribedName(): string | undefined {
-    const baseName = this.template?.name ?? this.purpose ?? this.hosts?.join(", ");
+    const baseName = purposeToBuiltInRecipe(this.purposeField)?.name ?? this.purpose ?? this.hosts?.join(", ");
     if (typeof(baseName) === "undefined") return;
     const sequenceNumber = this.sequenceNumber! > 1  ? ` (${this.sequenceNumber})` : "";
     return `${baseName}${sequenceNumber}`
@@ -199,49 +199,24 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeSt
   //////////////////////////////////////////
   // Purpose field ("purpose" or "allow")
   //////////////////////////////////////////
-  get prescribedPurposeField(): string {
-    const {allow, purpose} = this.templateRecipe ?? {} as SavedRecipe;
-    if (allow) return allow.map( ({host}) => host ).join(", ");
-    return purpose ?? "";
-  }
+  // get prescribedPurposeField(): string {
+  //   const {allow, purpose} = this.templateRecipe ?? {} as SavedRecipe;
+  //   if (allow) return allow.map( ({host}) => host ).join(", ");
+  //   return purpose ?? "";
+  // }
 
-  get mayEditPurpose(): boolean { return this.templateRecipe.allow === undefined && this.templateRecipe?.purpose === undefined }
-  private _purpose?: string;
+  get mayEditPurpose(): boolean { return true }; //return this.templateRecipe.allow === undefined && this.templateRecipe?.purpose === undefined }
+  purposeField?: string;
   /** The purpose of the recipe from the purpose form field if not a list of 1 or more hosts */
-  get purpose(): string | undefined { return this._purpose ?? this.templateRecipe?.purpose; }
-  setPurpose = action ( (purpose?: string) => this._purpose = purpose );
+  get purpose(): string | undefined { return this.hosts ? undefined : this.purposeField; } // ?? this.templateRecipe?.purpose;
+  setPurposeField = action ( (newPurposeFieldValue?: string) => this.purposeField = newPurposeFieldValue );
 
 
   /**
    * The hosts for the "allow" restrictions of a recipe if the purpose field contains
    * a URL or list of hosts
    */
-  get hosts(): string[] | undefined {
-    try {
-      // If the host field contains a valid URL, return the host name
-      return [new URL(this.purpose ?? "").hostname];
-    } catch {}
-    // Return a list of valid domains
-    try {
-      const hosts = (this.purpose ?? "").split(",")
-        .map( i => {
-          const potentialHostName = i.trim();
-          // Get JavaScript's URL parser to validate the hostname for us
-          if (isValidDomain(potentialHostName)) {
-            return getRegisteredDomain(potentialHostName);
-          } else throw "not a valid host name"
-        })
-        .filter( i =>  i ) as string[];
-        if (hosts.length > 0) {
-          return hosts;
-        }
-    } catch {}
-    const {allow} = this.templateRecipe;
-    if (allow && allow.length! > 0) {
-      return allow.map(({host}) => host).sort()
-    }
-    return undefined;
-  }
+  get hosts(): string[] | undefined { return purposeToListOfHosts(this.purposeField); }
   get purposeContainsHosts(): boolean { return (this.hosts?.length ?? 0) > 0 }
 
   ///////////////////////////////////////////////
@@ -251,30 +226,25 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeSt
    * The JSON of the recipe after all user adjustment have been applied
    */
   get recipeJson(): string | undefined {
-    // The recipe starts with the JSON template.
-    let recipeJson: string | undefined = this.template?.recipeJson;
-    // IMPORTANT -- changes must be applied in the correct order for JSON
-    // fields to be ordered correctly and to be consistent between platforms.
-
-    // Apply changes in purpose/hosts
-    if (this.mayEditPurpose) {
-      const hosts = this.hosts;
-      if (hosts) {
-        recipeJson = addHostsToRecipeJson(recipeJson, hosts);
-      } else if ((this.purpose?.length ?? 0) > 0) {
-        recipeJson = addPurposeToRecipeJson(recipeJson, this.purpose);
-      }
-    }
-    // Apply changes in lengthInChars (passwords only)
-    if (this.mayEditLengthInChars && this.lengthInChars! > 0) {
-      recipeJson = addLengthInCharsToRecipeJson(recipeJson, this.lengthInChars);
-    }
-    // Apply changes in sequence number
-    if ((this.sequenceNumber ?? 1) > 1) {
-      recipeJson = addSequenceNumberToRecipeJson(recipeJson, this.sequenceNumber);
-    }
-    return recipeJson;
+    return getRecipeJson(this); // , this.template?.recipeJson);
   }
+
+  loadSavedRecipe = action ((savedRecipe: SavedRecipe) => {
+    const template = JSON.parse(savedRecipe.recipeJson) as DiceKeysAppSecretRecipe;
+    const {purpose, allow} = template;
+    this._type = template.type ?? savedRecipe.type;
+    // this._nameField = savedRecipe.name;
+    this.setPurposeField(
+      purpose != null ? purpose :
+      allow != null ? allow.map( ({host}) =>
+          host.startsWith("*.") ? host.substr(2) : host
+        ).sort().join(", ") :
+      this.purposeField
+    );
+      this.sequenceNumberState.setValue(template["#"]);
+      this.lengthInBytesState.setValue(template.lengthInBytes);
+    this.lengthInCharsState.setValue(template.lengthInChars);
+  });
 
 
   ////////////////

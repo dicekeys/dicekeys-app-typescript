@@ -1,7 +1,8 @@
 import css from "./RecipeBuilderView.css";
 import React from "react";
 import { observer  } from "mobx-react";
-import { DiceKeysAppSecretRecipe, RecipeBuilderState } from "./RecipeBuilderState";
+import { RecipeBuilderState } from "./RecipeBuilderState";
+import { DiceKeysAppSecretRecipe } from "~dicekeys";
 
 export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
   const recipe = JSON.parse(recipeJson || "{}") as DiceKeysAppSecretRecipe;

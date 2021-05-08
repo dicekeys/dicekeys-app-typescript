@@ -17,7 +17,7 @@ export const DerivationViewWithState = observer( ( {selectedRecipeState, recipeB
   recipeBuilderState: RecipeBuilderState
 }) => (
   <div className={css.DerivationView}>
-    <RecipeTemplateSelectorView {...{selectedRecipeState, recipeBuilderState}} />
+    <RecipeTemplateSelectorView {...{selectedRecipeState, state: recipeBuilderState}} />
     <RecipeBuilderView state={recipeBuilderState} />
     <RecipesDerivedValuesView {...{state: recipeBuilderState}} />
   </div>

@@ -21,21 +21,23 @@ export class NumericTextFieldState {
     const numericValue = parseInt(this.textValue);
     return numericValue >= this.minValue ? numericValue : undefined;
   }
-  get minusOne(): number | undefined {
-    return this.numericValue != null && this.numericValue - 1 > this.minValue ?
-      this.numericValue - 1 :
+  get decrement(): number | undefined {
+    return this.numericValue != null && this.numericValue - this.incrementBy > this.minValue ?
+      this.numericValue - this.incrementBy :
       undefined;
   }
-  get plusOne(): number {
-    return this.numericValue != null ? this.numericValue + 1 : (this.defaultValue ?? this.minValue);
+  get increment(): number {
+    return this.numericValue != null ? this.numericValue + this.incrementBy : (this.defaultValue ?? this.minValue);
   }
 
   public readonly minValue;
   private defaultValue?: number;
   private setNumericValue?: (value: number | undefined) => any;
+  public readonly incrementBy: number;
 
-  constructor({minValue = 0, defaultValue, setNumericValue, initialValue} : {
+  constructor({minValue = 0, incrementBy=1, defaultValue, setNumericValue, initialValue} : {
       minValue: number,
+      incrementBy?: number,
       defaultValue?: number,
       setNumericValue?: (value: number | undefined) => any,
       initialValue?: string,
@@ -43,6 +45,7 @@ export class NumericTextFieldState {
     }
   ) {
     this.minValue = minValue;
+    this.incrementBy = incrementBy;
     this.defaultValue = defaultValue;
     this.setNumericValue = setNumericValue;
     this.textValue = `${initialValue ?? ""}`
@@ -88,12 +91,12 @@ export const NumberPlusMinusView = observer( ({state, textFieldClassName, size, 
     state.setValue(newValue);
     onFocusedOrChanged?.()    
   });
-  const subtractOne = () => setValue(state.minusOne);
-  const addOne = () => setValue(state.plusOne);
+  const subtractOne = () => setValue(state.decrement);
+  const addOne = () => setValue(state.increment);
   return (
     <div className={css.hstack}>
       <CharButton hidden={state.numericValue == null} onClick={ subtractOne  }
-        >-<CharButtonToolTip>- 1 = {state.minusOne ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
+        >-<CharButtonToolTip>- 1 = {state.decrement ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
       <NumericTextField
         className={ textFieldClassName }
         size={size} state={state}
@@ -121,6 +124,6 @@ export const NumberPlusMinusView = observer( ({state, textFieldClassName, size, 
         } }
       />
       <CharButton onClick={ addOne }
-      >+<CharButtonToolTip>+ 1 = { state.plusOne }</CharButtonToolTip></CharButton>
+      >+<CharButtonToolTip>+ 1 = { state.increment }</CharButtonToolTip></CharButton>
     </div>
 )});

@@ -2,10 +2,9 @@ import css from "./recipe-builder.module.css";
 import xcss from "./RecipeBuilderView.css";
 import React from "react";
 import { observer  } from "mobx-react";
-import { DerivationRecipeTemplateList } from "../../dicekeys/DerivationRecipeTemplateList";
+import { BuiltInRecipes } from "../../dicekeys/SavedRecipe";
 import { RecipeStore } from "../../state/stores/RecipeStore";
-import { savedRecipeIdentifier, SelectedRecipeState, SelectedRecipeIdentifier, templateRecipeIdentifier, RecipeBuilderState } from "./RecipeBuilderState";
-import { DerivableObjectNameList, describeRecipeType } from "./DescribeRecipeType";
+import { savedRecipeIdentifier, SelectedRecipeIdentifier, templateRecipeIdentifier, RecipeBuilderState } from "./RecipeBuilderState";
 
 const SavedRecipesOptGroup = observer( () => {
   const savedRecipes = RecipeStore.recipes;
@@ -19,38 +18,41 @@ const SavedRecipesOptGroup = observer( () => {
   );  
 })
 
-export const RecipeTemplateSelectorView = observer( ({selectedRecipeState, recipeBuilderState}: {
-  selectedRecipeState: SelectedRecipeState,
-  recipeBuilderState: RecipeBuilderState,
+export const RecipeTemplateSelectorView = observer( ({state}: {
+  state: RecipeBuilderState,
 }) => {
   return (
     <div className={css.field_row}
-      onMouseEnter={recipeBuilderState.showHelpForFn(undefined)}
+      onMouseEnter={state.showHelpForFn(undefined)}
     >
       <div className={css.vertical_labeled_field}>
         <div className={css.hstack}>
           <select
             className={xcss.SelectRecipe}
-            value={ selectedRecipeState.recipeIdentifier ?? "" }
+            value={ state.selectedRecipeState.recipeIdentifier ?? "" }
             placeholder={"Placeholder"}
             onChange={ (e) => {
-              selectedRecipeState.setSelectedRecipeIdentifier(e.currentTarget.value as SelectedRecipeIdentifier | undefined);
-              recipeBuilderState.showHelpFor(undefined);
+              state.selectedRecipeState.setSelectedRecipeIdentifier(e.currentTarget.value as SelectedRecipeIdentifier | undefined);
+              const {templateRecipe} = state.selectedRecipeState;
+              if (templateRecipe) {
+                state.loadSavedRecipe(templateRecipe)
+              }
+              state.showHelpFor(undefined);
             }}
           >
             <option key="none" disabled={true} hidden={true} value="">Select Recipe</option>
             {/* <option key="spacer" disabled={true} value="-"></option> */}
             <SavedRecipesOptGroup/>
             <optgroup key={"Built-in recipes"} label={"Built-in recipes"}>
-              { DerivationRecipeTemplateList.map( template => (
+              { BuiltInRecipes.map( template => (
                 <option key={template.name} value={templateRecipeIdentifier(template.name)} >{ template.name }</option>
               ))}
             </optgroup>
-            <optgroup key={"Custom recipes"} label={"Custom"}>
+            {/* <optgroup key={"Custom recipes"} label={"Custom"}>
               { DerivableObjectNameList.map( (recipeType) => (
                 <option key={ recipeType } value={ recipeType } >{ describeRecipeType(recipeType) }</option>
               ))}              
-            </optgroup>
+            </optgroup> */}
           </select>  
           {/* <button onClick={ () => sequenceNumberState.setSequenceNumber( Math.max(1, (sequenceNumberState.sequenceNumber ?? 1) - 1 )) } >-</button> */}
         </div>
