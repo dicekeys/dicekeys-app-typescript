@@ -1,9 +1,12 @@
 import { action, makeAutoObservable } from "mobx";
 import {
-  StoredRecipe, DerivationRecipeType, DiceKeysAppSecretRecipe, RecipeFieldType, getRecipeJson,
+  StoredRecipe, DerivationRecipeType, DiceKeysAppSecretRecipe, purposeToBuiltInRecipe
+} from "../../dicekeys/StoredRecipe";
+import {
+  getRecipeJson,
   purposeToListOfHosts,
-  purposeToBuiltInRecipe
-} from "../../dicekeys/SavedRecipe";
+  RecipeFieldType
+} from "../../dicekeys/ConstructRecipe";
 import { NumericTextFieldState } from "../../views/basics/NumericTextFieldView";
 
 /**
@@ -13,9 +16,6 @@ export class RecipeBuilderState implements Partial<StoredRecipe> /* ,RecipeTypeS
   constructor() {
     makeAutoObservable(this);
   }
-  // get template(): PartialSavedRecipe | undefined { return this.selectedRecipeState.template}
-
-	// get templateRecipe(): DiceKeysAppSecretRecipe { return Recipe( this.template?.recipeJson ) }
 
   _type: DerivationRecipeType | undefined;
   get type(): DerivationRecipeType | undefined { return this._type } // ?? this.template?.type ?? this.templateRecipe.type
@@ -47,7 +47,6 @@ export class RecipeBuilderState implements Partial<StoredRecipe> /* ,RecipeTypeS
   /////////////////////////////////////////////////////////////
   // LengthInChars field ("lengthInChars") for Passwords only
   /////////////////////////////////////////////////////////////
-//  get templateLengthInChars(): number | undefined { return this.type !== "Password" ? undefined : this.templateRecipe.lengthInChars }
   get mayEditLengthInChars(): boolean { return this.type === "Password" } // && this.templateLengthInChars === undefined
   lengthInCharsState = new NumericTextFieldState({minValue: 16, defaultValue: 64});
   get lengthInChars(): number | undefined { return this.lengthInCharsState.numericValue }
@@ -55,43 +54,33 @@ export class RecipeBuilderState implements Partial<StoredRecipe> /* ,RecipeTypeS
   ///////////////////////////////////////////////////////////
   // LengthInBytes field ("lengthInBytes") for Secrets only
   ///////////////////////////////////////////////////////////
-//  get templateLengthInBytes(): number | undefined { return this.type !== "Secret" ? undefined : this.templateRecipe.lengthInBytes }
   get mayEditLengthInBytes(): boolean { return this.type === "Secret" } //  && this.templateLengthInBytes === undefined
   lengthInBytesState = new NumericTextFieldState({minValue: 4, incrementBy: 16, defaultValue: 32});
   get lengthInBytes(): number | undefined { return this.lengthInBytesState.numericValue }
 
-  /////////////////////////////////
-  // Name field ("name")
-  /////////////////////////////////
-  private _nameField?: string;
+  ////////////////////////////////////
+  // Name field ("name") to be saved
+  ////////////////////////////////////
   get prescribedName(): string | undefined {
-    const baseName = this.matchingBuiltInRecipe?.name ?? this.purpose ?? this.hosts?.join(", ");
+    const baseName = this.matchingBuiltInRecipe?.nameToSave ?? this.purpose ?? this.hosts?.join(", ");
     if (typeof(baseName) === "undefined") return;
     const sequenceNumber = this.sequenceNumber! > 1  ? ` (${this.sequenceNumber})` : "";
     return `${baseName}${sequenceNumber}`
   }
 
-  /**
-   * The name of the recipe to save
-   */
-  get name(): string | undefined {
-    return (typeof (this._nameField) !== "undefined" && this._nameField.length > 0) ?
-      this._nameField :
+  public name: string = "";
+  get nameToSave(): string | undefined {
+    return (this.name.length > 0) ?
+      this.name :
       this.prescribedName;
   }
-  setName = action ( (name: string) => this._nameField = name );
+  setName = action ( (name: string) => this.name = name );
 
 
   //////////////////////////////////////////
   // Purpose field ("purpose" or "allow")
   //////////////////////////////////////////
-  // get prescribedPurposeField(): string {
-  //   const {allow, purpose} = this.templateRecipe ?? {} as SavedRecipe;
-  //   if (allow) return allow.map( ({host}) => host ).join(", ");
-  //   return purpose ?? "";
-  // }
-
-  get mayEditPurpose(): boolean { return true }; //return this.templateRecipe.allow === undefined && this.templateRecipe?.purpose === undefined }
+  get mayEditPurpose(): boolean { return true };
   purposeField?: string;
   /** The purpose of the recipe from the purpose form field if not a list of 1 or more hosts */
   get purpose(): string | undefined { return this.hosts ? undefined : this.purposeField; } // ?? this.templateRecipe?.purpose;
@@ -112,7 +101,7 @@ export class RecipeBuilderState implements Partial<StoredRecipe> /* ,RecipeTypeS
    * The JSON of the recipe after all user adjustment have been applied
    */
   get recipeJson(): string | undefined {
-    return getRecipeJson(this); // , this.template?.recipeJson);
+    return getRecipeJson(this);
   }
 
   get matchingBuiltInRecipe(): StoredRecipe | undefined {
@@ -124,11 +113,12 @@ export class RecipeBuilderState implements Partial<StoredRecipe> /* ,RecipeTypeS
     const template = JSON.parse(savedRecipe.recipeJson ?? "{}") as DiceKeysAppSecretRecipe;
     const {purpose, allow} = template;
     this._type = template.type ?? savedRecipe.type;
+    this.name = "";
     // this._nameField = savedRecipe.name;
     this.setPurposeField(
       purpose != null ? purpose :
-      allow != null ? allow.map( ({host}) =>
-          host.startsWith("*.") ? host.substr(2) : host
+      allow != null ? allow.map( ({host}) => host.trim() /*
+          host.startsWith("*.") ? host.substr(2) : host */
         ).sort().join(", ") :
       this.purposeField
     );

@@ -1,4 +1,4 @@
-import { BuiltInRecipes } from "./SavedRecipe";
+import { BuiltInRecipes } from "./StoredRecipe";
 import {
   restrictionsJson
 } from "./restrictions-json";
@@ -42,7 +42,7 @@ export const passwordRecipeJson = (hostOrHosts: SingletonOrArrayOf<string>) =>
 
 const defaultPasswordConsumerList: PasswordConsumer[] = BuiltInRecipes
   .filter( r => r.type == "Password" )
-  .map( ({name, recipeJson}) => ({
+  .map( ({nameToSave: name, recipeJson}) => ({
     name: name,
     recipe: recipeJson  
 }) )

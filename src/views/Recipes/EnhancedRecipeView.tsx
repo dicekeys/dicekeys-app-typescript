@@ -32,7 +32,7 @@ export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
   if (purpose != null) {
     const jsonEncodedPurpose = JSON.stringify(purpose)
     const jsonEscapedPurpose = jsonEncodedPurpose.substr(1, jsonEncodedPurpose.length - 2);
-    replace(`"purpose":${JSON.stringify(purpose)}`, (<>"purpose":"<span className={css.host_name_span}>{jsonEscapedPurpose}</span>"</>));
+    replace(`"purpose":${jsonEncodedPurpose}`, (<>"purpose":"<span className={css.host_name_span}>{jsonEscapedPurpose}</span>"</>));
   }
   const allow = recipe.allow;
   if (allow != null) {

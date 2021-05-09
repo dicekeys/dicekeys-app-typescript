@@ -9,7 +9,7 @@ import {
   stringToUtf8ByteArray, UnsealingInstructions
 } from "@dicekeys/dicekeys-api-js"
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
-import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
+import { jsonStringifyWithSortedFieldOrder } from "../utilities/json";
 import { QueuedPostMessageApiRequest, PostMessageRequestEvent } from "../api-handler/QueuedPostMessageApiRequest";
 
 

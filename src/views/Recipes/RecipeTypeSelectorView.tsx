@@ -1,7 +1,7 @@
 import css from "./RecipeBuilderView.css";
 import React from "react";
 import { observer  } from "mobx-react";
-import { DerivationRecipeType } from "../../dicekeys/SavedRecipe";
+import { DerivationRecipeType } from "../../dicekeys/StoredRecipe";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { DerivableObjectNameList, describeRecipeType } from "./DescribeRecipeType";
 
@@ -13,7 +13,7 @@ export const RecipeTypeSelectorView = observer( ({state}: {
     <div style={{display: "flex", alignSelf: "flex-start", flexDirection: "row", justifyContent: "flex-start"}}>
       Derive a&nbsp;
       <select
-        className={css.SelectRecipe}
+        className={css.SelectDerivedField}
         value={ state.type ?? "" }
         onMouseEnter={state.showHelpForFn(undefined)}
         onChange={ (e) => {

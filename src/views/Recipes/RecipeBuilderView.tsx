@@ -2,24 +2,29 @@ import css from "./RecipeBuilderView.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";
-import { NumberPlusMinusView } from "~views/basics/NumericTextFieldView";
+import { NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
 import { RecipeDescriptionView } from "./RecipeDescriptionView";
 import { SaveRecipeView } from "./SaveRecipeView";
 import { LabeledEnhancedRecipeView } from "./EnhancedRecipeView";
 import { describeRecipeType } from "./DescribeRecipeType";
 import { RecipeTypeSelectorView } from "./RecipeTypeSelectorView";
-import { RecipeFieldType } from "../../dicekeys/SavedRecipe";
+import { RecipeFieldType } from "../../dicekeys/ConstructRecipe";
 
 // IN PROGRESS
 
-// Load templates directly into fields  (needs reformatting)
+// Restyling (location of load, edit button, etc.)
 
 // TO DO
 
+// Include *. in purpose?
+// (including/excluding subdomains on all strings?)
 // Saved recipes and built-in recipes default to non-edit mode, edit button loads them
 // Clear button to empty recipe
+// Delete recipe menu?
 
-// Switch between manual fields and raw recipe
+// Raw recipe editor with switch
+
+// Save button checks for overwrites on name
 
 // compare resulting recipeJson to see if still matches template/saved version
 
@@ -33,6 +38,8 @@ import { RecipeFieldType } from "../../dicekeys/SavedRecipe";
 
 // Ensure lengthInBytes appears for secrets view
 // Recalculate suggested names by mapping purpose strings back to templates
+// Load templates directly into fields
+
 
 
 

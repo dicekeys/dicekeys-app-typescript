@@ -232,7 +232,20 @@
   border-right: 1px solid gray; */
 }
 
-.SelectDerivedField, .SelectRecipe {
+.SelectRecipe {
+  align-self: flex-start;
+  border: none;
+  /* background-color: rgba(248, 248, 248, 1); */
+  padding-top: 0.05rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+
+  margin-bottom: 1rem;
+}
+
+.SelectDerivedField, .SelectRecipeType {
   align-self: flex-start;
   border: none;
   background-color: rgba(248, 248, 248, 1);
@@ -240,5 +253,5 @@
   padding-left: 0.25rem;
   padding-right: 0.25rem;
   border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;;
+  border-top-right-radius: 0.5rem;
 }

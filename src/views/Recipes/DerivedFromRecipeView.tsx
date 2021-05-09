@@ -23,7 +23,7 @@ export const DerivedFromRecipeView = observer( ({state}: {state: DerivedFromReci
         <>
           <div className={css.DerivedValueHeader}>
             <select
-              className={css.SelectDerivedField}
+              className={css.SelectRecipeType}
               value={state.outputFieldForType[type]}
               onChange={ (e) => state.setOutputField(e.currentTarget.value as OutputFormat<typeof type>) }
             >

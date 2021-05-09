@@ -1,60 +1,6 @@
-import {DerivableObjectName, Recipe} from "@dicekeys/dicekeys-api-js"
+import {Recipe} from "@dicekeys/dicekeys-api-js"
 import { getRegisteredDomain, isValidDomain } from "../domains/get-registered-domain";
 
-export type DerivationRecipeType = DerivableObjectName
-
-export class StoredRecipe {
-  constructor(
-    public readonly type: DerivationRecipeType,
-    public readonly name: string,
-    public readonly recipeJson: string
-  ) {
-  }
-}
-
-export const BuiltInRecipes: StoredRecipe[] = [
-	new StoredRecipe("Password", "1Password", `{"allow":[{"host":"*.1password.com"}]}`),
-	new StoredRecipe("Password", "Apple", `{"allow":[{"host":"*.apple.com"},{"host":"*.icloud.com"}],"lengthInChars":64}`),
-	new StoredRecipe("Password", "Authy", `{"allow":[{"host":"*.authy.com"}]}`),
-	new StoredRecipe("Password", "Bitwarden", `{"allow":[{"host":"*.bitwarden.com"}]}`),
-	new StoredRecipe("Password", "Facebook", `{"allow":[{"host":"*.facebook.com"}]}`),
-	new StoredRecipe("Password", "Google", `{"allow":[{"host":"*.google.com"}]}`),
-	new StoredRecipe("Password", "Keeper", `{"allow":[{"host":"*.keepersecurity.com"},{"host":"*.keepersecurity.eu"}]}`),
-	new StoredRecipe("Password", "LastPass", `{"allow":[{"host":"*.lastpass.com"}]}`),
-	new StoredRecipe("Password", "Microsoft", `{"allow":[{"host":"*.microsoft.com"},{"host":"*.live.com"}]}`)  
-];
-
-
-const savedPrefix = "saved:";
-const templatePrefix = "template:";
-export type SavedRecipeIdentifier<T extends string = string> = `${typeof savedPrefix}${T}`;
-export type TemplateRecipeIdentifier<T extends string = string> = `${typeof templatePrefix}${T}`;
-export type RecipeIdentifier<T extends string = string> = SavedRecipeIdentifier<T> | TemplateRecipeIdentifier<T>
-export type PotentialRecipeIdentifier<T extends string = string> = RecipeIdentifier<T> | string;
-export const savedRecipeIdentifier = <T extends string = string>(recipeName: T) => `${savedPrefix}${recipeName}` as SavedRecipeIdentifier<T>;
-export const templateRecipeIdentifier = <T extends string = string>(recipeName: T) => `${templatePrefix}${recipeName}` as TemplateRecipeIdentifier<T>;
-export const isSavedRecipeIdentifier = <T extends string = string>
-  (recipeIdentifier?: SavedRecipeIdentifier<T> | string): recipeIdentifier is SavedRecipeIdentifier<T> =>
-    !!(recipeIdentifier?.startsWith(savedPrefix));
-export const isTemplateRecipeIdentifier = <T extends string = string>
-  (recipeIdentifier?: TemplateRecipeIdentifier<T> | string): recipeIdentifier is TemplateRecipeIdentifier<T> =>
-    !!(recipeIdentifier?.startsWith(templatePrefix));
-export const savedRecipeIdentifiersName = <T extends string = string>
-  (identifier: SavedRecipeIdentifier<T>): T => identifier.substr(savedPrefix.length) as T;
-export const templateRecipeIdentifiersName = <T extends string = string>
-  (identifier: TemplateRecipeIdentifier<T>): T => identifier.substr(templatePrefix.length) as T;
-
-export const nameIfSavedRecipeIdentifier = <T extends string = string>
-(identifier: SavedRecipeIdentifier<T> | string | undefined) =>
-    (isSavedRecipeIdentifier(identifier) ? savedRecipeIdentifiersName(identifier) : undefined)  as (
-      typeof identifier extends SavedRecipeIdentifier<T> ? T : undefined
-    );
-export const nameIfTemplateRecipeIdentifier = <T extends string = string>
-  (identifier: TemplateRecipeIdentifier<T> | string | undefined) =>
-      (isTemplateRecipeIdentifier(identifier) ? templateRecipeIdentifiersName(identifier) : undefined)  as (
-        typeof identifier extends TemplateRecipeIdentifier<T> ? T : undefined
-      );
-    
 const addFieldToEndOfJsonObjectString = (fieldName: string, quote: boolean = false, doNotAddIfValueIs: string | number | undefined = undefined) =>
   (originalJsonObjectString: string | undefined, fieldValue?: string | number): string | undefined => {
   if (typeof fieldValue == "undefined" || fieldValue == doNotAddIfValueIs) return originalJsonObjectString;
@@ -76,7 +22,7 @@ export const addAllowToRecipeJson: <T extends string | undefined>(recipeWithoutA
 
 const getHostRestrictionsArrayAsString = (hosts: string[]): string =>
   `[${hosts
-        .map( host => `{"host":"*.${host}"}` )
+        .map( host => `{"host":"${host}"}` )
         .join(",")
     }]`;
 
@@ -105,24 +51,16 @@ interface AddableRecipeFields {
   sequenceNumber?: number;
 }
 
-const recipeJsonToHosts = (recipeJson: string | undefined): string[] => {
+export const recipeJsonToHosts = (recipeJson: string | undefined): string[] => {
   const {allow} = (JSON.parse(recipeJson ?? "{}") as DiceKeysAppSecretRecipe);
-  return allow == null ? [] : allow.map( ({host}) => {
+  return allow == null ? [] : allow.map( ({host}) => host.trim() /* {
       host = host.trim();
       return host.startsWith("*.") ? host.substr(2) : host 
-    }
+    } */
   )
   .filter( host => host.length > 0 )
   .sort();
 }
-
-const commaSeparatedHostsToBuiltInRecipe = BuiltInRecipes.reduce( (result, savedRecipe) => {
-  const hosts = recipeJsonToHosts(savedRecipe.recipeJson);
-  if (hosts.length > 0) {
-    result[hosts.join(",")] = savedRecipe
-  }
-  return result
-}, {} as Record<string, StoredRecipe>);
 
 export const purposeToListOfHosts = (purposeField: string | undefined): string[] | undefined => {
   if (purposeField == null) return;
@@ -142,12 +80,6 @@ export const purposeToListOfHosts = (purposeField: string | undefined): string[]
     }
   } catch {}
   return undefined;
-}
-
-export const purposeToBuiltInRecipe = (purposeField?: string): StoredRecipe | undefined => {
-  const hosts = purposeToListOfHosts(purposeField);
-  if (hosts == null) return undefined;
-  return commaSeparatedHostsToBuiltInRecipe[hosts.join(",")];
 }
 
 export const getRecipeJson = (spec: AddableRecipeFields, template?: string): string | undefined => {

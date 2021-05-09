@@ -1,4 +1,4 @@
-import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
+import { jsonStringifyWithSortedFieldOrder } from "../utilities/json";
 
 export class WorkerAborted extends Error {}
 

@@ -1,6 +1,6 @@
 import { action, makeAutoObservable } from "mobx";
 import {
-  DerivationRecipeType} from "../../dicekeys/SavedRecipe";
+  DerivationRecipeType} from "../../dicekeys/StoredRecipe";
 import { CachedApiCalls } from "../../api-handler/CachedApiCalls";
 
 const spaceJson = (spaces: number = 2) => (json: string | undefined): string | undefined => {

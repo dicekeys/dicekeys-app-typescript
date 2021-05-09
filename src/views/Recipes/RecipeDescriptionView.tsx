@@ -7,8 +7,8 @@ import css from "./RecipeBuilderView.css";
 
 const HostNameView = ({host}: {host: string}) => (
   host.startsWith("*.") ?
-  (<><span className={css.host_name_span}>{ host.substring(2) }</span></>) :
-  (<><span className={css.host_name_span}>{ host }</span> (excluding subdomains)</>)
+  (<><span className={css.host_name_span}>{ host.substring(2) }</span> (and its subdomains)</>) :
+  (<><span className={css.host_name_span}>{ host }</span> (but not its subdomains)</>)
 )
 
 export const RecipeDescriptionContentView = ({type, recipeJson}: Partial<StoredRecipe>) => {
