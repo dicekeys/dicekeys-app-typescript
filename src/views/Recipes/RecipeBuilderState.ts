@@ -62,18 +62,10 @@ export class RecipeBuilderState {
   // Name field ("name") to be saved
   ////////////////////////////////////
   get prescribedName(): string | undefined {
-    const baseName = this.matchingBuiltInRecipe?.name ?? this.purpose ?? this.hosts?.join(", ");
-    if (typeof(baseName) === "undefined") return;
-    const sequenceNumber = this.sequenceNumber! > 1  ? ` (${this.sequenceNumber})` : "";
-    return `${baseName}${sequenceNumber}`
+    return this.matchingBuiltInRecipe?.name ?? this.purpose ?? this.hosts?.join(", ");
   }
 
   public name: string = "";
-  get nameToSave(): string | undefined {
-    return (this.name.length > 0) ?
-      this.name :
-      this.prescribedName;
-  }
   setName = action ( (name: string) => this.name = name );
 
 

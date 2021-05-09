@@ -1,4 +1,4 @@
-import css from "./RecipeBuilderView.css";
+import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";

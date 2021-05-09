@@ -2,7 +2,7 @@ import React from "react";
 import { AndClause } from "~views/basics";
 import { DiceKeysAppSecretRecipe, StoredRecipe } from "../../dicekeys";
 import { describeRecipeType } from "./DescribeRecipeType";
-import css from "./RecipeBuilderView.css";
+import css from "./Recipes.module.css";
 
 
 const HostNameView = ({host}: {host: string}) => (

@@ -73,19 +73,21 @@ export type DiceKeysAppSecretRecipe = Recipe & {
   purpose?: string;
 }
 
-export const enhancedStoredRecipeName = (storedRecipe: StoredRecipe): string => {
-  const {name, type, recipeJson} = storedRecipe;
+export const getStoredRecipeNameSuffix = (storedRecipe: StoredRecipe): string => {
+  const {type, recipeJson} = storedRecipe;
   const recipe = JSON.parse(recipeJson) as DiceKeysAppSecretRecipe;
   const {lengthInBytes, lengthInChars} = recipe;
   const sequenceNumber = recipe["#"];
-  const suffixes = [] as string[];
-
-  suffixes.push(describeRecipeType(type));
-    return `${name} ${describeRecipeType(type)}${
+  return `${describeRecipeType(type)}${
         lengthInBytes == null ? "" : ` (${lengthInBytes} bytes)`
     }${ lengthInChars == null ? "" : ` (${lengthInChars} chars)`
   }${ sequenceNumber == null ? "" : ` #${sequenceNumber}`
 }`;
+}
+
+export const enhancedStoredRecipeName = (storedRecipe: StoredRecipe): string => {
+  const {name} = storedRecipe;
+  return `${name} ${getStoredRecipeNameSuffix(storedRecipe)}`;
 }
 
 const commaSeparatedHostsToBuiltInRecipe = BuiltInRecipes.reduce( (result, savedRecipe) => {

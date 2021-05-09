@@ -1,4 +1,4 @@
-import css from "./RecipeBuilderView.css";
+import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";
@@ -16,18 +16,13 @@ import { RecipeFieldType } from "../../dicekeys/ConstructRecipe";
 
 // TO DO
 
-// Fields automatically added to name
+// Delete recipe menu?
 
 // Saved recipes and built-in recipes default to non-edit mode, edit button loads them
 
 // Clear button to empty recipe
-// Delete recipe menu?
 
 // Raw recipe editor with switch
-
-// Save button checks for overwrites on name
-
-// compare resulting recipeJson to see if still matches template/saved version
 
 // limit to one calculation at a time
 
@@ -37,6 +32,7 @@ import { RecipeFieldType } from "../../dicekeys/ConstructRecipe";
 
 // DONE
 
+// Fields automatically added to name
 // Include *. in purpose?
 // (including/excluding subdomains on all strings?)
 // Ensure lengthInBytes appears for secrets view

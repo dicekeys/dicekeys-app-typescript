@@ -11,9 +11,54 @@
   margin-right: 0.25rem;
 }
 
-.RecipeName {
-  min-width: 12rem;
-  /* font-size: 1.4rem; */
+
+.SaveRecipeRow {
+  display: flex;
+  margin-top: 0.5rem;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: baseline;
+}
+
+.SaveRecipeName {
+  /* min-width: 12rem; */
+  font-size: 1rem;
+  text-align: right;
+  font-family: sans-serif;
+  border-right: black 2px inset;
+  border-top: black 2px inset;
+  border-bottom: black 2px inset;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+  border-right: none;
+  border-right-style: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-right: 0;
+}
+
+.SaveRecipeName:focus {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right-width: 0px;
+  border-right-style: none;
+  outline: none;
+}
+
+.SaveRecipeNameExtension {
+  user-select: none;
+  font-size: 1rem;
+  font-family:sans-serif;
+  border-right: black 2px inset;
+  border-top: black 2px inset;
+  border-bottom: black 2px inset;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+  background-color: rgba(240, 240, 240,  1);
+  color: rgba(114, 114, 128,  1);
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-right: 1px;
 }
 
 .RecipeBuilderBlock {

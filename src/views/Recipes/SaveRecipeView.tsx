@@ -1,38 +1,28 @@
-import css from "./RecipeBuilderView.css";
+import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeStore } from "~state/stores/RecipeStore";
 import { action } from "mobx";
 import { RecipeBuilderState } from "./RecipeBuilderState";
+import { getStoredRecipeNameSuffix, StoredRecipe } from "../../dicekeys/StoredRecipe";
 
 export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) => {
-  const {name: name = state.prescribedName, recipeJson, type} = state;
-  if (!type || typeof recipeJson === "undefined") {
+  const {name, recipeJson, type} = state;
+  if (type == null || recipeJson == null) {
     return null;
   }
-  const isNameSaved = state.name && RecipeStore.recipeForName(state.name);
-  const isIdenticalToSaved = isNameSaved &&
-    RecipeStore.recipeForName(state.name!)?.type === state.type &&
-    RecipeStore.recipeForName(state.name!)?.recipeJson === state.recipeJson;
-    const disableSaveButton = isIdenticalToSaved || typeof name === "undefined" || name.length === 0 ||
-    (
-      state.matchingBuiltInRecipe?.name === state.name &&
-      state.matchingBuiltInRecipe?.type === state.type &&
-      state.matchingBuiltInRecipe?.recipeJson === state.recipeJson
-    )
-    const saveWillReplace = isNameSaved && !isIdenticalToSaved;
+  const storedRecipe: StoredRecipe = {name, recipeJson, type};
+  const isAlreadySaved = RecipeStore.isRecipeSaved(storedRecipe);
+  const disableSaveButton = isAlreadySaved || name == null || name.length === 0; // ||
 
-    const save = recipeJson && name != null && name.length > 0 && recipeJson.length > 0 ? action ( () => {
-    RecipeStore.addRecipe({name: name, type, recipeJson});
+  const save = recipeJson && name != null && name.length > 0 && recipeJson.length > 0 ? action ( () => {
+    RecipeStore.addRecipe(storedRecipe);
     // alert(`Added ${type}:${name}:${recipeJson}`)
   }) : undefined;
-  const remove = isIdenticalToSaved && name ? action ( () => {
-    RecipeStore.removeRecipeByName(name);
-    // alert(`Removed ${type}:${name}:${recipeJson}`)
-  }) : undefined;
   return (
-    <div style={{display: "flex", marginTop: "0.5rem", flexDirection: "row",  "justifyContent": "flex-end"}}>
-      <input type="text" className={css.RecipeName} value={state.name} placeholder={ state.prescribedName }
+    <div className={css.SaveRecipeRow}>
+      <button className={css.SaveButton} disabled={disableSaveButton} onClick={save}>{ "save as" }</button>
+      <input type="text" className={css.SaveRecipeName} value={state.name} placeholder={ state.prescribedName } size={ (state.name.length || state.prescribedName?.length || 0) + 1}
         onInput={ (e) => state.setName( e.currentTarget.value )}
         onFocus={ (e) => {
           if (e.currentTarget.value.length == 0 && state.prescribedName) {
@@ -40,8 +30,7 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
           }
         }}  
       />
-      <button className={css.SaveButton} disabled={disableSaveButton} onClick={save}>{ saveWillReplace ? "replace" : "save" }</button>
-      <button className={css.DeleteButton} style={{visibility: isIdenticalToSaved ? "visible" : "hidden"}} onClick={remove}>delete</button>
+      <span className={css.SaveRecipeNameExtension} >&nbsp;{ getStoredRecipeNameSuffix(storedRecipe) }&nbsp;</span>
     </div>
     )
   }

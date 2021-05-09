@@ -1,6 +1,6 @@
 import React from "react";
 import { observer  } from "mobx-react";
-import css from "./RecipeBuilderView.css";
+import css from "./Recipes.module.css";
 import { CharButton, CharButtonToolTip, OptionallyObscuredTextView, SecretFieldsCommonObscureButton } from "../basics";
 import { GlobalSharedToggleState } from "../../state";
 import { action } from "mobx";

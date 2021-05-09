@@ -1,4 +1,4 @@
-import css from "./RecipeBuilderView.css";
+import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { BuiltInRecipes, enhancedStoredRecipeName, getStoredRecipe, savedRecipeIdentifier, templateRecipeIdentifier } from "../../dicekeys/StoredRecipe";
@@ -9,8 +9,16 @@ export const LoadRecipeView = observer( ({state}: {
   state: RecipeBuilderState,
 }) => {
   const savedRecipes = RecipeStore.recipes;
+  // Remove any saved recipes from the set of built-in recipes
+  const builtInRecipes = BuiltInRecipes.filter(
+    builtInRecipe => savedRecipes.every( savedRecipe =>
+      builtInRecipe.recipeJson != savedRecipe.recipeJson ||
+      builtInRecipe.type != savedRecipe.type  ||
+      builtInRecipe.name != savedRecipe.name
+    )
+  )
   return (
-    <div className={css.field_row}
+    <div className={"FIXME"}
       onMouseEnter={state.showHelpForFn(undefined)}
     >
       <div>
@@ -34,7 +42,7 @@ export const LoadRecipeView = observer( ({state}: {
             </optgroup>
           )}
           <optgroup key={"Built-in recipes"} label={"Built-in recipes"}>
-            { BuiltInRecipes.map( template => (
+            { builtInRecipes.map( template => (
               <option key={template.name} value={templateRecipeIdentifier(template)} >{ enhancedStoredRecipeName(template) }</option>
             ))}
           </optgroup>
