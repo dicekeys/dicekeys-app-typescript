@@ -1,13 +1,19 @@
 import {
-  SavedRecipe
+  BuiltInRecipes,
+  isSavedRecipeIdentifier,
+  isTemplateRecipeIdentifier,
+  PotentialRecipeIdentifier,
+  StoredRecipe,
+  savedRecipeIdentifiersName,
+  templateRecipeIdentifiersName
 } from "../../dicekeys/SavedRecipe";
 import { action, makeAutoObservable } from "mobx";
 import { autoSave } from "../core/AutoSave";
 
 export const RecipeStore = new (class RecipeStore {
-  protected recipesByName: Record<string, SavedRecipe>;
+  protected recipesByName: Record<string, StoredRecipe>;
 
-  addRecipe = action ( (recipe: SavedRecipe) => {
+  addRecipe = action ( (recipe: StoredRecipe) => {
     this.recipesByName[recipe.name] = recipe;
   });
 
@@ -27,7 +33,7 @@ export const RecipeStore = new (class RecipeStore {
       .sort( (a, b) => a.name < b.name ? -1 : 1 );
   }
  
-  recipeForName = (recipeName: string): SavedRecipe | undefined => {
+  recipeForName = (recipeName: string): StoredRecipe | undefined => {
     const result = this.recipesByName[recipeName];
     return result;
   }
@@ -38,3 +44,14 @@ export const RecipeStore = new (class RecipeStore {
     autoSave(this, "RecipeStore");
   }
 })();
+
+export const getStoredRecipe = (recipeIdentifier?: PotentialRecipeIdentifier): StoredRecipe | undefined => {
+  if (isSavedRecipeIdentifier(recipeIdentifier)) {
+    return RecipeStore.recipeForName(savedRecipeIdentifiersName(recipeIdentifier));
+  } else if (isTemplateRecipeIdentifier(recipeIdentifier)) {
+    const name = templateRecipeIdentifiersName(recipeIdentifier);
+    return BuiltInRecipes.filter( t => t.name === name )[0];
+  } else {
+    return;
+  }
+}

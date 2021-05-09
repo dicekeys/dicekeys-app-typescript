@@ -1,6 +1,6 @@
 import React from "react";
 import { AndClause } from "~views/basics";
-import { DiceKeysAppSecretRecipe, SavedRecipe } from "../../dicekeys";
+import { DiceKeysAppSecretRecipe, StoredRecipe } from "../../dicekeys";
 import { describeRecipeType } from "./DescribeRecipeType";
 import css from "./RecipeBuilderView.css";
 
@@ -11,7 +11,7 @@ const HostNameView = ({host}: {host: string}) => (
   (<><span className={css.host_name_span}>{ host }</span> (excluding subdomains)</>)
 )
 
-export const RecipeDescriptionContentView = ({type, recipeJson}: Partial<SavedRecipe>) => {
+export const RecipeDescriptionContentView = ({type, recipeJson}: Partial<StoredRecipe>) => {
   if (!type || !recipeJson) return <></>;
   let recipe: DiceKeysAppSecretRecipe = (() => {
     try {
@@ -42,7 +42,7 @@ export const RecipeDescriptionContentView = ({type, recipeJson}: Partial<SavedRe
   );
 }
 
-export const RecipeDescriptionView = (props: Partial<SavedRecipe>) => (
+export const RecipeDescriptionView = (props: Partial<StoredRecipe>) => (
   <div className={css.RecipeDescriptionView} >
     <RecipeDescriptionContentView {...props} />
   </div>

@@ -1,50 +1,15 @@
 import { action, makeAutoObservable } from "mobx";
-import { RecipeStore } from "~state/stores/RecipeStore";
 import {
-  BuiltInRecipes,
-  SavedRecipe, DerivationRecipeType, DiceKeysAppSecretRecipe, RecipeFieldType, getRecipeJson,
+  StoredRecipe, DerivationRecipeType, DiceKeysAppSecretRecipe, RecipeFieldType, getRecipeJson,
   purposeToListOfHosts,
   purposeToBuiltInRecipe
 } from "../../dicekeys/SavedRecipe";
-import { NumericTextFieldState } from "~views/basics/NumericTextFieldView";
-
-
-export type PartialSavedRecipe = Pick<SavedRecipe, "type"> & Partial<SavedRecipe>;
-
-export interface PurposeFieldState {
-  purposeField?: string;
-  setPurposeField: (purpose?: string) => void
-}
-
-
-
-const savedPrefix = "saved:";
-const templatePrefix = "template:";
-type SavedRecipeIdentifier = `${typeof savedPrefix}${string}`;
-type TemplateRecipeIdentifier = `${typeof templatePrefix}${string}`;
-export const savedRecipeIdentifier = (recipeName: string) => `${savedPrefix}${recipeName}` as SavedRecipeIdentifier;
-export const templateRecipeIdentifier = (recipeName: string) => `${templatePrefix}${recipeName}` as TemplateRecipeIdentifier;
-const isSavedRecipeIdentifier = (recipeIdentifier?: string): recipeIdentifier is SavedRecipeIdentifier => !!(recipeIdentifier?.startsWith(savedPrefix));
-const isTemplateRecipeIdentifier = (recipeIdentifier?: string): recipeIdentifier is TemplateRecipeIdentifier => !!(recipeIdentifier?.startsWith(templatePrefix));
-
-const getSavedRecipe = (recipeIdentifier?: string): PartialSavedRecipe | undefined => {
-  if (isSavedRecipeIdentifier(recipeIdentifier)) {
-    return RecipeStore.recipeForName(recipeIdentifier.substr(savedPrefix.length));
-  } else if (isTemplateRecipeIdentifier(recipeIdentifier)) {
-    const name = recipeIdentifier.substr(templatePrefix.length);
-    return BuiltInRecipes.filter( t => t.name === name )[0];
-  } else {
-    return;
-  }
-}
-
-export type SelectedRecipeIdentifier = SavedRecipeIdentifier | TemplateRecipeIdentifier | DerivationRecipeType;
-
+import { NumericTextFieldState } from "../../views/basics/NumericTextFieldView";
 
 /**
  * State for building and displaying recipes
  */
-export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeState,*/ PurposeFieldState {
+export class RecipeBuilderState implements Partial<StoredRecipe> /* ,RecipeTypeState,PurposeFieldState */ {
   constructor() {
     makeAutoObservable(this);
   }
@@ -150,12 +115,11 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeSt
     return getRecipeJson(this); // , this.template?.recipeJson);
   }
 
-  get matchingBuiltInRecipe(): SavedRecipe | undefined {
+  get matchingBuiltInRecipe(): StoredRecipe | undefined {
     return purposeToBuiltInRecipe(this.purposeField);
   }
 
-  loadSavedRecipe = action ((recipeIdentifier?: string) => {
-    const savedRecipe = getSavedRecipe(recipeIdentifier);
+  loadRecipe = action ((savedRecipe?: StoredRecipe) => {
     if (savedRecipe == null) return;
     const template = JSON.parse(savedRecipe.recipeJson ?? "{}") as DiceKeysAppSecretRecipe;
     const {purpose, allow} = template;
@@ -168,8 +132,8 @@ export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeSt
         ).sort().join(", ") :
       this.purposeField
     );
-      this.sequenceNumberState.setValue(template["#"]);
-      this.lengthInBytesState.setValue(template.lengthInBytes);
+    this.sequenceNumberState.setValue(template["#"]);
+    this.lengthInBytesState.setValue(template.lengthInBytes);
     this.lengthInCharsState.setValue(template.lengthInChars);
   });
 }

@@ -3,7 +3,7 @@ import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderView } from ".";
 import { RecipeBuilderState } from "./RecipeBuilderState";
-import { RecipeTemplateSelectorView } from "./RecipeTemplateSelectorView";
+import { LoadRecipeView } from "./LoadRecipeView";
 import { DiceKey } from "~dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
@@ -17,7 +17,7 @@ export const DerivationViewWithState = observer( ( {recipeBuilderState, derivedF
   derivedFromRecipeState: DerivedFromRecipeState
 }) => (
   <div className={css.DerivationView}>
-    <RecipeTemplateSelectorView {...{state: recipeBuilderState}} />
+    <LoadRecipeView {...{state: recipeBuilderState}} />
     <RecipeBuilderView state={recipeBuilderState} />
     <DerivedFromRecipeView {...{state: derivedFromRecipeState}} />
   </div>

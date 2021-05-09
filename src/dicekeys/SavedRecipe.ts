@@ -3,7 +3,7 @@ import { getRegisteredDomain, isValidDomain } from "../domains/get-registered-do
 
 export type DerivationRecipeType = DerivableObjectName
 
-export class SavedRecipe {
+export class StoredRecipe {
   constructor(
     public readonly type: DerivationRecipeType,
     public readonly name: string,
@@ -12,18 +12,49 @@ export class SavedRecipe {
   }
 }
 
-export const BuiltInRecipes: SavedRecipe[] = [
-	new SavedRecipe("Password", "1Password", `{"allow":[{"host":"*.1password.com"}]}`),
-	new SavedRecipe("Password", "Apple", `{"allow":[{"host":"*.apple.com"},{"host":"*.icloud.com"}],"lengthInChars":64}`),
-	new SavedRecipe("Password", "Authy", `{"allow":[{"host":"*.authy.com"}]}`),
-	new SavedRecipe("Password", "Bitwarden", `{"allow":[{"host":"*.bitwarden.com"}]}`),
-	new SavedRecipe("Password", "Facebook", `{"allow":[{"host":"*.facebook.com"}]}`),
-	new SavedRecipe("Password", "Google", `{"allow":[{"host":"*.google.com"}]}`),
-	new SavedRecipe("Password", "Keeper", `{"allow":[{"host":"*.keepersecurity.com"},{"host":"*.keepersecurity.eu"}]}`),
-	new SavedRecipe("Password", "LastPass", `{"allow":[{"host":"*.lastpass.com"}]}`),
-	new SavedRecipe("Password", "Microsoft", `{"allow":[{"host":"*.microsoft.com"},{"host":"*.live.com"}]}`)  
+export const BuiltInRecipes: StoredRecipe[] = [
+	new StoredRecipe("Password", "1Password", `{"allow":[{"host":"*.1password.com"}]}`),
+	new StoredRecipe("Password", "Apple", `{"allow":[{"host":"*.apple.com"},{"host":"*.icloud.com"}],"lengthInChars":64}`),
+	new StoredRecipe("Password", "Authy", `{"allow":[{"host":"*.authy.com"}]}`),
+	new StoredRecipe("Password", "Bitwarden", `{"allow":[{"host":"*.bitwarden.com"}]}`),
+	new StoredRecipe("Password", "Facebook", `{"allow":[{"host":"*.facebook.com"}]}`),
+	new StoredRecipe("Password", "Google", `{"allow":[{"host":"*.google.com"}]}`),
+	new StoredRecipe("Password", "Keeper", `{"allow":[{"host":"*.keepersecurity.com"},{"host":"*.keepersecurity.eu"}]}`),
+	new StoredRecipe("Password", "LastPass", `{"allow":[{"host":"*.lastpass.com"}]}`),
+	new StoredRecipe("Password", "Microsoft", `{"allow":[{"host":"*.microsoft.com"},{"host":"*.live.com"}]}`)  
 ];
 
+
+const savedPrefix = "saved:";
+const templatePrefix = "template:";
+export type SavedRecipeIdentifier<T extends string = string> = `${typeof savedPrefix}${T}`;
+export type TemplateRecipeIdentifier<T extends string = string> = `${typeof templatePrefix}${T}`;
+export type RecipeIdentifier<T extends string = string> = SavedRecipeIdentifier<T> | TemplateRecipeIdentifier<T>
+export type PotentialRecipeIdentifier<T extends string = string> = RecipeIdentifier<T> | string;
+export const savedRecipeIdentifier = <T extends string = string>(recipeName: T) => `${savedPrefix}${recipeName}` as SavedRecipeIdentifier<T>;
+export const templateRecipeIdentifier = <T extends string = string>(recipeName: T) => `${templatePrefix}${recipeName}` as TemplateRecipeIdentifier<T>;
+export const isSavedRecipeIdentifier = <T extends string = string>
+  (recipeIdentifier?: SavedRecipeIdentifier<T> | string): recipeIdentifier is SavedRecipeIdentifier<T> =>
+    !!(recipeIdentifier?.startsWith(savedPrefix));
+export const isTemplateRecipeIdentifier = <T extends string = string>
+  (recipeIdentifier?: TemplateRecipeIdentifier<T> | string): recipeIdentifier is TemplateRecipeIdentifier<T> =>
+    !!(recipeIdentifier?.startsWith(templatePrefix));
+export const savedRecipeIdentifiersName = <T extends string = string>
+  (identifier: SavedRecipeIdentifier<T>): T => identifier.substr(savedPrefix.length) as T;
+export const templateRecipeIdentifiersName = <T extends string = string>
+  (identifier: TemplateRecipeIdentifier<T>): T => identifier.substr(templatePrefix.length) as T;
+
+export const nameIfSavedRecipeIdentifier = <T extends string = string>
+(identifier: SavedRecipeIdentifier<T> | string | undefined) =>
+    (isSavedRecipeIdentifier(identifier) ? savedRecipeIdentifiersName(identifier) : undefined)  as (
+      typeof identifier extends SavedRecipeIdentifier<T> ? T : undefined
+    );
+export const nameIfTemplateRecipeIdentifier = <T extends string = string>
+  (identifier: TemplateRecipeIdentifier<T> | string | undefined) =>
+      (isTemplateRecipeIdentifier(identifier) ? templateRecipeIdentifiersName(identifier) : undefined)  as (
+        typeof identifier extends TemplateRecipeIdentifier<T> ? T : undefined
+      );
+    
 const addFieldToEndOfJsonObjectString = (fieldName: string, quote: boolean = false, doNotAddIfValueIs: string | number | undefined = undefined) =>
   (originalJsonObjectString: string | undefined, fieldValue?: string | number): string | undefined => {
   if (typeof fieldValue == "undefined" || fieldValue == doNotAddIfValueIs) return originalJsonObjectString;
@@ -91,7 +122,7 @@ const commaSeparatedHostsToBuiltInRecipe = BuiltInRecipes.reduce( (result, saved
     result[hosts.join(",")] = savedRecipe
   }
   return result
-}, {} as Record<string, SavedRecipe>);
+}, {} as Record<string, StoredRecipe>);
 
 export const purposeToListOfHosts = (purposeField: string | undefined): string[] | undefined => {
   if (purposeField == null) return;
@@ -113,7 +144,7 @@ export const purposeToListOfHosts = (purposeField: string | undefined): string[]
   return undefined;
 }
 
-export const purposeToBuiltInRecipe = (purposeField?: string): SavedRecipe | undefined => {
+export const purposeToBuiltInRecipe = (purposeField?: string): StoredRecipe | undefined => {
   const hosts = purposeToListOfHosts(purposeField);
   if (hosts == null) return undefined;
   return commaSeparatedHostsToBuiltInRecipe[hosts.join(",")];
