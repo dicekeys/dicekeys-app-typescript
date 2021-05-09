@@ -7,7 +7,7 @@ export const RecipeStore = new (class RecipeStore {
   protected recipesByName: Record<string, StoredRecipe>;
 
   addRecipe = action ( (recipe: StoredRecipe) => {
-    this.recipesByName[recipe.nameToSave] = recipe;
+    this.recipesByName[recipe.name] = recipe;
   });
 
   removeRecipeByName = action ( (recipeName: string) => {
@@ -23,7 +23,7 @@ export const RecipeStore = new (class RecipeStore {
 
   get recipes() {
     return Object.values(this.recipesByName)
-      .sort( (a, b) => a.nameToSave < b.nameToSave ? -1 : 1 );
+      .sort( (a, b) => a.name < b.name ? -1 : 1 );
   }
  
   recipeForName = (recipeName: string): StoredRecipe | undefined => {

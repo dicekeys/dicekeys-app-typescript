@@ -16,9 +16,10 @@ import { RecipeFieldType } from "../../dicekeys/ConstructRecipe";
 
 // TO DO
 
-// Include *. in purpose?
-// (including/excluding subdomains on all strings?)
+// Fields automatically added to name
+
 // Saved recipes and built-in recipes default to non-edit mode, edit button loads them
+
 // Clear button to empty recipe
 // Delete recipe menu?
 
@@ -36,6 +37,8 @@ import { RecipeFieldType } from "../../dicekeys/ConstructRecipe";
 
 // DONE
 
+// Include *. in purpose?
+// (including/excluding subdomains on all strings?)
 // Ensure lengthInBytes appears for secrets view
 // Recalculate suggested names by mapping purpose strings back to templates
 // Load templates directly into fields

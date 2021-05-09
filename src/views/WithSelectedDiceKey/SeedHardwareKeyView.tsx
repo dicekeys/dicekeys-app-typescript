@@ -2,7 +2,7 @@ import React from "react";
 import { makeAutoObservable } from "mobx";
 import { observer  } from "mobx-react";
 import { DiceKey } from "../../dicekeys/DiceKey";
-import { addSequenceNumberToRecipeJson } from "../../dicekeys/StoredRecipe";
+import { addSequenceNumberToRecipeJson } from "../../dicekeys/ConstructRecipe";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { uint8ArrayToHexString } from "../../utilities/convert";
 import { GeneratedTextFieldViewWithSharedToggleState, GeneratedTextFieldView, DiceKeyAsSeedView } from "../basics/GeneratedTextField";

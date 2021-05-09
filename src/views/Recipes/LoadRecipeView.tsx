@@ -1,7 +1,7 @@
 import css from "./RecipeBuilderView.css";
 import React from "react";
 import { observer  } from "mobx-react";
-import { BuiltInRecipes, getStoredRecipe, savedRecipeIdentifier, templateRecipeIdentifier } from "../../dicekeys/StoredRecipe";
+import { BuiltInRecipes, enhancedStoredRecipeName, getStoredRecipe, savedRecipeIdentifier, templateRecipeIdentifier } from "../../dicekeys/StoredRecipe";
 import { RecipeStore } from "../../state/stores/RecipeStore";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 
@@ -16,7 +16,7 @@ export const LoadRecipeView = observer( ({state}: {
       <div>
         <select
           className={css.SelectRecipe}
-          value={ state.matchingBuiltInRecipe?.nameToSave == null ? "" :
+          value={ state.matchingBuiltInRecipe?.name == null ? "" :
               templateRecipeIdentifier(state.matchingBuiltInRecipe)
             }
           placeholder={"Placeholder"}
@@ -29,13 +29,13 @@ export const LoadRecipeView = observer( ({state}: {
           {savedRecipes.length == 0 ? (<></>) : (
             <optgroup key={"Saved Recipes"} label={"Saved Recipes"}>
               { savedRecipes.map( savedRecipe => (
-                <option key={ savedRecipe.nameToSave } value={ savedRecipeIdentifier(savedRecipe)} >{ savedRecipe.nameToSave }</option>
+                <option key={ savedRecipe.name } value={ savedRecipeIdentifier(savedRecipe)} >{ enhancedStoredRecipeName(savedRecipe) }</option>
               ))}
             </optgroup>
           )}
           <optgroup key={"Built-in recipes"} label={"Built-in recipes"}>
             { BuiltInRecipes.map( template => (
-              <option key={template.nameToSave} value={templateRecipeIdentifier(template)} >{ template.nameToSave }</option>
+              <option key={template.name} value={templateRecipeIdentifier(template)} >{ enhancedStoredRecipeName(template) }</option>
             ))}
           </optgroup>
         </select>

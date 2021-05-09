@@ -42,7 +42,7 @@ export const passwordRecipeJson = (hostOrHosts: SingletonOrArrayOf<string>) =>
 
 const defaultPasswordConsumerList: PasswordConsumer[] = BuiltInRecipes
   .filter( r => r.type == "Password" )
-  .map( ({nameToSave: name, recipeJson}) => ({
+  .map( ({name: name, recipeJson}) => ({
     name: name,
     recipe: recipeJson  
 }) )

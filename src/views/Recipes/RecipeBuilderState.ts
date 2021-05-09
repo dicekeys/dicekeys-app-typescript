@@ -12,7 +12,7 @@ import { NumericTextFieldState } from "../../views/basics/NumericTextFieldView";
 /**
  * State for building and displaying recipes
  */
-export class RecipeBuilderState implements Partial<StoredRecipe> /* ,RecipeTypeState,PurposeFieldState */ {
+export class RecipeBuilderState {
   constructor() {
     makeAutoObservable(this);
   }
@@ -62,7 +62,7 @@ export class RecipeBuilderState implements Partial<StoredRecipe> /* ,RecipeTypeS
   // Name field ("name") to be saved
   ////////////////////////////////////
   get prescribedName(): string | undefined {
-    const baseName = this.matchingBuiltInRecipe?.nameToSave ?? this.purpose ?? this.hosts?.join(", ");
+    const baseName = this.matchingBuiltInRecipe?.name ?? this.purpose ?? this.hosts?.join(", ");
     if (typeof(baseName) === "undefined") return;
     const sequenceNumber = this.sequenceNumber! > 1  ? ` (${this.sequenceNumber})` : "";
     return `${baseName}${sequenceNumber}`

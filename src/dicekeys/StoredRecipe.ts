@@ -1,4 +1,5 @@
 import {DerivableObjectName, Recipe} from "@dicekeys/dicekeys-api-js"
+import { describeRecipeType } from "~views/Recipes/DescribeRecipeType";
 import { jsonStringifyWithSortedFieldOrder } from "../utilities/json";
 import { purposeToListOfHosts, recipeJsonToHosts } from "./ConstructRecipe";
 
@@ -7,7 +8,7 @@ export type DerivationRecipeType = DerivableObjectName
 export class StoredRecipe<NAME extends string = string> {
   constructor(
     public readonly type: DerivationRecipeType,
-    public readonly nameToSave: NAME,
+    public readonly name: NAME,
     public readonly recipeJson: string
   ) {
   }
@@ -63,38 +64,6 @@ export const getStoredRecipe = (recipeIdentifier?: PotentialRecipeIdentifier): S
     storedRecipeIfTemplateRecipeIdentifier(recipeIdentifier);
 }
 
-
-const addFieldToEndOfJsonObjectString = (fieldName: string, quote: boolean = false, doNotAddIfValueIs: string | number | undefined = undefined) =>
-  (originalJsonObjectString: string | undefined, fieldValue?: string | number): string | undefined => {
-  if (typeof fieldValue == "undefined" || fieldValue == doNotAddIfValueIs) return originalJsonObjectString;
-  const srcString = (typeof originalJsonObjectString === "undefined" || originalJsonObjectString.length === 0) ? "{}" : originalJsonObjectString;
-  const lastClosingBraceIndex = srcString.lastIndexOf("}");
-  if (lastClosingBraceIndex < 0) {return srcString }
-  const prefixUpToFinalClosingBrace = srcString.substr(0, lastClosingBraceIndex);
-  const suffixIncludingFinalCloseBrace = srcString.substr(lastClosingBraceIndex);
-  const commaIfObjectNonEmpty = srcString.indexOf(":") > 0 ? "," : "";
-  const fieldValueString = typeof fieldValue == "string" && quote ? `"${fieldValue.replace(/\"/g, "\\\"")}"` : `${fieldValue}`;
-  return prefixUpToFinalClosingBrace + `${commaIfObjectNonEmpty}"${fieldName}":${fieldValueString}` + suffixIncludingFinalCloseBrace;
-}
-
-export const addLengthInBytesToRecipeJson: <T extends string | undefined>(recipeWithoutLengthInBytes: T, lengthInBytes?: number) => string | undefined = addFieldToEndOfJsonObjectString("lengthInBytes", false, 32); 
-export const addLengthInCharsToRecipeJson: <T extends string | undefined>(recipeWithoutLengthInChars: T, lengthInChars?: number) => string | undefined = addFieldToEndOfJsonObjectString("lengthInChars", false, 0); 
-export const addSequenceNumberToRecipeJson: <T extends string | undefined>(recipeWithoutSequenceNumber: T, sequenceNumber?: number) => string | undefined = addFieldToEndOfJsonObjectString("#", false, 1);
-export const addPurposeToRecipeJson: <T extends string | undefined>(recipeWithoutPurpose: T, purpose?: string) => string | undefined = addFieldToEndOfJsonObjectString("purpose", true);
-export const addAllowToRecipeJson: <T extends string | undefined>(recipeWithoutAllow: T, allow?: string) => string | undefined = addFieldToEndOfJsonObjectString("allow", false);
-
-const getHostRestrictionsArrayAsString = (hosts: string[]): string =>
-  `[${hosts
-        .map( host => `{"host":"${host}"}` )
-        .join(",")
-    }]`;
-
-export const addHostsToRecipeJson = (recipeWithoutAllow: string | undefined, hosts: string[]): string | undefined => {
-  if (hosts.length === 0) return recipeWithoutAllow;
-  const allow = getHostRestrictionsArrayAsString(hosts.sort());
-  return addAllowToRecipeJson(recipeWithoutAllow, allow);
-}
-
 export type DiceKeysAppSecretRecipe = Recipe & {
   // FIXME -- definition of recipe out of date in API, fix that and remove this hack
   lengthInChars?: number;
@@ -102,6 +71,21 @@ export type DiceKeysAppSecretRecipe = Recipe & {
   // Sequence numbers
   '#'?: number;
   purpose?: string;
+}
+
+export const enhancedStoredRecipeName = (storedRecipe: StoredRecipe): string => {
+  const {name, type, recipeJson} = storedRecipe;
+  const recipe = JSON.parse(recipeJson) as DiceKeysAppSecretRecipe;
+  const {lengthInBytes, lengthInChars} = recipe;
+  const sequenceNumber = recipe["#"];
+  const suffixes = [] as string[];
+
+  suffixes.push(describeRecipeType(type));
+    return `${name} ${describeRecipeType(type)}${
+        lengthInBytes == null ? "" : ` (${lengthInBytes} bytes)`
+    }${ lengthInChars == null ? "" : ` (${lengthInChars} chars)`
+  }${ sequenceNumber == null ? "" : ` #${sequenceNumber}`
+}`;
 }
 
 const commaSeparatedHostsToBuiltInRecipe = BuiltInRecipes.reduce( (result, savedRecipe) => {
