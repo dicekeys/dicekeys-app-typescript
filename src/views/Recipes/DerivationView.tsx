@@ -2,31 +2,31 @@ import css from "./RecipeBuilderView.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderView } from ".";
-import { CachedApiCalls } from "../../api-handler/CachedApiCalls";
-import { RecipeBuilderState, SelectedRecipeState } from "./RecipeBuilderState";
+import { RecipeBuilderState } from "./RecipeBuilderState";
 import { RecipeTemplateSelectorView } from "./RecipeTemplateSelectorView";
 import { DiceKey } from "~dicekeys/DiceKey";
-import { RecipesDerivedValuesView } from "./RecipesDerivedValuesView";
+import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
+import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
 
 interface DerivationViewProps {
   seedString: string;
 }
 
-export const DerivationViewWithState = observer( ( {selectedRecipeState, recipeBuilderState}: {
-  selectedRecipeState: SelectedRecipeState,
+export const DerivationViewWithState = observer( ( {recipeBuilderState, derivedFromRecipeState}: {
   recipeBuilderState: RecipeBuilderState
+  derivedFromRecipeState: DerivedFromRecipeState
 }) => (
   <div className={css.DerivationView}>
-    <RecipeTemplateSelectorView {...{selectedRecipeState, state: recipeBuilderState}} />
+    <RecipeTemplateSelectorView {...{state: recipeBuilderState}} />
     <RecipeBuilderView state={recipeBuilderState} />
-    <RecipesDerivedValuesView {...{state: recipeBuilderState}} />
+    <DerivedFromRecipeView {...{state: derivedFromRecipeState}} />
   </div>
 ));
 export const DerivationView = observer ( (props: DerivationViewProps) => {
-  const selectedRecipeState = new SelectedRecipeState();
-  const recipeBuilderState =  new RecipeBuilderState(selectedRecipeState, new CachedApiCalls(props.seedString));
+  const recipeBuilderState =  new RecipeBuilderState();
+  const derivedFromRecipeState = new DerivedFromRecipeState({recipe: recipeBuilderState, seedString: props.seedString});
   return (
-    <DerivationViewWithState {...{selectedRecipeState, recipeBuilderState}}/>
+    <DerivationViewWithState {...{recipeBuilderState, derivedFromRecipeState}}/>
   )
 });
 

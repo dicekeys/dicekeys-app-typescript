@@ -23,6 +23,8 @@ import { RecipeFieldType } from "../../dicekeys/SavedRecipe";
 
 // compare resulting recipeJson to see if still matches template/saved version
 
+// limit to one calculation at a time
+
 // LATER?
 
 // Add/remove field for optional fields?

@@ -25,7 +25,7 @@ export const CopyButton = observer ( (props: CopyButtonProps) => {
     // FUTURE - provide user notification that copy happened.
   });
   return (
-   <CharButton hidden={props.value == null} onClick={copyToClipboard}>&#128203;<CharButtonToolTip>Copy to clipboard</CharButtonToolTip></CharButton>
+   <CharButton hidden={props.value == null} onClick={copyToClipboard}>&#128203;<CharButtonToolTip></CharButtonToolTip></CharButton>
   );
 });
 

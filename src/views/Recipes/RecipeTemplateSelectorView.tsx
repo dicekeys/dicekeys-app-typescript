@@ -4,7 +4,7 @@ import React from "react";
 import { observer  } from "mobx-react";
 import { BuiltInRecipes } from "../../dicekeys/SavedRecipe";
 import { RecipeStore } from "../../state/stores/RecipeStore";
-import { savedRecipeIdentifier, SelectedRecipeIdentifier, templateRecipeIdentifier, RecipeBuilderState } from "./RecipeBuilderState";
+import { savedRecipeIdentifier, templateRecipeIdentifier, RecipeBuilderState } from "./RecipeBuilderState";
 
 const SavedRecipesOptGroup = observer( () => {
   const savedRecipes = RecipeStore.recipes;
@@ -29,14 +29,13 @@ export const RecipeTemplateSelectorView = observer( ({state}: {
         <div className={css.hstack}>
           <select
             className={xcss.SelectRecipe}
-            value={ state.selectedRecipeState.recipeIdentifier ?? "" }
+            value={ state.matchingBuiltInRecipe?.name == null ? "" :
+                templateRecipeIdentifier(state.matchingBuiltInRecipe?.name)
+              }
             placeholder={"Placeholder"}
             onChange={ (e) => {
-              state.selectedRecipeState.setSelectedRecipeIdentifier(e.currentTarget.value as SelectedRecipeIdentifier | undefined);
-              const {templateRecipe} = state.selectedRecipeState;
-              if (templateRecipe) {
-                state.loadSavedRecipe(templateRecipe)
-              }
+              // state.selectedRecipeState.setSelectedRecipeIdentifier(e.currentTarget.value as SelectedRecipeIdentifier | undefined);
+              state.loadSavedRecipe(e.currentTarget.value)
               state.showHelpFor(undefined);
             }}
           >
