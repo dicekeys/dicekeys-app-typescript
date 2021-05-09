@@ -1,4 +1,4 @@
-import { BuiltInRecipes } from "./BuiltInRecipes";
+import { BuiltInRecipes } from "./SavedRecipe";
 import {
   restrictionsJson
 } from "./restrictions-json";
