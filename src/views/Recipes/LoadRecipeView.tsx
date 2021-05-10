@@ -1,7 +1,7 @@
 import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
-import { BuiltInRecipes, enhancedStoredRecipeName, getStoredRecipe, savedRecipeIdentifier, builtInRecipeIdentifier, savedRecipeIdentifierToStoredRecipe, customRecipeIdentifier } from "../../dicekeys/StoredRecipe";
+import { BuiltInRecipes, enhancedStoredRecipeName, getStoredRecipe, savedRecipeIdentifier, builtInRecipeIdentifier, customRecipeIdentifier } from "../../dicekeys/StoredRecipe";
 import { RecipeStore } from "../../state/stores/RecipeStore";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { DerivableObjectNameList, describeRecipeType } from "./DescribeRecipeType";
