@@ -1,6 +1,6 @@
 import { action, makeAutoObservable } from "mobx";
 import {
-  StoredRecipe, DerivationRecipeType, purposeToBuiltInRecipe
+  StoredRecipe, DerivationRecipeType, builtInRecipeIdentifier, isRecipeBuiltIn, RecipeIdentifier, savedRecipeIdentifier, SavedRecipeIdentifier, BuiltInRecipeIdentifier
 } from "../../dicekeys/StoredRecipe";
 import {
   getRecipeJson,
@@ -12,6 +12,7 @@ import {
 } from "../../dicekeys/ConstructRecipe";
 import { NumericTextFieldState } from "../../views/basics/NumericTextFieldView";
 import { Recipe } from "@dicekeys/dicekeys-api-js";
+import { RecipeStore } from "~state/stores/RecipeStore";
 
 type EditingMode = "fields" | "json" | undefined;
 
@@ -29,17 +30,18 @@ export class RecipeBuilderState {
   } )
 
   //
-  editing: boolean = true;
+  editing: boolean = false;
   get editingMode(): EditingMode { return this.editing ? (this.recipeJsonField != null ? "json" : "fields" ) : undefined };
   get mayEditFields(): boolean {
     const recipeJson = this.recipeJsonField;
-    return recipeJson != null && isRecipeJsonConstructableFromFields(recipeJson)
+    return recipeJson == null || isRecipeJsonConstructableFromFields(recipeJson)
   }
   setStartEditingFields = action ( () => {
     const recipeJson = this.recipeJsonField;
     if (recipeJson != null && isRecipeJsonConstructableFromFields(recipeJson)) {
       this.setFieldsFromRecipeJson(recipeJson);
     }
+    this.recipeJsonField = undefined;
     this.editing = true;  
   });
   setStartEditingRawJson = action ( () => {
@@ -79,7 +81,7 @@ export class RecipeBuilderState {
   // LengthInChars field ("lengthInChars") for Passwords only
   /////////////////////////////////////////////////////////////
   get mayEditLengthInChars(): boolean { return this.type === "Password" }
-  lengthInCharsState = new NumericTextFieldState({minValue: 16, defaultValue: 64});
+  lengthInCharsState = new NumericTextFieldState({minValue: 16, incrementBy: 4, defaultValue: 64});
   get lengthInChars(): number | undefined { return this.lengthInCharsState.numericValue }
 
   ///////////////////////////////////////////////////////////
@@ -93,7 +95,7 @@ export class RecipeBuilderState {
   // Name field ("name") to be saved
   ////////////////////////////////////
   get prescribedName(): string | undefined {
-    return this.matchingBuiltInRecipe?.name ?? this.purpose?.substr(0, 20) ?? this.hosts?.join(", ");
+    return this.purpose?.substr(0, 20) ?? this.hosts?.join(", ");
   }
 
   public name: string = "";
@@ -123,20 +125,44 @@ export class RecipeBuilderState {
    * The JSON of the recipe after all user adjustment have been applied
    */
   recipeJsonField: string | undefined;
-  setRecipeJson = action ( (recipeJson: string) => {
+  setRecipeJson = action ( (recipeJson: string | undefined) => {
+    if (recipeJson != null) {
+      this.setFieldsFromRecipeJson(recipeJson);
+    } else {
+      this.emptyAllRecipeFields();
+    }
     this.recipeJsonField = recipeJson;
-    this.setFieldsFromRecipeJson(recipeJson);
   });
   get prescribedRecipeJson(): string | undefined {
     return getRecipeJson(this);
   }
-  get recipeJson(): string | undefined {
-    return this.recipeJsonField ?? getRecipeJson(this);
-  }
-  
 
-  get matchingBuiltInRecipe(): StoredRecipe | undefined {
-    return purposeToBuiltInRecipe(this.purposeField);
+  get recipeJson(): string | undefined {
+    return (this.editingMode === "fields" || this.recipeJsonField == null) ? getRecipeJson(this) : this.recipeJsonField;
+  }
+
+  get savedRecipeIdentifer(): SavedRecipeIdentifier | undefined {
+    const {type, name, recipeJson} = this;
+    if (type == null || name == null || recipeJson == null) return;
+    const storedRecipe: StoredRecipe = {type, name, recipeJson};
+    if (RecipeStore.isRecipeSaved(storedRecipe)) {
+      return savedRecipeIdentifier(storedRecipe);
+    }
+    return;
+  }
+
+  get builtInRecipeIdentifer(): BuiltInRecipeIdentifier | undefined {
+    const {type, name, recipeJson} = this;
+    if (type == null || name == null || recipeJson == null) return;
+    const storedRecipe: StoredRecipe = {type, name, recipeJson};
+    if (isRecipeBuiltIn(storedRecipe)) {
+      return builtInRecipeIdentifier(storedRecipe);
+    }
+    return;
+  }
+
+  get recipeIdentifier(): RecipeIdentifier | undefined {
+    return this.savedRecipeIdentifer || this.builtInRecipeIdentifer;
   }
 
   get areAllRecipeFieldsEmpty(): boolean {
@@ -156,10 +182,12 @@ export class RecipeBuilderState {
   })
 
   setFieldsFromRecipeJson = action ( (recipeJson: string) => {
-    const {type} = JSON.parse(recipeJson) as Recipe;
-    if (type != null) {
-      this.type = type;
-    }
+    try {
+      const {type} = JSON.parse(recipeJson) as Recipe;
+      if (type != null) {
+        this.type = type;
+      }
+    } catch {}
     const recipeFields = recipeJsonToAddableFields(recipeJson);
     const {purpose, hosts} = recipeFields;
     if (purpose != null) {
@@ -172,25 +200,13 @@ export class RecipeBuilderState {
     this.lengthInCharsState.setValue(recipeFields.lengthInChars);
   });
 
-  loadRecipe = action ((storedRecipe?: StoredRecipe) => {
+  loadRecipe = action ((storedRecipe?: Partial<StoredRecipe>) => {
     if (storedRecipe == null) return;
     this.emptyAllRecipeFields();
-    this.name = storedRecipe.name;
+    this.name = storedRecipe.name ?? "";
     this.type = storedRecipe.type;
-    this.editing = false;
+    // Edit if custom recipe
+    this.editing = storedRecipe.name == null;
     this.setRecipeJson(storedRecipe.recipeJson);
-    // const template = JSON.parse(storedRecipe.recipeJson ?? "{}") as DiceKeysAppSecretRecipe;
-    // const {purpose, allow} = template;
-    // this.type = template.type ?? storedRecipe.type;
-    // this.setPurposeField(
-    //   purpose != null ? purpose :
-    //   allow != null ? allow.map( ({host}) => host.trim() /*
-    //       host.startsWith("*.") ? host.substr(2) : host */
-    //     ).sort().join(", ") :
-    //   this.purposeField
-    // );
-    // this.sequenceNumberState.setValue(template["#"]);
-    // this.lengthInBytesState.setValue(template.lengthInBytes);
-    // this.lengthInCharsState.setValue(template.lengthInChars);
   });
 }

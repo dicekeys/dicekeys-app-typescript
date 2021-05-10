@@ -52,7 +52,8 @@ interface AddableRecipeFields {
 }
 
 export const recipeJsonToHosts = (recipeJson: string | undefined): string[] => {
-  const {allow} = (JSON.parse(recipeJson ?? "{}") as DiceKeysAppSecretRecipe);
+  if (recipeJson == null) return [];
+  const {allow} = (JSON.parse(recipeJson) as DiceKeysAppSecretRecipe);
   return allow == null ? [] : allow.map( ({host}) => host.trim() /* {
       host = host.trim();
       return host.startsWith("*.") ? host.substr(2) : host 
@@ -131,25 +132,34 @@ export const getRecipeJson = (spec: AddableRecipeFields, templateRecipeJson?: st
 }
 
 export const recipeJsonToAddableFields = (recipeJson: string): AddableRecipeFields => {
-  const {allow, ...parsed} = JSON.parse(recipeJson) as AddableRecipeFields & DiceKeysAppSecretRecipe;
-  if (allow != null) {
-    parsed.hosts = allowFieldToHostList(allow);
-    // Current constructor allows either purpose or hosts, but not both
-    delete parsed.purpose;
+  try {
+    const {allow, ...parsed} = JSON.parse(recipeJson) as AddableRecipeFields & DiceKeysAppSecretRecipe;
+    if (allow != null) {
+      parsed.hosts = allowFieldToHostList(allow);
+      // Current constructor allows either purpose or hosts, but not both
+      delete parsed.purpose;
+    }
+    if (parsed["#"] != null) {
+      parsed.sequenceNumber = parsed["#"];
+      delete parsed["#"];
+    }
+    return parsed;
+  } catch {
+    return {};
   }
-  if (parsed["#"] != null) {
-    parsed.sequenceNumber = parsed["#"];
-    delete parsed["#"];
-  }
-  return parsed;
 }
 
 export const isRecipeJsonConstructableFromFields = (recipeJson: string): boolean => {
-  const {allow, ...parsed} = JSON.parse(recipeJson) as AddableRecipeFields & DiceKeysAppSecretRecipe;
-  if (allow != null) {
-    parsed.hosts = allowFieldToHostList(allow);
-    // Current constructor allows either purpose or hosts, but not both
-    delete parsed.purpose;
+  if (recipeJson = "{}" || recipeJson == "") return true;
+  try {
+    const {allow, ...parsed} = JSON.parse(recipeJson) as AddableRecipeFields & DiceKeysAppSecretRecipe;
+    if (allow != null) {
+      parsed.hosts = allowFieldToHostList(allow);
+      // Current constructor allows either purpose or hosts, but not both
+      delete parsed.purpose;
+    }
+    return getRecipeJson(parsed) === recipeJson;
+  } catch {
+    return false;
   }
-  return getRecipeJson(parsed) === recipeJson;
 }

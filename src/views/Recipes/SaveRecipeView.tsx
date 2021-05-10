@@ -2,26 +2,39 @@ import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeStore } from "~state/stores/RecipeStore";
-import { action } from "mobx";
 import { RecipeBuilderState } from "./RecipeBuilderState";
-import { getStoredRecipeNameSuffix, StoredRecipe } from "../../dicekeys/StoredRecipe";
+import { getStoredRecipeNameSuffix, savedRecipeIdentifierToStoredRecipe, StoredRecipe } from "../../dicekeys/StoredRecipe";
 
 export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) => {
   const {name, recipeJson, type} = state;
   if (type == null || recipeJson == null) {
     return null;
   }
-  const storedRecipe: StoredRecipe = {name, recipeJson, type};
-  const isAlreadySaved = RecipeStore.isRecipeSaved(storedRecipe);
-  const disableSaveButton = isAlreadySaved || name == null || name.length === 0; // ||
+  
 
-  const save = recipeJson && name != null && name.length > 0 && recipeJson.length > 0 ? action ( () => {
-    RecipeStore.addRecipe(storedRecipe);
-    // alert(`Added ${type}:${name}:${recipeJson}`)
-  }) : undefined;
+
+
+  const saveOrDelete = () => {
+    const {savedRecipeIdentifer} = state;
+    if (savedRecipeIdentifer) {
+      // This is already saved so must be the delete button
+      RecipeStore.removeRecipe(savedRecipeIdentifierToStoredRecipe(savedRecipeIdentifer));
+    } else {
+      const storedRecipe: StoredRecipe = {name, recipeJson, type};
+      RecipeStore.addRecipe(storedRecipe)
+    }
+  }
+
   return (
     <div className={css.SaveRecipeSubRow}>
-      <button className={css.SaveButton} hidden={disableSaveButton} onClick={save}>{ "save as" }</button>
+      <button
+        hidden={!state.recipeIdentifier || state.editingMode != null}
+        onClick={state.setStartEditing}
+      >edit</button>
+      <button className={css.SaveButton}
+        hidden={state.name == null || state.name.length == 0}
+        onClick={saveOrDelete}
+        >{state.savedRecipeIdentifer ? "delete" : "save as"}</button>
       <input disabled={state.editingMode == null} type="text" className={css.SaveRecipeName} value={state.name} placeholder={ state.prescribedName } size={ (state.name.length || state.prescribedName?.length || 0) + 1}
         onInput={ (e) => state.setName( e.currentTarget.value )}
         onFocus={ (e) => {
@@ -30,7 +43,7 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
           }
         }}  
       />
-      <span className={css.SaveRecipeNameExtension} >&nbsp;{ getStoredRecipeNameSuffix(storedRecipe) }&nbsp;</span>
+      <span className={css.SaveRecipeNameExtension} >&nbsp;{ getStoredRecipeNameSuffix(state) }&nbsp;</span>
     </div>
     )
   }

@@ -1,7 +1,6 @@
 import {DerivableObjectName, Recipe} from "@dicekeys/dicekeys-api-js"
 import { describeRecipeType } from "~views/Recipes/DescribeRecipeType";
 import { jsonStringifyWithSortedFieldOrder } from "../utilities/json";
-import { purposeToListOfHosts, recipeJsonToHosts } from "./ConstructRecipe";
 
 export type DerivationRecipeType = DerivableObjectName
 
@@ -28,40 +27,54 @@ export const BuiltInRecipes: StoredRecipe[] = [
 
 
 const savedPrefix = "saved:";
-const templatePrefix = "template:";
-export type SavedRecipeIdentifier= `${typeof savedPrefix}${string}`;
-export type TemplateRecipeIdentifier= `${typeof templatePrefix}${string}`;
-export type RecipeIdentifier = SavedRecipeIdentifier | TemplateRecipeIdentifier
+const builtInPrefix = "builtIn:";
+const customPrefix = "custom:";
+export type SavedRecipeIdentifier = `${typeof savedPrefix}${string}`;
+export type BuiltInRecipeIdentifier = `${typeof builtInPrefix}${string}`;
+export type CustomRecipeIdentifier = `${typeof customPrefix}${string}`;
+export type RecipeIdentifier = SavedRecipeIdentifier | BuiltInRecipeIdentifier | CustomRecipeIdentifier;
 export type PotentialRecipeIdentifier = RecipeIdentifier | string;
 export const savedRecipeIdentifier = (storedRecipe: StoredRecipe) =>
   `${savedPrefix}${jsonStringifyWithSortedFieldOrder(storedRecipe)}` as SavedRecipeIdentifier;
-export const templateRecipeIdentifier = (storedRecipe: StoredRecipe) =>
-  `${templatePrefix}${jsonStringifyWithSortedFieldOrder(storedRecipe)}` as TemplateRecipeIdentifier;
+export const builtInRecipeIdentifier = (storedRecipe: StoredRecipe) =>
+  `${builtInPrefix}${jsonStringifyWithSortedFieldOrder(storedRecipe)}` as BuiltInRecipeIdentifier;
+export const customRecipeIdentifier = (storedRecipe: Omit<StoredRecipe, "recipeJson" | "name">) =>
+  `${customPrefix}${jsonStringifyWithSortedFieldOrder(storedRecipe)}` as BuiltInRecipeIdentifier;
 export const isSavedRecipeIdentifier = 
   (recipeIdentifier?: SavedRecipeIdentifier | string): recipeIdentifier is SavedRecipeIdentifier =>
     !!(recipeIdentifier?.startsWith(savedPrefix));
-export const isTemplateRecipeIdentifier = 
-  (recipeIdentifier?: TemplateRecipeIdentifier | string): recipeIdentifier is TemplateRecipeIdentifier =>
-    !!(recipeIdentifier?.startsWith(templatePrefix));
+export const isBuiltInRecipeIdentifier = 
+  (recipeIdentifier?: BuiltInRecipeIdentifier | string): recipeIdentifier is BuiltInRecipeIdentifier =>
+    !!(recipeIdentifier?.startsWith(builtInPrefix));
+export const isCustomRecipeIdentifier = 
+  (recipeIdentifier?: CustomRecipeIdentifier | string): recipeIdentifier is CustomRecipeIdentifier =>
+    !!(recipeIdentifier?.startsWith(customPrefix));
 export const savedRecipeIdentifierToStoredRecipe = 
-  (identifier: SavedRecipeIdentifier): StoredRecipe => JSON.parse(identifier.substr(savedPrefix.length)) as StoredRecipe;
-export const templateRecipeIdentifierToStoredRecipe = 
-  (identifier: TemplateRecipeIdentifier): StoredRecipe => JSON.parse(identifier.substr(templatePrefix.length)) as StoredRecipe;
+  (identifier: SavedRecipeIdentifier) => JSON.parse(identifier.substr(savedPrefix.length)) as StoredRecipe;
+export const builtInRecipeIdentifierToStoredRecipe = 
+  (identifier: BuiltInRecipeIdentifier) => JSON.parse(identifier.substr(builtInPrefix.length)) as StoredRecipe;
+export const customRecipeIdentifierToStoredRecipe = 
+  (identifier: CustomRecipeIdentifier) => JSON.parse(identifier.substr(customPrefix.length)) as Omit<StoredRecipe, "recipeJson" | "name">;
 
 export const storedRecipeIfSavedRecipeIdentifier =
 (identifier: SavedRecipeIdentifier | string | undefined) =>
     (isSavedRecipeIdentifier(identifier) ? savedRecipeIdentifierToStoredRecipe(identifier) : undefined)  as (
       typeof identifier extends SavedRecipeIdentifier ? StoredRecipe : undefined
     );
-export const storedRecipeIfTemplateRecipeIdentifier =
-  (identifier: TemplateRecipeIdentifier | string | undefined) =>
-    (isTemplateRecipeIdentifier(identifier) ? templateRecipeIdentifierToStoredRecipe(identifier) : undefined)  as (
-      typeof identifier extends TemplateRecipeIdentifier ? StoredRecipe : undefined
+export const storedRecipeIfBuiltInRecipeIdentifier =
+  (identifier: BuiltInRecipeIdentifier | string | undefined) =>
+    (isBuiltInRecipeIdentifier(identifier) ? builtInRecipeIdentifierToStoredRecipe(identifier) : undefined)  as (
+      typeof identifier extends BuiltInRecipeIdentifier ? StoredRecipe : undefined
     );
-
+export const storedRecipeIfCustomRecipeIdentifier =
+  (identifier: CustomRecipeIdentifier | string | undefined) =>
+    (isCustomRecipeIdentifier(identifier) ? customRecipeIdentifierToStoredRecipe(identifier) : undefined)  as (
+      typeof identifier extends CustomRecipeIdentifier ? StoredRecipe : undefined
+    );
 export const getStoredRecipe = (recipeIdentifier?: PotentialRecipeIdentifier): StoredRecipe | undefined => {
   return storedRecipeIfSavedRecipeIdentifier(recipeIdentifier) ??
-    storedRecipeIfTemplateRecipeIdentifier(recipeIdentifier);
+    storedRecipeIfBuiltInRecipeIdentifier(recipeIdentifier) ??
+    storedRecipeIfCustomRecipeIdentifier(recipeIdentifier);
 }
 
 export type DiceKeysAppSecretRecipe = Recipe & {
@@ -73,16 +86,21 @@ export type DiceKeysAppSecretRecipe = Recipe & {
   purpose?: string;
 }
 
-export const getStoredRecipeNameSuffix = (storedRecipe: StoredRecipe): string => {
+export const getStoredRecipeNameSuffix = (storedRecipe: Partial<StoredRecipe>): string => {
   const {type, recipeJson} = storedRecipe;
-  const recipe = JSON.parse(recipeJson) as DiceKeysAppSecretRecipe;
-  const {lengthInBytes, lengthInChars} = recipe;
-  const sequenceNumber = recipe["#"];
-  return `${describeRecipeType(type)}${
-        lengthInBytes == null ? "" : ` (${lengthInBytes} bytes)`
-    }${ lengthInChars == null ? "" : ` (${lengthInChars} chars)`
-  }${ sequenceNumber == null ? "" : ` #${sequenceNumber}`
-}`;
+  if (!type || !recipeJson) return "";
+  try {
+    const recipe = JSON.parse(recipeJson) as DiceKeysAppSecretRecipe;
+    const {lengthInBytes, lengthInChars} = recipe;
+    const sequenceNumber = recipe["#"];
+    return `${describeRecipeType(type)}${
+          lengthInBytes == null ? "" : ` (${lengthInBytes} bytes)`
+      }${ lengthInChars == null ? "" : ` (${lengthInChars} chars)`
+      }${ sequenceNumber == null ? "" : ` #${sequenceNumber}`
+    }`;
+  } catch {
+    return describeRecipeType(type);
+  }
 }
 
 export const enhancedStoredRecipeName = (storedRecipe: StoredRecipe): string => {
@@ -90,16 +108,23 @@ export const enhancedStoredRecipeName = (storedRecipe: StoredRecipe): string => 
   return `${name} ${getStoredRecipeNameSuffix(storedRecipe)}`;
 }
 
-const commaSeparatedHostsToBuiltInRecipe = BuiltInRecipes.reduce( (result, savedRecipe) => {
-  const hosts = recipeJsonToHosts(savedRecipe.recipeJson);
-  if (hosts.length > 0) {
-    result[hosts.join(",")] = savedRecipe
-  }
-  return result
-}, {} as Record<string, StoredRecipe>);
+export const isRecipeBuiltIn = (storedRecipe: Partial<StoredRecipe>): boolean =>
+  !!BuiltInRecipes.find( savedRecipe =>
+    storedRecipe.recipeJson === savedRecipe.recipeJson &&
+    storedRecipe.type === savedRecipe.type  &&
+    storedRecipe.name === savedRecipe.name
+  )
 
-export const purposeToBuiltInRecipe = (purposeField?: string): StoredRecipe | undefined => {
-  const hosts = purposeToListOfHosts(purposeField);
-  if (hosts == null) return undefined;
-  return commaSeparatedHostsToBuiltInRecipe[hosts.join(",")];
-}
+// const commaSeparatedHostsToBuiltInRecipe = BuiltInRecipes.reduce( (result, savedRecipe) => {
+//   const hosts = recipeJsonToHosts(savedRecipe.recipeJson);
+//   if (hosts.length > 0) {
+//     result[hosts.join(",")] = savedRecipe
+//   }
+//   return result
+// }, {} as Record<string, StoredRecipe>);
+
+// export const purposeToBuiltInRecipe = (purposeField?: string): StoredRecipe | undefined => {
+//   const hosts = purposeToListOfHosts(purposeField);
+//   if (hosts == null) return undefined;
+//   return commaSeparatedHostsToBuiltInRecipe[hosts.join(",")];
+// }

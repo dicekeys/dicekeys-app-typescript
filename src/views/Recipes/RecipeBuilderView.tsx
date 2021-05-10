@@ -12,18 +12,12 @@ import { getRegisteredDomain } from "~domains/get-registered-domain";
 
 // IN PROGRESS
 
-// Restyling (location of load, edit button, etc.)
+// Restyling (location of load, edit, delete, etc.)
 
 // TO DO
 
-// Delete recipe menu?
-
-// Saved recipes and built-in recipes default to non-edit mode, edit button loads them
-
 // Clear button to empty recipe
-
 // Raw recipe editor with switch
-
 // limit to one calculation at a time
 
 // LATER?
@@ -32,6 +26,8 @@ import { getRegisteredDomain } from "~domains/get-registered-domain";
 
 // DONE
 
+// Delete recipe button
+// Saved recipes and built-in recipes default to non-edit mode, edit button loads them
 // Fields automatically added to name
 // Include *. in purpose?
 // (including/excluding subdomains on all strings?)
@@ -177,22 +173,24 @@ export const RecipeBuilderFieldsView = observer( ( {state}: {state: RecipeBuilde
 export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState}) => {
   return (
     <div className={css.RecipeBuilderBlock}>
-      <div className={css.RecipeFormFrame}>
-        <RecipeTypeSelectorView {...{state}} />
+      <RecipeTypeSelectorView {...{state}} />
         { state.editingMode == null ? (<></>) : (
+        <div className={css.RecipeFormFrame}>
           <RecipeFieldsHelpView {...{state}} />
+          { state.editingMode === "fields" ? (
+            < RecipeBuilderFieldsView state={state} />
+          ) : state.editingMode === "json" ? 
+            < RecipeBuilderFieldsView state={state} /> :
+            <></>
+          }
+        </div>
         )}
-        { state.editingMode === "fields" ? (
-          < RecipeBuilderFieldsView state={state} />
-        ) : state.editingMode === "json" ? 
-          < RecipeBuilderFieldsView state={state} /> :
-          <></>
-      }
-      </div>
-      <div className={css.RecipeAndExplanationBlock} >
-        <LabeledEnhancedRecipeView state={state} />
-        <RecipeDescriptionView type={state.type} recipeJson={state.recipeJson} /> 
-      </div>
+      {state.type == null ? (<></>) : (
+        <div className={css.RecipeAndExplanationBlock} >
+          <LabeledEnhancedRecipeView state={state} />
+          <RecipeDescriptionView type={state.type} recipeJson={state.recipeJson} /> 
+        </div>
+      )}
     </div>
   );
 });

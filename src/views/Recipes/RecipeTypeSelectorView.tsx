@@ -12,22 +12,24 @@ export const RecipeTypeSelectorView = observer( ({state}: {
 }) => {
   return (
     <div className={css.SelectAndSaveRow}>
-      Derive a&nbsp;
-      <select
-        className={css.SelectDerivedField}
-        value={ state.type ?? "" }
-        onMouseEnter={state.showHelpForFn(undefined)}
-        onChange={ (e) => {
-          state.setType(e.currentTarget.value as DerivationRecipeType | undefined);
-          state.setStartEditing();
-          state.showHelpFor(undefined);
-        }}
-      >
-        <option key="none" disabled={true} hidden={true} value="">...</option>
-        { DerivableObjectNameList.map( (recipeType) => (
-          <option key={ recipeType } value={ recipeType } >{ describeRecipeType(recipeType) }</option>
-        ))}              
-      </select>
+      <span hidden={state.editingMode == null}>
+        Derive a&nbsp;
+        <select
+          className={css.SelectDerivedField}
+          value={ state.type ?? "" }
+          onMouseEnter={state.showHelpForFn(undefined)}
+          onChange={ (e) => {
+            state.setType(e.currentTarget.value as DerivationRecipeType | undefined);
+            state.setStartEditing();
+            state.showHelpFor(undefined);
+          }}
+        >
+          <option key="none" disabled={true} hidden={true} value="">...</option>
+          { DerivableObjectNameList.map( (recipeType) => (
+            <option key={ recipeType } value={ recipeType } >{ describeRecipeType(recipeType) }</option>
+          ))}              
+        </select>
+      </span>
       <SaveRecipeView state={state} />
     </div>
   );

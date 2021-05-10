@@ -1,5 +1,6 @@
 .DerivationView {
-  max-width: 80vw;
+  width: 85vw;
+  min-height: 60vh;
 }
 
 .DeleteButton, .SaveButton {
@@ -7,8 +8,9 @@
 }
 
 .SaveButton {
-  margin-left: .25rem;
-  margin-right: 0.25rem;
+  width: 10ch;
+  margin-left: .5rem;
+  margin-right: .5rem;
 }
 
 .SelectAndSaveRow {
@@ -37,7 +39,6 @@
 }
 
 .SaveRecipeName {
-  /* min-width: 12rem; */
   font-size: 1rem;
   text-align: right;
   font-family: sans-serif;
@@ -87,20 +88,22 @@
 
 .RecipeBuilderBlock {
   /* margin-top: 1rem; */
+  display: flex;
+  flex-direction: column;
+  align-content: stretch;
   padding: 1rem;
   background-color: rgba(248,248,248,1);
-  max-width: 85w;
   border-top-right-radius: 0.5rem;
   border-bottom-right-radius: 0.5rem;
   border-bottom-left-radius: 0.5rem;
 }
 
 .RecipeAndExplanationBlock {
+  padding-top: 0.5rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  min-height: 4rem;
 }
 
 .RecipeFormFrame {
@@ -118,7 +121,6 @@
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
-  width: 75vw;
 }
 
 .RecipeHelpContent {
@@ -129,9 +131,8 @@
   align-items: stretch;
   align-content: flex-start;
   height: 3rem;
-  /* width: auto; */
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
   padding-bottom: 0.5rem;
   border-radius: 0.5rem;
 }
@@ -154,14 +155,7 @@
   padding-right: 1rem;
 }
 
-/* .RecipeField {
-  background-color: rgba(224, 224, 224, 1);
-} */
-
 .RecipeFieldSelected, .RecipeHelpContent {
-  /* border-top-color: gray;
-  border-top-width: 0.075rem;
-  border-top-style: solid; */
   background-color: rgba(248, 248, 248, 1);
   border-bottom-left-radius: 0.5rem;
   border-bottom-right-radius: 0.5rem;
@@ -176,18 +170,11 @@
   margin-bottom: 4px;
 }
 
-
-/* .FieldName:focus {
-  outline:0;
-} */
-
 .FieldName:active {
   background: gray
 }
 
 .FieldToolTip {
-  /* display: flex;
-  flex-direction: row; */
   display: block;
   position: absolute;
   visibility: hidden;
@@ -210,7 +197,7 @@
   display: flex;
   flex-direction: row;
   justify-content: start;
-  /* align-items: flex-end; */
+  font-size: 0.9rem;
 }
 
 .RawRecipeLabel {
@@ -222,9 +209,12 @@
 .RawRecipeValue {
   overflow-wrap: break-word;
   font-family: monospace;
+  color: rgba(0, 0, 0, 0.75);
 }
 
 .RecipeDescriptionView {
+  margin-top: 0.25rem;
+  font-size: 1rem;
   display: block;
 }
 
@@ -271,7 +261,7 @@
 }
 
 .DerivedValueBlock {
-  padding: 1rem;
+  padding-top: 1rem;
   min-height: 15vh;
   flex-direction: column;
   justify-content: flex-start;
@@ -289,10 +279,10 @@
 .DerivedValue {
   display: block;
   font-family: monospace;
-  width: 100%;
   overflow-wrap: anywhere;
   /* overflow-y: scroll; */
   white-space: pre-wrap;
+  min-height: 1rem;
   border: 1px solid gray;
   padding: 0.25rem;
 

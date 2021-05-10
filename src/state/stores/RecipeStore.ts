@@ -9,15 +9,15 @@ export const RecipeStore = new (class RecipeStore {
 
   get recipeJsonSet(): Set<string> { return new Set(this.recipeJsonArray) }
 
-  addRecipe = action ( (recipe: StoredRecipe) => {
+  addRecipe = action ( (storedRecipe: StoredRecipe) => {
     const {recipeJsonSet} = this;
-    recipeJsonSet.add(jsonStringifyWithSortedFieldOrder(recipe));
+    recipeJsonSet.add(jsonStringifyWithSortedFieldOrder(storedRecipe));
     this.recipeJsonArray = [...recipeJsonSet.values()];
   });
 
-  removeRecipe = action ( (recipe: StoredRecipe) => {
+  removeRecipe = action ( (storedRecipe: StoredRecipe) => {
     const {recipeJsonSet} = this;
-    recipeJsonSet.delete(jsonStringifyWithSortedFieldOrder(recipe));
+    recipeJsonSet.delete(jsonStringifyWithSortedFieldOrder(storedRecipe));
     this.recipeJsonArray = [...recipeJsonSet.values()];
   });
 

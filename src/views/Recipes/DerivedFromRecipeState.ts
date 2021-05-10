@@ -62,7 +62,7 @@ export class DerivedFromRecipeState {
   get derivedValue(): string | undefined {
     const {recipe: state, api} = this;
     const {type, recipeJson} = state;
-    if (!recipeJson || !type) { return; }
+    if (!type || !recipeJson) return;
   
     switch (type) {
       case "Password":
