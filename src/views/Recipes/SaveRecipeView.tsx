@@ -20,9 +20,9 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
     // alert(`Added ${type}:${name}:${recipeJson}`)
   }) : undefined;
   return (
-    <div className={css.SaveRecipeRow}>
-      <button className={css.SaveButton} disabled={disableSaveButton} onClick={save}>{ "save as" }</button>
-      <input type="text" className={css.SaveRecipeName} value={state.name} placeholder={ state.prescribedName } size={ (state.name.length || state.prescribedName?.length || 0) + 1}
+    <div className={css.SaveRecipeSubRow}>
+      <button className={css.SaveButton} hidden={disableSaveButton} onClick={save}>{ "save as" }</button>
+      <input disabled={state.editingMode == null} type="text" className={css.SaveRecipeName} value={state.name} placeholder={ state.prescribedName } size={ (state.name.length || state.prescribedName?.length || 0) + 1}
         onInput={ (e) => state.setName( e.currentTarget.value )}
         onFocus={ (e) => {
           if (e.currentTarget.value.length == 0 && state.prescribedName) {

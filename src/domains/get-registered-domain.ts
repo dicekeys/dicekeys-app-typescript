@@ -75,29 +75,21 @@ export const getDepthOfPublicSuffix = (domain: string): number => {
  * 
  * @param domainOrUrl A domain name or an HTTP(s) URL.
  */
-export const getDomainFromDomainOrUrlString = (domainOrUrl: string): string => {
-  try {
-    const {protocol, host} = new URL(domainOrUrl);
-    if (protocol === "http:" || protocol === "https:") {
-      return host;
-    }
-  } catch {
+export const getDomainFromDomainOrUrlString = (domainOrUrl: string): string | undefined => {
+  if (domainOrUrl.startsWith("*.")) {
+    domainOrUrl = domainOrUrl.substr(2);
   }
-  return isValidDomainRexExp(domainOrUrl) ? domainOrUrl : "";
-}
+  try {
+    const {protocol, host} = new URL(domainOrUrl.indexOf(":") != -1 ? domainOrUrl : `https://${domainOrUrl}/`);
+    if (
+        (protocol === "http:" || protocol === "https:" || protocol === "mailto:") &&
+        getDepthOfPublicSuffix(host) > 0  
+      ) {
+      return isValidDomainRexExp(host) ? host : undefined;
 
-export const isValidDomain = (candidate: string): boolean => {
-  try {
-    if (candidate.startsWith("*.")) {
-      candidate = candidate.substr(2);
     }
-    const hostname = new URL(`https://${candidate}/`).hostname;
-    if (hostname != candidate) return false;
-    const suffixLength = getDepthOfPublicSuffix(candidate);
-    return suffixLength > 0;
-  } catch {
-    return false;
-  }
+  } catch {}
+  return undefined;
 }
 
 /**
@@ -114,11 +106,14 @@ export const isValidDomain = (candidate: string): boolean => {
  * 
  * @param domainOrUrl A domain name or an HTTP(s) URL.
  */
-export const getRegisteredDomain = (domainOrUrl: string): string => {
+export const getRegisteredDomain = (domainOrUrl: string): string | undefined => {
   const includesSubdomains = domainOrUrl.startsWith("*.");
   const domain = getDomainFromDomainOrUrlString(
     includesSubdomains ? domainOrUrl.substr(2) : domainOrUrl
   );
+  if (domain == null) {
+    return undefined;
+  }
   const labels = domain.split(".");
   const depthOfPublicSuffix = getDepthOfPublicSuffix(domain);
   // The registered domain will have one label in addition to the public suffix

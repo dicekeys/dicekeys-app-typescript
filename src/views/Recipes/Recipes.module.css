@@ -11,6 +11,22 @@
   margin-right: 0.25rem;
 }
 
+.SelectAndSaveRow {
+  display: flex;
+  align-self: stretch;
+  flex-direction: row;
+  justify-content: flex-start;
+  padding-bottom: 0.25rem;
+}
+
+.SaveRecipeSubRow {
+  justify-self: flex-end;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: baseline;
+}
 
 .SaveRecipeRow {
   display: flex;
@@ -45,6 +61,15 @@
   outline: none;
 }
 
+.SaveRecipeNameExtension, .SaveRecipeName:disabled {
+  background-color: rgba(240, 240, 240,  1);
+}
+
+.SaveRecipeName:disabled {
+  border-left: black 2px inset;
+  user-select: none;
+}
+
 .SaveRecipeNameExtension {
   user-select: none;
   font-size: 1rem;
@@ -54,7 +79,6 @@
   border-bottom: black 2px inset;
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
-  background-color: rgba(240, 240, 240,  1);
   color: rgba(114, 114, 128,  1);
   padding-top: 1px;
   padding-bottom: 1px;

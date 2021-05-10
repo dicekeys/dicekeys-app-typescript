@@ -4,11 +4,11 @@ import { observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
 import { RecipeDescriptionView } from "./RecipeDescriptionView";
-import { SaveRecipeView } from "./SaveRecipeView";
 import { LabeledEnhancedRecipeView } from "./EnhancedRecipeView";
 import { describeRecipeType } from "./DescribeRecipeType";
 import { RecipeTypeSelectorView } from "./RecipeTypeSelectorView";
 import { RecipeFieldType } from "../../dicekeys/ConstructRecipe";
+import { getRegisteredDomain } from "~domains/get-registered-domain";
 
 // IN PROGRESS
 
@@ -81,32 +81,23 @@ export const PurposeFieldView = observer( ({state}: {
         className={css.PurposeOrHostNameTextField}
         size={32}
         value={state.purposeField ?? ""}
-        placeholder="https://example.com/path?search"
+        placeholder=""
+        onPaste={ e => {
+          // If pasting a URL, paste only the domain
+          const text = e.clipboardData.getData("text")
+          if (text.startsWith("http://") || text.startsWith("https://")) {
+            const domain = getRegisteredDomain(text);
+            if (domain != null) {
+              state.setPurposeField(domain);
+              e.preventDefault();
+            }
+          }
+        }}
         onInput={ e => {state.setPurposeField(e.currentTarget.value); showHelp(); }} 
         onFocus={ showHelp } />
     </RecipeFieldView>
   );
 });
-
-// export const TypeFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
-//   const field = "#";
-//   return (
-//     <RecipeFieldView {...{state, field}} label={"Seq. #"} >
-//       <select
-//         value={state.type}
-//         onClick={ state.showHelpForFn(field) }
-//         onChange={ (e) => {
-//           const type = e.currentTarget.value as DerivationRecipeType | undefined;
-//           state.setType(type);
-//           state.showHelpFor(field);
-//       }}>
-//         <option key={"none"} value="" ></option>
-//         { recipeTypes.map( ({key, name}) => (
-//           <option key={key} value={key} >{name}</option>
-//         )) }
-//       </select>
-//     </RecipeFieldView>
-//   )});
 
 export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
   const field = "#";
@@ -139,7 +130,7 @@ export const LengthInBytesFormFieldView = observer( ({state}: {state: RecipeBuil
   );
 });
 
-export const RecipeFieldHelpContent = observer ( ( {state}: {state: RecipeBuilderState}) => {
+const RecipeFieldsHelpContentView = observer ( ( {state}: {state: RecipeBuilderState}) => {
   const secretType = state.type === "Password" ? "password" :
     state.type === "Secret" ? "secret" :
     "password, secret, or key"
@@ -162,30 +153,46 @@ export const RecipeFieldHelpContent = observer ( ( {state}: {state: RecipeBuilde
   }
 });
 
+const RecipeFieldsHelpView = observer ( ( {state}: {state: RecipeBuilderState}) => (
+  <div className={css.RecipeHelpBlock}>
+    <div className={css.RecipeHelpContent}>
+      <RecipeFieldsHelpContentView state={state} />
+    </div>
+  </div>
+));
+
+export const RecipeBuilderFieldsView = observer( ( {state}: {state: RecipeBuilderState}) => {
+  return (
+    <div className={css.RecipeFields}>
+      <PurposeFieldView state={state} />
+      <LengthInCharsFormFieldView state={state} />
+      <LengthInBytesFormFieldView state={state} />
+      <SequenceNumberFormFieldView state={state} />
+    </div>
+  );
+});
+
+
 
 export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState}) => {
   return (
     <div className={css.RecipeBuilderBlock}>
       <div className={css.RecipeFormFrame}>
         <RecipeTypeSelectorView {...{state}} />
-        <div className={css.RecipeHelpBlock}>
-          <div className={css.RecipeHelpContent}>
-            <RecipeFieldHelpContent {...{state}} />
-          </div>
-        </div>
-        <div className={css.RecipeFields}>
-          <PurposeFieldView state={state} />
-          <LengthInCharsFormFieldView state={state} />
-          <LengthInBytesFormFieldView state={state} />
-          <SequenceNumberFormFieldView state={state} />
-        </div>
+        { state.editingMode == null ? (<></>) : (
+          <RecipeFieldsHelpView {...{state}} />
+        )}
+        { state.editingMode === "fields" ? (
+          < RecipeBuilderFieldsView state={state} />
+        ) : state.editingMode === "json" ? 
+          < RecipeBuilderFieldsView state={state} /> :
+          <></>
+      }
       </div>
       <div className={css.RecipeAndExplanationBlock} >
         <LabeledEnhancedRecipeView state={state} />
         <RecipeDescriptionView type={state.type} recipeJson={state.recipeJson} /> 
       </div>
-
-      <SaveRecipeView state={state} />
     </div>
   );
 });

@@ -1,5 +1,5 @@
-import {Recipe} from "@dicekeys/dicekeys-api-js"
-import { getRegisteredDomain, isValidDomain } from "../domains/get-registered-domain";
+import {Recipe, WebBasedApplicationIdentity} from "@dicekeys/dicekeys-api-js"
+import { getRegisteredDomain } from "../domains/get-registered-domain";
 
 const addFieldToEndOfJsonObjectString = (fieldName: string, quote: boolean = false, doNotAddIfValueIs: string | number | undefined = undefined) =>
   (originalJsonObjectString: string | undefined, fieldValue?: string | number): string | undefined => {
@@ -70,9 +70,12 @@ export const purposeToListOfHosts = (purposeField: string | undefined): string[]
         const potentialHostName = i.trim();
         if (potentialHostName.length == 0) return;
         // Get JavaScript's URL parser to validate the hostname for us
-        if (isValidDomain(potentialHostName)) {
-          return getRegisteredDomain(potentialHostName);
-        } else throw "not a valid host name"
+        const registeredDomain = getRegisteredDomain(potentialHostName);
+        if (registeredDomain != null) {
+          return registeredDomain
+        } else {
+          return;
+        }
       })
       .filter( i =>  i != null && i.length > 0 ) as string[];
     if (hosts.length > 0) {
@@ -82,12 +85,21 @@ export const purposeToListOfHosts = (purposeField: string | undefined): string[]
   return undefined;
 }
 
-export const getRecipeJson = (spec: AddableRecipeFields, template?: string): string | undefined => {
+export const allowFieldToHostList = (allow: WebBasedApplicationIdentity[]) =>
+  allow.map( ({host}) => host.trim()).sort()
+
+export const hostsToPurpose = (hosts: string[]) =>
+  hosts.join(", ");
+
+export const allowFieldToPurpose = (allow: WebBasedApplicationIdentity[]) =>
+  hostsToPurpose(allowFieldToHostList(allow));
+
+export const getRecipeJson = (spec: AddableRecipeFields, templateRecipeJson?: string): string | undefined => {
   const {hosts, purpose, lengthInBytes, lengthInChars, sequenceNumber} = spec;
-  const templateRecipe = template == null ? {} : JSON.parse(template) as DiceKeysAppSecretRecipe;
+  const templateRecipe = templateRecipeJson == null ? {} : JSON.parse(templateRecipeJson) as DiceKeysAppSecretRecipe;
   // The recipe starts with the JSON template.
 
-  let recipeJson: string | undefined = template;
+  let recipeJson: string | undefined = templateRecipeJson;
   // IMPORTANT -- changes must be applied in the correct order for JSON
   // fields to be ordered correctly and to be consistent between platforms.
 
@@ -116,4 +128,28 @@ export const getRecipeJson = (spec: AddableRecipeFields, template?: string): str
     recipeJson = addSequenceNumberToRecipeJson(recipeJson, sequenceNumber);
   }
   return recipeJson;
+}
+
+export const recipeJsonToAddableFields = (recipeJson: string): AddableRecipeFields => {
+  const {allow, ...parsed} = JSON.parse(recipeJson) as AddableRecipeFields & DiceKeysAppSecretRecipe;
+  if (allow != null) {
+    parsed.hosts = allowFieldToHostList(allow);
+    // Current constructor allows either purpose or hosts, but not both
+    delete parsed.purpose;
+  }
+  if (parsed["#"] != null) {
+    parsed.sequenceNumber = parsed["#"];
+    delete parsed["#"];
+  }
+  return parsed;
+}
+
+export const isRecipeJsonConstructableFromFields = (recipeJson: string): boolean => {
+  const {allow, ...parsed} = JSON.parse(recipeJson) as AddableRecipeFields & DiceKeysAppSecretRecipe;
+  if (allow != null) {
+    parsed.hosts = allowFieldToHostList(allow);
+    // Current constructor allows either purpose or hosts, but not both
+    delete parsed.purpose;
+  }
+  return getRecipeJson(parsed) === recipeJson;
 }
