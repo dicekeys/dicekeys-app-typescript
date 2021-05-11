@@ -7,19 +7,17 @@ import { getStoredRecipeNameSuffix, savedRecipeIdentifierToStoredRecipe, StoredR
 
 export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) => {
   const {name, recipeJson, type} = state;
-  if (type == null || recipeJson == null) {
+  if (type == null) {
     return null;
   }
   
-
-
-
   const saveOrDelete = () => {
     const {savedRecipeIdentifer} = state;
     if (savedRecipeIdentifer) {
       // This is already saved so must be the delete button
       RecipeStore.removeRecipe(savedRecipeIdentifierToStoredRecipe(savedRecipeIdentifer));
     } else {
+      if (recipeJson==null) return;
       const storedRecipe: StoredRecipe = {name, recipeJson, type};
       RecipeStore.addRecipe(storedRecipe)
     }
@@ -27,14 +25,23 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
 
   return (
     <div className={css.SaveRecipeSubRow}>
+      { state.editingMode == null ? (
+        <button
+          onClick={state.setStartEditing}
+        >edit
+        </button>
+      ) : state.editingMode === "fields" ? (
+        <button
+          onClick={state.setStartEditingRawJson}
+        >edit raw json
+        </button>
+      ) : null }
       <button
-        hidden={!state.recipeIdentifier || state.editingMode != null}
-        onClick={state.setStartEditing}
-      >edit</button>
-      <button className={css.SaveButton}
-        hidden={state.name == null || state.name.length == 0}
+        className={css.SaveButton}
+        hidden={state.prescribedName == null && (state.name == null || state.name.length == 0)}
         onClick={saveOrDelete}
-        >{state.savedRecipeIdentifer ? "delete" : "save as"}</button>
+        >{state.savedRecipeIdentifer ? "delete" : "save as"}
+      </button>
       <input disabled={state.editingMode == null} type="text" className={css.SaveRecipeName} value={state.name} placeholder={ state.prescribedName } size={ (state.name.length || state.prescribedName?.length || 0) + 1}
         onInput={ (e) => state.setName( e.currentTarget.value )}
         onFocus={ (e) => {

@@ -13,14 +13,16 @@ const HostNameView = ({host}: {host: string}) => (
 
 export const RecipeDescriptionContentView = ({type, recipeJson}: Partial<StoredRecipe>) => {
   if (!type || !recipeJson) return (<i>Set at least one field above to create a recipe.</i>);
-  let recipe: DiceKeysAppSecretRecipe = (() => {
+  let recipe: DiceKeysAppSecretRecipe | undefined = (() => {
     try {
       return JSON.parse(recipeJson ?? "{}") as DiceKeysAppSecretRecipe;
     } catch {
-      console.log(`Invalid recipe JSON: ${recipeJson}`)
-      return {};
+      return undefined;
     }
   })();
+  if (recipe == null) {
+    return (<><i>Improperly formatted JSON {describeRecipeType(type).toLocaleLowerCase()} recipe</i></>);
+  }
   const withClauses: JSX.Element[] = [];
   if (type === "Password" && recipe.lengthInChars) {
     withClauses.push((<> a maximum length of <span className={css.length_span}>{ recipe.lengthInChars }</span> characters</>));

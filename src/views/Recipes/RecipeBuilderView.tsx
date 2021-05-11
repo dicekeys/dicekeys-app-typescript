@@ -16,8 +16,6 @@ import { getRegisteredDomain } from "~domains/get-registered-domain";
 
 // TO DO
 
-// Clear button to empty recipe
-// Raw recipe editor with switch
 // limit to one calculation at a time
 
 // LATER?
@@ -26,6 +24,7 @@ import { getRegisteredDomain } from "~domains/get-registered-domain";
 
 // DONE
 
+// Raw recipe editor with switch
 // Delete recipe button
 // Saved recipes and built-in recipes default to non-edit mode, edit button loads them
 // Fields automatically added to name
@@ -47,7 +46,7 @@ export const RecipeFieldView = observer ( ({state, label, field, children}: Reac
   state?: RecipeBuilderState,
   label: string,
 //  description: string,
-  field: RecipeFieldType,
+  field?: RecipeFieldType,
 }>) => (
   <div
     className={state?.helpToDisplay === field ? css.RecipeFieldSelected : css.RecipeField}
@@ -57,7 +56,7 @@ export const RecipeFieldView = observer ( ({state, label, field, children}: Reac
     <label
       className={css.FieldName}
       onClick={ () => state?.showHelpFor( state?.helpToDisplay === field ? undefined: field ) }
-    >{ label }&nbsp;&nbsp;&#9432;
+    >{ label }{field == null ? null : (<>&nbsp;&nbsp;&#9432;</>)}
     </label>
   </div>
 ));
@@ -169,6 +168,27 @@ export const RecipeBuilderFieldsView = observer( ( {state}: {state: RecipeBuilde
 });
 
 
+export const JsonFieldView = observer( ({state}: {
+  state: RecipeBuilderState,
+} ) => {
+  return (
+    <RecipeFieldView {...{state}} label="Recipe in JSON format" >
+      <input type="text"
+        className={css.JsonTextField}
+        value={state.recipeJsonField ?? ""}
+        onInput={ e => {state.setRecipeJson(e.currentTarget.value); }} 
+    />
+    </RecipeFieldView>
+  );
+});
+export const RecipeRawJsonView = observer( ( {state}: {state: RecipeBuilderState}) => {
+  return (
+    <div className={css.RecipeFields}>
+      <JsonFieldView state={state} />
+    </div>
+  );
+});
+
 
 export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState}) => {
   return (
@@ -176,11 +196,13 @@ export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState
       <RecipeTypeSelectorView {...{state}} />
         { state.editingMode == null ? (<></>) : (
         <div className={css.RecipeFormFrame}>
-          <RecipeFieldsHelpView {...{state}} />
           { state.editingMode === "fields" ? (
-            < RecipeBuilderFieldsView state={state} />
+            <>
+              <RecipeFieldsHelpView {...{state}} />
+              <RecipeBuilderFieldsView state={state} />
+            </>
           ) : state.editingMode === "json" ? 
-            < RecipeBuilderFieldsView state={state} /> :
+              <RecipeRawJsonView state={state} /> :
             <></>
           }
         </div>

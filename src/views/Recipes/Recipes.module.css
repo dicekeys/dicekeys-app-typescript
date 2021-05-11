@@ -257,7 +257,11 @@
 }
 
 .PurposeOrHostNameTextField {
-  min-width: 15rem;
+  min-width: 18rem;
+}
+
+.JsonTextField {
+  min-width: 60vw;
 }
 
 .DerivedValueBlock {

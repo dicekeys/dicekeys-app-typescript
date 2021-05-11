@@ -53,14 +53,17 @@ export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
   }
 }
 
-export const LabeledEnhancedRecipeView = observer( ( props: {state: RecipeBuilderState}) => (
+export const LabeledEnhancedRecipeView = observer( ( {state}: {state: RecipeBuilderState}) => (
   <div className={css.RawRecipeView}>
     <div className={css.RawRecipeLabel}>Recipe:</div>
-    <div className={css.RawRecipeValue}>
-      {props.state.recipeJson == null ? (
-        <i>not yet specified</i>
+    <div className={css.RawRecipeValue}
+        // contentEditable={true} 
+        // onInput={ e => { state.setFieldsFromRecipeJson(e.currentTarget.textContent!); e.preventDefault(); }}
+    >
+      {state.recipeJson == null ? (
+        <i>{"{}"}</i>
       ) : (
-      <EnhancedRecipeView recipeJson={ props.state.recipeJson  }/>
+      <EnhancedRecipeView recipeJson={ state.recipeJson  }/>
       )}
     </div>
   </div>
