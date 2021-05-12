@@ -37,6 +37,7 @@ export class RecipeBuilderState {
   editing: boolean = false;
   setStartEditing = action( () => {
     this.editing = true;
+    this.showHelpFor(undefined);
   })
 
   //////////////////////////////////////////

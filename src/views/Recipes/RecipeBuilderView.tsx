@@ -4,11 +4,12 @@ import { observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
 import { RecipeDescriptionView } from "./RecipeDescriptionView";
-import { LabeledEnhancedRecipeView, EnhancedRecipeView } from "./EnhancedRecipeView";
+import { EnhancedRecipeView } from "./EnhancedRecipeView";
 import { describeRecipeType } from "./DescribeRecipeType";
 import { RecipeTypeSelectorView } from "./RecipeTypeSelectorView";
 import { RecipeFieldType } from "../../dicekeys/ConstructRecipe";
 import { getRegisteredDomain } from "../../domains/get-registered-domain";
+import { useContainerDimensions } from "../../utilities/react-hooks/useContainerDimensions";
 
 // IN PROGRESS
 
@@ -16,7 +17,6 @@ import { getRegisteredDomain } from "../../domains/get-registered-domain";
 
 // TO DO
 
-// formatting overlay -- need to handle overflow
 // Warning if json does not match fields alone
 // limit to one calculation at a time
 
@@ -26,6 +26,7 @@ import { getRegisteredDomain } from "../../domains/get-registered-domain";
 
 // DONE
 
+// handle overflow text in formatted recipeJson
 // Raw recipe editor with switch
 // Delete recipe button
 // Saved recipes and built-in recipes default to non-edit mode, edit button loads them
@@ -142,6 +143,13 @@ const RecipeFieldsHelpContentView = observer ( ( {state}: {state: RecipeBuilderS
     case "lengthInChars": return (<>
       Apply a length-limit to the password.
     </>);
+    case "rawJson": return (<>
+      This is the internal recipe format for expert use only.
+      <br/>
+      <b>Be careful.</b>
+      Changing even one character will change the {secretType}.
+      If you can't re-create this exact same string, you won't be able to re-create the secrets you generated with it.
+    </>);
     default: return state.type == null ? (<>
       Choose a recipe or template above.
     </>) : (<>
@@ -153,7 +161,9 @@ const RecipeFieldsHelpContentView = observer ( ( {state}: {state: RecipeBuilderS
 const RecipeFieldsHelpView = observer ( ( {state}: {state: RecipeBuilderState}) => (
   <div className={css.RecipeHelpBlock}>
     <div className={css.RecipeHelpContent}>
-      <RecipeFieldsHelpContentView state={state} />
+      <div style={{display: "block"}}>
+        <RecipeFieldsHelpContentView state={state} />
+      </div>
     </div>
   </div>
 ));
@@ -169,17 +179,21 @@ export const RecipeBuilderFieldsView = observer( ( {state}: {state: RecipeBuilde
   );
 });
 
-
 export const JsonFieldView = observer( ({state}: {
   state: RecipeBuilderState,
 } ) => {
+  const componentRef = React.useRef<HTMLTextAreaElement>(null);
+  const { width } = useContainerDimensions(componentRef)
+
+  const field = "rawJson";
   return (
-    <RecipeFieldView {...{state}} label="Recipe in JSON format" >
-      <div>
-        <div className={css.FormattedRecipeUnderlay}>
+    <RecipeFieldView {...{state, field}} label="Recipe in JSON format" >
+      <div className={css.FormattedRecipeBox}>
+        <div className={css.FormattedRecipeUnderlay} style={{width: `${width ?? 0}px`}} >
           <EnhancedRecipeView recipeJson={state.recipeJson} />
         </div>
-        <input type="text" spellCheck={false}
+        <textarea spellCheck={false} ref={componentRef}
+          disabled={!state.editing}
           className={css.FormattedRecipeTextField}
           value={state.recipeJson ?? ""}
           onInput={ e => {state.setRecipeJson(e.currentTarget.value); }} 
@@ -190,7 +204,7 @@ export const JsonFieldView = observer( ({state}: {
 });
 export const RecipeRawJsonView = observer( ( {state}: {state: RecipeBuilderState}) => {
   return (
-    <div className={css.RecipeFields}>
+    <div className={css.RecipeSingleFieldRow}>
       <JsonFieldView state={state} />
     </div>
   );
@@ -198,22 +212,23 @@ export const RecipeRawJsonView = observer( ( {state}: {state: RecipeBuilderState
 
 
 export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState}) => {
+  if (state.type == null) return (<></>);
   return (
     <div className={css.RecipeBuilderBlock}>
       <RecipeTypeSelectorView {...{state}} />
-      { !state.editing ? (<></>) : (
-        <div className={css.RecipeFormFrame}>
+      <div className={css.RecipeFormFrame}>
+        { !state.editing ? (<></>) : (
+          <>
           <RecipeFieldsHelpView {...{state}} />
           <RecipeBuilderFieldsView state={state} />
-          <RecipeRawJsonView state={state} /> 
-        </div>
-      )}
-      {state.type == null ? (<></>) : (
-        <div className={css.RecipeAndExplanationBlock} >
-          <LabeledEnhancedRecipeView state={state} />
-          <RecipeDescriptionView type={state.type} recipeJson={state.recipeJson} /> 
-        </div>
-      )}
+          </>
+        )}
+        <RecipeRawJsonView state={state} /> 
+      </div>
+      <div className={css.RecipeAndExplanationBlock} >
+        {/* <LabeledEnhancedRecipeView state={state} /> */}
+        <RecipeDescriptionView type={state.type} recipeJson={state.recipeJson} /> 
+      </div>
     </div>
   );
 });

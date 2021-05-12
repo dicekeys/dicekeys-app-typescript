@@ -65,7 +65,7 @@ export type DiceKeysAppSecretRecipe = Recipe & {
   purpose?: string;
 }
 
-export type RecipeFieldType = keyof DiceKeysAppSecretRecipe;
+export type RecipeFieldType = "rawJson" | keyof DiceKeysAppSecretRecipe;
 
 interface AddableRecipeFields {
   hosts?: string[];
