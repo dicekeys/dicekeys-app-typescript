@@ -14,7 +14,8 @@ export class NumericTextFieldState {
     const newTextValue = `${newValue ?? ""}`;
     if (newTextValue !== this.textValue) { 
       this.textValue = `${newValue ?? ""}`
-      this.setNumericValue?.(this.numericValue);
+//      this.setNumericValue?.(this.numericValue);
+      this.onChanged?.(this.numericValue)
     }
   });
   get numericValue(): number | undefined {
@@ -32,22 +33,22 @@ export class NumericTextFieldState {
 
   public readonly minValue;
   private defaultValue?: number;
-  private setNumericValue?: (value: number | undefined) => any;
   public readonly incrementBy: number;
+  private readonly onChanged?: (value: number | undefined) => any;
 
-  constructor({minValue = 0, incrementBy=1, defaultValue, setNumericValue, initialValue} : {
+  constructor({minValue = 0, incrementBy=1, defaultValue, initialValue, onChanged} : {
       minValue: number,
       incrementBy?: number,
       defaultValue?: number,
-      setNumericValue?: (value: number | undefined) => any,
-      initialValue?: string,
-      onFocusedOrChanged?: () => any
+      onChanged?: (value: number | undefined) => any,
+      initialValue?: string
     }
   ) {
     this.minValue = minValue;
     this.incrementBy = incrementBy;
     this.defaultValue = defaultValue;
-    this.setNumericValue = setNumericValue;
+    this.onChanged = onChanged;
+//    this.setNumericValue = setNumericValue;
     this.textValue = `${initialValue ?? ""}`
     makeAutoObservable(this);
   }

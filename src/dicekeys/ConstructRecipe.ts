@@ -11,7 +11,7 @@ const addOrAppendFieldToJsonObjectString =
   var wasReplacedWithinString: boolean = false;
   const jsonWithFieldReplaced = modifyJson(originalJsonObjectString, ({key, replaceValueWithNewValue: replaceWithNewValue, remove}) => {
       if (key == targetKey) {
-        if (fieldValue == doNotAddIfValueIs) {
+        if (typeof fieldValue === "undefined" || fieldValue == doNotAddIfValueIs) {
           remove();
          } else {
           replaceWithNewValue(fieldValue);

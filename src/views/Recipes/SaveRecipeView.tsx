@@ -25,15 +25,10 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
 
   return (
     <div className={css.SaveRecipeSubRow}>
-      { state.editingMode == null ? (
+      { !state.editing ? (
         <button
           onClick={state.setStartEditing}
         >edit
-        </button>
-      ) : state.editingMode === "fields" ? (
-        <button
-          onClick={state.setStartEditingRawJson}
-        >edit raw json
         </button>
       ) : null }
       <button
@@ -42,7 +37,7 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
         onClick={saveOrDelete}
         >{state.savedRecipeIdentifer ? "delete" : "save as"}
       </button>
-      <input disabled={state.editingMode == null} type="text" className={css.SaveRecipeName} value={state.name} placeholder={ state.prescribedName } size={ (state.name.length || state.prescribedName?.length || 0) + 1}
+      <input disabled={!state.editing} type="text" className={css.SaveRecipeName} value={state.name} placeholder={ state.prescribedName } size={ (state.name.length || state.prescribedName?.length || 0) + 1}
         onInput={ (e) => state.setName( e.currentTarget.value )}
         onFocus={ (e) => {
           if (e.currentTarget.value.length == 0 && state.prescribedName) {

@@ -3,9 +3,13 @@ import {
   StoredRecipe, DerivationRecipeType, builtInRecipeIdentifier, isRecipeBuiltIn, RecipeIdentifier, savedRecipeIdentifier, SavedRecipeIdentifier, BuiltInRecipeIdentifier
 } from "../../dicekeys/StoredRecipe";
 import {
+  addLengthInBytesToRecipeJson,
+  addLengthInCharsToRecipeJson,
+  addPurposeToRecipeJson,
+  addSequenceNumberToRecipeJson,
   getRecipeJson,
   hostsToPurpose,
-  isRecipeJsonConstructableFromFields,
+//  isRecipeJsonConstructableFromFields,
   purposeToListOfHosts,
   RecipeFieldType,
   recipeJsonToAddableFields
@@ -14,7 +18,7 @@ import { NumericTextFieldState } from "../../views/basics/NumericTextFieldView";
 import { Recipe } from "@dicekeys/dicekeys-api-js";
 import { RecipeStore } from "~state/stores/RecipeStore";
 
-type EditingMode = "fields" | "json" | undefined;
+// type EditingMode = "fields" | "json" | undefined;
 
 /**
  * State for building and displaying recipes
@@ -31,31 +35,8 @@ export class RecipeBuilderState {
 
   //
   editing: boolean = false;
-  get editingMode(): EditingMode { return this.editing ? (this.recipeJsonField != null ? "json" : "fields" ) : undefined };
-  get mayEditFields(): boolean {
-    const recipeJson = this.recipeJsonField;
-    return recipeJson == null || isRecipeJsonConstructableFromFields(recipeJson)
-  }
-  setStartEditingFields = action ( () => {
-    const recipeJson = this.recipeJsonField;
-    if (recipeJson != null && isRecipeJsonConstructableFromFields(recipeJson)) {
-      this.setFieldsFromRecipeJson(recipeJson);
-    }
-    this.recipeJsonField = undefined;
-    this.editing = true;  
-  });
-  setStartEditingRawJson = action ( () => {
-    if (this.recipeJsonField == null) {
-      this.recipeJsonField = getRecipeJson(this) ?? "{}";
-    }
-    this.editing = true;
-  });
   setStartEditing = action( () => {
-    if (this.mayEditFields) {
-      this.setStartEditingFields();
-    } else {
-      this.setStartEditingRawJson();
-    }
+    this.editing = true;
   })
 
   //////////////////////////////////////////
@@ -74,21 +55,27 @@ export class RecipeBuilderState {
   /////////////////////////////////
   // SequenceNumber field ("#")
   /////////////////////////////////
-  sequenceNumberState = new NumericTextFieldState({minValue: 2});
+  sequenceNumberState = new NumericTextFieldState({minValue: 2, onChanged: (sequenceNumber) => {
+    this.recipeJson = addSequenceNumberToRecipeJson(this.recipeJson, sequenceNumber);
+  }});
   get sequenceNumber(): number | undefined { return this.sequenceNumberState.numericValue } 
 
   /////////////////////////////////////////////////////////////
   // LengthInChars field ("lengthInChars") for Passwords only
   /////////////////////////////////////////////////////////////
   get mayEditLengthInChars(): boolean { return this.type === "Password" }
-  lengthInCharsState = new NumericTextFieldState({minValue: 16, incrementBy: 4, defaultValue: 64});
+  lengthInCharsState = new NumericTextFieldState({minValue: 16, incrementBy: 4, defaultValue: 64, onChanged: (lengthInChars) => {
+    this.recipeJson = addLengthInCharsToRecipeJson(this.recipeJson, lengthInChars);
+  }});
   get lengthInChars(): number | undefined { return this.lengthInCharsState.numericValue }
 
   ///////////////////////////////////////////////////////////
   // LengthInBytes field ("lengthInBytes") for Secrets only
   ///////////////////////////////////////////////////////////
   get mayEditLengthInBytes(): boolean { return this.type === "Secret" }
-  lengthInBytesState = new NumericTextFieldState({minValue: 4, incrementBy: 16, defaultValue: 32});
+  lengthInBytesState = new NumericTextFieldState({minValue: 4, incrementBy: 16, defaultValue: 32, onChanged: (lengthInBytes) => {
+    this.recipeJson = addLengthInBytesToRecipeJson(this.recipeJson, lengthInBytes);
+  }});
   get lengthInBytes(): number | undefined { return this.lengthInBytesState.numericValue }
 
   ////////////////////////////////////
@@ -108,7 +95,10 @@ export class RecipeBuilderState {
   purposeField?: string;
   /** The purpose of the recipe from the purpose form field if not a list of 1 or more hosts */
   get purpose(): string | undefined { return this.hosts ? undefined : this.purposeField; } // ?? this.templateRecipe?.purpose;
-  setPurposeField = action ( (newPurposeFieldValue?: string) => this.purposeField = newPurposeFieldValue );
+  setPurposeField = action ( (newPurposeFieldValue?: string) => {
+    this.purposeField = newPurposeFieldValue;
+    this.recipeJson = addPurposeToRecipeJson(this.recipeJson, newPurposeFieldValue);
+  });
 
 
   /**
@@ -124,22 +114,19 @@ export class RecipeBuilderState {
   /**
    * The JSON of the recipe after all user adjustment have been applied
    */
-  recipeJsonField: string | undefined;
   setRecipeJson = action ( (recipeJson: string | undefined) => {
     if (recipeJson != null) {
       this.setFieldsFromRecipeJson(recipeJson);
     } else {
       this.emptyAllRecipeFields();
     }
-    this.recipeJsonField = recipeJson;
+    this.recipeJson = recipeJson;
   });
   get prescribedRecipeJson(): string | undefined {
     return getRecipeJson(this);
   }
 
-  get recipeJson(): string | undefined {
-    return (this.editingMode === "fields" || this.recipeJsonField == null) ? getRecipeJson(this) : this.recipeJsonField;
-  }
+  recipeJson: string | undefined;
 
   get savedRecipeIdentifer(): SavedRecipeIdentifier | undefined {
     const {type, name, recipeJson} = this;
@@ -176,9 +163,9 @@ export class RecipeBuilderState {
   emptyAllRecipeFields = action (() => {
     this.name = "";
     this.purposeField = "";
-    this.sequenceNumberState.setValue(undefined);
-    this.lengthInBytesState.setValue(undefined);
-    this.lengthInCharsState.setValue(undefined);
+    this.sequenceNumberState.textValue = ""
+    this.lengthInBytesState.textValue = "";
+    this.lengthInCharsState.textValue = ""
   })
 
   setFieldsFromRecipeJson = action ( (recipeJson: string) => {
@@ -188,16 +175,15 @@ export class RecipeBuilderState {
         this.type = type;
       }
     } catch {}
-    const recipeFields = recipeJsonToAddableFields(recipeJson);
-    const {purpose, hosts} = recipeFields;
+    const {purpose, hosts, sequenceNumber, lengthInBytes, lengthInChars} = recipeJsonToAddableFields(recipeJson);
     if (purpose != null) {
-      this.setPurposeField(purpose)
+      this.purposeField = purpose;
     } else if (hosts != null) {
-      this.setPurposeField(hostsToPurpose(hosts))      
+      this.purposeField = hostsToPurpose(hosts);
     }
-    this.sequenceNumberState.setValue(recipeFields.sequenceNumber);
-    this.lengthInBytesState.setValue(recipeFields.lengthInBytes);
-    this.lengthInCharsState.setValue(recipeFields.lengthInChars);
+    this.sequenceNumberState.textValue = sequenceNumber != null ? `${sequenceNumber}` : ""
+    this.lengthInBytesState.textValue = lengthInBytes != null ? `${lengthInBytes}` : "";
+    this.lengthInCharsState.textValue = lengthInChars != null ? `${lengthInChars}` : ""
   });
 
   loadRecipe = action ((storedRecipe?: Partial<StoredRecipe>) => {

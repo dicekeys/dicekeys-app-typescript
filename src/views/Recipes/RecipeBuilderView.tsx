@@ -4,11 +4,11 @@ import { observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
 import { RecipeDescriptionView } from "./RecipeDescriptionView";
-import { LabeledEnhancedRecipeView } from "./EnhancedRecipeView";
+import { LabeledEnhancedRecipeView, EnhancedRecipeView } from "./EnhancedRecipeView";
 import { describeRecipeType } from "./DescribeRecipeType";
 import { RecipeTypeSelectorView } from "./RecipeTypeSelectorView";
 import { RecipeFieldType } from "../../dicekeys/ConstructRecipe";
-import { getRegisteredDomain } from "~domains/get-registered-domain";
+import { getRegisteredDomain } from "../../domains/get-registered-domain";
 
 // IN PROGRESS
 
@@ -16,6 +16,8 @@ import { getRegisteredDomain } from "~domains/get-registered-domain";
 
 // TO DO
 
+// formatting overlay -- need to handle overflow
+// Warning if json does not match fields alone
 // limit to one calculation at a time
 
 // LATER?
@@ -72,7 +74,7 @@ export const PurposeFieldView = observer( ({state}: {
   const showHelp = state.showHelpForFn(field);
   return (
     <RecipeFieldView {...{state, field}} label="Purpose" >
-      <input type="text"
+      <input type="text" spellCheck={false}
         className={css.PurposeOrHostNameTextField}
         size={32}
         value={state.purposeField ?? ""}
@@ -173,11 +175,16 @@ export const JsonFieldView = observer( ({state}: {
 } ) => {
   return (
     <RecipeFieldView {...{state}} label="Recipe in JSON format" >
-      <input type="text"
-        className={css.JsonTextField}
-        value={state.recipeJsonField ?? ""}
-        onInput={ e => {state.setRecipeJson(e.currentTarget.value); }} 
-    />
+      <div>
+        <div className={css.FormattedRecipeUnderlay}>
+          <EnhancedRecipeView recipeJson={state.recipeJson} />
+        </div>
+        <input type="text" spellCheck={false}
+          className={css.FormattedRecipeTextField}
+          value={state.recipeJson ?? ""}
+          onInput={ e => {state.setRecipeJson(e.currentTarget.value); }} 
+        />
+      </div>
     </RecipeFieldView>
   );
 });
@@ -194,19 +201,13 @@ export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState
   return (
     <div className={css.RecipeBuilderBlock}>
       <RecipeTypeSelectorView {...{state}} />
-        { state.editingMode == null ? (<></>) : (
+      { !state.editing ? (<></>) : (
         <div className={css.RecipeFormFrame}>
-          { state.editingMode === "fields" ? (
-            <>
-              <RecipeFieldsHelpView {...{state}} />
-              <RecipeBuilderFieldsView state={state} />
-            </>
-          ) : state.editingMode === "json" ? 
-              <RecipeRawJsonView state={state} /> :
-            <></>
-          }
+          <RecipeFieldsHelpView {...{state}} />
+          <RecipeBuilderFieldsView state={state} />
+          <RecipeRawJsonView state={state} /> 
         </div>
-        )}
+      )}
       {state.type == null ? (<></>) : (
         <div className={css.RecipeAndExplanationBlock} >
           <LabeledEnhancedRecipeView state={state} />

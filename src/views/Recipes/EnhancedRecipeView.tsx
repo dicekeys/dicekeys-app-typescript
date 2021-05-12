@@ -2,7 +2,7 @@ import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";
-import { DiceKeysAppSecretRecipe } from "~dicekeys";
+import { DiceKeysAppSecretRecipe } from "../../dicekeys";
 
 export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
   try {
@@ -27,24 +27,24 @@ export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
     }
     const lengthInChars = recipe.lengthInChars;
     if (lengthInChars != null) {
-      replace(`"lengthInChars":${lengthInChars}`, (<>"lengthInChars":<span className={css.length_span}>{lengthInChars}</span></>));
+      replace(`"lengthInChars":${lengthInChars}`, (<>"lengthInChars":<span className={[css.FormattedRecipeSpan, css.length_span].join(" ")}>{lengthInChars}</span></>));
     }
     const purpose = recipe.purpose;
     if (purpose != null) {
       const jsonEncodedPurpose = JSON.stringify(purpose)
       const jsonEscapedPurpose = jsonEncodedPurpose.substr(1, jsonEncodedPurpose.length - 2);
-      replace(`"purpose":${jsonEncodedPurpose}`, (<>"purpose":"<span className={css.host_name_span}>{jsonEscapedPurpose}</span>"</>));
+      replace(`"purpose":${jsonEncodedPurpose}`, (<>"purpose":"<span className={[css.FormattedRecipeSpan, css.host_name_span].join(" ")}>{jsonEscapedPurpose}</span>"</>));
     }
     const allow = recipe.allow;
     if (allow != null) {
       allow.forEach( ({host}) => {
-        replace(`"host":"${host}"`, (<>"host":<span className={css.host_name_span}>{host}</span></>));
+        replace(`"host":"${host}"`, (<>"host":"<span className={[css.FormattedRecipeSpan, css.host_name_span].join(" ")}>{host}</span>"</>));
       });
     }
     return (
       <>
         {ingredients.map( (item, index) => (
-          <span key={`${index}`}>{item}</span>
+          <span className={css.FormattedRecipeSpan} key={`${index}`}>{item}</span>
         ))}
       </>
     );

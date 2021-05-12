@@ -12,7 +12,7 @@ export const RecipeTypeSelectorView = observer( ({state}: {
 }) => {
   return (
     <div className={css.SelectAndSaveRow}>
-      <span hidden={state.editingMode == null}>
+      <span hidden={!state.editing}>
         Derive a&nbsp;
         <select
           className={css.SelectDerivedField}
