@@ -12,7 +12,7 @@
           "${workspaceRoot}/node_modules/jest/bin/jest.js",
           "--runInBand",
           // optionally add test file name below
-          // "url",
+          // "ConstructRecipe",
         ],
         "console": "integratedTerminal",
         "internalConsoleOptions": "neverOpen",

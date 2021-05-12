@@ -1,9 +1,33 @@
 import {Recipe, WebBasedApplicationIdentity} from "@dicekeys/dicekeys-api-js"
+import { modifyJson } from "../utilities/modifyJson";
 import { getRegisteredDomain } from "../domains/get-registered-domain";
 
-const addFieldToEndOfJsonObjectString = (fieldName: string, quote: boolean = false, doNotAddIfValueIs: string | number | undefined = undefined) =>
-  (originalJsonObjectString: string | undefined, fieldValue?: string | number): string | undefined => {
-  if (typeof fieldValue == "undefined" || fieldValue == doNotAddIfValueIs) return originalJsonObjectString;
+const addOrAppendFieldToJsonObjectString =
+  <T=any>(fieldName: string, quote: boolean = false, doNotAddIfValueIs?: T) =>
+    (originalJsonObjectString: string | undefined, fieldValue?: T): string | undefined => {
+  if (originalJsonObjectString == null) return originalJsonObjectString;
+  // Try to replace the field if it already exists in the target object
+  const targetKey = `[${JSON.stringify(fieldName)}]`
+  var wasReplacedWithinString: boolean = false;
+  const jsonWithFieldReplaced = modifyJson(originalJsonObjectString, ({key, replaceValueWithNewValue: replaceWithNewValue, remove}) => {
+      if (key == targetKey) {
+        if (fieldValue == doNotAddIfValueIs) {
+          remove();
+         } else {
+          replaceWithNewValue(fieldValue);
+         }
+        wasReplacedWithinString = true;
+      }
+      return;
+    });
+  if (wasReplacedWithinString) {
+    return jsonWithFieldReplaced;
+  }
+  // Append to the end of a JSON object.
+  if (typeof fieldValue == "undefined" || fieldValue == doNotAddIfValueIs) {
+    // Don't add the field value if it's not defined or the value not to be added
+    return originalJsonObjectString;
+  }
   const srcString = (typeof originalJsonObjectString === "undefined" || originalJsonObjectString.length === 0) ? "{}" : originalJsonObjectString;
   const lastClosingBraceIndex = srcString.lastIndexOf("}");
   if (lastClosingBraceIndex < 0) {return srcString }
@@ -14,11 +38,11 @@ const addFieldToEndOfJsonObjectString = (fieldName: string, quote: boolean = fal
   return prefixUpToFinalClosingBrace + `${commaIfObjectNonEmpty}"${fieldName}":${fieldValueString}` + suffixIncludingFinalCloseBrace;
 }
 
-export const addLengthInBytesToRecipeJson: <T extends string | undefined>(recipeWithoutLengthInBytes: T, lengthInBytes?: number) => string | undefined = addFieldToEndOfJsonObjectString("lengthInBytes", false, 32); 
-export const addLengthInCharsToRecipeJson: <T extends string | undefined>(recipeWithoutLengthInChars: T, lengthInChars?: number) => string | undefined = addFieldToEndOfJsonObjectString("lengthInChars", false, 0); 
-export const addSequenceNumberToRecipeJson: <T extends string | undefined>(recipeWithoutSequenceNumber: T, sequenceNumber?: number) => string | undefined = addFieldToEndOfJsonObjectString("#", false, 1);
-export const addPurposeToRecipeJson: <T extends string | undefined>(recipeWithoutPurpose: T, purpose?: string) => string | undefined = addFieldToEndOfJsonObjectString("purpose", true);
-export const addAllowToRecipeJson: <T extends string | undefined>(recipeWithoutAllow: T, allow?: string) => string | undefined = addFieldToEndOfJsonObjectString("allow", false);
+export const addLengthInBytesToRecipeJson: <T extends string | undefined>(recipeWithoutLengthInBytes: T, lengthInBytes?: number) => string | undefined = addOrAppendFieldToJsonObjectString("lengthInBytes", false, 32); 
+export const addLengthInCharsToRecipeJson: <T extends string | undefined>(recipeWithoutLengthInChars: T, lengthInChars?: number) => string | undefined = addOrAppendFieldToJsonObjectString("lengthInChars", false, 0); 
+export const addSequenceNumberToRecipeJson: <T extends string | undefined>(recipeWithoutSequenceNumber: T, sequenceNumber?: number) => string | undefined = addOrAppendFieldToJsonObjectString("#", false, 1);
+export const addPurposeToRecipeJson: <T extends string | undefined>(recipeWithoutPurpose: T, purpose?: string) => string | undefined = addOrAppendFieldToJsonObjectString("purpose", true);
+export const addAllowToRecipeJson: <T extends string | undefined>(recipeWithoutAllow: T, allow?: string) => string | undefined = addOrAppendFieldToJsonObjectString("allow", false);
 
 const getHostRestrictionsArrayAsString = (hosts: string[]): string =>
   `[${hosts
