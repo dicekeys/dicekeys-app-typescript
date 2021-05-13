@@ -2,13 +2,13 @@ import cssRequiredNotice from "./camera-permissions-required-notification.module
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
-import { Face, FaceRead } from "@dicekeys/read-dicekey-js";
+import { FaceRead } from "@dicekeys/read-dicekey-js";
 import { CameraCaptureWithOverlay } from "./CameraCaptureWithOverlay";
 import { DiceKeyFrameProcessorState } from "./DiceKeyFrameProcessorState";
 import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
 import { MediaStreamState } from "./CameraCaptureView";
 import { CamerasOnThisDevice } from "./CamerasOnThisDevice";
-import { DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
+import { Face, DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
 import { Layout } from "../../css";
 import { CenteredControls } from "~views/basics";
 
@@ -103,7 +103,7 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
 
 export const Preview_ScanDiceKeyView = () => (
   <ScanDiceKeyView onDiceKeyRead={ (facesRead) => {
-    const diceKey: DiceKey = new DiceKey(facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face>);
+    const diceKey: DiceKey = new DiceKey(facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face>, true);
     const hrf = diceKey.inHumanReadableForm;
     console.log(`Read ${hrf}`);
     alert(`Read ${hrf}`);

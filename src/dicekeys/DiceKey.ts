@@ -3,13 +3,18 @@ import { uint8ClampedArrayToHexString } from "../utilities/convert";
 import {
   FaceLetter, FaceLetters, InvalidFaceLetterException,
   FaceDigit, InvalidFaceDigitException,
-  Face,
   Clockwise90DegreeRotationsFromUpright,
   FaceOrientationLetterTrblOrUnknown,
   InvalidFaceOrientationLettersTrblOrUnknownException,
   FaceOrientationLettersTrbl,
-  FaceDigits
+  FaceDigits,
+  FaceOrientationLetterTrbl,
+  FaceIdentifiers
 } from "@dicekeys/read-dicekey-js";
+
+export type Face = FaceIdentifiers & {
+  orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl
+}
 
 export const NumberOfFacesInKey = 25;
 
@@ -73,14 +78,12 @@ export class DiceKeyLettersRepeatedAndAbsentException extends InvalidDiceKeyExce
 }
 
 export interface DiceKeyValidationOptions {
-  requireOneOfEachLetter?: boolean
-  allowOrientationOfQuestionMark?: boolean,
+  requireOneOfEachLetter?: Boolean
   throwOnFailures?: boolean
  }
 
 export const validateDiceKey = (diceKey: readonly Partial<Face>[], {
   requireOneOfEachLetter = false,
-  allowOrientationOfQuestionMark = false,
   throwOnFailures = false
 } : DiceKeyValidationOptions = {}): diceKey is DiceKeyFaces => {
   if (diceKey.length !== NumberOfFacesInKey) {
@@ -100,9 +103,7 @@ export const validateDiceKey = (diceKey: readonly Partial<Face>[], {
       if (!throwOnFailures) { return false; }
       throw new InvalidFaceDigitException(digit, {position});
     }
-    if (!FaceOrientationLetterTrblOrUnknown.isValid(orientationAsLowercaseLetterTrbl) || 
-      (!allowOrientationOfQuestionMark && orientationAsLowercaseLetterTrbl === "?")
-    ) {
+    if (!FaceOrientationLetterTrblOrUnknown.isValid(orientationAsLowercaseLetterTrbl)) {
       if (!throwOnFailures) { return false; }
       throw new InvalidFaceOrientationLettersTrblOrUnknownException(orientationAsLowercaseLetterTrbl, {position});
     }
@@ -171,7 +172,7 @@ export const FaceInHumanReadableForm = (face: Face, includeOrientations: boolean
 export const FaceFromHumanReadableForm = (hrf: string, options?: {position?: number}): Face => ({
   letter: FaceLetter(hrf[0], options),
   digit: FaceDigit(hrf[1], options),
-  orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrblOrUnknown(hrf[2], options)
+  orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl(hrf[2], options)
 })
 
 export const DiceKeyInHumanReadableForm = (diceKey: DiceKeyFaces, includeOrientations: boolean): DiceKeyInHumanReadableForm =>
@@ -199,7 +200,7 @@ const diceKeyFromHumanReadableForm = (
     const faceAndOrientation: Face = {
       letter: FaceLetter(letter, positionObj),
       digit: FaceDigit(digitString, positionObj),
-      orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrblOrUnknown(orientationAsLowercaseLetterTrbl, positionObj)
+      orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl(orientationAsLowercaseLetterTrbl, positionObj)
     };
     return faceAndOrientation;
   }) as readonly Face[] as DiceKeyFaces;
@@ -381,6 +382,30 @@ export class DiceKey {
     }
   }
 
+  inNumericForm = () => {
+    // rotate so that center faces is upright
+    const faces: DiceKeyFaces = (() => {
+      switch(this.centerFace.orientationAsLowercaseLetterTrbl) {
+        case "r": return this.rotate(3);
+        case "b": return this.rotate(2);
+        case "l": return this.rotate(1);
+        default: return this;
+    }})().faces;
+    let digitsAsBigInt = BigInt(0);
+    let orientationsAsBigInt = BigInt(0);
+    faces.forEach( (face, index) => {
+      // if letters unique, 25!
+      // all digits
+      digitsAsBigInt = (digitsAsBigInt * BigInt(6)) + BigInt(face.digit.charCodeAt(0) - "0".charCodeAt(0))
+      // orientations relative to center die
+      if (index != 12) {
+        // The center die will always be upright.        
+        orientationsAsBigInt = (orientationsAsBigInt * BigInt(4)) +
+          BigInt( FaceOrientationLetterTrbl.toClockwise90DegreeRotationsFromUpright(face.orientationAsLowercaseLetterTrbl) )
+      }
+    })
+  }
+
   static fromRandom = () => new DiceKey(getRandomDiceKey());
   static fromHumanReadableForm = (
     humanReadableForm: DiceKeyInHumanReadableForm,
@@ -391,7 +416,8 @@ export class DiceKey {
   rotate = (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright) => new DiceKey(rotateDiceKey(this.faces, clockwise90DegreeRotationsFromUpright));
   get inRotationIndependentForm(): DiceKey { return new DiceKey(rotateToRotationIndependentForm(this.faces, true)) };
   toSeedString = () => toSeedString(this.faces, true);
-  get centerLetterAndDigit(): string { return this.faces[12].letter + this.faces[12].digit }
+  get centerFace(): Face { return this.faces[12]; }
+  get centerLetterAndDigit(): string { return this.centerFace.letter + this.centerFace.digit }
   get nickname(): string { return`DiceKey with ${this.centerLetterAndDigit} in center`; }
 
   keyId = (): Promise<string> =>
