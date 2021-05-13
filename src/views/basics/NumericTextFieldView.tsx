@@ -48,7 +48,6 @@ export class NumericTextFieldState {
     this.incrementBy = incrementBy;
     this.defaultValue = defaultValue;
     this.onChanged = onChanged;
-//    this.setNumericValue = setNumericValue;
     this.textValue = `${initialValue ?? ""}`
     makeAutoObservable(this);
   }
