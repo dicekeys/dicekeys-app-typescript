@@ -5,7 +5,7 @@ import {
 } from "@dicekeys/dicekeys-api-js";
 import {
   jsonStringifyWithSortedFieldOrder
-} from "./json";
+} from "../utilities/json";
 import {
    SeededCryptoModuleWithHelpers, SeededCryptoModulePromise
 } from "@dicekeys/seeded-crypto-js";

@@ -1,4 +1,4 @@
-import { DerivationRecipeTemplateList } from "./DerivationRecipeTemplateList";
+import { BuiltInRecipes } from "./StoredRecipe";
 import {
   restrictionsJson
 } from "./restrictions-json";
@@ -40,9 +40,9 @@ export interface PasswordConsumer extends
 export const passwordRecipeJson = (hostOrHosts: SingletonOrArrayOf<string>) => 
   restrictionsJson(asArray(hostOrHosts));
 
-const defaultPasswordConsumerList: PasswordConsumer[] = DerivationRecipeTemplateList
+const defaultPasswordConsumerList: PasswordConsumer[] = BuiltInRecipes
   .filter( r => r.type == "Password" )
-  .map( ({name, recipeJson}) => ({
+  .map( ({name: name, recipeJson}) => ({
     name: name,
     recipe: recipeJson  
 }) )

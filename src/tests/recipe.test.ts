@@ -6,7 +6,7 @@ import {
 } from "../api-handler/mutate-recipe";
 import {
   jsonStringifyWithSortedFieldOrder
-} from "../api-handler/json"
+} from "../utilities/json"
 
 const seedString = "Put this in water and an avocado will grow.";
 

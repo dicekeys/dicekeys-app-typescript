@@ -1,189 +1,202 @@
-import { Recipe } from "@dicekeys/dicekeys-api-js";
 import { action, makeAutoObservable } from "mobx";
-import { DerivationRecipeTemplateList } from "../../dicekeys/DerivationRecipeTemplateList";
+import {
+  StoredRecipe, DerivationRecipeType, builtInRecipeIdentifier, isRecipeBuiltIn, RecipeIdentifier, savedRecipeIdentifier, SavedRecipeIdentifier, BuiltInRecipeIdentifier
+} from "../../dicekeys/StoredRecipe";
+import {
+  addHostsToRecipeJson,
+  addLengthInBytesToRecipeJson,
+  addLengthInCharsToRecipeJson,
+  addPurposeToRecipeJson,
+  addSequenceNumberToRecipeJson,
+  getRecipeJson,
+  hostsToPurpose,
+//  isRecipeJsonConstructableFromFields,
+  purposeToListOfHosts,
+  RecipeFieldType,
+  recipeJsonToAddableFields
+} from "../../dicekeys/ConstructRecipe";
+import { NumericTextFieldState } from "../../views/basics/NumericTextFieldView";
+import { Recipe } from "@dicekeys/dicekeys-api-js";
 import { RecipeStore } from "~state/stores/RecipeStore";
-import { addHostsToRecipeJson, addLengthInCharsToRecipeJson, addPurposeToRecipeJson,
-  addSequenceNumberToRecipeJson, SavedRecipe, DerivationRecipeType
-} from "../../dicekeys/SavedRecipe";
-import { getRegisteredDomain, isValidDomain } from "~domains/get-registered-domain";
-import { NumericTextFieldState } from "~views/basics/NumericTextFieldView";
 
-export type PartialSavedRecipe = Pick<SavedRecipe, "type"> & Partial<SavedRecipe>;
+// type EditingMode = "fields" | "json" | undefined;
 
-export interface PurposeFieldState {
-  purpose?: string;
-  setPurpose: (purpose?: string) => void
-}
-
-const savedPrefix = "saved:";
-const templatePrefix = "template:";
-type SavedRecipeIdentifier = `${typeof savedPrefix}${string}`;
-type TemplateRecipeIdentifier = `${typeof templatePrefix}${string}`;
-export const savedRecipeIdentifier = (recipeName: string) => `${savedPrefix}${recipeName}` as SavedRecipeIdentifier;
-export const templateRecipeIdentifier = (recipeName: string) => `${templatePrefix}${recipeName}` as TemplateRecipeIdentifier;
-const isSavedRecipeIdentifier = (recipeIdentifier?: string): recipeIdentifier is SavedRecipeIdentifier => !!(recipeIdentifier?.startsWith(savedPrefix));
-const isTemplateRecipeIdentifier = (recipeIdentifier?: string): recipeIdentifier is TemplateRecipeIdentifier => !!(recipeIdentifier?.startsWith(templatePrefix));
-
-export type SelectedRecipeIdentifier = SavedRecipeIdentifier | TemplateRecipeIdentifier | DerivationRecipeType;
-
-export class SelectedRecipeState {
-  recipeIdentifier?: SelectedRecipeIdentifier;
-
-  setSelectedRecipeIdentifier = action ( (selectedRecipeIdentifier?: SelectedRecipeIdentifier) => {
-    this.recipeIdentifier = selectedRecipeIdentifier
-  });
-
-  get isSaved(): boolean { return isSavedRecipeIdentifier(this.recipeIdentifier) }
-  get isTemplate(): boolean { return isTemplateRecipeIdentifier(this.recipeIdentifier) }
-
-  get savedRecipe(): SavedRecipe | undefined {
-    if (!isSavedRecipeIdentifier(this.recipeIdentifier)) return;
-    return RecipeStore.recipeForName(this.recipeIdentifier.substr(savedPrefix.length))
-  }
-
-  get templateRecipe(): SavedRecipe | undefined {
-    if (!isTemplateRecipeIdentifier(this.recipeIdentifier)) return;
-    const name = this.recipeIdentifier.substr(templatePrefix.length);
-    return DerivationRecipeTemplateList.filter( t => t.name === name )[0];
-}
-
-  get template(): PartialSavedRecipe | undefined {
-    const {recipeIdentifier} = this;
-    if (isSavedRecipeIdentifier(recipeIdentifier)) {
-      return this.savedRecipe;
-    } else if (isTemplateRecipeIdentifier(recipeIdentifier)) {
-      return this.templateRecipe;
-    } else if (recipeIdentifier !== undefined) {
-      return {type: recipeIdentifier, recipeJson: ""}
-    } else {
-      return;
-    }
-  }
-
+/**
+ * State for building and displaying recipes
+ */
+export class RecipeBuilderState {
   constructor() {
     makeAutoObservable(this);
   }
-}
 
-export type DiceKeysAppSecretRecipe = Recipe & {
-  // FIXME -- definition of recipe out of date in API, fix that and remove this hack
-  lengthInChars?: number;
-  // Sequence numbers
-  '#'?: number;
-  purpose?: string;
-}
+  type: DerivationRecipeType | undefined;
+  setType = action( (type: DerivationRecipeType | undefined) => {
+    this.type = type;
+  } )
 
-export class RecipeBuilderState implements Partial<SavedRecipe>, /* RecipeTypeState,*/ PurposeFieldState {
-  constructor(public selectedRecipeState: SelectedRecipeState) {
-    makeAutoObservable(this);
-  }
-  get template(): PartialSavedRecipe | undefined { return this.selectedRecipeState.template}
-  // private _type?: DerivationRecipeType;
+  //
+  editing: boolean = false;
+  setStartEditing = action( () => {
+    this.editing = true;
+    this.showHelpFor(undefined);
+  })
 
-//  setTemplate = action ( (template: RecipeTemplate) => this.template = template );
-  get templateRecipe(): DiceKeysAppSecretRecipe { return Recipe( this.template?.recipeJson ) }
+  //////////////////////////////////////////
+  // helpToDisplay while building a recipe
+  //////////////////////////////////////////
+  /**
+   * The field to provide help for, or undefined to show help about the
+   * type of secret being created
+   */
+	helpToDisplay?: RecipeFieldType;
+	showHelpFor = action ( (recipeField?: RecipeFieldType) => {
+		this.helpToDisplay = recipeField;
+	} )
+	showHelpForFn = (recipeField?: RecipeFieldType) => () => this.showHelpFor(recipeField);
 
-  get type(): DerivationRecipeType | undefined { return this.template?.type ?? this.templateRecipe.type }
-
-
-//  get templateSequenceNumber(): number | undefined { return this.templateRecipe["#"] }
-  get templateLengthInChars(): number | undefined { return this.templateRecipe.lengthInChars }
-
-  // get mayEditType(): boolean { return !this.template.type }
-  //get mayEditSequenceNumber(): boolean { return this.templateSequenceNumber === undefined }
-//  private _sequenceNumber = NumericTextFieldState;
-  sequenceNumberState = new NumericTextFieldState(2);
-//  get sequenceNumber(): number | undefined { return this._sequenceNumber /* ?? this.templateSequenceNumber */ }
+  /////////////////////////////////
+  // SequenceNumber field ("#")
+  /////////////////////////////////
+  sequenceNumberState = new NumericTextFieldState({minValue: 2, onChanged: (sequenceNumber) => {
+    this.recipeJson = addSequenceNumberToRecipeJson(this.recipeJson, sequenceNumber);
+  }});
   get sequenceNumber(): number | undefined { return this.sequenceNumberState.numericValue } 
-  // setSequenceNumber = action( (newSequenceNumber?: number) => {
-  //   //if (this.mayEditSequenceNumber) {
-  //     this._sequenceNumber = newSequenceNumber;
-  //   //}
-  // });
 
-  get prescribedPurposeField(): string {
-    const {allow, purpose} = this.templateRecipe ?? {} as SavedRecipe;
-    if (allow) return allow.map( ({host}) => host ).join(", ");
-    return purpose ?? "";
-  }
-
-  get mayEditLengthInChars(): boolean { return this.type === "Password" && this.templateLengthInChars === undefined }
-  // private _lengthInChars?: number;
-  // get lengthInChars(): number | undefined { return this._lengthInChars ?? this.templateLengthInChars }
-  // setLengthInChars = action( (newLengthInChars?: number) => {
-  //   if (this.mayEditLengthInChars) {
-  //     this._lengthInChars = newLengthInChars;
-  //   }
-  // });
-  lengthInCharsState = new NumericTextFieldState(16);
+  /////////////////////////////////////////////////////////////
+  // LengthInChars field ("lengthInChars") for Passwords only
+  /////////////////////////////////////////////////////////////
+  get mayEditLengthInChars(): boolean { return this.type === "Password" }
+  lengthInCharsState = new NumericTextFieldState({minValue: 16, incrementBy: 4, defaultValue: 64, onChanged: (lengthInChars) => {
+    this.recipeJson = addLengthInCharsToRecipeJson(this.recipeJson, lengthInChars);
+  }});
   get lengthInChars(): number | undefined { return this.lengthInCharsState.numericValue }
 
-  get mayEditPurpose(): boolean { return this.templateRecipe.allow === undefined && this.templateRecipe?.purpose === undefined }
-  private _purpose?: string;
-  get purpose(): string | undefined { return this._purpose ?? this.templateRecipe?.purpose; }
-  setPurpose = action ( (purpose?: string) => this._purpose = purpose );
+  ///////////////////////////////////////////////////////////
+  // LengthInBytes field ("lengthInBytes") for Secrets only
+  ///////////////////////////////////////////////////////////
+  get mayEditLengthInBytes(): boolean { return this.type === "Secret" }
+  lengthInBytesState = new NumericTextFieldState({minValue: 4, incrementBy: 16, defaultValue: 32, onChanged: (lengthInBytes) => {
+    this.recipeJson = addLengthInBytesToRecipeJson(this.recipeJson, lengthInBytes);
+  }});
+  get lengthInBytes(): number | undefined { return this.lengthInBytesState.numericValue }
 
-
-  private _nameField?: string;
+  ////////////////////////////////////
+  // Name field ("name") to be saved
+  ////////////////////////////////////
   get prescribedName(): string | undefined {
-    const baseName = this.template?.name ?? this.purpose ?? this.hosts?.join(", ");
-    if (typeof(baseName) === "undefined") return;
-    const sequenceNumber = this.sequenceNumber! > 1  ? ` (${this.sequenceNumber})` : "";
-    return `${baseName}${sequenceNumber}`
+    return this.purpose?.substr(0, 20) ?? this.hosts?.join(", ");
   }
 
-  setName = action ( (name: string) => this._nameField = name );
-  get name(): string | undefined {
-    return (typeof (this._nameField) !== "undefined" && this._nameField.length > 0) ?
-      this._nameField :
-      this.prescribedName;
-    }
+  public name: string = "";
+  setName = action ( (name: string) => this.name = name );
 
-  get hosts(): string[] | undefined {
-    try {
-      // If the host field contains a valid URL, return the host name
-      return [new URL(this.purpose ?? "").hostname];
-    } catch {}
-    // Return a list of valid domains
-    try {
-      const hosts = (this.purpose ?? "").split(",")
-        .map( i => {
-          const potentialHostName = i.trim();
-          // Get JavaScript's URL parser to validate the hostname for us
-          if (isValidDomain(potentialHostName)) {
-            return getRegisteredDomain(potentialHostName);
-          } else throw "not a valid host name"
-        })
-        .filter( i =>  i ) as string[];
-        if (hosts.length > 0) {
-          return hosts;
-        }
-    } catch {}
-    const {allow} = this.templateRecipe;
-    if (allow && allow.length! > 0) {
-      return allow.map(({host}) => host)
-    }
-    return undefined;
-  }
+  //////////////////////////////////////////
+  // Purpose field ("purpose" or "allow")
+  //////////////////////////////////////////
+  get mayEditPurpose(): boolean { return true };
+  purposeField: string = "";
+  /** The purpose of the recipe from the purpose form field if not a list of 1 or more hosts */
+  get purpose(): string | undefined { return this.hosts != null || this.purposeField.length === 0 ? undefined : this.purposeField; }
+  setPurposeField = action ( (newPurposeFieldValue: string) => {
+    this.purposeField = newPurposeFieldValue;
+    const {hosts, purpose} = this;
+    this.recipeJson = addHostsToRecipeJson(this.recipeJson, hosts);
+    this.recipeJson = addPurposeToRecipeJson(this.recipeJson, purpose);
+  });
+
+
+  /**
+   * The hosts for the "allow" restrictions of a recipe if the purpose field contains
+   * a URL or list of hosts
+   */
+  get hosts(): string[] | undefined { return purposeToListOfHosts(this.purposeField); }
   get purposeContainsHosts(): boolean { return (this.hosts?.length ?? 0) > 0 }
 
-  get recipeJson(): string | undefined {
-    let recipeJson: string | undefined = this.template?.recipeJson;
-    if (this.mayEditPurpose) {
-      const hosts = this.hosts;
-      if (hosts) {
-        recipeJson = addHostsToRecipeJson(recipeJson, hosts);
-      } else if ((this.purpose?.length ?? 0) > 0) {
-        recipeJson = addPurposeToRecipeJson(recipeJson, this.purpose);
-      }
+  ///////////////////////////////////////////////
+  // Deriving a recipe from all the form fields
+  ///////////////////////////////////////////////
+  /**
+   * The JSON of the recipe after all user adjustment have been applied
+   */
+  setRecipeJson = action ( (recipeJson: string | undefined) => {
+    if (recipeJson != null) {
+      this.setFieldsFromRecipeJson(recipeJson);
+    } else {
+      this.emptyAllRecipeFields();
     }
-    if (this.mayEditLengthInChars && this.lengthInChars! > 0) {
-      recipeJson = addLengthInCharsToRecipeJson(recipeJson, this.lengthInChars);
-    }
-    if ((this.sequenceNumber ?? 1) > 1) {
-      recipeJson = addSequenceNumberToRecipeJson(recipeJson, this.sequenceNumber);
-    }
-    return recipeJson;
+    this.recipeJson = recipeJson;
+  });
+  get prescribedRecipeJson(): string | undefined {
+    return getRecipeJson(this);
   }
 
+  recipeJson: string | undefined;
+
+  get savedRecipeIdentifer(): SavedRecipeIdentifier | undefined {
+    const {type, name, recipeJson} = this;
+    if (type == null || name == null || recipeJson == null) return;
+    const storedRecipe: StoredRecipe = {type, name, recipeJson};
+    if (RecipeStore.isRecipeSaved(storedRecipe)) {
+      return savedRecipeIdentifier(storedRecipe);
+    }
+    return;
+  }
+
+  get builtInRecipeIdentifer(): BuiltInRecipeIdentifier | undefined {
+    const {type, name, recipeJson} = this;
+    if (type == null || name == null || recipeJson == null) return;
+    const storedRecipe: StoredRecipe = {type, name, recipeJson};
+    if (isRecipeBuiltIn(storedRecipe)) {
+      return builtInRecipeIdentifier(storedRecipe);
+    }
+    return;
+  }
+
+  get recipeIdentifier(): RecipeIdentifier | undefined {
+    return this.savedRecipeIdentifer || this.builtInRecipeIdentifer;
+  }
+
+  get areAllRecipeFieldsEmpty(): boolean {
+    return this.name == "" &&
+      this.purposeField == "" &&
+      this.sequenceNumber == null &&
+      this.lengthInBytes == null &&
+      this.lengthInChars == null
+  }
+
+  emptyAllRecipeFields = action (() => {
+    this.name = "";
+    this.purposeField = "";
+    this.sequenceNumberState.textValue = ""
+    this.lengthInBytesState.textValue = "";
+    this.lengthInCharsState.textValue = ""
+  })
+
+  setFieldsFromRecipeJson = action ( (recipeJson: string) => {
+    try {
+      const {type} = JSON.parse(recipeJson) as Recipe;
+      if (type != null) {
+        this.type = type;
+      }
+    } catch {}
+    const {purpose, hosts, sequenceNumber, lengthInBytes, lengthInChars} = recipeJsonToAddableFields(recipeJson);
+    if (purpose != null) {
+      this.purposeField = purpose;
+    } else if (hosts != null) {
+      this.purposeField = hostsToPurpose(hosts);
+    }
+    this.sequenceNumberState.textValue = sequenceNumber != null ? `${sequenceNumber}` : ""
+    this.lengthInBytesState.textValue = lengthInBytes != null ? `${lengthInBytes}` : "";
+    this.lengthInCharsState.textValue = lengthInChars != null ? `${lengthInChars}` : ""
+  });
+
+  loadRecipe = action ((storedRecipe?: Partial<StoredRecipe>) => {
+    if (storedRecipe == null) return;
+    this.emptyAllRecipeFields();
+    this.name = storedRecipe.name ?? "";
+    this.type = storedRecipe.type;
+    // Edit if custom recipe
+    this.editing = storedRecipe.name == null;
+    this.setRecipeJson(storedRecipe.recipeJson);
+  });
 }

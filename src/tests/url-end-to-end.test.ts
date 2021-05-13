@@ -10,7 +10,7 @@ import {
   QueuedUrlApiRequest
 } from "../api-handler/QueuedUrlApiRequest";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
-import { jsonStringifyWithSortedFieldOrder } from "../api-handler/json";
+import { jsonStringifyWithSortedFieldOrder } from "../utilities/json";
 
 import { Crypto } from "@peculiar/webcrypto"
 global.crypto = new Crypto();

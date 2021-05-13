@@ -1,39 +1,50 @@
 import {
-  SavedRecipe
-} from "../../dicekeys/SavedRecipe";
+  StoredRecipe} from "../../dicekeys/StoredRecipe";
 import { action, makeAutoObservable } from "mobx";
 import { autoSave } from "../core/AutoSave";
+import { jsonStringifyWithSortedFieldOrder } from "~utilities/json";
 
 export const RecipeStore = new (class RecipeStore {
-  protected recipesByName: Record<string, SavedRecipe>;
+  protected recipeJsonArray: string[];
 
-  addRecipe = action ( (recipe: SavedRecipe) => {
-    this.recipesByName[recipe.name] = recipe;
+  get recipeJsonSet(): Set<string> { return new Set(this.recipeJsonArray) }
+
+  addRecipe = action ( (storedRecipe: StoredRecipe) => {
+    const {recipeJsonSet} = this;
+    recipeJsonSet.add(jsonStringifyWithSortedFieldOrder(storedRecipe));
+    this.recipeJsonArray = [...recipeJsonSet.values()];
   });
 
-  removeRecipeByName = action ( (recipeName: string) => {
-    delete this.recipesByName[recipeName];
+  removeRecipe = action ( (storedRecipe: StoredRecipe) => {
+    const {recipeJsonSet} = this;
+    recipeJsonSet.delete(jsonStringifyWithSortedFieldOrder(storedRecipe));
+    this.recipeJsonArray = [...recipeJsonSet.values()];
   });
 
   removeAll = action ( () => {
     // console.log(`Remove all`);
-    this.recipesByName = {}
+    this.recipeJsonArray = []
   });
 
-  get names(): string[] { return Object.keys(this.recipesByName).sort() }
-
-  get recipes() {
-    return Object.values(this.recipesByName)
-      .sort( (a, b) => a.name < b.name ? -1 : 1 );
+  get recipes(): StoredRecipe[] {
+    return this.recipeJsonArray.map(
+      json => JSON.parse(json) as StoredRecipe
+    ).sort( (a, b) => 
+      a.name != b.name ? (a.name < b.name ? -1 : 1) :
+      a.type != b.type ? (a.type < b.type ? -1 : 1) :
+      a.recipeJson < b.recipeJson ? - 1 : 1
+    )
   }
  
-  recipeForName = (recipeName: string): SavedRecipe | undefined => {
-    const result = this.recipesByName[recipeName];
-    return result;
-  }
+  isRecipeSaved = (recipeToStore: StoredRecipe): boolean =>
+    !!this.recipes.find( savedRecipe =>
+      recipeToStore.recipeJson === savedRecipe.recipeJson &&
+      recipeToStore.type === savedRecipe.type  &&
+      recipeToStore.name === savedRecipe.name
+    )
 
   constructor() {
-    this.recipesByName = {};
+    this.recipeJsonArray = [];
     makeAutoObservable(this);
     autoSave(this, "RecipeStore");
   }

@@ -4,9 +4,11 @@
   align-items: baseline;
   background: none;
   border: none;
-  margin: 0.1rem;
+  margin-left: 0.1rem;
+  margin-right: 0.1rem;
   height: 1.5rem;
-  width: 1.5rem;;
+  width: 1.5rem;
+  user-select: none;
 }
 
 .CharButton:focus {

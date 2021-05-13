@@ -1,7 +1,7 @@
 
 import css from "./basic.module.css";
 import React from "react";
-import { observer  } from "mobx-react";
+import { observer } from "mobx-react";
 import { CharButton, CharButtonToolTip } from "../../views/basics";
 
 
@@ -11,28 +11,43 @@ import { action, makeAutoObservable } from "mobx";
 export class NumericTextFieldState {
   textValue: string;
   setValue = action ((newValue?: string | number) => {
-    this.textValue = `${newValue ?? ""}`
-    this.setNumericValue?.(this.numericValue);
+    const newTextValue = `${newValue ?? ""}`;
+    if (newTextValue !== this.textValue) { 
+      this.textValue = `${newValue ?? ""}`
+//      this.setNumericValue?.(this.numericValue);
+      this.onChanged?.(this.numericValue)
+    }
   });
   get numericValue(): number | undefined {
     const numericValue = parseInt(this.textValue);
     return numericValue >= this.minValue ? numericValue : undefined;
   }
-  get minusOne(): number | undefined {
-    if (this.numericValue && this.numericValue > this.minValue) {
-      return this.numericValue - 1;
-    } else {
-      return;
+  get decrement(): number | undefined {
+    return this.numericValue != null && (this.numericValue - this.incrementBy) > this.minValue ?
+      (this.numericValue - this.incrementBy) :
+      undefined;
+  }
+  get increment(): number {
+    return this.numericValue != null ? (this.numericValue + this.incrementBy) : (this.defaultValue ?? this.minValue);
+  }
+
+  public readonly minValue;
+  private defaultValue?: number;
+  public readonly incrementBy: number;
+  private readonly onChanged?: (value: number | undefined) => any;
+
+  constructor({minValue = 0, incrementBy=1, defaultValue, initialValue, onChanged} : {
+      minValue: number,
+      incrementBy?: number,
+      defaultValue?: number,
+      onChanged?: (value: number | undefined) => any,
+      initialValue?: string
     }
-  }
-  get plusOne(): number {
-    return this.numericValue ? this.numericValue + 1 : this.minValue;
-  }
-  constructor(
-    public readonly minValue: number = 0,
-    private setNumericValue?: (value: number | undefined) => any,
-    initialValue?: string | number
   ) {
+    this.minValue = minValue;
+    this.incrementBy = incrementBy;
+    this.defaultValue = defaultValue;
+    this.onChanged = onChanged;
     this.textValue = `${initialValue ?? ""}`
     makeAutoObservable(this);
   }
@@ -40,37 +55,75 @@ export class NumericTextFieldState {
 
 export interface NumericTextFieldProps {
   state: NumericTextFieldState;
+  size?: number;
   className?: string;
+  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
+  onFocusedOrChanged?: () => any;
 };
 
 export const NumericTextField = observer ( (props: NumericTextFieldProps) => {
   return (
     <input
       className={props.className}
+      type="text"
+      size={props.size ?? 4}
+      value={props.state.textValue}
       style={typeof props.state.numericValue == "number" ? {} :{color: "red"}}
-      placeholder={"none"} type="text" value={props.state.textValue} onInput={ e => props.state.setValue(e.currentTarget.value) }
+      placeholder={"none"}
+      onInput={ e => {
+        props.state.setValue(e.currentTarget.value);
+        props.onFocusedOrChanged?.();
+      } }
+      onKeyDown={ props.onKeyDown }
+      onFocus={ () => props.onFocusedOrChanged?.() }
     />
   )
 });
 
-export const NumberPlusMinusView = observer( (props: {label: string, state: NumericTextFieldState}) => {
-  const {
-    label, state
-  } = props;
+
+export const NumberPlusMinusView = observer( ({state, textFieldClassName, size, onFocusedOrChanged}: {
+  state: NumericTextFieldState,
+  textFieldClassName: string,
+  size?: number,
+  onFocusedOrChanged?: () => any
+}) => {
+  const setValue = action ((newValue: number | undefined) => {
+    state.setValue(newValue);
+    onFocusedOrChanged?.()    
+  });
+  const subtractOne = () => setValue(state.decrement);
+  const addOne = () => setValue(state.increment);
   return (
-    <div className={css.field_row}>
-      <div className={css.vertical_labeled_field}>
-        <div className={css.hstack}>
-          <CharButton
-              style={{visibility: state.numericValue !== undefined ? "visible" : "hidden"}}
-              onClick={ () => state.setValue(state.minusOne) }
-            >-<CharButtonToolTip>- 1 = {state.minusOne ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
-          <NumericTextField className={ css.sequence_number_text_field } state={state} />
-          <CharButton onClick={ () => state.setValue( state.plusOne ) }
-          >+<CharButtonToolTip>+ 1 = { state.plusOne }</CharButtonToolTip></CharButton>
-        </div>
-        <label className={css.label_below}>{label}</label>
-      </div>
+    <div className={css.hstack}>
+      <CharButton hidden={state.numericValue == null} onClick={ subtractOne  }
+        >-<CharButtonToolTip>- 1 = {state.decrement ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
+      <NumericTextField
+        className={ textFieldClassName }
+        size={size} state={state}
+        onFocusedOrChanged={onFocusedOrChanged}
+        onKeyDown={ e => {
+          switch (e.key) {
+            case "ArrowUp":
+            case "+":
+            case "=":
+            case ".":
+            case ">":
+              addOne();
+              e.preventDefault();
+              break;
+            case "ArrowDown":
+            case "-":
+            case "_":
+            case ",":
+            case "<":
+              subtractOne();
+              e.preventDefault();
+              break;
+            default:
+          }
+        } }
+      />
+      <CharButton onClick={ addOne }
+      >+<CharButtonToolTip>+ 1 = { state.increment }</CharButtonToolTip></CharButton>
     </div>
-  );
-});
+)});

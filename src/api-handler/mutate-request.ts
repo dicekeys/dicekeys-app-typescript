@@ -9,7 +9,7 @@ import {
 } from "@dicekeys/dicekeys-api-js";
 import {
   jsonStringifyWithSortedFieldOrder
-} from "./json";
+} from "../utilities/json";
 
 const addRecipeProofWorker = new AddRecipeProofWorker();
 

@@ -29,3 +29,13 @@ const deepCanonicalizeObjectFieldOrder = <T>(item: T): T =>
 
 export const jsonStringifyWithSortedFieldOrder = <T>(item: T, delimiter?: string ): string =>
   JSON.stringify( deepCanonicalizeObjectFieldOrder(item), undefined, delimiter );
+
+export const isValidJson = (candidateJson: string | undefined): candidateJson is string => {
+  if (candidateJson == null) return false;
+  try {
+    JSON.parse(candidateJson);
+    return true;
+  } catch {
+    return false;
+  }  
+}

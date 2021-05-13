@@ -8,7 +8,7 @@ const obscuringCharacter = String.fromCharCode(0x25A0); // * ■▓▒░
 
 type ObscuringFunction = (unobscuredValue: string) => string;
 
-const defaultObscuringFunction = (password: string): string => {
+export const defaultObscuringFunction = (password: string): string => {
   const words = password.split(' ');
   const obscuredWords = words.map( word => word.split("").map( _ => obscuringCharacter).join("")); // * ▓▒░
   const sortedObscuredWords = obscuredWords.sort();
@@ -29,13 +29,25 @@ const defaultObscuringFunction = (password: string): string => {
 // The hint does make it possible for others to know that you used the same  DiceKey for multiple
 // accounts.
 
-export type GeneratedTextFieldViewProps = Partial<ObscureButtonProps> & CopyButtonProps & {
-  obscuringFunction?: ObscuringFunction
+
+export type OptionallyObscuredTextProps = {
+  obscuringFunction?: ObscuringFunction;
+  obscureValue?: boolean;
+  value?: string;
 };
+
+export const OptionallyObscuredText = (props: OptionallyObscuredTextProps): string =>
+  props.obscureValue ? (props.obscuringFunction ?? defaultObscuringFunction)(props.value ?? "") : props.value ?? "";
+
+export const OptionallyObscuredTextView = observer( (props: OptionallyObscuredTextProps) => (
+  <>{ OptionallyObscuredText(props) }</>
+));
+
+export type GeneratedTextFieldViewProps = Partial<ObscureButtonProps> & CopyButtonProps & OptionallyObscuredTextProps;
 
 export const GeneratedTextFieldView  = observer( (props: GeneratedTextFieldViewProps) => (
     <div className={Layout.RowCentered}>
-      <div key={"value"} style={{fontFamily: "monospace"}}>{ props.obscureValue ? (props.obscuringFunction ?? defaultObscuringFunction)(props.value) : props.value }</div>
+      <div key={"value"} style={{fontFamily: "monospace"}}><OptionallyObscuredTextView {...props} /> { props.obscureValue ? (props.obscuringFunction ?? defaultObscuringFunction)(props.value ?? "") : props.value }</div>
       <ObscureButton {...props} />
       <CopyButton {...props}/>
     </div>

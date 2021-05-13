@@ -1,4 +1,5 @@
 import { Face, FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
+import { makeAutoObservable, runInAction } from "mobx";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import {english} from "./word-lists/english";
 
@@ -62,6 +63,14 @@ const toBip39Array = async (data32Bytes: Uint8ClampedArray): Promise<string[]> =
 }
 export const toBip39 = async (data32Bytes: Uint8ClampedArray): Promise<string> =>
 	(await toBip39Array(data32Bytes)).join(" ");
+
+export class toBip39Calculation{
+	value: string = ""
+	constructor(data32Bytes: Uint8ClampedArray) {
+		makeAutoObservable(this);
+		toBip39(data32Bytes).then( s => runInAction( () => { this.value = s } ));
+	}
+}
 
 const bip39WordsToIndexes = (wordArray: string[]): number[] =>
 	wordArray.map( word => {

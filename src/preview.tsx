@@ -39,7 +39,7 @@ window.addEventListener('load', () => {
     <ErrorHandler errorState={ApplicationErrorState}>
         <Previews />
     </ErrorHandler>
-  ), document.getElementById("app-container"));
+  ), document.getElementById("app_container"));
 });
 
 if (window.opener) {
