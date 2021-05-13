@@ -38,7 +38,7 @@ export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubView
     diceKey: DiceKey,
     initialSubView: SelectedDiceKeySubViews | undefined = undefined
   ): Promise<SelectedDiceKeyViewState> => {
-    const keyId = await DiceKey.keyId(diceKey);
+    const keyId = await diceKey.keyId();
     DiceKeyMemoryStore.addDiceKeyForKeyId(keyId, diceKey);
     return new SelectedDiceKeyViewState(goBack, keyId, initialSubView);
   }

@@ -79,7 +79,7 @@ export const SeedHardwareKeyView = observer( ( props: SeedHardwareKeyViewProps) 
 
         <h2>Seed</h2>
         <div>Your DiceKey represented in a text format:</div>
-        <DiceKeyAsSeedView value={DiceKey.toSeedString(props.diceKey, true)} />
+        <DiceKeyAsSeedView value={props.diceKey.toSeedString()} />
 
         <h2>Root Hardware Key Generated</h2>
         <GeneratedSecurityKeySeedView value={props.seedHardwareKeyViewState.hexSeed ?? "" } />
@@ -95,7 +95,7 @@ export const SeedHardwareKeyView = observer( ( props: SeedHardwareKeyViewProps) 
 
 export const Preview_SeedHardwareKeyView = () => {
   const diceKey = DiceKey.testExample;
-  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(DiceKey.toSeedString(diceKey, true));
+  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(diceKey.toSeedString());
   return (
     <SeedHardwareKeyView {...{diceKey, seedHardwareKeyViewState}} />
   )

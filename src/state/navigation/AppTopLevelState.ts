@@ -37,7 +37,7 @@ export class AppTopLevelState extends HasSubViews<SubViews> {
   });
 
   navigateToSelectedDiceKeyView = async (diceKey: DiceKey) => {
-    const keyId = await DiceKey.keyId(diceKey);
+    const keyId = await diceKey.keyId();
     runInAction( () => {
       DiceKeyMemoryStore.addDiceKeyForKeyId(keyId, diceKey);
       this.navigateToSelectedDiceKeyViewForKeyId(keyId);

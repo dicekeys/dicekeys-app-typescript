@@ -103,8 +103,8 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
 
 export const Preview_ScanDiceKeyView = () => (
   <ScanDiceKeyView onDiceKeyRead={ (facesRead) => {
-    const diceKey: DiceKey = facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face>;
-    const hrf = DiceKey.toHumanReadableForm(diceKey, true);
+    const diceKey: DiceKey = new DiceKey(facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face>);
+    const hrf = diceKey.inHumanReadableForm;
     console.log(`Read ${hrf}`);
     alert(`Read ${hrf}`);
   }} />

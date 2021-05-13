@@ -47,6 +47,8 @@ export const FacePositions = [
 export type FacePosition = typeof FacePositions[number];
 
 
+
+
 export class InvalidDiceKeyException extends Error {}
 
 export class DiceKeyLettersRepeatedAndAbsentException extends InvalidDiceKeyException {
@@ -76,11 +78,11 @@ export interface DiceKeyValidationOptions {
   throwOnFailures?: boolean
  }
 
-const validateDiceKey = (diceKey: readonly Partial<Face>[], {
+export const validateDiceKey = (diceKey: readonly Partial<Face>[], {
   requireOneOfEachLetter = false,
   allowOrientationOfQuestionMark = false,
   throwOnFailures = false
-} : DiceKeyValidationOptions = {}): diceKey is DiceKey => {
+} : DiceKeyValidationOptions = {}): diceKey is DiceKeyFaces => {
   if (diceKey.length !== NumberOfFacesInKey) {
     if (!throwOnFailures) { return false; }
     throw new Error(`A DiceKey must have ${NumberOfFacesInKey} faces`);
@@ -132,7 +134,7 @@ const validateDiceKey = (diceKey: readonly Partial<Face>[], {
 
 
 
-const getRandomDiceKey = (numberOfFaces: number = 6): DiceKey => {
+const getRandomDiceKey = (numberOfFaces: number = 6): DiceKeyFaces => {
   const remainingLetters = [...FaceLetters];
   return Array.from({ length: NumberOfFacesInKey }, (): Face => {
     // Pull out a letter at random from the remainingLetters array
@@ -147,7 +149,7 @@ const getRandomDiceKey = (numberOfFaces: number = 6): DiceKey => {
       digit, letter, orientationAsLowercaseLetterTrbl
     };
     return faceAndOrientation;
-  }) as DiceKey;
+  }) as DiceKeyFaces;
 }
 
 /**
@@ -172,13 +174,13 @@ export const FaceFromHumanReadableForm = (hrf: string, options?: {position?: num
   orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrblOrUnknown(hrf[2], options)
 })
 
-export const DiceKeyInHumanReadableForm = (diceKey: DiceKey, includeOrientations: boolean): DiceKeyInHumanReadableForm =>
+export const DiceKeyInHumanReadableForm = (diceKey: DiceKeyFaces, includeOrientations: boolean): DiceKeyInHumanReadableForm =>
   diceKey.map( face => FaceInHumanReadableForm(face, includeOrientations) ).join("") as DiceKeyInHumanReadableForm
 
 const diceKeyFromHumanReadableForm = (
   humanReadableForm: DiceKeyInHumanReadableForm,
   validationOptions: DiceKeyValidationOptions = {}
-): DiceKey<Face> => {
+): DiceKeyFaces<Face> => {
   if (typeof(humanReadableForm) !== "string") {
     throw new InvalidDiceKeyException("DiceKey in human-readable-form must be a string");
   }
@@ -187,7 +189,7 @@ const diceKeyFromHumanReadableForm = (
     humanReadableForm.length === 50 ? 2 :
     ( () => { throw new InvalidDiceKeyException("Invalid human-readable-form string length"); })();
 
-  const diceKey: DiceKey = FacePositions.map( position => {
+  const diceKey: DiceKeyFaces = FacePositions.map( position => {
     const [
       letter,
       digitString,
@@ -200,7 +202,7 @@ const diceKeyFromHumanReadableForm = (
       orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrblOrUnknown(orientationAsLowercaseLetterTrbl, positionObj)
     };
     return faceAndOrientation;
-  }) as readonly Face[] as DiceKey;
+  }) as readonly Face[] as DiceKeyFaces;
   validateDiceKey(diceKey, {throwOnFailures: true, ...validationOptions});
   return diceKey;
 }
@@ -211,7 +213,7 @@ const diceKeyFromHumanReadableForm = (
  * we choose the one with the lowest unicode string (the one with the letter with the lowest
  * charCode.) 
  */
-export type DiceKey<F extends Face = Face> = ReadOnlyTupleOf25Items<F>;
+export type DiceKeyFaces<F extends Face = Face> = ReadOnlyTupleOf25Items<F>;
 export type PartialDiceKey = ReadOnlyTupleOf25Items<Partial<Face>>
 /**
  * Construct a dice key either from a tuple of 25 ElementFace objects,
@@ -219,23 +221,23 @@ export type PartialDiceKey = ReadOnlyTupleOf25Items<Partial<Face>>
  * 75-character representation used by the OCR algorithm.
  * @param diceKeyOr25FaceIndexesOr29WordsOrOcrResultString 
  */
-export function DiceKey(
-  diceKeyAsFacesOrHumanReadableForm: string
-) : DiceKey<Face>;
-export function DiceKey<F extends Face = Face>(
-  diceKeyAsFacesOrHumanReadableForm : ReadonlyArray<F>
-): DiceKey<F>;
-export function DiceKey<F extends Face = Face>(
-  diceKeyAsFacesOrHumanReadableForm: string | ReadonlyArray<F>
-) {
-  if (typeof(diceKeyAsFacesOrHumanReadableForm) === "string") {
-    return diceKeyFromHumanReadableForm(diceKeyAsFacesOrHumanReadableForm as DiceKeyInHumanReadableForm);
-  }
-  if (validateDiceKey(diceKeyAsFacesOrHumanReadableForm)) {
-    return diceKeyAsFacesOrHumanReadableForm as DiceKey<F>;
-  }
-  throw new InvalidDiceKeyException("Invalid key format.");
-}
+// export function DiceKey(
+//   diceKeyAsFacesOrHumanReadableForm: string
+// ) : DiceKeyFaces<Face>;
+// export function DiceKey<F extends Face = Face>(
+//   diceKeyAsFacesOrHumanReadableForm : ReadonlyArray<F>
+// ): DiceKeyFaces<F>;
+// export function DiceKey<F extends Face = Face>(
+//   diceKeyAsFacesOrHumanReadableForm: string | ReadonlyArray<F>
+// ) {
+//   if (typeof(diceKeyAsFacesOrHumanReadableForm) === "string") {
+//     return diceKeyFromHumanReadableForm(diceKeyAsFacesOrHumanReadableForm as DiceKeyInHumanReadableForm);
+//   }
+//   if (validateDiceKey(diceKeyAsFacesOrHumanReadableForm)) {
+//     return diceKeyAsFacesOrHumanReadableForm as DiceKeyFaces<F>;
+//   }
+//   throw new InvalidDiceKeyException("Invalid key format.");
+// }
 
 
 const rotationIndexes5x5: {[rotation in Clockwise90DegreeRotationsFromUpright]: ReadOnlyTupleOf25Items<number>} = {
@@ -291,54 +293,52 @@ const defaultRotateFaceFn = <F extends Face>(
 } as F)
 
 export function rotateDiceKey<F extends Face = Face>(
-  diceKey: DiceKey<F>,
+  diceKey: DiceKeyFaces<F>,
   clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright,
   rotateFaceFn: RotateFaceFn<F>
-): DiceKey<F>;
+): DiceKeyFaces<F>;
 export function rotateDiceKey(
-  diceKey: DiceKey<Face>,
+  diceKey: DiceKeyFaces<Face>,
   clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright,
-): DiceKey;
+): DiceKeyFaces;
 export function rotateDiceKey<F extends Face = Face>(
-  diceKey: DiceKey<F>,
+  diceKey: DiceKeyFaces<F>,
   clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright,
   rotateFaceFn: RotateFaceFn<F> = defaultRotateFaceFn
-) : DiceKey<F> {
-  return DiceKey<F>(
-    rotationIndexes5x5[clockwise90DegreeRotationsFromUpright]
+) : DiceKeyFaces<F> {
+  return rotationIndexes5x5[clockwise90DegreeRotationsFromUpright]
       .map( i => diceKey[i] )
-      .map( faceAndRotation => rotateFaceFn(faceAndRotation, clockwise90DegreeRotationsFromUpright) ) 
-  );
+      .map( faceAndRotation => rotateFaceFn(faceAndRotation, clockwise90DegreeRotationsFromUpright) ) as DiceKeyFaces<F>;
 }
 
-const removeOrientations = <F extends Face = Face>(
-  diceKey: DiceKey<F>,
-): DiceKey => DiceKey<F>(diceKey.map( face => ({...face, orientationAsLowercaseLetterTrbl: "?"})));
+// const removeOrientations = <F extends Face = Face>(
+//   diceKey: DiceKeyFaces<F>,
+// ): DiceKeyFaces => DiceKey<F>(diceKey.map( face => ({...face, orientationAsLowercaseLetterTrbl: "?"})));
 
 
 const FaceRotationsNonStationary = [1, 2, 3] as const;
 export function rotateToRotationIndependentForm<F extends Face = Face>(
-  diceKey: DiceKey<Face>,
+  diceKey: DiceKeyFaces<Face>,
   includeOrientations: boolean,
   rotateFaceFn: RotateFaceFn<F>
-): DiceKey;
+): DiceKeyFaces;
 export function rotateToRotationIndependentForm(
-  diceKey: DiceKey<Face>,
+  diceKey: DiceKeyFaces<Face>,
   includeOrientations: boolean,
-): DiceKey;
+): DiceKeyFaces;
 export function rotateToRotationIndependentForm<F extends Face = Face>(
-  diceKey: DiceKey<F>,
+  diceKey: DiceKeyFaces<F>,
   includeOrientations: boolean,
   rotateFaceFn: RotateFaceFn<F> = defaultRotateFaceFn
-): DiceKey<F> {
-  let rotationIndependentDiceKey: DiceKey<F> = diceKey;
-  let earliestHumanReadableForm: DiceKeyInHumanReadableForm = DiceKey.toHumanReadableForm(diceKey, includeOrientations);
+): DiceKeyFaces<F> {
+  let rotationIndependentDiceKey: DiceKeyFaces<F> = diceKey;
+  let earliestHumanReadableForm: DiceKeyInHumanReadableForm = DiceKeyInHumanReadableForm(diceKey, includeOrientations);
   for (const candidateRotation of FaceRotationsNonStationary) {
     // If the candidate rotation would result in the square having a top-left letter
     // that is earlier in sort order (lower unicode character) than the current rotation,
     // replace the current rotation with the candidate rotation.
     const rotatedDiceKey = rotateDiceKey<F>(diceKey, candidateRotation, rotateFaceFn)
-    const humanReadableForm  = DiceKey.toHumanReadableForm(rotatedDiceKey, includeOrientations);
+    const humanReadableForm  = DiceKeyInHumanReadableForm(rotatedDiceKey, includeOrientations);
     if (humanReadableForm < earliestHumanReadableForm) {
       earliestHumanReadableForm = humanReadableForm;
       rotationIndependentDiceKey = rotatedDiceKey;
@@ -366,32 +366,43 @@ export function rotateToRotationIndependentForm<F extends Face = Face>(
  * @param recipeObject 
  */
 const toSeedString = (
-  diceKey: DiceKey,
+  diceKey: DiceKeyFaces,
   includeOrientations: boolean
 ): DiceKeyInHumanReadableForm => {
   const canonicalDiceKey = rotateToRotationIndependentForm(diceKey, includeOrientations); 
   const humanReadableForm = DiceKeyInHumanReadableForm(canonicalDiceKey, includeOrientations);
   return humanReadableForm;
 }
-  
-DiceKey.validate = validateDiceKey;
-DiceKey.fromRandom = getRandomDiceKey;
-DiceKey.fromHumanReadableForm = diceKeyFromHumanReadableForm;
-DiceKey.toHumanReadableForm = DiceKeyInHumanReadableForm;
-DiceKey.rotate = rotateDiceKey;
-DiceKey.rotateToRotationIndependentForm = rotateToRotationIndependentForm;
-DiceKey.toStringOf25Triples = DiceKeyInHumanReadableForm;
-DiceKey.removeOrientations = removeOrientations;
-DiceKey.toSeedString = toSeedString;
-DiceKey.cornerIndexesClockwise = [0, 4, 24, 20] as const;
-DiceKey.cornerIndexSet = new Set<number>(DiceKey.cornerIndexesClockwise);
-DiceKey.centerLetterAndDigit = (diceKey: DiceKey) => diceKey[12].letter + diceKey[12].digit;
-DiceKey.nickname = (diceKey: DiceKey) => `DiceKey with ${DiceKey.centerLetterAndDigit(diceKey)} in center`;
-DiceKey.keyId = (diceKey: DiceKey): Promise<string> =>
-  crypto.subtle.digest("SHA-256",  new TextEncoder().encode(DiceKey.toSeedString(diceKey, true))).then( hash =>
-    uint8ClampedArrayToHexString(new Uint8ClampedArray(hash.slice(0, 8)))).catch( e => { throw e } );
-DiceKey.testExample = DiceKey( [...Array(25).keys()].map( (i)  => ({
-  letter: FaceLetters[i],
-  digit: FaceDigits[i % 6],
-  orientationAsLowercaseLetterTrbl: "trbl"[i % 4]
-} as Face ) ));
+
+export class DiceKey {
+  constructor(public readonly faces: ReadOnlyTupleOf25Items<Face>, validate: boolean = true) {
+    if (validate) {
+      validateDiceKey(faces, {throwOnFailures: validate});
+    }
+  }
+
+  static fromRandom = () => new DiceKey(getRandomDiceKey());
+  static fromHumanReadableForm = (
+    humanReadableForm: DiceKeyInHumanReadableForm,
+    validationOptions: DiceKeyValidationOptions = {}
+  ) => new DiceKey(diceKeyFromHumanReadableForm(humanReadableForm, validationOptions));
+
+  get inHumanReadableForm(): DiceKeyInHumanReadableForm { return DiceKeyInHumanReadableForm(this.faces, true) }
+  rotate = (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright) => new DiceKey(rotateDiceKey(this.faces, clockwise90DegreeRotationsFromUpright));
+  get inRotationIndependentForm(): DiceKey { return new DiceKey(rotateToRotationIndependentForm(this.faces, true)) };
+  toSeedString = () => toSeedString(this.faces, true);
+  get centerLetterAndDigit(): string { return this.faces[12].letter + this.faces[12].digit }
+  get nickname(): string { return`DiceKey with ${this.centerLetterAndDigit} in center`; }
+
+  keyId = (): Promise<string> =>
+    crypto.subtle.digest("SHA-256",  new TextEncoder().encode(this.toSeedString())).then( hash =>
+      uint8ClampedArrayToHexString(new Uint8ClampedArray(hash.slice(0, 8)))).catch( e => { throw e } );
+
+      static testExample = new DiceKey(
+    [...Array(25).keys()].map( (i)  => ({
+      letter: FaceLetters[i],
+      digit: FaceDigits[i % 6],
+      orientationAsLowercaseLetterTrbl: "trbl"[i % 4]
+    } as Face ) ) as ReadOnlyTupleOf25Items<Face>
+  )
+}

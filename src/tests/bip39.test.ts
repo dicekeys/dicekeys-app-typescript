@@ -55,17 +55,17 @@ describe("Formats: Bip39", () => {
     const diceKey = DiceKey.testExample;
     const bip39Generated = await diceKeyToBip39String(diceKey)
     const diceKeyRestored = await bip39ToDiceKey(bip39Generated);
-    expect(DiceKey.toHumanReadableForm(diceKeyRestored, true)).toStrictEqual(DiceKey.toHumanReadableForm(diceKeyRestored, true));
+    expect(diceKey.inHumanReadableForm).toStrictEqual(diceKeyRestored.inHumanReadableForm);
   });
 
 
   for (var testIndex = 0; testIndex < 100; testIndex++) {
-    const diceKeyHRF = DiceKey.toHumanReadableForm(DiceKey.fromRandom(), true);
+    const diceKeyHRF = DiceKey.fromRandom().inHumanReadableForm;
     test(`Bip39 DiceKeys: ${diceKeyHRF}  (${testIndex})`, async () => {
       const diceKey = DiceKey.fromHumanReadableForm(diceKeyHRF);
       const bip39Generated = await diceKeyToBip39String(diceKey)
       const diceKeyRestored = await bip39ToDiceKey(bip39Generated);
-      expect(DiceKey.toHumanReadableForm(diceKeyRestored, true)).toStrictEqual(diceKeyHRF);
+      expect(diceKeyRestored.inHumanReadableForm).toStrictEqual(diceKeyHRF);
     });
   }
 });

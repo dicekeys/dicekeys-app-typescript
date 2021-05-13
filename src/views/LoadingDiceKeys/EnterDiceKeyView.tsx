@@ -6,7 +6,9 @@ import { observer } from "mobx-react";
 
 import {
   DiceKey,
+  DiceKeyFaces,
   ReadOnlyTupleOf25Items,
+  validateDiceKey,
 } from "../../dicekeys/DiceKey";
 import { Face, FaceDigit, FaceLetter, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
 import { DiceKeyView } from "../WithSelectedDiceKey/DiceKeyView";
@@ -15,11 +17,11 @@ export class EnterDiceKeyState {
   currentFaceIndex: number = 0;
 
   get isValid(): boolean {
-    return DiceKey.validate(this.partialDiceKey)!!
+    return validateDiceKey(this.partialDiceKey)!!
   }
 
   get diceKey(): DiceKey | undefined {
-    return DiceKey.validate(this.partialDiceKey) ? this.partialDiceKey : undefined;
+    return validateDiceKey(this.partialDiceKey) ? new DiceKey(this.partialDiceKey as DiceKeyFaces) : undefined;
   }
 
   readonly partialDiceKey: ReadOnlyTupleOf25Items<Partial<Face>> = Array.from({length: 25}, () => 

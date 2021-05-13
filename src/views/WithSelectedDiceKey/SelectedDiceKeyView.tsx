@@ -24,7 +24,7 @@ const SelectedDiceKeyViewHeader = observer( ( props: SelectedDiceKeyViewProps) =
   return (
     <div className={css.nav_header}>
       <span className={css.NavLeftSide} onClick={ props.navigationState.goBack } >&#8592;</span>
-      <span className={css.nav_center}>{DiceKey.nickname(diceKey)}</span>
+      <span className={css.nav_center}>{diceKey.nickname}</span>
       <span className={css.NavRightSide}></span>
     </div>
   );
@@ -64,13 +64,13 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
           {(() => {
             switch(props.navigationState.subView) {
               case Navigation.SelectedDiceKeySubViews.DisplayDiceKey: return (
-                <DiceKeyView diceKey={diceKey}/>
+                <DiceKeyView diceKey={diceKey.faces}/>
               );
               case Navigation.SelectedDiceKeySubViews.DeriveSecrets: return (
-                <DerivationView seedString={DiceKey.toSeedString(diceKey, true)} />
+                <DerivationView seedString={diceKey.toSeedString()} />
               );
               case Navigation.SelectedDiceKeySubViews.SeedHardwareKey: return (
-                <SeedHardwareKeyView diceKey={diceKey} seedHardwareKeyViewState={ new SeedHardwareKeyViewState(DiceKey.toSeedString(diceKey, true)) } />
+                <SeedHardwareKeyView diceKey={diceKey} seedHardwareKeyViewState={ new SeedHardwareKeyViewState(diceKey.toSeedString()) } />
               );
               case Navigation.SelectedDiceKeySubViews.Backup: return (
                 null

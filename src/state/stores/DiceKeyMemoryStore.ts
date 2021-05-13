@@ -14,7 +14,7 @@ export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
   });
 
   addDiceKey = async (diceKey: DiceKey) =>
-    this.addDiceKeyForKeyId(await DiceKey.keyId(diceKey), diceKey);
+    this.addDiceKeyForKeyId(await diceKey.keyId(), diceKey);
 
   removeDiceKeyForKeyId = action ( (keyId: string) => {
     // console.log(`removeDiceKeyForKeyId(${keyId})`);
@@ -22,7 +22,7 @@ export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
   });
 
   removeDiceKey = async (diceKeyOrKeyId: DiceKey | string) => {
-    const keyId = typeof(diceKeyOrKeyId) === "string" ? diceKeyOrKeyId : await DiceKey.keyId(diceKeyOrKeyId);
+    const keyId = typeof(diceKeyOrKeyId) === "string" ? diceKeyOrKeyId : await diceKeyOrKeyId.keyId();
     this.removeDiceKeyForKeyId(keyId);
   };
 
@@ -36,7 +36,7 @@ export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
   get keysIdsAndNicknames() {
     return Object.entries(this.diceKeysByKeyId)
       .map( ([keyId, diceKey]) =>
-        ({keyId, nickname: DiceKey.nickname(diceKey) })
+        ({keyId, nickname: diceKey.nickname })
       );
   }
  
