@@ -18,14 +18,16 @@ import { useContainerDimensions } from "../../utilities/react-hooks/useContainer
 // TO DO
 
 // Warning if json does not match fields alone
-// limit to one calculation at a time
 
 // LATER?
 
-// Add/remove field for optional fields?
+// Make json parser more resilient to errors?
+// Add/remove field for other optional fields?
 
 // DONE
 
+// limit to one calculation at a time
+// Bug Purpose field switching from hosts/purpose leaves both in JSON
 // handle overflow text in formatted recipeJson
 // Raw recipe editor with switch
 // Delete recipe button
@@ -144,11 +146,11 @@ const RecipeFieldsHelpContentView = observer ( ( {state}: {state: RecipeBuilderS
       Apply a length-limit to the password.
     </>);
     case "rawJson": return (<>
-      This is the internal recipe format for expert use only.
+      This is the recipe's internal JSON format for use only when the provided fields are insufficient.
       <br/>
-      <b>Be careful.</b>
+      <b>Be careful.</b>&nbsp;
       Changing even one character will change the {secretType}.
-      If you can't re-create this exact same string, you won't be able to re-create the secrets you generated with it.
+      If you can't re-create the exact recipe string used to generate a {secretType}, you will be unable to regenerate it.
     </>);
     default: return state.type == null ? (<>
       Choose a recipe or template above.

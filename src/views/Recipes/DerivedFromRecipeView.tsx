@@ -9,7 +9,7 @@ import { DerivedFromRecipeState, OutputFormats, OutputFormat } from "./DerivedFr
 
 
 export const DerivedFromRecipeView = observer( ({state}: {state: DerivedFromRecipeState}) => {
-  const {recipe, derivedValue} = state;
+  const {recipeState: recipe, derivedValue} = state;
   const {type} = recipe;
   const copyToClipboard = action ( () => {
     if (derivedValue != null) {

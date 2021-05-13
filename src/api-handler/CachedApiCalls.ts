@@ -9,14 +9,55 @@ import { toBip39 } from "~formats/bip39/bip39";
 
 const Bip39Calculation = new AsyncCalculation<string>();
 
+interface DeferredApiCalculationRequest {
+  key: string;
+  trigger: () => Promise<void>;
+}
+
+const deferCalculation = <T>(fn: () => Promise<T>) => {
+  let trigger: () => Promise<void>;
+  const promise = new Promise<T>( (resolve, reject) => {
+    trigger = () => fn().then( r => resolve(r) ).catch( e => reject(e) );
+  });
+  return {promise, trigger: trigger!};
+}
+
 export class CachedApiCalls {
   private cache = new ObservableMap<string, AsyncResultObservable<ApiCalls.Response>>();
+  private computeApiCommandWorker = new ComputeApiCommandWorker();
 
-  private calculate = action (
-      (key: string, fn: () => Promise<ApiCalls.Response>): void => {
-        this.cache.set(key, new AsyncResultObservable(fn()));
-      }
-  );
+  private pendingCalculationStack: DeferredApiCalculationRequest[] = [];
+  private calculationInProgress?: DeferredApiCalculationRequest;
+
+  private popPendingCalculation = action( () => {
+    return this.calculationInProgress = this.pendingCalculationStack.shift();
+  })
+
+  private pushPendingCalculation = action( (item: DeferredApiCalculationRequest) => {
+    this.pendingCalculationStack.unshift(item);
+    this.calculatePendingItems();
+  });
+
+  private moveKeyToTopOfStack = action ( (key: string) => {
+    const indexOfKey = this.pendingCalculationStack.findIndex( (item) => item.key === key );
+    if (indexOfKey <= 0) return;
+    this.pendingCalculationStack.unshift(...this.pendingCalculationStack.splice(indexOfKey, 1));
+  });
+
+  private addToCache = action( (key: string, asyncResultObservable: AsyncResultObservable<ApiCalls.Response>) => {
+    this.cache.set(key, asyncResultObservable);
+  });
+
+  private calculatePendingItems = async () => {
+    if (this.calculationInProgress != null) {
+      // another thread is already running pending calculations
+      return
+    }
+    let calculationInProgress: DeferredApiCalculationRequest | undefined;
+    while (calculationInProgress = this.popPendingCalculation()) {
+      try { await calculationInProgress.trigger(); } catch {}
+    }
+  }
 
   getResultForRecipe = <T extends ApiCalls.Request = ApiCalls.Request>(
     request: T
@@ -26,19 +67,18 @@ export class CachedApiCalls {
       requestHasPackagedSealedMessageParameter(request) ? request.packagedSealedMessageJson :
       ""
     }`;
-    if (this.cache.has(key)) {
-      return this.cache.get(key)!.result as ApiCalls.ResultForRequest<T>;
+    const cacheEntry = this.cache.get(key);
+    if (cacheEntry) {
+      this.moveKeyToTopOfStack(key);
+      return cacheEntry.result as ApiCalls.ResultForRequest<T>;
+    } else {
+      const {promise, trigger} = deferCalculation(() => this.computeApiCommandWorker.calculate({seedString: this.seedString, request}));
+      const asyncResultObservable = new AsyncResultObservable(promise);
+      this.addToCache(key, asyncResultObservable);
+      this.pushPendingCalculation({key, trigger});
+      return asyncResultObservable.result as (ApiCalls.ResultForRequest<T> | undefined);
     }
-    this.calculate(key, () => new ComputeApiCommandWorker().calculate({seedString: this.seedString, request}));
-    return this.cache.get(key)?.result as (ApiCalls.ResultForRequest<T> | undefined);
   }
-
-  // getJsonForRecipe =
-  //   <R extends (ApiCalls.GetPasswordRequest | ApiCalls.GetSecretRequest | ApiCalls.GetUnsealingKeyRequest | ApiCalls.GetSymmetricKeyRequest | ApiCalls.GetSigningKeyRequest)>(
-  //    command: R["command"], recipe: string
-  //   ): ApiCalls.ResultForRequest<R> | undefined => {
-  //   return this.getResultForRecipe<R>({command, recipe} as R)
-  // }
 
   //
   // Passwords

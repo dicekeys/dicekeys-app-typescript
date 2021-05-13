@@ -2,6 +2,7 @@ import { action, makeAutoObservable } from "mobx";
 import {
   DerivationRecipeType} from "../../dicekeys/StoredRecipe";
 import { CachedApiCalls } from "../../api-handler/CachedApiCalls";
+import { isValidJson } from "~utilities/json";
 
 const spaceJson = (spaces: number = 2) => (json: string | undefined): string | undefined => {
   return (json == null) ? json : JSON.stringify(JSON.parse(json), undefined, spaces);
@@ -31,13 +32,13 @@ const DefaultOutputFormat: OutputFormatForType =  {
 } as const
 export const outputFormats = <T extends DerivationRecipeType>(type: T): OutputFormats[T]  => OutputFormats[type];
 
-interface RecipeProps {
+interface RecipeState {
   type?: DerivationRecipeType;
   recipeJson?: string;
 }
 
 export class DerivedFromRecipeState {
-  readonly recipe: RecipeProps;
+  readonly recipeState: RecipeState;
   readonly api: CachedApiCalls;
 
   //////////////////////////////////////////
@@ -46,23 +47,23 @@ export class DerivedFromRecipeState {
   outputFieldForType: OutputFormatForType = {...DefaultOutputFormat};
   outputFieldFor = <T extends DerivationRecipeType>(t: T): OutputFormat<T> => this.outputFieldForType[t];
   setOutputField = action ( (value: OutputFormat<DerivationRecipeType>) => {
-    const recipeType = this.recipe.type;
+    const recipeType = this.recipeState.type;
     if (recipeType != null && (OutputFormats[recipeType] as readonly string[]).indexOf(value) != -1) {
       this.outputFieldForType[recipeType] = value;
     }
   });
   setOutputFieldTo = (value: OutputFormat<DerivationRecipeType>) => () => this.setOutputField(value);
 
-  constructor({recipe, seedString}: {recipe: RecipeProps, seedString: string} ) {
-    this.recipe = recipe;
+  constructor({recipeState, seedString}: {recipeState: RecipeState, seedString: string} ) {
+    this.recipeState = recipeState;
     this.api = new CachedApiCalls(seedString);
     makeAutoObservable(this);
   }
 
   get derivedValue(): string | undefined {
-    const {recipe: state, api} = this;
-    const {type, recipeJson} = state;
-    if (!type || !recipeJson) return;
+    const {recipeState, api} = this;
+    const {type, recipeJson} = recipeState;
+    if (!type || !isValidJson(recipeJson)) return;
   
     switch (type) {
       case "Password":

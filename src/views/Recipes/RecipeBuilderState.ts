@@ -3,6 +3,7 @@ import {
   StoredRecipe, DerivationRecipeType, builtInRecipeIdentifier, isRecipeBuiltIn, RecipeIdentifier, savedRecipeIdentifier, SavedRecipeIdentifier, BuiltInRecipeIdentifier
 } from "../../dicekeys/StoredRecipe";
 import {
+  addHostsToRecipeJson,
   addLengthInBytesToRecipeJson,
   addLengthInCharsToRecipeJson,
   addPurposeToRecipeJson,
@@ -93,12 +94,14 @@ export class RecipeBuilderState {
   // Purpose field ("purpose" or "allow")
   //////////////////////////////////////////
   get mayEditPurpose(): boolean { return true };
-  purposeField?: string;
+  purposeField: string = "";
   /** The purpose of the recipe from the purpose form field if not a list of 1 or more hosts */
-  get purpose(): string | undefined { return this.hosts ? undefined : this.purposeField; } // ?? this.templateRecipe?.purpose;
-  setPurposeField = action ( (newPurposeFieldValue?: string) => {
+  get purpose(): string | undefined { return this.hosts != null || this.purposeField.length === 0 ? undefined : this.purposeField; }
+  setPurposeField = action ( (newPurposeFieldValue: string) => {
     this.purposeField = newPurposeFieldValue;
-    this.recipeJson = addPurposeToRecipeJson(this.recipeJson, newPurposeFieldValue);
+    const {hosts, purpose} = this;
+    this.recipeJson = addHostsToRecipeJson(this.recipeJson, hosts);
+    this.recipeJson = addPurposeToRecipeJson(this.recipeJson, purpose);
   });
 
 

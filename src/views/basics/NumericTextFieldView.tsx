@@ -23,12 +23,12 @@ export class NumericTextFieldState {
     return numericValue >= this.minValue ? numericValue : undefined;
   }
   get decrement(): number | undefined {
-    return this.numericValue != null && this.numericValue - this.incrementBy > this.minValue ?
-      this.numericValue - this.incrementBy :
+    return this.numericValue != null && (this.numericValue - this.incrementBy) > this.minValue ?
+      (this.numericValue - this.incrementBy) :
       undefined;
   }
   get increment(): number {
-    return this.numericValue != null ? this.numericValue + this.incrementBy : (this.defaultValue ?? this.minValue);
+    return this.numericValue != null ? (this.numericValue + this.incrementBy) : (this.defaultValue ?? this.minValue);
   }
 
   public readonly minValue;

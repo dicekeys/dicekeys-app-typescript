@@ -24,7 +24,7 @@ export const DerivationViewWithState = observer( ( {recipeBuilderState, derivedF
 ));
 export const DerivationView = observer ( (props: DerivationViewProps) => {
   const recipeBuilderState =  new RecipeBuilderState();
-  const derivedFromRecipeState = new DerivedFromRecipeState({recipe: recipeBuilderState, seedString: props.seedString});
+  const derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, seedString: props.seedString});
   return (
     <DerivationViewWithState {...{recipeBuilderState, derivedFromRecipeState}}/>
   )
