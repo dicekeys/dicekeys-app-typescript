@@ -5,7 +5,7 @@ import {
 import {
   EnterDiceKeyView, EnterDiceKeyState
 } from "./EnterDiceKeyView"
-import { DiceKey } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyFaces } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import { CenteredControls } from "../basics";
@@ -37,7 +37,7 @@ type LoadDiceKeyProps = {
 const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
   switch(props.state.mode) {
     case "camera": return ( 
-      <ScanDiceKeyView onDiceKeyRead={ (diceKey) => props.onDiceKeyRead( diceKey.map( faceRead => faceRead.toFace()) as DiceKey, "camera") }/>
+      <ScanDiceKeyView onDiceKeyRead={ (diceKey) => props.onDiceKeyRead( new DiceKey(diceKey.map( faceRead => faceRead.toFace()) as DiceKeyFaces), "camera") }/>
     );
     case "manual": return (  
       <EnterDiceKeyView state={props.state.enterDiceKeyState} />

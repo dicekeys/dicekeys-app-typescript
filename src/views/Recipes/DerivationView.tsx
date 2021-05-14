@@ -4,7 +4,7 @@ import { observer  } from "mobx-react";
 import { RecipeBuilderView } from ".";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { LoadRecipeView } from "./LoadRecipeView";
-import { DiceKey } from "~dicekeys/DiceKey";
+import { DiceKey } from "../../dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
 
@@ -31,6 +31,6 @@ export const DerivationView = observer ( (props: DerivationViewProps) => {
 });
 
 export const Preview_DerivationView = () => (
-  <DerivationView seedString={DiceKey.toSeedString(DiceKey.testExample, true) } />
+  <DerivationView seedString={DiceKey.testExample.toSeedString()} />
 )
 // export const DerivationViewPreview 

@@ -1,6 +1,6 @@
 import { Face, FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
 import { makeAutoObservable, runInAction } from "mobx";
-import { DiceKey } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyFaces } from "../../dicekeys/DiceKey";
 import {english} from "./word-lists/english";
 
 const invertedEnglish: Record<string, number> = english.reduce( (result, word, index) => {
@@ -116,15 +116,15 @@ export const faceToNumber0to599 = (face: Face): number =>
 	(face.orientationAsLowercaseLetterTrbl === "?" ? 0 : FaceOrientationLettersTrbl.indexOf(face.orientationAsLowercaseLetterTrbl));
 
 
-export const bip39StringToDiceKey = async (bip39: string): Promise<DiceKey> => DiceKey(
+export const bip39StringToDiceKey = async (bip39: string): Promise<DiceKey> => new DiceKey(
 	(await fromBip39StringTo10BitNumbers(bip39))
 	.slice(0, 25)
-	.map( faceFromNumber0to599 )
+	.map( faceFromNumber0to599 ) as DiceKeyFaces
 );
 
 export const diceKeyToBip39WordArray = (diceKey: DiceKey): Promise<string[]> =>
-	toBip39Array( new Uint8ClampedArray(  convertArrayOf10BitNumbersTo8BitNumbers( diceKey.map( faceToNumber0to599 ) ) ));
+	toBip39Array( new Uint8ClampedArray(  convertArrayOf10BitNumbersTo8BitNumbers( diceKey.faces.map( faceToNumber0to599 ) ) ));
 
 export const diceKeyToBip39String = (diceKey: DiceKey): Promise<string> =>
-	toBip39( new Uint8ClampedArray(  convertArrayOf10BitNumbersTo8BitNumbers( diceKey.map( faceToNumber0to599 ) ) ));
+	toBip39( new Uint8ClampedArray(  convertArrayOf10BitNumbersTo8BitNumbers( diceKey.faces.map( faceToNumber0to599 ) ) ));
 

@@ -5,21 +5,24 @@ import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import {
+  Face,
   DiceKey,
+  DiceKeyFaces,
   ReadOnlyTupleOf25Items,
+  validateDiceKey,
 } from "../../dicekeys/DiceKey";
-import { Face, FaceDigit, FaceLetter, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
+import { FaceDigit, FaceLetter, FaceOrientationLetterTrbl, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
 import { DiceKeyView } from "../WithSelectedDiceKey/DiceKeyView";
 
 export class EnterDiceKeyState {
   currentFaceIndex: number = 0;
 
   get isValid(): boolean {
-    return DiceKey.validate(this.partialDiceKey)!!
+    return validateDiceKey(this.partialDiceKey)!!
   }
 
   get diceKey(): DiceKey | undefined {
-    return DiceKey.validate(this.partialDiceKey) ? this.partialDiceKey : undefined;
+    return validateDiceKey(this.partialDiceKey) ? new DiceKey(this.partialDiceKey as DiceKeyFaces) : undefined;
   }
 
   readonly partialDiceKey: ReadOnlyTupleOf25Items<Partial<Face>> = Array.from({length: 25}, () => 
@@ -61,7 +64,7 @@ export class EnterDiceKeyState {
     ) {
       // Rotate right
       this.currentFace.orientationAsLowercaseLetterTrbl =
-        FaceOrientationLetterTrblOrUnknown.rotate(this.currentFace.orientationAsLowercaseLetterTrbl ?? 't', 1) ?? 't';      
+        FaceOrientationLetterTrblOrUnknown.rotate(this.currentFace.orientationAsLowercaseLetterTrbl ?? 't', 1) as FaceOrientationLetterTrbl ?? 't';  
     } else if (
       ( (event.shiftKey || event.ctrlKey) && event.code === "ArrowLeft") ||
       event.key === "_" ||
@@ -73,7 +76,7 @@ export class EnterDiceKeyState {
     ) {
       // Rotate left
       this.currentFace.orientationAsLowercaseLetterTrbl =
-        FaceOrientationLetterTrblOrUnknown.rotate(this.currentFace.orientationAsLowercaseLetterTrbl ?? 't', 3) ?? 't';
+        FaceOrientationLetterTrblOrUnknown.rotate(this.currentFace.orientationAsLowercaseLetterTrbl ?? 't', 3) as FaceOrientationLetterTrbl ?? 't';
     } else if (event.code === "ArrowUp") {
       // Move up ( index -= 5 % 25 )
       this.currentFaceIndex = ( this.currentFaceIndex! + 20 ) % 25;
