@@ -375,14 +375,82 @@ const toSeedString = (
   return humanReadableForm;
 }
 
+
+const factorialConstants0to25: bigint[] = Array.from(Array(26).keys()).reduce( (factorials) => {
+  if (factorials.length === 0) factorials.push(BigInt(0));
+  else if (factorials.length === 1) factorials.push(BigInt(1));
+  else factorials.push(factorials[factorials.length - 1] * BigInt(factorials.length))
+  return factorials;
+}, [] as bigint[] );
+const uniqueLetterEncodingSize = factorialConstants0to25[25];
+const digitEncodingSize = BigInt(6) ** BigInt(24);
+const uniqueOrientationEncodingSize = BigInt(4) ** BigInt(24);
+export const SizeOfNumericEncodingForUniqueLetters = uniqueLetterEncodingSize * digitEncodingSize * uniqueOrientationEncodingSize;
+
 export class DiceKey {
-  constructor(public readonly faces: ReadOnlyTupleOf25Items<Face>, validate: boolean = true) {
+  public readonly faces: ReadOnlyTupleOf25Items<Face>;
+  constructor(faces: Face[], validate: boolean = true) {
     if (validate) {
       validateDiceKey(faces, {throwOnFailures: validate});
     }
+    this.faces = faces as ReadOnlyTupleOf25Items<Face>;
   }
 
-  inNumericForm = () => {
+  static fromNumericForm = (numericForm: bigint): DiceKey => {
+    const orientationsAsBigInt = numericForm % uniqueOrientationEncodingSize;
+    let withoutOrientations = numericForm / uniqueOrientationEncodingSize;
+    const digitsAsBigInt = withoutOrientations % digitEncodingSize;
+    const withoutDigits = withoutOrientations / digitEncodingSize;
+    const lettersAsBigInt = withoutDigits % uniqueLetterEncodingSize;
+
+    const {orientations} = [...Array(24).keys()].reduce( (r, _, index) => {
+      // Build right to left by reading the number from its least significant 2 bits to most-significant two bits
+      // and appending orientations onto the start of the array.
+      let {orientations, orientationsAsBigInt} = r;
+      if (index == 12) {
+        // the center face is always upright, so index 12 actually refers to the 13th face.
+        r.orientations.unshift("t")
+      }
+      orientations.unshift(FaceOrientationLettersTrbl[Number(orientationsAsBigInt % 4n) as Clockwise90DegreeRotationsFromUpright]);
+      orientationsAsBigInt /= 4n;
+      return {orientations, orientationsAsBigInt};
+    }, {orientations: [] as FaceOrientationLetterTrbl[], orientationsAsBigInt});
+
+    const {digits} = [...Array(25).keys()].reduce( (r) => {
+      // Build right to left by reading the number 0-5 from digitsAsBigInt % 6, then dividing by 6
+      // for the next most significant value (the digit to the left) 
+      let {digits, digitsAsBigInt} = r;
+      digits.unshift(FaceDigits[Number(digitsAsBigInt % 6n) as Clockwise90DegreeRotationsFromUpright]);
+      digitsAsBigInt /= 6n;
+      return {digits, digitsAsBigInt};
+    }, {digits: [] as FaceDigit[], digitsAsBigInt});
+
+    const {letterIndexes} = [...Array(25).keys()].reduce( (r, _, index) => {
+      // Build right to left by reading the number 0-5 from digitsAsBigInt % 6, then dividing by 6
+      // for the next most significant value (the digit to the left) 
+      let {letterIndexes, lettersAsBigInt} = r;
+      letterIndexes.unshift(Number(lettersAsBigInt % BigInt(index + 1)));
+      lettersAsBigInt /= BigInt(index + 1);
+      return {letterIndexes, lettersAsBigInt};
+    }, {letterIndexes: [] as number[], lettersAsBigInt});
+
+    const {letters} = letterIndexes.reduce( (r, letterIndex) => {
+      let {letters, lettersRemaining} = r;
+      letters.push(lettersRemaining[letterIndex]);
+      lettersRemaining.splice(letterIndex, 1);
+      return {letters, lettersRemaining};
+    }, {letters: [] as FaceLetter[], lettersRemaining: [...FaceLetters]});
+
+    const faces = [...Array(25).keys()].map( index => ({
+      letter: letters[index],
+      digit: digits[index],
+      orientationAsLowercaseLetterTrbl: orientations[index]
+    } as Face));
+
+    return new DiceKey(faces as DiceKeyFaces)
+  }
+
+  get inNumericForm(): bigint | undefined {
     // rotate so that center faces is upright
     const faces: DiceKeyFaces = (() => {
       switch(this.centerFace.orientationAsLowercaseLetterTrbl) {
@@ -391,19 +459,31 @@ export class DiceKey {
         case "l": return this.rotate(1);
         default: return this;
     }})().faces;
-    let digitsAsBigInt = BigInt(0);
-    let orientationsAsBigInt = BigInt(0);
-    faces.forEach( (face, index) => {
-      // if letters unique, 25!
-      // all digits
-      digitsAsBigInt = (digitsAsBigInt * BigInt(6)) + BigInt(face.digit.charCodeAt(0) - "0".charCodeAt(0))
-      // orientations relative to center die
-      if (index != 12) {
-        // The center die will always be upright.        
-        orientationsAsBigInt = (orientationsAsBigInt * BigInt(4)) +
-          BigInt( FaceOrientationLetterTrbl.toClockwise90DegreeRotationsFromUpright(face.orientationAsLowercaseLetterTrbl) )
-      }
-    })
+
+    const {lettersAsBigInt} = faces.map( ({letter}) => letter )
+      .reduce( (r, letter, index) => {
+        const letterIndex = r.lettersRemaining.indexOf(letter);
+        if (letterIndex >= 0 && r.lettersAsBigInt != null) {
+          r.lettersAsBigInt += BigInt(letterIndex) * factorialConstants0to25[24 - index]
+          r.lettersRemaining.splice(letterIndex, 1);
+        }
+        return r;
+        }, {lettersAsBigInt: BigInt(0) as bigint | undefined, lettersRemaining: [...FaceLetters]}
+      );
+    // Fail by returning undefined if there wasn't a unique letter encoding
+    if (lettersAsBigInt == null) return lettersAsBigInt;
+
+    let digitsAsBigInt = faces.map( ({digit}) => digit.charCodeAt(0) - "1".charCodeAt(0) )
+      .reduce( (prev, digitMinus1is0to5) => prev * BigInt(6) + BigInt(digitMinus1is0to5), BigInt(0) );
+
+    let orientationsAsBigInt = faces.map( ({orientationAsLowercaseLetterTrbl}) =>
+      FaceOrientationLetterTrbl.toClockwise90DegreeRotationsFromUpright(orientationAsLowercaseLetterTrbl))
+      .reduce( (prev, rotations0to3) => prev * BigInt(4) + BigInt(rotations0to3), BigInt(0) );
+
+    return ( ( (
+      lettersAsBigInt
+        * digitEncodingSize ) + digitsAsBigInt )
+        * uniqueOrientationEncodingSize ) + orientationsAsBigInt;
   }
 
   static fromRandom = () => new DiceKey(getRandomDiceKey());

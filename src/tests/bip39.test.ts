@@ -2,6 +2,7 @@ import { DiceKey } from "../dicekeys/DiceKey";
 import { toBip39, bip39ToByteArray, diceKeyToBip39String, bip39StringToDiceKey as bip39ToDiceKey } from "../formats/bip39/bip39";
 
 import { Crypto } from "@peculiar/webcrypto"
+import { TestDiceKeys } from "./TestDiceKeys";
 global.crypto = new Crypto();
 
 const testVectorsFromSpec: [string, string][] = [
@@ -58,14 +59,12 @@ describe("Formats: Bip39", () => {
     expect(diceKey.inHumanReadableForm).toStrictEqual(diceKeyRestored.inHumanReadableForm);
   });
 
-
-  for (var testIndex = 0; testIndex < 100; testIndex++) {
-    const diceKeyHRF = DiceKey.fromRandom().inHumanReadableForm;
-    test(`Bip39 DiceKeys: ${diceKeyHRF}  (${testIndex})`, async () => {
-      const diceKey = DiceKey.fromHumanReadableForm(diceKeyHRF);
+	TestDiceKeys.forEach( (diceKey, index) => {
+		const {inHumanReadableForm} = diceKey;
+    test(`Bip39 DiceKeys: ${inHumanReadableForm}  (${index})`, async () => {
       const bip39Generated = await diceKeyToBip39String(diceKey)
       const diceKeyRestored = await bip39ToDiceKey(bip39Generated);
-      expect(diceKeyRestored.inHumanReadableForm).toStrictEqual(diceKeyHRF);
+      expect(diceKeyRestored.inHumanReadableForm).toStrictEqual(inHumanReadableForm);
     });
-  }
+  });
 });
