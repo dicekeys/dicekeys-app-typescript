@@ -9,6 +9,7 @@
   },
   "main": "dist/electron/electron.js",
   "targets": {
+    "main": false,
     "electron": {
       "distDir": "dist/electron",
       "source": [
@@ -29,8 +30,11 @@
     "start": "parcel src/web/index.html",
     "build": "tsc -p .",
     "build-app": "rimraf dist/web & parcel build src/web/index.html --no-optimize --dist-dir dist/web/",
-    "build-electron-js": "rimraf dist/electron & parcel build src/electron/electron.ts --no-optimize --dist-dir dist/electron/",
-    "build-electron": "rimraf dist/electron & parcel build src/electron/electron.html src/electron/electron.ts src/electron/preload.ts src/electron/renderer.ts --no-optimize --dist-dir dist/electron/",
+    "build-electron-electron-ts": "parcel build src/electron/electron.ts --no-optimize --dist-dir dist/electron/",
+    "build-electron-preload-ts": "parcel build src/electron/preload.ts --no-optimize --dist-dir dist/electron/",
+    "build-electron-renderer-ts": "parcel build src/electron/renderer.ts --no-optimize --dist-dir dist/electron/",
+    "build-electron-electron-html": "parcel build src/electron/electron.html --no-optimize --dist-dir dist/electron/",
+    "build-electron": "rimraf dist/electron & npm run build-electron-electron-ts & npm run build-electron-preload-ts & npm run build-electron-renderer-ts & npm run build-electron-electron-html",
     "upload-production": "gsutil -m cp dist/web/* gs://dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/*.js",
     "update-production": "npm run -s build-app & npm run -s upload-production",
     "upload-staging": "gsutil -m cp dist/web/* gs://staging.dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://staging.dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://staging.dicekeys.app/*.js",
