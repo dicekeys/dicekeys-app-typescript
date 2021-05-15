@@ -1,13 +1,8 @@
 import ReactDOM from "react-dom";
 import * as React from "react";
 import {AppTopLevelView} from "./views/AppTopLevelRoutingView";
-import { ErrorHandler } from "~views/ErrorHandler";
-import { ErrorState } from "~views/ErrorState";
-// import { postMessageApiResponder } from "~api-handler/handle-post-message-api-request";
-// import {
-//   urlApiResponder
-// } from "../api-handler/handle-url-api-request";
-
+import { ErrorHandler } from "./views/ErrorHandler";
+import { ErrorState } from "./views/ErrorState";
 
 const ApplicationErrorState = new ErrorState();
 
