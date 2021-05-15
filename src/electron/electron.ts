@@ -13,6 +13,7 @@ function createWindow () {
   })
 
   win.loadFile('electron.html')
+  win.webContents.openDevTools()
 }
 
 app.whenReady().then(() => {
