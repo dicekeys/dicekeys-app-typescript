@@ -11,7 +11,7 @@ import {
   shortDescribeCommandsAction
 } from "../../phrasing/api";
 import { observer } from "mobx-react";
-import { CenteredControls } from "~views/basics";
+import { CenteredControls } from "../../views/basics";
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you

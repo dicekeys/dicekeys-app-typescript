@@ -1,7 +1,7 @@
 import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
-import { RecipeStore } from "~state/stores/RecipeStore";
+import { RecipeStore } from "../../state/stores/RecipeStore";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { getStoredRecipeNameSuffix, savedRecipeIdentifierToStoredRecipe, StoredRecipe } from "../../dicekeys/StoredRecipe";
 

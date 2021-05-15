@@ -2,7 +2,7 @@ import {
   StoredRecipe} from "../../dicekeys/StoredRecipe";
 import { action, makeAutoObservable } from "mobx";
 import { autoSave } from "../core/AutoSave";
-import { jsonStringifyWithSortedFieldOrder } from "~utilities/json";
+import { jsonStringifyWithSortedFieldOrder } from "../../utilities/json";
 
 export const RecipeStore = new (class RecipeStore {
   protected recipeJsonArray: string[];

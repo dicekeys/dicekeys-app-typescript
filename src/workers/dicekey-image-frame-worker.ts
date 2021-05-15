@@ -1,5 +1,5 @@
 import "core-js/stable";
-import "regenerator-runtime/runtime";
+// import "regenerator-runtime/runtime";
 
 // Hack to allow the webassembly module to load since it looks for window
 // FUTURE - can this be removed with better use of emscripten to generate non-broken code?

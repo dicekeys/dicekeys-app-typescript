@@ -32,6 +32,7 @@ class DiceKeyFrameWorkerClient {
     this.workerMessageReceivedEvent = new CustomEvent(this);
     // Create the worker for processing camera frames
     this.frameWorker = new Worker('../../workers/dicekey-image-frame-worker.ts');
+    // this.frameWorker = new Worker(new URL('../../workers/dicekey-image-frame-worker.ts'/*,  import.meta.url */ ));
     // Attach the message-received event to the worker
     this.frameWorker.addEventListener( "message", this.workerMessageReceivedEvent.send );
     // Use a promise to track when the worker has sent us its ready message

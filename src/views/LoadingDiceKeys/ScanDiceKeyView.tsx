@@ -10,7 +10,7 @@ import { MediaStreamState } from "./CameraCaptureView";
 import { CamerasOnThisDevice } from "./CamerasOnThisDevice";
 import { Face, DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
 import { Layout } from "../../css";
-import { CenteredControls } from "~views/basics";
+import { CenteredControls } from "../../views/basics";
 
 interface CameraSelectionViewProps {
   onCameraSelected?: (camerasDeviceId: string) => any;

@@ -1,13 +1,13 @@
 import { observer } from "mobx-react";
 import React from "react";
 import {AppTopLevelState} from "../state/navigation";
-import {Layout} from "../css";
+import Layout from "../css/layout.module.css";
 import css from "./AppHomeView.module.css";
 
-import LoadDiceKeyImage from "../images/Scanning a DiceKey.svg";
-import AssemblyImage1 from "../images/Illustration of shaking bag.svg";
-import AssemblyImage2 from "../images/Box Bottom After Roll.svg";
-import AssemblyImage3 from "../images/Seal Box.svg";
+import LoadDiceKeyImage from "url:../images/Scanning a DiceKey.svg";
+import AssemblyImage1 from "url:../images/Illustration of shaking bag.svg";
+import AssemblyImage2 from "url:../images/Box Bottom After Roll.svg";
+import AssemblyImage3 from "url:../images/Seal Box.svg";
 
 interface AppHomeViewProps {
   appTopLevelState: AppTopLevelState;

@@ -4,8 +4,8 @@ import { ApiCalls, PasswordJson, SecretJson, SigningKeyJson, SymmetricKeyJson, U
 import { requestHasPackagedSealedMessageParameter, requestHasRecipeParameter } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import { hexStringToUint8ClampedArray, uint8ClampedArrayToHexString } from "../utilities/convert";
 import { AsyncResultObservable } from "../utilities/AsyncResultObservable";
-import { AsyncCalculation } from "~utilities/AsyncCalculation";
-import { toBip39 } from "~formats/bip39/bip39";
+import { AsyncCalculation } from "../utilities/AsyncCalculation";
+import { toBip39 } from "../formats/bip39/bip39";
 
 const Bip39Calculation = new AsyncCalculation<string>();
 

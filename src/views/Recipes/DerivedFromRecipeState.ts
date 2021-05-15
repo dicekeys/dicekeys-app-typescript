@@ -2,7 +2,7 @@ import { action, makeAutoObservable } from "mobx";
 import {
   DerivationRecipeType} from "../../dicekeys/StoredRecipe";
 import { CachedApiCalls } from "../../api-handler/CachedApiCalls";
-import { isValidJson } from "~utilities/json";
+import { isValidJson } from "../../utilities/json";
 
 const spaceJson = (spaces: number = 2) => (json: string | undefined): string | undefined => {
   return (json == null) ? json : JSON.stringify(JSON.parse(json), undefined, spaces);

@@ -18,6 +18,7 @@ REQUEST extends ApiCalls.ApiRequestObject = ApiCalls.ApiRequestObject
 > extends WorkerRequest<ApiRequestWithSeed<REQUEST>, ExecuteApiResponse<REQUEST>> {
   constructor() {
     super(
+//      () => new Worker(new URL('./api-command-worker.ts' /* , import.meta.url */ )),
       () => new Worker('./api-command-worker.ts'),
       (request) => request
     )

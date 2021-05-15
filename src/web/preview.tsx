@@ -1,14 +1,14 @@
 import ReactDOM from "react-dom";
 import * as React from "react";
-import { ErrorHandler } from "./views/ErrorHandler";
-import { ErrorState } from "./views/ErrorState";
-import { PreviewView } from "./views/basics/Layouts";
-import { Preview_ScanDiceKeyView } from "./views/LoadingDiceKeys/ScanDiceKeyView";
-import { Preview_EnterDiceKeyView } from "./views/LoadingDiceKeys/EnterDiceKeyView";
-import { Layout } from "./css";
-import { Preview_SeedHardwareKeyView } from "./views/WithSelectedDiceKey/SeedHardwareKeyView";
-import { Preview_SelectedDiceKeyView } from "./views/WithSelectedDiceKey/SelectedDiceKeyView";
-import { Preview_DerivationView } from "./views/Recipes/DerivationView";
+import { ErrorHandler } from "../views/ErrorHandler";
+import { ErrorState } from "../views/ErrorState";
+import { PreviewView } from "../views/basics/Layouts";
+import { Preview_ScanDiceKeyView } from "../views/LoadingDiceKeys/ScanDiceKeyView";
+import { Preview_EnterDiceKeyView } from "../views/LoadingDiceKeys/EnterDiceKeyView";
+import { Layout } from "../css";
+import { Preview_SeedHardwareKeyView } from "../views/WithSelectedDiceKey/SeedHardwareKeyView";
+import { Preview_SelectedDiceKeyView } from "../views/WithSelectedDiceKey/SelectedDiceKeyView";
+import { Preview_DerivationView } from "../views/Recipes/DerivationView";
 
 const ApplicationErrorState = new ErrorState();
 

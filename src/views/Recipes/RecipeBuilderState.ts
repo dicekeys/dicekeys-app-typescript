@@ -15,9 +15,9 @@ import {
   RecipeFieldType,
   recipeJsonToAddableFields
 } from "../../dicekeys/ConstructRecipe";
-import { NumericTextFieldState } from "../../views/basics/NumericTextFieldView";
+import { NumericTextFieldState } from "../basics/NumericTextFieldView";
 import { Recipe } from "@dicekeys/dicekeys-api-js";
-import { RecipeStore } from "~state/stores/RecipeStore";
+import { RecipeStore } from "../../state/stores/RecipeStore";
 
 // type EditingMode = "fields" | "json" | undefined;
 

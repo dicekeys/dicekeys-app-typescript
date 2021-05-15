@@ -1,5 +1,5 @@
 import {DerivableObjectName, Recipe} from "@dicekeys/dicekeys-api-js"
-import { describeRecipeType } from "~views/Recipes/DescribeRecipeType";
+import { describeRecipeType } from "../views/Recipes/DescribeRecipeType";
 import { jsonStringifyWithSortedFieldOrder } from "../utilities/json";
 
 export type DerivationRecipeType = DerivableObjectName
