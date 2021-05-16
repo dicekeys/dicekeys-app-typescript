@@ -12,7 +12,7 @@ function createWindow () {
     }
   })
 
-  win.loadFile('electron.html')
+  win.loadFile('./dist/electron/electron.html')
   win.webContents.openDevTools()
 }
 

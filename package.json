@@ -16,7 +16,7 @@
       "engines": {
         "electron": ">=12.x"
       },
-      "distDir": "dist/electron",
+      "distDir": "dist/electron/",
       "source": [
         "src/electron/electron.ts",
         "src/electron/preload.ts"
@@ -25,7 +25,7 @@
     "electron-html": {
       "includeNodeModules": false,
       "outputFormat": "commonjs",
-      "distDir": "dist/electron",
+      "distDir": "dist/electron/",
       "source": [
         "src/electron/electron.html"
       ]
@@ -33,13 +33,14 @@
   },
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "start": "parcel src/web/index.html",
+    "start": "parcel src/index.html",
     "build": "tsc -p .",
-    "build-app": "rimraf dist/web & parcel build src/web/index.html --no-optimize --dist-dir dist/web/",
-    "build-electron-electron-ts": "parcel build src/electron/electron.ts --no-optimize --dist-dir dist/electron/",
-    "build-electron-preload-ts": "parcel build src/electron/preload.ts --no-optimize --dist-dir dist/electron/",
-    "build-electron-electron-html": "parcel build src/electron/electron.html --no-optimize --dist-dir dist/electron/",
-    "build-electron": "rimraf dist/electron & parcel build src/electron/electron.html src/electron/electron.ts  src/electron/preload.ts --no-optimize --dist-dir dist/electron/ --no-content-hash",
+    "clean": "rimraf dist/ ",
+    "build-app": "rimraf dist/web & parcel build src/web/index.html --no-minify --out-dir dist/web/",
+    "build-electron-electron-ts": "parcel build src/electron/electron.ts --no-minify --out-dir dist/electron/",
+    "build-electron-preload-ts": "parcel build src/electron/preload.ts --no-minify --out-dir dist/electron/",
+    "build-electron-electron-html": "parcel build src/electron/electron.html --no-minify --out-dir dist/electron/",
+    "build-electron": "rimraf dist/electron & parcel build src/electron.html src/electron.ts  src/preload.ts --no-minify --out-dir dist/electron/ --no-content-hash --target=node6",
     "upload-production": "gsutil -m cp dist/web/* gs://dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/*.js",
     "update-production": "npm run -s build-app & npm run -s upload-production",
     "upload-staging": "gsutil -m cp dist/web/* gs://staging.dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://staging.dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://staging.dicekeys.app/*.js",
@@ -52,14 +53,14 @@
     "@dicekeys/dicekeys-api-js": "^0.1.3",
     "@dicekeys/read-dicekey-js": "0.0.34",
     "@dicekeys/seeded-crypto-js": "^0.2.1",
-    "images": "^3.2.3",
     "mobx": "^6.1.8",
     "mobx-react": "^7.1.0",
+    "parcel-bundler": "^1.12.5",
     "react": "^17.0.1",
     "react-dom": "^17.0.1"
   },
   "browserslist": [
-    "electron >= 9.0.4", 
+    "electron >= 12.0.0",
     "last 1 Chrome versions"
   ],
   "devDependencies": {
@@ -87,7 +88,6 @@
     "madge": "^4.0.2",
     "node-fetch": "^2.6.1",
     "nodemon": "^2.0.3",
-    "parcel": "^2.0.0-nightly.665",
     "postcss": "^8.2.15",
     "postcss-modules": "^3.2.2",
     "rimraf": "^3.0.2",
