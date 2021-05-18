@@ -100,14 +100,14 @@ const OverlineGroupView = ({code}: { code: number | undefined }) => (
  * 
  * @param face 
  */
-const UnitFaceGroupView = observer( ({face}: {face: Partial<Face>}) => {
+const UnitFaceGroupView = observer( ({face, ...svgGroupProps}: {face: Partial<Face>} & React.SVGAttributes<SVGGElement>,) => {
   const {letter, digit} = face;
   const {underlineCode, overlineCode} = letter && digit ?
     getUndoverlineCodes({letter, digit}) :
     ({} as {underlineCode: undefined, overlineCode: undefined});
 
   return (
-    <g>
+    <g {...svgGroupProps} >
       <UnderlineGroupView code={underlineCode} />
       <OverlineGroupView code={overlineCode} />
       <text
@@ -143,15 +143,14 @@ export const FaceGroupView = observer( ({
     stroke, strokeWidth,
     linearFractionOfCoverage = 5/8,
     onFaceClicked,
+    ...svgGroupProps
   } : {
     onFaceClicked?: () => any,
     face: Partial<Face>,
     center?: Point,
     highlightThisFace?: boolean,
     linearFractionOfCoverage?: number,
-    stroke?: string,
-    strokeWidth?: number | string,
-  }) => {
+  } & React.SVGAttributes<SVGGElement> ) => {
   const radius = 1 / 12;
   const clockwiseAngle = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTrbl || "?");
   const optionalOnClickHandler = onFaceClicked ? {onClick: ((e: React.MouseEvent) => {
@@ -159,13 +158,17 @@ export const FaceGroupView = observer( ({
     e.preventDefault();
   })} : {};
   return (
-    <g transform={`translate(${center.x}, ${center.y})`} {...optionalOnClickHandler} style={!!onFaceClicked ? {cursor: "pointer"} : {}} >
+    <g {...svgGroupProps}
+        transform={`translate(${center.x}, ${center.y})`}
+        {...optionalOnClickHandler}
+        style={!!onFaceClicked ? {cursor: "pointer"} : {}}
+    >
       <rect 
-      x={-0.5} y={-0.5}
-      width={1} height={1}
-      rx={radius} ry={radius}
-      stroke={stroke} strokeWidth={strokeWidth}
-      fill={highlightThisFace ? dieSurfaceColorHighlighted : dieSurfaceColor}
+        x={-0.5} y={-0.5}
+        width={1} height={1}
+        rx={radius} ry={radius}
+        fill={highlightThisFace ? dieSurfaceColorHighlighted : dieSurfaceColor}
+        {...{stroke, strokeWidth}}
       />
 
       <g transform={`scale(${linearFractionOfCoverage})${clockwiseAngle === 0 ? "" : ` rotate(${ clockwiseAngle }, 0, 0)`}`}>

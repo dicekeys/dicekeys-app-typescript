@@ -39,19 +39,25 @@ class DiceKeySizeModel {
   radius = this.linearSizeOfBox / 50;
 }
 
-export const DiceKeySvgGroup = observer( ({
-    faces, ...options
-  }: {faces: PartialDiceKey} & DiceKeyRenderOptions & {sizeModel: DiceKeySizeModel}
-  ) => {
+type DiceKeySvgGroupProps = {
+  faces: PartialDiceKey,
+  sizeModel: DiceKeySizeModel
+} & DiceKeyRenderOptions & React.SVGAttributes<SVGGElement>
+
+
+export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
     const {
+      faces,
+      highlightFaceAtIndex,
       showLidTab = false,
 //      leaveSpaceForTab = showLidTab,
       sizeModel,
       onFaceClicked,
-    } = options;
+      ...svgGroupProps
+    } = props;
   
     return (
-      <g>
+      <g {...svgGroupProps}>
         { (!showLidTab) ? null : (
           // Lid tab as circle
           <circle
@@ -77,7 +83,7 @@ export const DiceKeySvgGroup = observer( ({
                 x: sizeModel.distanceBetweenDieCenters * (-2 + (index % 5)),
                 y: sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5))}
               }
-              highlightThisFace={options.highlightFaceAtIndex == index}
+              highlightThisFace={highlightFaceAtIndex == index}
             />
           ))
         }

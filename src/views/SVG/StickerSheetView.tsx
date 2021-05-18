@@ -37,16 +37,17 @@ interface StickerSheetViewProps {
 
 const lettersPerStickySheet = 5;
 
-export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & {sizeModel: StickerSheetSizeModel}
-  ) => {
+export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & {sizeModel: StickerSheetSizeModel} & React.SVGAttributes<SVGGElement>) => {
     const {
       showLetter = "A",
       highlightFaceWithDigit,
-      sizeModel = new StickerSheetSizeModel()
+      hideFaces,
+      sizeModel = new StickerSheetSizeModel(),
+      ...svgGroupProps
     } = props;
-    const hideFaces = new Set<string>( (props.hideFaces ?? []).map( ({letter, digit}) => `${letter}${digit}`) );
+    const hideFacesSet = new Set<string>( (hideFaces ?? []).map( ({letter, digit}) => `${letter}${digit}`) );
     const hideFace = ({letter, digit}: {letter: string, digit: string}) =>
-      hideFaces.has(`${letter}${digit}`);
+      hideFacesSet.has(`${letter}${digit}`);
   
     const letterIndex= Math.max(0, FaceLetters.indexOf(showLetter));
     const pageIndex = Math.floor(letterIndex / lettersPerStickySheet);
@@ -54,7 +55,7 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & {s
     const lettersOnPage = FaceLetters.slice(firstLetterIndex, firstLetterIndex + lettersPerStickySheet);
 
     return (
-      <g>/* Sticker Sheet */
+      <g {...svgGroupProps}>/* Sticker Sheet */
         <rect
           x={sizeModel.left} y={sizeModel.top}
           width={sizeModel.width} height={sizeModel.height}

@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
 
-const FaceTargetPlaceholderSvgGroup = (props: {linearSizeOfFace: number} & React.SVGAttributes<SVGElement>) => {
+const FaceTargetPlaceholderSvgGroup = (props: {linearSizeOfFace: number} & React.SVGAttributes<SVGGElement>) => {
   const {linearSizeOfFace, ...otherProps} = props;
   const centerWhiteSquareSize = linearSizeOfFace * 0.75;
   const darker = "#D0D0D0";
