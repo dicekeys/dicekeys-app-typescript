@@ -20,6 +20,11 @@
   width: fit-content;
 }
 
+.RowStretched {
+  display: flex;
+  flex-direction: row;
+}
+
 .ColumnCentered, .ColumnStretched, .PaddedStretchedColumn {
   display: flex;
   flex-direction: column;
@@ -40,16 +45,43 @@
   flex-shrink: 5;
 }
 
-.ColumnStretched, .PaddedStretchedColumn{
+.RowStretched, .ColumnStretched, .PaddedStretchedColumn{
   flex-grow: 5;
   flex-shrink: 5;
-  flex-basis: 100%;
+  /* flex-basis: 100%; */
   justify-content: stretch;
-  align-content: stretch;
-  align-items: stretch;
-  margin: 1.5rem;
+  align-content: space-between;
 }
 
 .PaddedStretchedColumn {
   margin: 1.5rem;
+}
+
+.Spacer {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+/**
+ CSS-FIXME -- these wont' scale below the original image size
+*/
+.ResizableImage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-grow: 1;
+  flex-shrink: 10;
+  flex-basis: calc(min(50vw,50vh));
+  min-height: 0;
+  min-width: 0;
+  margin: none;
+  overflow: hidden
+}
+
+.ResizableImage img {
+  margin: 0px;  
+  object-fit: contain;
+  display: block;
+  min-width: 0px;
+  min-height: 0px;
 }

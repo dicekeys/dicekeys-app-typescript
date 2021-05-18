@@ -34,6 +34,7 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "start": "parcel src/index.html",
+    "preview": "parcel src/preview.html",
     "build": "tsc -p .",
     "clean": "rimraf dist/ ",
     "build-app": "rimraf dist/web & parcel build src/web/index.html --no-minify --out-dir dist/web/",
@@ -57,7 +58,8 @@
     "mobx-react": "^7.1.0",
     "parcel-bundler": "^1.12.5",
     "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "react-dom": "^17.0.1",
+    "views": "^1.0.2"
   },
   "browserslist": [
     "electron >= 12.0.0",

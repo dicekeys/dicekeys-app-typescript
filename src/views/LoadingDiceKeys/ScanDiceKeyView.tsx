@@ -8,7 +8,7 @@ import { DiceKeyFrameProcessorState } from "./DiceKeyFrameProcessorState";
 import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
 import { MediaStreamState } from "./CameraCaptureView";
 import { CamerasOnThisDevice } from "./CamerasOnThisDevice";
-import { Face, DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
+import { DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
 import { Layout } from "../../css";
 import { CenteredControls } from "../../views/basics";
 
@@ -35,7 +35,8 @@ const CameraSelectionView = observer ( (props: React.PropsWithoutRef<CameraSelec
 });
 
 type ScanDiceKeyViewProps = React.PropsWithoutRef<{
-  onDiceKeyRead?: (facesRead: TupleOf25Items<FaceRead>) => any
+  onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
+  onDiceKeyRead?: (diceKey: DiceKey) => any
 }>;
 
 const PermissionRequiredView = () => {
@@ -61,7 +62,7 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
 
   constructor(props: ScanDiceKeyView["props"]) {
     super(props);
-    this.frameProcessorState = new DiceKeyFrameProcessorState(props.onDiceKeyRead);
+    this.frameProcessorState = new DiceKeyFrameProcessorState(props);
   }
 
   onCameraSelected = (deviceId: string ) => {
@@ -102,9 +103,8 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
 });
 
 export const Preview_ScanDiceKeyView = () => (
-  <ScanDiceKeyView onDiceKeyRead={ (facesRead) => {
-    const diceKey: DiceKey = new DiceKey(facesRead.map( faceRead => faceRead.toFace()) as TupleOf25Items<Face>, true);
-    const hrf = diceKey.inHumanReadableForm;
+  <ScanDiceKeyView onDiceKeyRead={ (diceKeyRead) => {
+    const hrf = diceKeyRead.inHumanReadableForm;
     console.log(`Read ${hrf}`);
     alert(`Read ${hrf}`);
   }} />

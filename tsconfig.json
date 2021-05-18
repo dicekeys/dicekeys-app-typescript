@@ -48,7 +48,7 @@
     "baseUrl": "./src",
     // "paths": {},                           /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
     "paths": {
-      "*" : ["node_modules/@types", "node_modules/", "src/@types/*", "","src/"],        
+      "*" : ["node_modules/@types", "node_modules/", "src/@types/*", "src/"],
       "~*": ["./src/*"]
     },
     // "rootDirs": [],                        /* List of root folders whose combined content represents the structure of the project at runtime. */

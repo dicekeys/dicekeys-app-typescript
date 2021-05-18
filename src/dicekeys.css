@@ -3,7 +3,7 @@
 */
 html {
   display: flex;
-  font-size: 1.5vw;
+  font-size: calc(max(1.5vw,1.5vh));
 }
 
 body {

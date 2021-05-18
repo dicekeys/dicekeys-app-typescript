@@ -11,7 +11,7 @@ import {
   FaceReadWithImageIfErrorFound
 } from "../../dicekeys/FacesRead"
 import { action, makeAutoObservable } from "mobx";
-import { TupleOf25Items } from "../../dicekeys/DiceKey";
+import { DiceKey, Face, TupleOf25Items } from "../../dicekeys/DiceKey";
 
 export class DiceKeyFrameProcessorState {
   facesRead?: FaceRead[];
@@ -41,15 +41,26 @@ export class DiceKeyFrameProcessorState {
    */
   private framesSinceErrorsNarrowedToJustBitErrors: number | undefined;
 
+  private onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
+  private onDiceKeyRead?: (diceKeyRead: DiceKey) => any
 
-  constructor(private onDiceKeyRead?: (facesRead: TupleOf25Items<FaceRead>) => any) {
+  constructor({onFacesRead, onDiceKeyRead}: {
+    onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
+    onDiceKeyRead?: (diceKeyRead: DiceKey) => any
+  }) {
+    this.onDiceKeyRead = onDiceKeyRead;
+    this.onFacesRead = onFacesRead;
     makeAutoObservable(this);
   }
 
   private scanningSuccessful = action ( (): true => {
     this.scanningSuccessfulEnoughToTerminate = true;
+    if (this.bestFacesRead && this.onFacesRead) {
+      this.onFacesRead(this.bestFacesRead as TupleOf25Items<FaceRead>)
+      this.onFacesRead = undefined;
+    }
     if (this.bestFacesRead && this.onDiceKeyRead) {
-      this.onDiceKeyRead(this.bestFacesRead as TupleOf25Items<FaceRead>)
+      this.onDiceKeyRead(new DiceKey(this.bestFacesRead.map( faceRead => faceRead.toFace() ) as TupleOf25Items<Face>))
       this.onDiceKeyRead = undefined;
     }
     return true;

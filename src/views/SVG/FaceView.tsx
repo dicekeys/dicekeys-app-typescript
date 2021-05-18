@@ -1,4 +1,3 @@
-import css from "./dicekey-view.module.css"
 import React from "react";
 import { observer } from "mobx-react";
 import {
@@ -10,7 +9,6 @@ import {
   UndoverlineCodes, getUndoverlineCodes,
   FaceDimensionsFractional
 } from "@dicekeys/read-dicekey-js";
-import { PartialDiceKey } from "../../dicekeys/DiceKey";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
@@ -33,16 +31,6 @@ const textShade = "#000000";
 // const hiddenTextShade = "#B0B0B0";
 const dieSurfaceColor = "#ffffff";
 const dieSurfaceColorHighlighted = "rgb(222, 244, 64)"
- // actual Pantone color 07C = rgb(10,6,159), but actual product looks much darker than that purported equality
-const diceBoxColor = "#050350"; // must be in hex format as it is parsed as such in this code.
-
-export interface DiceKeyRenderOptions {
-  highlightDieAtIndex?: number;
-  diceBoxColor?: [number, number, number];
-  showLidTab?: boolean;
-  leaveSpaceForTab?: boolean;
-  onFaceClicked?: (dieIndex: number) => any;
-}
 
 /**
  * Given an 11 bit underline/overline code, return an array of positions [0..10]
@@ -131,8 +119,6 @@ const UnitFaceGroupView = observer( ({face}: {face: Partial<Face>}) => {
           fontWeight={FontWeight}
           letterSpacing={`${FaceDimensionsFractional.spaceBetweenLetterAndDigit}px`}
           textAnchor={'middle'}
-  //        textAlign={'center'}
-  //        lineHeight={1}
           fillOpacity={1}
         ><tspan>{(letter ?? ' ') + (digit ?? ' ')}</tspan
       ></text>
@@ -153,15 +139,18 @@ const UnitFaceGroupView = observer( ({face}: {face: Partial<Face>}) => {
 export const FaceGroupView = observer( ({
     face,
     center = {x: 0, y: 0},
-    highlightThisDie = false,
+    highlightThisFace = false,
+    stroke, strokeWidth,
     linearFractionOfCoverage = 5/8,
     onFaceClicked,
   } : {
     onFaceClicked?: () => any,
     face: Partial<Face>,
     center?: Point,
-    highlightThisDie?: boolean,
+    highlightThisFace?: boolean,
     linearFractionOfCoverage?: number,
+    stroke?: string,
+    strokeWidth?: number | string,
   }) => {
   const radius = 1 / 12;
   const clockwiseAngle = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTrbl || "?");
@@ -175,7 +164,8 @@ export const FaceGroupView = observer( ({
       x={-0.5} y={-0.5}
       width={1} height={1}
       rx={radius} ry={radius}
-      fill={highlightThisDie ? dieSurfaceColorHighlighted : dieSurfaceColor}
+      stroke={stroke} strokeWidth={strokeWidth}
+      fill={highlightThisFace ? dieSurfaceColorHighlighted : dieSurfaceColor}
       />
 
       <g transform={`scale(${linearFractionOfCoverage})${clockwiseAngle === 0 ? "" : ` rotate(${ clockwiseAngle }, 0, 0)`}`}>
@@ -183,69 +173,4 @@ export const FaceGroupView = observer( ({
       </g>
     </g>
   )
-});
-
-
-export const DiceKeyView = observer( ({
-    diceKey, ...options
-  }: {diceKey: PartialDiceKey} & DiceKeyRenderOptions
-  ) => {
-    const {
-      showLidTab = false,
-      leaveSpaceForTab = showLidTab,
-      onFaceClicked,
-    } = options;
-    const tabFraction = leaveSpaceForTab ? 0.1 : 0;
-
-    const linearSizeOfFace = 1;
-    const distanceBetweenFacesAsFractionOfLinearSizeOfFace = 0.2
-    const marginOfBoxEdgeAsFractionOfLinearSizeOfFace = 1/8;
-    const linearSizeOfBox = linearSizeOfFace * (
-      5 +
-      4 * distanceBetweenFacesAsFractionOfLinearSizeOfFace +
-      2 * marginOfBoxEdgeAsFractionOfLinearSizeOfFace
-    );
-    const distanceBetweenDieCenters = linearSizeOfFace * (1 + distanceBetweenFacesAsFractionOfLinearSizeOfFace);
-    const linearSizeOfBoxWithTab = linearSizeOfBox * (1 + tabFraction);
-
-    const top = -linearSizeOfBox / 2;
-    const left = -linearSizeOfBox / 2;
-    const radius = linearSizeOfBox / 50;
-
-    // var [r, g, b] = [1, 3, 5].map( start => parseInt( diceBoxColor.substr(start, 2), 16) );
-    // const diceBoxColorRGB = {r, g, b};  
-  
-    return (
-      <svg className={css.dicekey_svg} viewBox={`${left} ${top} ${linearSizeOfBox} ${linearSizeOfBoxWithTab}`}>
-        { (!showLidTab) ? null : (
-          // Lid tab as circle
-          <circle
-            cx={0} cy={top + linearSizeOfBox}
-            r={tabFraction * linearSizeOfBox}
-            fill={diceBoxColor}
-          />
-        )}
-        // The blue dice box
-        <rect
-          x={left} y={top}
-          width={linearSizeOfBox} height={linearSizeOfBox}
-          rx={radius} ry={radius}
-          fill={diceBoxColor}
-        />
-        {
-          diceKey.map( (face, index) => (
-            <FaceGroupView
-              {...(onFaceClicked ? ({onFaceClicked: () => onFaceClicked(index) }) : {})}
-              key={index}
-              face={face}
-              center={{
-                x: distanceBetweenDieCenters * (-2 + (index % 5)),
-                y: distanceBetweenDieCenters * (-2 + Math.floor(index / 5))}
-              }
-              highlightThisDie={options.highlightDieAtIndex == index}
-            />
-          ))
-        }
-      </svg>
-    );
 });
