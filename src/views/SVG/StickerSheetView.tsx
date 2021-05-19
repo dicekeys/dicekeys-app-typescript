@@ -3,22 +3,19 @@ import { observer } from "mobx-react";
 import { Face } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
 import { FaceDigit, FaceDigits, FaceIdentifiers, FaceLetter, FaceLetters } from "@dicekeys/read-dicekey-js";
+import { fitRectangleWithAspectRatioIntoABoundingBox, Bounds } from "../../utilities/bounding-rects";
 
 
 const distanceBetweenFacesAsFractionOfLinearSizeOfFace = 1/4;
 const ratioOfPortraitSheetWidthToFaceSize = 5 + 6 * distanceBetweenFacesAsFractionOfLinearSizeOfFace;
-const ratioOfPortraitSheetLengthToFaceSize = 6 + 7 * distanceBetweenFacesAsFractionOfLinearSizeOfFace;
+const portraitSheetWidthOverHeight = 130 / 155; // sheets are manufactured 155mm x 130mm
+const ratioOfPortraitSheetLengthToFaceSize =  ratioOfPortraitSheetWidthToFaceSize / portraitSheetWidthOverHeight;
 
-class StickerSheetSizeModel {
-  constructor(public readonly linearSizeOfFace: number = 1) {}
+const fitPortraitSheetIntoBounds = fitRectangleWithAspectRatioIntoABoundingBox(portraitSheetWidthOverHeight);
+export type StickerSheetSizeModelOptions = {linearSizeOfFace: number} | Bounds | {sizeModel: StickerSheetSizeModel};
 
-  static toFit = ({width, height}: {width?: number, height?: number}) => 
-    new StickerSheetSizeModel(
-      width != null && height != null ?
-        Math.min(width / ratioOfPortraitSheetWidthToFaceSize, height / ratioOfPortraitSheetLengthToFaceSize) :
-      height != null ? height :
-      width != null ? width : ratioOfPortraitSheetLengthToFaceSize
-    );
+export class StickerSheetSizeModel {
+  constructor(public readonly linearSizeOfFace: number) {}
 
   width = this.linearSizeOfFace * ratioOfPortraitSheetWidthToFaceSize;
   height = this.linearSizeOfFace * ratioOfPortraitSheetLengthToFaceSize;
@@ -26,9 +23,16 @@ class StickerSheetSizeModel {
   top = -this.height / 2;
   left = -this.width / 2;
   radius = 0;
+
+  static fromOptions = (arg: StickerSheetSizeModelOptions): StickerSheetSizeModel =>
+    "sizeModel" in arg ? arg.sizeModel :
+    new StickerSheetSizeModel(
+      "linearSizeOfFace" in arg && typeof arg.linearSizeOfFace === "number" ? arg.linearSizeOfFace :
+      fitPortraitSheetIntoBounds(arg as Bounds).width / ratioOfPortraitSheetWidthToFaceSize
+    );
 }
 
-interface StickerSheetViewProps {
+type StickerSheetViewProps = StickerSheetSizeModelOptions & {
   showLetter?: FaceLetter;
   highlightFaceWithDigit?: FaceDigit;
   hideFaces?: FaceIdentifiers[];
@@ -42,9 +46,11 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & {s
       showLetter = "A",
       highlightFaceWithDigit,
       hideFaces,
-      sizeModel = new StickerSheetSizeModel(),
       ...svgGroupProps
     } = props;
+    const {
+      top, left, width, height, radius, linearSizeOfFace, distanceBetweenDieCenters
+    } = StickerSheetSizeModel.fromOptions(props);
     const hideFacesSet = new Set<string>( (hideFaces ?? []).map( ({letter, digit}) => `${letter}${digit}`) );
     const hideFace = ({letter, digit}: {letter: string, digit: string}) =>
       hideFacesSet.has(`${letter}${digit}`);
@@ -57,12 +63,12 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & {s
     return (
       <g {...svgGroupProps}>/* Sticker Sheet */
         <rect
-          x={sizeModel.left} y={sizeModel.top}
-          width={sizeModel.width} height={sizeModel.height}
-          rx={sizeModel.radius} ry={sizeModel.radius}
+          x={left} y={top}
+          width={width} height={height}
+          rx={radius} ry={radius}
           stroke={"gray"}
           fill={"white"}
-          strokeWidth={0.025}
+          strokeWidth={linearSizeOfFace / 40}
         />
         {
           FaceDigits.map( (digit, digitIndex) => lettersOnPage.map( (letter, letterIndex) => {
@@ -71,11 +77,12 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & {s
             return (hideFace(face) ? null : (
               <FaceGroupView
                 key={key} face={face}
+                linearSizeOfFace={linearSizeOfFace}
                 stroke={"rgba(128, 128, 128, 0.2)"}
-                strokeWidth={sizeModel.linearSizeOfFace / 80}
+                strokeWidth={linearSizeOfFace / 80}
                 center={{
-                  x: sizeModel.distanceBetweenDieCenters * (-2 + letterIndex),
-                  y: sizeModel.distanceBetweenDieCenters * (-2.5 + digitIndex)}
+                  x: distanceBetweenDieCenters * (-2 + letterIndex),
+                  y: distanceBetweenDieCenters * (-2.5 + digitIndex)}
                 }
                 highlightThisFace={showLetter === letter && highlightFaceWithDigit === digit}
             />))
@@ -86,16 +93,16 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & {s
 });
 
 export const StickerSheetView = observer( (props: StickerSheetViewProps) => {
-    const {sizeModel = new StickerSheetSizeModel(), ...otherProps} = props;
+    const sizeModel = StickerSheetSizeModel.fromOptions(props);
     const viewBox = `${sizeModel.left} ${sizeModel.top} ${sizeModel.width} ${sizeModel.height}`
     return (
       <svg viewBox={viewBox}>
-        <StickerSheetSvgGroup {...otherProps} sizeModel={sizeModel} />
+        <StickerSheetSvgGroup {...{...props, sizeModel}} />
       </svg>
     )    
 });
 
 
 export const Preview_StickerSheetView = () => (
-  <StickerSheetView showLetter="G" highlightFaceWithDigit="2" hideFaces={[{letter: "I", digit: "3"}]} />
+  <StickerSheetView linearSizeOfFace={1} showLetter="G" highlightFaceWithDigit="2" hideFaces={[{letter: "I", digit: "3"}]} />
 )

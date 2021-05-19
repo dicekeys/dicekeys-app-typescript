@@ -79,6 +79,7 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
               {...(onFaceClicked ? ({onFaceClicked: () => onFaceClicked(index) }) : {})}
               key={index}
               face={face}
+              linearSizeOfFace={sizeModel.linearSizeOfFace}
               center={{
                 x: sizeModel.distanceBetweenDieCenters * (-2 + (index % 5)),
                 y: sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5))}

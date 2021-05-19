@@ -141,6 +141,7 @@ export const FaceGroupView = observer( ({
     center = {x: 0, y: 0},
     highlightThisFace = false,
     stroke, strokeWidth,
+    linearSizeOfFace = 1,
     linearFractionOfCoverage = 5/8,
     onFaceClicked,
     ...svgGroupProps
@@ -149,9 +150,10 @@ export const FaceGroupView = observer( ({
     face: Partial<Face>,
     center?: Point,
     highlightThisFace?: boolean,
+    linearSizeOfFace: number,
     linearFractionOfCoverage?: number,
   } & React.SVGAttributes<SVGGElement> ) => {
-  const radius = 1 / 12;
+  const radius = linearSizeOfFace / 12;
   const clockwiseAngle = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTrbl || "?");
   const optionalOnClickHandler = onFaceClicked ? {onClick: ((e: React.MouseEvent) => {
     onFaceClicked();
@@ -164,14 +166,14 @@ export const FaceGroupView = observer( ({
         style={!!onFaceClicked ? {cursor: "pointer"} : {}}
     >
       <rect 
-        x={-0.5} y={-0.5}
-        width={1} height={1}
+        x={-linearSizeOfFace/2} y={-linearSizeOfFace/2}
+        width={linearSizeOfFace} height={linearSizeOfFace}
         rx={radius} ry={radius}
         fill={highlightThisFace ? dieSurfaceColorHighlighted : dieSurfaceColor}
         {...{stroke, strokeWidth}}
       />
 
-      <g transform={`scale(${linearFractionOfCoverage})${clockwiseAngle === 0 ? "" : ` rotate(${ clockwiseAngle }, 0, 0)`}`}>
+      <g transform={`scale(${linearSizeOfFace * linearFractionOfCoverage})${clockwiseAngle === 0 ? "" : ` rotate(${ clockwiseAngle }, 0, 0)`}`}>
         <UnitFaceGroupView face={face} />
       </g>
     </g>

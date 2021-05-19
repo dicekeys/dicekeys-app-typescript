@@ -13,6 +13,7 @@ import { Preview_AssemblyInstructions } from "./views/AssemblyInstructionsView";
 import { Preview_BackupView } from "./views/BackupView";
 import { Preview_StickerSheetView } from "./views/SVG/StickerSheetView";
 import { Preview_StickerTargetSheetView } from "./views/SVG/StickerTargetSheetView";
+import { Preview_FaceCopyingView } from "./views/SVG/FaceCopyingView";
 
 const ApplicationErrorState = new ErrorState();
 
@@ -27,14 +28,15 @@ const Previews = () => {
   switch(component?.toLocaleLowerCase()) {
     // Add preview components here
     case "AssemblyInstructions".toLocaleLowerCase(): return ( <Center><Preview_AssemblyInstructions/></Center> );
-    case "EnterDiceKeyView".toLocaleLowerCase(): return ( <Center><Preview_EnterDiceKeyView/></Center> );
-    case "ScanDiceKeyView".toLocaleLowerCase(): return ( <Center><Preview_ScanDiceKeyView/></Center> );
-    case "SeedHardwareKeyView".toLocaleLowerCase(): return ( <Center><Preview_SeedHardwareKeyView/></Center> );
-    case "SelectedDiceKeyView".toLocaleLowerCase(): return ( <Center><Preview_SelectedDiceKeyView /></Center> );
-    case "DerivationView".toLocaleLowerCase(): return ( <PreviewView><Preview_DerivationView /></PreviewView>);
-    case "BackupView".toLocaleLowerCase(): return ( <PreviewView><Preview_BackupView /></PreviewView>);
-    case "StickerSheetView".toLocaleLowerCase(): return ( <PreviewView><Preview_StickerSheetView /></PreviewView>);
-    case "StickerTargetSheetView".toLocaleLowerCase(): return ( <PreviewView><Preview_StickerTargetSheetView /></PreviewView>);
+    case "EnterDiceKey".toLocaleLowerCase(): return ( <Center><Preview_EnterDiceKeyView/></Center> );
+    case "ScanDiceKey".toLocaleLowerCase(): return ( <Center><Preview_ScanDiceKeyView/></Center> );
+    case "SeedHardwareKey".toLocaleLowerCase(): return ( <Center><Preview_SeedHardwareKeyView/></Center> );
+    case "SelectedDiceKey".toLocaleLowerCase(): return ( <Center><Preview_SelectedDiceKeyView /></Center> );
+    case "Derivation".toLocaleLowerCase(): return ( <PreviewView><Preview_DerivationView /></PreviewView>);
+    case "Backup".toLocaleLowerCase(): return ( <PreviewView><Preview_BackupView /></PreviewView>);
+    case "StickerSheet".toLocaleLowerCase(): return ( <PreviewView><Preview_StickerSheetView /></PreviewView>);
+    case "StickerTargetSheet".toLocaleLowerCase(): return ( <PreviewView><Preview_StickerTargetSheetView /></PreviewView>);
+    case "FaceCopying".toLocaleLowerCase(): return ( <PreviewView><Preview_FaceCopyingView /></PreviewView>);
     //Preview_SelectedDiceKeyView
     // Handle component not found
     case undefined: return ( <div>Parameter "component" not defined.</div> );

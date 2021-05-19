@@ -2,6 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
+import {StickerSheetSizeModel, StickerSheetSizeModelOptions} from "./StickerSheetView"
 
 const FaceTargetPlaceholderSvgGroup = (props: {linearSizeOfFace: number} & React.SVGAttributes<SVGGElement>) => {
   const {linearSizeOfFace, ...otherProps} = props;
@@ -36,59 +37,36 @@ const FaceTargetPlaceholderSvgGroup = (props: {linearSizeOfFace: number} & React
   </g>)
 }
 
-const distanceBetweenFacesAsFractionOfLinearSizeOfFace = 1/4;
-const ratioOfPortraitSheetWidthToFaceSize = 5 + 6 * distanceBetweenFacesAsFractionOfLinearSizeOfFace;
-const ratioOfPortraitSheetHeightToWidth = 155 / 130; // sheets are manufactured 155mm x 130mm
-const ratioOfPortraitSheetLengthToFaceSize = ratioOfPortraitSheetHeightToWidth * ratioOfPortraitSheetWidthToFaceSize;
-
-class StickerTargetSheetSizeModel {
-  constructor(public readonly linearSizeOfFace: number = 1) {}
-
-  static toFit = ({width, height}: {width?: number, height?: number}) => 
-    new StickerTargetSheetSizeModel(
-      width != null && height != null ?
-        Math.min(width / ratioOfPortraitSheetWidthToFaceSize, height / ratioOfPortraitSheetLengthToFaceSize) :
-      height != null ? height :
-      width != null ? width : ratioOfPortraitSheetLengthToFaceSize
-    );
-
-  width = this.linearSizeOfFace * ratioOfPortraitSheetWidthToFaceSize;
-  height = this.linearSizeOfFace * ratioOfPortraitSheetLengthToFaceSize;
-  distanceBetweenDieCenters = this.linearSizeOfFace * (1 + distanceBetweenFacesAsFractionOfLinearSizeOfFace);
-  top = -this.height / 2;
-  left = -this.width / 2;
-  radius = 0;
-}
-
-interface StickerTargetSheetViewProps {
+type StickerTargetSheetViewProps = StickerSheetSizeModelOptions & {
   diceKey: DiceKey;
   indexOfLastFacePlaced?: number;
   highlightThisFace?: number;
-  sizeModel?: StickerTargetSheetSizeModel;
+  sizeModel?: StickerSheetSizeModel;
+  transform?: string;
 }
 
-export const StickerTargetSheetSvgGroup = observer( (props: StickerTargetSheetViewProps & {sizeModel: StickerTargetSheetSizeModel}
-  ) => {
+export const StickerTargetSheetSvgGroup = observer( (props: StickerTargetSheetViewProps) => {
     const {
-      sizeModel = new StickerTargetSheetSizeModel(),
       diceKey,
       indexOfLastFacePlaced = -1,
-      highlightThisFace
+      highlightThisFace,
+      transform,
     } = props;
-  
+    const sizeModel = StickerSheetSizeModel.fromOptions(props);
+
     return (
-      <g>/* Sticker Sheet */
+      <g {...{transform}}>/* Sticker Sheet */
         <rect
           x={sizeModel.left} y={sizeModel.top}
           width={sizeModel.width} height={sizeModel.height}
           rx={sizeModel.radius} ry={sizeModel.radius}
           stroke={"gray"}
           fill={"white"}
-          strokeWidth={0.0125}
+          strokeWidth={sizeModel.linearSizeOfFace / 40}
         />
         {
           diceKey.faces.map( (face, index) => (index > indexOfLastFacePlaced) ? (
-            <FaceTargetPlaceholderSvgGroup linearSizeOfFace={sizeModel.linearSizeOfFace}
+            <FaceTargetPlaceholderSvgGroup key={index} linearSizeOfFace={sizeModel.linearSizeOfFace}
               transform={`translate(${
                 sizeModel.distanceBetweenDieCenters * (-2 + (index % 5)) }, ${
                 sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5))
@@ -98,6 +76,7 @@ export const StickerTargetSheetSvgGroup = observer( (props: StickerTargetSheetVi
             <FaceGroupView
               key={index}
               face={face}
+              linearSizeOfFace={sizeModel.linearSizeOfFace}
               stroke={"rgba(128, 128, 128, 0.2)"}
               strokeWidth={sizeModel.linearSizeOfFace / 80}
               center={{
@@ -113,16 +92,16 @@ export const StickerTargetSheetSvgGroup = observer( (props: StickerTargetSheetVi
 });
 
 export const StickerTargetSheetView = observer( (props: StickerTargetSheetViewProps) => {
-    const {sizeModel = new StickerTargetSheetSizeModel(), ...otherProps} = props;
+    const sizeModel = StickerSheetSizeModel.fromOptions(props);
     const viewBox = `${sizeModel.left} ${sizeModel.top} ${sizeModel.width} ${sizeModel.height}`
     return (
       <svg viewBox={viewBox}>
-        <StickerTargetSheetSvgGroup {...otherProps} sizeModel={sizeModel} />
+        <StickerTargetSheetSvgGroup {...{...props, sizeModel}} />
       </svg>
     )    
 });
 
 
 export const Preview_StickerTargetSheetView = () => (
-  <StickerTargetSheetView diceKey={DiceKey.testExample} indexOfLastFacePlaced={12} />
+  <StickerTargetSheetView diceKey={DiceKey.testExample} height={500} width={500} indexOfLastFacePlaced={12} />
 )
