@@ -1,5 +1,22 @@
 # DiceKeys TypeScript App for DiceKeys.app (and future Electron app)
 
+## Requirements
+
+Tested to work with Node.js LTS v14.
+
+Install [Parcel](https://parceljs.org/) in your system.
+```
+npm install -g parcel-bundler
+```
+
+Make sure you have access to [GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-with-a-personal-access-token).
+(adding you personal toke)
+
+Install modules
+```
+npm install
+```
+
 ## Running
 ```
 parcel src/index.html
