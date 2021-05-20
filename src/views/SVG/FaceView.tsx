@@ -141,6 +141,7 @@ export const FaceGroupView = observer( ({
     center = {x: 0, y: 0},
     highlightThisFace = false,
     stroke, strokeWidth,
+    transparentBackground,
     linearSizeOfFace = 1,
     linearFractionOfCoverage = 5/8,
     onFaceClicked,
@@ -150,6 +151,7 @@ export const FaceGroupView = observer( ({
     face: Partial<Face>,
     center?: Point,
     highlightThisFace?: boolean,
+    transparentBackground?: boolean,
     linearSizeOfFace: number,
     linearFractionOfCoverage?: number,
   } & React.SVGAttributes<SVGGElement> ) => {
@@ -160,8 +162,8 @@ export const FaceGroupView = observer( ({
     e.preventDefault();
   })} : {};
   return (
-    <g {...svgGroupProps}
-        transform={`translate(${center.x}, ${center.y})`}
+    <g transform={center ? `translate(${center.x}, ${center.y})` : undefined}
+        {...svgGroupProps}
         {...optionalOnClickHandler}
         style={!!onFaceClicked ? {cursor: "pointer"} : {}}
     >
@@ -169,7 +171,7 @@ export const FaceGroupView = observer( ({
         x={-linearSizeOfFace/2} y={-linearSizeOfFace/2}
         width={linearSizeOfFace} height={linearSizeOfFace}
         rx={radius} ry={radius}
-        fill={highlightThisFace ? dieSurfaceColorHighlighted : dieSurfaceColor}
+        fill={highlightThisFace ? dieSurfaceColorHighlighted : transparentBackground ? "none"  : dieSurfaceColor}
         {...{stroke, strokeWidth}}
       />
 

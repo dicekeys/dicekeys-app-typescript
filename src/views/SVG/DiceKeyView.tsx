@@ -3,6 +3,8 @@ import React from "react";
 import { observer } from "mobx-react";
 import { PartialDiceKey } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
+import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox, viewBox } from "../../utilities/bounding-rects";
+import { WithBounds } from "../../utilities/WithBounds";
 
 const diceBoxColor = "#050350"; // must be in hex format as it is parsed as such in this code.
 
@@ -22,17 +24,27 @@ export const ratioOfBoxWidthToFaceSize = 1 * (
     2 * marginOfBoxEdgeAsFractionOfLinearSizeOfFace
   );
 export const fractionBoxWithLidTabToBoxWithoutLidTab = 1.1;
-class DiceKeySizeModel {
+
+const fractionOfHeightDevotedToTabIfPresent = 0.1;
+
+export class DiceKeySizeModel {
   constructor(public readonly linearSizeOfFace: number = 1, public readonly includeSpaceForTab: boolean = false) {}
 
-  static fromBoxWith = (boxWidth: number, includeSpaceForTab: boolean = false) =>
-    new DiceKeySizeModel(boxWidth / ratioOfBoxWidthToFaceSize, includeSpaceForTab);
+  static fromBounds = (widthOverHeight: number, includeSpaceForTab: boolean) => (bounds: Bounds) =>
+    new DiceKeySizeModel(fitRectangleWithAspectRatioIntoABoundingBox(widthOverHeight)(bounds).width / ratioOfBoxWidthToFaceSize, includeSpaceForTab);
+    static fromBoundsWithTab = DiceKeySizeModel.fromBounds(1/(1-fractionOfHeightDevotedToTabIfPresent), true);
+    static fromBoundsWithoutTab = DiceKeySizeModel.fromBounds(1, false);
 
-  tabFraction = this.includeSpaceForTab ? 0.1 : 0;
+  tabFraction = this.includeSpaceForTab ? fractionOfHeightDevotedToTabIfPresent : 0;
 
   linearSizeOfBox = this.linearSizeOfFace * ratioOfBoxWidthToFaceSize;
   distanceBetweenDieCenters = this.linearSizeOfFace * (1 + distanceBetweenFacesAsFractionOfLinearSizeOfFace);
   linearSizeOfBoxWithTab = this.linearSizeOfBox * (1 + this.tabFraction);
+
+  width = this.linearSizeOfBox;
+  height = this.linearSizeOfBox * (1 / (1 - this.tabFraction));
+  get bounds() { const {width, height} = this; return {width, height}; }
+
 
   top = -this.linearSizeOfBox / 2;
   left = -this.linearSizeOfBox / 2;
@@ -41,8 +53,7 @@ class DiceKeySizeModel {
 
 type DiceKeySvgGroupProps = {
   faces: PartialDiceKey,
-  sizeModel: DiceKeySizeModel
-} & DiceKeyRenderOptions & React.SVGAttributes<SVGGElement>
+} & Bounds & DiceKeyRenderOptions & React.SVGAttributes<SVGGElement>
 
 
 export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
@@ -50,11 +61,16 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
       faces,
       highlightFaceAtIndex,
       showLidTab = false,
-//      leaveSpaceForTab = showLidTab,
-      sizeModel,
+      leaveSpaceForTab = showLidTab,
+      width: boundsWidth,
+      height: boundsHeight,
       onFaceClicked,
       ...svgGroupProps
     } = props;
+
+    const sizeModel = (showLidTab || leaveSpaceForTab) ?
+      DiceKeySizeModel.fromBoundsWithTab(props) :
+      DiceKeySizeModel.fromBoundsWithoutTab(props);
   
     return (
       <g {...svgGroupProps}>
@@ -92,13 +108,20 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
     );
 });
 
-export const DiceKeyView = observer( (props: {faces: PartialDiceKey} & {faceSize?: number} & DiceKeyRenderOptions
+export const DiceKeyViewFixedSize = observer( (props: {faces: PartialDiceKey} & Bounds & DiceKeyRenderOptions) => (
+  <svg className={css.dicekey_svg} viewBox={viewBox(props)}>
+    <DiceKeySvgGroup {...props} />
+  </svg>
+));
+
+export const DiceKeyViewAutoSized = observer( (props: {faces: PartialDiceKey} & DiceKeyRenderOptions
   ) => {
-    const sizeModel = new DiceKeySizeModel(props.faceSize ?? 1, props.showLidTab || props.leaveSpaceForTab);
-    const viewBox = `${sizeModel.left} ${sizeModel.top} ${sizeModel.linearSizeOfBox} ${sizeModel.linearSizeOfBoxWithTab}`
     return (
-      <svg className={css.dicekey_svg} viewBox={viewBox}>
-        <DiceKeySvgGroup {...props} sizeModel={sizeModel} />
-      </svg>
+      <WithBounds content={(bounds) => (
+        <svg viewBox={viewBox(bounds)}>
+          <DiceKeySvgGroup {...{...props, ...bounds, height: bounds.height}} />
+        </svg>
+      )}
+      />
     )    
 });

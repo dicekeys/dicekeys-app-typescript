@@ -3,12 +3,12 @@ import { observer } from "mobx-react";
 import { Face } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
 import { FaceDigit, FaceDigits, FaceIdentifiers, FaceLetter, FaceLetters } from "@dicekeys/read-dicekey-js";
-import { fitRectangleWithAspectRatioIntoABoundingBox, Bounds } from "../../utilities/bounding-rects";
+import { fitRectangleWithAspectRatioIntoABoundingBox, Bounds, viewBox } from "../../utilities/bounding-rects";
 
 
 const distanceBetweenFacesAsFractionOfLinearSizeOfFace = 1/4;
 const ratioOfPortraitSheetWidthToFaceSize = 5 + 6 * distanceBetweenFacesAsFractionOfLinearSizeOfFace;
-const portraitSheetWidthOverHeight = 130 / 155; // sheets are manufactured 155mm x 130mm
+export const portraitSheetWidthOverHeight = 130 / 155; // sheets are manufactured 155mm x 130mm
 const ratioOfPortraitSheetLengthToFaceSize =  ratioOfPortraitSheetWidthToFaceSize / portraitSheetWidthOverHeight;
 
 const fitPortraitSheetIntoBounds = fitRectangleWithAspectRatioIntoABoundingBox(portraitSheetWidthOverHeight);
@@ -19,38 +19,38 @@ export class StickerSheetSizeModel {
 
   width = this.linearSizeOfFace * ratioOfPortraitSheetWidthToFaceSize;
   height = this.linearSizeOfFace * ratioOfPortraitSheetLengthToFaceSize;
+  get bounds() { const {width, height} = this; return {width, height}; }
   distanceBetweenDieCenters = this.linearSizeOfFace * (1 + distanceBetweenFacesAsFractionOfLinearSizeOfFace);
   top = -this.height / 2;
   left = -this.width / 2;
   radius = 0;
 
-  static fromOptions = (arg: StickerSheetSizeModelOptions): StickerSheetSizeModel =>
-    "sizeModel" in arg ? arg.sizeModel :
+  static fromBounds = (bounds: Bounds): StickerSheetSizeModel =>
     new StickerSheetSizeModel(
-      "linearSizeOfFace" in arg && typeof arg.linearSizeOfFace === "number" ? arg.linearSizeOfFace :
-      fitPortraitSheetIntoBounds(arg as Bounds).width / ratioOfPortraitSheetWidthToFaceSize
+      fitPortraitSheetIntoBounds(bounds).width / ratioOfPortraitSheetWidthToFaceSize
     );
 }
 
-type StickerSheetViewProps = StickerSheetSizeModelOptions & {
+type StickerSheetViewProps = Bounds & {
   showLetter?: FaceLetter;
   highlightFaceWithDigit?: FaceDigit;
   hideFaces?: FaceIdentifiers[];
-  sizeModel?: StickerSheetSizeModel;
 }
 
 const lettersPerStickySheet = 5;
 
-export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & {sizeModel: StickerSheetSizeModel} & React.SVGAttributes<SVGGElement>) => {
+export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & React.SVGAttributes<SVGGElement>) => {
     const {
       showLetter = "A",
       highlightFaceWithDigit,
       hideFaces,
+      width: boundsWidth,
+      height: boundsHeight,
       ...svgGroupProps
     } = props;
     const {
       top, left, width, height, radius, linearSizeOfFace, distanceBetweenDieCenters
-    } = StickerSheetSizeModel.fromOptions(props);
+    } = StickerSheetSizeModel.fromBounds(props);
     const hideFacesSet = new Set<string>( (hideFaces ?? []).map( ({letter, digit}) => `${letter}${digit}`) );
     const hideFace = ({letter, digit}: {letter: string, digit: string}) =>
       hideFacesSet.has(`${letter}${digit}`);
@@ -93,10 +93,9 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & {s
 });
 
 export const StickerSheetView = observer( (props: StickerSheetViewProps) => {
-    const sizeModel = StickerSheetSizeModel.fromOptions(props);
-    const viewBox = `${sizeModel.left} ${sizeModel.top} ${sizeModel.width} ${sizeModel.height}`
+    const sizeModel = StickerSheetSizeModel.fromBounds(props);
     return (
-      <svg viewBox={viewBox}>
+      <svg viewBox={viewBox(props)}>
         <StickerSheetSvgGroup {...{...props, sizeModel}} />
       </svg>
     )    
@@ -104,5 +103,5 @@ export const StickerSheetView = observer( (props: StickerSheetViewProps) => {
 
 
 export const Preview_StickerSheetView = () => (
-  <StickerSheetView linearSizeOfFace={1} showLetter="G" highlightFaceWithDigit="2" hideFaces={[{letter: "I", digit: "3"}]} />
+  <StickerSheetView {...{width: 500, height: 500}} showLetter="G" highlightFaceWithDigit="2" hideFaces={[{letter: "I", digit: "3"}]} />
 )

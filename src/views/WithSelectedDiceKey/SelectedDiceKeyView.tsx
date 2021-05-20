@@ -3,7 +3,7 @@ import {NavigationBars} from "../../css"
 import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
 import { DiceKey } from "../../dicekeys/DiceKey";
-import { DiceKeyView } from "../SVG/DiceKeyView";
+import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 import imageOfDiceKeyIcon from /*url:*/"../../images/DiceKey Icon.svg";
 import imageOfUsbKey from /*url:*/"../../images/USB Key.svg";
 import imageOfSecretWithArrow from /*url:*/"../../images/Secret with Arrow.svg";
@@ -54,7 +54,7 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
           {(() => {
             switch(props.navigationState.subView) {
               case Navigation.SelectedDiceKeySubViews.DisplayDiceKey: return (
-                <DiceKeyView faces={diceKey.faces}/>
+                <DiceKeyViewAutoSized faces={diceKey.faces}/>
               );
               case Navigation.SelectedDiceKeySubViews.DeriveSecrets: return (
                 <DerivationView seedString={diceKey.toSeedString()} />

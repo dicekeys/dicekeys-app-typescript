@@ -1,7 +1,7 @@
 .view_top_level {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: stretch;
   align-items: stretch;
   height: 100vh;
   padding: 0;
@@ -9,12 +9,12 @@
 
 .view_content_region {
   display: flex;
-  padding: 1rem;
+  margin: 1rem;
   flex-grow: 1;
   flex-shrink: 1;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: stretch;
   box-sizing: border-box;
 }
 
@@ -26,9 +26,12 @@
 
 
 .default_view_content {
-  flex-direction: column;
   display: flex;
-  padding: 2rem;
+  flex-direction: column;
+  justify-content: stretch;
+  align-content: stretch;
+  /* margin: 2rem; */
   flex-grow: 1;
+  flex-shrink: 1;
 }
 

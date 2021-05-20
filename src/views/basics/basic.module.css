@@ -10,8 +10,8 @@
 .PreviewContainer {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
-  align-items: center;
+  justify-content: stretch;
+  align-items: stretch;
   height: 100vh;
   width: 96vw;
   padding-left: 2vw;

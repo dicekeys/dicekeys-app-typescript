@@ -12,7 +12,7 @@ import {
   validateDiceKey,
 } from "../../dicekeys/DiceKey";
 import { FaceDigit, FaceLetter, FaceOrientationLetterTrbl, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
-import { DiceKeyView } from "../SVG/DiceKeyView";
+import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 
 export class EnterDiceKeyState {
   currentFaceIndex: number = 0;
@@ -134,7 +134,7 @@ export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.C
         <div className={styles.key_hints}>
           To rotate the current face, use either &lt; &gt;, - +, or CTRL arrow (right and left arrows).
         </div>
-        <DiceKeyView
+        <DiceKeyViewAutoSized
           faces={this.props.state.partialDiceKey}
           highlightFaceAtIndex={this.props.state.currentFaceIndex}
           onFaceClicked={ (index) => this.props.state.setCurrentFaceIndex(index)  }  
