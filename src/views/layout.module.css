@@ -16,7 +16,7 @@
   flex-grow: 5;
   flex-shrink: 5;
   flex-basis: 100vh;
-  justify-content: stretch;
+  justify-content: normal;
   align-items: stretch;
   align-self: stretch;
   justify-self: stretch;

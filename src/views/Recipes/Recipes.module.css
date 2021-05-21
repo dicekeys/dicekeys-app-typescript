@@ -142,7 +142,7 @@
 .RecipeFields, .RecipeSingleFieldRow {
   display: flex;
   flex-direction: row;
-  justify-content: stretch;
+  justify-content: space-between;
   align-content: flex-end;
 }
 

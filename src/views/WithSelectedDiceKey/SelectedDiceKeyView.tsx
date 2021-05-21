@@ -12,6 +12,7 @@ import { DerivationView } from "../Recipes/DerivationView";
 import { Navigation } from "../../state";
 import { SeedHardwareKeyView, SeedHardwareKeyViewState } from "./SeedHardwareKeyView";
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
+import { BackupState, BackupView } from "../BackupView";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 // const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
@@ -33,7 +34,7 @@ const FooterButtonView = observer( ( props: SelectedDiceKeyViewProps & {
 const SelectedDiceKeyViewStateFooter = observer( ( props: SelectedDiceKeyViewProps) => {
   const navState = props.navigationState;
   return (
-  <div className={NavigationBars.nav_footer}>
+  <div className={NavigationBars.BottomNavigationBar}>
     <FooterButtonView {...props} labelStr={`DiceKey`} subView={SubViews.DisplayDiceKey} imageSrc={imageOfDiceKeyIcon} onClick={navState.navigateToDisplayDiceKey} />
     <FooterButtonView {...props} labelStr={`SoloKey`} subView={SubViews.SeedHardwareKey} imageSrc={imageOfUsbKey} onClick={navState.navigateToSeedHardwareKey} />
     <FooterButtonView {...props} labelStr={`Secret`} subView={SubViews.DeriveSecrets} imageSrc={imageOfSecretWithArrow} onClick={navState.navigateToDeriveSecrets} />
@@ -48,29 +49,29 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
   return (
     <div className={css.view_top_level}>
       <SimpleTopNavBar title={diceKey.nickname} goBack={props.navigationState.goBack} />
-      <div className={css.spacer}/>
-      <div className={css.view_content_region}>
-        <div className={css.default_view_content}>
-          {(() => {
-            switch(props.navigationState.subView) {
-              case Navigation.SelectedDiceKeySubViews.DisplayDiceKey: return (
-                <DiceKeyViewAutoSized faces={diceKey.faces}/>
-              );
-              case Navigation.SelectedDiceKeySubViews.DeriveSecrets: return (
-                <DerivationView seedString={diceKey.toSeedString()} />
-              );
-              case Navigation.SelectedDiceKeySubViews.SeedHardwareKey: return (
-                <SeedHardwareKeyView diceKey={diceKey} seedHardwareKeyViewState={ new SeedHardwareKeyViewState(diceKey.toSeedString()) } />
-              );
-              case Navigation.SelectedDiceKeySubViews.Backup: return (
-                null
-              );
-              default: return null;
-            }
-          })()}
+      <div className={NavigationBars.BetweenTopAndBottomNavigationBars}>
+        <div className={css.view_content_region}>
+          <div className={css.default_view_content}>
+            {(() => {
+              switch(props.navigationState.subView) {
+                case Navigation.SelectedDiceKeySubViews.DisplayDiceKey: return (
+                  <DiceKeyViewAutoSized faces={diceKey.faces}/>
+                );
+                case Navigation.SelectedDiceKeySubViews.DeriveSecrets: return (
+                  <DerivationView seedString={diceKey.toSeedString()} />
+                );
+                case Navigation.SelectedDiceKeySubViews.SeedHardwareKey: return (
+                  <SeedHardwareKeyView diceKey={diceKey} seedHardwareKeyViewState={ new SeedHardwareKeyViewState(diceKey.toSeedString()) } />
+                );
+                case Navigation.SelectedDiceKeySubViews.Backup: return (
+                  <BackupView diceKey={diceKey} state={new BackupState()} />
+                );
+                default: return null;
+              }
+            })()}
+          </div>
         </div>
       </div>
-      <div className={css.spacer}/>
       <SelectedDiceKeyViewStateFooter {...props} />
     </div>
   );

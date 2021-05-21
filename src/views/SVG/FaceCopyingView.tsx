@@ -1,6 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { DiceKey, Face } from "../../dicekeys/DiceKey";
+import { DiceKey, Face, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { StickerTargetSheetSvgGroup } from "./StickerTargetSheetView";
 import { DiceKeySizeModel, DiceKeySvgGroup } from "./DiceKeyView";
 import { StickerSheetSizeModel, StickerSheetSvgGroup, portraitSheetWidthOverHeight } from "./StickerSheetView";
@@ -40,10 +40,12 @@ const fitDiceKeyFaceCopyingImageIntoBounds = fitRectangleWithAspectRatioIntoABou
 type FaceCopyingViewProps = {
   diceKey: DiceKey,
   medium: "SticKey" | "DiceKey",
+  matchSticKeyAspectRatio?: boolean,
+  showArrow?: boolean,
   indexOfLastFacePlaced?: number,
 }; //  & React.SVGAttributes<SVGGElement>
 const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) => {
-  const {diceKey, medium, indexOfLastFacePlaced} = props;
+  const {diceKey, medium, matchSticKeyAspectRatio: matchSticKeyDimensions, indexOfLastFacePlaced, showArrow} = props;
   const bounds = medium === "SticKey" ?
     fitStiKeyFaceCopyingImageIntoBounds(props) :
     fitDiceKeyFaceCopyingImageIntoBounds(props);
@@ -51,7 +53,10 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
   const face = diceKey.faces[indexOfLastFacePlaced ?? -1] as Face | undefined;
   const modelBounds = {width: width * fractionalWidths[0], height: height};
   const stickerSheetSizeModel = StickerSheetSizeModel.fromBounds(modelBounds);
-  const diceKeySizeModel = DiceKeySizeModel.fromBoundsWithoutTab(modelBounds);
+  const diceKeySizeModel = DiceKeySizeModel.fromBoundsWithoutTab( matchSticKeyDimensions ?
+    // Adjust height from 6-face hight to 5 face height
+    {width: modelBounds.width, height: modelBounds.height - stickerSheetSizeModel.linearSizeOfFace}:
+    modelBounds);
   const sheetSizeModel = (medium === "SticKey") ? stickerSheetSizeModel : diceKeySizeModel;
   const xoffsetImageCenterToLeftSheetCenter = -width * (fractionalWidths[0] + fractionalWidths[1])/2;
   const xoffsetImageCenterToRightSheetCenter = width * (fractionalWidths[1] + fractionalWidths[2])/2;
@@ -74,19 +79,28 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
           transform={`translate(${xoffsetImageCenterToRightSheetCenter}, 0)`}
         />        
       </>) : medium === "DiceKey" ? (<>
-        <DiceKeySvgGroup faces={diceKey.faces} {...diceKeySizeModel.bounds} highlightFaceAtIndex={indexOfLastFacePlaced}
+        <DiceKeySvgGroup
+          faces={diceKey.faces}
+          {...diceKeySizeModel.bounds}
+          highlightFaceAtIndex={indexOfLastFacePlaced}
           transform={`translate(${xoffsetImageCenterToLeftSheetCenter})`}
         />
-        <DiceKeySvgGroup faces={diceKey.faces} {...diceKeySizeModel.bounds} highlightFaceAtIndex={indexOfLastFacePlaced}
+        <DiceKeySvgGroup
+          faces={diceKey.faces.map( (face, index) =>
+            index <= (indexOfLastFacePlaced ?? 24) ? face : {} ) as PartialDiceKey
+          }
+          {...diceKeySizeModel.bounds}
+          highlightFaceAtIndex={indexOfLastFacePlaced}
           transform={`translate(${xoffsetImageCenterToRightSheetCenter}, 0)`}
         />              
       </>) : (<></>)}
-      ${ face == null ? (
+      ${ showArrow !== true ? (<></>) : (
         <text textAnchor={'middle'} fontSize={sheetSizeModel.linearSizeOfFace * 1.5} y={sheetSizeModel.linearSizeOfFace * .6} >
           <tspan>
             &#x21e8;
           </tspan>
-        </text>) : (
+        </text>)
+      }${ face == null ? (<></>) : (
         <>
           <image href={HandWithSticker}
             transform={
@@ -133,6 +147,6 @@ export const SticKeyCopyingView = observer( (props: Omit<FaceCopyingViewProps, "
 export const Preview_FaceCopyingView = ({indexOfLastFacePlaced=23}: {indexOfLastFacePlaced?: number}) => (
   <>
     <DiceKeyCopyingView diceKey={DiceKey.testExample} indexOfLastFacePlaced={indexOfLastFacePlaced} />
-    <SticKeyCopyingView diceKey={DiceKey.testExample} indexOfLastFacePlaced={indexOfLastFacePlaced} />
+    <SticKeyCopyingView diceKey={DiceKey.testExample} matchSticKeyAspectRatio={true} indexOfLastFacePlaced={indexOfLastFacePlaced} />
   </>
 )

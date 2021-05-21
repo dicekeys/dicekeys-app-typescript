@@ -10,7 +10,7 @@
 .PreviewContainer {
   display: flex;
   flex-direction: column;
-  justify-content: stretch;
+  justify-content: normal;
   align-items: stretch;
   height: 100vh;
   width: 96vw;

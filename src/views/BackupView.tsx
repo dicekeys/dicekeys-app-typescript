@@ -2,18 +2,8 @@ import { DiceKey } from "../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
-import { SimpleTopNavBar } from "./Navigation/SimpleTopNavBar";
 import { StepFooterView } from "./Navigation/StepFooterView";
-import Layout from "../css/Layout.module.css";
-
-// import IllustrationOfShakingBag from /*url:*/"../images/Illustration of shaking bag.svg";
-// import BoxBottomAfterRoll from /*url:*/"../images/Box Bottom After Roll.svg";
-// import BoxBottomAllDiceInPlace from /*url:*/"../images/Box Bottom All DIce In Place.svg";
-// import ScanDiceKeyImage from /*url:*/"../images/Scanning a DiceKey.svg";
-// import SealBox from /*url:*/"../images/Seal Box.svg";
-// import { DiceKeyView } from "./WithSelectedDiceKey/DiceKeyView";
-// import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
-// import { Spacer, ResizableImage, Instruction } from "./basics";
+import { DiceKeyCopyingView, FaceCopyingView, SticKeyCopyingView } from "./SVG/FaceCopyingView";
 
 enum Step {
   SelectBackupMedium = 1,
@@ -29,16 +19,16 @@ const validStepOrUndefined = (step: number): Step | undefined =>
 
 enum BackupMedium {
   SticKey = "SticKey",
-  DiceKey = "DiceKey,"
+  DiceKey = "DiceKey",
 }
 
+// FIXME -- hide faces that have already been removed.
 export class BackupState {
-  diceKeyScanned?: DiceKey;
-  setDiceKeyScanned = action ( (diceKey?: DiceKey) => {
-    this.diceKeyScanned = diceKey;
-  })
   backupMedium?: BackupMedium;
-  setBackupMedium = (newMedium: BackupMedium) => action ( () => this.backupMedium = newMedium );
+  setBackupMedium = (newMedium: BackupMedium) => action ( () => {
+    this.backupMedium = newMedium;
+    this.step = Step.SelectBackupMedium + 1;
+  });
   backupScanned?: DiceKey;
   step: Step;
   setStep = action ( (step: Step) => this.step = step );
@@ -53,44 +43,69 @@ export class BackupState {
   }
 }
 
-const StepSelectBackupMedium = observer (({state}: {state: BackupState}) => {
+const commonBottomStyle: React.CSSProperties = {
+  display: "flex", flexDirection: "column", justifyContent: "normal", alignItems: "stretch", height: "25vh", padding:"1vh", border: "none"
+}
+
+const StepSelectBackupMedium = observer (({diceKey, state}: BackupViewProps) => {
   return (
-    <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center"}}>
-      <button onClick={state.setBackupMedium(BackupMedium.SticKey)}>Use SticKey</button>
-      <button onClick={state.setBackupMedium(BackupMedium.SticKey)}>Use DiceKey</button>
+    <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center", alignContent: "stretch"}}>
+      <button
+        style={{...commonBottomStyle, marginBottom: "1vh"}}
+        onClick={state.setBackupMedium(BackupMedium.SticKey)}
+      >
+        <SticKeyCopyingView diceKey={diceKey} showArrow={true} indexOfLastFacePlaced={12} />
+        <span style={{marginTop: "0.5rem"}}>Use SticKey</span>
+      </button>
+      <button
+        style={{...commonBottomStyle, marginTop: "1vh"}}
+        onClick={state.setBackupMedium(BackupMedium.SticKey)}
+      >
+        <DiceKeyCopyingView diceKey={diceKey} showArrow={true} indexOfLastFacePlaced={12}  matchSticKeyAspectRatio={true} />
+        <span style={{marginTop: "0.5rem"}}>Use DiceKey</span>
+      </button>
    </div>
 )});
 
-const BackupStepSwitchView = observer ( (props: {state: BackupState}) => {
-  switch (props.state.step) {
+const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
+  const {step, backupMedium} = props.state;
+  switch (step) {
     case Step.SelectBackupMedium: return (<StepSelectBackupMedium {...props} />);
-    default: return (<></>);
+    case Step.Validate: return (<>FIXME</>)
+    default: return (backupMedium == null || step < Step.FirstFace || step > Step.LastFace) ? (<></>) : (
+      <>
+        <FaceCopyingView medium={backupMedium} diceKey={props.diceKey} indexOfLastFacePlaced={step - Step.FirstFace} />
+      </>
+    );
   }
 
 });
 
 interface BackupViewProps {
   state: BackupState;
-  onComplete: (diceKeyLoaded?: DiceKey) => any;
+  diceKey: DiceKey;
+//  onComplete: () => any;
 }
 export const BackupView = observer ( (props: BackupViewProps) => {
-  const {state, onComplete} = props;
-  return (
-    <div className={Layout.RowStretched}>
-      <div className={Layout.ColumnStretched}>
-        <SimpleTopNavBar title={"Assembly Instructions"} goBack={ () => onComplete() } />
-        <div className={Layout.PaddedStretchedColumn}>
-          <BackupStepSwitchView state={state} />
-          <StepFooterView setStep={state.setStep} pprev={undefined} prev={state.stepMinus1} next={state.stepPlus1} />
-        </div>
-      </div>
-    </div>
-  )
-});
+  const {state} = props; //, diceKey //, onComplete } = props;
+    // <div className={Layout.RowStretched}>
+    //   <div className={Layout.ColumnStretched}>
+    //     <SimpleTopNavBar title={`Backup ${diceKey.nickname}`} goBack={ () => onComplete() } />
+    //     <div className={Layout.PaddedStretchedColumn}>
+    return (<>
+      <BackupStepSwitchView {...props} />
+      { state.backupMedium == null ? (<></>) : (
+        <StepFooterView setStep={state.setStep} pprev={undefined} prev={state.stepMinus1} next={state.stepPlus1} />
+      )}
+    </>)
+      //   </div>
+      // </div>
+    // </div>
+  });
 
 
 export const Preview_BackupView = () => {
   return (
-    <BackupView state={new BackupState(Step.SelectBackupMedium)} onComplete={ () => {} } />
+    <BackupView diceKey={DiceKey.fromRandom()} state={new BackupState(Step.SelectBackupMedium)}  />
   );
 };
