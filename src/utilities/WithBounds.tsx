@@ -51,55 +51,53 @@ class SettableBounds {
 }
 export const createBounds = SettableBounds.create;
 
-export interface WithBoundsProps {
-  weight?: number,
-  fitToWidthOverHeight?: number,
-  content: (bounds: Bounds) => JSX.Element
+export interface OptionalAspectRatioProps {
+  aspectRatioWidthOverHeight?: number,
+  maxWidth?: string,
+  maxHeight?: string,
 }
 
-export const WithBounds = observer( (props: WithBoundsProps) => {
+type WithBoundsProps = OptionalAspectRatioProps & {
+  weight?: number,
+  children: (bounds: Bounds) => JSX.Element,
+};
+
+const createAspectRatioStyle = (props: OptionalAspectRatioProps): React.CSSProperties => {
+  const {aspectRatioWidthOverHeight = 1, maxWidth, maxHeight} = props ?? {};
+  if (aspectRatioWidthOverHeight === 0 || maxWidth === null || maxHeight === null) {
+    return {}
+  } else return {
+    width: `min(${maxWidth}, ${maxHeight} * ${aspectRatioWidthOverHeight})`,
+    height: `min(${maxHeight}, ${maxWidth} / ${aspectRatioWidthOverHeight})`,
+  }
+}
+
+export const WithBounds = observer( (props: WithBoundsProps & OptionalAspectRatioProps & React.HTMLAttributes<HTMLDivElement>) => {
   const componentRef = React.useRef<HTMLDivElement>(null);
 
-  const {weight, fitToWidthOverHeight, content, ...divProps} = props;
-  const {bounds, setBounds} = createBounds(fitToWidthOverHeight);
+  const {
+    weight, children, style,
+    aspectRatioWidthOverHeight, maxHeight, maxWidth,
+    ...divProps
+  } = props;
+  const aspectRatioStyle = createAspectRatioStyle({aspectRatioWidthOverHeight, maxWidth, maxHeight})
+  const {bounds, setBounds} = createBounds(aspectRatioWidthOverHeight);
   useContainerDimensions(componentRef, setBounds);
   const flexWeightAsCSS = weight == null ? {} : {flexGrow: weight, flexShrink: weight};
   return (
-    <div {...divProps} style={{...flexWeightAsCSS, padding: 0, margin: 0, display: "flex",
-      justifyContent: "stretch",
-      alignContent: "stretch",
-      flexGrow: 1,
-      flexShrink: 1,
+    <div {...divProps}
+      style={{
+        ...flexWeightAsCSS,
+        padding: 0, margin: 0, display:
+        "flex",
+        justifyContent: "space-around",
+        alignContent: "stretch",
+        flexGrow: 1,
+        flexShrink: 1,
+        ...aspectRatioStyle,
+        ...style,
     }} ref={componentRef}>
-    { content(bounds) }
+    { children(bounds) }
     </div>
   )
 });
-
-// export interface BoundsSetterProps {
-//   weight?: number,
-//   fitToWidthOverHeight?: number,
-//   setBounds: (bounds: Bounds) => any
-// }
-
-// export const BoundsSetter = (props: React.PropsWithChildren<BoundsSetterProps>) => {
-//   const componentRef = React.useRef<HTMLDivElement>(null);
-
-//   const {weight, fitToWidthOverHeight, setBounds, children, ...divProps} = props;
-//   useContainerDimensions(componentRef, setBounds);
-//   const flexWeightAsCSS = weight == null ? {} : {flexGrow: weight, flexShrink: weight};
-//   return (
-//     <div {...divProps}
-//       style={{
-//         ...flexWeightAsCSS,
-//         padding: 0, margin: 0,
-//         display: "flex",
-//         justifyContent: "stretch",
-//         alignContent: "stretch",
-//         flexGrow: 1,
-//         flexShrink: 1,
-//     }} ref={componentRef}>
-//     { children }
-//     </div>
-//   )
-// };

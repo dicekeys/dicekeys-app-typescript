@@ -129,11 +129,11 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
 
 export const FaceCopyingView = observer( (props: FaceCopyingViewProps) => {
   return (
-    <WithBounds content={ (bounds => (
+    <WithBounds>{ (bounds => (
       <svg viewBox={viewBox(bounds)}>
         <FaceCopyingViewGroup {...{...props, ...bounds}} />
       </svg>
-    ))} />
+    ))}</WithBounds>
   )    
 });
 

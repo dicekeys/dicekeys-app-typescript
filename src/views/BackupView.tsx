@@ -1,4 +1,4 @@
-import { DiceKey, Face } from "../dicekeys/DiceKey";
+import { DiceKey, Face, PartialDiceKey } from "../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
@@ -7,6 +7,7 @@ import { DiceKeyCopyingView, FaceCopyingView, SticKeyCopyingView } from "./SVG/F
 import { FaceLetters } from "@dicekeys/read-dicekey-js";
 import { Instruction } from "./basics";
 import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
+import { DiceKeyViewAutoSized } from "./SVG/DiceKeyView";
 
 enum Step {
   SelectBackupMedium = 1,
@@ -129,24 +130,38 @@ const StepSelectBackupMedium = observer (({state}: BackupViewProps) => {
 
 const ValidateBackupView  = observer ( (props: BackupViewProps) => {
   const {state} = props;
-
+  const {
+    backupScannedSuccessfully,
+    diceKeyToBackUp,
+    diceKeyScannedFromBackupAtRotationWithFewestErrors,
+    differencesBetweenOriginalAndBackup,
+  } = state;
   if (state.scanning) {
     return (<>
       <ScanDiceKeyView onDiceKeyRead={ state.setBackupScanned } />
       <button onClick={state.stopScanning} >Stop scanning</button>
     </>)
-  } else if (state.backupScannedSuccessfully) {
-    return (<>
-      Success!
-    </>)
-  } else if (state.differencesBetweenOriginalAndBackup != null) {    
-    return (<>
-      {state.differencesBetweenOriginalAndBackup.errors.length} faces with errors.
-    </>)
   } else {
     return (<>
-      <button onClick={state.startScanning} >Scan to verify</button>      
-    </>);
+      <div style={{display: "flex", flexDirection: "row", justifyContent: "center"}}>
+        <DiceKeyViewAutoSized faces={diceKeyToBackUp.faces}
+          aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
+          />
+        <DiceKeyViewAutoSized faces={diceKeyScannedFromBackupAtRotationWithFewestErrors?.faces ?? [] as unknown as PartialDiceKey }
+          // style={{width: "calc(min(40vh, 30vw)", height: "calc(min(40vh, 30vw)"}}
+          aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
+        />
+      </div>
+      { backupScannedSuccessfully ? (<>Success!</>) :
+        (differencesBetweenOriginalAndBackup?.errors ?? 0) > 5 ?
+          (<>The backup doesn't look anything like the original.</>) :
+          (<>{ differencesBetweenOriginalAndBackup?.errors[0].index }</>)
+      }
+      
+      <button onClick={state.startScanning} >{
+        state.diceKeyScannedFromBackup == null ? (<>Scan to verify</>) : (<>Re-scan</>)
+      }</button>  
+    </>)
   }
 });
 

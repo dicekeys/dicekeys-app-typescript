@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import { PartialDiceKey } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
 import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox, viewBox } from "../../utilities/bounding-rects";
-import { WithBounds } from "../../utilities/WithBounds";
+import { WithBounds, OptionalAspectRatioProps } from "../../utilities/WithBounds";
 
 const diceBoxColor = "#050350"; // must be in hex format as it is parsed as such in this code.
 
@@ -114,14 +114,14 @@ export const DiceKeyViewFixedSize = observer( (props: {faces: PartialDiceKey} & 
   </svg>
 ));
 
-export const DiceKeyViewAutoSized = observer( (props: {faces: PartialDiceKey} & DiceKeyRenderOptions
-  ) => {
-    return (
-      <WithBounds content={(bounds) => (
+export const DiceKeyViewAutoSized = observer( (
+  {faces, aspectRatioWidthOverHeight, maxWidth, maxHeight, ...props}:
+    {faces: PartialDiceKey} & OptionalAspectRatioProps & DiceKeyRenderOptions & {style?: React.CSSProperties}
+) => (
+      <WithBounds {...{...props, aspectRatioWidthOverHeight, maxWidth, maxHeight}}>{(bounds) => (
         <svg viewBox={viewBox(bounds)}>
-          <DiceKeySvgGroup {...{...props, ...bounds, height: bounds.height}} />
+          <DiceKeySvgGroup {...{...props, faces, ...bounds, height: bounds.height}} />
         </svg>
-      )}
-      />
+      )}</WithBounds> 
     )    
-});
+);
