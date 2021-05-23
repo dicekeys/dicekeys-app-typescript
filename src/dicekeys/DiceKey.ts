@@ -522,13 +522,17 @@ export class DiceKey {
   get centerLetterAndDigit(): string { return this.centerFace.letter + this.centerFace.digit }
   get nickname(): string { return`DiceKey with ${this.centerLetterAndDigit} in center`; }
 
-  compareTo = (other: DiceKey): FaceComparisonError[] =>
+  compareTo = (other: DiceKey) =>
   // Compare DiceKey a against the four possible rotations of B to get the list of errors
   ([0, 1, 2, 3] as const)
-    .map( rotation => compareDiceKeysAtFixedRotation(this, other.rotate(rotation) ) )
+    .map( clockwiseTurnsFromUpright => {
+      const otherDiceKeyRotated = other.rotate(clockwiseTurnsFromUpright);
+      const errors = compareDiceKeysAtFixedRotation(this, otherDiceKeyRotated );
+      return {clockwiseTurnsFromUpright, errors, otherDiceKeyRotated}
+  })
   // Get the shortest list of errors by sorting by the length of the error list
   // (the number of faces with errors) and taking the first element
-    .sort( (a, b) => a.length < b.length ? -1 : 1 )[0]
+    .sort( (a, b) => a.errors.length <= b.errors.length ? -1 : 1 )[0]
 
   keyId = (): Promise<string> =>
     crypto.subtle.digest("SHA-256",  new TextEncoder().encode(this.toSeedString())).then( hash =>

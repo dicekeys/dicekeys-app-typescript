@@ -56,8 +56,11 @@ export class BackupState {
   userChoseToAllowSkipScanningStep: boolean = false;
   userChoseToAllowSkippingBackupStep: boolean = false;
 
-  get errors() { return this.diceKeyScannedFromBackup ? this.diceKeyToBackUp.compareTo(this.diceKeyScannedFromBackup) : undefined }
-  get backupScannedSuccessfully() { return this.diceKeyScannedFromBackup && this.errors?.length === 0 }
+  get differencesBetweenOriginalAndBackup() { return this.diceKeyScannedFromBackup ? this.diceKeyToBackUp.compareTo(this.diceKeyScannedFromBackup) : undefined }
+  get backupScannedSuccessfully() { return this.diceKeyScannedFromBackup && this.differencesBetweenOriginalAndBackup?.errors.length === 0 }
+  get diceKeyScannedFromBackupAtRotationWithFewestErrors() {
+    return this.differencesBetweenOriginalAndBackup?.otherDiceKeyRotated
+  }
 
   constructor(public readonly diceKeyToBackUp: DiceKey, step: Step = Step.START_INCLUSIVE) {
     this.step = step;
@@ -136,9 +139,9 @@ const ValidateBackupView  = observer ( (props: BackupViewProps) => {
     return (<>
       Success!
     </>)
-  } else if (state.errors) {    
+  } else if (state.differencesBetweenOriginalAndBackup != null) {    
     return (<>
-      {state.errors.length} faces with errors.
+      {state.differencesBetweenOriginalAndBackup.errors.length} faces with errors.
     </>)
   } else {
     return (<>
