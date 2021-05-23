@@ -33,23 +33,33 @@ export class BackupState {
     this.backupMedium = newMedium;
     this.step = Step.SelectBackupMedium + 1;
   });
-  backupScanned?: DiceKey;
+  diceKeyScannedFromBackup?: DiceKey;
   scanning: boolean = false;
   setScanning = (to: boolean) => action( () => this.scanning = to );
   startScanning = this.setScanning(true);
   stopScanning = this.setScanning(false); 
   setBackupScanned = action( (diceKey?: DiceKey) => {
-    this.backupScanned = diceKey;
+    this.diceKeyScannedFromBackup = diceKey;
     this.scanning = false;
   })
   step: Step;
-  setStep = action ( (step: Step) => this.step = step );
+  setStep = action ( (step: Step) => {
+    this.step = step;
+    if (step === Step.Validate) {
+      // If moving to the validation step, and if we had tried scanning a key to validate before,
+      // clear what we scanned
+      this.diceKeyScannedFromBackup = undefined;
+    }
+  });
   get stepPlus1() { return validStepOrUndefined(this.step+1) }
   get stepMinus1() { return validStepOrUndefined(this.step-1) }
   userChoseToAllowSkipScanningStep: boolean = false;
   userChoseToAllowSkippingBackupStep: boolean = false;
 
-  constructor(step: Step = Step.START_INCLUSIVE) {
+  get errors() { return this.diceKeyScannedFromBackup ? this.diceKeyToBackUp.compareTo(this.diceKeyScannedFromBackup) : undefined }
+  get backupScannedSuccessfully() { return this.diceKeyScannedFromBackup && this.errors?.length === 0 }
+
+  constructor(public readonly diceKeyToBackUp: DiceKey, step: Step = Step.START_INCLUSIVE) {
     this.step = step;
     makeAutoObservable(this);
   }
@@ -93,21 +103,22 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, i
   </Instruction>);
 });
 
-const StepSelectBackupMedium = observer (({diceKey, state}: BackupViewProps) => {
+const StepSelectBackupMedium = observer (({state}: BackupViewProps) => {
+  const {diceKeyToBackUp} = state;
   return (
     <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center", alignContent: "stretch"}}>
       <button
         style={{...commonBottomStyle, marginBottom: "1vh"}}
         onClick={state.setBackupMedium(BackupMedium.SticKey)}
       >
-        <SticKeyCopyingView diceKey={diceKey} showArrow={true} indexOfLastFacePlaced={12} />
+        <SticKeyCopyingView diceKey={diceKeyToBackUp} showArrow={true} indexOfLastFacePlaced={12} />
         <span style={{marginTop: "0.5rem"}}>Use SticKey</span>
       </button>
       <button
         style={{...commonBottomStyle, marginTop: "1vh"}}
         onClick={state.setBackupMedium(BackupMedium.DiceKey)}
       >
-        <DiceKeyCopyingView diceKey={diceKey} showArrow={true} indexOfLastFacePlaced={12}  matchSticKeyAspectRatio={true} />
+        <DiceKeyCopyingView diceKey={diceKeyToBackUp} showArrow={true} indexOfLastFacePlaced={12}  matchSticKeyAspectRatio={true} />
         <span style={{marginTop: "0.5rem"}}>Use DiceKey</span>
       </button>
    </div>
@@ -121,9 +132,13 @@ const ValidateBackupView  = observer ( (props: BackupViewProps) => {
       <ScanDiceKeyView onDiceKeyRead={ state.setBackupScanned } />
       <button onClick={state.stopScanning} >Stop scanning</button>
     </>)
-  } else if (state.backupScanned) {
+  } else if (state.backupScannedSuccessfully) {
     return (<>
-      FIXME Compare
+      Success!
+    </>)
+  } else if (state.errors) {    
+    return (<>
+      {state.errors.length} faces with errors.
     </>)
   } else {
     return (<>
@@ -133,15 +148,15 @@ const ValidateBackupView  = observer ( (props: BackupViewProps) => {
 });
 
 const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
-  const {step, backupMedium} = props.state;
+  const {step, backupMedium, diceKeyToBackUp} = props.state;
   const faceIndex = step - Step.FirstFace;
   switch (step) {
     case Step.SelectBackupMedium: return (<StepSelectBackupMedium {...props} />);
     case Step.Validate: return (<ValidateBackupView {...props} />)
     default: return (backupMedium == null || step < Step.FirstFace || step > Step.LastFace) ? (<></>) : (
       <>
-        <FaceCopyingView medium={backupMedium} diceKey={props.diceKey} indexOfLastFacePlaced={faceIndex} />
-        <CopyFaceInstructionView medium={backupMedium} face={props.diceKey.faces[faceIndex]} index={faceIndex} />
+        <FaceCopyingView medium={backupMedium} diceKey={diceKeyToBackUp} indexOfLastFacePlaced={faceIndex} />
+        <CopyFaceInstructionView medium={backupMedium} face={diceKeyToBackUp.faces[faceIndex]} index={faceIndex} />
       </>
     );
   }
@@ -149,7 +164,6 @@ const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
 
 interface BackupViewProps {
   state: BackupState;
-  diceKey: DiceKey;
 //  onComplete: () => any;
 }
 export const BackupView = observer ( (props: BackupViewProps) => {
@@ -179,6 +193,6 @@ export const BackupView = observer ( (props: BackupViewProps) => {
 
 export const Preview_BackupView = () => {
   return (
-    <BackupView diceKey={DiceKey.fromRandom()} state={new BackupState(Step.SelectBackupMedium)}  />
+    <BackupView state={new BackupState(DiceKey.fromRandom(), Step.SelectBackupMedium)}  />
   );
 };

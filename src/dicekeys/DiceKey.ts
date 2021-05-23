@@ -272,6 +272,31 @@ const rotationIndexes5x5: {[rotation in Clockwise90DegreeRotationsFromUpright]: 
    ],
  };
 
+interface FaceComparisonErrorTypes {
+  letter?: true;
+  digit?: true;
+  orientationAsLowercaseLetterTrbl?: true;
+}
+
+interface FaceComparisonError extends FaceComparisonErrorTypes {
+  index: number;
+}
+
+const compareFaces = (a: Face, b: Face, index: number): FaceComparisonError | undefined => {
+  const errors: FaceComparisonErrorTypes = {
+    ...(a.letter !== b.letter ? {letter: true} : {}),
+    ...(a.digit !== b.digit ? {digit: true} : {}),
+    ...(a.orientationAsLowercaseLetterTrbl !== b.orientationAsLowercaseLetterTrbl ? {orientationAsLowercaseLetterTrbl: true} : {})
+  }
+  return Object.keys(errors).length > 0 ? {...errors, index} : undefined;
+}
+
+const compareDiceKeysAtFixedRotation = (a: DiceKey, b: DiceKey): FaceComparisonError[] =>
+  a.faces
+    .map( (aFace, index) => compareFaces(aFace, b.faces[index], index) )
+    .filter( e => e != null ) as FaceComparisonError[];
+
+
 
 //  )
 type RotateFaceFn<F extends Face> = (
@@ -311,11 +336,6 @@ export function rotateDiceKey<F extends Face = Face>(
       .map( i => diceKey[i] )
       .map( faceAndRotation => rotateFaceFn(faceAndRotation, clockwise90DegreeRotationsFromUpright) ) as DiceKeyFaces<F>;
 }
-
-// const removeOrientations = <F extends Face = Face>(
-//   diceKey: DiceKeyFaces<F>,
-// ): DiceKeyFaces => DiceKey<F>(diceKey.map( face => ({...face, orientationAsLowercaseLetterTrbl: "?"})));
-
 
 const FaceRotationsNonStationary = [1, 2, 3] as const;
 export function rotateToRotationIndependentForm<F extends Face = Face>(
@@ -374,6 +394,8 @@ const toSeedString = (
   const humanReadableForm = DiceKeyInHumanReadableForm(canonicalDiceKey, includeOrientations);
   return humanReadableForm;
 }
+
+
 
 
 const factorialConstants0to25: bigint[] = Array.from(Array(26).keys()).reduce( (factorials) => {
@@ -499,6 +521,14 @@ export class DiceKey {
   get centerFace(): Face { return this.faces[12]; }
   get centerLetterAndDigit(): string { return this.centerFace.letter + this.centerFace.digit }
   get nickname(): string { return`DiceKey with ${this.centerLetterAndDigit} in center`; }
+
+  compareTo = (other: DiceKey): FaceComparisonError[] =>
+  // Compare DiceKey a against the four possible rotations of B to get the list of errors
+  ([0, 1, 2, 3] as const)
+    .map( rotation => compareDiceKeysAtFixedRotation(this, other.rotate(rotation) ) )
+  // Get the shortest list of errors by sorting by the length of the error list
+  // (the number of faces with errors) and taking the first element
+    .sort( (a, b) => a.length < b.length ? -1 : 1 )[0]
 
   keyId = (): Promise<string> =>
     crypto.subtle.digest("SHA-256",  new TextEncoder().encode(this.toSeedString())).then( hash =>

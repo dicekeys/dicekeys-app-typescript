@@ -64,7 +64,7 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
                   <SeedHardwareKeyView diceKey={diceKey} seedHardwareKeyViewState={ new SeedHardwareKeyViewState(diceKey.toSeedString()) } />
                 );
                 case Navigation.SelectedDiceKeySubViews.Backup: return (
-                  <BackupView diceKey={diceKey} state={new BackupState()} />
+                  <BackupView state={new BackupState(diceKey)} />
                 );
                 default: return null;
               }
