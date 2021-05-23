@@ -1,8 +1,9 @@
 {
   "name": "dicekeys-electron",
+  "author": "DiceKeys, LLC",
+  "description": "DiceKeys App",
+  "version": "0.0.1",
   "productName": "dicekeys-electron",
-  "version": "1.0.0",
-  "description": "My Electron application description",
   "main": "dist/electron.js",
   "scripts": {
     "start": "tsc && electron-forge start",
@@ -12,10 +13,6 @@
     "lint": "eslint --ext .ts ."
   },
   "keywords": [],
-  "author": {
-    "name": "Angelos Veglektsis",
-    "email": "angelos@aveworks.com"
-  },
   "license": "MIT",
   "config": {
     "forge": "./forge.config.js"
