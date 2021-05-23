@@ -4,10 +4,11 @@ import { observer } from "mobx-react";
 import React from "react";
 import { StepFooterView } from "./Navigation/StepFooterView";
 import { DiceKeyCopyingView, FaceCopyingView, SticKeyCopyingView } from "./SVG/FaceCopyingView";
-import { FaceLetters } from "@dicekeys/read-dicekey-js";
+import { FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
 import { Instruction } from "./basics";
 import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
 import { DiceKeyViewAutoSized } from "./SVG/DiceKeyView";
+import { addPreview } from "./basics/Previews";
 
 enum Step {
   SelectBackupMedium = 1,
@@ -208,9 +209,28 @@ export const BackupView = observer ( (props: BackupViewProps) => {
     // </div>
   });
 
-
-export const Preview_BackupView = () => {
-  return (
-    <BackupView state={new BackupState(DiceKey.fromRandom(), Step.SelectBackupMedium)}  />
-  );
-};
+addPreview("Backup", () => ( 
+  <BackupView state={new BackupState(DiceKey.fromRandom(), Step.SelectBackupMedium)} />
+));
+addPreview("BackupShowErrors", () => {
+  const referenceDiceKey = DiceKey.testExample;
+  const state = new BackupState(referenceDiceKey, Step.Validate);
+  state.setBackupMedium(BackupMedium.DiceKey);
+  const diceKeyWithErrors = new DiceKey(referenceDiceKey.rotate(1).faces.map( (face, index) => {
+      switch(index) {
+        case 3: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 5) % FaceLetters.length]};
+        case 8: return {...face, digit: FaceDigits[(FaceDigits.indexOf(face.digit) + 3) % FaceDigits.length]};
+        case 13: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 3) % FaceLetters.length]};
+        case 20: return {...face, orientationAsLowercaseLetterTrbl: FaceOrientationLettersTrbl[(FaceOrientationLettersTrbl.indexOf(face.orientationAsLowercaseLetterTrbl) + 1) % FaceOrientationLettersTrbl.length]};
+        case 22: return {
+          letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 12) % FaceLetters.length],
+          digit: FaceDigits[(FaceDigits.indexOf(face.digit) + 1) % FaceDigits.length],
+          orientationAsLowercaseLetterTrbl: FaceOrientationLettersTrbl[(FaceOrientationLettersTrbl.indexOf(face.orientationAsLowercaseLetterTrbl) + 3) % FaceOrientationLettersTrbl.length]};
+        default: return face;
+      }
+    }
+  ));
+  state.setBackupScanned(diceKeyWithErrors)
+  return ( 
+  <BackupView state={state} />
+)});
