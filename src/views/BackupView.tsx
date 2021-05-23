@@ -1,12 +1,16 @@
-import { DiceKey } from "../dicekeys/DiceKey";
+import { DiceKey, Face } from "../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import { StepFooterView } from "./Navigation/StepFooterView";
 import { DiceKeyCopyingView, FaceCopyingView, SticKeyCopyingView } from "./SVG/FaceCopyingView";
+import { FaceLetters } from "@dicekeys/read-dicekey-js";
+import { Instruction } from "./basics";
+import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
 
 enum Step {
   SelectBackupMedium = 1,
+//  Introduction, FIXME
   FirstFace,
   LastFace = FirstFace + 24,
   Validate,
@@ -30,6 +34,14 @@ export class BackupState {
     this.step = Step.SelectBackupMedium + 1;
   });
   backupScanned?: DiceKey;
+  scanning: boolean = false;
+  setScanning = (to: boolean) => action( () => this.scanning = to );
+  startScanning = this.setScanning(true);
+  stopScanning = this.setScanning(false); 
+  setBackupScanned = action( (diceKey?: DiceKey) => {
+    this.backupScanned = diceKey;
+    this.scanning = false;
+  })
   step: Step;
   setStep = action ( (step: Step) => this.step = step );
   get stepPlus1() { return validStepOrUndefined(this.step+1) }
@@ -47,6 +59,40 @@ const commonBottomStyle: React.CSSProperties = {
   display: "flex", flexDirection: "column", justifyContent: "normal", alignItems: "stretch", height: "25vh", padding:"1vh", border: "none"
 }
 
+const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, index: number, medium: BackupMedium}) => {
+  const sheetIndex = FaceLetters.indexOf(face.letter) % 5;
+  const firstLetterOnSheet = FaceLetters[sheetIndex * 5];
+  const lastLetterOnSheet = FaceLetters[sheetIndex * 5 + 4];
+  const indexMod5 = index % 5;
+  const {letter, digit, orientationAsLowercaseLetterTrbl: oriented} = face;
+
+  return (<Instruction>
+    { medium === BackupMedium.SticKey ? (<>
+        Remove the {letter}{digit} sticker
+        from the sheet with letters {firstLetterOnSheet} to {lastLetterOnSheet}.
+      </>) : (<>
+        Find the die with the letter {letter} on it.
+      </>) 
+    }<br/>
+    {
+      index === 0 ? (<>Pick a corner of the target sheet to be the top left and place it</>) :
+      index === 1 ? (<>Place it just to the right of the first sticker you placed</>) :
+      (indexMod5 == 4) ? (<>Place it in the last position of this row</>) :
+      (indexMod5 == 0) ? (<>Place it in the leftmost position of the next (new) row</>) :
+      (<>Place it in to the right of the previous sticker in the {
+        indexMod5 === 1 ? "second" : indexMod5 === 2 ? "third" : "fourth"
+      } row</>)
+    }
+    &nbsp;with {letter}{digit}&nbsp;
+    { 
+      oriented === "t" ? (<>upright (not turned)</>) :
+      oriented === "b" ? (<>turned upside down</>) :
+      oriented === "r" ? (<>turned the right (90 degrees clockwise of upright)</>) :
+      oriented === "l" ? (<>turned the left (90 degrees counterclockwise of upright)</>) : ""
+    }.
+  </Instruction>);
+});
+
 const StepSelectBackupMedium = observer (({diceKey, state}: BackupViewProps) => {
   return (
     <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center", alignContent: "stretch"}}>
@@ -59,7 +105,7 @@ const StepSelectBackupMedium = observer (({diceKey, state}: BackupViewProps) => 
       </button>
       <button
         style={{...commonBottomStyle, marginTop: "1vh"}}
-        onClick={state.setBackupMedium(BackupMedium.SticKey)}
+        onClick={state.setBackupMedium(BackupMedium.DiceKey)}
       >
         <DiceKeyCopyingView diceKey={diceKey} showArrow={true} indexOfLastFacePlaced={12}  matchSticKeyAspectRatio={true} />
         <span style={{marginTop: "0.5rem"}}>Use DiceKey</span>
@@ -67,18 +113,38 @@ const StepSelectBackupMedium = observer (({diceKey, state}: BackupViewProps) => 
    </div>
 )});
 
+const ValidateBackupView  = observer ( (props: BackupViewProps) => {
+  const {state} = props;
+
+  if (state.scanning) {
+    return (<>
+      <ScanDiceKeyView onDiceKeyRead={ state.setBackupScanned } />
+      <button onClick={state.stopScanning} >Stop scanning</button>
+    </>)
+  } else if (state.backupScanned) {
+    return (<>
+      FIXME Compare
+    </>)
+  } else {
+    return (<>
+      <button onClick={state.startScanning} >Scan to verify</button>      
+    </>);
+  }
+});
+
 const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
   const {step, backupMedium} = props.state;
+  const faceIndex = step - Step.FirstFace;
   switch (step) {
     case Step.SelectBackupMedium: return (<StepSelectBackupMedium {...props} />);
-    case Step.Validate: return (<>FIXME</>)
+    case Step.Validate: return (<ValidateBackupView {...props} />)
     default: return (backupMedium == null || step < Step.FirstFace || step > Step.LastFace) ? (<></>) : (
       <>
-        <FaceCopyingView medium={backupMedium} diceKey={props.diceKey} indexOfLastFacePlaced={step - Step.FirstFace} />
+        <FaceCopyingView medium={backupMedium} diceKey={props.diceKey} indexOfLastFacePlaced={faceIndex} />
+        <CopyFaceInstructionView medium={backupMedium} face={props.diceKey.faces[faceIndex]} index={faceIndex} />
       </>
     );
   }
-
 });
 
 interface BackupViewProps {
@@ -88,6 +154,7 @@ interface BackupViewProps {
 }
 export const BackupView = observer ( (props: BackupViewProps) => {
   const {state} = props; //, diceKey //, onComplete } = props;
+  const {step} = state;
     // <div className={Layout.RowStretched}>
     //   <div className={Layout.ColumnStretched}>
     //     <SimpleTopNavBar title={`Backup ${diceKey.nickname}`} goBack={ () => onComplete() } />
@@ -95,7 +162,13 @@ export const BackupView = observer ( (props: BackupViewProps) => {
     return (<>
       <BackupStepSwitchView {...props} />
       { state.backupMedium == null ? (<></>) : (
-        <StepFooterView setStep={state.setStep} pprev={undefined} prev={state.stepMinus1} next={state.stepPlus1} />
+        <StepFooterView 
+          setStep={state.setStep}
+          pprev={step > Step.FirstFace + 1 ? Step.FirstFace : undefined}
+          prev={state.stepMinus1}
+          next={state.stepPlus1}
+          nnext={step >= Step.FirstFace && step < Step.LastFace - 1 ? Step.Validate : undefined}  
+        />
       )}
     </>)
       //   </div>
