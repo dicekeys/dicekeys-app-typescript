@@ -28,17 +28,44 @@ module.exports = {
     },
     {
       "name": "@electron-forge/maker-deb",
-      "config": {}
+      "config": {
+        options: {
+          maintainer: 'DiceKeys LLC',
+          homepage: 'https://dicekeys.com'
+        }
+      }
     },
     {
       "name": "@electron-forge/maker-rpm",
-      "config": {}
+      "config": {
+        options: {
+          maintainer: 'DiceKeys LLC',
+          homepage: 'https://dicekeys.com'
+        }
+      }
+    },
+    {
+      name: '@electron-forge/maker-snap',
+      config: {
+        features: {
+          audio: false,
+          mpris: 'com.dicekeys.app',
+          webgl: true
+        },
+        summary: 'DiceKeys'
+      }
     },
     {
       name: '@electron-forge/maker-dmg',
       config: {
         format: 'ULFO'
       }
-    }
+    },
+    // {
+    //   name: '@electron-forge/maker-pkg',
+    //   config: {
+    //     keychain: 'dicekeys-keychain'
+    //   }
+    // }
   ]
 }

@@ -1,11 +1,12 @@
 import {app, BrowserWindow, ipcMain} from 'electron';
 import * as path from 'path';
 
+import * as squirrelCheck from './electron-squirrel-startup'
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-// This is crashing in macOS
-// if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
-//   app.quit();
-// }
+if (squirrelCheck()) {
+  app.quit();
+}
 
 let mainWindow: BrowserWindow
 
