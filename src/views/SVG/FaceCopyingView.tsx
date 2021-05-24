@@ -113,7 +113,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
           />
           <FaceGroupView
             transform={translateToDieCenter + `rotate(-0.7)`}
-            transparentBackground={true}
+            backgroundColor="rgba(0,0,0,0" // transparent
             strokeWidth={0}
             stroke={"rgba(0,0,0,0)"}
             face={face}
