@@ -1,10 +1,10 @@
 import React from "react";
-import { DiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
+import { DiceKey, PartialDiceKey, FaceComparisonErrorTypes } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import { ScanDiceKeyView } from "../LoadingDiceKeys/ScanDiceKeyView";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
-import { FaceView } from "../SVG/FaceView";
+import { AndClause } from "../basics";
 
 export interface ModifiableDiceKeyState {
   diceKey: DiceKey;
@@ -38,6 +38,9 @@ export class ValidateBackupState {
   get diceKeyScannedFromBackupAtRotationWithFewestErrors() {
     return this.differencesBetweenOriginalAndBackup?.otherDiceKeyRotated
   }
+  get numberOfFacesWithErrors() {
+    return this.differencesBetweenOriginalAndBackup?.errors.length ?? 0
+  }
 
   _errorIndex?: number;
   get errorIndex(): number | undefined {
@@ -54,7 +57,18 @@ export class ValidateBackupState {
   get error() {
     return this.errorIndex == null ? undefined : this.differencesBetweenOriginalAndBackup?.errors[this.errorIndex]
   }
+  get causeOfError() {
+    const {error} = this;
+    if (error == null) return undefined;
+    const {index, ...errorObject} = error;
+    return (Object.keys(errorObject) as (keyof FaceComparisonErrorTypes)[])
+      .map( k => k === "orientationAsLowercaseLetterTrbl" ? "orientation" : k )
+  }
   get errorFaceIndex() { return this.error?.index }
+  get errorRowIndex() { return Math.floor((this.errorFaceIndex ?? 0) / 5) }
+  get errorColumnIndex() { return (this.errorFaceIndex ?? 0) % 5 }
+  get errorRowName() { return ["top", "second", "third", "fourth", "bottom"][this.errorRowIndex] }
+  get errorColumnName() { return ["leftmost", "second", "third", "fourth", "rightmost"][this.errorColumnIndex]  }
   get errorOriginalFace() { return this.diceKeyState.diceKey.faces[this.errorFaceIndex ?? 0]}
   get errorBackupFace() { return this.differencesBetweenOriginalAndBackup?.otherDiceKeyRotated.faces[this.errorFaceIndex ?? 0]; }
  
@@ -66,9 +80,8 @@ export const ValidateBackupView  = observer ( ({state}: {state: ValidateBackupSt
     backupScannedSuccessfully,
     diceKeyScannedFromBackupAtRotationWithFewestErrors,
     differencesBetweenOriginalAndBackup,
-    errorBackupFace,
-    errorOriginalFace,
-    errorFaceIndex
+    errorFaceIndex,
+    causeOfError,
   } = state;
   if (state.scanning) {
     return (<>
@@ -78,30 +91,62 @@ export const ValidateBackupView  = observer ( ({state}: {state: ValidateBackupSt
   } else {
     return (<>
       <div style={{display: "flex", flexDirection: "row", justifyContent: "center"}}>
-        <DiceKeyViewAutoSized faces={diceKeyState.diceKey.faces}
-          aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
+        <div style={{display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems:"center", marginRight: "1rem"}} >
+          <DiceKeyViewAutoSized faces={diceKeyState.diceKey.faces}
+            aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
+            highlightFaceAtIndex={errorFaceIndex}
+            />
+          <button style={{marginTop: ".25rem"}} onClick={state.startScanningOriginal}>Re-scan your original DiceKey</button>  
+        </div>
+        <div style={{display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems:"center", marginLeft: "1rem"}} >
+          <DiceKeyViewAutoSized faces={diceKeyScannedFromBackupAtRotationWithFewestErrors?.faces ?? [] as unknown as PartialDiceKey }
+            // style={{width: "calc(min(40vh, 30vw)", height: "calc(min(40vh, 30vw)"}}
+            aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
+            highlightFaceAtIndex={errorFaceIndex}
           />
-        <DiceKeyViewAutoSized faces={diceKeyScannedFromBackupAtRotationWithFewestErrors?.faces ?? [] as unknown as PartialDiceKey }
-          // style={{width: "calc(min(40vh, 30vw)", height: "calc(min(40vh, 30vw)"}}
-          aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
-        />
+          <button style={{marginTop: ".25rem"}}  onClick={state.startScanningBackup} >{
+            state.diceKeyScannedFromBackup == null ? (<>Scan backup to verify</>) : (<>Re-scan Backup</>)
+          }</button>  
+
+        </div>
       </div>
-      { errorFaceIndex == null || errorBackupFace == null || errorOriginalFace == null ? null : (
-        <div>
-          <FaceView face={errorOriginalFace} maxHeight="10vh" maxWidth="10vw"  />
-          <FaceView face={errorBackupFace} maxHeight="10vh" maxWidth="10vw"  />
+      <div style={{fontSize: "1.25rem", display: "flex", flexDirection:"row", justifyContent:"center", alignContent:"baseline",
+        marginTop: "0.75rem",
+        marginBottom: "0.5rem",
+      }}>
+        { backupScannedSuccessfully ? (<>Well done. The backup matches the original.</>) :
+          (differencesBetweenOriginalAndBackup?.errors.length ?? 0) > 5 ?
+            (<>The backup doesn't look anything like the original.</>) :
+          (errorFaceIndex == null || causeOfError == null) ? null :
+            (<>Mismatch of&nbsp;<i><AndClause items={causeOfError} /></i> &nbsp;at the {state.errorRowName} row, {state.errorColumnName} column.</>)
+        }
+      </div>
+      { state.errorIndex == null || state.numberOfFacesWithErrors <= 1 ? null : (
+        <div style={{display: "flex", flexDirection: "row", justifyContent: "center",
+            marginBottom: "0.5rem",
+          }}>
+          <div style={{minWidth: "10vw"}}>
+            <button
+              style={{marginRight: "1rem"}}
+              hidden={state.errorIndex == 0}
+              onClick={() => state.setErrorIndex((state.errorIndex ?? 1) - 1)}
+              >previous
+            </button>
+          </div>
+          <div style={{minWidth: "20vw", fontSize: "1.1rem", display: "flex", flexDirection:"row", justifyContent:"center", alignContent:"baseline"}}>
+            Error {state.errorIndex + 1} of {state.numberOfFacesWithErrors}
+          </div>
+          <div style={{minWidth: "10vw"}}>
+            <button
+              style={{marginLeft: "1rem"}}
+              hidden={state.errorIndex >= state.numberOfFacesWithErrors - 1 }
+              onClick={() => state.setErrorIndex((state.errorIndex ?? 0) + 1)}
+            >next
+            </button>
+          </div>
         </div>
       )}
-      { backupScannedSuccessfully ? (<>Success!</>) :
-        (differencesBetweenOriginalAndBackup?.errors.length ?? 0) > 5 ?
-          (<>The backup doesn't look anything like the original.</>) :
-          (<>First error at { errorFaceIndex }</>)
-      }
 
-      <button onClick={state.startScanningOriginal}>Re-scan your original DiceKey</button>  
-      <button onClick={state.startScanningBackup} >{
-        state.diceKeyScannedFromBackup == null ? (<>Scan backup to verify</>) : (<>Re-scan Backup</>)
-      }</button>  
     </>)
   }
 });

@@ -1,9 +1,9 @@
 import React from "react";
 
-const ConjunctionClauseView = (conjunction: string) => ({items}: {items: JSX.Element[]}): JSX.Element => {
+const ConjunctionClauseView = (conjunction: string) => ({items}: {items: (JSX.Element | string)[]}): JSX.Element => {
   if (items.length == 0) return (<></>);
   // At least one item.  Make it start of clause.
-  if (items.length == 1) return items[0];
+  if (items.length == 1) return (<>{items[0]}</>);
   return (
     <>{ items.map( (item, index) => (
       <span key={index}>{

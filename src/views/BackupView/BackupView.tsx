@@ -171,6 +171,23 @@ class PreviewDiceKeyState {
 addPreview("Backup", () => ( 
   <BackupView state={new BackupState(new PreviewDiceKeyState(DiceKey.testExample), Step.SelectBackupMedium)} />
 ));
+addPreview("Backup1Error", () => {
+  const diceKeyState = new PreviewDiceKeyState(DiceKey.testExample);
+  const state = new BackupState(diceKeyState);
+  state.setBackupMedium(BackupMedium.DiceKey);
+  const diceKeyWithErrors = new DiceKey(diceKeyState.diceKey.rotate(1).faces.map( (face, index) => {
+      switch(index) {
+        case 3: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 5) % FaceLetters.length]};
+        default: return face;
+      }
+    }
+  ));
+  state.setStep(Step.Validate);
+  state.validateBackupState?.setDiceKeyScannedFromBackup(diceKeyWithErrors)
+  return ( 
+  <BackupView state={state} />
+)});
+
 addPreview("BackupShowErrors", () => {
   const diceKeyState = new PreviewDiceKeyState(DiceKey.testExample);
   const state = new BackupState(diceKeyState);

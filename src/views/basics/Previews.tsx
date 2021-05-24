@@ -10,8 +10,8 @@ export const Center = ({children}: React.PropsWithChildren<{}>) => (
 
 const PreviewMap = new Map<string, () => JSX.Element>();
 
-export const getPreview = (name: string) => PreviewMap.get(name.toLocaleLowerCase());
-
+export const getPreview = (name?: string) => name == null ? undefined : PreviewMap.get(name.toLocaleLowerCase());
+export const getPreviewNames = () => ([...(PreviewMap.keys())]).sort();
 export const addRawPreview = (name: string, previewFn: () => JSX.Element) =>
   PreviewMap.set(name.toLocaleLowerCase(), previewFn);
 export const addPreview = (name: string, previewFn: () => JSX.Element) =>

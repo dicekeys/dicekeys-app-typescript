@@ -272,13 +272,13 @@ const rotationIndexes5x5: {[rotation in Clockwise90DegreeRotationsFromUpright]: 
    ],
  };
 
-interface FaceComparisonErrorTypes {
+export interface FaceComparisonErrorTypes {
   letter?: true;
   digit?: true;
   orientationAsLowercaseLetterTrbl?: true;
 }
 
-interface FaceComparisonError extends FaceComparisonErrorTypes {
+export interface FaceComparisonError extends FaceComparisonErrorTypes {
   index: number;
 }
 
