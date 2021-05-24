@@ -1,4 +1,4 @@
-import { computed, makeObservable } from "mobx";
+import { computed, makeObservable, runInAction } from "mobx";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../stores/DiceKeyMemoryStore";
 import { HasSubViews } from "../core";
@@ -17,9 +17,18 @@ export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubView
     return this.keyId ? DiceKeyMemoryStore.diceKeyForKeyId(this.keyId) : undefined;
   };
 
+  public setDiceKey = async (diceKey?: DiceKey) => {
+    if (diceKey == null) return;
+    const keyId = await diceKey.keyId();
+    runInAction( () => {
+      DiceKeyMemoryStore.addDiceKeyForKeyId(keyId, diceKey);
+      this.keyId = keyId;
+    })
+  }
+
   constructor(
     public readonly goBack: () => any,
-    public readonly keyId: string,
+    public keyId: string,
     initialSubView: SelectedDiceKeySubViews = SelectedDiceKeySubViews.DisplayDiceKey
   ) {
     super(initialSubView);

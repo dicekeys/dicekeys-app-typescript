@@ -12,7 +12,7 @@ import { DerivationView } from "../Recipes/DerivationView";
 import { Navigation } from "../../state";
 import { SeedHardwareKeyView, SeedHardwareKeyViewState } from "./SeedHardwareKeyView";
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
-import { BackupState, BackupView } from "../BackupView";
+import { BackupState, BackupView } from "../BackupView/BackupView";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 // const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
@@ -64,7 +64,7 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
                   <SeedHardwareKeyView diceKey={diceKey} seedHardwareKeyViewState={ new SeedHardwareKeyViewState(diceKey.toSeedString()) } />
                 );
                 case Navigation.SelectedDiceKeySubViews.Backup: return (
-                  <BackupView state={new BackupState(diceKey)} />
+                  <BackupView state={new BackupState({diceKey, setDiceKey: props.navigationState.setDiceKey})} />
                 );
                 default: return null;
               }
