@@ -3,7 +3,7 @@ import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import { StepFooterView } from "../Navigation/StepFooterView";
-import { DiceKeyCopyingView, FaceCopyingView, SticKeyCopyingView } from "../SVG/FaceCopyingView";
+import { FaceCopyingView } from "../SVG/FaceCopyingView";
 import { FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
 import { Instruction } from "../basics";
 import { addPreview } from "../basics/Previews";
@@ -23,7 +23,10 @@ enum Step {
 const validStepOrUndefined = (step: number): Step | undefined =>
   (step >= Step.START_INCLUSIVE && step < Step.END_EXCLUSIVE) ? step : undefined;
 
-
+interface SettableDiceKeyState {
+  diceKey: DiceKey, setDiceKey:
+  (diceKey?: DiceKey) => any;
+}
 
 // FIXME -- hide faces that have already been removed.
 export class BackupState {
@@ -48,14 +51,26 @@ export class BackupState {
   userChoseToAllowSkipScanningStep: boolean = false;
   userChoseToAllowSkippingBackupStep: boolean = false;
 
-  constructor(public readonly diceKeyState: {diceKey: DiceKey, setDiceKey: (diceKey?: DiceKey) => any}, step: Step = Step.START_INCLUSIVE) {
+  constructor(public readonly diceKeyState: SettableDiceKeyState, step: Step = Step.START_INCLUSIVE) {
     this.step = step;
     makeAutoObservable(this);
   }
 }
 
-const commonBottomStyle: React.CSSProperties = {
-  display: "flex", flexDirection: "column", justifyContent: "normal", alignItems: "stretch", height: "25vh", padding:"1vh", border: "none"
+const commonButtonStyle: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "stretch",
+  alignItems: "stretch",
+  alignContent: "center",
+  paddingTop: "1.5vh",
+  paddingBottom: "1.5vh",
+  marginTop: "1.5vh",
+  marginBottom: "1.5vh",
+  borderRadius: "min(1vh,1vw)",
+  paddingLeft: "1vw",
+  paddingRight: "1vw",
+  border: "none"
 }
 
 const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, index: number, medium: BackupMedium}) => {
@@ -92,26 +107,22 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, i
   </Instruction>);
 });
 
-const StepSelectBackupMedium = observer (({state}: BackupViewProps) => {
-  const {diceKeyState} = state;
-  return (
-    <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center", alignContent: "stretch"}}>
-      <button
-        style={{...commonBottomStyle, marginBottom: "1vh"}}
+const StepSelectBackupMedium = observer (({state}: {state: BackupState}) => (
+  <div style={{
+    display: "flex", alignSelf: "stretch", flexDirection: "column", flexGrow: 1,
+    justifyContent: "center", alignContent: "center", alignItems: "center",
+  }}>{
+  [BackupMedium.SticKey, BackupMedium.DiceKey].map( medium => (
+      <button key={medium}
+        style={{...commonButtonStyle, marginBottom: "1vh"}}
         onClick={state.setBackupMedium(BackupMedium.SticKey)}
       >
-        <SticKeyCopyingView diceKey={diceKeyState.diceKey} showArrow={true} indexOfLastFacePlaced={12} />
-        <span style={{marginTop: "0.5rem"}}>Use SticKey</span>
+        <FaceCopyingView medium={medium} diceKey={state.diceKeyState.diceKey} showArrow={true} indexOfLastFacePlaced={12} 
+          maxWidth="60vw" maxHeight="30vh"
+        />
+        <span style={{marginTop: "0.5rem"}}>Use {medium}</span>
       </button>
-      <button
-        style={{...commonBottomStyle, marginTop: "1vh"}}
-        onClick={state.setBackupMedium(BackupMedium.DiceKey)}
-      >
-        <DiceKeyCopyingView diceKey={diceKeyState.diceKey} showArrow={true} indexOfLastFacePlaced={12}  matchSticKeyAspectRatio={true} />
-        <span style={{marginTop: "0.5rem"}}>Use DiceKey</span>
-      </button>
-   </div>
-)});
+    ))}</div>));
 
 const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
   const {step, backupMedium, diceKeyState, validateBackupState} = props.state;
@@ -124,7 +135,9 @@ const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
       )
     default: return (backupMedium == null || step < Step.FirstFace || step > Step.LastFace) ? (<></>) : (
       <>
-        <FaceCopyingView medium={backupMedium} diceKey={diceKey} indexOfLastFacePlaced={faceIndex} />
+        <FaceCopyingView medium={backupMedium} diceKey={diceKey} indexOfLastFacePlaced={faceIndex}
+           maxWidth="80vw" maxHeight="60vh"
+        />
         <CopyFaceInstructionView medium={backupMedium} face={diceKey.faces[faceIndex]} index={faceIndex} />
       </>
     );
@@ -135,29 +148,19 @@ interface BackupViewProps {
   state: BackupState;
 //  onComplete: () => any;
 }
-export const BackupView = observer ( (props: BackupViewProps) => {
-  const {state} = props; //, diceKey //, onComplete } = props;
-  const {step} = state;
-    // <div className={Layout.RowStretched}>
-    //   <div className={Layout.ColumnStretched}>
-    //     <SimpleTopNavBar title={`Backup ${diceKey.nickname}`} goBack={ () => onComplete() } />
-    //     <div className={Layout.PaddedStretchedColumn}>
-    return (<>
-      <BackupStepSwitchView {...props} />
-      { state.backupMedium == null ? (<></>) : (
-        <StepFooterView 
-          setStep={state.setStep}
-          pprev={step > Step.FirstFace + 1 ? Step.FirstFace : undefined}
-          prev={state.stepMinus1}
-          next={state.stepPlus1}
-          nnext={step >= Step.FirstFace && step < Step.LastFace - 1 ? Step.Validate : undefined}  
-        />
-      )}
-    </>)
-      //   </div>
-      // </div>
-    // </div>
-  });
+export const BackupView = observer ( ({state}: BackupViewProps) => (
+  <div className="BackupViewTop" style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "space-around", alignContent: "stretch", alignItems: "center" }}>
+    <BackupStepSwitchView state={state} />
+    { state.backupMedium == null ? (<></>) : (
+      <StepFooterView 
+        setStep={state.setStep}
+        pprev={state.step > Step.FirstFace + 1 ? Step.FirstFace : undefined}
+        prev={state.stepMinus1}
+        next={state.stepPlus1}
+        nnext={state.step >= Step.FirstFace && state.step < Step.LastFace - 1 ? Step.Validate : undefined}  
+      />
+    )}
+  </div>));
 
 class PreviewDiceKeyState {
   constructor(public diceKey: DiceKey) {

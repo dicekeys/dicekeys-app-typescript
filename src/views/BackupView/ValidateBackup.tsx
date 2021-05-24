@@ -114,10 +114,10 @@ export const ValidateBackupView  = observer ( ({state}: {state: ValidateBackupSt
         marginTop: "0.75rem",
         marginBottom: "0.5rem",
       }}>
-        { backupScannedSuccessfully ? (<>Well done. The backup matches the original.</>) :
-          (differencesBetweenOriginalAndBackup?.errors.length ?? 0) > 5 ?
-            (<>The backup doesn't look anything like the original.</>) :
-          (errorFaceIndex == null || causeOfError == null) ? null :
+        { backupScannedSuccessfully ? (<>Well done.The backup matches the original.</>) : null }
+        { (differencesBetweenOriginalAndBackup?.errors.length ?? 0) <= 5 ? null :
+            (<>The backup doesn't look anything like the original.<br/></>)
+        }{ (errorFaceIndex == null || causeOfError == null) ? null :
             (<>Mismatch of&nbsp;<i><AndClause items={causeOfError} /></i> &nbsp;at the {state.errorRowName} row, {state.errorColumnName} column.</>)
         }
       </div>

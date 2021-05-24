@@ -8,7 +8,7 @@ import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox, viewBox } from "..
 import HandWithSticker from /*url:*/"../../images/Hand with Sticker.svg";
 import { FaceGroupView } from "./FaceView";
 import { weightsToFractionalProportions, sum } from "../../utilities/weights";
-import { WithBounds } from "../../utilities/WithBounds";
+import { OptionalMaxSizeCalcProps, WithBounds } from "../../utilities/WithBounds";
 
 // Hand with sticker is 219wide x 187 high
 const handImageSVGHeight = 187;
@@ -29,7 +29,6 @@ const widthsInUnitsOf1KeyWidth = [
 ];
 const fractionalWidths = weightsToFractionalProportions(...widthsInUnitsOf1KeyWidth);
 const totalWidthInUnitsOf1KeyWidth = sum(widthsInUnitsOf1KeyWidth);
-
 
 const sticKeyFaceCopyingImageWidthOverHeight = portraitSheetWidthOverHeight * totalWidthInUnitsOf1KeyWidth;
 const diceKeyFaceCopyingImageWidthOverHeight = 1 /* dice key with no lid width/height (a square) */ * totalWidthInUnitsOf1KeyWidth;
@@ -71,7 +70,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
 
   return (
     <g>
-      ${ medium === "SticKey" ? (<>
+      { medium === "SticKey" ? (<>
         <StickerSheetSvgGroup {...stickerSheetSizeModel.bounds} showLetter={face?.letter} highlightFaceWithDigit={face?.digit}
           transform={`translate(${xoffsetImageCenterToLeftSheetCenter})`}
         />
@@ -94,13 +93,13 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
           transform={`translate(${xoffsetImageCenterToRightSheetCenter}, 0)`}
         />              
       </>) : (<></>)}
-      ${ showArrow !== true ? (<></>) : (
+      { showArrow !== true ? (<></>) : (
         <text textAnchor={'middle'} fontSize={sheetSizeModel.linearSizeOfFace * 1.5} y={sheetSizeModel.linearSizeOfFace * .6} >
           <tspan>
             &#x21e8;
           </tspan>
         </text>)
-      }${ face == null ? (<></>) : (
+      }{ face == null ? (<></>) : (
         <>
           <image href={HandWithSticker}
             transform={
@@ -109,7 +108,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
               // Second, scale the image to make face sizes match
               ` scale(${scaleOfHandImage})` +
               // First, translate image so that the center of the die face is the center of the image
-              `translate(${-handImageOffsetToCenterOfDie.width},${-handImageOffsetToCenterOfDie.height})`
+              ` translate(${-handImageOffsetToCenterOfDie.width},${-handImageOffsetToCenterOfDie.height})`
             }
           />
           <FaceGroupView
@@ -126,10 +125,13 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
   );
 });
 
+const aspectRatioWidthOverHeight = portraitSheetWidthOverHeight * totalWidthInUnitsOf1KeyWidth;
 
-export const FaceCopyingView = observer( (props: FaceCopyingViewProps) => {
+export const FaceCopyingView = observer( ({
+  maxHeight, maxWidth, ...props
+}: FaceCopyingViewProps & OptionalMaxSizeCalcProps) => {
   return (
-    <WithBounds>{ (bounds => (
+    <WithBounds {...{aspectRatioWidthOverHeight, maxHeight, maxWidth}}>{ (bounds => (
       <svg viewBox={viewBox(bounds)}>
         <FaceCopyingViewGroup {...{...props, ...bounds}} />
       </svg>

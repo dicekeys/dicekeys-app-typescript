@@ -163,7 +163,7 @@ export const FaceGroupView = observer( ({
     e.preventDefault();
   })} : {};
   return (
-    <g transform={center ? `translate(${center.x}, ${center.y})` : transform}
+    <g transform={transform != null ? transform : center ? `translate(${center.x}, ${center.y})` : undefined}
         {...svgGroupProps}
         {...optionalOnClickHandler}
         style={!!onFaceClicked ? {cursor: "pointer"} : {}}

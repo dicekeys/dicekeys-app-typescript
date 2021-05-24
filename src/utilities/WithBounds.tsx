@@ -52,10 +52,13 @@ class SettableBounds {
 }
 export const createBounds = SettableBounds.create;
 
-export interface OptionalAspectRatioProps {
-  aspectRatioWidthOverHeight?: number,
+export interface OptionalMaxSizeCalcProps {
   maxWidth?: string,
   maxHeight?: string,
+}
+
+export interface OptionalAspectRatioProps extends OptionalMaxSizeCalcProps {
+  aspectRatioWidthOverHeight?: number,
 }
 
 type WithBoundsProps = OptionalAspectRatioProps & {
@@ -84,21 +87,36 @@ export const WithBounds = observer( (props: WithBoundsProps & OptionalAspectRati
   const aspectRatioStyle = createAspectRatioStyle({aspectRatioWidthOverHeight, maxWidth, maxHeight})
   const {bounds, setBounds} = createBounds(aspectRatioWidthOverHeight);
   useContainerDimensions(componentRef, setBounds);
+
+  const edgelessFlex = {
+    padding: 0, margin: 0,
+    display: "flex",
+    justifyContent: "space-around", // NOTE stretch not supported in flex-box
+    alignContent: "stretch",
+    flexGrow: 1,
+    flexShrink: 1,
+} as const;
+
   const flexWeightAsCSS = weight == null ? {} : {flexGrow: weight, flexShrink: weight};
   return (
-    <div {...divProps}
+    <div 
+      className="WithBoundsRow"
+      {...divProps}
       style={{
         ...flexWeightAsCSS,
-        padding: 0, margin: 0, display:
-        "flex",
-        justifyContent: "space-around",
-        alignContent: "stretch",
-        flexGrow: 1,
-        flexShrink: 1,
+        ...edgelessFlex,
+        flexDirection: "row",
         ...aspectRatioStyle,
         ...style,
     }} ref={componentRef}>
-    { children(bounds) }
+      <div
+        className="WithBoundsColumn"
+        style={{
+        ...edgelessFlex,
+        flexDirection: "column",
+      }}>
+        { children(bounds) }
+       </div>
     </div>
   )
 });

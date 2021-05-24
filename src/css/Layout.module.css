@@ -3,9 +3,9 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  align-content: center;
+  justify-content: space-around;
+  align-items: stretch;
+  align-content: stretch;
 }
 
 .MarginsAroundForm {
@@ -50,7 +50,7 @@
   flex-shrink: 5;
   /* flex-basis: 100%; */
   justify-content: normal;
-  align-content: space-between;
+  align-content: space-around;
 }
 
 .PaddedStretchedColumn {

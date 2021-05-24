@@ -52,7 +52,7 @@ const previewState = new PreviewState();
 
 const Previews = observer ( () => (
   previewState.preview ?? (
-    <div style={{display: "flex", flexDirection: "column", justifyContent: "center"}}>
+    <div style={{display: "flex", flexDirection: "column", justifyContent: "space-around", alignContent: "space-around"}}>
       {getPreviewNames().map( name => (
         <button onClick={() => previewState.setName(name)}>{name}</button>
       ))}
