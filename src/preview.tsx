@@ -45,20 +45,20 @@ class PreviewState {
     this.name = name;
     window.history.pushState("", "", `?name=${name}`);
   });
-  get preview() { return getPreview(this.name)?.() };
+  get preview() { return getPreview(this.name) };
 }
 
 const previewState = new PreviewState();
 
-const Previews = observer ( () => (
-  previewState.preview ?? (
+const Previews = observer ( () =>
+  previewState.preview?.() ?? (
     <div style={{display: "flex", flexDirection: "column", justifyContent: "space-around", alignContent: "space-around"}}>
       {getPreviewNames().map( name => (
         <button onClick={() => previewState.setName(name)}>{name}</button>
       ))}
     </div>
   )
-));
+);
 
 window.addEventListener('load', () => {
   ReactDOM.render((

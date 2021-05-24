@@ -216,6 +216,8 @@ const diceKeyFromHumanReadableForm = (
  */
 export type DiceKeyFaces<F extends Face = Face> = ReadOnlyTupleOf25Items<F>;
 export type PartialDiceKey = ReadOnlyTupleOf25Items<Partial<Face>>
+
+export const EmptyPartialDiceKey = Array.from(Array(25).keys()).map( () => ({}) );
 /**
  * Construct a dice key either from a tuple of 25 ElementFace objects,
  * 25 indexes (which represent a element, face, and rotation), or from the
@@ -538,7 +540,7 @@ export class DiceKey {
     crypto.subtle.digest("SHA-256",  new TextEncoder().encode(this.toSeedString())).then( hash =>
       uint8ClampedArrayToHexString(new Uint8ClampedArray(hash.slice(0, 8)))).catch( e => { throw e } );
 
-      static testExample = new DiceKey(
+  static testExample = new DiceKey(
     [...Array(25).keys()].map( (i)  => ({
       letter: FaceLetters[i],
       digit: FaceDigits[i % 6],

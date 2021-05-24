@@ -1,9 +1,10 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { DiceKey } from "../../dicekeys/DiceKey";
+import { DiceKey, EmptyPartialDiceKey } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
-import {StickerSheetSizeModel} from "./StickerSheetView"
-import { Bounds } from "../../utilities/bounding-rects";
+import {portraitSheetWidthOverHeight, StickerSheetSizeModel} from "./StickerSheetView"
+import { Bounds, viewBox } from "../../utilities/bounding-rects";
+import { OptionalMaxSizeCalcProps, WithBounds } from "../../utilities/WithBounds";
 
 const FaceTargetPlaceholderSvgGroup = (props: {linearSizeOfFace: number} & React.SVGAttributes<SVGGElement>) => {
   const {linearSizeOfFace, ...otherProps} = props;
@@ -38,15 +39,15 @@ const FaceTargetPlaceholderSvgGroup = (props: {linearSizeOfFace: number} & React
   </g>)
 }
 
-type StickerTargetSheetViewProps = Bounds & {
-  diceKey: DiceKey;
+type StickerTargetSheetViewProps = {
+  diceKey?: DiceKey;
   indexOfLastFacePlaced?: number;
   highlightThisFace?: number;
   sizeModel?: StickerSheetSizeModel;
   transform?: string;
 }
 
-export const StickerTargetSheetSvgGroup = observer( (props: StickerTargetSheetViewProps) => {
+export const StickerTargetSheetSvgGroup = observer( (props: StickerTargetSheetViewProps & Bounds) => {
     const {
       diceKey,
       indexOfLastFacePlaced = -1,
@@ -66,7 +67,7 @@ export const StickerTargetSheetSvgGroup = observer( (props: StickerTargetSheetVi
           strokeWidth={sizeModel.linearSizeOfFace / 40}
         />
         {
-          diceKey.faces.map( (face, index) => (index > indexOfLastFacePlaced) ? (
+          (diceKey?.faces ?? EmptyPartialDiceKey).map( (face, index) => (diceKey == null || index > indexOfLastFacePlaced) ? (
             <FaceTargetPlaceholderSvgGroup key={index} linearSizeOfFace={sizeModel.linearSizeOfFace}
               transform={`translate(${
                 sizeModel.distanceBetweenDieCenters * (-2 + (index % 5)) }, ${
@@ -92,17 +93,18 @@ export const StickerTargetSheetSvgGroup = observer( (props: StickerTargetSheetVi
     );
 });
 
-export const StickerTargetSheetView = observer( (props: StickerTargetSheetViewProps) => {
-    const sizeModel = StickerSheetSizeModel.fromBounds(props);
-    const viewBox = `${sizeModel.left} ${sizeModel.top} ${sizeModel.width} ${sizeModel.height}`
-    return (
-      <svg viewBox={viewBox}>
-        <StickerTargetSheetSvgGroup {...{...props, sizeModel}} />
-      </svg>
-    )    
-});
+export const StickerTargetSheetView = observer( ({maxWidth, maxHeight, ...props}: StickerTargetSheetViewProps & OptionalMaxSizeCalcProps) => (
+  <WithBounds aspectRatioWidthOverHeight={portraitSheetWidthOverHeight} {...{maxWidth, maxHeight}}>{ bounds => {
+  const sizeModel = StickerSheetSizeModel.fromBounds(bounds);
+  return (
+    <svg viewBox={viewBox(bounds)}>
+    <StickerTargetSheetSvgGroup {...{...props, ...sizeModel.bounds}} />
+    </svg>
+  )}}
+  </WithBounds>
+));
 
 
 export const Preview_StickerTargetSheetView = () => (
-  <StickerTargetSheetView diceKey={DiceKey.testExample} height={500} width={500} indexOfLastFacePlaced={12} />
+  <StickerTargetSheetView diceKey={DiceKey.testExample} maxHeight="50vh" maxWidth="50vw" indexOfLastFacePlaced={12} />
 )

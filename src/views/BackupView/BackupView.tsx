@@ -9,10 +9,13 @@ import { Instruction } from "../basics";
 import { addPreview } from "../basics/Previews";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupState, ValidateBackupView } from "./ValidateBackup";
+import { StickerSheetView } from "../SVG/StickerSheetView";
+import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
+import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 
 enum Step {
   SelectBackupMedium = 1,
-//  Introduction, FIXME
+  Introduction,
   FirstFace,
   LastFace = FirstFace + 24,
   Validate,
@@ -73,6 +76,36 @@ const commonButtonStyle: React.CSSProperties = {
   border: "none"
 }
 
+const IntroToBackingUpToADiceKeyView = () => (<>
+  <div>
+    <Instruction>Open your DiceKey kit and take out the box bottom and the 25 dice.</Instruction>
+    <div style={{display: "flex", flexDirection: "row", justifyContent: "center", marginTop: "2rem", marginBottom: "2rem"}}>
+      <div style={{display: "flex", flexDirection: "column", alignItems: "center", marginRight: "2vw"}}>
+        <DiceKeyViewAutoSized maxHeight="40vh" maxWidth="35vw" />
+      </div>
+    </div>
+    <Instruction>Next, you will replicate the first DiceKey by copying the arrangement of dice.</Instruction>
+    <div style={{marginTop: "3rem"}}>Need another DiceKey?  You can <a href="https://dicekeys.com/store">order more</a>.</div>
+  </div>
+</>)
+const IntroToBackingUpToASticKeyView = () => (
+  <div>
+    <Instruction>Unwrap your SticKeys it.</Instruction>
+    <div style={{display: "flex", flexDirection: "row", justifyContent: "center", marginTop: "2rem", marginBottom: "2rem"}}>
+      <div style={{display: "flex", flexDirection: "column", alignItems: "center", marginRight: "2vw"}}>
+        <StickerSheetView maxHeight="40vh" maxWidth="35vw" />
+        5 sticker sheets
+      </div>
+      <div style={{display: "flex", flexDirection: "column", alignItems: "center", marginLeft: "2vw"}}>
+        <StickerTargetSheetView maxHeight="40vh" maxWidth="35vw" />
+        1 target sheet
+      </div>
+    </div>
+    <Instruction>Next, you will create a copy of your DiceKey on the target sheet by placing stickers.</Instruction>
+    <div style={{marginTop: "3rem"}}>Out of SticKeys?  You can <a href="https://dicekeys.com/store">order more</a>.</div>
+  </div>
+);
+
 const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, index: number, medium: BackupMedium}) => {
   const sheetIndex = FaceLetters.indexOf(face.letter) % 5;
   const firstLetterOnSheet = FaceLetters[sheetIndex * 5];
@@ -115,7 +148,7 @@ const StepSelectBackupMedium = observer (({state}: {state: BackupState}) => (
   [BackupMedium.SticKey, BackupMedium.DiceKey].map( medium => (
       <button key={medium}
         style={{...commonButtonStyle, marginBottom: "1vh"}}
-        onClick={state.setBackupMedium(BackupMedium.SticKey)}
+        onClick={state.setBackupMedium(medium)}
       >
         <FaceCopyingView medium={medium} diceKey={state.diceKeyState.diceKey} showArrow={true} indexOfLastFacePlaced={12} 
           maxWidth="60vw" maxHeight="30vh"
@@ -130,6 +163,7 @@ const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
   const faceIndex = step - Step.FirstFace;
   switch (step) {
     case Step.SelectBackupMedium: return (<StepSelectBackupMedium {...props} />);
+    case Step.Introduction: return backupMedium === BackupMedium.DiceKey ? (<IntroToBackingUpToADiceKeyView/>):(<IntroToBackingUpToASticKeyView/>)
     case Step.Validate: return validateBackupState == null ? null : (
         <ValidateBackupView state={validateBackupState} />
       )
@@ -161,6 +195,14 @@ export const BackupView = observer ( ({state}: BackupViewProps) => (
       />
     )}
   </div>));
+
+
+
+
+
+
+
+
 
 class PreviewDiceKeyState {
   constructor(public diceKey: DiceKey) {

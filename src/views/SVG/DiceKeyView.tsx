@@ -1,7 +1,7 @@
 import css from "./dicekey-view.module.css"
 import React from "react";
 import { observer } from "mobx-react";
-import { PartialDiceKey } from "../../dicekeys/DiceKey";
+import { EmptyPartialDiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
 import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox, viewBox } from "../../utilities/bounding-rects";
 import { WithBounds, OptionalAspectRatioProps } from "../../utilities/WithBounds";
@@ -52,7 +52,7 @@ export class DiceKeySizeModel {
 }
 
 type DiceKeySvgGroupProps = {
-  faces: PartialDiceKey,
+  faces?: PartialDiceKey,
 } & Bounds & DiceKeyRenderOptions & React.SVGAttributes<SVGGElement>
 
 
@@ -90,11 +90,12 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
           fill={diceBoxColor}
         />
         {
-          faces.map( (face, index) => (
+          (faces ?? EmptyPartialDiceKey).map( (face, index) => (
             <FaceGroupView
               {...(onFaceClicked ? ({onFaceClicked: () => onFaceClicked(index) }) : {})}
               key={index}
               face={face}
+              backgroundColor={((!("letter" in face))&&(!("digit" in face))) ? "rgba(96,123,202,1)" : undefined}
               linearSizeOfFace={sizeModel.linearSizeOfFace}
               center={{
                 x: sizeModel.distanceBetweenDieCenters * (-2 + (index % 5)),
@@ -116,7 +117,7 @@ export const DiceKeyViewFixedSize = observer( (props: {faces: PartialDiceKey} & 
 
 export const DiceKeyViewAutoSized = observer( (
   {faces, aspectRatioWidthOverHeight, maxWidth, maxHeight, ...props}:
-    {faces: PartialDiceKey} & OptionalAspectRatioProps & DiceKeyRenderOptions & {style?: React.CSSProperties}
+    {faces?: PartialDiceKey} & OptionalAspectRatioProps & DiceKeyRenderOptions & {style?: React.CSSProperties}
 ) => (
       <WithBounds {...{...props, aspectRatioWidthOverHeight, maxWidth, maxHeight}}>{(bounds) => (
         <svg viewBox={viewBox(bounds)}>

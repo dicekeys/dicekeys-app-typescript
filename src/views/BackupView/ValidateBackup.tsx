@@ -24,10 +24,10 @@ export class ValidateBackupState {
   setDiceKeyScannedFromBackup = action( (diceKey?: DiceKey) => {
     this.diceKeyScannedFromBackup = diceKey;
   });
-  onScanned = action( (diceKey?: DiceKey) => {
+  onScanned = action( (diceKey: DiceKey) => {
     if (this.scanning === "backup") {
       this.setDiceKeyScannedFromBackup(diceKey);
-    } else if (this.scanning === "original" && diceKey != null) {
+    } else if (this.scanning === "original") {
       this.diceKeyState.setDiceKey(diceKey)
     }
     this.stopScanning();
@@ -100,7 +100,6 @@ export const ValidateBackupView  = observer ( ({state}: {state: ValidateBackupSt
         </div>
         <div style={{display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems:"center", marginLeft: "1rem"}} >
           <DiceKeyViewAutoSized faces={diceKeyScannedFromBackupAtRotationWithFewestErrors?.faces ?? [] as unknown as PartialDiceKey }
-            // style={{width: "calc(min(40vh, 30vw)", height: "calc(min(40vh, 30vw)"}}
             aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
             highlightFaceAtIndex={errorFaceIndex}
           />
@@ -116,7 +115,7 @@ export const ValidateBackupView  = observer ( ({state}: {state: ValidateBackupSt
       }}>
         { backupScannedSuccessfully ? (<>Well done.The backup matches the original.</>) : null }
         { (differencesBetweenOriginalAndBackup?.errors.length ?? 0) <= 5 ? null :
-            (<>The backup doesn't look anything like the original.<br/></>)
+            (<div style={{display: "block"}}>The backup doesn't look anything like the original.<br/></div>)
         }{ (errorFaceIndex == null || causeOfError == null) ? null :
             (<>Mismatch of&nbsp;<i><AndClause items={causeOfError} /></i> &nbsp;at the {state.errorRowName} row, {state.errorColumnName} column.</>)
         }

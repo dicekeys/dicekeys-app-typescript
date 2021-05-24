@@ -1,3 +1,3 @@
 export const isRunningInPreviewMode = () => {
-  return window.location.hostname==="localhost" && window.location.search.startsWith("?component");
+  return window.location.hostname==="localhost" && window.location.search.startsWith("?name");
 }

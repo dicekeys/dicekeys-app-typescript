@@ -150,7 +150,7 @@ export const FaceGroupView = observer( ({
     highlightThisFace = false,
     stroke, strokeWidth,
     transform,
-    transparentBackground,
+    backgroundColor,
     linearSizeOfFace = 1,
     linearFractionOfCoverage = 5/8,
     onFaceClicked,
@@ -172,7 +172,7 @@ export const FaceGroupView = observer( ({
         x={-linearSizeOfFace/2} y={-linearSizeOfFace/2}
         width={linearSizeOfFace} height={linearSizeOfFace}
         rx={radius} ry={radius}
-        fill={highlightThisFace ? dieSurfaceColorHighlighted : transparentBackground ? "none"  : dieSurfaceColor}
+        fill={highlightThisFace ? dieSurfaceColorHighlighted : backgroundColor ?? dieSurfaceColor}
         {...{stroke, strokeWidth}}
       />
 
@@ -186,7 +186,7 @@ export const FaceGroupView = observer( ({
 interface FaceViewProps {
   face: Partial<Face>;
   highlightThisFace?: boolean;
-  transparentBackground?: boolean;
+  backgroundColor?: string;
   stroke?: string;
   strokeWidth?: string | number;
   onFaceClicked?: () => any;

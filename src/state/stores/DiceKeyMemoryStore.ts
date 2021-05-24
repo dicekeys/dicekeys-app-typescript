@@ -1,7 +1,7 @@
 import {
   DiceKey
 } from "../../dicekeys/DiceKey";
-import { action, makeAutoObservable } from "mobx";
+import { action, makeAutoObservable, observable } from "mobx";
 import { autoSaveEncrypted } from "../core/AutoSave";
 import { AllAppWindowsAndTabsAreClosingEvent } from "../core/AllAppWindowsAndTabsAreClosingEvent";
 
@@ -10,7 +10,8 @@ export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
 
   addDiceKeyForKeyId = action ( (keyId: string, diceKey: DiceKey) => {
     // console.log(`addDiceKeyForKeyId(${keyId}) ${diceKey}`);
-    this.diceKeysByKeyId[keyId] = diceKey;
+    if (!(keyId in this.diceKeyForKeyId))
+      this.diceKeysByKeyId[keyId] = diceKey;
   });
 
   addDiceKey = async (diceKey: DiceKey) =>

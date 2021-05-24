@@ -4,6 +4,7 @@ import { Face } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
 import { FaceDigit, FaceDigits, FaceIdentifiers, FaceLetter, FaceLetters } from "@dicekeys/read-dicekey-js";
 import { fitRectangleWithAspectRatioIntoABoundingBox, Bounds, viewBox } from "../../utilities/bounding-rects";
+import { OptionalMaxSizeCalcProps, WithBounds } from "../../utilities/WithBounds";
 
 
 const distanceBetweenFacesAsFractionOfLinearSizeOfFace = 1/4;
@@ -31,7 +32,7 @@ export class StickerSheetSizeModel {
     );
 }
 
-type StickerSheetViewProps = Bounds & {
+type StickerSheetViewProps = {
   showLetter?: FaceLetter;
   highlightFaceWithDigit?: FaceDigit;
   hideFaces?: FaceIdentifiers[];
@@ -39,7 +40,7 @@ type StickerSheetViewProps = Bounds & {
 
 const lettersPerStickySheet = 5;
 
-export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & React.SVGAttributes<SVGGElement>) => {
+export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & Bounds & React.SVGAttributes<SVGGElement>) => {
     const {
       showLetter = "A",
       highlightFaceWithDigit,
@@ -92,14 +93,16 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & Re
     );
 });
 
-export const StickerSheetView = observer( (props: StickerSheetViewProps) => {
-    const sizeModel = StickerSheetSizeModel.fromBounds(props);
+export const StickerSheetView = observer( ({maxWidth, maxHeight, ...props}: StickerSheetViewProps & OptionalMaxSizeCalcProps) => (
+    <WithBounds aspectRatioWidthOverHeight={portraitSheetWidthOverHeight} {...{maxWidth, maxHeight}}>{ bounds => {
+    const sizeModel = StickerSheetSizeModel.fromBounds(bounds);
     return (
-      <svg viewBox={viewBox(props)}>
-        <StickerSheetSvgGroup {...{...props, sizeModel}} />
+      <svg viewBox={viewBox(bounds)}>
+      <StickerSheetSvgGroup {...{...props, ...sizeModel.bounds}} showLetter="A" />
       </svg>
-    )    
-});
+    )}}
+    </WithBounds>
+));
 
 
 export const Preview_StickerSheetView = () => (

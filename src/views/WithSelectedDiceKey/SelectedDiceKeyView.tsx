@@ -13,6 +13,7 @@ import { Navigation } from "../../state";
 import { SeedHardwareKeyView, SeedHardwareKeyViewState } from "./SeedHardwareKeyView";
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 import { BackupState, BackupView } from "../BackupView/BackupView";
+import { makeAutoObservable, runInAction } from "mobx";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 // const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
@@ -78,17 +79,20 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
 });
 
 
-export const Preview_SelectedDiceKeyView = () => {
-  const [navigationState, setNavigationState] = useState<Navigation.SelectedDiceKeyViewState | undefined>();
-  useEffect( () => {
-    if (!navigationState) {
-      Navigation.SelectedDiceKeyViewState.create(
-        () => alert("Back off man, I'm a scientist!"),
-        DiceKey.testExample
-      ).then( navState => setNavigationState(navState) )
-    }})
+const previewProps = new (class PreviewState {
+  navigationState?: Navigation.SelectedDiceKeyViewState = undefined;
+  constructor() {
+    makeAutoObservable(this);
+    Navigation.SelectedDiceKeyViewState.create(
+      () => alert("Back off man, I'm a scientist!"),
+      DiceKey.testExample
+    ).then( navState => runInAction(() => this.navigationState = navState) )  
+  }
+})()
+export const Preview_SelectedDiceKeyView = observer ( () => {
+  const {navigationState} = previewProps;
   if (navigationState == null) return null;
   return (
-    <SelectedDiceKeyView navigationState={navigationState} />
+    <SelectedDiceKeyView {...{navigationState}} />
   );
-};
+});
