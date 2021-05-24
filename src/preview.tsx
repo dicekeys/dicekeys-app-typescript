@@ -15,6 +15,13 @@ import { getPreview, addPreview, addCenteredPreview, getPreviewNames } from "./v
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 
+import {AppTopLevelRoutingView} from "./views/AppTopLevelRoutingView";
+
+// To make sure everything is loaded, load the view for the app even if we're not using it.
+if (!AppTopLevelRoutingView) {
+  console.log("Failed to load the app top level view.")
+}
+
 const ApplicationErrorState = new ErrorState();
 
 addCenteredPreview("AssemblyInstructions", () => ( <Preview_AssemblyInstructions/> ));
@@ -30,11 +37,14 @@ addPreview("FaceCopying", () => ( <Preview_FaceCopyingView />));
 
 class PreviewState {
   constructor (public name: string | undefined =
-    (new URL(window.location.href).searchParams.get("component") ?? undefined)
+    (new URL(window.location.href).searchParams.get("name") ?? undefined)
   ) {
     makeAutoObservable(this);
   }
-  setName = action( (name: string) => this.name = name );
+  setName = action( (name: string) => {
+    this.name = name;
+    window.history.pushState("", "", `?name=${name}`);
+  });
   get preview() { return getPreview(this.name)?.() };
 }
 
