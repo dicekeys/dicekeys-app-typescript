@@ -4,18 +4,24 @@
 
 Tested to work with Node.js LTS v14.
 
+Install [TypeScript](https://www.typescriptlang.org/download) in your system.
+```
+npm install -g typescript
+```
+
 Install [Parcel](https://parceljs.org/) in your system.
 ```
 npm install -g parcel-bundler
 ```
 
 Make sure you have access to [GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-with-a-personal-access-token).
-(adding you personal toke)
+(add you personal token to ~/.npmrc)
 
 Install modules
 ```
 npm install
 ```
+_If `npm` fails, check **GitHub Packages** instructions._
 
 ## Running
 ```
