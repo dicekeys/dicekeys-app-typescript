@@ -1,6 +1,6 @@
 import css from "./selected-dicekey-view.module.css";
 import {NavigationBars} from "../../css"
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { observer  } from "mobx-react";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";

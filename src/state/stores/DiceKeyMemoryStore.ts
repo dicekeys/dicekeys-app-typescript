@@ -1,7 +1,7 @@
 import {
   DiceKey
 } from "../../dicekeys/DiceKey";
-import { action, makeAutoObservable, observable } from "mobx";
+import { action, makeAutoObservable } from "mobx";
 import { autoSaveEncrypted } from "../core/AutoSave";
 import { AllAppWindowsAndTabsAreClosingEvent } from "../core/AllAppWindowsAndTabsAreClosingEvent";
 
