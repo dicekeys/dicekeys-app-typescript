@@ -9,6 +9,7 @@ import {
   UndoverlineCodes, getUndoverlineCodes,
   FaceDimensionsFractional
 } from "@dicekeys/read-dicekey-js";
+import { OptionalAspectRatioProps, WithBounds } from "../../utilities/WithBounds";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
@@ -79,7 +80,7 @@ const UndoverlineGroupView = ({lineType, code}: { lineType: "underline" | "overl
       }
     </g>
   );
-};
+}
 
 const UnderlineGroupView = ({code}: { code: number | undefined }) => (
   <UndoverlineGroupView lineType={"underline"} code={code} />
@@ -100,7 +101,7 @@ const OverlineGroupView = ({code}: { code: number | undefined }) => (
  * 
  * @param face 
  */
-const UnitFaceGroupView = observer( ({face, ...svgGroupProps}: {face: Partial<Face>} & React.SVGAttributes<SVGGElement>,) => {
+const UnitFaceGroupView = observer ( ({face, ...svgGroupProps}: {face: Partial<Face>} & React.SVGAttributes<SVGGElement>,) => {
   const {letter, digit} = face;
   const {underlineCode, overlineCode} = letter && digit ?
     getUndoverlineCodes({letter, digit}) :
@@ -126,6 +127,13 @@ const UnitFaceGroupView = observer( ({face, ...svgGroupProps}: {face: Partial<Fa
   );
 });
 
+interface FaceGroupViewProps extends FaceViewProps {
+  center?: Point;
+  linearSizeOfFace: number;
+  linearFractionOfCoverage?: number;
+  transform?: string;
+}
+
 /**
  * Render a face including the white background of the die.
  * 
@@ -141,20 +149,13 @@ export const FaceGroupView = observer( ({
     center = {x: 0, y: 0},
     highlightThisFace = false,
     stroke, strokeWidth,
+    transform,
     transparentBackground,
     linearSizeOfFace = 1,
     linearFractionOfCoverage = 5/8,
     onFaceClicked,
     ...svgGroupProps
-  } : {
-    onFaceClicked?: () => any,
-    face: Partial<Face>,
-    center?: Point,
-    highlightThisFace?: boolean,
-    transparentBackground?: boolean,
-    linearSizeOfFace: number,
-    linearFractionOfCoverage?: number,
-  } & React.SVGAttributes<SVGGElement> ) => {
+  } : FaceGroupViewProps ) => { /*  & React.SVGAttributes<SVGGElement> */
   const radius = linearSizeOfFace / 12;
   const clockwiseAngle = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTrbl || "?");
   const optionalOnClickHandler = onFaceClicked ? {onClick: ((e: React.MouseEvent) => {
@@ -162,7 +163,7 @@ export const FaceGroupView = observer( ({
     e.preventDefault();
   })} : {};
   return (
-    <g transform={center ? `translate(${center.x}, ${center.y})` : undefined}
+    <g transform={center ? `translate(${center.x}, ${center.y})` : transform}
         {...svgGroupProps}
         {...optionalOnClickHandler}
         style={!!onFaceClicked ? {cursor: "pointer"} : {}}
@@ -181,3 +182,29 @@ export const FaceGroupView = observer( ({
     </g>
   )
 });
+
+interface FaceViewProps {
+  face: Partial<Face>;
+  highlightThisFace?: boolean;
+  transparentBackground?: boolean;
+  stroke?: string;
+  strokeWidth?: string | number;
+  onFaceClicked?: () => any;
+  style?: React.CSSProperties;
+  className?: string;
+}
+export const FaceView = observer( ({
+    style, className,
+    aspectRatioWidthOverHeight, maxWidth, maxHeight,
+    ...props
+  }: FaceViewProps & OptionalAspectRatioProps) => (
+      <WithBounds {...{aspectRatioWidthOverHeight, maxWidth, maxHeight,className,style}}>{ (bounds) => {
+        const linearSizeOfFace = Math.min(bounds.height, bounds.width);
+        const center = {x: linearSizeOfFace/2, y: linearSizeOfFace/2};
+        return(
+        <svg>
+          <FaceGroupView {...{...props, linearSizeOfFace, center}} />
+        </svg>
+      )}}</WithBounds>
+    )
+    );

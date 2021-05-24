@@ -4,6 +4,7 @@ import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import { ScanDiceKeyView } from "../LoadingDiceKeys/ScanDiceKeyView";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
+import { FaceView } from "../SVG/FaceView";
 
 export interface ModifiableDiceKeyState {
   diceKey: DiceKey;
@@ -37,6 +38,26 @@ export class ValidateBackupState {
   get diceKeyScannedFromBackupAtRotationWithFewestErrors() {
     return this.differencesBetweenOriginalAndBackup?.otherDiceKeyRotated
   }
+
+  _errorIndex?: number;
+  get errorIndex(): number | undefined {
+    const differences = this.differencesBetweenOriginalAndBackup;
+    const numDifferences = differences?.errors.length ?? 0;
+    if (numDifferences === 0) return;
+    const index = this._errorIndex;
+    return index == null ? 0 :
+      index < 0 ? 0 :
+      index > numDifferences - 1 ? numDifferences - 1 :
+      index;
+  }
+  setErrorIndex = action( (errorIndex: number) => this._errorIndex = errorIndex );
+  get error() {
+    return this.errorIndex == null ? undefined : this.differencesBetweenOriginalAndBackup?.errors[this.errorIndex]
+  }
+  get errorFaceIndex() { return this.error?.index }
+  get errorOriginalFace() { return this.diceKeyState.diceKey.faces[this.errorFaceIndex ?? 0]}
+  get errorBackupFace() { return this.differencesBetweenOriginalAndBackup?.otherDiceKeyRotated.faces[this.errorFaceIndex ?? 0]; }
+ 
 }
 
 export const ValidateBackupView  = observer ( ({state}: {state: ValidateBackupState}) => {
@@ -45,6 +66,9 @@ export const ValidateBackupView  = observer ( ({state}: {state: ValidateBackupSt
     backupScannedSuccessfully,
     diceKeyScannedFromBackupAtRotationWithFewestErrors,
     differencesBetweenOriginalAndBackup,
+    errorBackupFace,
+    errorOriginalFace,
+    errorFaceIndex
   } = state;
   if (state.scanning) {
     return (<>
@@ -62,10 +86,16 @@ export const ValidateBackupView  = observer ( ({state}: {state: ValidateBackupSt
           aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
         />
       </div>
+      { errorFaceIndex == null || errorBackupFace == null || errorOriginalFace == null ? null : (
+        <div>
+          <FaceView face={errorOriginalFace} maxHeight="10vh" maxWidth="10vw"  />
+          <FaceView face={errorBackupFace} maxHeight="10vh" maxWidth="10vw"  />
+        </div>
+      )}
       { backupScannedSuccessfully ? (<>Success!</>) :
         (differencesBetweenOriginalAndBackup?.errors.length ?? 0) > 5 ?
           (<>The backup doesn't look anything like the original.</>) :
-          (<>First error at { differencesBetweenOriginalAndBackup?.errors[0].index }</>)
+          (<>First error at { errorFaceIndex }</>)
       }
 
       <button onClick={state.startScanningOriginal}>Re-scan your original DiceKey</button>  
