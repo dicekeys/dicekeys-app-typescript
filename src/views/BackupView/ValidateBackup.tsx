@@ -7,7 +7,7 @@ import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 import { AndClause } from "../basics";
 
 export interface ModifiableDiceKeyState {
-  diceKey: DiceKey;
+  diceKey?: DiceKey;
   setDiceKey: (diceKey?: DiceKey) => any
 }
 
@@ -33,7 +33,7 @@ export class ValidateBackupState {
     this.stopScanning();
   })
 
-  get differencesBetweenOriginalAndBackup() { return this.diceKeyScannedFromBackup ? this.diceKeyState.diceKey.compareTo(this.diceKeyScannedFromBackup) : undefined }
+  get differencesBetweenOriginalAndBackup() { return this.diceKeyScannedFromBackup ? this.diceKeyState.diceKey?.compareTo(this.diceKeyScannedFromBackup) : undefined }
   get backupScannedSuccessfully() { return this.diceKeyScannedFromBackup && this.differencesBetweenOriginalAndBackup?.errors.length === 0 }
   get diceKeyScannedFromBackupAtRotationWithFewestErrors() {
     return this.differencesBetweenOriginalAndBackup?.otherDiceKeyRotated
@@ -69,7 +69,7 @@ export class ValidateBackupState {
   get errorColumnIndex() { return (this.errorFaceIndex ?? 0) % 5 }
   get errorRowName() { return ["top", "second", "third", "fourth", "bottom"][this.errorRowIndex] }
   get errorColumnName() { return ["leftmost", "second", "third", "fourth", "rightmost"][this.errorColumnIndex]  }
-  get errorOriginalFace() { return this.diceKeyState.diceKey.faces[this.errorFaceIndex ?? 0]}
+  get errorOriginalFace() { return this.diceKeyState.diceKey?.faces[this.errorFaceIndex ?? 0]}
   get errorBackupFace() { return this.differencesBetweenOriginalAndBackup?.otherDiceKeyRotated.faces[this.errorFaceIndex ?? 0]; }
  
 }
@@ -92,7 +92,7 @@ export const ValidateBackupView  = observer ( ({state}: {state: ValidateBackupSt
     return (<>
       <div style={{display: "flex", flexDirection: "row", justifyContent: "center"}}>
         <div style={{display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems:"center", marginRight: "1rem"}} >
-          <DiceKeyViewAutoSized faces={diceKeyState.diceKey.faces}
+          <DiceKeyViewAutoSized faces={diceKeyState.diceKey?.faces}
             aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
             highlightFaceAtIndex={errorFaceIndex}
             />

@@ -13,7 +13,7 @@ import { StickerSheetView } from "../SVG/StickerSheetView";
 import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 
-enum Step {
+enum BackupStep {
   SelectBackupMedium = 1,
   Introduction,
   FirstFace,
@@ -23,26 +23,25 @@ enum Step {
   START_INCLUSIVE = 1,
 }
 
-const validStepOrUndefined = (step: number): Step | undefined =>
-  (step >= Step.START_INCLUSIVE && step < Step.END_EXCLUSIVE) ? step : undefined;
+const validStepOrUndefined = (step: number): BackupStep | undefined =>
+  (step >= BackupStep.START_INCLUSIVE && step < BackupStep.END_EXCLUSIVE) ? step : undefined;
 
 interface SettableDiceKeyState {
-  diceKey: DiceKey, setDiceKey:
-  (diceKey?: DiceKey) => any;
+  diceKey?: DiceKey,
+  setDiceKey: (diceKey?: DiceKey) => any;
 }
 
-// FIXME -- hide faces that have already been removed.
 export class BackupState {
   backupMedium?: BackupMedium;
   validateBackupState?: ValidateBackupState;
 
   setBackupMedium = (newMedium: BackupMedium) => action ( () => {
     this.backupMedium = newMedium;
-    this.step = Step.SelectBackupMedium + 1;
+    this.step = BackupStep.SelectBackupMedium + 1;
   });
-  step: Step;
-    setStep = action ( (step: Step) => {
-    if (step === Step.Validate) {
+  step: BackupStep;
+    setStep = action ( (step: BackupStep) => {
+    if (step === BackupStep.Validate) {
       // If moving to the validation step, and if we had tried scanning a key to validate before,
       // clear what we scanned
       this.validateBackupState = new ValidateBackupState(this.diceKeyState);
@@ -54,7 +53,10 @@ export class BackupState {
   userChoseToAllowSkipScanningStep: boolean = false;
   userChoseToAllowSkippingBackupStep: boolean = false;
 
-  constructor(public readonly diceKeyState: SettableDiceKeyState, step: Step = Step.START_INCLUSIVE) {
+  constructor(
+    public readonly diceKeyState: SettableDiceKeyState,
+    step: BackupStep = BackupStep.START_INCLUSIVE
+  ) {
     this.step = step;
     makeAutoObservable(this);
   }
@@ -157,22 +159,24 @@ const StepSelectBackupMedium = observer (({state}: {state: BackupState}) => (
       </button>
     ))}</div>));
 
-const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
+export const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
   const {step, backupMedium, diceKeyState, validateBackupState} = props.state;
   const {diceKey} = diceKeyState;
-  const faceIndex = step - Step.FirstFace;
+  const faceIndex = step - BackupStep.FirstFace;
   switch (step) {
-    case Step.SelectBackupMedium: return (<StepSelectBackupMedium {...props} />);
-    case Step.Introduction: return backupMedium === BackupMedium.DiceKey ? (<IntroToBackingUpToADiceKeyView/>):(<IntroToBackingUpToASticKeyView/>)
-    case Step.Validate: return validateBackupState == null ? null : (
+    case BackupStep.SelectBackupMedium: return (<StepSelectBackupMedium {...props} />);
+    case BackupStep.Introduction: return backupMedium === BackupMedium.DiceKey ? (<IntroToBackingUpToADiceKeyView/>):(<IntroToBackingUpToASticKeyView/>)
+    case BackupStep.Validate: return validateBackupState == null ? null : (
         <ValidateBackupView state={validateBackupState} />
       )
-    default: return (backupMedium == null || step < Step.FirstFace || step > Step.LastFace) ? (<></>) : (
+    default: return (backupMedium == null || step < BackupStep.FirstFace || step > BackupStep.LastFace) ? (<></>) : (
       <>
         <FaceCopyingView medium={backupMedium} diceKey={diceKey} indexOfLastFacePlaced={faceIndex}
            maxWidth="80vw" maxHeight="60vh"
         />
-        <CopyFaceInstructionView medium={backupMedium} face={diceKey.faces[faceIndex]} index={faceIndex} />
+        { diceKey == null ? null : (
+          <CopyFaceInstructionView medium={backupMedium} face={diceKey.faces[faceIndex]} index={faceIndex} />
+        )}
       </>
     );
   }
@@ -180,20 +184,28 @@ const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
 
 interface BackupViewProps {
   state: BackupState;
-//  onComplete: () => any;
+  prevStepBeforeStart?: () => any;
+  nextStepAfterEnd?: () => any;
 }
-export const BackupView = observer ( ({state}: BackupViewProps) => (
+export const BackupView = observer ( ({state, prevStepBeforeStart, nextStepAfterEnd}: BackupViewProps) => (
   <div className="BackupViewTop" style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "space-around", alignContent: "stretch", alignItems: "center" }}>
     <BackupStepSwitchView state={state} />
-    { state.backupMedium == null ? (<></>) : (
-      <StepFooterView 
-        setStep={state.setStep}
-        pprev={state.step > Step.FirstFace + 1 ? Step.FirstFace : undefined}
-        prev={state.stepMinus1}
-        next={state.stepPlus1}
-        nnext={state.step >= Step.FirstFace && state.step < Step.LastFace - 1 ? Step.Validate : undefined}  
-      />
-    )}
+    <StepFooterView 
+      setStep={state.setStep}
+      pprev={state.step > BackupStep.FirstFace + 1 ? BackupStep.FirstFace : undefined}
+      prev={
+        // If at the start, allow a parent to set a previous step (for embedding backup into assembly instructions)
+        state.step === BackupStep.START_INCLUSIVE ? prevStepBeforeStart :
+        state.stepMinus1
+      }
+      next={
+        // If at the end, allow a parent to set a next step (for embedding backup into assembly instructions)
+        state.step === (BackupStep.END_EXCLUSIVE-1) ? nextStepAfterEnd :
+        // Don't show next when selecting a backup medium
+        state.step === BackupStep.SelectBackupMedium ? undefined :
+        state.stepPlus1}
+      nnext={state.step >= BackupStep.FirstFace && state.step < BackupStep.LastFace - 1 ? BackupStep.Validate : undefined}  
+  />
   </div>));
 
 
@@ -214,7 +226,7 @@ class PreviewDiceKeyState {
   })
 }
 addPreview("Backup", () => ( 
-  <BackupView state={new BackupState(new PreviewDiceKeyState(DiceKey.testExample), Step.SelectBackupMedium)} />
+  <BackupView state={new BackupState(new PreviewDiceKeyState(DiceKey.testExample), BackupStep.SelectBackupMedium)} />
 ));
 addPreview("Backup1Error", () => {
   const diceKeyState = new PreviewDiceKeyState(DiceKey.testExample);
@@ -227,7 +239,7 @@ addPreview("Backup1Error", () => {
       }
     }
   ));
-  state.setStep(Step.Validate);
+  state.setStep(BackupStep.Validate);
   state.validateBackupState?.setDiceKeyScannedFromBackup(diceKeyWithErrors)
   return ( 
   <BackupView state={state} />
@@ -251,7 +263,7 @@ addPreview("BackupShowErrors", () => {
       }
     }
   ));
-  state.setStep(Step.Validate);
+  state.setStep(BackupStep.Validate);
   state.validateBackupState?.setDiceKeyScannedFromBackup(diceKeyWithErrors)
   return ( 
   <BackupView state={state} />

@@ -14,6 +14,7 @@ import SealBox from /*url:*/"../images/Seal Box.svg";
 import { DiceKeyViewAutoSized } from "./SVG/DiceKeyView";
 import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
 import { Spacer, ResizableImage, Instruction } from "./basics/";
+import { BackupState, BackupView } from "./BackupView";
 
 enum Step {
   Randomize = 1,
@@ -30,15 +31,23 @@ enum Step {
 const validStepOrUndefined = (step: number): Step | undefined =>
   (step >= Step.START_INCLUSIVE && step < Step.END_EXCLUSIVE) ? step : undefined;
 
+const Center = ({children}: React.PropsWithChildren<{}>) => (
+  <div style={{display: "flex", flexDirection: "row", justifyContent:"center"}}>
+    {children}
+  </div>
+)
+
 
 export class AssemblyInstructionsState {
-  diceKeyScanned?: DiceKey;
-  setDiceKeyScanned = action ( (diceKey?: DiceKey) => {
-    this.diceKeyScanned = diceKey;
+  diceKey?: DiceKey;
+  setDiceKey = action ( (diceKey?: DiceKey) => {
+    this.diceKey = diceKey;
   })
   backupScanned?: DiceKey;
   step: Step;
-  setStep = action ( (step: Step) => this.step = step );
+  setStep = action ( (step?: Step) => { if (step != null) { this.step = step } } );
+  get goToNextStep() { const {stepPlus1} = this; return stepPlus1 == null ? undefined : () => this.setStep(stepPlus1) };
+  get goToPrevStep() { const {stepMinus1} = this; return stepMinus1 == null ? undefined : () => this.setStep(stepMinus1) };
   get stepPlus1() { return validStepOrUndefined(this.step+1) }
   get stepMinus1() { return validStepOrUndefined(this.step-1) }
   userChoseToAllowSkipScanningStep: boolean = false;
@@ -54,7 +63,9 @@ const StepRandomizeView = () => (
   <>
     <Instruction>Shake the dice in the felt bag or in your hands.</Instruction>
     <Spacer/>
-    <ResizableImage src={IllustrationOfShakingBag} alt="A bag of dice being shaken"/>
+    <Center>
+      <ResizableImage src={IllustrationOfShakingBag} alt="A bag of dice being shaken"/>
+    </Center>
   </>
 );
 
@@ -62,7 +73,9 @@ const StepDropDiceView = () => (
   <>
   <Instruction>Let the dice fall randomly.</Instruction>
   <Spacer/>
-  <ResizableImage src={BoxBottomAfterRoll} alt="The box bottom with dice randomly placed into it."/>
+  <Center>
+    <ResizableImage src={BoxBottomAfterRoll} alt="The box bottom with dice randomly placed into it."/>
+  </Center>
   <Spacer/>
   <Instruction>Most should land squarely into the 25 slots in the box base.</Instruction>
   </>
@@ -72,7 +85,9 @@ const StepFillEmptySlots = () => (
   <>
     <Instruction>Put the remaining dice squarely into the empty slots.</Instruction>
     <Spacer/>
-    <ResizableImage src={BoxBottomAllDiceInPlace} alt="Box bottom with all dice in place." />
+    <Center>
+      <ResizableImage src={BoxBottomAllDiceInPlace} alt="Box bottom with all dice in place." />
+    </Center>
     <Spacer/>
     <Instruction>Leave the rest in their original random order and orientations.</Instruction>
     <Spacer/>
@@ -91,23 +106,27 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
   const startScanning = () => setScanning(true);
   const stopScanning = () => setScanning(false);
   const onDiceKeyRead = (diceKey: DiceKey) => {
-    state.setDiceKeyScanned(diceKey);
+    state.setDiceKey(diceKey);
     stopScanning();
   }
-  const {diceKeyScanned} = state;
+  const {diceKey: diceKeyScanned} = state;
   return (<>
     <Spacer/>
-    <Instruction>Scan the dice in the bottom of the box (without the top.)</Instruction>
+    <Instruction>Scan the dice in the bottom of the box (without sealing the box top into place.)</Instruction>
     <Spacer/>
     { scanning ? (<>
       <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } />
       <button onClick={stopScanning}>Cancel</button>
     </>) : diceKeyScanned != null ? (<>
-        <DiceKeyViewAutoSized faces={diceKeyScanned.faces} />
+        <Center>
+          <DiceKeyViewAutoSized maxHeight="50vh" maxWidth="70vw" faces={diceKeyScanned.faces} />
+        </Center>
         <Spacer/>
         <button onClick={startScanning} >Scan again</button>
       </>) : (<>
-        <ResizableImage src={ScanDiceKeyImage} alt="Illustration of scanning a DiceKey with a device camera."/>
+        <Center>
+          <ResizableImage src={ScanDiceKeyImage} alt="Illustration of scanning a DiceKey with a device camera."/>
+        </Center>
         <Spacer/>
         <button onClick={startScanning}>Scan</button>
         <Spacer/>
@@ -120,14 +139,16 @@ const StepSealBox = () => (
   <>
     <Instruction>Place the box top above the base so that the hinges line up.</Instruction>
     <Spacer/>
-    <ResizableImage src={SealBox} alt={"Sealing the box closed"}/>
+    <Center>
+      <ResizableImage src={SealBox} alt={"Sealing the box closed"}/>
+    </Center>
     <Spacer/>
     <Instruction>Press firmly down along the edges. The box will snap together, helping to prevent accidental re-opening.</Instruction>
   </>
 );
 
 const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsState}) => {
-  const createdDiceKey = state.diceKeyScanned != null;
+  const createdDiceKey = state.diceKey != null;
   const backedUpSuccessfully = false; // FIXME
   return (
     <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center"}}>
@@ -150,11 +171,17 @@ const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsSta
 )});
 
 const AssemblyInstructionsStepSwitchView = observer ( (props: {state: AssemblyInstructionsState}) => {
+  const backupState = new BackupState(props.state);
   switch (props.state.step) {
     case Step.Randomize: return (<StepRandomizeView/>);
     case Step.DropDice: return (<StepDropDiceView/>);
     case Step.FillEmptySlots: return (<StepFillEmptySlots/>);
-    case Step.ScanFirstTime: return (<StepScanFirstTime {...props}/>)
+    case Step.ScanFirstTime: return (<StepScanFirstTime {...props}/>);
+    case Step.CreateBackup: return (<BackupView
+      state={backupState}
+      nextStepAfterEnd={props.state.goToNextStep}
+      prevStepBeforeStart={props.state.goToPrevStep}
+    /> )
     case Step.SealBox: return (<StepSealBox/>);
     case Step.Done: return (<StepInstructionsDone {...props} />)
     default: return (<></>);
@@ -174,7 +201,14 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
         <SimpleTopNavBar title={"Assembly Instructions"} goBack={ () => onComplete() } />
         <div className={Layout.PaddedStretchedColumn}>
           <AssemblyInstructionsStepSwitchView state={state} />
-          <StepFooterView setStep={state.setStep} pprev={undefined} prev={state.stepMinus1} next={state.stepPlus1} />
+          { // Don't show the footer in the backup step as it already has the footer
+             state.step === Step.CreateBackup ? null : (
+            <StepFooterView setStep={state.setStep} pprev={undefined} prev={state.goToPrevStep} next={state.goToNextStep} />
+          ) }
+          { state.step >= Step.SealBox ? null : (
+            // Show the warning about not sealing the box until we have reached the box-sealing step.
+            <div style={{backgroundColor: "red", color: "white"}}>Do not close the box before the final step</div>
+          ) }
         </div>
       </div>
     </div>

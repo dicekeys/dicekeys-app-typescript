@@ -3,7 +3,7 @@ import React from "react";
 import {observer} from "mobx-react";
 import css from "./StepFooterView.module.css";
 
-type Step = number | undefined | (() => undefined);
+type Step = number | undefined | (() => any);
 
 interface StepFooterViewProps {
   current?: number;
@@ -28,9 +28,9 @@ export const StepFooterView = observer ( (props: StepFooterViewProps) => {
       </div>
       <div className={css.StepFooterRow}>
         <button className={css.StepButton} hidden={pprev == null} onClick={ onClickFn(pprev) } >&lt;&lt;</button>
-        <button className={css.StepButton} hidden={prev == null} onClick={ onClickFn(prev) } >&lt;</button>
+        <button className={css.StepButton} hidden={prev == null} onClick={ onClickFn(prev) } >&lt; previous</button>
         <div className={css.SpaceBetweenLeftAndRightButtons}></div>
-        <button className={css.StepButton} hidden={next == null} onClick={ onClickFn(next) } >&gt;</button>
+        <button className={css.StepButton} hidden={next == null} onClick={ onClickFn(next) } >next &gt;</button>
         <button className={css.StepButton} hidden={nnext == null} onClick={ onClickFn(nnext) } >&gt;&gt;</button>
       </div>
     </div>

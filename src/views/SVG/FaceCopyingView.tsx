@@ -37,22 +37,25 @@ const fitDiceKeyFaceCopyingImageIntoBounds = fitRectangleWithAspectRatioIntoABou
 
 
 type FaceCopyingViewProps = {
-  diceKey: DiceKey,
+  diceKey?: DiceKey,
   medium: "SticKey" | "DiceKey",
   matchSticKeyAspectRatio?: boolean,
   showArrow?: boolean,
   indexOfLastFacePlaced?: number,
 }; //  & React.SVGAttributes<SVGGElement>
 const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) => {
-  const {diceKey, medium, matchSticKeyAspectRatio: matchSticKeyDimensions, indexOfLastFacePlaced, showArrow} = props;
+  const {
+    diceKey, medium, matchSticKeyAspectRatio, indexOfLastFacePlaced, showArrow,
+  } = props;
+  const hideFaces = diceKey?.faces.slice(0, indexOfLastFacePlaced ?? -1);
   const bounds = medium === "SticKey" ?
     fitStiKeyFaceCopyingImageIntoBounds(props) :
     fitDiceKeyFaceCopyingImageIntoBounds(props);
   const {width, height} = bounds;
-  const face = diceKey.faces[indexOfLastFacePlaced ?? -1] as Face | undefined;
+  const face = diceKey?.faces[indexOfLastFacePlaced ?? -1] as Face | undefined;
   const modelBounds = {width: width * fractionalWidths[0], height: height};
   const stickerSheetSizeModel = StickerSheetSizeModel.fromBounds(modelBounds);
-  const diceKeySizeModel = DiceKeySizeModel.fromBoundsWithoutTab( matchSticKeyDimensions ?
+  const diceKeySizeModel = DiceKeySizeModel.fromBoundsWithoutTab( matchSticKeyAspectRatio ?
     // Adjust height from 6-face hight to 5 face height
     {width: modelBounds.width, height: modelBounds.height - stickerSheetSizeModel.linearSizeOfFace}:
     modelBounds);
@@ -71,7 +74,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
   return (
     <g>
       { medium === "SticKey" ? (<>
-        <StickerSheetSvgGroup {...stickerSheetSizeModel.bounds} showLetter={face?.letter} highlightFaceWithDigit={face?.digit}
+        <StickerSheetSvgGroup {...stickerSheetSizeModel.bounds} showLetter={face?.letter} hideFaces={hideFaces} highlightFaceWithDigit={face?.digit}
           transform={`translate(${xoffsetImageCenterToLeftSheetCenter})`}
         />
         <StickerTargetSheetSvgGroup {...stickerSheetSizeModel.bounds} diceKey={diceKey} sizeModel={stickerSheetSizeModel} indexOfLastFacePlaced={indexOfLastFacePlaced}
@@ -79,13 +82,13 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
         />        
       </>) : medium === "DiceKey" ? (<>
         <DiceKeySvgGroup
-          faces={diceKey.faces}
+          faces={diceKey?.faces}
           {...diceKeySizeModel.bounds}
           highlightFaceAtIndex={indexOfLastFacePlaced}
           transform={`translate(${xoffsetImageCenterToLeftSheetCenter})`}
         />
         <DiceKeySvgGroup
-          faces={diceKey.faces.map( (face, index) =>
+          faces={diceKey?.faces.map( (face, index) =>
             index <= (indexOfLastFacePlaced ?? 24) ? face : {} ) as PartialDiceKey
           }
           {...diceKeySizeModel.bounds}
