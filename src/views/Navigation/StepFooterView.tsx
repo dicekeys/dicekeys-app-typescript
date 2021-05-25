@@ -3,35 +3,33 @@ import React from "react";
 import {observer} from "mobx-react";
 import css from "./StepFooterView.module.css";
 
-type Step = number | undefined | (() => any);
-
 interface StepFooterViewProps {
-  current?: number;
-  total?: number;
-  setStep?: (step: number) => any;
-  onMaySkip?: () => any;
-  prev?: Step;
-  pprev?: Step;
-  next?: Step;
-  nnext?: Step;
+  // setStep?: (step: number) => any;
+  // current?: number;
+  // total?: number;
+  prev?: () => any;
+  pprev?: () => any;
+  next?: () => any;
+  nnext?: () => any;
+  aboveFooter?: JSX.Element | undefined;
 }
 
 export const StepFooterView = observer ( (props: StepFooterViewProps) => {
-  const {setStep, pprev, prev, next, nnext, onMaySkip} = props;
-  const onClickFn = (step: Step): (() => any) | undefined =>
-    typeof step === "number" ? (() => setStep?.(step)) :
-      step;
+  const {aboveFooter, pprev, prev, next, nnext} = props;
   return (
     <div className={css.StepFooter}>
+      { aboveFooter == null ? null : (
+        <div className={css.StepFooterRow}>
+          {aboveFooter}
+          {/* <button className={css.StepButton} hidden={onMaySkip == null} onClick={ onClickFn(onMaySkip) } >Let me skip this step</button> */}
+        </div>
+      ) }
       <div className={css.StepFooterRow}>
-      <button className={css.StepButton} hidden={onMaySkip == null} onClick={ onClickFn(onMaySkip) } >Let me skip this step</button>
-      </div>
-      <div className={css.StepFooterRow}>
-        <button className={css.StepButton} hidden={pprev == null} onClick={ onClickFn(pprev) } >&lt;&lt;</button>
-        <button className={css.StepButton} hidden={prev == null} onClick={ onClickFn(prev) } >&lt; previous</button>
+        <button className={css.StepButton} hidden={pprev == null} onClick={ pprev } >&lt;&lt;</button>
+        <button className={css.StepButton} hidden={prev == null} onClick={ prev } >&lt; previous</button>
         <div className={css.SpaceBetweenLeftAndRightButtons}></div>
-        <button className={css.StepButton} hidden={next == null} onClick={ onClickFn(next) } >next &gt;</button>
-        <button className={css.StepButton} hidden={nnext == null} onClick={ onClickFn(nnext) } >&gt;&gt;</button>
+        <button className={css.StepButton} hidden={next == null} onClick={ next } >next &gt;</button>
+        <button className={css.StepButton} hidden={nnext == null} onClick={ nnext } >&gt;&gt;</button>
       </div>
     </div>
 )});

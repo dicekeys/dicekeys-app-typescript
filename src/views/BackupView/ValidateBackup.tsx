@@ -113,7 +113,7 @@ export const ValidateBackupView  = observer ( ({state}: {state: ValidateBackupSt
         marginTop: "0.75rem",
         marginBottom: "0.5rem",
       }}>
-        { backupScannedSuccessfully ? (<>Well done.The backup matches the original.</>) : null }
+        { backupScannedSuccessfully ? (<>Well done. The backup matches the original.</>) : null }
         { (differencesBetweenOriginalAndBackup?.errors.length ?? 0) <= 5 ? null :
             (<div style={{display: "block"}}>The backup doesn't look anything like the original.<br/></div>)
         }{ (errorFaceIndex == null || causeOfError == null) ? null :

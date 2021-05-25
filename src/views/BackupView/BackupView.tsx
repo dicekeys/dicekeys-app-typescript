@@ -12,8 +12,9 @@ import { ValidateBackupState, ValidateBackupView } from "./ValidateBackup";
 import { StickerSheetView } from "../SVG/StickerSheetView";
 import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
+import stepCSS from "../Navigation/StepFooterView.module.css";
 
-enum BackupStep {
+export enum BackupStep {
   SelectBackupMedium = 1,
   Introduction,
   FirstFace,
@@ -33,14 +34,14 @@ interface SettableDiceKeyState {
 
 export class BackupState {
   backupMedium?: BackupMedium;
-  validateBackupState?: ValidateBackupState;
+  validateBackupState: ValidateBackupState;
 
   setBackupMedium = (newMedium: BackupMedium) => action ( () => {
     this.backupMedium = newMedium;
     this.step = BackupStep.SelectBackupMedium + 1;
   });
   step: BackupStep;
-    setStep = action ( (step: BackupStep) => {
+  setStep = action ( (step: BackupStep) => {
     if (step === BackupStep.Validate) {
       // If moving to the validation step, and if we had tried scanning a key to validate before,
       // clear what we scanned
@@ -48,15 +49,21 @@ export class BackupState {
     }
     this.step = step;
   });
-  get stepPlus1() { return validStepOrUndefined(this.step+1) }
+  setStepTo = (step?: BackupStep) => step == null ? undefined : () => this.setStep(step);
+  get stepPlus1() {
+    return validStepOrUndefined(this.step+1)
+  }
   get stepMinus1() { return validStepOrUndefined(this.step-1) }
-  userChoseToAllowSkipScanningStep: boolean = false;
-  userChoseToAllowSkippingBackupStep: boolean = false;
+
+  userChoseToSkipValidationStep: boolean = false;
+  setUserChoseToSkipValidationStep = action ( () => this.userChoseToSkipValidationStep = true );
+
 
   constructor(
     public readonly diceKeyState: SettableDiceKeyState,
     step: BackupStep = BackupStep.START_INCLUSIVE
   ) {
+    this.validateBackupState = new ValidateBackupState(diceKeyState);
     this.step = step;
     makeAutoObservable(this);
   }
@@ -159,7 +166,7 @@ const StepSelectBackupMedium = observer (({state}: {state: BackupState}) => (
       </button>
     ))}</div>));
 
-export const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
+const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
   const {step, backupMedium, diceKeyState, validateBackupState} = props.state;
   const {diceKey} = diceKeyState;
   const faceIndex = step - BackupStep.FirstFace;
@@ -167,8 +174,8 @@ export const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
     case BackupStep.SelectBackupMedium: return (<StepSelectBackupMedium {...props} />);
     case BackupStep.Introduction: return backupMedium === BackupMedium.DiceKey ? (<IntroToBackingUpToADiceKeyView/>):(<IntroToBackingUpToASticKeyView/>)
     case BackupStep.Validate: return validateBackupState == null ? null : (
-        <ValidateBackupView state={validateBackupState} />
-      )
+      <ValidateBackupView state={validateBackupState} />
+    )
     default: return (backupMedium == null || step < BackupStep.FirstFace || step > BackupStep.LastFace) ? (<></>) : (
       <>
         <FaceCopyingView medium={backupMedium} diceKey={diceKey} indexOfLastFacePlaced={faceIndex}
@@ -182,30 +189,51 @@ export const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
   }
 });
 
+export const BackupContentView = observer ( (props: BackupViewProps) => (
+  <BackupStepSwitchView {...props} />
+));
+
+
 interface BackupViewProps {
   state: BackupState;
   prevStepBeforeStart?: () => any;
   nextStepAfterEnd?: () => any;
 }
-export const BackupView = observer ( ({state, prevStepBeforeStart, nextStepAfterEnd}: BackupViewProps) => (
-  <div className="BackupViewTop" style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "space-around", alignContent: "stretch", alignItems: "center" }}>
-    <BackupStepSwitchView state={state} />
-    <StepFooterView 
-      setStep={state.setStep}
-      pprev={state.step > BackupStep.FirstFace + 1 ? BackupStep.FirstFace : undefined}
-      prev={
-        // If at the start, allow a parent to set a previous step (for embedding backup into assembly instructions)
-        state.step === BackupStep.START_INCLUSIVE ? prevStepBeforeStart :
-        state.stepMinus1
-      }
-      next={
-        // If at the end, allow a parent to set a next step (for embedding backup into assembly instructions)
-        state.step === (BackupStep.END_EXCLUSIVE-1) ? nextStepAfterEnd :
-        // Don't show next when selecting a backup medium
-        state.step === BackupStep.SelectBackupMedium ? undefined :
-        state.stepPlus1}
-      nnext={state.step >= BackupStep.FirstFace && state.step < BackupStep.LastFace - 1 ? BackupStep.Validate : undefined}  
+
+export const BackupStepFooterView = observer ( ({
+    state,
+    prevStepBeforeStart,
+    nextStepAfterEnd,
+  }: BackupViewProps) => (
+  <StepFooterView 
+    aboveFooter = {
+      (state.step === BackupStep.Validate && !state.userChoseToSkipValidationStep && !state.validateBackupState.backupScannedSuccessfully) ? (
+        <button className={stepCSS.StepButton}
+          onClick={state.setUserChoseToSkipValidationStep} >Let me skip this step
+        </button>
+      ): undefined}
+    pprev={state.setStepTo(state.step <= BackupStep.FirstFace ? undefined : BackupStep.FirstFace)}
+    prev={
+      // If at the start, allow a parent to set a previous step (for embedding backup into assembly instructions)
+      state.step === BackupStep.START_INCLUSIVE ? prevStepBeforeStart :
+      state.setStepTo(state.stepMinus1)
+    }
+    next={
+      // If at the end, allow a parent to set a next step (for embedding backup into assembly instructions)
+      state.step === (BackupStep.Validate) ? (
+        state.validateBackupState.backupScannedSuccessfully || state.userChoseToSkipValidationStep ? nextStepAfterEnd : undefined
+      ) :
+      // Don't show next when selecting a backup medium
+      state.step === BackupStep.SelectBackupMedium ? undefined :
+      state.setStepTo(state.stepPlus1)}
+    nnext={state.step >= BackupStep.FirstFace && state.step < BackupStep.LastFace - 1 ? state.setStepTo(BackupStep.Validate) : undefined}  
   />
+));
+
+export const BackupView = observer ( (props: BackupViewProps) => (
+  <div className="BackupViewTop" style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "space-around", alignContent: "stretch", alignItems: "center" }}>
+    <BackupContentView state={props.state} />
+    <BackupStepFooterView {...props} />
   </div>));
 
 

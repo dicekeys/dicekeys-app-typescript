@@ -1,10 +1,11 @@
 import { DiceKey } from "../dicekeys/DiceKey";
-import { action, makeAutoObservable } from "mobx";
+import { action, makeAutoObservable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import { SimpleTopNavBar } from "./Navigation/SimpleTopNavBar";
 import { StepFooterView } from "./Navigation/StepFooterView";
 import Layout from "../css/Layout.module.css";
+import stepCSS from "./Navigation/StepFooterView.module.css";
 
 import IllustrationOfShakingBag from /*url:*/"../images/Illustration of shaking bag.svg";
 import BoxBottomAfterRoll from /*url:*/"../images/Box Bottom After Roll.svg";
@@ -14,7 +15,7 @@ import SealBox from /*url:*/"../images/Seal Box.svg";
 import { DiceKeyViewAutoSized } from "./SVG/DiceKeyView";
 import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
 import { Spacer, ResizableImage, Instruction } from "./basics/";
-import { BackupState, BackupView } from "./BackupView";
+import { BackupContentView, BackupState, BackupStepFooterView } from "./BackupView";
 
 enum Step {
   Randomize = 1,
@@ -43,15 +44,25 @@ export class AssemblyInstructionsState {
   setDiceKey = action ( (diceKey?: DiceKey) => {
     this.diceKey = diceKey;
   })
-  backupScanned?: DiceKey;
+  backupState = new BackupState(this);
   step: Step;
   setStep = action ( (step?: Step) => { if (step != null) { this.step = step } } );
   get goToNextStep() { const {stepPlus1} = this; return stepPlus1 == null ? undefined : () => this.setStep(stepPlus1) };
   get goToPrevStep() { const {stepMinus1} = this; return stepMinus1 == null ? undefined : () => this.setStep(stepMinus1) };
-  get stepPlus1() { return validStepOrUndefined(this.step+1) }
-  get stepMinus1() { return validStepOrUndefined(this.step-1) }
-  userChoseToAllowSkipScanningStep: boolean = false;
-  userChoseToAllowSkippingBackupStep: boolean = false;
+  get stepPlus1() { 
+    if (this.step === Step.ScanFirstTime && this.diceKey == undefined) {
+      return this.userChoseToSkipScanningStep ? Step.SealBox : undefined;
+    }
+    return validStepOrUndefined(this.step+1)
+  }
+  get stepMinus1() {
+    if (this.step === Step.SealBox && this.diceKey == undefined) {
+      return Step.ScanFirstTime
+    }
+    return validStepOrUndefined(this.step-1)
+  }
+  userChoseToSkipScanningStep: boolean = false;
+  setUserChoseToSkipScanningStep = action ( () => this.userChoseToSkipScanningStep = true );
 
   constructor(step: Step = Step.START_INCLUSIVE) {
     this.step = step;
@@ -163,7 +174,7 @@ const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsSta
             <Instruction>Be sure to make a backup soon!</Instruction>
           </>)
         }{ !createdDiceKey ? (<></>) : (<>
-            <Instruction>When you press the \"Done\" button, we'll take you to the same screen you'll see after scanning your DiceKey from the home screen.</Instruction>
+            <Instruction>When you press the "Done" button, we'll take you to the same screen you'll see after scanning your DiceKey from the home screen.</Instruction>
           </>)
         }
       </div>
@@ -171,17 +182,12 @@ const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsSta
 )});
 
 const AssemblyInstructionsStepSwitchView = observer ( (props: {state: AssemblyInstructionsState}) => {
-  const backupState = new BackupState(props.state);
   switch (props.state.step) {
     case Step.Randomize: return (<StepRandomizeView/>);
     case Step.DropDice: return (<StepDropDiceView/>);
     case Step.FillEmptySlots: return (<StepFillEmptySlots/>);
     case Step.ScanFirstTime: return (<StepScanFirstTime {...props}/>);
-    case Step.CreateBackup: return (<BackupView
-      state={backupState}
-      nextStepAfterEnd={props.state.goToNextStep}
-      prevStepBeforeStart={props.state.goToPrevStep}
-    /> )
+    case Step.CreateBackup: return (<BackupContentView state={props.state.backupState} /> )
     case Step.SealBox: return (<StepSealBox/>);
     case Step.Done: return (<StepInstructionsDone {...props} />)
     default: return (<></>);
@@ -193,6 +199,27 @@ interface AssemblyInstructionsViewProps {
   state: AssemblyInstructionsState;
   onComplete: (diceKeyLoaded?: DiceKey) => any;
 }
+
+const AssemblyInstructionsStepFooterView = observer ( ({state}: {state: AssemblyInstructionsState}) => (
+  <StepFooterView               
+    aboveFooter={(state.step === Step.ScanFirstTime && !state.userChoseToSkipScanningStep && state.diceKey == null) ? (
+        <button className={stepCSS.StepButton} hidden={state.userChoseToSkipScanningStep == null}
+          onClick={ ()=> runInAction( () => state.userChoseToSkipScanningStep = true) } >Let me skip scanning and backup up my DiceKey
+        </button>
+      ) : undefined
+    }
+    prev={state.goToPrevStep}
+    next={state.goToNextStep}
+  />
+));
+
+/* fixme 
+ : (state.step === Step.CreateBackup && !state.userChoseToAllowSkippingBackupStep) ? (
+      <button className={stepCSS.StepButton} hidden={state.userChoseToAllowSkippingBackupStep == null}
+        onClick={ ()=> runInAction( () => state.userChoseToAllowSkippingBackupStep = true) } >Let me skip scanning and backup up my DiceKey
+      </button>
+    )
+*/
 export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsViewProps) => {
   const {state, onComplete} = props;
   return (
@@ -202,8 +229,10 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
         <div className={Layout.PaddedStretchedColumn}>
           <AssemblyInstructionsStepSwitchView state={state} />
           { // Don't show the footer in the backup step as it already has the footer
-             state.step === Step.CreateBackup ? null : (
-            <StepFooterView setStep={state.setStep} pprev={undefined} prev={state.goToPrevStep} next={state.goToNextStep} />
+             state.step === Step.CreateBackup ? (
+               <BackupStepFooterView state={state.backupState} nextStepAfterEnd={props.state.goToNextStep} prevStepBeforeStart={props.state.goToPrevStep} />
+             ) : (
+            <AssemblyInstructionsStepFooterView state={state}  />
           ) }
           { state.step >= Step.SealBox ? null : (
             // Show the warning about not sealing the box until we have reached the box-sealing step.
