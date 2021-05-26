@@ -6,7 +6,7 @@ import { SelectedDiceKeyView } from "./WithSelectedDiceKey/SelectedDiceKeyView";
 import { AppHomeView } from "./AppHomeView";
 import { LoadDiceKeyView, LoadDiceKeyState } from "./LoadingDiceKeys/LoadDiceKeyView";
 import {Layout} from "../css";
-import {AssemblyInstructionsView, AssemblyInstructionsState} from "./AssemblyInstructionsView"
+import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
 
 const DefaultAppTopLevelState = new AppTopLevelState();
 
@@ -14,7 +14,7 @@ interface AppTopLevelRoutingViewProps {
   appTopLevelState?: AppTopLevelState;
 }
 export const AppTopLevelRoutingView = observer ( (props: AppTopLevelRoutingViewProps) => {
-  const appTopLevelState = props.appTopLevelState ?? DefaultAppTopLevelState;
+  const {appTopLevelState = DefaultAppTopLevelState} = props;
   const onDiceKeyLoaded = (diceKey?: DiceKey) => {
     if (diceKey != null) {
       appTopLevelState.navigateToSelectedDiceKeyView(diceKey);
@@ -29,7 +29,7 @@ export const AppTopLevelRoutingView = observer ( (props: AppTopLevelRoutingViewP
       <LoadDiceKeyView onDiceKeyRead={ onDiceKeyLoaded } state={new LoadDiceKeyState("camera")} />
     )
     case SubViewsOfTopLevel.AssemblyInstructions: return (
-      <AssemblyInstructionsView onComplete={ onDiceKeyLoaded } state={new AssemblyInstructionsState()} />
+      <AssemblyInstructionsView onComplete={ onDiceKeyLoaded } state={appTopLevelState.assemblyInstructionsState} />
     )
     case SubViewsOfTopLevel.DiceKeyView: return (
       <SelectedDiceKeyView navigationState={appTopLevelState.selectedDiceKeyViewState!} />

@@ -1,4 +1,5 @@
 import { action, makeObservable, override, runInAction } from "mobx";
+import { AssemblyInstructionsState } from "../../views/AssemblyInstructionsState";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { HasSubViews } from "../core";
 import { DiceKeyMemoryStore } from "../stores/DiceKeyMemoryStore";
@@ -45,6 +46,18 @@ export class AppTopLevelState extends HasSubViews<SubViews> {
 
   foregroundDiceKeyState: ForegroundDiceKeyState = new ForegroundDiceKeyState();
   selectedDiceKeyViewState: SelectedDiceKeyViewState = new SelectedDiceKeyViewState( this.navigateToTopLevelView, this.foregroundDiceKeyState );
+
+
+
+  private onReturnFromAssemblyInstructions = () => {
+    const diceKey = this.foregroundDiceKeyState.diceKey;
+    if (diceKey) {
+      this.navigateToSelectedDiceKeyView(diceKey);
+    } else {
+      this.navigateToTopLevelView()
+    }
+  }
+  assemblyInstructionsState = new AssemblyInstructionsState(this.onReturnFromAssemblyInstructions);
 
   constructor() {
     super(SubViews.AppHomeView);

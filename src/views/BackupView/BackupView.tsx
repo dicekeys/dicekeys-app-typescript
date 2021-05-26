@@ -59,6 +59,11 @@ export class BackupState {
   userChoseToSkipValidationStep: boolean = false;
   setUserChoseToSkipValidationStep = action ( () => this.userChoseToSkipValidationStep = true );
 
+  clear = action ( () => {
+    this.backupMedium = undefined;
+    this.validateBackupState.diceKeyScannedFromBackup = undefined;
+    this.step = BackupStep.START_INCLUSIVE;
+  })
 
   constructor(
     public readonly diceKeyState: SettableDiceKeyState,
@@ -221,6 +226,7 @@ export const BackupStepFooterView = observer ( ({
       state.step === BackupStep.START_INCLUSIVE ? prevStepBeforeStart :
       state.setStepTo(state.stepMinus1)
     }
+    nextIsDone={state.step === (BackupStep.END_EXCLUSIVE - 1)}
     next={
       // If at the end, allow a parent to set a next step (for embedding backup into assembly instructions)
       state.step === (BackupStep.Validate) ? (
