@@ -11,8 +11,10 @@ module.exports = {
       "package-lock.json",
       "^(/README.md$)",
       "src"
-    ]
-  },
+    ],
+    "executableName": "dicekeys",
+    "icon": "./packaging/icon.icns"
+},
   "makers": [
     {
       "name": "@electron-forge/maker-squirrel",
@@ -23,7 +25,8 @@ module.exports = {
     {
       "name": "@electron-forge/maker-zip",
       "platforms": [
-        "darwin"
+        "darwin",
+        "linux"
       ]
     },
     {
@@ -45,20 +48,21 @@ module.exports = {
       }
     },
     {
-      name: '@electron-forge/maker-snap',
-      config: {
-        features: {
-          audio: false,
-          mpris: 'com.dicekeys.app',
-          webgl: true
-        },
-        summary: 'DiceKeys'
-      }
-    },
-    {
       name: '@electron-forge/maker-dmg',
       config: {
-        format: 'ULFO'
+        format: 'ULFO',
+        overwrite: true,
+        icon: "./packaging/icon.icns",
+        iconSize: 128,
+        background: './packaging/dmg/dmg-background.png',
+        additionalDMGOptions: {
+          window:{
+            size: {
+              width: 750,
+              height: 545
+            }
+          }
+        }
       }
     },
     // {
