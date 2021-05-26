@@ -162,7 +162,7 @@ const StepSealBox = () => (
 
 const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsState}) => {
   const createdDiceKey = state.diceKey != null;
-  const backedUpSuccessfully = false; // FIXME
+  const backedUpSuccessfully = state.backupState.validateBackupState.backupScannedSuccessfully;
   return (
     <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center"}}>
       <div style={{display: "block"}}>
@@ -231,7 +231,9 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
         {/* Header, empty for spacing purposes only */}
         <div></div>
         {/* Content */}
-        <AssemblyInstructionsStepSwitchView state={state} />
+        <div className={layoutCSS.PaddedContentBox}>
+          <AssemblyInstructionsStepSwitchView state={state} />
+        </div>
         {/* Footer */
           state.step === Step.CreateBackup ? (
             <BackupStepFooterView state={state.backupState} nextStepAfterEnd={props.state.goToNextStep} prevStepBeforeStart={props.state.goToPrevStep} />

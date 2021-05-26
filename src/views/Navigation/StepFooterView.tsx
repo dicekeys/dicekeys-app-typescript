@@ -25,11 +25,11 @@ export const StepFooterView = observer ( (props: StepFooterViewProps) => {
         </div>
       ) }
       <div className={css.StepFooterRow}>
-        <button className={css.StepButton} hidden={pprev == null} onClick={ pprev } >&lt;&lt;</button>
-        <button className={css.StepButton} hidden={prev == null} onClick={ prev } >&lt; previous</button>
+        <button className={css.StepButton} style={pprev == null ? {visibility: "hidden"} : {}} onClick={ pprev } >&lt;&lt;</button>
+        <button className={css.StepButton} style={prev == null ? {visibility: "hidden"} : {}} onClick={ prev } >&lt; previous</button>
         <div className={css.SpaceBetweenLeftAndRightButtons}></div>
-        <button className={css.StepButton} hidden={next == null} onClick={ next } >next &gt;</button>
-        <button className={css.StepButton} hidden={nnext == null} onClick={ nnext } >&gt;&gt;</button>
+        <button className={css.StepButton} style={next == null ? {visibility: "hidden"} : {}} onClick={ next } >next &gt;</button>
+        <button className={css.StepButton} style={nnext == null ? {visibility: "hidden"} : {}} onClick={ nnext } >&gt;&gt;</button>
       </div>
     </div>
 )});

@@ -15,14 +15,14 @@
 }
 
 .BottomNavigationBar {
-  height: 4.5rem;
+  height: 5rem;
   background-color: gray;
   align-items: baseline;
 }
 
 
 .BetweenTopAndBottomNavigationBars {
-  height: calc(100vh - 7.5rem);
+  height: calc(100vh - 8rem);
   width: 100vw;
   display: flex;
   flex-direction: column;

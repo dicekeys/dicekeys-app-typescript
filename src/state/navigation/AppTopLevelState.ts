@@ -2,6 +2,7 @@ import { action, makeObservable, override, runInAction } from "mobx";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { HasSubViews } from "../core";
 import { DiceKeyMemoryStore } from "../stores/DiceKeyMemoryStore";
+import { ForegroundDiceKeyState } from "./ForegroundDiceKeyState";
 import { SelectedDiceKeyViewState } from "./SelectedDiceKeyViewState";
 
 export enum SubViewsOfTopLevel {
@@ -16,23 +17,12 @@ const SubViews = SubViewsOfTopLevel;
 
 export class AppTopLevelState extends HasSubViews<SubViews> {
 
-  selectedDiceKeyViewState?: SelectedDiceKeyViewState = undefined;
-
-  get subView(): SubViews {
-    switch(this._subView) {
-      case SubViews.DiceKeyView:
-        return (this.selectedDiceKeyViewState && this.selectedDiceKeyViewState.diceKey) ? this._subView : SubViews.AppHomeView
-      default:
-        return this._subView
-    }
-  }
-
   navigateToTopLevelView = this.navigateToSubView(SubViews.AppHomeView);
   navigateToAssemblyInstructions = this.navigateToSubView(SubViews.AssemblyInstructions)
   navigateToLoadDiceKey = this.navigateToSubView(SubViews.LoadDicekey)
 
   private navigateToSelectedDiceKeyViewForKeyId = action ( (keyId: string) => {
-    this.selectedDiceKeyViewState = new SelectedDiceKeyViewState( this.navigateToTopLevelView, keyId );
+    this.foregroundDiceKeyState.setKeyId(keyId);
     this.navigateTo(SubViews.DiceKeyView);
   });
 
@@ -43,6 +33,18 @@ export class AppTopLevelState extends HasSubViews<SubViews> {
       this.navigateToSelectedDiceKeyViewForKeyId(keyId);
     });
   }
+
+  get subView(): SubViews {
+    switch(this._subView) {
+      case SubViews.DiceKeyView:
+        return (this.selectedDiceKeyViewState && this.foregroundDiceKeyState.diceKey != null) ? this._subView : SubViews.AppHomeView
+      default:
+        return this._subView
+    }
+  }
+
+  foregroundDiceKeyState: ForegroundDiceKeyState = new ForegroundDiceKeyState();
+  selectedDiceKeyViewState: SelectedDiceKeyViewState = new SelectedDiceKeyViewState( this.navigateToTopLevelView, this.foregroundDiceKeyState );
 
   constructor() {
     super(SubViews.AppHomeView);

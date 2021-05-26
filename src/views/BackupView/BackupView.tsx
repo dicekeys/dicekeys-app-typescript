@@ -13,6 +13,7 @@ import { StickerSheetView } from "../SVG/StickerSheetView";
 import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 import stepCSS from "../Navigation/StepFooterView.module.css";
+import layoutCSS from "../../css/Layout.module.css";
 
 export enum BackupStep {
   SelectBackupMedium = 1,
@@ -122,7 +123,7 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, i
   const indexMod5 = index % 5;
   const {letter, digit, orientationAsLowercaseLetterTrbl: oriented} = face;
 
-  return (<Instruction>
+  return (<div style={{minHeight: "7rem"}}><Instruction>
     { medium === BackupMedium.SticKey ? (<>
         Remove the {letter}{digit} sticker
         from the sheet with letters {firstLetterOnSheet} to {lastLetterOnSheet}.
@@ -146,7 +147,7 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, i
       oriented === "r" ? (<>turned the right (90 degrees clockwise of upright)</>) :
       oriented === "l" ? (<>turned the left (90 degrees counterclockwise of upright)</>) : ""
     }.
-  </Instruction>);
+  </Instruction></div>);
 });
 
 const StepSelectBackupMedium = observer (({state}: {state: BackupState}) => (
@@ -190,7 +191,9 @@ const BackupStepSwitchView = observer ( (props: BackupViewProps) => {
 });
 
 export const BackupContentView = observer ( (props: BackupViewProps) => (
-  <BackupStepSwitchView {...props} />
+  <div className={layoutCSS.PaddedContentBox}>
+    <BackupStepSwitchView {...props} />
+  </div>
 ));
 
 
@@ -221,7 +224,7 @@ export const BackupStepFooterView = observer ( ({
     next={
       // If at the end, allow a parent to set a next step (for embedding backup into assembly instructions)
       state.step === (BackupStep.Validate) ? (
-        state.validateBackupState.backupScannedSuccessfully || state.userChoseToSkipValidationStep ? nextStepAfterEnd : undefined
+        (state.validateBackupState.backupScannedSuccessfully || state.userChoseToSkipValidationStep) ? (nextStepAfterEnd ?? state.setStepTo(state.stepPlus1)) : undefined
       ) :
       // Don't show next when selecting a backup medium
       state.step === BackupStep.SelectBackupMedium ? undefined :
@@ -232,6 +235,8 @@ export const BackupStepFooterView = observer ( ({
 
 export const BackupView = observer ( (props: BackupViewProps) => (
   <div className="BackupViewTop" style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "space-around", alignContent: "stretch", alignItems: "center" }}>
+    {/* Header, empty for spacing purposes only */}
+    <div></div>
     <BackupContentView state={props.state} />
     <BackupStepFooterView {...props} />
   </div>));

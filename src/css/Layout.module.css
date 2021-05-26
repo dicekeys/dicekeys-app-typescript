@@ -1,4 +1,4 @@
-.HeaderFooterContentBox {
+.HeaderFooterContentBox, .PaddedContentBox {
   display: flex;
   flex-direction: column;
   justify-content: space-between;

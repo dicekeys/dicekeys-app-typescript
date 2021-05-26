@@ -3,6 +3,8 @@
   flex-direction: column;
   justify-content: center;
   align-content: center;
+  padding-bottom: 2rem;
+  width: 80vw;
 }
 
 .StepFooterRow {
