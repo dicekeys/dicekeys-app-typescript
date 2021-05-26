@@ -32,7 +32,7 @@ export const AppTopLevelRoutingView = observer ( (props: AppTopLevelRoutingViewP
       <AssemblyInstructionsView onComplete={ onDiceKeyLoaded } state={appTopLevelState.assemblyInstructionsState} />
     )
     case SubViewsOfTopLevel.DiceKeyView: return (
-      <SelectedDiceKeyView navigationState={appTopLevelState.selectedDiceKeyViewState!} />
+      <SelectedDiceKeyView appState={appTopLevelState} />
     );
   }
 });

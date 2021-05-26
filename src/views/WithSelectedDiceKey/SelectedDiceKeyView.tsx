@@ -12,14 +12,15 @@ import { DerivationView } from "../Recipes/DerivationView";
 import { Navigation } from "../../state";
 import { SeedHardwareKeyView, SeedHardwareKeyViewState } from "./SeedHardwareKeyView";
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
-import { BackupState, BackupView } from "../BackupView/BackupView";
+import { BackupView } from "../BackupView/BackupView";
 import { ForegroundDiceKeyState } from "../../state/navigation/ForegroundDiceKeyState";
+import { AppTopLevelState } from "../../state/navigation/AppTopLevelState";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 // const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
 
 interface SelectedDiceKeyViewProps {
-  navigationState: Navigation.SelectedDiceKeyViewState;
+  appState: AppTopLevelState;
 }
 
 const FooterButtonView = observer( ( props: SelectedDiceKeyViewProps & {
@@ -27,13 +28,13 @@ const FooterButtonView = observer( ( props: SelectedDiceKeyViewProps & {
   onClick: () => void
 } ) => (
   <div
-    className={props.navigationState.subView === props.subView ? NavigationBars.footer_button_selected : NavigationBars.footer_button}
+    className={props.appState.selectedDiceKeyViewState.subView === props.subView ? NavigationBars.footer_button_selected : NavigationBars.footer_button}
     onClick={(e) => { props.onClick(); e.preventDefault(); }}
   ><img className={NavigationBars.footer_icon} src={props.imageSrc}/><div>{props.labelStr}</div></div>
 ));
 
 const SelectedDiceKeyViewStateFooter = observer( ( props: SelectedDiceKeyViewProps) => {
-  const navState = props.navigationState;
+  const navState = props.appState.selectedDiceKeyViewState;
   return (
   <div className={NavigationBars.BottomNavigationBar}>
     <FooterButtonView {...props} labelStr={`DiceKey`} subView={SubViews.DisplayDiceKey} imageSrc={imageOfDiceKeyIcon} onClick={navState.navigateToDisplayDiceKey} />
@@ -44,10 +45,11 @@ const SelectedDiceKeyViewStateFooter = observer( ( props: SelectedDiceKeyViewPro
   );
 });
 
-const SelectedDiceKeySubViewSwitch = observer( ( props: SelectedDiceKeyViewProps & {backupState: BackupState}) => {
-  const diceKey = props.navigationState.foregroundDiceKeyState.diceKey;
+const SelectedDiceKeySubViewSwitch = observer( ( props: SelectedDiceKeyViewProps) => {
+  const {backupState, selectedDiceKeyViewState, foregroundDiceKeyState } = props.appState;
+  const diceKey = foregroundDiceKeyState.diceKey;
   if (!diceKey) return null;
-  switch(props.navigationState.subView) {
+  switch(props.appState.selectedDiceKeyViewState.subView) {
     case Navigation.SelectedDiceKeySubViews.DisplayDiceKey: return (
       <DiceKeyViewAutoSized maxWidth="80vw" maxHeight="70vh" faces={diceKey.faces}/>
     );
@@ -58,9 +60,9 @@ const SelectedDiceKeySubViewSwitch = observer( ( props: SelectedDiceKeyViewProps
       <SeedHardwareKeyView diceKey={diceKey} seedHardwareKeyViewState={ new SeedHardwareKeyViewState(diceKey.toSeedString()) } />
     );
     case Navigation.SelectedDiceKeySubViews.Backup: return (
-      <BackupView state={props.backupState} nextStepAfterEnd={() => {
-        props.backupState.clear();
-        props.navigationState.navigateToDisplayDiceKey();
+      <BackupView state={backupState} nextStepAfterEnd={() => {
+        backupState.clear();
+        selectedDiceKeyViewState.navigateToDisplayDiceKey();
       }} />
     );
     default: return null;
@@ -68,15 +70,14 @@ const SelectedDiceKeySubViewSwitch = observer( ( props: SelectedDiceKeyViewProps
 });
 
 export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) => {
-  const diceKey = props.navigationState.foregroundDiceKeyState.diceKey;
+  const diceKey = props.appState.foregroundDiceKeyState.diceKey;
   if (!diceKey) return null;
-  const backupState = new BackupState(props.navigationState.foregroundDiceKeyState);
   return (
     <div className={layoutCSS.HeaderFooterContentBox}>
-      <SimpleTopNavBar title={diceKey.nickname} goBack={props.navigationState.goBack} />
+      <SimpleTopNavBar title={diceKey.nickname} goBack={props.appState.selectedDiceKeyViewState.goBack} />
       {/* <div className={layoutCSS.PaddedContentBox}> */}
       <div className={NavigationBars.BetweenTopAndBottomNavigationBars}>
-        <SelectedDiceKeySubViewSwitch {...{...props, backupState}} />
+        <SelectedDiceKeySubViewSwitch {...{...props}} />
       </div>
       <SelectedDiceKeyViewStateFooter {...props} />
     </div>
@@ -86,7 +87,7 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
 
 export const Preview_SelectedDiceKeyView = observer ( () => {
   return (
-    <SelectedDiceKeyView navigationState={
+    <SelectedDiceKeyView appState={
       new Navigation.SelectedDiceKeyViewState(
         () => alert("Back off man, I'm a scientist!"),
         new ForegroundDiceKeyState(DiceKey.testExample)

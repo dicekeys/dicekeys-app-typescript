@@ -73,10 +73,10 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
   const startScanning = () => setScanning(true);
   const stopScanning = () => setScanning(false);
   const onDiceKeyRead = (diceKey: DiceKey) => {
-    state.setDiceKey(diceKey);
+    state.topLevelState.foregroundDiceKeyState.setDiceKey(diceKey);
     stopScanning();
   }
-  const {diceKey: diceKeyScanned} = state;
+  const {diceKey} = state.topLevelState.foregroundDiceKeyState;
   return (<>
     <Spacer/>
     <Instruction>Scan the dice in the bottom of the box (without sealing the box top into place.)</Instruction>
@@ -84,9 +84,9 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
     { scanning ? (<>
       <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } />
       <button onClick={stopScanning}>Cancel</button>
-    </>) : diceKeyScanned != null ? (<>
+    </>) : diceKey != null ? (<>
         <Center>
-          <DiceKeyViewAutoSized maxHeight="50vh" maxWidth="70vw" faces={diceKeyScanned.faces} />
+          <DiceKeyViewAutoSized maxHeight="50vh" maxWidth="70vw" faces={diceKey.faces} />
         </Center>
         <Spacer/>
         <button onClick={startScanning} >Scan again</button>
@@ -115,8 +115,8 @@ const StepSealBox = () => (
 );
 
 const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsState}) => {
-  const createdDiceKey = state.diceKey != null;
-  const backedUpSuccessfully = state.backupState.validateBackupState.backupScannedSuccessfully;
+  const createdDiceKey = state.topLevelState.foregroundDiceKey != null;
+  const backedUpSuccessfully = state.topLevelState. validateBackupState.backupScannedSuccessfully;
   return (
     <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center"}}>
       <div style={{display: "block"}}>
@@ -156,17 +156,17 @@ interface AssemblyInstructionsViewProps {
   onComplete: (diceKeyLoaded?: DiceKey) => any;
 }
 
-const AssemblyInstructionsStepFooterView = observer ( ({state}: {state: AssemblyInstructionsState}) => (
+const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  AssemblyInstructionsViewProps) => (
   <StepFooterView               
     aboveFooter={(state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.diceKey == null) ? (
         <button className={stepCSS.StepButton} hidden={state.userChoseToSkipScanningStep == null}
-          onClick={ ()=> runInAction( () => state.userChoseToSkipScanningStep = true) } >Let me skip scanning and backup up my DiceKey
+          onClick={ ()=> runInAction( () => state.userChoseToSkipScanningStep = true) } >Let me skip scanning and backing up my DiceKey
         </button>
       ) : undefined
     }
     nextIsDone={state.step === (AssemblyInstructionsStep.END_EXCLUSIVE - 1)}
     prev={state.goToPrevStep}
-    next={state.goToNextStep}
+    next={state.step === (AssemblyInstructionsStep.END_EXCLUSIVE-1) ? onComplete : state.goToNextStep}
   />
 ));
 
@@ -174,7 +174,7 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
   const {state, onComplete} = props;
   return (
     <div className={layoutCSS.HeaderFooterContentBox}>
-      <SimpleTopNavBar title={"Assembly Instructions"} goBack={ () => onComplete() } />
+      <SimpleTopNavBar title={"Assembly Instructions"} goBack={ onComplete } />
       <div className={[layoutCSS.PaddedContentBox, layoutCSS.HeaderFooterContentBox].join(" ")}>
         {/* Header, empty for spacing purposes only */}
         <div></div>
@@ -186,7 +186,7 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
           state.step === AssemblyInstructionsStep.CreateBackup ? (
             <BackupStepFooterView state={state.backupState} nextStepAfterEnd={props.state.goToNextStep} prevStepBeforeStart={props.state.goToPrevStep} />
           ) : (
-            <AssemblyInstructionsStepFooterView state={state}  />
+            <AssemblyInstructionsStepFooterView {...props}  />
           )
         }
       </div>
@@ -198,6 +198,6 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
 });
 
 addPreview("AssemblyInstructions", () => ( 
-  <AssemblyInstructionsView state={new AssemblyInstructionsState(() => {}, AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {} } />
+  <AssemblyInstructionsView state={new AssemblyInstructionsState(() => {}, AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
 ));
 

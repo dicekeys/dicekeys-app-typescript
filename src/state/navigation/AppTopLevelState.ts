@@ -5,6 +5,7 @@ import { HasSubViews } from "../core";
 import { DiceKeyMemoryStore } from "../stores/DiceKeyMemoryStore";
 import { ForegroundDiceKeyState } from "./ForegroundDiceKeyState";
 import { SelectedDiceKeyViewState } from "./SelectedDiceKeyViewState";
+import { BackupState } from "../../views/BackupView/BackupState";
 
 export enum SubViewsOfTopLevel {
   AppHomeView,
@@ -45,7 +46,9 @@ export class AppTopLevelState extends HasSubViews<SubViews> {
   }
 
   foregroundDiceKeyState: ForegroundDiceKeyState = new ForegroundDiceKeyState();
+  get foregroundDiceKey() { return this.foregroundDiceKeyState.diceKey }
   selectedDiceKeyViewState: SelectedDiceKeyViewState = new SelectedDiceKeyViewState( this.navigateToTopLevelView, this.foregroundDiceKeyState );
+  backupState = new BackupState(this.foregroundDiceKeyState);
 
 
 
@@ -57,7 +60,7 @@ export class AppTopLevelState extends HasSubViews<SubViews> {
       this.navigateToTopLevelView()
     }
   }
-  assemblyInstructionsState = new AssemblyInstructionsState(this.onReturnFromAssemblyInstructions);
+  assemblyInstructionsState = new AssemblyInstructionsState(this, this.onReturnFromAssemblyInstructions);
 
   constructor() {
     super(SubViews.AppHomeView);
