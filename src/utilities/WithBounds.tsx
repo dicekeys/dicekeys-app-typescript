@@ -1,3 +1,4 @@
+import css from "./WithBounds.module.css"
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
@@ -88,33 +89,17 @@ export const WithBounds = observer( (props: WithBoundsProps & OptionalAspectRati
   const {bounds, setBounds} = createBounds(aspectRatioWidthOverHeight);
   useContainerDimensions(componentRef, setBounds);
 
-  const edgelessFlex = {
-    padding: 0, margin: 0,
-    display: "flex",
-    justifyContent: "space-around", // NOTE stretch not supported in flex-box
-    alignContent: "stretch",
-    flexGrow: 1,
-    flexShrink: 1,
-} as const;
-
   const flexWeightAsCSS = weight == null ? {} : {flexGrow: weight, flexShrink: weight};
   return (
     <div 
-      className="WithBoundsRow"
+      className={css.WithBoundsRow}
       {...divProps}
       style={{
         ...flexWeightAsCSS,
-        ...edgelessFlex,
-        flexDirection: "row",
         ...aspectRatioStyle,
         ...style,
     }} ref={componentRef}>
-      <div
-        className="WithBoundsColumn"
-        style={{
-        ...edgelessFlex,
-        flexDirection: "column",
-      }}>
+      <div className={css.WithBoundsColumn} >
         { children(bounds) }
        </div>
     </div>

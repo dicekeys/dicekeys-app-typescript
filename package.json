@@ -49,7 +49,7 @@
     "upload-site-association": "gsutil -o \"GSUtil:parallel_process_count=1\" -m cp .well-known/* gs://dicekeys.app/.well-known/ & gsutil -o \"GSUtil:parallel_process_count=1\" -m setmeta -h \"content-type: application/json\" gs://dicekeys.app/.well-known/apple-app-site-association"
   },
   "keywords": [],
-  "license": "UNLICENSED. All rights reserved",
+  "license": "MIT",
   "dependencies": {
     "@dicekeys/dicekeys-api-js": "^0.1.3",
     "@dicekeys/read-dicekey-js": "0.0.34",
@@ -59,9 +59,7 @@
     "parcel-bundler": "^1.12.5",
     "preview": "^0.1.3",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "utilities": "^1.0.5",
-    "views": "^1.0.2"
+    "react-dom": "^17.0.2"
   },
   "browserslist": [
     "electron >= 12.0.0",

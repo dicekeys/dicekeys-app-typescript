@@ -1,6 +1,16 @@
 {
   "compilerOptions": {
-    "plugins": [{ "name": "typescript-plugin-css-modules" }],
+      "plugins": [
+          { "name": "typescript-plugin-css-modules",
+            "options": {
+              "classnameTransform": "asIs",
+              "customMatcher": "\\.module\\.(c|le|sa|sc)ss$",
+              "dotenvOptions": {},
+              "postCssOptions": [{"useConfig": true}],
+              "rendererOptions": {}
+            }
+          }
+        ],
     // Required for MOBX, see https://mobx.js.org/installation.html
     "useDefineForClassFields": true,
       /* Visit https://aka.ms/tsconfig.json to read more about this file */
@@ -48,7 +58,7 @@
     "baseUrl": "./src",
     // "paths": {},                           /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
     "paths": {
-      "*" : ["node_modules/@types", "node_modules/", "src/@types/*", "src/"],
+      "*" : ["node_modules/@types", "node_modules/", "src/@types/", "src/"],
       "~*": ["./src/*"]
     },
     // "rootDirs": [],                        /* List of root folders whose combined content represents the structure of the project at runtime. */

@@ -1,12 +1,13 @@
+import css from "./AssemblyInstructionsView.module.css";
+import stepCSS from "./Navigation/StepFooterView.module.css";
+import layoutCSS from "../css/Layout.module.css";
+
 import { DiceKey } from "../dicekeys/DiceKey";
 import { action, makeAutoObservable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import { SimpleTopNavBar } from "./Navigation/SimpleTopNavBar";
 import { StepFooterView } from "./Navigation/StepFooterView";
-import Layout from "../css/Layout.module.css";
-import stepCSS from "./Navigation/StepFooterView.module.css";
-
 import IllustrationOfShakingBag from /*url:*/"../images/Illustration of shaking bag.svg";
 import BoxBottomAfterRoll from /*url:*/"../images/Box Bottom After Roll.svg";
 import BoxBottomAllDiceInPlace from /*url:*/"../images/Box Bottom All DIce In Place.svg";
@@ -16,6 +17,7 @@ import { DiceKeyViewAutoSized } from "./SVG/DiceKeyView";
 import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
 import { Spacer, ResizableImage, Instruction } from "./basics/";
 import { BackupContentView, BackupState, BackupStepFooterView } from "./BackupView";
+import { addPreview } from "./basics/Previews";
 
 enum Step {
   Randomize = 1,
@@ -223,30 +225,29 @@ const AssemblyInstructionsStepFooterView = observer ( ({state}: {state: Assembly
 export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsViewProps) => {
   const {state, onComplete} = props;
   return (
-    <div className={Layout.RowStretched}>
-      <div className={Layout.ColumnStretched}>
-        <SimpleTopNavBar title={"Assembly Instructions"} goBack={ () => onComplete() } />
-        <div className={Layout.PaddedStretchedColumn}>
-          <AssemblyInstructionsStepSwitchView state={state} />
-          { // Don't show the footer in the backup step as it already has the footer
-             state.step === Step.CreateBackup ? (
-               <BackupStepFooterView state={state.backupState} nextStepAfterEnd={props.state.goToNextStep} prevStepBeforeStart={props.state.goToPrevStep} />
-             ) : (
+    <div className={layoutCSS.HeaderFooterContentBox}>
+      <SimpleTopNavBar title={"Assembly Instructions"} goBack={ () => onComplete() } />
+      <div className={[layoutCSS.PaddedContentBox, layoutCSS.HeaderFooterContentBox].join(" ")}>
+        {/* Header, empty for spacing purposes only */}
+        <div></div>
+        {/* Content */}
+        <AssemblyInstructionsStepSwitchView state={state} />
+        {/* Footer */
+          state.step === Step.CreateBackup ? (
+            <BackupStepFooterView state={state.backupState} nextStepAfterEnd={props.state.goToNextStep} prevStepBeforeStart={props.state.goToPrevStep} />
+          ) : (
             <AssemblyInstructionsStepFooterView state={state}  />
-          ) }
-          { state.step >= Step.SealBox ? null : (
-            // Show the warning about not sealing the box until we have reached the box-sealing step.
-            <div style={{backgroundColor: "red", color: "white"}}>Do not close the box before the final step</div>
-          ) }
-        </div>
+          )
+        }
       </div>
-    </div>
+      {/* Show the warning about not sealing the box until we have reached the box-sealing step. */}
+      <div className={css.WarningFooter} hidden={state.step >= Step.SealBox}>
+        Do not close the box before the final step</div>
+      </div>
   )
 });
 
+addPreview("AssemblyInstructions", () => ( 
+  <AssemblyInstructionsView state={new AssemblyInstructionsState(Step.ScanFirstTime)} onComplete={ () => {} } />
+));
 
-export const Preview_AssemblyInstructions = () => {
-  return (
-    <AssemblyInstructionsView state={new AssemblyInstructionsState(Step.ScanFirstTime)} onComplete={ () => {} } />
-  );
-};

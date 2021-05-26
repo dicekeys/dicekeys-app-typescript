@@ -10,13 +10,14 @@ body {
   margin: 0px; padding: 0px;
 }
 
-app_container {
+.AppContainer {
   display: flex;
   width: 100vw;
+  height: 100vh;
   flex-direction: column;
-  align-content: center;
+  justify-content: stretch;
+  align-content: space-around;
 }
-
 
 option, select {
   font-size: 1rem;

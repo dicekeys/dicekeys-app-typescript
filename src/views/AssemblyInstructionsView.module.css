@@ -1,0 +1,12 @@
+.WarningFooter {
+  background-color: red;
+  color: white;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-content: baseline;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+}

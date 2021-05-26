@@ -6,7 +6,7 @@ import { StepFooterView } from "../Navigation/StepFooterView";
 import { FaceCopyingView } from "../SVG/FaceCopyingView";
 import { FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
 import { Instruction } from "../basics";
-import { addPreview } from "../basics/Previews";
+import { addPreviewWithMargins } from "../basics/Previews";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupState, ValidateBackupView } from "./ValidateBackup";
 import { StickerSheetView } from "../SVG/StickerSheetView";
@@ -253,10 +253,10 @@ class PreviewDiceKeyState {
       this.diceKey = diceKey;
   })
 }
-addPreview("Backup", () => ( 
+addPreviewWithMargins("Backup", () => ( 
   <BackupView state={new BackupState(new PreviewDiceKeyState(DiceKey.testExample), BackupStep.SelectBackupMedium)} />
 ));
-addPreview("Backup1Error", () => {
+addPreviewWithMargins("Backup1Error", () => {
   const diceKeyState = new PreviewDiceKeyState(DiceKey.testExample);
   const state = new BackupState(diceKeyState);
   state.setBackupMedium(BackupMedium.DiceKey);
@@ -273,7 +273,7 @@ addPreview("Backup1Error", () => {
   <BackupView state={state} />
 )});
 
-addPreview("BackupShowErrors", () => {
+addPreviewWithMargins("BackupShowErrors", () => {
   const diceKeyState = new PreviewDiceKeyState(DiceKey.testExample);
   const state = new BackupState(diceKeyState);
   state.setBackupMedium(BackupMedium.DiceKey);
