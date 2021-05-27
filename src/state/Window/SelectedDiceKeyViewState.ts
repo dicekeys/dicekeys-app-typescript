@@ -1,5 +1,6 @@
+import { BackupViewState } from "./BackupState";
 import { HasSubViews } from "../core";
-import { ForegroundDiceKeyState } from "./ForegroundDiceKeyState";
+import { DiceKeyState } from "./DiceKeyState";
 
 export enum SelectedDiceKeySubViews {
   DisplayDiceKey, // primary view
@@ -12,11 +13,13 @@ export enum SelectedDiceKeySubViews {
 export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubViews> {
   constructor(
     public readonly goBack: () => any,
-    public readonly foregroundDiceKeyState: ForegroundDiceKeyState,
+    public readonly foregroundDiceKeyState: DiceKeyState,
     initialSubView: SelectedDiceKeySubViews = SelectedDiceKeySubViews.DisplayDiceKey
   ) {
     super(initialSubView);
   }
+
+  backupState = new BackupViewState(this.foregroundDiceKeyState);
 
   navigateToDisplayDiceKey = this.navigateToSubView(SelectedDiceKeySubViews.DisplayDiceKey);
   navigateToBackup = this.navigateToSubView(SelectedDiceKeySubViews.Backup);

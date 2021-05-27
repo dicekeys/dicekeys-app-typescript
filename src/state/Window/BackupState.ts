@@ -1,7 +1,8 @@
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
-import { BackupMedium } from "./BackupMedium";
-import { ValidateBackupState } from "./ValidateBackup";
+import { BackupMedium } from "../../views/BackupView/BackupMedium";
+import { ValidateBackupState, ValidateBackupViewState } from "./BackupValidationState";
+import { DiceKeyState } from "./DiceKeyState";
 
 export enum BackupStep {
   SelectBackupMedium = 1,
@@ -21,20 +22,29 @@ interface SettableDiceKeyState {
   setDiceKey: (diceKey?: DiceKey) => any;
 }
 
-export class BackupState {
+export class BackupViewState {
+  constructor(
+    public readonly diceKeyState: SettableDiceKeyState,
+    public step: BackupStep = BackupStep.START_INCLUSIVE
+  ) {
+    makeAutoObservable(this);
+  }
+
   backupMedium?: BackupMedium;
-  validateBackupState: ValidateBackupState;
+  diceKeyScannedFromBackup = new DiceKeyState();
+  validationStepState: ValidateBackupState = new ValidateBackupState(this.diceKeyState, this.diceKeyScannedFromBackup);
+  validationStepViewState: ValidateBackupViewState = new ValidateBackupViewState(this.validationStepState);
 
   setBackupMedium = (newMedium: BackupMedium) => action ( () => {
     this.backupMedium = newMedium;
     this.step = BackupStep.SelectBackupMedium + 1;
   });
-  step: BackupStep;
   setStep = action ( (step: BackupStep) => {
     if (step === BackupStep.Validate) {
       // If moving to the validation step, and if we had tried scanning a key to validate before,
       // clear what we scanned
-      this.validateBackupState = new ValidateBackupState(this.diceKeyState);
+      this.diceKeyScannedFromBackup.clear();
+      this.validationStepViewState.clear();
     }
     this.step = step;
   });
@@ -49,16 +59,8 @@ export class BackupState {
 
   clear = action ( () => {
     this.backupMedium = undefined;
-    this.validateBackupState.diceKeyScannedFromBackup = undefined;
+    this.diceKeyScannedFromBackup.clear();
     this.step = BackupStep.START_INCLUSIVE;
   })
 
-  constructor(
-    public readonly diceKeyState: SettableDiceKeyState,
-    step: BackupStep = BackupStep.START_INCLUSIVE
-  ) {
-    this.validateBackupState = new ValidateBackupState(diceKeyState);
-    this.step = step;
-    makeAutoObservable(this);
-  }
 }

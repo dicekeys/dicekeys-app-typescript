@@ -1,17 +1,17 @@
 import { observer } from "mobx-react";
 import React from "react";
 import { DiceKey } from "../dicekeys/DiceKey";
-import {AppTopLevelState, SubViewsOfTopLevel} from "../state/navigation";
+import {WindowState, SubViewsOfTopLevel} from "../state/Window";
 import { SelectedDiceKeyView } from "./WithSelectedDiceKey/SelectedDiceKeyView";
 import { AppHomeView } from "./AppHomeView";
 import { LoadDiceKeyView, LoadDiceKeyState } from "./LoadingDiceKeys/LoadDiceKeyView";
 import {Layout} from "../css";
 import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
 
-const DefaultAppTopLevelState = new AppTopLevelState();
+const DefaultAppTopLevelState = new WindowState();
 
 interface AppTopLevelRoutingViewProps {
-  appTopLevelState?: AppTopLevelState;
+  appTopLevelState?: WindowState;
 }
 export const AppTopLevelRoutingView = observer ( (props: AppTopLevelRoutingViewProps) => {
   const {appTopLevelState = DefaultAppTopLevelState} = props;
@@ -32,7 +32,7 @@ export const AppTopLevelRoutingView = observer ( (props: AppTopLevelRoutingViewP
       <AssemblyInstructionsView onComplete={ onDiceKeyLoaded } state={appTopLevelState.assemblyInstructionsState} />
     )
     case SubViewsOfTopLevel.DiceKeyView: return (
-      <SelectedDiceKeyView appState={appTopLevelState} />
+      <SelectedDiceKeyView state={appTopLevelState.selectedDiceKeyViewState} />
     );
   }
 });

@@ -1,11 +1,10 @@
 import { action, makeObservable, override, runInAction } from "mobx";
-import { AssemblyInstructionsState } from "../../views/AssemblyInstructionsState";
+import { AssemblyInstructionsState } from "./AssemblyInstructionsState";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { HasSubViews } from "../core";
 import { DiceKeyMemoryStore } from "../stores/DiceKeyMemoryStore";
-import { ForegroundDiceKeyState } from "./ForegroundDiceKeyState";
+import { DiceKeyState } from "./DiceKeyState";
 import { SelectedDiceKeyViewState } from "./SelectedDiceKeyViewState";
-import { BackupState } from "../../views/BackupView/BackupState";
 
 export enum SubViewsOfTopLevel {
   AppHomeView,
@@ -17,7 +16,7 @@ export enum SubViewsOfTopLevel {
 type SubViews = SubViewsOfTopLevel;
 const SubViews = SubViewsOfTopLevel;
 
-export class AppTopLevelState extends HasSubViews<SubViews> {
+export class WindowState extends HasSubViews<SubViews> {
 
   navigateToTopLevelView = this.navigateToSubView(SubViews.AppHomeView);
   navigateToAssemblyInstructions = this.navigateToSubView(SubViews.AssemblyInstructions)
@@ -45,10 +44,9 @@ export class AppTopLevelState extends HasSubViews<SubViews> {
     }
   }
 
-  foregroundDiceKeyState: ForegroundDiceKeyState = new ForegroundDiceKeyState();
+  foregroundDiceKeyState: DiceKeyState = new DiceKeyState();
   get foregroundDiceKey() { return this.foregroundDiceKeyState.diceKey }
   selectedDiceKeyViewState: SelectedDiceKeyViewState = new SelectedDiceKeyViewState( this.navigateToTopLevelView, this.foregroundDiceKeyState );
-  backupState = new BackupState(this.foregroundDiceKeyState);
 
 
 
@@ -60,7 +58,7 @@ export class AppTopLevelState extends HasSubViews<SubViews> {
       this.navigateToTopLevelView()
     }
   }
-  assemblyInstructionsState = new AssemblyInstructionsState(this, this.onReturnFromAssemblyInstructions);
+  assemblyInstructionsState = new AssemblyInstructionsState(this.foregroundDiceKeyState, this.onReturnFromAssemblyInstructions);
 
   constructor() {
     super(SubViews.AppHomeView);

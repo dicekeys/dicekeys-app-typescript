@@ -1,6 +1,7 @@
 
 import { action, makeAutoObservable } from "mobx";
-import { AppTopLevelState } from "../state/navigation";
+import { BackupViewState } from "./BackupState";
+import { SettableDiceKeyState } from "./DiceKeyState";
 
 export enum AssemblyInstructionsStep {
   Randomize = 1,
@@ -28,22 +29,23 @@ export class AssemblyInstructionsState {
   };
   get goToPrevStep() { const {stepMinus1} = this; return stepMinus1 == null ? undefined : () => this.setStep(stepMinus1) };
   get stepPlus1() { 
-    if (this.step === AssemblyInstructionsStep.ScanFirstTime && this.topLevelState.foregroundDiceKeyState.diceKey == undefined) {
+    if (this.step === AssemblyInstructionsStep.ScanFirstTime && this.foregroundDiceKeyState.diceKey == undefined) {
       return this.userChoseToSkipScanningStep ? AssemblyInstructionsStep.SealBox : undefined;
     }
     return validStepOrUndefined(this.step+1)
   }
   get stepMinus1() {
-    if (this.step === AssemblyInstructionsStep.SealBox && this.topLevelState.foregroundDiceKeyState.diceKey == undefined) {
+    if (this.step === AssemblyInstructionsStep.SealBox && this.foregroundDiceKeyState.diceKey == undefined) {
       return AssemblyInstructionsStep.ScanFirstTime
     }
     return validStepOrUndefined(this.step-1)
   }
   userChoseToSkipScanningStep: boolean = false;
   setUserChoseToSkipScanningStep = action ( () => this.userChoseToSkipScanningStep = true );
+  backupState = new BackupViewState(this.foregroundDiceKeyState);
 
   constructor(
-    public topLevelState: AppTopLevelState,
+    public foregroundDiceKeyState: SettableDiceKeyState,
     private goBack: () => any,
     public step: AssemblyInstructionsStep = AssemblyInstructionsStep.START_INCLUSIVE,
   ) {

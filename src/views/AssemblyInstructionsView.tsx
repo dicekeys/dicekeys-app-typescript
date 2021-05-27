@@ -18,7 +18,8 @@ import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
 import { Spacer, ResizableImage, Instruction } from "./basics/";
 import { BackupContentView, BackupStepFooterView } from "./BackupView";
 import { addPreview } from "./basics/Previews";
-import {AssemblyInstructionsStep, AssemblyInstructionsState} from "./AssemblyInstructionsState";
+import {AssemblyInstructionsStep, AssemblyInstructionsState} from "../state/Window/AssemblyInstructionsState";
+import { DiceKeyState } from "../state/Window/DiceKeyState";
 
 const Center = ({children}: React.PropsWithChildren<{}>) => (
   <div style={{display: "flex", flexDirection: "row", justifyContent:"center"}}>
@@ -73,10 +74,10 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
   const startScanning = () => setScanning(true);
   const stopScanning = () => setScanning(false);
   const onDiceKeyRead = (diceKey: DiceKey) => {
-    state.topLevelState.foregroundDiceKeyState.setDiceKey(diceKey);
+    state.foregroundDiceKeyState.setDiceKey(diceKey);
     stopScanning();
   }
-  const {diceKey} = state.topLevelState.foregroundDiceKeyState;
+  const {diceKey} = state.foregroundDiceKeyState;
   return (<>
     <Spacer/>
     <Instruction>Scan the dice in the bottom of the box (without sealing the box top into place.)</Instruction>
@@ -115,8 +116,8 @@ const StepSealBox = () => (
 );
 
 const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsState}) => {
-  const createdDiceKey = state.topLevelState.foregroundDiceKey != null;
-  const backedUpSuccessfully = state.topLevelState. validateBackupState.backupScannedSuccessfully;
+  const createdDiceKey = state.foregroundDiceKeyState.diceKey != null;
+  const backedUpSuccessfully = state.backupState.validationStepState.backupScannedSuccessfully;
   return (
     <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center"}}>
       <div style={{display: "block"}}>
@@ -158,7 +159,7 @@ interface AssemblyInstructionsViewProps {
 
 const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  AssemblyInstructionsViewProps) => (
   <StepFooterView               
-    aboveFooter={(state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.diceKey == null) ? (
+    aboveFooter={(state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.foregroundDiceKeyState.diceKey == null) ? (
         <button className={stepCSS.StepButton} hidden={state.userChoseToSkipScanningStep == null}
           onClick={ ()=> runInAction( () => state.userChoseToSkipScanningStep = true) } >Let me skip scanning and backing up my DiceKey
         </button>
@@ -198,6 +199,6 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
 });
 
 addPreview("AssemblyInstructions", () => ( 
-  <AssemblyInstructionsView state={new AssemblyInstructionsState(() => {}, AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
+  <AssemblyInstructionsView state={new AssemblyInstructionsState(new DiceKeyState(DiceKey.testExample), () => {}, AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
 ));
 
