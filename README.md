@@ -1,8 +1,20 @@
 # DiceKeys TypeScript App for DiceKeys.app (and future Electron app)
 
-## Running
+## Running web app locally
 ```
-parcel src/index.html
+cd web
+npm install
+npm run start
+```
+
+## Running electron app
+```
+cd web
+npm install
+npm run build-electron-html
+cd ../electron
+npm install
+npm run start
 ```
 
 ## Run tests
