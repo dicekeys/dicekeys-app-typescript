@@ -41,7 +41,7 @@ const IntroToBackingUpToADiceKeyView = () => (<>
       </div>
     </div>
     <Instruction>Next, you will replicate the first DiceKey by copying the arrangement of dice.</Instruction>
-    <div style={{marginTop: "3rem"}}>Need another DiceKey?  You can <a href="https://dicekeys.com/store">order more</a>.</div>
+    <div style={{marginTop: "3rem"}}>Need another DiceKey?  You can <a target="_blank" href="https://dicekeys.com/store">order more</a>.</div>
   </div>
 </>)
 const IntroToBackingUpToASticKeyView = () => (
@@ -58,7 +58,7 @@ const IntroToBackingUpToASticKeyView = () => (
       </div>
     </div>
     <Instruction>Next, you will create a copy of your DiceKey on the target sheet by placing stickers.</Instruction>
-    <div style={{marginTop: "3rem"}}>Out of SticKeys?  You can <a href="https://dicekeys.com/store">order more</a>.</div>
+    <div style={{marginTop: "3rem"}}>Out of SticKeys?  You can <a  target="_blank" href="https://dicekeys.com/store">order more</a>.</div>
   </div>
 );
 
