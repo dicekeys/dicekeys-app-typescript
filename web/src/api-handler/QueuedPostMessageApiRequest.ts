@@ -108,7 +108,7 @@ export class QueuedPostMessageApiRequest extends QueuedApiRequest {
 
   throwIfClientNotPermitted: () => void = () => throwIfHostNotPermitted(this.host)(this.request);
 
-  transmitResponse = (response: ApiCalls.Response) => window.opener.postMessage(response, this.origin)
+  transmitResponse = (response: ApiCalls.Response) =>  { (this.requestEvent.source?.postMessage as (m: any, t?: Transferable[]) => unknown)(response) }
 
   static messageEventIsApiRequest = (
     candidateRequestEvent: MessageEvent
@@ -120,7 +120,7 @@ export class QueuedPostMessageApiRequest extends QueuedApiRequest {
   );
 
   constructor(
-    requestEvent: PostMessageRequestEvent
+    private requestEvent: PostMessageRequestEvent
   ) {
     super();
     const origin = requestEvent.origin;

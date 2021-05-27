@@ -20,7 +20,7 @@ const defaultRequestOrigin = `https://${defaultRequestHost}`;
 
 class MockQueuedPostMessageApiRequest extends QueuedPostMessageApiRequest {
 
-  transmitResponse = (response: ApiCalls.Response) => window.opener.postMessage(response, this.origin)
+  transmitResponse: (response: ApiCalls.Response) => any;
 
   constructor(
     requestEvent: PostMessageRequestEvent,
