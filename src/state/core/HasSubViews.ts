@@ -8,9 +8,7 @@ export abstract class HasSubViews<SUB_VIEWS> {
     this._subView = destinationSubView;
   });
 
-  protected navigateToSubView = (destinationSubView: SUB_VIEWS) => action( ()=> {
-    this._subView = destinationSubView;
-  });
+  protected navigateToSubView = (destinationSubView: SUB_VIEWS) => () => this.navigateTo(destinationSubView);
 
   get subView(): SUB_VIEWS | undefined { return this._subView; }
 

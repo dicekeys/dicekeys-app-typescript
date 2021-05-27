@@ -8,13 +8,13 @@ import { FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/r
 import { Instruction } from "../basics";
 import { addPreviewWithMargins } from "../basics/Previews";
 import { BackupMedium } from "./BackupMedium";
-import { ValidateBackupView } from "./ValidateBackup";
+import { ValidateBackupView } from "./ValidateBackupView";
 import { StickerSheetView } from "../SVG/StickerSheetView";
 import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 import stepCSS from "../Navigation/StepFooterView.module.css";
 import layoutCSS from "../../css/Layout.module.css";
-import {BackupStep, BackupViewState} from "../../state/Window/BackupState";
+import {BackupStep, BackupViewState} from "./BackupViewState";
 
 const commonButtonStyle: React.CSSProperties = {
   display: "flex",
@@ -145,16 +145,18 @@ interface BackupViewProps {
   state: BackupViewState;
   prevStepBeforeStart?: () => any;
   nextStepAfterEnd?: () => any;
+  thereAreMoreStepsAfterLastStepOfBackup?: boolean;
 }
 
 export const BackupStepFooterView = observer ( ({
     state,
     prevStepBeforeStart,
     nextStepAfterEnd,
+    thereAreMoreStepsAfterLastStepOfBackup
   }: BackupViewProps) => (
   <StepFooterView 
     aboveFooter = {
-      (state.step === BackupStep.Validate && !state.userChoseToSkipValidationStep && !state.validationStepState.backupScannedSuccessfully) ? (
+      (state.step === BackupStep.Validate && !state.userChoseToSkipValidationStep && !state.validationStepViewState.backupScannedSuccessfully) ? (
         <button className={stepCSS.StepButton}
           onClick={state.setUserChoseToSkipValidationStep} >Let me skip this step
         </button>
@@ -165,11 +167,11 @@ export const BackupStepFooterView = observer ( ({
       state.step === BackupStep.START_INCLUSIVE ? prevStepBeforeStart :
       state.setStepTo(state.stepMinus1)
     }
-    nextIsDone={state.step === (BackupStep.END_EXCLUSIVE - 1)}
+    nextIsDone={state.step === (BackupStep.END_EXCLUSIVE - 1) && !thereAreMoreStepsAfterLastStepOfBackup}
     next={
       // If at the end, allow a parent to set a next step (for embedding backup into assembly instructions)
       state.step === (BackupStep.Validate) ? (
-        (state.validationStepState.backupScannedSuccessfully || state.userChoseToSkipValidationStep) ? (nextStepAfterEnd ?? state.setStepTo(state.stepPlus1)) : undefined
+        (state.validationStepViewState.backupScannedSuccessfully || state.userChoseToSkipValidationStep) ? (nextStepAfterEnd ?? state.setStepTo(state.stepPlus1)) : undefined
       ) :
       // Don't show next when selecting a backup medium
       state.step === BackupStep.SelectBackupMedium ? undefined :

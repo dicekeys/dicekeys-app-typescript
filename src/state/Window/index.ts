@@ -1,2 +1,2 @@
-export * from "./SelectedDiceKeyViewState"
-export * from "./WindowState"
+export * from "../../views/WithSelectedDiceKey/SelectedDiceKeyViewState"
+export * from "../../views/WindowTopLevelNavigationState"

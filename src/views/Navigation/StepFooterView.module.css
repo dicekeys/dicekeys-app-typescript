@@ -5,6 +5,7 @@
   align-content: center;
   padding-bottom: 2rem;
   width: 80vw;
+  align-self: center;
 }
 
 .StepFooterRow {

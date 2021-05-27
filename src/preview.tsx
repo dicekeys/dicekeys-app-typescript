@@ -13,11 +13,11 @@ import { Preview_FaceCopyingView } from "./views/SVG/FaceCopyingView";
 import { getPreview, addPreviewWithMargins, addCenteredPreview, getPreviewNames } from "./views/basics/Previews";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
-
-import {AppTopLevelRoutingView} from "./views/AppTopLevelRoutingView";
+import {ButtonsCSS} from "./css"
+import {WindowRoutingView} from "./views/WindowTopLevelView";
 
 // To make sure everything is loaded, load the view for the app even if we're not using it.
-if (!AppTopLevelRoutingView) {
+if (!WindowRoutingView) {
   console.log("Failed to load the app top level view.")
 }
 
@@ -52,7 +52,7 @@ const Previews = observer ( () =>
   previewState.preview?.() ?? (
     <div style={{display: "flex", flexDirection: "column", justifyContent: "space-around", alignContent: "space-around"}}>
       {getPreviewNames().map( name => (
-        <button onClick={() => previewState.setName(name)}>{name}</button>
+        <button key={name} className={ButtonsCSS.PushButton} onClick={() => previewState.setName(name)}>{name}</button>
       ))}
     </div>
   )

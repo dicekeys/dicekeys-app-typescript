@@ -1,8 +1,8 @@
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
-import { BackupMedium } from "../../views/BackupView/BackupMedium";
-import { ValidateBackupState, ValidateBackupViewState } from "./BackupValidationState";
-import { DiceKeyState } from "./DiceKeyState";
+import { BackupMedium } from "./BackupMedium";
+import { ValidateBackupViewState } from "./ValidateBackupViewState";
+import { DiceKeyState } from "../../state/Window/DiceKeyState";
 
 export enum BackupStep {
   SelectBackupMedium = 1,
@@ -32,8 +32,7 @@ export class BackupViewState {
 
   backupMedium?: BackupMedium;
   diceKeyScannedFromBackup = new DiceKeyState();
-  validationStepState: ValidateBackupState = new ValidateBackupState(this.diceKeyState, this.diceKeyScannedFromBackup);
-  validationStepViewState: ValidateBackupViewState = new ValidateBackupViewState(this.validationStepState);
+  validationStepViewState = new ValidateBackupViewState(this.diceKeyState, this.diceKeyScannedFromBackup);
 
   setBackupMedium = (newMedium: BackupMedium) => action ( () => {
     this.backupMedium = newMedium;

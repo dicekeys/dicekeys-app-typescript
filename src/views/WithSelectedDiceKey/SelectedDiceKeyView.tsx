@@ -14,7 +14,7 @@ import { SeedHardwareKeyView, SeedHardwareKeyViewState } from "./SeedHardwareKey
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 import { BackupView } from "../BackupView/BackupView";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
-import { SelectedDiceKeyViewState } from "../../state/Window/SelectedDiceKeyViewState";
+import { SelectedDiceKeyViewState } from "./SelectedDiceKeyViewState";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 // const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar

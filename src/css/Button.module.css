@@ -1,0 +1,10 @@
+.PushButton {
+  display: block;
+  width: fit-content;
+  align-self: center;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  margin: 0.5rem;
+}

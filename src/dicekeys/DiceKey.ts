@@ -524,7 +524,7 @@ export class DiceKey {
   get centerLetterAndDigit(): string { return this.centerFace.letter + this.centerFace.digit }
   get nickname(): string { return`DiceKey with ${this.centerLetterAndDigit} in center`; }
 
-  compareTo = (other: DiceKey) =>
+  compareTo = (other: DiceKey): DiceKeyComparisonResult =>
   // Compare DiceKey a against the four possible rotations of B to get the list of errors
   ([0, 1, 2, 3] as const)
     .map( clockwiseTurnsFromUpright => {
@@ -547,4 +547,10 @@ export class DiceKey {
       orientationAsLowercaseLetterTrbl: "trbl"[i % 4]
     } as Face ) ) as ReadOnlyTupleOf25Items<Face>
   )
+}
+
+export interface DiceKeyComparisonResult {
+  clockwiseTurnsFromUpright: 0 | 1 | 2 | 3;
+  errors: FaceComparisonError[];
+  otherDiceKeyRotated: DiceKey;
 }

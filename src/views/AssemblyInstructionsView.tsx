@@ -1,6 +1,7 @@
 import css from "./AssemblyInstructionsView.module.css";
 import stepCSS from "./Navigation/StepFooterView.module.css";
 import layoutCSS from "../css/Layout.module.css";
+import {ButtonsCSS} from "../css";
 
 import { DiceKey } from "../dicekeys/DiceKey";
 import { runInAction } from "mobx";
@@ -15,10 +16,10 @@ import ScanDiceKeyImage from /*url:*/"../images/Scanning a DiceKey.svg";
 import SealBox from /*url:*/"../images/Seal Box.svg";
 import { DiceKeyViewAutoSized } from "./SVG/DiceKeyView";
 import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
-import { Spacer, ResizableImage, Instruction } from "./basics/";
+import { Spacer, ResizableImage, Instruction, CenteredControls } from "./basics/";
 import { BackupContentView, BackupStepFooterView } from "./BackupView";
 import { addPreview } from "./basics/Previews";
-import {AssemblyInstructionsStep, AssemblyInstructionsState} from "../state/Window/AssemblyInstructionsState";
+import {AssemblyInstructionsStep, AssemblyInstructionsState} from "./AssemblyInstructionsState";
 import { DiceKeyState } from "../state/Window/DiceKeyState";
 
 const Center = ({children}: React.PropsWithChildren<{}>) => (
@@ -84,19 +85,24 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
     <Spacer/>
     { scanning ? (<>
       <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } />
-      <button onClick={stopScanning}>Cancel</button>
+      <CenteredControls>
+        <button className={ButtonsCSS.PushButton} onClick={stopScanning}>Cancel</button>
+      </CenteredControls>
     </>) : diceKey != null ? (<>
         <Center>
           <DiceKeyViewAutoSized maxHeight="50vh" maxWidth="70vw" faces={diceKey.faces} />
         </Center>
-        <Spacer/>
-        <button onClick={startScanning} >Scan again</button>
+        <CenteredControls>
+          <button className={ButtonsCSS.PushButton} onClick={startScanning} >Scan again</button>
+        </CenteredControls>
       </>) : (<>
         <Center>
           <ResizableImage src={ScanDiceKeyImage} alt="Illustration of scanning a DiceKey with a device camera."/>
         </Center>
         <Spacer/>
-        <button onClick={startScanning}>Scan</button>
+        <CenteredControls>
+          <button className={ButtonsCSS.PushButton} onClick={startScanning}>Scan</button>
+        </CenteredControls>
         <Spacer/>
       </>)
     }
@@ -117,7 +123,7 @@ const StepSealBox = () => (
 
 const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsState}) => {
   const createdDiceKey = state.foregroundDiceKeyState.diceKey != null;
-  const backedUpSuccessfully = state.backupState.validationStepState.backupScannedSuccessfully;
+  const backedUpSuccessfully = state.backupState.validationStepViewState.backupScannedSuccessfully;
   return (
     <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center"}}>
       <div style={{display: "block"}}>
@@ -176,7 +182,7 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
   return (
     <div className={layoutCSS.HeaderFooterContentBox}>
       <SimpleTopNavBar title={"Assembly Instructions"} goBack={ onComplete } />
-      <div className={[layoutCSS.PaddedContentBox, layoutCSS.HeaderFooterContentBox].join(" ")}>
+      <div className={[layoutCSS.HeaderFooterContentBox, layoutCSS.HeaderFooterContentBox].join(" ")}>
         {/* Header, empty for spacing purposes only */}
         <div></div>
         {/* Content */}
@@ -185,20 +191,28 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
         </div>
         {/* Footer */
           state.step === AssemblyInstructionsStep.CreateBackup ? (
-            <BackupStepFooterView state={state.backupState} nextStepAfterEnd={props.state.goToNextStep} prevStepBeforeStart={props.state.goToPrevStep} />
+            <BackupStepFooterView state={state.backupState}
+              /* when final backup step is done we'll go to the next step of assembly */
+              nextStepAfterEnd={props.state.goToNextStep}
+              /* If stepping back from the first step of backup, move to the previous assembly step */
+              prevStepBeforeStart={props.state.goToPrevStep}
+              /* ensures that last step isn't marked as "done" as more assembly steps follow */
+              thereAreMoreStepsAfterLastStepOfBackup={true}
+            />
           ) : (
+            /* Show the step footer for all steps other than the sub-steps of the Backup process */
             <AssemblyInstructionsStepFooterView {...props}  />
           )
         }
       </div>
       {/* Show the warning about not sealing the box until we have reached the box-sealing step. */}
-      <div className={css.WarningFooter} hidden={state.step >= AssemblyInstructionsStep.SealBox}>
+      <div className={css.WarningFooter} style={(state.step >= AssemblyInstructionsStep.SealBox ? {visibility: "hidden"} : {})}>
         Do not close the box before the final step</div>
       </div>
   )
 });
 
 addPreview("AssemblyInstructions", () => ( 
-  <AssemblyInstructionsView state={new AssemblyInstructionsState(new DiceKeyState(DiceKey.testExample), () => {}, AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
+  <AssemblyInstructionsView state={new AssemblyInstructionsState(new DiceKeyState(DiceKey.testExample), AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
 ));
 

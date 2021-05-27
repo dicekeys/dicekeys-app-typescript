@@ -1,4 +1,4 @@
-.HeaderFooterContentBox, .PaddedContentBox {
+.HeaderFooterContentBox, .PaddedContentBox, .ContentBox {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -6,6 +6,10 @@
   overflow: hide;
   flex-grow: 1;
   align-self: stretch;
+}
+
+.ContentBox {
+  justify-content: space-around;
 }
 
 .PaddedContentBox {

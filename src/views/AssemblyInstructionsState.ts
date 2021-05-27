@@ -1,7 +1,7 @@
 
 import { action, makeAutoObservable } from "mobx";
-import { BackupViewState } from "./BackupState";
-import { SettableDiceKeyState } from "./DiceKeyState";
+import { BackupViewState } from "./BackupView/BackupViewState";
+import { SettableDiceKeyState } from "../state/Window/DiceKeyState";
 
 export enum AssemblyInstructionsStep {
   Randomize = 1,
@@ -21,9 +21,6 @@ const validStepOrUndefined = (step: number): AssemblyInstructionsStep | undefine
 export class AssemblyInstructionsState {
   setStep = action ( (step?: AssemblyInstructionsStep) => { if (step != null) { this.step = step } } );
   get goToNextStep(): (() => any) | undefined {
-    if (this.step === (AssemblyInstructionsStep.END_EXCLUSIVE - 1)) {
-      return this.goBack
-    }
     const {stepPlus1} = this;
     return stepPlus1 == null ? undefined : (() => this.setStep(stepPlus1))
   };
@@ -46,10 +43,8 @@ export class AssemblyInstructionsState {
 
   constructor(
     public foregroundDiceKeyState: SettableDiceKeyState,
-    private goBack: () => any,
     public step: AssemblyInstructionsStep = AssemblyInstructionsStep.START_INCLUSIVE,
   ) {
-    this.step = step;
     makeAutoObservable(this);
   }
 }

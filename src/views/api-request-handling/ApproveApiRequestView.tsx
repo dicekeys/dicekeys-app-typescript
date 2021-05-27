@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "./api-request-container.module.css";
-import {Layout} from "../../css";
+import {ButtonsCSS, Layout} from "../../css";
 import {
   ApiCalls} from "@dicekeys/dicekeys-api-js";
 import {
@@ -112,8 +112,8 @@ const ApproveApiRequestViewProps = observer( (props: ApproveApiRequestViewProps)
         <KeyAccessRestrictionsView host={host} />
       </div>
       <CenteredControls>
-        <button onClick={handleDeclineRequestButton}>Cancel</button>
-        <button hidden={true} onClick={handleApproveRequestButton}>{ shortDescribeCommandsAction(command) }</button>
+        <button className={ButtonsCSS.PushButton} onClick={handleDeclineRequestButton}>Cancel</button>
+        <button className={ButtonsCSS.PushButton} hidden={true} onClick={handleApproveRequestButton}>{ shortDescribeCommandsAction(command) }</button>
       </CenteredControls>
     </div>
   )

@@ -41,8 +41,8 @@ export class DiceKeyFrameProcessorState {
    */
   private framesSinceErrorsNarrowedToJustBitErrors: number | undefined;
 
-  private onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
-  private onDiceKeyRead?: (diceKeyRead: DiceKey) => any
+  public onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
+  public onDiceKeyRead?: (diceKeyRead: DiceKey) => any
 
   constructor({onFacesRead, onDiceKeyRead}: {
     onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
@@ -50,7 +50,10 @@ export class DiceKeyFrameProcessorState {
   }) {
     this.onDiceKeyRead = onDiceKeyRead;
     this.onFacesRead = onFacesRead;
-    makeAutoObservable(this);
+    makeAutoObservable(this, {
+      onFacesRead: false,
+      onDiceKeyRead: false,
+    });
   }
 
   private scanningSuccessful = action ( (): true => {

@@ -64,7 +64,6 @@
 }
 
 .centered_controls, .decision_button_container {
-  margin: 1rem;
   display: flex;
   flex-direction: row;
   flex-grow: 1;

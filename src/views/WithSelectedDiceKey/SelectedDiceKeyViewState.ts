@@ -1,6 +1,6 @@
-import { BackupViewState } from "./BackupState";
-import { HasSubViews } from "../core";
-import { DiceKeyState } from "./DiceKeyState";
+import { BackupViewState } from "../BackupView/BackupViewState";
+import { HasSubViews } from "../../state/core";
+import { DiceKeyState } from "../../state/Window/DiceKeyState";
 
 export enum SelectedDiceKeySubViews {
   DisplayDiceKey, // primary view
