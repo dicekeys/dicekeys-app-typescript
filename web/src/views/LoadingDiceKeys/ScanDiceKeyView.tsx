@@ -1,38 +1,34 @@
 import cssRequiredNotice from "./camera-permissions-required-notification.module.css";
-import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import { FaceRead } from "@dicekeys/read-dicekey-js";
 import { CameraCaptureWithOverlay } from "./CameraCaptureWithOverlay";
 import { DiceKeyFrameProcessorState } from "./DiceKeyFrameProcessorState";
 import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
-import { MediaStreamState } from "./CameraCaptureView";
 import { CamerasOnThisDevice } from "./CamerasOnThisDevice";
 import { DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
 import { Layout } from "../../css";
-import { CenteredControls } from "../../views/basics";
+import { MediaStreamState } from "./MediaStreamState";
+import { CameraSelectionView } from "./CameraSelectionView";
 
-interface CameraSelectionViewProps {
-  onCameraSelected?: (camerasDeviceId: string) => any;
-}
-const CameraSelectionView = observer ( (props: React.PropsWithoutRef<CameraSelectionViewProps>) => {
-  const cameras = CamerasOnThisDevice.instance.cameras;
-  const defaultDevice = cameras[0];
-  if (defaultDevice) {
-    runInAction( () => {
-      props.onCameraSelected?.(defaultDevice.deviceId);
-    });
-  }
-  return (
-    <CenteredControls>
-      <select value={cameras[0]?.deviceId ?? ""} onChange={ (e) => props.onCameraSelected?.(e.target.value)} >
-        { cameras.map( camera => (
-          <option key={camera.deviceId} value={camera.deviceId}>{ camera.name }</option>
-        ))}
-      </select>
-    </CenteredControls>
-  )
-});
+const minCameraWidth = 1024;
+const minCameraHeight = 720;
+const defaultMediaTrackConstraints: MediaTrackConstraints = {
+  width: {
+//          ideal: Math.min(camera.capabilities?.width?.max ?? defaultCameraDimensions.width, defaultCameraDimensions.width),
+    max: 1280,
+    ideal: 1024,
+    min: minCameraWidth,
+  },
+  height: {
+//          ideal: Math.min(camera.capabilities?.height?.max ?? defaultCameraDimensions.height, defaultCameraDimensions.height),
+    max: 1280,
+    min: minCameraHeight,
+    ideal: 1024,
+  },
+  aspectRatio: {ideal: 1},
+  // advanced: [{focusDistance: {ideal: 0}}]
+};
 
 type ScanDiceKeyViewProps = React.PropsWithoutRef<{
   onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
@@ -53,9 +49,8 @@ const PermissionRequiredView = () => {
 }
 
 export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Component<ScanDiceKeyViewProps>  {
-
   frameProcessorState: DiceKeyFrameProcessorState;
-  mediaStreamState = new MediaStreamState();
+  mediaStreamState = new MediaStreamState(defaultMediaTrackConstraints);
   onFrameCaptured = async (framesImageData: ImageData, canvasRenderingContext: CanvasRenderingContext2D): Promise<void> => {
     this.frameProcessorState.handleProcessedCameraFrame(await processDiceKeyImageFrame(framesImageData), canvasRenderingContext);
   }
@@ -65,27 +60,8 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
     this.frameProcessorState = new DiceKeyFrameProcessorState(props);
   }
 
-  onCameraSelected = (deviceId: string ) => {
-    const mediaTrackConstraints: MediaTrackConstraints = {
-      deviceId,
-      width: {
-//          ideal: Math.min(camera.capabilities?.width?.max ?? defaultCameraDimensions.width, defaultCameraDimensions.width),
-        max: 1280,
-          min: 1024,
-      },
-      height: {
-//          ideal: Math.min(camera.capabilities?.height?.max ?? defaultCameraDimensions.height, defaultCameraDimensions.height),
-        max: 1280,
-          min: 1024
-      },
-      aspectRatio: {ideal: 1},
-      // advanced: [{focusDistance: {ideal: 0}}]
-    };
-    this.mediaStreamState.setMediaStreamFromConstraints(mediaTrackConstraints);
-  }
-
   componentWillUnmount() {
-    this.mediaStreamState.clearMediaStream();
+    this.mediaStreamState.clear();
   }
 
   render() {
@@ -96,7 +72,7 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
     return (
       <div className={Layout.ColumnStretched}>
         <CameraCaptureWithOverlay onFrameCaptured={this.onFrameCaptured} mediaStreamState={this.mediaStreamState} />
-        <CameraSelectionView onCameraSelected={this.onCameraSelected} />
+        <CameraSelectionView mediaStreamState={this.mediaStreamState} {...{minCameraWidth, minCameraHeight}} />
       </div>
     );
   }

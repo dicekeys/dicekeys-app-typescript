@@ -3,16 +3,16 @@ import React from "react";
 import { observer } from "mobx-react";
 import { OverlayCanvas } from "../basics/overlay-canvas";
 import { createReactObservableBounds } from "../basics/bounds";
-import { MediaStreamState, CameraCaptureView } from "./CameraCaptureView";
 import { Layout } from "../../css";
+import { MediaStreamState } from "./MediaStreamState";
+import { FrameGrabberUsingImageCapture } from "./FrameGrabberUsingImageCapture";
+import { FrameGrabberFromVideoElement } from "./FrameGrabberFromVideoElement";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
-
-
 export interface CameraCaptureWithOverlayProperties {
   mediaStreamState: MediaStreamState;
-  onVideoElementRef?: (e: HTMLVideoElement | undefined) => any;
+//  onVideoElementRef?: (e: HTMLVideoElement | undefined) => any;
   onFrameCaptured?: (frame: ImageData, canvasRenderingContext: CanvasRenderingContext2D) => any;
 }
 
@@ -39,18 +39,33 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
 
   render() {
     const [videoElementBounds, makeThisVideoElementsBoundsObservable] = createReactObservableBounds();
-
+    const useImageCapture = ImageCapture != null;
+    const useVideoElementCapture = !useImageCapture;
+    if (useImageCapture) {
+      const {mediaStream} = this.props.mediaStreamState;
+      const track = mediaStream?.getTracks()[0];
+      if (track) {
+        new FrameGrabberUsingImageCapture(track, this.onFrameCaptured);;
+      }
+    }
+         
+    const withVideoElementRef = (videoElement: HTMLVideoElement | null) => {
+      if (videoElement == null) return;
+//      autorun( () => {
+        videoElement.srcObject = this.props.mediaStreamState.mediaStream ?? null;
+//      });
+      makeThisVideoElementsBoundsObservable(videoElement);
+      if (useVideoElementCapture && videoElement.srcObject != null) {
+        new FrameGrabberFromVideoElement(videoElement, this.onFrameCaptured) 
+      }
+    };
+  
     return (
       <div className={Layout.ColumnCentered}>
-        <CameraCaptureView
-          onFrameCaptured={this.onFrameCaptured}
-          mediaStreamState={this.props.mediaStreamState}
-          makeThisElementsBoundsObservable={makeThisVideoElementsBoundsObservable}
-        />
+        <video autoPlay={true} ref={withVideoElementRef} />
         <OverlayCanvas bounds={videoElementBounds} ref={ e => {
           this.renderingContext = e?.getContext("2d") ?? undefined;
         }} />
-        {/* <canvas ref={c => this.testCanvasIllustratingFramesCaptured = c ?? undefined}/> */}
       </div>
     );
   }
