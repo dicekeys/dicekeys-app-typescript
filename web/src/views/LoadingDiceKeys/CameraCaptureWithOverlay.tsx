@@ -7,6 +7,7 @@ import { Layout } from "../../css";
 import { MediaStreamState } from "./MediaStreamState";
 import { FrameGrabberUsingImageCapture } from "./FrameGrabberUsingImageCapture";
 import { FrameGrabberFromVideoElement } from "./FrameGrabberFromVideoElement";
+import { WithSettableBounds, SettableBounds } from "../../utilities/WithBounds";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
@@ -23,19 +24,12 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
 
   onFrameCaptured = async (frame: ImageData) => {
     const renderingContext = this.renderingContext;
-    // const c = this.testCanvasIllustratingFramesCaptured;
-    // if (c) {
-    //   c.width = frame.width;
-    //   c.height = frame.height;
-    //   const ctx = c.getContext("2d");
-    //   ctx?.putImageData(frame, 0, 0);
-    // }
     if (renderingContext) {
       await this.props.onFrameCaptured?.(frame, renderingContext);
     }
   }
 
-  // testCanvasIllustratingFramesCaptured?: HTMLCanvasElement
+  settableBounds = new SettableBounds();
 
   render() {
     const [videoElementBounds, makeThisVideoElementsBoundsObservable] = createReactObservableBounds();
@@ -62,10 +56,20 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
   
     return (
       <div className={Layout.ColumnCentered}>
-        <video autoPlay={true} ref={withVideoElementRef} />
-        <OverlayCanvas bounds={videoElementBounds} ref={ e => {
-          this.renderingContext = e?.getContext("2d") ?? undefined;
-        }} />
+        <WithSettableBounds settableBounds={this.settableBounds} aspectRatioWidthOverHeight={1} maxWidth="100vw" maxHeight="75vh">
+          { bounds => (<>
+            <video
+              width={bounds.width}
+              height={bounds.height}
+              autoPlay={true}
+              ref={withVideoElementRef}
+            />
+            <OverlayCanvas
+              bounds={videoElementBounds}
+              ref={ e => { this.renderingContext = e?.getContext("2d") ?? undefined; }
+            } />
+          </>)
+        }</WithSettableBounds>
       </div>
     );
   }

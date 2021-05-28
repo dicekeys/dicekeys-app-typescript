@@ -32,7 +32,6 @@ export class MediaStreamState {
       this.clear();
       return;
     }
-    this._deviceId = deviceId;
     const mediaTrackConstraints: MediaTrackConstraints = {
       ...this.defaultMediaTrackConstraints,
       deviceId,

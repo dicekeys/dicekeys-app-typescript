@@ -14,13 +14,12 @@ export const useContainerDimensions = (myRef: React.RefObject<any>, setBounds: (
 
   React.useEffect(() => {
     const handleResize = () => {
-      setBounds(getBounds())
+      if (myRef.current) {
+        setBounds(getBounds())
+      }
     }
 
-    if (myRef.current) {
-      setBounds(getBounds())
-    }
-
+    handleResize();
     window.addEventListener("resize", handleResize)
 
     return () => {
@@ -31,27 +30,40 @@ export const useContainerDimensions = (myRef: React.RefObject<any>, setBounds: (
   setBounds(getBounds());
 };
 
-class SettableBounds {
+export class SettableBounds {
+
   width: number = 0;
   height: number = 0;
+
+  get bounds() { 
+    const {width, height} = this;
+    return {width, height} as Bounds;
+  }
+
+  setBounds = action ( (bounds: Bounds) => {
+    this.width = bounds.width;
+    this.height = bounds.height;
+  });
   
   constructor() {
     makeAutoObservable(this);
   }
+  // fitBounds = this.fitToAspectRatioAsWidthOverHeight == null ? undefined :
+  //   fitRectangleWithAspectRatioIntoABoundingBox(this.fitToAspectRatioAsWidthOverHeight);
 
-  static create = (fitToAspectRatioAsWidthOverHeight?: number) => {
-    const fitBounds = fitToAspectRatioAsWidthOverHeight == null ? undefined :
-      fitRectangleWithAspectRatioIntoABoundingBox(fitToAspectRatioAsWidthOverHeight);
-    const bounds = new SettableBounds();
-    const setBounds = action ( (divBounds: Bounds) => {
-      const {width, height} = fitBounds != null ? fitBounds(divBounds) : divBounds;
-      bounds.width = width;
-      bounds.height = height;
-    })
-    return {bounds: bounds as Bounds, setBounds}
-  }
+  // static create = (fitToAspectRatioAsWidthOverHeight?: number) => {
+  //   const fitBounds = fitToAspectRatioAsWidthOverHeight == null ? undefined :
+  //     fitRectangleWithAspectRatioIntoABoundingBox(fitToAspectRatioAsWidthOverHeight);
+  //   const bounds = new SettableBounds();
+  //   const setBounds = action ( (divBounds: Bounds) => {
+  //     const {width, height} = fitBounds != null ? fitBounds(divBounds) : divBounds;
+  //     bounds.width = width;
+  //     bounds.height = height;
+  //   })
+  //   return {bounds: bounds as Bounds, setBounds}
+  // }
 }
-export const createBounds = SettableBounds.create;
+// export const createBounds = SettableBounds.create;
 
 export interface OptionalMaxSizeCalcProps {
   maxWidth?: string,
@@ -64,7 +76,7 @@ export interface OptionalAspectRatioProps extends OptionalMaxSizeCalcProps {
 
 type WithBoundsProps = OptionalAspectRatioProps & {
   weight?: number,
-  children: (bounds: Bounds) => JSX.Element,
+  children: (bounds: SettableBounds) => JSX.Element,
 };
 
 const createAspectRatioStyle = (props: OptionalAspectRatioProps): React.CSSProperties => {
@@ -77,17 +89,19 @@ const createAspectRatioStyle = (props: OptionalAspectRatioProps): React.CSSPrope
   }
 }
 
-export const WithBounds = observer( (props: WithBoundsProps & OptionalAspectRatioProps & React.HTMLAttributes<HTMLDivElement>) => {
+export const WithSettableBounds = observer( (props: WithBoundsProps & {settableBounds: SettableBounds} & React.HTMLAttributes<HTMLDivElement>) => {
   const componentRef = React.useRef<HTMLDivElement>(null);
 
   const {
     weight, children, style,
     aspectRatioWidthOverHeight, maxHeight, maxWidth,
+    settableBounds,
     ...divProps
   } = props;
+  const fit = aspectRatioWidthOverHeight ? fitRectangleWithAspectRatioIntoABoundingBox(aspectRatioWidthOverHeight) : undefined;
+
   const aspectRatioStyle = createAspectRatioStyle({aspectRatioWidthOverHeight, maxWidth, maxHeight})
-  const {bounds, setBounds} = createBounds(aspectRatioWidthOverHeight);
-  useContainerDimensions(componentRef, setBounds);
+  useContainerDimensions(componentRef, (bounds) => settableBounds.setBounds( fit ? fit(bounds) : bounds ));
 
   const flexWeightAsCSS = weight == null ? {} : {flexGrow: weight, flexShrink: weight};
   return (
@@ -100,8 +114,12 @@ export const WithBounds = observer( (props: WithBoundsProps & OptionalAspectRati
         ...style,
     }} ref={componentRef}>
       <div className={css.WithBoundsColumn} >
-        { children(bounds) }
+        { children(settableBounds) }
        </div>
     </div>
   )
 });
+
+export const WithBounds = (props: WithBoundsProps & OptionalAspectRatioProps & React.HTMLAttributes<HTMLDivElement>) => (
+  <WithSettableBounds {...props} settableBounds={new SettableBounds()} /> 
+);
