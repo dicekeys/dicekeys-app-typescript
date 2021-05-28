@@ -39,7 +39,7 @@ export const savedRecipeIdentifier = (storedRecipe: StoredRecipe) =>
 export const builtInRecipeIdentifier = (storedRecipe: StoredRecipe) =>
   `${builtInPrefix}${jsonStringifyWithSortedFieldOrder(storedRecipe)}` as BuiltInRecipeIdentifier;
 export const customRecipeIdentifier = (storedRecipe: Omit<StoredRecipe, "recipeJson" | "name">) =>
-  `${customPrefix}${jsonStringifyWithSortedFieldOrder(storedRecipe)}` as BuiltInRecipeIdentifier;
+  `${customPrefix}${jsonStringifyWithSortedFieldOrder(storedRecipe)}` as CustomRecipeIdentifier;
 export const isSavedRecipeIdentifier = 
   (recipeIdentifier?: SavedRecipeIdentifier | string): recipeIdentifier is SavedRecipeIdentifier =>
     !!(recipeIdentifier?.startsWith(savedPrefix));

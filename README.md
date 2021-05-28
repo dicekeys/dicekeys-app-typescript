@@ -1,8 +1,43 @@
 # DiceKeys TypeScript App for DiceKeys.app (and future Electron app)
 
-## Running
+=======
+## Requirements
+
+## Running web app locally
+Tested to work with Node.js LTS v14.
+
+Install [TypeScript](https://www.typescriptlang.org/download) in your system.
 ```
-parcel src/index.html
+npm install -g typescript
+```
+
+Install [Parcel](https://parceljs.org/) in your system.
+```
+npm install -g parcel-bundler
+```
+
+Make sure you have access to [GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-with-a-personal-access-token).
+(add you personal token to ~/.npmrc)
+
+Install modules
+```
+cd web
+npm install
+```
+_If `npm` fails, check **GitHub Packages** instructions._
+
+```
+npm run start
+```
+
+## Running electron app
+```
+cd web
+npm install
+npm run build-electron-html
+cd ../electron
+npm install
+npm run start
 ```
 
 ## Run tests
