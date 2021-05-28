@@ -40,6 +40,21 @@ npm install
 npm run start
 ```
 
+## Build electron app for Linux
+
+Create the build image
+```
+cd electron
+docker build -f Dockerfile.linux . --tag dicekeys_build_linux
+```
+
+Create **deb**, **rpm** and **zip**. Output files resides in `out` folder.
+```
+cd electron
+docker run --rm -v $PWD:/dicekeys dicekeys_build_linux
+```
+
+
 ## Run tests
 ```
 jest
