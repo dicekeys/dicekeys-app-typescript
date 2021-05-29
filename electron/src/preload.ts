@@ -11,5 +11,30 @@ contextBridge.exposeInMainWorld('ElectronBridge', {
     // Get cli args
     cliArgs: () => {
         return ipcRenderer.sendSync('cli-args')
+    },
+    openFileDialog: (options: Electron.OpenDialogOptions, code: string) => {
+        return new Promise<Electron.OpenDialogReturnValue>(function(resolve, reject){
+            ipcRenderer.on('open-file-dialog-response' , function listener(event, value, eventCode){
+                if(code === eventCode){
+                    resolve(value)
+                    ipcRenderer.removeListener('open-file-dialog-response', listener)
+                }
+            });
+
+            ipcRenderer.send('open-file-dialog', options, code)
+        });
+    },
+    openMessageDialog: (options: Electron.MessageBoxOptions, code: string) => {
+        return new Promise<Electron.MessageBoxReturnValue>(function(resolve, reject){
+            ipcRenderer.on('open-message-dialog-response' , function listener(event, value, eventCode){
+                if(code === eventCode){
+                    resolve(value)
+                    ipcRenderer.removeListener('open-message-dialog-response', listener)
+                }
+            });
+
+            ipcRenderer.send('open-message-dialog', options, code)
+        });
     }
+
 } as IElectronBridge)
