@@ -2,11 +2,14 @@ import {app, BrowserWindow, ipcMain} from 'electron';
 import * as path from 'path';
 
 import * as squirrelCheck from './electron-squirrel-startup'
+import ipcRenderer = Electron.Renderer.ipcRenderer;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (squirrelCheck()) {
   app.quit();
 }
+
+const cliArgs = process.argv.slice(2);
 
 let mainWindow: BrowserWindow
 
@@ -72,6 +75,12 @@ if (instanceLock) {
 
 // Return value and exit
 ipcMain.on("cli-result", (event, result) => {
-  process.stdout.write(result + '\n');
+  process.stdout.write(result);
+  process.stdout.write('\n');
   process.exit(0)
+})
+
+// Return cli arguments
+ipcMain.on('cli-args', (event, arg) => {
+  event.returnValue = cliArgs
 })

@@ -12,7 +12,7 @@ module.exports = {
       "^(/README.md$)",
       "src"
     ],
-    "executableName": "dicekeys",
+    "executableName": "DiceKeys",
     "icon": "./packaging/icon.icns"
 },
   publishers: {
