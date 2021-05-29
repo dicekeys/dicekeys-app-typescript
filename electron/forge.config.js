@@ -42,8 +42,11 @@ module.exports = {
       "name": "@electron-forge/maker-deb",
       "config": {
         options: {
+          bin: 'DiceKeys',
+          productName: 'DiceKeys',
           maintainer: 'DiceKeys LLC',
-          homepage: 'https://dicekeys.com'
+          homepage: 'https://dicekeys.com',
+          categories: ['Utility']
         }
       }
     },
