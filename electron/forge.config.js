@@ -15,6 +15,15 @@ module.exports = {
     "executableName": "dicekeys",
     "icon": "./packaging/icon.icns"
 },
+  publishers: {
+    "name": "@electron-forge/publisher-github",
+    "config": {
+      "repository": {
+        "owner": "dicekeys",
+        "name": "dicekeys-app-web"
+      }
+    }
+  },
   "makers": [
     {
       "name": "@electron-forge/maker-squirrel",

@@ -39,19 +39,25 @@ cd ../electron
 npm install
 npm run start
 ```
+## Build electron app for macOS
 
-## Build electron app for Linux
+```
+cd electron
+npm run make
+```
+
+## Build electron app for Windows/Linux
 
 Create the build image
 ```
 cd electron
-docker build -f Dockerfile.linux . --tag dicekeys_build_linux
+docker build -f Dockerfile . --tag dicekeys_build
 ```
 
 Create **deb**, **rpm** and **zip**. Output files resides in `out` folder.
 ```
 cd electron
-docker run --rm -v $PWD:/dicekeys dicekeys_build_linux
+docker run --rm -v $PWD:/dicekeys dicekeys_build
 ```
 
 
