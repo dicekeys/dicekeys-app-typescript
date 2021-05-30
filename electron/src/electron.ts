@@ -108,13 +108,20 @@ implementSyncApi( "writeResultToStdOutAndExit", (result) => {
   process.stdout.write('\n');
   process.exit(0)
 });
-implementSyncApi( "getCommandLineArguments", () => 
+implementSyncApi( "getCommandLineArguments", () => {
   /**
-    The first two arguments are the path and the executable name, so the actual command line arguments start at index 2.
+    When executed with electron command the first two arguments are the path and the executable name,
+    so the actual command line arguments start at index 2. When executed as packed binary the actual
+    command line arguments start at index 1.
     See: https://nodejs.org/docs/latest/api/process.html#process_process_argv.
-    The constant represents only the arguments that follow the path and executable nae.
+    The constant represents only the arguments that follow the path and executable name.
   */
-  process.argv.slice(2)
- );
+  const argv = process.argv
+  if(argv[0].toLowerCase().endsWith("electron")){
+      return argv.slice(2)
+  }else{
+      return argv.slice(1)
+  }
+});
 implementAsyncApi( "openFileDialog", (options) => dialog.showOpenDialog(mainWindow, options) );
 implementAsyncApi( "openMessageDialog", (options) => dialog.showMessageBox(mainWindow, options) );

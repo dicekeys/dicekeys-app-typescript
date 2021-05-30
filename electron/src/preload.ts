@@ -25,14 +25,14 @@ const createIpcAsyncRequestClientFunction = <CHANNEL extends ElectronIpcAsyncReq
     const responseChannel = responseChannelNameFor(channel)
     // Create a listener function that will resolve the promise and stop listening when
     // the event code matches
-    const responseListener = (event: Electron.IpcRendererEvent, value: ElectronBridgeAsyncApiResponse<CHANNEL>, eventCode: string) => {
+    const responseListener = (event: Electron.IpcRendererEvent, eventCode: string, response: ElectronBridgeAsyncApiResponse<CHANNEL>) => {
       if (eventCode === exceptionCodeFor(codeToMatch) ) {
         // The value is actually an exception and we should reject the promise.
-        reject(value);
+        reject(response);
         ipcRenderer.removeListener(responseChannel, responseListener);
       } else if (eventCode === codeToMatch) {
         // The response code matches the request and so we should resolve the request
-        resolve(value)
+        resolve(response)
         ipcRenderer.removeListener(responseChannel, responseListener);
       }
     }
