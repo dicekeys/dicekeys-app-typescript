@@ -1,0 +1,93 @@
+.TopNavigationBar, .BottomNavigationBar {
+  width: 100vw;
+  display: flex;
+  flex-direction: row;
+  flex: 0 0 auto;
+  font-size: 1.75rem;
+  /* padding-top: 0.5rem;
+  padding-bottom: 0.5rem; */
+  text-align: center;
+}
+
+.TopNavigationBar {
+  height: 3rem;
+  background-color: #5576C5;
+}
+
+.BottomNavigationBar {
+  height: 5rem;
+  background-color: gray;
+  align-items: baseline;
+}
+
+
+.BetweenTopAndBottomNavigationBars {
+  height: calc(100vh - 8rem);
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+}
+
+.BelowTopNavigationBar {
+  height: calc(100vh-3rem);
+}
+
+/* .NavLeftSide, .NavRightSide, .NavCenter {
+} */
+
+.NavLeftSide, .NavRightSide, .NavCenter {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.NavLeftSide, .NavRightSide {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 10%;
+  max-width: 25%;
+  flex-basis: 25%;
+  flex-shrink: 1;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.NavLeftSide {
+  cursor: pointer;
+  justify-content: start;
+}
+
+.NavCenter {
+  flex-basis: 50%;
+  flex-grow: 2;
+  flex-shrink: 0;
+}
+
+.NavRightSide {
+  justify-content: end;
+}
+
+.footer_button, .footer_button_selected {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 25vw;
+  padding-right: 0;
+  padding-left: 0;
+  margin-top: .5rem;
+  margin-bottom: .5rem;
+  cursor: pointer;
+}
+
+.footer_button_selected {
+  filter: invert(100%);
+}
+
+.footer_icon {
+  display: flex;
+  flex-basis: 0;
+  flex-grow: 1;
+}
+

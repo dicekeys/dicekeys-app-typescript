@@ -1,7 +1,9 @@
 # DiceKeys TypeScript App for DiceKeys.app (and future Electron app)
 
+=======
 ## Requirements
 
+## Running web app locally
 Tested to work with Node.js LTS v14.
 
 Install [TypeScript](https://www.typescriptlang.org/download) in your system.
@@ -19,14 +21,45 @@ Make sure you have access to [GitHub Packages](https://docs.github.com/en/packag
 
 Install modules
 ```
+cd web
 npm install
 ```
 _If `npm` fails, check **GitHub Packages** instructions._
 
-## Running
 ```
-parcel src/index.html
+npm run start
 ```
+
+## Running electron app
+```
+cd web
+npm install
+npm run build-electron-html
+cd ../electron
+npm install
+npm run start
+```
+## Build electron app for macOS
+
+```
+cd electron
+npm run make
+```
+
+## Build electron app for Windows/Linux
+
+Create the build image
+```
+cd electron
+docker build -f Dockerfile . --tag dicekeys_build
+```
+
+Create **deb**, **rpm** and **zip**. Output files resides in `out` folder.
+```
+cd electron
+docker run --rm -v $PWD:/dicekeys dicekeys_build
+```
+
 
 ## Run tests
 ```
@@ -50,11 +83,10 @@ We inject state into these components through their React props (React's name fo
 We borrow from environments like SwiftUI, which allow you to run and inspect individual components by rendering previews, by manually
 creating preview HTML files for key components that operate only on the subset of the application state that required for those views.
 
-For example, to preview the `ScanDiceKeyView` in isolation, run
 ```
 parcel src/preview.html
 ```
-Then load [http://localhost:1234/?component=ScanDiceKeyView](http://localhost:1234/?component=ScanDiceKeyView)
+Then load [http://localhost:1234/](http://localhost:1234/)
 
 
 ## Security notes
@@ -71,3 +103,20 @@ Due to our strict security requirements, we try to minimize dependencies.  The o
   
 Testing with `jest` introduces other dependencies, but those should not be compiled into the production applications.
 
+
+## Build notes
+
+Using parcel v2 to build.  Ran into problems with CSS that required using the nightly build.
+
+
+Currently must use the TypeScript compiler and avoiding babel per [mobx](https://mobx.js.org/installation.html) requirement to set `"useDefineForClassFields": true`
+
+At some point we may want to add this to the .parcelrc, but for now we're typechecking in vscode
+and with tsc, and this isn't working well in the beta of parcel 2.
+
+
+```
+  "validators": {
+    "*.{ts,tsx}": ["@parcel/validator-typescript"]
+  }
+```

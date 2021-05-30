@@ -1,0 +1,37 @@
+.view_top_level {
+  display: flex;
+  flex-direction: column;
+  justify-content: normal;
+  align-items: stretch;
+  height: 100vh;
+  padding: 0;
+}
+
+.view_content_region {
+  display: flex;
+  padding: 1rem;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: normal;
+  box-sizing: border-box;
+}
+
+.spacer {
+  display: flex;
+  flex-basis: 0;
+  flex-grow: 0.0001;
+}
+
+
+.default_view_content {
+  display: flex;
+  flex-direction: column;
+  justify-content: normal;
+  align-content: stretch;
+  /* margin: 2rem; */
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
