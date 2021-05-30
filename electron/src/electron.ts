@@ -2,14 +2,22 @@ import {app, BrowserWindow, dialog, ipcMain} from 'electron';
 import * as path from 'path';
 
 import * as squirrelCheck from './electron-squirrel-startup'
+import {
+  ElectronIpcAsyncRequestChannelName,
+  ElectronBridgeAsyncApiRequest,
+  ElectronBridgeAsyncApiResponse,
+  exceptionCodeFor,
+  responseChannelNameFor,
+  ElectronIpcSyncRequestChannelName,
+  ElectronBridgeSyncApiResponse,
+  ElectronBridgeSyncApiRequest
+} from './IElectronBridge';
 import ipcRenderer = Electron.Renderer.ipcRenderer;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (squirrelCheck()) {
     app.quit();
 }
-
-const cliArgs = process.argv.slice(2);
 
 let mainWindow: BrowserWindow
 
@@ -73,26 +81,47 @@ if (instanceLock) {
     app.quit()
 }
 
-// Return value and exit
-ipcMain.on("cli-result", (event, result) => {
-    process.stdout.write(result);
-    process.stdout.write('\n');
-    process.exit(0)
-})
 
-// Return cli arguments
-ipcMain.on('cli-args', (event, arg) => {
-    event.returnValue = cliArgs
-})
+const implementSyncApi = <CHANNEL extends ElectronIpcSyncRequestChannelName>(channel: CHANNEL, implementation: (...args: ElectronBridgeSyncApiRequest<CHANNEL>) => ElectronBridgeSyncApiResponse<CHANNEL>) => {
+  const responseChannelName = responseChannelNameFor(channel);
+  ipcMain.on(channel, (event, ...args) => {
+    try {
+      event.returnValue = implementation(...(args as ElectronBridgeSyncApiRequest<CHANNEL>));
+    } catch (e) {
+      event.returnValue = e;
+    }
+  })
+}
+const implementAsyncApi = <CHANNEL extends ElectronIpcAsyncRequestChannelName>(channel: CHANNEL, implementation: (...args: ElectronBridgeAsyncApiRequest<CHANNEL>) => Promise<ElectronBridgeAsyncApiResponse<CHANNEL>>) => {
+  const responseChannelName = responseChannelNameFor(channel);
+  ipcMain.on(channel, (event, code, ...args) => {
+    implementation(...args as ElectronBridgeAsyncApiRequest<CHANNEL>).then( response =>
+      event.sender.send(responseChannelName, code, response)
+    ).catch( exception =>
+      event.sender.send(responseChannelName, exceptionCodeFor(code), exception)
+    )
+  })
+}
 
-ipcMain.on('open-file-dialog', (event, options, code) => {
-    dialog.showOpenDialog(mainWindow, options).then((value) => {
-        event.sender.send('open-file-dialog-response', value, code);
-    })
+implementSyncApi( "writeResultToStdOutAndExit", (result) => {
+  process.stdout.write(result);
+  process.stdout.write('\n');
+  process.exit(0)
 });
-
-ipcMain.on('open-message-dialog', (event, options, code) => {
-    dialog.showMessageBox(options).then((value) => {
-        event.sender.send('open-message-dialog-response', value, code)
-    });
+implementSyncApi( "getCommandLineArguments", () => {
+  /**
+    When executed with electron command the first two arguments are the path and the executable name,
+    so the actual command line arguments start at index 2. When executed as packed binary the actual
+    command line arguments start at index 1.
+    See: https://nodejs.org/docs/latest/api/process.html#process_process_argv.
+    The constant represents only the arguments that follow the path and executable name.
+  */
+  const argv = process.argv
+  if(argv[0].toLowerCase().endsWith("electron")){
+      return argv.slice(2)
+  }else{
+      return argv.slice(1)
+  }
 });
+implementAsyncApi( "openFileDialog", (options) => dialog.showOpenDialog(mainWindow, options) );
+implementAsyncApi( "openMessageDialog", (options) => dialog.showMessageBox(mainWindow, options) );

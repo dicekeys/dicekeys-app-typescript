@@ -2,39 +2,53 @@
 // It has the same sandbox as a Chrome extension.
 import { IElectronBridge } from "./IElectronBridge";
 import {contextBridge, ipcRenderer} from "electron";
+import {
+  ElectronIpcAsyncRequestChannelName,
+  ElectronIpcSyncRequestChannelName,
+  ElectronBridgeAsyncApiRequest,
+  ElectronBridgeSyncApiRequest,
+  ElectronBridgeAsyncApiResponse,
+  ElectronBridgeSyncApiResponse,
+  exceptionCodeFor,
+  responseChannelNameFor,
+} from "./IElectronBridge";
 
-contextBridge.exposeInMainWorld('ElectronBridge', {
-    // Return result in stdout and quit
-    cliResult: (result: string) => {
-        ipcRenderer.send("cli-result", result)
-    },
-    // Get cli args
-    cliArgs: () => {
-        return ipcRenderer.sendSync('cli-args')
-    },
-    openFileDialog: (options: Electron.OpenDialogOptions, code: string) => {
-        return new Promise<Electron.OpenDialogReturnValue>(function(resolve, reject){
-            ipcRenderer.on('open-file-dialog-response' , function listener(event, value, eventCode){
-                if(code === eventCode){
-                    resolve(value)
-                    ipcRenderer.removeListener('open-file-dialog-response', listener)
-                }
-            });
+const createIpcSyncRequestClientFunction = <CHANNEL extends ElectronIpcSyncRequestChannelName>(channel: CHANNEL) =>
+  (...args: ElectronBridgeSyncApiRequest<CHANNEL>) => ipcRenderer.sendSync(channel, ...args) as ElectronBridgeSyncApiResponse<CHANNEL>
 
-            ipcRenderer.send('open-file-dialog', options, code)
-        });
-    },
-    openMessageDialog: (options: Electron.MessageBoxOptions, code: string) => {
-        return new Promise<Electron.MessageBoxReturnValue>(function(resolve, reject){
-            ipcRenderer.on('open-message-dialog-response' , function listener(event, value, eventCode){
-                if(code === eventCode){
-                    resolve(value)
-                    ipcRenderer.removeListener('open-message-dialog-response', listener)
-                }
-            });
-
-            ipcRenderer.send('open-message-dialog', options, code)
-        });
+const createIpcAsyncRequestClientFunction = <CHANNEL extends ElectronIpcAsyncRequestChannelName>(channel: CHANNEL) =>
+  (...args: ElectronBridgeAsyncApiRequest<CHANNEL>) =>
+  new Promise<ElectronBridgeAsyncApiResponse<CHANNEL>>( (resolve, reject) => {
+    // Create a code that allows us to match requests to responses
+    const codeToMatch = `${Math.random()}:${Math.random()}`;
+    // The response channel name is the name of the request channel type with suffix "-response" added
+    const responseChannel = responseChannelNameFor(channel)
+    // Create a listener function that will resolve the promise and stop listening when
+    // the event code matches
+    const responseListener = (event: Electron.IpcRendererEvent, eventCode: string, response: ElectronBridgeAsyncApiResponse<CHANNEL>) => {
+      if (eventCode === exceptionCodeFor(codeToMatch) ) {
+        // The value is actually an exception and we should reject the promise.
+        reject(response);
+        ipcRenderer.removeListener(responseChannel, responseListener);
+      } else if (eventCode === codeToMatch) {
+        // The response code matches the request and so we should resolve the request
+        resolve(response)
+        ipcRenderer.removeListener(responseChannel, responseListener);
+      }
     }
+    // Start listening for response just before sending the request
+    ipcRenderer.on(responseChannel, responseListener);
+    // Send the request
+    ipcRenderer.send(channel, codeToMatch, ...args);
+  });
 
-} as IElectronBridge)
+// Create the API to expose, using TypeScript to verify that we created everything correctly
+const electronBridgeTypeChecked: IElectronBridge = {
+  writeResultToStdOutAndExit: createIpcSyncRequestClientFunction("writeResultToStdOutAndExit"),
+  getCommandLineArguments: createIpcSyncRequestClientFunction("getCommandLineArguments"),
+  openFileDialog: createIpcAsyncRequestClientFunction("openFileDialog"),
+  openMessageDialog: createIpcAsyncRequestClientFunction("openMessageDialog"),
+};
+
+// Expose the API
+contextBridge.exposeInMainWorld('ElectronBridge', electronBridgeTypeChecked);
