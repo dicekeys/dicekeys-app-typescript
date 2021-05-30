@@ -1,4 +1,4 @@
-# DiceKeys TypeScript App for DiceKeys.app (and future Electron app)
+# DiceKeys TypeScript App for DiceKeys.app and Electron
 
 =======
 ## Requirements
