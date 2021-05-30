@@ -1,6 +1,5 @@
 # DiceKeys TypeScript App for DiceKeys.app and Electron
 
-=======
 ## Requirements
 
 ## Running web app locally
