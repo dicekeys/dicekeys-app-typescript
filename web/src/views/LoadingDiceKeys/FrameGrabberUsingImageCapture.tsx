@@ -1,4 +1,4 @@
-import { withDefined } from "../../utilities/if-defined";
+import { withDefined } from "../../utilities/with-defined";
 
 
 export class FrameGrabberUsingImageCapture {

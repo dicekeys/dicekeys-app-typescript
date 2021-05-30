@@ -1,5 +1,5 @@
 import { action, makeAutoObservable } from "mobx";
-import { withDefined } from "../../utilities/if-defined";
+import { withDefined } from "../../utilities/with-defined";
 
 export type MakeThisElementsBoundsObservable = (element?: HTMLElement | null) => void;
 
