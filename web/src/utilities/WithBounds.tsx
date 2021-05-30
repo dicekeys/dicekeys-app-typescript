@@ -48,22 +48,7 @@ export class SettableBounds {
   constructor() {
     makeAutoObservable(this);
   }
-  // fitBounds = this.fitToAspectRatioAsWidthOverHeight == null ? undefined :
-  //   fitRectangleWithAspectRatioIntoABoundingBox(this.fitToAspectRatioAsWidthOverHeight);
-
-  // static create = (fitToAspectRatioAsWidthOverHeight?: number) => {
-  //   const fitBounds = fitToAspectRatioAsWidthOverHeight == null ? undefined :
-  //     fitRectangleWithAspectRatioIntoABoundingBox(fitToAspectRatioAsWidthOverHeight);
-  //   const bounds = new SettableBounds();
-  //   const setBounds = action ( (divBounds: Bounds) => {
-  //     const {width, height} = fitBounds != null ? fitBounds(divBounds) : divBounds;
-  //     bounds.width = width;
-  //     bounds.height = height;
-  //   })
-  //   return {bounds: bounds as Bounds, setBounds}
-  // }
 }
-// export const createBounds = SettableBounds.create;
 
 export interface OptionalMaxSizeCalcProps {
   maxWidth?: string,

@@ -94,7 +94,7 @@ export const StickerTargetSheetSvgGroup = observer( (props: StickerTargetSheetVi
 });
 
 export const StickerTargetSheetView = observer( ({maxWidth, maxHeight, ...props}: StickerTargetSheetViewProps & OptionalMaxSizeCalcProps) => (
-  <WithBounds aspectRatioWidthOverHeight={portraitSheetWidthOverHeight} {...{maxWidth, maxHeight}}>{ bounds => {
+  <WithBounds aspectRatioWidthOverHeight={portraitSheetWidthOverHeight} {...{maxWidth, maxHeight}}>{ ({bounds}) => {
   const sizeModel = StickerSheetSizeModel.fromBounds(bounds);
   return (
     <svg viewBox={viewBox(bounds)}>

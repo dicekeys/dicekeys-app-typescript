@@ -3,6 +3,7 @@ import * as React from "react";
 import {WindowTopLevelView} from "./views/WindowTopLevelView";
 import { ErrorHandler } from "./views/ErrorHandler";
 import { ErrorState } from "./views/ErrorState";
+import { DiceKeyMemoryStore } from "./state";
 
 const ApplicationErrorState = new ErrorState();
 
@@ -14,11 +15,13 @@ const ApplicationErrorState = new ErrorState();
 // // window.addEventListener("message", messageEvent => handleMessageEvent(messageEvent) );
 
 window.addEventListener('load', () => {
-  ReactDOM.render((
-    <ErrorHandler errorState={ApplicationErrorState}>
-      <WindowTopLevelView />
-    </ErrorHandler>
-  ), document.getElementById("app_container"));
+  DiceKeyMemoryStore.onReady( () => {
+    ReactDOM.render((
+      <ErrorHandler errorState={ApplicationErrorState}>
+        <WindowTopLevelView />
+      </ErrorHandler>
+    ), document.getElementById("app_container"));
+  });
 });
 
 

@@ -134,7 +134,7 @@ export const FaceCopyingView = observer( ({
   maxHeight, maxWidth, ...props
 }: FaceCopyingViewProps & OptionalMaxSizeCalcProps) => {
   return (
-    <WithBounds {...{aspectRatioWidthOverHeight, maxHeight, maxWidth}}>{ (bounds => (
+    <WithBounds {...{aspectRatioWidthOverHeight, maxHeight, maxWidth}}>{ (({bounds}) => (
       <svg viewBox={viewBox(bounds)}>
         <FaceCopyingViewGroup {...{...props, ...bounds}} />
       </svg>

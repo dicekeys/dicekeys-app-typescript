@@ -13,7 +13,7 @@ export class ObservableBounds {
 
   private constructor() {
     makeAutoObservable(this);
-  }
+}
 
   static create = (): [ObservableBounds, SetObservableBoundsFunction] => {
     const observableBounds = new ObservableBounds();

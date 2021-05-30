@@ -15,6 +15,7 @@ import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import {ButtonsCSS} from "./css"
 import {WindowRoutingView} from "./views/WindowTopLevelView";
+import { DiceKeyMemoryStore } from "./state";
 
 // To make sure everything is loaded, load the view for the app even if we're not using it.
 if (!WindowRoutingView) {
@@ -59,11 +60,13 @@ const Previews = observer ( () =>
 );
 
 window.addEventListener('load', () => {
-  ReactDOM.render((
-    <ErrorHandler errorState={ApplicationErrorState}>
-        <Previews />
-    </ErrorHandler>
-  ), document.getElementById("app_container"));
+  DiceKeyMemoryStore.onReady( () => {
+    ReactDOM.render((
+      <ErrorHandler errorState={ApplicationErrorState}>
+          <Previews />
+      </ErrorHandler>
+    ), document.getElementById("app_container"));
+  })
 });
 
 if (window.opener) {

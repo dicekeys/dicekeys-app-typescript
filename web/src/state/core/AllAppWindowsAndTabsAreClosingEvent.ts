@@ -2,25 +2,55 @@ import { urlSafeBase64Encode } from "@dicekeys/dicekeys-api-js";
 import { action, makeAutoObservable } from "mobx";
 import { CustomEvent } from "../../utilities/event";
 import { getRandomBytes } from "../../utilities/get-random-bytes";
-import { autoSave } from "./AutoSave";
 
 const myWindowId = urlSafeBase64Encode(getRandomBytes(20));
 const heartbeatFrequencyInMs = 5000;
 let heartbeatInterval: any;
 
+const localStoreName = "DiceKeysOpenWindowIds"
+
 export const AllAppWindowsAndTabsAreClosingEvent = new CustomEvent<[], undefined>(undefined);
+
+const removeExpiredWindowIds = (windowIds: {[windowId: string]: number}): {[windowId: string]: number} => {
+	const now = new Date().getTime();
+	return Object.entries(windowIds).reduce( (activeWindowIds, entry) => {
+		const [windowId, whenExpires] = entry;
+		if (whenExpires > now) {
+			activeWindowIds[windowId] = whenExpires;
+		}
+		return activeWindowIds
+	}, {} as {[windowId: string]: number});
+}
+	
 
 //const WindowsOpen =
 new (class WindowsOpen {
-	private openWindowIds: {[windowId: string]: number} = {};
+	private get openWindowIds(): {[windowId: string]: number} {
+		try {
+			const openWindowIdsObj = JSON.parse( localStorage.getItem(localStoreName) ?? "{}" );
+			if (typeof openWindowIdsObj === "object" && openWindowIdsObj != null) {
+				return removeExpiredWindowIds(openWindowIdsObj);
+			}
+		} catch {}
+		return {};
+	};
+
+	private set openWindowIds(windowIds: {[windowId: string]: number}) {
+		localStorage.setItem(localStoreName, JSON.stringify(windowIds));
+	};
+
 
 	private sendHeartbeat = action( () => {
-		this.openWindowIds[myWindowId] = (new Date()).getTime() + (2 * heartbeatFrequencyInMs);
+		// this.openWindowIds[myWindowId] = (new Date()).getTime() + (2 * heartbeatFrequencyInMs);
+		this.openWindowIds = {...this.openWindowIds, [myWindowId]: (new Date()).getTime() + (2 * heartbeatFrequencyInMs)};
 	})
 
 	private removeMyself = action( () => {
 		clearInterval(heartbeatInterval);
-		delete this.openWindowIds[myWindowId];
+		const ids = this.openWindowIds;
+		delete ids[myWindowId];
+		this.openWindowIds = ids; 
+		// delete this.openWindowIds[myWindowId];
 		if (!this.areOtherWindowsOpen) {
 			AllAppWindowsAndTabsAreClosingEvent.send();
 		}
@@ -35,7 +65,6 @@ new (class WindowsOpen {
 
 	constructor() {
 		makeAutoObservable(this);
-		autoSave(this, "WindowsOpen");
 		this.sendHeartbeat();
 		heartbeatInterval = setInterval( this.sendHeartbeat, heartbeatFrequencyInMs );
 		window.addEventListener("unload", () => {
