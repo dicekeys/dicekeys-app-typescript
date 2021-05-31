@@ -17,24 +17,37 @@ export function autoSave<T>(_this: T, name: string, dontLoadOnPreview: boolean =
 	})
 }
 
-export function autoSaveEncrypted<T>(_this: T, name: string, dontLoadOnPreview: boolean = false) {
+export function autoSaveEncrypted<T>(_this: T, name: string, onReady: () => any, dontLoadOnPreview: boolean = false) {
 	// We don't load or save state in preview mode
 	if (dontLoadOnPreview && isRunningInPreviewMode()) return;
+
+	const afterLoad = () => {
+		autorun(() => {
+			const value = JSON.stringify(toJS(_this))
+			encryptJsonStorageField(value).then( encryptedValue => {
+					// console.log(`Writing encrypted value to local store`, value);
+					localStorage.setItem(name, encryptedValue)
+				}
+			);
+		})
+		onReady();
+	}
 
 	const encryptedStoredJson = localStorage.getItem(name);
 	if (encryptedStoredJson) {
 		decryptJsonStorageField(encryptedStoredJson).then( storedJson => {
 			if (storedJson) {
+				// console.log(`Loading encrypted value to local store`, storedJson);
 				runInAction( () =>
 					set(_this, JSON.parse(storedJson) as T)
 				);
 			}
-		});
+			afterLoad();
+		}).catch( (exception) => { 
+			console.error("Storage load exception", exception)
+			afterLoad();
+		 } );
+	} else {
+		afterLoad();
 	}
-	autorun(() => {
-		const value = JSON.stringify(toJS(_this))
-		encryptJsonStorageField(value).then( encryptedValue =>
-			localStorage.setItem(name, encryptedValue)
-		);
-	})
 }

@@ -48,6 +48,24 @@ const PermissionRequiredView = () => {
   )
 }
 
+
+const NoCameraAvailableView = ({minCameraWidth, minCameraHeight}: {
+  minCameraWidth: number,
+  minCameraHeight: number
+}) => {
+  return (
+    <div className={cssRequiredNotice.notification}>
+      <div className={cssRequiredNotice.primary_instruction}>
+        You do not have a sufficiently-high resolution camera available to scan your DiceKey.
+      </div>
+      <div className={cssRequiredNotice.secondary_instruction}>
+        You need a camera with resolution at least {minCameraWidth}&times;{minCameraHeight}.
+      </div>
+    </div>
+  )
+}
+
+
 export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Component<ScanDiceKeyViewProps>  {
   frameProcessorState: DiceKeyFrameProcessorState;
   mediaStreamState = new MediaStreamState(defaultMediaTrackConstraints);
@@ -66,13 +84,22 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
 
   render() {
     if (!CamerasOnThisDevice.instance.readyAndNonEmpty) {
-      return ( <PermissionRequiredView/> )
+      return ( <PermissionRequiredView/> );
+    }
+    const cameras = CamerasOnThisDevice.instance.cameras.filter( (camera) => {
+      const width = camera.capabilities?.width?.max;
+      const height = camera.capabilities?.height?.max;
+      return (!height || !minCameraHeight || height >= minCameraHeight) &&
+      (!width || !minCameraHeight ||  width >= minCameraWidth)
+    });
+    if (CamerasOnThisDevice.instance.ready && cameras.length === 0) {
+      return ( <NoCameraAvailableView minCameraWidth={minCameraWidth} minCameraHeight={minCameraHeight} /> )
     }
 
     return (
       <div className={Layout.ColumnStretched}>
         <CameraCaptureWithOverlay onFrameCaptured={this.onFrameCaptured} mediaStreamState={this.mediaStreamState} />
-        <CameraSelectionView mediaStreamState={this.mediaStreamState} {...{minCameraWidth, minCameraHeight}} />
+        <CameraSelectionView mediaStreamState={this.mediaStreamState} cameras={cameras} />
       </div>
     );
   }

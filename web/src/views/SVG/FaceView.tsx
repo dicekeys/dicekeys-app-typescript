@@ -198,7 +198,7 @@ export const FaceView = observer( ({
     aspectRatioWidthOverHeight, maxWidth, maxHeight,
     ...props
   }: FaceViewProps & OptionalAspectRatioProps) => (
-      <WithBounds {...{aspectRatioWidthOverHeight, maxWidth, maxHeight,className,style}}>{ (bounds) => {
+      <WithBounds {...{aspectRatioWidthOverHeight, maxWidth, maxHeight,className,style}}>{ ({bounds}) => {
         const linearSizeOfFace = Math.min(bounds.height, bounds.width);
         const center = {x: linearSizeOfFace/2, y: linearSizeOfFace/2};
         return(

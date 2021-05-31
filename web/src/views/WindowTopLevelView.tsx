@@ -7,7 +7,6 @@ import { WindowHomeView } from "./WindowHomeView";
 import { LoadDiceKeyView, LoadDiceKeyState } from "./LoadingDiceKeys/LoadDiceKeyView";
 import {Layout} from "../css";
 import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
-import { DiceKeyState } from "../state/Window/DiceKeyState";
 import { AssemblyInstructionsState } from "./AssemblyInstructionsState";
 
 
@@ -34,10 +33,10 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
     case SubViewsOfTopLevel.AppHomeView: return (
       <WindowHomeView {...{windowNavigationState}}/>
     );
-    case SubViewsOfTopLevel.LoadDicekey: return (
+    case SubViewsOfTopLevel.LoadDiceKeyView: return (
       <LoadDiceKeyView
         onDiceKeyRead={ onDiceKeyLoaded }
-        onCancelled={ windowNavigationState.navigateToWindowHomeView }
+        onCancelled={ () => window.history.back() }
         state={new LoadDiceKeyState("camera")} />
     )
     case SubViewsOfTopLevel.AssemblyInstructions: return (
@@ -46,14 +45,14 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
       } />
     )
     case SubViewsOfTopLevel.DiceKeyView: return (
-      <SelectedDiceKeyView state={new SelectedDiceKeyViewState( windowNavigationState.navigateToWindowHomeView, windowNavigationState.foregroundDiceKeyState)} />
+      <SelectedDiceKeyView state={new SelectedDiceKeyViewState( windowNavigationState.foregroundDiceKeyState)} />
     );
   }
 });
 
 export const WindowTopLevelView = observer ( (props: Partial<WindowTopLevelNavigationProps>) => {
   const {
-    windowNavigationState = new WindowTopLevelNavigationState(new DiceKeyState()),
+    windowNavigationState = new WindowTopLevelNavigationState(),
   } = props;
   return (
   <div className={Layout.PrimaryView} >

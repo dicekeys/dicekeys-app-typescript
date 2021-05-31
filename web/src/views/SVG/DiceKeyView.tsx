@@ -119,7 +119,7 @@ export const DiceKeyViewAutoSized = observer( (
   {faces, aspectRatioWidthOverHeight, maxWidth, maxHeight, ...props}:
     {faces?: PartialDiceKey} & OptionalAspectRatioProps & DiceKeyRenderOptions & {style?: React.CSSProperties}
 ) => (
-      <WithBounds {...{aspectRatioWidthOverHeight, maxWidth, maxHeight}}>{(bounds) => (
+      <WithBounds {...{aspectRatioWidthOverHeight, maxWidth, maxHeight}}>{({bounds}) => (
         <svg viewBox={viewBox(bounds)}>
           <DiceKeySvgGroup {...{...props, faces, ...bounds, height: bounds.height}} />
         </svg>
