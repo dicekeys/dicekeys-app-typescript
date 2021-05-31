@@ -1,24 +1,17 @@
 import { observer } from "mobx-react";
 import React from "react";
-import { CamerasOnThisDevice } from "./CamerasOnThisDevice";
+import { Camera } from "./CamerasOnThisDevice";
 import { CenteredControls } from "../../views/basics";
 import { MediaStreamState } from "./MediaStreamState";
 
 interface CameraSelectionViewProps {
+  cameras: Camera[],
   mediaStreamState: MediaStreamState
-  minCameraWidth: number,
-  minCameraHeight: number
 }
 export const CameraSelectionView = observer ( (props: React.PropsWithoutRef<CameraSelectionViewProps>) => {
-  const {minCameraWidth, minCameraHeight} = props;
-  const cameras = CamerasOnThisDevice.instance.cameras.filter( (camera) => {
-    const width = camera.capabilities?.width?.max;
-    const height = camera.capabilities?.height?.max;
-    return (!height || !minCameraHeight || height >= minCameraHeight) &&
-    (!width || !minCameraHeight ||  width >= minCameraWidth)
-  });
+  const {cameras, mediaStreamState} = props;
   const defaultDevice = cameras[0];
-  if (defaultDevice && props.mediaStreamState.deviceId == null) {
+  if (defaultDevice && mediaStreamState.deviceId == null) {
     props.mediaStreamState.setDeviceId(defaultDevice.deviceId);
   }
   return (
