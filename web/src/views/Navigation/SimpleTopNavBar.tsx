@@ -2,7 +2,7 @@ import {NavigationBars} from "../../css"
 import { observer } from "mobx-react";
 import React from "react";
 
-const isRunningInElectron: boolean = !!(window && window.process && "type" in window.process && window.process["type"]);
+const isRunningInElectron: boolean = !!(window && window.process && "type" in window.process && (window.process as {type: string})["type"] != null);
 
 export const SimpleTopNavBar = observer( ( props: {
   title?: string,
