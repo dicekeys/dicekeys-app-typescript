@@ -135,6 +135,8 @@ export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.C
           To rotate the current face, use either &lt; &gt;, - +, or CTRL arrow (right and left arrows).
         </div>
         <DiceKeyViewAutoSized
+          maxHeight="50vh"
+          maxWidth="80vw"
           faces={this.props.state.partialDiceKey}
           highlightFaceAtIndex={this.props.state.currentFaceIndex}
           onFaceClicked={ (index) => this.props.state.setCurrentFaceIndex(index)  }  
