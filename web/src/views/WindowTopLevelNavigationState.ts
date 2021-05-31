@@ -14,30 +14,29 @@ export enum SubViewsOfTopLevel {
 type SubViews = SubViewsOfTopLevel;
 const SubViews = SubViewsOfTopLevel;
 
-const getDiceKeyFromPathRoot = (pathRoot: string | undefined): DiceKey | undefined => {
+const getDiceKeyFromPathRoot = (pathRoot: string | undefined) => {
   if (!pathRoot) return;
-  return DiceKeyMemoryStore.diceKeyForKeyId(
-    DiceKeyMemoryStore.keyIdForCenterLetterAndDigit((pathRoot)) ?? pathRoot
-  );
+  const keyId = DiceKeyMemoryStore.keyIdForCenterLetterAndDigit((pathRoot)) ?? pathRoot;
+  const diceKey = DiceKeyMemoryStore.diceKeyForKeyId(keyId);
+  return {keyId, diceKey}
 };
 
-const getTopLevelNavStateFromPath = (path: string = window.location.pathname) => {
+const getTopLevelNavStateFromPath = (path: string = window.location.pathname): (
+  {subView?: SubViewsOfTopLevel, keyId?: string, diceKey?: DiceKey}
+) => {
   const pathRoot = path.split("/")[1];
-  let diceKey: DiceKey | undefined;
-  let subView: SubViewsOfTopLevel | undefined;
   switch(pathRoot) {
     case SubViewsOfTopLevel.AppHomeView:
     case SubViewsOfTopLevel.AssemblyInstructions:
     case SubViewsOfTopLevel.LoadDiceKeyView:
-      subView = pathRoot;
-      break;
+      return {subView: pathRoot};
     default:
-      diceKey = getDiceKeyFromPathRoot(pathRoot);
-      if (diceKey != null) {
-        subView = SubViewsOfTopLevel.DiceKeyView;
+      const {diceKey, keyId} = getDiceKeyFromPathRoot(pathRoot) ?? {};
+      if (diceKey != null && keyId != null) {
+        return {subView: SubViewsOfTopLevel.DiceKeyView, diceKey, keyId} as const;
       }
   }
-  return {subView, diceKey}
+  return {subView: undefined}
 }
 
 export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
@@ -71,25 +70,33 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
     }
   }
 
-  updateAddressBar = () => {
+  updateAddressBar = action (() => {
+    const {subView: priorSubView} = getTopLevelNavStateFromPath();
     const {diceKey, keyId} = this.foregroundDiceKeyState;
-    if (this.subView === SubViewsOfTopLevel.DiceKeyView && diceKey != null && keyId != null) {
+    const newPathElements: string[] = ["", this.subView];
+    if (keyId != null && diceKey != null) {
       const {centerLetterAndDigit} = diceKey;
-      if (keyId === DiceKeyMemoryStore.keyIdForCenterLetterAndDigit(centerLetterAndDigit)) {
-        // the center die's letter and digit uniquely identify this DiceKey among all those in memory
-        window.history.replaceState({}, "", `/${centerLetterAndDigit}`)
-      } else {
-        window.history.replaceState({}, "", `/${keyId}`)
-      }
-      return;
-    } else {
-      window.history.pushState({}, "", `/${this.subView}`);
+      newPathElements.push( keyId === DiceKeyMemoryStore.keyIdForCenterLetterAndDigit(centerLetterAndDigit) ?
+          centerLetterAndDigit :
+          keyId
+      );
     }
-  }
+    const newPath = newPathElements.join("/");
+    const stateArgs = [{}, "", newPath] as const;
+    if (this.subView === SubViewsOfTopLevel.DiceKeyView  &&
+         (priorSubView === SubViewsOfTopLevel.LoadDiceKeyView ||
+          priorSubView === SubViewsOfTopLevel.AssemblyInstructions
+          ) && diceKey != null && keyId != null) {
+      // When displaying a DiceKey after loading/assembling, replace the load/assembly state with the display state
+      window.history.replaceState(...stateArgs);
+    } else {
+      window.history.pushState(...stateArgs);
+    }
+  })
 
   constructor({
       subView = SubViews.AppHomeView,
-      diceKey
+      diceKey,
     }: Partial<ReturnType<typeof getTopLevelNavStateFromPath>> = getTopLevelNavStateFromPath()
   ) {
     super(subView, () => this.updateAddressBar() );
