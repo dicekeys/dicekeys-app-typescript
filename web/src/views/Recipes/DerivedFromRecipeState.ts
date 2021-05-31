@@ -17,7 +17,7 @@ export const OutputFormats = {
   "UnsealingKey": ["JSON", "Hex (Unsealing Key)", "Hex (Sealing Key)"],
 } as const;
 type OutputFormats = typeof OutputFormats;
-export type OutputFormat<T extends DerivationRecipeType> = OutputFormats[T][number]
+export type OutputFormat<T extends DerivationRecipeType = DerivationRecipeType> = OutputFormats[T][number]
 export type OutputFormatForType<T extends DerivationRecipeType = DerivationRecipeType> = {[type in T]: OutputFormat<T>}
 ( () => {
   const TypeCheckOutputFormats: Record<DerivationRecipeType, readonly string[]> = OutputFormats;

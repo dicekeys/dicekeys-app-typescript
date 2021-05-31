@@ -5,8 +5,41 @@ import { CharButton, CharButtonToolTip, OptionallyObscuredTextView, SecretFields
 import { GlobalSharedToggleState } from "../../state";
 import { action } from "mobx";
 import { DerivedFromRecipeState, OutputFormats, OutputFormat } from "./DerivedFromRecipeState";
+import { DerivationRecipeType } from "../../dicekeys/StoredRecipe";
 
 
+const Bip39OutputView = ({bip39String, obscureValue}: {bip39String: string, obscureValue: boolean}) => {
+  let bip39WordArray = bip39String.split(" ");
+  if (obscureValue) {
+    bip39WordArray = bip39WordArray.map( plaintextWord => "************".substr(0, plaintextWord.length) ).sort();
+  }
+  return (
+    <div className={css.Bip39Field}>{
+      bip39WordArray.map( (word, index) => (
+        <span key={index} className={css.Bip39WordSpan}>
+          { // put spaces between words by inserting space before every word but first
+            index !== 0 ? (<>&nbsp;</>) : null}
+          <div key={index} className={css.Bip39WordAndIndex}>
+            <div className={css.Bip39WordAboveIndex}>{word}</div>
+            <div className={css.Bip39IndexBelowWord}>{`${index+1}`}</div>
+          </div>
+        </span>
+      ))
+    }</div>
+  )
+}
+
+const SelectDerivedOutputType = observer( ({type, state}: {type: DerivationRecipeType, state: DerivedFromRecipeState}) => (
+  <select
+    className={css.SelectRecipeType}
+    value={state.outputFieldForType[type]}
+    onChange={ (e) => state.setOutputField(e.currentTarget.value as OutputFormat) }
+  >
+    {OutputFormats[type].map( (format: string) => (
+      <option key={format} value={format}>{format}</option>
+    ))}
+  </select>
+));
 
 export const DerivedFromRecipeView = observer( ({state}: {state: DerivedFromRecipeState}) => {
   const {recipeState: recipe, derivedValue} = state;
@@ -22,15 +55,7 @@ export const DerivedFromRecipeView = observer( ({state}: {state: DerivedFromReci
       {type == null ? null : (
         <>
           <div className={css.DerivedValueHeader}>
-            <select
-              className={css.SelectRecipeType}
-              value={state.outputFieldForType[type]}
-              onChange={ (e) => state.setOutputField(e.currentTarget.value as OutputFormat<typeof type>) }
-            >
-              {OutputFormats[type].map( (format: string) => (
-                <option key={format} value={format}>{format}</option>
-              ))}
-            </select>
+            <SelectDerivedOutputType type={type} state={state} />
             <span style={{width: "1rem"}}></span>
             <CharButton
                 hidden={derivedValue == null}
@@ -40,9 +65,13 @@ export const DerivedFromRecipeView = observer( ({state}: {state: DerivedFromReci
             <span style={{width: "1rem"}}></span>
             <SecretFieldsCommonObscureButton />
             </div>
-          <div className={css.DerivedValue}>
-            <OptionallyObscuredTextView value={derivedValue} obscureValue={ GlobalSharedToggleState.ObscureSecretFields.value } />
-          </div>
+          { type === "Secret" && state.outputFieldForType[type] === "BIP39" && derivedValue != null ?
+            (<Bip39OutputView bip39String={derivedValue} obscureValue={ GlobalSharedToggleState.ObscureSecretFields.value } />)
+            : (
+            <div className={css.DerivedValue}>
+              <OptionallyObscuredTextView value={derivedValue} obscureValue={ GlobalSharedToggleState.ObscureSecretFields.value } />
+            </div>
+          )}
         </>
       )}
     </div>

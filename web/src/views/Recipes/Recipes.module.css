@@ -376,3 +376,39 @@
   z-index: 2;
   background-color: rgba(0, 0, 0, 0);
 }
+
+.Bip39Field {
+  display: flex;
+  flex-direction: row;
+  flex-flow: wrap;
+  justify-content: flex-start;
+  align-content: flex-start;
+  user-select: all;
+}
+
+.Bip39WordSpan {
+  display: flex;
+  flex-flow: nowrap;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+.Bip39WordAndIndex {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.Bip39WordAboveIndex {
+  border-bottom: 1px gray solid;
+  align-items: baseline;
+}
+.Bip39IndexBelowWord {
+  font-size: 0.5rem;
+  flex-direction: row;
+  color: gray;
+  align-items: baseline;
+  user-select: none;
+}
