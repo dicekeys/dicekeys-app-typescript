@@ -13,7 +13,10 @@
 }
 
 .PaddedContentBox {
-  padding: 2rem;
+  margin-left: 1.5rem;
+  margin-right: 1.5rem;
+  margin-bottom: 0.25rem;
+  margin-top: 0.25rem;
 }
 
 .PrimaryView {
@@ -82,7 +85,7 @@
 }
 
 /**
- CSS-FIXME -- these wont' scale below the original image size
+ CSS-FIXME -- these won't scale below the original image size
 */
 .ResizableImage {
   display: flex;
