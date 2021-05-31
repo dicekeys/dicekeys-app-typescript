@@ -77,9 +77,9 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
       const {centerLetterAndDigit} = diceKey;
       if (keyId === DiceKeyMemoryStore.keyIdForCenterLetterAndDigit(centerLetterAndDigit)) {
         // the center die's letter and digit uniquely identify this DiceKey among all those in memory
-        window.history.pushState({}, "", `/${centerLetterAndDigit}`)
+        window.history.replaceState({}, "", `/${centerLetterAndDigit}`)
       } else {
-        window.history.pushState({}, "", `/${keyId}`)
+        window.history.replaceState({}, "", `/${keyId}`)
       }
       return;
     } else {
@@ -96,7 +96,7 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
     this.foregroundDiceKeyState = new DiceKeyState(diceKey);
 
     window.addEventListener('popstate', (_: PopStateEvent) => {
-      const newState = getTopLevelNavStateFromPath()
+      const newState = getTopLevelNavStateFromPath();
       this.foregroundDiceKeyState.setDiceKey(diceKey);
       this.rawSetSubView(newState.subView ?? SubViews.AppHomeView);
     });
