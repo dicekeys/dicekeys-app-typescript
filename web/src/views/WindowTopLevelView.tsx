@@ -45,7 +45,7 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
       } />
     )
     case SubViewsOfTopLevel.DiceKeyView: return (
-      <SelectedDiceKeyView state={new SelectedDiceKeyViewState( windowNavigationState.navigateToWindowHomeView, windowNavigationState.foregroundDiceKeyState)} />
+      <SelectedDiceKeyView state={new SelectedDiceKeyViewState( windowNavigationState.foregroundDiceKeyState)} />
     );
   }
 });

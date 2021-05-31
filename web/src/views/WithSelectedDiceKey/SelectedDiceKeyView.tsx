@@ -21,6 +21,7 @@ const SubViews = Navigation.SelectedDiceKeySubViews
 
 interface SelectedDiceKeyViewProps {
   state: SelectedDiceKeyViewState;
+  goBack?: () => any;
 }
 
 const FooterButtonView = observer( ( props: SelectedDiceKeyViewProps & {
@@ -71,10 +72,11 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
 
 export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) => {
   const diceKey = props.state.foregroundDiceKeyState.diceKey;
+  const {goBack} = props;
   if (!diceKey) return null;
   return (
     <div className={layoutCSS.HeaderFooterContentBox}>
-      <SimpleTopNavBar title={diceKey.nickname} goBack={props.state.goBack} />
+      <SimpleTopNavBar title={diceKey.nickname} goBack={goBack} />
       {/* <div className={layoutCSS.PaddedContentBox}> */}
       <div className={NavigationBars.BetweenTopAndBottomNavigationBars}>
         <SelectedDiceKeySubViewSwitch {...{...props}} />
@@ -87,11 +89,9 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
 
 export const Preview_SelectedDiceKeyView = observer ( () => {
   return (
-    <SelectedDiceKeyView state={
-      new Navigation.SelectedDiceKeyViewState(
-        () => alert("Back off man, I'm a scientist!"),
-        new DiceKeyState(DiceKey.testExample)
-      )
-    } />
+    <SelectedDiceKeyView
+      goBack={() => alert("Back off man, I'm a scientist!")}
+      state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample))}
+    />
   );
 });

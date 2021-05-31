@@ -30,20 +30,29 @@ const replacePathElement = (indexOfPathElementToReplace: number, newPathElement:
 
 export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubViews> {
   constructor(
-    public readonly goBack: () => any,
     public readonly foregroundDiceKeyState: DiceKeyState,
     initialSubView: SelectedDiceKeySubViews = getSelectedDiceKeySubViewFromPath()
   ) {
-    super(initialSubView, () => {
-      // update path
-      const newPath = replacePathElement(2, this.subView ?? "");
-      window.history.replaceState({}, '', newPath);
+    super(initialSubView, () => this.updateAddressBar());
 
-      window.addEventListener('popstate', (_: PopStateEvent) => {
-        this.rawSetSubView(getSelectedDiceKeySubViewFromPath());
-      });
-  
+    window.addEventListener('popstate', (_: PopStateEvent) => {
+      this.rawSetSubView(getSelectedDiceKeySubViewFromPath());
     });
+  }
+
+  private updateAddressBar = () => { // (newSubView: SelectedDiceKeySubViews, priorSubView: SelectedDiceKeySubViews | undefined) => {
+    const subViewInAddressBar = getSelectedDiceKeySubViewFromPath();
+    const newPath = replacePathElement(2, this.subView ?? "");
+    if (this.subView === SelectedDiceKeySubViews.DisplayDiceKey && subViewInAddressBar !== SelectedDiceKeySubViews.DisplayDiceKey) {
+      // We're popping from a subview to the display dicekey view
+      window.history.back();
+    } else if (this.subView !== SelectedDiceKeySubViews.DisplayDiceKey && subViewInAddressBar == SelectedDiceKeySubViews.DisplayDiceKey ) { 
+      // We're moving down from the primary view (displaying a dicekey) and pushing a subview
+      window.history.pushState({}, '', newPath);
+    } else {
+      // we're moving laterally from one subview to another
+      window.history.replaceState({}, '', newPath);
+    }
   }
 
   backupState = new BackupViewState(this.foregroundDiceKeyState);

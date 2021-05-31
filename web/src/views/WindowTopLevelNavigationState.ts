@@ -97,8 +97,10 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
 
     window.addEventListener('popstate', (_: PopStateEvent) => {
       const newState = getTopLevelNavStateFromPath();
-      this.foregroundDiceKeyState.setDiceKey(diceKey);
-      this.rawSetSubView(newState.subView ?? SubViews.AppHomeView);
+      runInAction(() => {
+        this.rawSetSubView(newState.subView ?? SubViews.AppHomeView);
+        this.foregroundDiceKeyState.setDiceKey(diceKey);
+      });
     });
 
     makeObservable(this, {
