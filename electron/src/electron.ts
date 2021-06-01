@@ -1,4 +1,4 @@
-import {app, BrowserWindow, dialog, ipcMain} from 'electron';
+import {app, BrowserWindow, dialog, ipcMain, protocol} from 'electron';
 import * as path from 'path';
 
 import * as squirrelCheck from './electron-squirrel-startup'
@@ -20,10 +20,19 @@ if (squirrelCheck()) {
 }
 
 let mainWindow: BrowserWindow
+let deepLinkUrl: string[]
 
 function bootstrapApplication() {
+
+    // Register dicekeys uri scheme
+    registerProtocol()
+
     // Bootstrap if needed
     startApplication()
+}
+
+function registerProtocol(){
+    app.setAsDefaultProtocolClient('dicekeys')
 }
 
 function startApplication() {
@@ -36,6 +45,12 @@ function startApplication() {
         width: 800,
     });
 
+    // Protocol handler for win32
+    if (process.platform == 'win32') {
+        // Keep only command line / deep linked arguments
+        deepLinkUrl = process.argv.slice(1)
+    }
+
     // and load the index.html of the app.
     mainWindow.loadFile(path.resolve(__dirname, '..', 'app', 'electron.html'));
 
@@ -47,6 +62,14 @@ const instanceLock = app.requestSingleInstanceLock()
 
 if (instanceLock) {
     app.on('second-instance', (event, commandLine, workingDirectory) => {
+        // Protocol handler for win32
+        // argv: An array of the second instance’s (command line / deep linked) arguments
+        if (process.platform == 'win32') {
+            // Keep only command line / deep linked arguments
+            deepLinkUrl = commandLine.slice(1)
+            sendDeepLink()
+        }
+
         // Someone tried to run a second instance, we should focus our window.
         if (mainWindow) {
             if (mainWindow.isMinimized()) {
@@ -81,6 +104,20 @@ if (instanceLock) {
     app.quit()
 }
 
+app.on('will-finish-launching', function() {
+    // Protocol handler for osx
+    app.on('open-url', function(event, url) {
+        event.preventDefault()
+        deepLinkUrl = [url]
+        sendDeepLink()
+    })
+})
+
+function sendDeepLink(){
+    if (mainWindow && mainWindow.webContents) {
+        mainWindow.webContents.send('deeplink', deepLinkUrl)
+    }
+}
 
 const implementSyncApi = <CHANNEL extends ElectronIpcSyncRequestChannelName>(channel: CHANNEL, implementation: (...args: ElectronBridgeSyncApiRequest<CHANNEL>) => ElectronBridgeSyncApiResponse<CHANNEL>) => {
   const responseChannelName = responseChannelNameFor(channel);
@@ -102,7 +139,7 @@ const implementAsyncApi = <CHANNEL extends ElectronIpcAsyncRequestChannelName>(c
     )
   })
 }
-
+implementSyncApi( "getDeepLink", () => deepLinkUrl);
 implementSyncApi( "writeResultToStdOutAndExit", (result) => {
   process.stdout.write(result);
   process.stdout.write('\n');

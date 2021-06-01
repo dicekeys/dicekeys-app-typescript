@@ -42,12 +42,17 @@ const createIpcAsyncRequestClientFunction = <CHANNEL extends ElectronIpcAsyncReq
     ipcRenderer.send(channel, codeToMatch, ...args);
   });
 
+
 // Create the API to expose, using TypeScript to verify that we created everything correctly
 const electronBridgeTypeChecked: IElectronBridge = {
   writeResultToStdOutAndExit: createIpcSyncRequestClientFunction("writeResultToStdOutAndExit"),
   getCommandLineArguments: createIpcSyncRequestClientFunction("getCommandLineArguments"),
   openFileDialog: createIpcAsyncRequestClientFunction("openFileDialog"),
   openMessageDialog: createIpcAsyncRequestClientFunction("openMessageDialog"),
+  getDeepLink: createIpcSyncRequestClientFunction("getDeepLink"),
+  setDeepLinkListener: (fn: (deepLink: string[]) => void) => {
+      ipcRenderer.on('deeplink', (event,args: string[]) => fn(args));
+  },
 };
 
 // Expose the API

@@ -12,6 +12,9 @@ module.exports = {
       "^(/README.md$)",
       "src"
     ],
+    "extendInfo": {
+      "CFBundleURLSchemes": ["dicekeys"]
+    },
     "executableName": "DiceKeys",
     "icon": "./packaging/icon.icns"
 },

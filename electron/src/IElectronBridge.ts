@@ -1,6 +1,7 @@
 interface IElectronBridgeSync {
   writeResultToStdOutAndExit(result: string): void;
   getCommandLineArguments(): string[];
+  getDeepLink(): string[];
 }
 
 interface IElectronBridgeAsync {
@@ -8,7 +9,11 @@ interface IElectronBridgeAsync {
   openMessageDialog(options: Electron.MessageBoxOptions): Promise<Electron.MessageBoxReturnValue>;
 }
 
-export interface IElectronBridge extends IElectronBridgeSync, IElectronBridgeAsync {
+interface IElectronBridgeListener {
+  setDeepLinkListener(fn: (deepLink: string[]) => void): void
+}
+
+export interface IElectronBridge extends IElectronBridgeSync, IElectronBridgeAsync, IElectronBridgeListener {
 }
 
 export const responseChannelNameFor = <T extends string> (channelName: T) => `${channelName}-response` as const;
