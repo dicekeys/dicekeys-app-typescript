@@ -1,24 +1,28 @@
 import React from "react";
 
+import { Layout } from "../../css";
+import css from "./ScanDiceKey.module.css";
 import { observer } from "mobx-react";
 import { OverlayCanvas } from "../basics/overlay-canvas";
 import { createReactObservableBounds } from "../basics/bounds";
-import { Layout } from "../../css";
 import { MediaStreamState } from "./MediaStreamState";
 import { FrameGrabberUsingImageCapture } from "./FrameGrabberUsingImageCapture";
 import { FrameGrabberFromVideoElement } from "./FrameGrabberFromVideoElement";
 import { WithSettableBounds, SettableBounds } from "../../utilities/WithBounds";
+
+import ScanningOverlayImage from /*url:*/"../../images/Scanning Overlay.svg";
 
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
 export interface CameraCaptureWithOverlayProperties {
   mediaStreamState: MediaStreamState;
   onFrameCaptured?: (frame: ImageData, canvasRenderingContext: CanvasRenderingContext2D) => any;
+  showBoxOverlay?: boolean;
   maxWidth?: string;
   maxHeight?: string;
 }
 
-export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverlay extends React.Component<React.PropsWithoutRef<CameraCaptureWithOverlayProperties>> {
+export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverlay extends React.Component<React.PropsWithChildren<CameraCaptureWithOverlayProperties>> {
 
  // private overlayCanvasElement: HTMLCanvasElement | null = null;
   private renderingContext?: CanvasRenderingContext2D;
@@ -46,9 +50,7 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
          
     const withVideoElementRef = (videoElement: HTMLVideoElement | null) => {
       if (videoElement == null) return;
-//      autorun( () => {
         videoElement.srcObject = this.props.mediaStreamState.mediaStream ?? null;
-//      });
       makeThisVideoElementsBoundsObservable(videoElement);
       if (useVideoElementCapture && videoElement.srcObject != null) {
         new FrameGrabberFromVideoElement(videoElement, this.onFrameCaptured) 
@@ -67,6 +69,13 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
               autoPlay={true}
               ref={withVideoElementRef}
             />
+            { !this.props.showBoxOverlay ? null : (
+              <img className={css.MiddleOverlay}
+                src={ScanningOverlayImage} 
+                width={bounds.width}
+                height={bounds.height}
+              />
+            )}
             <OverlayCanvas
               bounds={videoElementBounds}
               ref={ e => { this.renderingContext = e?.getContext("2d") ?? undefined; }
