@@ -45,12 +45,15 @@ export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubView
     const newPath = replacePathElement(2, this.subView ?? "");
     if (this.subView === SelectedDiceKeySubViews.DisplayDiceKey && subViewInAddressBar !== SelectedDiceKeySubViews.DisplayDiceKey) {
       // We're popping from a subview to the display dicekey view
+      console.log(`updateAddressBar.back ${JSON.stringify(subViewInAddressBar)} ${JSON.stringify(this.subView)}`);
       window.history.back();
     } else if (this.subView !== SelectedDiceKeySubViews.DisplayDiceKey && subViewInAddressBar == SelectedDiceKeySubViews.DisplayDiceKey ) { 
       // We're moving down from the primary view (displaying a dicekey) and pushing a subview
+      console.log(`updateAddressBar.pushState ${JSON.stringify(subViewInAddressBar)} ${JSON.stringify(this.subView)}`);
       window.history.pushState({}, '', newPath);
     } else {
       // we're moving laterally from one subview to another
+      console.log(`updateAddressBar.replaceState ${JSON.stringify(subViewInAddressBar)} ${JSON.stringify(this.subView)}`);
       window.history.replaceState({}, '', newPath);
     }
   }

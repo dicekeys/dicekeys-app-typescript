@@ -76,10 +76,9 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
     const newPathElements: string[] = ["", this.subView];
     if (keyId != null && diceKey != null) {
       const {centerLetterAndDigit} = diceKey;
-      newPathElements.push( keyId === DiceKeyMemoryStore.keyIdForCenterLetterAndDigit(centerLetterAndDigit) ?
+      newPathElements[1] = keyId === DiceKeyMemoryStore.keyIdForCenterLetterAndDigit(centerLetterAndDigit) ?
           centerLetterAndDigit :
-          keyId
-      );
+          keyId;
     }
     const newPath = newPathElements.join("/");
     const stateArgs = [{}, "", newPath] as const;
@@ -104,10 +103,12 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
 
     window.addEventListener('popstate', (_: PopStateEvent) => {
       const newState = getTopLevelNavStateFromPath();
-      runInAction(() => {
-        this.rawSetSubView(newState.subView ?? SubViews.AppHomeView);
-        this.foregroundDiceKeyState.setDiceKey(diceKey);
-      });
+      if (newState.subView != this.subView) {
+        runInAction(() => {
+          this.rawSetSubView(newState.subView ?? SubViews.AppHomeView);
+          this.foregroundDiceKeyState.setDiceKey(diceKey);
+        });
+      }
     });
 
     makeObservable(this, {
