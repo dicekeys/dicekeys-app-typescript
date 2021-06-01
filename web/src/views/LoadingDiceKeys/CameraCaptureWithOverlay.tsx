@@ -12,7 +12,7 @@ import { WithSettableBounds, SettableBounds } from "../../utilities/WithBounds";
 
 import ScanningOverlayImage from /*url:*/"../../images/Scanning Overlay.svg";
 
-export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
+export const imageCaptureSupported: boolean = (window.hasOwnProperty("ImageCapture"));
 
 export interface CameraCaptureWithOverlayProperties {
   mediaStreamState: MediaStreamState;
@@ -38,7 +38,7 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
 
   render() {
     const [videoElementBounds, makeThisVideoElementsBoundsObservable] = createReactObservableBounds();
-    const useImageCapture = ImageCapture != null;
+    const useImageCapture = imageCaptureSupported;
     const useVideoElementCapture = !useImageCapture;
     const {mediaStreamState} = this.props;
     // Unless the parent sets showBoxOverlay, show the box overlay only when
