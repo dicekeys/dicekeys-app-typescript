@@ -92,3 +92,9 @@
   flex-grow: 1;
 }
 
+/* .footer_button:not(:hover) {
+  filter: invert(20%);
+} */
+.footer_button:hover {
+  filter: invert(75%);
+}

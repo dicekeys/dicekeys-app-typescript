@@ -8,3 +8,7 @@
   padding-right: 0.75rem;
   margin: 0.5rem;
 }
+
+.PushButton:hover {
+  background: rgba(128,128,128,0.3);
+}

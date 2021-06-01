@@ -4,7 +4,6 @@ import layoutCSS from "../css/Layout.module.css";
 import {ButtonsCSS} from "../css";
 
 import { DiceKey } from "../dicekeys/DiceKey";
-import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import { SimpleTopNavBar } from "./Navigation/SimpleTopNavBar";
@@ -157,7 +156,9 @@ const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  Ass
   <StepFooterView               
     aboveFooter={(state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.foregroundDiceKeyState.diceKey == null) ? (
         <button className={stepCSS.StepButton} hidden={state.userChoseToSkipScanningStep == null}
-          onClick={ ()=> runInAction( () => state.userChoseToSkipScanningStep = true) } >Let me skip scanning and backing up my DiceKey
+          onClick={ state.setUserChoseToSkipScanningStep }
+          style={{marginBottom: "0.5rem"}}
+        >Let me skip scanning and backing up my DiceKey
         </button>
       ) : undefined
     }

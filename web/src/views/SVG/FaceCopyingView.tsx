@@ -77,7 +77,11 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
         <StickerSheetSvgGroup {...stickerSheetSizeModel.bounds} showLetter={face?.letter} hideFaces={hideFaces} highlightFaceWithDigit={face?.digit}
           transform={`translate(${xoffsetImageCenterToLeftSheetCenter})`}
         />
-        <StickerTargetSheetSvgGroup {...stickerSheetSizeModel.bounds} diceKey={diceKey} sizeModel={stickerSheetSizeModel} indexOfLastFacePlaced={indexOfLastFacePlaced}
+        <StickerTargetSheetSvgGroup
+          {...stickerSheetSizeModel.bounds} diceKey={diceKey}
+            sizeModel={stickerSheetSizeModel}
+            indexOfLastFacePlaced={indexOfLastFacePlaced}
+            highlightThisFace={indexOfLastFacePlaced}
           transform={`translate(${xoffsetImageCenterToRightSheetCenter}, 0)`}
         />        
       </>) : medium === "DiceKey" ? (<>
@@ -116,7 +120,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
           />
           <FaceGroupView
             transform={translateToDieCenter + `rotate(-0.7)`}
-            backgroundColor="rgba(0,0,0,0" // transparent
+            backgroundColor="rgba(0,0,0,0)" // transparent
             strokeWidth={0}
             stroke={"rgba(0,0,0,0)"}
             face={face}

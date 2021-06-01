@@ -39,3 +39,27 @@
 .MinWidthButtonContainer {
   min-width: 10vw;
 }
+
+.FeatureCardButton {
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  align-items: stretch;
+  align-content: center;
+  padding-top: 1.5vh;
+  padding-bottom: 1.5vh;
+  margin-top: 1.5vh;
+  margin-bottom: 1.5vh;
+  border-radius: min(1vh,1vw);
+  padding-left: 1vw;
+  padding-right: 1vw;
+  border: none;
+}
+
+.FeatureCardButton:hover {
+  background: rgba(128,128,128,0.2);
+}
+
+.FeatureCardButton:not(:first-of-type) {
+  margin-top: 1vh;
+}

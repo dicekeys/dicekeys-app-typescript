@@ -228,7 +228,7 @@
 
 //   render() {
 //     super.render();
-//     this.addClass(layoutStyles.centered_column);
+//     this.addClass(layoutStyles.CenteredColumn);
 
 //     //var orientationCheckbox: Checkbox;
 //     this.append(
@@ -307,7 +307,7 @@
 //     }
 //     if (this.options.requestContext.request.command === ApiCalls.Command.getPassword) {
 //       this.append(
-//         Div({class: layoutStyles.centered_column},
+//         Div({class: layoutStyles.CenteredColumn},
 //           Div({class: styles.password_to_be_shared_label}, Span({},
 //             `password to be sent to&nbsp;`),
 //             describeHost(this.options.requestContext.host

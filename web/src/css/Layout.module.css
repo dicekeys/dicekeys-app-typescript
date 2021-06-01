@@ -127,12 +127,12 @@
 
 /* FIXME -- deprecate these */
 
-.centered_column, .stretched_column_container {
+.CenteredColumn, .stretched_column_container {
   display: flex;
   flex-direction: column;
 }
 
-.centered_column {
+.CenteredColumn {
   justify-content: space-evenly;
   align-items: center;
   align-content: center;
@@ -141,6 +141,7 @@
   flex-grow: 5;
   flex-shrink: 5;
 }
+
 .stretched_column_container {
   flex-grow: 5;
   flex-shrink: 5;

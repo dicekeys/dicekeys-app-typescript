@@ -36,6 +36,12 @@ export const ContentRow  = ({children}: React.PropsWithChildren<{}>) => (
   </div>
 );
 
+export const CenteredColumn = ({children}: React.PropsWithChildren<{}>) => (
+  <div className={LayoutCss.CenteredColumn}>
+    {children}
+  </div>
+)
+
 export const PaddedContentBox  = ({children}: React.PropsWithChildren<{}>) => (
   <div className={LayoutCss.PaddedContentBox}>
     {children}
