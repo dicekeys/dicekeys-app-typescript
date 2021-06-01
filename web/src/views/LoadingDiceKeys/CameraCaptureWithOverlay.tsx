@@ -40,8 +40,13 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
     const [videoElementBounds, makeThisVideoElementsBoundsObservable] = createReactObservableBounds();
     const useImageCapture = ImageCapture != null;
     const useVideoElementCapture = !useImageCapture;
+    const {mediaStreamState} = this.props;
+    // Unless the parent sets showBoxOverlay, show the box overlay only when
+    // we can set the focus mode to something close.  Otherwise, the overlay may
+    // encourage the user to put the DiceKey closer than the camera can focus on it.
+    const {showBoxOverlay = mediaStreamState.supportsFixedFocus} = this.props;
     if (useImageCapture) {
-      const {mediaStream} = this.props.mediaStreamState;
+      const {mediaStream} = mediaStreamState;
       const track = mediaStream?.getTracks()[0];
       if (track) {
         new FrameGrabberUsingImageCapture(track, this.onFrameCaptured);;
@@ -69,7 +74,7 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
               autoPlay={true}
               ref={withVideoElementRef}
             />
-            { !this.props.showBoxOverlay ? null : (
+            { !showBoxOverlay ? null : (
               <img className={css.MiddleOverlay}
                 src={ScanningOverlayImage} 
                 width={bounds.width}

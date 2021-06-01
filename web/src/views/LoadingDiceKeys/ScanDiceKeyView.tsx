@@ -26,8 +26,7 @@ const defaultMediaTrackConstraints: MediaTrackConstraints = {
     min: minCameraHeight,
     ideal: 1024,
   },
-  aspectRatio: {ideal: 1},
-  // advanced: [{focusDistance: {ideal: 0}}]
+  aspectRatio: {ideal: 1}
 };
 
 type ScanDiceKeyViewProps = React.PropsWithoutRef<{
@@ -102,8 +101,7 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
 
     return (
       <div className={Layout.ColumnStretched}>
-        <CameraCaptureWithOverlay onFrameCaptured={this.onFrameCaptured} mediaStreamState={this.mediaStreamState} {...{maxWidth, maxHeight, showBoxOverlay}} >
-        </CameraCaptureWithOverlay>
+        <CameraCaptureWithOverlay onFrameCaptured={this.onFrameCaptured} mediaStreamState={this.mediaStreamState} {...{maxWidth, maxHeight, showBoxOverlay}} />
         <CameraSelectionView mediaStreamState={this.mediaStreamState} cameras={cameras} />
       </div>
     );
