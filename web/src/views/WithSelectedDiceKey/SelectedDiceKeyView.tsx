@@ -77,7 +77,6 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
   return (
     <div className={layoutCSS.HeaderFooterContentBox}>
       <SimpleTopNavBar title={diceKey.nickname} goBack={goBack} />
-      {/* <div className={layoutCSS.PaddedContentBox}> */}
       <div className={NavigationBars.BetweenTopAndBottomNavigationBars}>
         <SelectedDiceKeySubViewSwitch {...{...props}} />
       </div>

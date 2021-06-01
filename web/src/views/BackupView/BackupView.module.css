@@ -1,0 +1,41 @@
+
+.ComparisonBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items:center;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.ComparisonBox:first-of-type {
+  margin-left: 0;
+}
+
+.ComparisonBox:last-of-type {
+  margin-right: 0;
+}
+
+.ErrorStepViewBox {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0.1;
+  flex-grow: 0.1;
+}
+
+.ErrorExplanation {
+  min-width: 20vw;
+  font-size: 1.1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-content: baseline
+}
+
+.MinWidthButtonContainer {
+  min-width: 10vw;
+}

@@ -13,8 +13,9 @@ export const imageCaptureSupported: boolean = (typeof ImageCapture === "function
 
 export interface CameraCaptureWithOverlayProperties {
   mediaStreamState: MediaStreamState;
-//  onVideoElementRef?: (e: HTMLVideoElement | undefined) => any;
   onFrameCaptured?: (frame: ImageData, canvasRenderingContext: CanvasRenderingContext2D) => any;
+  maxWidth?: string;
+  maxHeight?: string;
 }
 
 export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverlay extends React.Component<React.PropsWithoutRef<CameraCaptureWithOverlayProperties>> {
@@ -53,10 +54,12 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
         new FrameGrabberFromVideoElement(videoElement, this.onFrameCaptured) 
       }
     };
+
+    const {maxWidth="100vw", maxHeight="75vh"} = this.props;
   
     return (
       <div className={Layout.ColumnCentered}>
-        <WithSettableBounds settableBounds={this.settableBounds} aspectRatioWidthOverHeight={1} maxWidth="100vw" maxHeight="75vh">
+        <WithSettableBounds settableBounds={this.settableBounds} aspectRatioWidthOverHeight={1} {...{maxWidth, maxHeight}}>
           { bounds => (<>
             <video
               width={bounds.width}

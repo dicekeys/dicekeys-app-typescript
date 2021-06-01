@@ -32,7 +32,9 @@ const defaultMediaTrackConstraints: MediaTrackConstraints = {
 
 type ScanDiceKeyViewProps = React.PropsWithoutRef<{
   onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
-  onDiceKeyRead?: (diceKey: DiceKey) => any
+  onDiceKeyRead?: (diceKey: DiceKey) => any,
+  maxWidth?: string;
+  maxHeight?: string;
 }>;
 
 const PermissionRequiredView = () => {
@@ -83,6 +85,7 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
   }
 
   render() {
+    const {maxWidth, maxHeight} = this.props
     if (!CamerasOnThisDevice.instance.readyAndNonEmpty) {
       return ( <PermissionRequiredView/> );
     }
@@ -98,7 +101,7 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
 
     return (
       <div className={Layout.ColumnStretched}>
-        <CameraCaptureWithOverlay onFrameCaptured={this.onFrameCaptured} mediaStreamState={this.mediaStreamState} />
+        <CameraCaptureWithOverlay onFrameCaptured={this.onFrameCaptured} mediaStreamState={this.mediaStreamState} {...{maxWidth, maxHeight}} />
         <CameraSelectionView mediaStreamState={this.mediaStreamState} cameras={cameras} />
       </div>
     );

@@ -1,11 +1,12 @@
 import React from "react";
+import css from "./BackupView.module.css";
 import {ButtonsCSS} from "../../css"
 import { DiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { observer } from "mobx-react";
 import { ScanDiceKeyView } from "../LoadingDiceKeys/ScanDiceKeyView";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
-import { AndClause, CenteredControls } from "../basics";
-import { ValidateBackupViewState } from "./ValidateBackupViewState";
+import { AndClause, CenteredControls, ContentBox, ContentRow, Instruction, Spacer } from "../basics";
+import { ValidateBackupViewState, FaceErrorDescriptor } from "./ValidateBackupViewState";
 
 export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateBackupViewState}) => {
   const onDiceKeyRead = (diceKey: DiceKey) => {
@@ -18,27 +19,31 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
   };
   if (viewState.scanning) {
     return (<>
-      <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } />
+      <ScanDiceKeyView
+        maxWidth="80vw"
+        maxHeight="50vh"      
+        onDiceKeyRead={ onDiceKeyRead }
+      />
       <CenteredControls>
           <button className={ButtonsCSS.PushButton} onClick={viewState.stopScanning} >Stop scanning</button>
       </CenteredControls>
     </>)
   } else {
     return (<>
-      <div style={{display: "flex", flexDirection: "row", justifyContent: "center"}}>
-        <div style={{display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems:"center", marginRight: "1rem"}} >
+      <ContentRow>
+        <div className={css.ComparisonBox}>
           <DiceKeyViewAutoSized faces={viewState.diceKeyState.diceKey?.faces}
             aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
-            highlightFaceAtIndex={viewState.errorDescriptor.faceIndex}
+            highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />
           <CenteredControls>
             <button className={ButtonsCSS.PushButton} onClick={viewState.startScanningOriginal}>Re-scan your original DiceKey</button>
           </CenteredControls>
         </div>
-        <div style={{display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems:"center", marginLeft: "1rem"}} >
+        <div className={css.ComparisonBox} >
           <DiceKeyViewAutoSized faces={viewState.diceKeyScanned?.faces ?? [] as unknown as PartialDiceKey }
             aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
-            highlightFaceAtIndex={viewState.errorDescriptor.faceIndex}
+            highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
           />
           <CenteredControls>
             <button className={ButtonsCSS.PushButton}  onClick={viewState.startScanningBackup} >{
@@ -47,44 +52,70 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
           </CenteredControls>
 
         </div>
-      </div>
+      </ContentRow>
+      <Spacer/>
+      { viewState.backupScannedSuccessfully ? (<>
+          <ContentBox>
+            <Instruction>
+              Well done.<br/>
+              The backup matches the original.
+            </Instruction>
+          </ContentBox>
+        </>) : null }
       <div style={{fontSize: "1.25rem", display: "flex", flexDirection:"row", justifyContent:"center", alignContent:"baseline",
         marginTop: "0.75rem",
         marginBottom: "0.5rem",
       }}>
-        { viewState.backupScannedSuccessfully ? (<>Well done. The backup matches the original.</>) : null }
-        { (viewState.diceKeyComparisonResult?.errors.length ?? 0) <= 5 ? null :
-            (<div style={{display: "block"}}>The backup doesn't look anything like the original.<br/></div>)
-        }{ (viewState.errorDescriptor.faceIndex == null || viewState.errorDescriptor.cause == null) ? null :
-            (<>Mismatch of&nbsp;<i><AndClause items={viewState.errorDescriptor.cause} /></i> &nbsp;at the {viewState.errorDescriptor.rowName} row, {viewState.errorDescriptor.columnName} column.</>)
+      { (viewState.diceKeyComparisonResult?.errors.length ?? 0) > 5 ?
+          (<div style={{display: "block"}}>The backup doesn't look anything like the original.<br/></div>) :        
+        (viewState.errorDescriptor == null || viewState.errorDescriptor.cause.length === 0) ? null :
+            <ErrorItemView errorDescriptor={viewState.errorDescriptor} />
         }
       </div>
-      { viewState.errorIndex == null || viewState.numberOfFacesWithErrors <= 1 ? null : (
-        <div style={{display: "flex", flexDirection: "row", justifyContent: "center",
-            marginBottom: "0.5rem",
-          }}>
-          <div style={{minWidth: "10vw"}}>
-            <button
-              className={ButtonsCSS.PushButton}
-              hidden={viewState.errorIndex == 0}
-              onClick={() => viewState.setErrorIndex((viewState.errorIndex ?? 1) - 1)}
-              >previous
-            </button>
-          </div>
-          <div style={{minWidth: "20vw", fontSize: "1.1rem", display: "flex", flexDirection:"row", justifyContent:"center", alignContent:"baseline"}}>
-            Error {viewState.errorIndex + 1} of {viewState.numberOfFacesWithErrors}
-          </div>
-          <div style={{minWidth: "10vw"}}>
-            <button
-              className={ButtonsCSS.PushButton}
-              hidden={viewState.errorIndex >= viewState.numberOfFacesWithErrors - 1 }
-              onClick={() => viewState.setErrorIndex((viewState.errorIndex ?? 0) + 1)}
-            >next
-            </button>
-          </div>
-        </div>
+      { viewState.numberOfFacesWithErrors <= 1 ? null : (
+        <ErrorStepView viewState={viewState} />
       )}
-
+      <Spacer/>
     </>)
   }
 });
+
+const ErrorItemView = ({errorDescriptor}: {errorDescriptor: FaceErrorDescriptor}) => {
+  const {cause, rowName, columnName} = errorDescriptor;
+  return (
+    <>
+      Mismatch of&nbsp;
+      <i>
+        <AndClause items={cause} />
+      </i> &nbsp;
+    at the {rowName} row, {columnName} column.
+    </>
+  )
+}
+
+const ErrorStepView = observer ( ({viewState}: {viewState: ValidateBackupViewState}) => {
+  const {errorIndex = 0, numberOfFacesWithErrors} = viewState;
+  return (
+  <div className={css.ErrorStepViewBox}>
+    <div className={css.MinWidthButtonContainer} style={{ ...( (errorIndex) > 0 ? {} : {visibility: "hidden"})}}>
+      <button
+        className={ButtonsCSS.PushButton}
+        hidden={errorIndex == 0 || errorIndex == null}
+        onClick={() => viewState.setErrorIndex((errorIndex ?? 1) - 1)}
+        >previous
+      </button>
+    </div>
+    <div className={css.ErrorExplanation}>
+      Error {errorIndex + 1} of {numberOfFacesWithErrors}
+    </div>
+    <div className={css.MinWidthButtonContainer} style={{...( (errorIndex) < numberOfFacesWithErrors-1 ? {} : {visibility: "hidden"})}}>
+      <button
+        className={ButtonsCSS.PushButton}
+        hidden={errorIndex >= numberOfFacesWithErrors - 1 }
+        onClick={() => viewState.setErrorIndex((errorIndex ?? 0) + 1)}
+      >next
+      </button>
+    </div>
+  </div>
+
+)});

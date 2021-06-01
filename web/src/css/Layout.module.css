@@ -1,4 +1,4 @@
-.HeaderFooterContentBox, .PaddedContentBox, .ContentBox {
+.HeaderFooterContentBox, .PaddedContentBox, .ContentBox, .ContentRow {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -10,6 +10,14 @@
 
 .ContentBox {
   justify-content: space-around;
+}
+
+.ContentRow {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  flex-grow: 1;
 }
 
 .PaddedContentBox {
@@ -84,6 +92,12 @@
   flex-shrink: 1;
 }
 
+.Center {
+  display: flex;
+  flex-direction: row;
+  justify-content:center;
+}
+
 /**
  CSS-FIXME -- these won't scale below the original image size
 */
@@ -91,9 +105,9 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  flex-grow: 1;
+  flex-grow: 10;
   flex-shrink: 10;
-  flex-basis: calc(min(50vw,50vh));
+  flex-basis: calc(min(25vw,25vh));
   min-height: 0;
   min-width: 0;
   margin: none;
@@ -101,6 +115,9 @@
 }
 
 .ResizableImage img {
+  display: flex;
+  flex-grow: 10;
+  flex-shrink: 10;
   margin: 0px;  
   object-fit: contain;
   display: block;

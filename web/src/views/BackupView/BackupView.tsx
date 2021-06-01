@@ -5,7 +5,7 @@ import React from "react";
 import { StepFooterView } from "../Navigation/StepFooterView";
 import { FaceCopyingView } from "../SVG/FaceCopyingView";
 import { FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
-import { Instruction } from "../basics";
+import { ContentBox, Instruction, PaddedContentBox } from "../basics";
 import { addPreviewWithMargins } from "../basics/Previews";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupView } from "./ValidateBackupView";
@@ -13,7 +13,6 @@ import { StickerSheetView } from "../SVG/StickerSheetView";
 import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 import stepCSS from "../Navigation/StepFooterView.module.css";
-import layoutCSS from "../../css/Layout.module.css";
 import {BackupStep, BackupViewState} from "./BackupViewState";
 
 const commonButtonStyle: React.CSSProperties = {
@@ -33,7 +32,7 @@ const commonButtonStyle: React.CSSProperties = {
 }
 
 const IntroToBackingUpToADiceKeyView = () => (<>
-  <div>
+  <ContentBox>
     <Instruction>Open your DiceKey kit and take out the box bottom and the 25 dice.</Instruction>
     <div style={{display: "flex", flexDirection: "row", justifyContent: "center", marginTop: "2rem", marginBottom: "2rem"}}>
       <div style={{display: "flex", flexDirection: "column", alignItems: "center", marginRight: "2vw"}}>
@@ -42,10 +41,10 @@ const IntroToBackingUpToADiceKeyView = () => (<>
     </div>
     <Instruction>Next, you will replicate the first DiceKey by copying the arrangement of dice.</Instruction>
     <div style={{marginTop: "3rem"}}>Need another DiceKey?  You can <a target="_blank" href="https://dicekeys.com/store">order more</a>.</div>
-  </div>
+  </ContentBox>
 </>)
 const IntroToBackingUpToASticKeyView = () => (
-  <div>
+  <ContentBox>
     <Instruction>Unwrap your SticKeys it.</Instruction>
     <div style={{display: "flex", flexDirection: "row", justifyContent: "center", marginTop: "2rem", marginBottom: "2rem"}}>
       <div style={{display: "flex", flexDirection: "column", alignItems: "center", marginRight: "2vw"}}>
@@ -59,7 +58,7 @@ const IntroToBackingUpToASticKeyView = () => (
     </div>
     <Instruction>Next, you will create a copy of your DiceKey on the target sheet by placing stickers.</Instruction>
     <div style={{marginTop: "3rem"}}>Out of SticKeys?  You can <a  target="_blank" href="https://dicekeys.com/store">order more</a>.</div>
-  </div>
+  </ContentBox>
 );
 
 const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, index: number, medium: BackupMedium}) => {
@@ -135,9 +134,9 @@ const BackupStepSwitchView = observer ( ({state}: BackupViewProps) => {
 });
 
 export const BackupContentView = observer ( (props: BackupViewProps) => (
-  <div className={layoutCSS.PaddedContentBox}>
+  <PaddedContentBox>
     <BackupStepSwitchView {...props} />
-  </div>
+  </PaddedContentBox>
 ));
 
 
@@ -205,6 +204,16 @@ class PreviewDiceKeyState {
 addPreviewWithMargins("Backup", () => ( 
   <BackupView state={new BackupViewState(new PreviewDiceKeyState(DiceKey.testExample), BackupStep.SelectBackupMedium)} />
 ));
+
+addPreviewWithMargins("BackupNoErrors", () => {
+  const diceKeyState = new PreviewDiceKeyState(DiceKey.testExample);
+  const state = new BackupViewState(diceKeyState);
+  state.setBackupMedium(BackupMedium.DiceKey);
+  state.setStep(BackupStep.Validate);
+  state.diceKeyScannedFromBackup.setDiceKey(DiceKey.testExample)
+  return (<BackupView state={state} />
+)});
+
 addPreviewWithMargins("Backup1Error", () => {
   const diceKeyState = new PreviewDiceKeyState(DiceKey.testExample);
   const state = new BackupViewState(diceKeyState);
