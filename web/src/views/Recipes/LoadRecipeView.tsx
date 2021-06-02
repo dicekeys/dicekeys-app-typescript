@@ -19,10 +19,10 @@ export const LoadRecipeView = observer( ({state}: {
     )
   )
   return (
-    <div className={"FIXME"}
+    <div className={css.LoadRecipeView}
       onMouseEnter={state.showHelpForFn(undefined)}
     >
-      <div>
+      {/* <div> */}
         <select
           className={css.SelectRecipe}
           // value={ state.recipeIdentifier ?? "" }
@@ -52,20 +52,7 @@ export const LoadRecipeView = observer( ({state}: {
             ))}      
           </optgroup>
         </select>
-        {/* <button
-          hidden={!state.recipeIdentifier || state.editingMode != null}
-          onClick={state.setStartEditing}
-        >edit</button>
-        <button
-          hidden={!state.savedRecipeIdentifer}
-          onClick={() => {
-            const {savedRecipeIdentifer} = state;
-            if (savedRecipeIdentifer) {
-              RecipeStore.removeRecipe(savedRecipeIdentifierToStoredRecipe(savedRecipeIdentifer));
-            }
-          }}
-        >delete</button> */}
-      </div>
+      {/* </div> */}
     </div>
   );
 });

@@ -13,12 +13,18 @@ export const ErrorHandler = observer ( class ErrorHandler extends React.Componen
 
   render() {
     const {error, info} = this.props.errorState;
-    if (error) {
+    if (error != null) {
       return (
-        <div className={"FIXME-error"}>{ error.name }{ error.message }{ error.stack }{ info }</div>
+        <div className={"FIXME-error"}>
+          <div>{ error.name }</div>
+          <div>{ error.message }</div>
+          <div>{ error.stack ?? "(no stack)" }</div>
+          <div>{ JSON.stringify(info) }</div>
+        </div>
       )
+    } else {
+      return this.props.children;
     }
-    return this.props.children;
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {

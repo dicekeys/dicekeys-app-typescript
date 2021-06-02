@@ -56,8 +56,17 @@ const getHostRestrictionsArrayAsString = (hosts: string[]): string =>
         .join(",")
     }]`;
 
+const hostNameToSortOrderHostHame = (hostName: string) =>
+    hostName.startsWith("*.") ? hostName.substr(2) + "*." : hostName;
+
 export const addHostsToRecipeJson = (recipeWithoutAllow: string | undefined, hosts: string[] | undefined): string | undefined => {
-  const allow = hosts == null || hosts.length === 0 ? undefined : getHostRestrictionsArrayAsString(hosts.sort());
+  const allow = hosts == null || hosts.length === 0 ? undefined : getHostRestrictionsArrayAsString(hosts.sort(
+    (a, b) => {
+      return (hostNameToSortOrderHostHame(a) < hostNameToSortOrderHostHame(b)) ? -1 :
+      a === b ? 0 :
+      1;
+    }
+  ));
   return addAllowToRecipeJson(recipeWithoutAllow, allow);
 }
 

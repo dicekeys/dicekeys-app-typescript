@@ -6,7 +6,7 @@ import { NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
 import { RecipeDescriptionView } from "./RecipeDescriptionView";
 import { EnhancedRecipeView } from "./EnhancedRecipeView";
 import { describeRecipeType } from "./DescribeRecipeType";
-import { RecipeTypeSelectorView } from "./RecipeTypeSelectorView";
+import { SelectAndSaveTableHeaderView } from "./SelectAndSaveTableHeaderView";
 import { RecipeFieldType } from "../../dicekeys/ConstructRecipe";
 import { getRegisteredDomain } from "../../domains/get-registered-domain";
 import { useContainerDimensions } from "../../utilities/react-hooks/useContainerDimensions";
@@ -217,7 +217,7 @@ export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState
   if (state.type == null) return (<></>);
   return (
     <div className={css.RecipeBuilderBlock}>
-      <RecipeTypeSelectorView {...{state}} />
+      <SelectAndSaveTableHeaderView {...{state}} />
       <div className={css.RecipeFormFrame}>
         { !state.editing ? (<></>) : (
           <>

@@ -7,6 +7,7 @@ import { ScanDiceKeyView } from "../LoadingDiceKeys/ScanDiceKeyView";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 import { AndClause, CenteredControls, ContentBox, ContentRow, Instruction, Spacer } from "../basics";
 import { ValidateBackupViewState, FaceErrorDescriptor } from "./ValidateBackupViewState";
+import { visibility } from "../../utilities/visibility";
 
 export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateBackupViewState}) => {
   const onDiceKeyRead = (diceKey: DiceKey) => {
@@ -108,7 +109,7 @@ const ErrorStepView = observer ( ({viewState}: {viewState: ValidateBackupViewSta
     <div className={css.ErrorExplanation}>
       Error {errorIndex + 1} of {numberOfFacesWithErrors}
     </div>
-    <div className={css.MinWidthButtonContainer} style={{...( (errorIndex) < numberOfFacesWithErrors-1 ? {} : {visibility: "hidden"})}}>
+    <div className={css.MinWidthButtonContainer} style={visibility(errorIndex < numberOfFacesWithErrors-1)}>
       <button
         className={ButtonsCSS.PushButton}
         hidden={errorIndex >= numberOfFacesWithErrors - 1 }

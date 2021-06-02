@@ -1,6 +1,26 @@
+.LoadRecipeView {
+  margin: 0.25rem;
+}
+
+.SelectRecipe {
+  align-self: flex-start;
+  border: none;
+  background-color: rgba(238, 238, 255, 1);
+  padding: 0.25rem;
+  border-radius: 0.5rem;;
+  /* border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem; */
+}
+
 .DerivationView {
-  width: 85vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   min-height: 60vh;
+  margin-left: 5vw;
+  margin-right: 5vw;
+  flex-grow: 1;
+  flex-shrink: 0;
 }
 
 .DeleteButton, .SaveButton {
@@ -21,13 +41,18 @@
   padding-bottom: 0.25rem;
 }
 
-.SaveRecipeSubRow {
-  justify-self: flex-end;
+.SaveRecipeSubRow, .RecipeSelectorSubRow {
+  justify-self: flex-start;
   flex-grow: 1;
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: baseline;
+}
+
+.RecipeSelectorSubRow {
+  justify-self: flex-start;
+  justify-content: flex-end;
 }
 
 .SaveRecipeRow {
@@ -92,6 +117,7 @@
   flex-direction: column;
   align-content: stretch;
   padding: 1rem;
+  min-width: 60rem;
   background-color: rgba(248,248,248,1);
   border-top-right-radius: 0.5rem;
   border-bottom-right-radius: 0.5rem;
@@ -116,24 +142,19 @@
 }
 
 .RecipeHelpBlock {
-  display: flex;
-  flex-direction: column;
-  align-self: stretch;
-  justify-content: flex-end;
-  align-items: center;
+  align-self: center;
+  overflow: auto;
+  display: block;
+  width: 100%;
 }
 
 .RecipeHelpContent {
-  display: flex;
+  display:block;
+  overflow: auto;
   user-select: none;
-  flex-direction: column;
-  align-self: stretch;
-  justify-content: flex-end;
-  align-items: stretch;
-  align-content: flex-start;
   min-height: 4rem;
-  padding-left: 2rem;
-  padding-right: 2rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   border-radius: 0.5rem;
@@ -269,6 +290,7 @@
 .DerivedValueBlock {
   padding-top: 1rem;
   min-height: 15vh;
+  min-width: 60rem;
   flex-direction: column;
   justify-content: flex-start;
   align-content: flex-start;
@@ -291,24 +313,13 @@
   min-height: 1rem;
   border: 1px solid gray;
   padding: 0.25rem;
+  border-radius: 0.25rem;
 
   /* border-bottom: 1px solid gray;
   border-left: 1px solid gray;
   border-right: 1px solid gray; */
 }
 
-.SelectRecipe {
-  align-self: flex-start;
-  border: none;
-  /* background-color: rgba(248, 248, 248, 1); */
-  padding-top: 0.05rem;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
-
-  margin-bottom: 1rem;
-}
 
 .SelectDerivedField, .SelectRecipeType {
   align-self: flex-start;

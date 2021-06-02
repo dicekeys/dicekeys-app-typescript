@@ -7,12 +7,11 @@ import { DerivableObjectNameList, describeRecipeType } from "./DescribeRecipeTyp
 import { SaveRecipeView } from "./SaveRecipeView";
 
 
-export const RecipeTypeSelectorView = observer( ({state}: {
+const RecipeTypeSelectorView = observer( ({state}: {
   state: RecipeBuilderState,
 }) => {
   return (
-    <div className={css.SelectAndSaveRow}>
-      <span hidden={!state.editing}>
+      <div className={css.RecipeSelectorSubRow} hidden={!state.editing}>
         Derive a&nbsp;
         <select
           className={css.SelectDerivedField}
@@ -29,8 +28,17 @@ export const RecipeTypeSelectorView = observer( ({state}: {
             <option key={ recipeType } value={ recipeType } >{ describeRecipeType(recipeType) }</option>
           ))}              
         </select>
-      </span>
+      </div>
+  );
+});
+
+export const SelectAndSaveTableHeaderView = observer( ({state}: {
+  state: RecipeBuilderState,
+}) => {
+  return (
+    <div className={css.SelectAndSaveRow}>
       <SaveRecipeView state={state} />
+      <RecipeTypeSelectorView state={state} />
     </div>
   );
 });

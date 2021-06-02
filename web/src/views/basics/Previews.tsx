@@ -1,12 +1,6 @@
 import React from "react";
-import Layout from "../../css/Layout.module.css"
-import { PreviewView } from "./Layout";
+import { Center, PreviewView } from "./Layout";
 
-export const Center = ({children}: React.PropsWithChildren<{}>) => (
-  <div className={Layout.PrimaryView} >
-    {children}
-  </div>
-);
 
 const PreviewMap = new Map<string, () => JSX.Element | null>();
 

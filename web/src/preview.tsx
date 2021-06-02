@@ -5,8 +5,6 @@ import { ErrorState } from "./views/ErrorState";
 import { Preview_ScanDiceKeyView } from "./views/LoadingDiceKeys/ScanDiceKeyView";
 import { Preview_EnterDiceKeyView } from "./views/LoadingDiceKeys/EnterDiceKeyView";
 import { Preview_SeedHardwareKeyView } from "./views/WithSelectedDiceKey/SeedHardwareKeyView";
-import { Preview_SelectedDiceKeyView } from "./views/WithSelectedDiceKey/SelectedDiceKeyView";
-import { Preview_DerivationView } from "./views/Recipes/DerivationView";
 import { Preview_StickerSheetView } from "./views/SVG/StickerSheetView";
 import { Preview_StickerTargetSheetView } from "./views/SVG/StickerTargetSheetView";
 import { Preview_FaceCopyingView } from "./views/SVG/FaceCopyingView";
@@ -27,8 +25,6 @@ const ApplicationErrorState = new ErrorState();
 addCenteredPreview("EnterDiceKey", () => ( <Preview_EnterDiceKeyView/> ));
 addCenteredPreview("ScanDiceKey", () => ( <Preview_ScanDiceKeyView/> ));
 addCenteredPreview("SeedHardwareKey", () => ( <Preview_SeedHardwareKeyView/> ));
-addCenteredPreview("SelectedDiceKey", () => ( <Preview_SelectedDiceKeyView /> ));
-addPreviewWithMargins("Derivation", () => ( <Preview_DerivationView />));
 addPreviewWithMargins("StickerSheet", () => ( <Preview_StickerSheetView />));
 addPreviewWithMargins("StickerTargetSheet", () => ( <Preview_StickerTargetSheetView />));
 addPreviewWithMargins("FaceCopying", () => ( <Preview_FaceCopyingView />));
@@ -49,15 +45,20 @@ class PreviewState {
 
 const previewState = new PreviewState();
 
-const Previews = observer ( () =>
-  previewState.preview?.() ?? (
-    <div style={{display: "flex", flexDirection: "column", justifyContent: "space-around", alignContent: "space-around"}}>
-      {getPreviewNames().map( name => (
-        <button key={name} className={ButtonsCSS.PushButton} onClick={() => previewState.setName(name)}>{name}</button>
-      ))}
-    </div>
-  )
-);
+const Previews = observer ( () => {
+  const {preview} = previewState;
+  if (preview != null && typeof preview === "function") {
+    return preview();
+  } else {
+    return (
+      <div style={{display: "flex", flexDirection: "column", justifyContent: "space-around", alignContent: "space-around"}}>
+        {getPreviewNames().map( name => (
+          <button key={name} className={ButtonsCSS.PushButton} onClick={() => previewState.setName(name)}>{name}</button>
+        ))}
+      </div>
+    );
+  }
+});
 
 window.addEventListener('load', () => {
   DiceKeyMemoryStore.onReady( () => {
