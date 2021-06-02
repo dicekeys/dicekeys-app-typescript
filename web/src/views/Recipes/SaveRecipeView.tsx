@@ -20,7 +20,8 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
     } else {
       if (recipeJson==null) return;
       const storedRecipe: StoredRecipe = {name, recipeJson, type};
-      RecipeStore.addRecipe(storedRecipe)
+      RecipeStore.addRecipe(storedRecipe);
+      state.stopEditing();
     }
   }
 

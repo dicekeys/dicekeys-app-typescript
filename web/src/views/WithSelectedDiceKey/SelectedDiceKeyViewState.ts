@@ -23,9 +23,9 @@ const getSelectedDiceKeySubViewFromPath = (path: string = window.location.pathna
 }
 
 const replacePathElement = (indexOfPathElementToReplace: number, newPathElement: string) => {
-  const pathElements = window.location.pathname.split('/');
+  const pathElements = (window.location.pathname || "/").split('/');
   pathElements[indexOfPathElementToReplace] = newPathElement
-  return pathElements.join('/');
+  return `${window.location.protocol}//${window.location.host}${pathElements.join('/')}`;
 }
 
 export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubViews> {

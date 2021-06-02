@@ -15,30 +15,6 @@
   align-items: baseline;
 }
 
-.StepButton {
-  min-width: 3rem;
-  cursor: arrow;
-  justify-content: center;
-  align-items: baseline;
-  background: none;
-  border: none;
-  margin-left: 0.25rem;
-  margin-right: 0.25rem;
-  border-radius: 0.25rem;
-  user-select: none;
-}
-
-.StepButton:hover {
-  background-color: rgba(128,128,128,1);
-}
-
-.StepButton:focus {
-  outline:0;
-}
-
-.StepButton:active {
-  background-color: gray
-}
 
 .SpaceBetweenLeftAndRightButtons {
   min-width: 6rem;

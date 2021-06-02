@@ -1,4 +1,5 @@
 import css from "./Recipes.module.css";
+import {ButtonsCSS} from "../../css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";
@@ -26,8 +27,7 @@ export const RecipeFieldDescription = (props: React.PropsWithChildren<{}>) => (
 
 export const RecipeFieldView = observer ( ({state, label, field, children}: React.PropsWithChildren<{
   state?: RecipeBuilderState,
-  label: string,
-//  description: string,
+  label: JSX.Element | string,
   field?: RecipeFieldType,
 }>) => (
   <div
@@ -56,7 +56,7 @@ export const PurposeFieldView = observer( ({state}: {
     <RecipeFieldView {...{state, field}} label="purpose (required)" >
       <input type="text" spellCheck={false}
         className={css.PurposeOrHostNameTextField}
-        size={32}
+        size={40}
         value={state.purposeField ?? ""}
         placeholder=""
         ref={ e => { if (e != null) { e?.focus(); showHelp() } } }
@@ -133,11 +133,20 @@ const RecipeFieldsHelpContentView = observer ( ( {state}: {state: RecipeBuilderS
       Limit the length of the generated password to a maximum number of characters.
     </>);
     case "rawJson": return (<>
-      This is the recipe's internal JSON format for use only when the provided fields are insufficient.
+      The recipe's internal JSON format.
       <br/>
       <b>Be careful.</b>&nbsp;
+      Do not edit it manually unless absolutely necessary.
       Changing even one character will change the {secretType}.
-      If you can't re-create the exact recipe string used to generate a {secretType}, you will be unable to regenerate it.
+      If you can't re-create the exact recipe string used to generate a {secretType},
+      you will be unable to regenerate it.
+      { state.allowEditingOfRawRecipe ? null : (
+        <button
+          onClick={ () => state.setAllowEditingOfRawRecipe(true) }
+          className={ButtonsCSS.SubtleButton} >
+            edit it anyway
+        </button>
+      )}
     </>);
     default: return state.type == null ? (<>
       Choose a recipe or template above.
@@ -171,22 +180,35 @@ export const RecipeBuilderFieldsView = observer( ( {state}: {state: RecipeBuilde
 export const JsonFieldView = observer( ({state}: {
   state: RecipeBuilderState,
 } ) => {
-  const componentRef = React.useRef<HTMLTextAreaElement>(null);
-  const { width } = useContainerDimensions(componentRef)
+  const textAreaComponentRef = React.useRef<HTMLTextAreaElement>(null);
+  const divAreaComponentRef = React.useRef<HTMLDivElement>(null);
+  const editable = state.editing && state.allowEditingOfRawRecipe;
+  const { width } = useContainerDimensions(editable ? textAreaComponentRef : divAreaComponentRef)
 
   const field = "rawJson";
   return (
-    <RecipeFieldView {...{state, field}} label="Recipe in JSON format" >
+    <RecipeFieldView {...{state, field}}
+      label="recipe in JSON format">
       <div className={css.FormattedRecipeBox}>
         <div className={css.FormattedRecipeUnderlay} style={{width: `${width ?? 0}px`}} >
           <EnhancedRecipeView recipeJson={state.recipeJson} />
         </div>
-        <textarea spellCheck={false} ref={componentRef}
+        { editable ? (
+          <textarea spellCheck={false}
+          ref={textAreaComponentRef}
           disabled={!state.editing}
           className={css.FormattedRecipeTextField}
           value={state.recipeJson ?? ""}
+          style={{...(state.editing ? {} : {userSelect: "all"})}}
           onInput={ e => {state.setRecipeJson(e.currentTarget.value); }} 
-        />
+          />
+        ) : (
+          <div
+            ref={divAreaComponentRef}
+            className={css.FormattedRecipeDisabledDiv}
+            style={{userSelect: "all"}}
+          >{state.recipeJson ?? (<>&nbsp;</>)}</div>   
+        ) }
       </div>
     </RecipeFieldView>
   );

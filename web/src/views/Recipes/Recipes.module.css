@@ -152,7 +152,7 @@
   display:block;
   overflow: auto;
   user-select: none;
-  min-height: 3.5rem;
+  min-height: 3.75rem;
   padding-left: 1rem;
   padding-right: 1rem;
   padding-top: 0.5rem;
@@ -195,6 +195,7 @@
   align-items: baseline;
   margin-top: 1px;
   margin-bottom: 4px;
+  user-select: none;
 }
 
 .FieldName:active {
@@ -342,7 +343,7 @@
 
 }
 
-.FormattedRecipeTextField, .FormattedRecipeUnderlay {
+.FormattedRecipeTextField, .FormattedRecipeDisabledDiv, .FormattedRecipeUnderlay {
   flex-grow: 1;
   overflow-wrap: break-word;
   word-wrap: break-word;
@@ -377,7 +378,7 @@
   z-index: 1;
 }
 
-.FormattedRecipeTextField {
+.FormattedRecipeTextField, .FormattedRecipeDisabledDiv {
   display: flex;
   position: relative;
   align-self: stretch;
@@ -386,6 +387,10 @@
   align-content: flex-start;
   z-index: 2;
   background-color: rgba(0, 0, 0, 0);
+}
+
+.FormattedRecipeDisabledDiv {
+  background-color: rgba(255, 255, 255, 0.5);
 }
 
 .Bip39Field {

@@ -37,10 +37,19 @@ export class RecipeBuilderState {
 
   //
   editing: boolean = false;
+  allowEditingOfRawRecipe: boolean = false;
+
   setStartEditing = action( () => {
     this.editing = true;
     this.showHelpFor("purpose");
   })
+  stopEditing = action( () => {
+    this.editing = false;
+  });
+
+  setAllowEditingOfRawRecipe = action ( (editingRawRecipe: boolean) => {
+    this.allowEditingOfRawRecipe = editingRawRecipe;
+  });
 
   //////////////////////////////////////////
   // helpToDisplay while building a recipe
@@ -212,6 +221,7 @@ export class RecipeBuilderState {
     this.type = storedRecipe.type;
     // Edit if custom recipe
     this.editing = storedRecipe.name == null;
+    this.allowEditingOfRawRecipe = false;
     this.setRecipeJson(storedRecipe.recipeJson);
   });
 }
