@@ -4,7 +4,6 @@ import layoutCSS from "../css/Layout.module.css";
 import {ButtonsCSS} from "../css";
 
 import { DiceKey } from "../dicekeys/DiceKey";
-import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import { SimpleTopNavBar } from "./Navigation/SimpleTopNavBar";
@@ -16,51 +15,40 @@ import ScanDiceKeyImage from /*url:*/"../images/Scanning a DiceKey.svg";
 import SealBox from /*url:*/"../images/Seal Box.svg";
 import { DiceKeyViewAutoSized } from "./SVG/DiceKeyView";
 import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
-import { Spacer, ResizableImage, Instruction, CenteredControls } from "./basics/";
+import { Spacer, ResizableImage, Instruction, CenteredControls, Center, PaddedContentBox } from "./basics/";
 import { BackupContentView, BackupStepFooterView } from "./BackupView";
 import { addPreview } from "./basics/Previews";
 import {AssemblyInstructionsStep, AssemblyInstructionsState} from "./AssemblyInstructionsState";
 import { DiceKeyState } from "../state/Window/DiceKeyState";
 
-const Center = ({children}: React.PropsWithChildren<{}>) => (
-  <div style={{display: "flex", flexDirection: "row", justifyContent:"center"}}>
-    {children}
-  </div>
-)
 
 const StepRandomizeView = () => (
-  <>
+  <PaddedContentBox>
     <Instruction>Shake the dice in the felt bag or in your hands.</Instruction>
     <Spacer/>
-    <Center>
-      <ResizableImage src={IllustrationOfShakingBag} alt="A bag of dice being shaken"/>
-    </Center>
-  </>
+    <ResizableImage src={IllustrationOfShakingBag} alt="A bag of dice being shaken"/>
+  </PaddedContentBox>
 );
 
 const StepDropDiceView = () => (
-  <>
+  <PaddedContentBox>
   <Instruction>Let the dice fall randomly.</Instruction>
   <Spacer/>
-  <Center>
-    <ResizableImage src={BoxBottomAfterRoll} alt="The box bottom with dice randomly placed into it."/>
-  </Center>
+  <ResizableImage src={BoxBottomAfterRoll} alt="The box bottom with dice randomly placed into it."/>
   <Spacer/>
   <Instruction>Most should land squarely into the 25 slots in the box base.</Instruction>
-  </>
+  </PaddedContentBox>
 );
 
 const StepFillEmptySlots = () => (
-  <>
+  <PaddedContentBox>
     <Instruction>Put the remaining dice squarely into the empty slots.</Instruction>
     <Spacer/>
-    <Center>
-      <ResizableImage src={BoxBottomAllDiceInPlace} alt="Box bottom with all dice in place." />
-    </Center>
+    <ResizableImage src={BoxBottomAllDiceInPlace} alt="Box bottom with all dice in place." />
     <Spacer/>
     <Instruction>Leave the rest in their original random order and orientations.</Instruction>
     <Spacer/>
-  </>
+  </PaddedContentBox>
 );
 
 const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState}) => {
@@ -79,12 +67,15 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
     stopScanning();
   }
   const {diceKey} = state.foregroundDiceKeyState;
-  return (<>
+  return (<PaddedContentBox>
     <Spacer/>
     <Instruction>Scan the dice in the bottom of the box (without sealing the box top into place.)</Instruction>
     <Spacer/>
     { scanning ? (<>
-      <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } />
+      <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead }
+        maxWidth="80vw"
+        maxHeight="50vh"
+      />
       <CenteredControls>
         <button className={ButtonsCSS.PushButton} onClick={stopScanning}>Cancel</button>
       </CenteredControls>
@@ -96,9 +87,7 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
           <button className={ButtonsCSS.PushButton} onClick={startScanning} >Scan again</button>
         </CenteredControls>
       </>) : (<>
-        <Center>
-          <ResizableImage src={ScanDiceKeyImage} alt="Illustration of scanning a DiceKey with a device camera."/>
-        </Center>
+        <ResizableImage src={ScanDiceKeyImage} alt="Illustration of scanning a DiceKey with a device camera."/>
         <Spacer/>
         <CenteredControls>
           <button className={ButtonsCSS.PushButton} onClick={startScanning}>Scan</button>
@@ -106,42 +95,42 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
         <Spacer/>
       </>)
     }
-  </>);
+  </PaddedContentBox>);
 });
 
 const StepSealBox = () => (
-  <>
+  <PaddedContentBox>
     <Instruction>Place the box top above the base so that the hinges line up.</Instruction>
     <Spacer/>
-    <Center>
-      <ResizableImage src={SealBox} alt={"Sealing the box closed"}/>
-    </Center>
+    <ResizableImage src={SealBox} alt={"Sealing the box closed"}/>
     <Spacer/>
     <Instruction>Press firmly down along the edges. The box will snap together, helping to prevent accidental re-opening.</Instruction>
-  </>
+  </PaddedContentBox>
 );
 
 const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsState}) => {
   const createdDiceKey = state.foregroundDiceKeyState.diceKey != null;
   const backedUpSuccessfully = state.backupState.validationStepViewState.backupScannedSuccessfully;
   return (
-    <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center"}}>
-      <div style={{display: "block"}}>
-        <Instruction>{createdDiceKey ? "You did it!" : "That's it!"}</Instruction>
-        <Spacer/>
-        { createdDiceKey ? (<></>) : (<>
-            <Instruction>There's nothing more to it.</Instruction>
-            <Instruction>Go back to assemble and scan in a real DiceKey.</Instruction>
-          </>)
-        }{ backedUpSuccessfully ? (<></>) :(<>
-            <Instruction>Be sure to make a backup soon!</Instruction>
-          </>)
-        }{ !createdDiceKey ? (<></>) : (<>
-            <Instruction>When you press the "Done" button, we'll take you to the same screen you'll see after scanning your DiceKey from the home screen.</Instruction>
-          </>)
-        }
-      </div>
-   </div>
+    <PaddedContentBox>
+      <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center"}}>
+        <div style={{display: "block"}}>
+          <Instruction>{createdDiceKey ? "You did it!" : "That's it!"}</Instruction>
+          <Spacer/>
+          { createdDiceKey ? (<></>) : (<>
+              <Instruction>There's nothing more to it.</Instruction>
+              <Instruction>Go back to assemble and scan in a real DiceKey.</Instruction>
+            </>)
+          }{ backedUpSuccessfully ? (<></>) :(<>
+              <Instruction>Be sure to make a backup soon!</Instruction>
+            </>)
+          }{ !createdDiceKey ? (<></>) : (<>
+              <Instruction>When you press the "Done" button, we'll take you to the same screen you'll see after scanning your DiceKey from the home screen.</Instruction>
+            </>)
+          }
+        </div>
+    </div>
+   </PaddedContentBox>
 )});
 
 const AssemblyInstructionsStepSwitchView = observer ( (props: {state: AssemblyInstructionsState}) => {
@@ -167,7 +156,9 @@ const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  Ass
   <StepFooterView               
     aboveFooter={(state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.foregroundDiceKeyState.diceKey == null) ? (
         <button className={stepCSS.StepButton} hidden={state.userChoseToSkipScanningStep == null}
-          onClick={ ()=> runInAction( () => state.userChoseToSkipScanningStep = true) } >Let me skip scanning and backing up my DiceKey
+          onClick={ state.setUserChoseToSkipScanningStep }
+          style={{marginBottom: "0.5rem"}}
+        >Let me skip scanning and backing up my DiceKey
         </button>
       ) : undefined
     }
@@ -186,7 +177,7 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
         {/* Header, empty for spacing purposes only */}
         <div></div>
         {/* Content */}
-        <div className={layoutCSS.PaddedContentBox}>
+        <div className={layoutCSS.ContentBox}>
           <AssemblyInstructionsStepSwitchView state={state} />
         </div>
         {/* Footer */

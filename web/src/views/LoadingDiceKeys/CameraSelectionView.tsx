@@ -14,6 +14,7 @@ export const CameraSelectionView = observer ( (props: React.PropsWithoutRef<Came
   if (defaultDevice && mediaStreamState.deviceId == null) {
     props.mediaStreamState.setDeviceId(defaultDevice.deviceId);
   }
+  if (cameras.length <= 1) return null;
   return (
     <CenteredControls>
       <select value={props.mediaStreamState.deviceId} onChange={ (e) => props.mediaStreamState.setDeviceId(e.target.value)} >

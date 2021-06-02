@@ -1,4 +1,4 @@
-.HeaderFooterContentBox, .PaddedContentBox, .ContentBox {
+.HeaderFooterContentBox, .PaddedContentBox, .ContentBox, .ContentRow {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -12,8 +12,19 @@
   justify-content: space-around;
 }
 
+.ContentRow {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  flex-grow: 1;
+}
+
 .PaddedContentBox {
-  padding: 2rem;
+  margin-left: 1.5rem;
+  margin-right: 1.5rem;
+  margin-bottom: 0.25rem;
+  margin-top: 0.25rem;
 }
 
 .PrimaryView {
@@ -81,16 +92,22 @@
   flex-shrink: 1;
 }
 
+.Center {
+  display: flex;
+  flex-direction: row;
+  justify-content:center;
+}
+
 /**
- CSS-FIXME -- these wont' scale below the original image size
+ CSS-FIXME -- these won't scale below the original image size
 */
 .ResizableImage {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  flex-grow: 1;
+  flex-grow: 10;
   flex-shrink: 10;
-  flex-basis: calc(min(50vw,50vh));
+  flex-basis: calc(min(25vw,25vh));
   min-height: 0;
   min-width: 0;
   margin: none;
@@ -98,6 +115,9 @@
 }
 
 .ResizableImage img {
+  display: flex;
+  flex-grow: 10;
+  flex-shrink: 10;
   margin: 0px;  
   object-fit: contain;
   display: block;
@@ -107,12 +127,12 @@
 
 /* FIXME -- deprecate these */
 
-.centered_column, .stretched_column_container {
+.CenteredColumn, .stretched_column_container {
   display: flex;
   flex-direction: column;
 }
 
-.centered_column {
+.CenteredColumn {
   justify-content: space-evenly;
   align-items: center;
   align-content: center;
@@ -121,6 +141,7 @@
   flex-grow: 5;
   flex-shrink: 5;
 }
+
 .stretched_column_container {
   flex-grow: 5;
   flex-shrink: 5;

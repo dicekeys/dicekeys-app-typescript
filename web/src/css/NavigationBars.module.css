@@ -87,7 +87,14 @@
 
 .footer_icon {
   display: flex;
+  max-height: 2.25rem;
   flex-basis: 0;
   flex-grow: 1;
 }
 
+/* .footer_button:not(:hover) {
+  filter: invert(20%);
+} */
+.footer_button:hover {
+  filter: invert(75%);
+}

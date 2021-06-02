@@ -1,0 +1,65 @@
+
+.ComparisonBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items:center;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.ComparisonBox:first-of-type {
+  margin-left: 0;
+}
+
+.ComparisonBox:last-of-type {
+  margin-right: 0;
+}
+
+.ErrorStepViewBox {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0.1;
+  flex-grow: 0.1;
+}
+
+.ErrorExplanation {
+  min-width: 20vw;
+  font-size: 1.1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-content: baseline
+}
+
+.MinWidthButtonContainer {
+  min-width: 10vw;
+}
+
+.FeatureCardButton {
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  align-items: stretch;
+  align-content: center;
+  padding-top: 1.5vh;
+  padding-bottom: 1.5vh;
+  margin-top: 1.5vh;
+  margin-bottom: 1.5vh;
+  border-radius: min(1vh,1vw);
+  padding-left: 1vw;
+  padding-right: 1vw;
+  border: none;
+}
+
+.FeatureCardButton:hover {
+  background: rgba(128,128,128,0.2);
+}
+
+.FeatureCardButton:not(:first-of-type) {
+  margin-top: 1vh;
+}

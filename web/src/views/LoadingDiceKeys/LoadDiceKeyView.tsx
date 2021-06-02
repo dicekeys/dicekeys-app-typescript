@@ -37,7 +37,10 @@ type LoadDiceKeyProps = {
 const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
   switch(props.state.mode) {
     case "camera": return ( 
-      <ScanDiceKeyView onFacesRead={ (diceKey) => props.onDiceKeyRead( new DiceKey(diceKey.map( faceRead => faceRead.toFace()) as DiceKeyFaces), "camera") }/>
+      <ScanDiceKeyView
+        maxWidth="100vw"
+        maxHeight="65vh"
+        onFacesRead={ (diceKey) => props.onDiceKeyRead( new DiceKey(diceKey.map( faceRead => faceRead.toFace()) as DiceKeyFaces), "camera") }/>
     );
     case "manual": return (  
       <EnterDiceKeyView state={props.state.enterDiceKeyState} />

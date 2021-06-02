@@ -142,7 +142,7 @@ const ApproveApiRequestViewProps = observer( (props: ApproveApiRequestViewProps)
 //         ( diceKey ?
 //           new ApproveApiCommand({...this.options, diceKey}).with( e => this.apiResponseSettings = e )
 //           :
-//           Div({class: layoutStyles.centered_column},
+//           Div({class: layoutStyles.CenteredColumn},
 //             Img({src: RenderedOpenDiceKey, style: 'max-width: 25vw; max-height: 25vh;',
 //               events: events => events.click.on( () => {
 //                 this.userAskedToLoadDiceKey = true; this.renderSoon(); } ),

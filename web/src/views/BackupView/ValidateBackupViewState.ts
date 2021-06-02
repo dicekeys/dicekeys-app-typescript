@@ -4,20 +4,20 @@ import { SettableDiceKeyState } from "../../state/Window/DiceKeyState";
 
 export class FaceErrorDescriptor {
   constructor(
-    private readonly diceKey?: DiceKey,
-    private readonly diceKeyComparisonResult?: DiceKeyComparisonResult,
-    private readonly errorIndex?: number,
+    private readonly diceKey: DiceKey,
+    private readonly diceKeyComparisonResult: DiceKeyComparisonResult,
+    private readonly errorIndex: number,
   ) {
     makeAutoObservable(this)
   }
 
   get error() {
-    return this.errorIndex == null ? undefined : this.diceKeyComparisonResult?.errors[this.errorIndex]
+    return this.diceKeyComparisonResult?.errors[this.errorIndex]
   }
 
   get cause() {
     const {error} = this;
-    if (error == null) return undefined;
+    if (error == null) return [];
     const {index, ...errorObject} = error;
     return (Object.keys(errorObject) as (keyof FaceComparisonErrorTypes)[])
       .map( k => k === "orientationAsLowercaseLetterTrbl" ? "orientation" : k )
@@ -69,5 +69,12 @@ export class ValidateBackupViewState {
     return this.diceKeyComparisonResult?.errors.length ?? 0
   }
 
-  get errorDescriptor() { return new FaceErrorDescriptor(this.diceKeyState.diceKey, this.diceKeyComparisonResult, this.errorIndex); }
+  get errorDescriptor() {
+    const {diceKey} = this.diceKeyState;
+    const {errorIndex = 0} = this; 
+    if (diceKey == null || this.diceKeyComparisonResult == null ||
+      errorIndex < 0 || errorIndex >= this.diceKeyComparisonResult.errors.length
+    )
+    return undefined;
+    return new FaceErrorDescriptor(diceKey, this.diceKeyComparisonResult, errorIndex); }
 }

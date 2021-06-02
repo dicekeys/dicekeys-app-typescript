@@ -39,7 +39,7 @@ const SelectedDiceKeyViewStateFooter = observer( ( props: SelectedDiceKeyViewPro
   return (
   <div className={NavigationBars.BottomNavigationBar}>
     <FooterButtonView {...props} labelStr={`DiceKey`} subView={SubViews.DisplayDiceKey} imageSrc={imageOfDiceKeyIcon} onClick={navState.navigateToDisplayDiceKey} />
-    <FooterButtonView {...props} labelStr={`SoloKey`} subView={SubViews.SeedHardwareKey} imageSrc={imageOfUsbKey} onClick={navState.navigateToSeedHardwareKey} />
+    <FooterButtonView {...props} labelStr={`Seed`} subView={SubViews.SeedHardwareKey} imageSrc={imageOfUsbKey} onClick={navState.navigateToSeedHardwareKey} />
     <FooterButtonView {...props} labelStr={`Secret`} subView={SubViews.DeriveSecrets} imageSrc={imageOfSecretWithArrow} onClick={navState.navigateToDeriveSecrets} />
     <FooterButtonView {...props} labelStr={`Backup`} subView={SubViews.Backup} imageSrc={imageOfBackup} onClick={navState.navigateToBackup} />
   </div>
@@ -77,7 +77,6 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
   return (
     <div className={layoutCSS.HeaderFooterContentBox}>
       <SimpleTopNavBar title={diceKey.nickname} goBack={goBack} />
-      {/* <div className={layoutCSS.PaddedContentBox}> */}
       <div className={NavigationBars.BetweenTopAndBottomNavigationBars}>
         <SelectedDiceKeySubViewSwitch {...{...props}} />
       </div>
