@@ -10,6 +10,7 @@ import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import { CenteredControls } from "../basics";
 import { ButtonsCSS, Layout } from "../../css";
+import { visibility } from "../../utilities/visibility";
 
 
 type Mode = "camera" | "manual";
@@ -69,7 +70,7 @@ export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
         ) : null }
         <button className={ButtonsCSS.PushButton} onClick={ () => state.setMode(state.mode === "camera" ? "manual" : "camera") } >{state.mode !== "camera" ? "Use Camera" : "Enter Manually"}</button>        
         <button className={ButtonsCSS.PushButton}
-          style={state.mode !== "manual" || !state.enterDiceKeyState.isValid ? {visibility: "hidden"} : {}}
+          style={visibility(state.mode === "manual" || state.enterDiceKeyState.isValid)}
           onClick={ onDonePressedWithinEnterDiceKey }
         >Done</button>          
       </CenteredControls>

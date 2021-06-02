@@ -53,12 +53,16 @@ export class NumericTextFieldState {
   }
 }
 
-export interface NumericTextFieldProps {
+interface CommonProps {
   state: NumericTextFieldState;
   size?: number;
-  className?: string;
-  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
+  placeholder?: string;
   onFocusedOrChanged?: () => any;
+  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
+}
+
+export interface NumericTextFieldProps extends CommonProps {
+  className?: string;
 };
 
 export const NumericTextField = observer ( (props: NumericTextFieldProps) => {
@@ -69,7 +73,7 @@ export const NumericTextField = observer ( (props: NumericTextFieldProps) => {
       size={props.size ?? 4}
       value={props.state.textValue}
       style={typeof props.state.numericValue == "number" ? {} :{color: "red"}}
-      placeholder={"none"}
+      placeholder={props.placeholder ?? "none"}
       onInput={ e => {
         props.state.setValue(e.currentTarget.value);
         props.onFocusedOrChanged?.();
@@ -81,12 +85,11 @@ export const NumericTextField = observer ( (props: NumericTextFieldProps) => {
 });
 
 
-export const NumberPlusMinusView = observer( ({state, textFieldClassName, size, onFocusedOrChanged}: {
-  state: NumericTextFieldState,
+export const NumberPlusMinusView = observer( (props: CommonProps & {
   textFieldClassName: string,
-  size?: number,
-  onFocusedOrChanged?: () => any
 }) => {
+  const {textFieldClassName, onKeyDown, ...commonProps} = props;
+  const {state, onFocusedOrChanged} = commonProps;
   const setValue = action ((newValue: number | undefined) => {
     state.setValue(newValue);
     onFocusedOrChanged?.()    
@@ -98,10 +101,10 @@ export const NumberPlusMinusView = observer( ({state, textFieldClassName, size, 
       <CharButton hidden={state.numericValue == null} onClick={ subtractOne  }
         >-<CharButtonToolTip>- 1 = {state.decrement ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
       <NumericTextField
+        {...commonProps}
         className={ textFieldClassName }
-        size={size} state={state}
-        onFocusedOrChanged={onFocusedOrChanged}
         onKeyDown={ e => {
+          onKeyDown?.(e);
           switch (e.key) {
             case "ArrowUp":
             case "+":

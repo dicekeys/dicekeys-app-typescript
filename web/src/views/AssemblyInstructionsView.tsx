@@ -1,5 +1,4 @@
 import css from "./AssemblyInstructionsView.module.css";
-import stepCSS from "./Navigation/StepFooterView.module.css";
 import layoutCSS from "../css/Layout.module.css";
 import {ButtonsCSS} from "../css";
 
@@ -155,7 +154,7 @@ interface AssemblyInstructionsViewProps {
 const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  AssemblyInstructionsViewProps) => (
   <StepFooterView               
     aboveFooter={(state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.foregroundDiceKeyState.diceKey == null) ? (
-        <button className={stepCSS.StepButton} hidden={state.userChoseToSkipScanningStep == null}
+        <button className={css.StepButton} hidden={state.userChoseToSkipScanningStep == null}
           onClick={ state.setUserChoseToSkipScanningStep }
           style={{marginBottom: "0.5rem"}}
         >Let me skip scanning and backing up my DiceKey

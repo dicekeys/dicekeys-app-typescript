@@ -1,6 +1,5 @@
 import { action, makeAutoObservable } from "mobx";
-import {
-  DerivationRecipeType} from "../../dicekeys/StoredRecipe";
+import {DerivationRecipeType} from "../../dicekeys/StoredRecipe";
 import { CachedApiCalls } from "../../api-handler/CachedApiCalls";
 import { isValidJson } from "../../utilities/json";
 
@@ -35,6 +34,7 @@ export const outputFormats = <T extends DerivationRecipeType>(type: T): OutputFo
 interface RecipeState {
   type?: DerivationRecipeType;
   recipeJson?: string;
+  recipeIsValid: boolean;
 }
 
 export class DerivedFromRecipeState {
@@ -62,8 +62,8 @@ export class DerivedFromRecipeState {
 
   get derivedValue(): string | undefined {
     const {recipeState, api} = this;
-    const {type, recipeJson} = recipeState;
-    if (!type || !isValidJson(recipeJson)) return;
+    const {type, recipeJson, recipeIsValid} = recipeState;
+    if (!type || !isValidJson(recipeJson) || !recipeIsValid) return;
   
     switch (type) {
       case "Password":

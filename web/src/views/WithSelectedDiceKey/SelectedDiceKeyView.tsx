@@ -15,6 +15,7 @@ import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 import { BackupView } from "../BackupView/BackupView";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { SelectedDiceKeyViewState } from "./SelectedDiceKeyViewState";
+import { addPreview } from "../basics/Previews";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 // const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
@@ -86,11 +87,14 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
 });
 
 
-export const Preview_SelectedDiceKeyView = observer ( () => {
-  return (
-    <SelectedDiceKeyView
-      goBack={() => alert("Back off man, I'm a scientist!")}
-      state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample))}
-    />
-  );
-});
+
+addPreview("SelectedDiceKey", observer ( () => (
+  <SelectedDiceKeyView
+    goBack={() => alert("Back off man, I'm a scientist!")}
+    state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample))}
+/>)));
+
+addPreview("Recipes", () => (<SelectedDiceKeyView
+      state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample), SubViews.DeriveSecrets)}
+  />)
+);

@@ -1,4 +1,5 @@
 import css from "./Recipes.module.css";
+import {ButtonsCSS} from "../../css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";
@@ -6,14 +7,10 @@ import { NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
 import { RecipeDescriptionView } from "./RecipeDescriptionView";
 import { EnhancedRecipeView } from "./EnhancedRecipeView";
 import { describeRecipeType } from "./DescribeRecipeType";
-import { RecipeTypeSelectorView } from "./RecipeTypeSelectorView";
+import { SelectAndSaveTableHeaderView } from "./SelectAndSaveTableHeaderView";
 import { RecipeFieldType } from "../../dicekeys/ConstructRecipe";
 import { getRegisteredDomain } from "../../domains/get-registered-domain";
 import { useContainerDimensions } from "../../utilities/react-hooks/useContainerDimensions";
-
-// IN PROGRESS
-
-// Restyling (location of load, edit, delete, etc.)
 
 // TO DO
 
@@ -24,33 +21,13 @@ import { useContainerDimensions } from "../../utilities/react-hooks/useContainer
 // Make json parser more resilient to errors?
 // Add/remove field for other optional fields?
 
-// DONE
-
-// limit to one calculation at a time
-// Bug Purpose field switching from hosts/purpose leaves both in JSON
-// handle overflow text in formatted recipeJson
-// Raw recipe editor with switch
-// Delete recipe button
-// Saved recipes and built-in recipes default to non-edit mode, edit button loads them
-// Fields automatically added to name
-// Include *. in purpose?
-// (including/excluding subdomains on all strings?)
-// Ensure lengthInBytes appears for secrets view
-// Recalculate suggested names by mapping purpose strings back to templates
-// Load templates directly into fields
-
-
-
-
-
 export const RecipeFieldDescription = (props: React.PropsWithChildren<{}>) => (
   <div className={css.FieldToolTip}>{props.children}</div>
 )
 
 export const RecipeFieldView = observer ( ({state, label, field, children}: React.PropsWithChildren<{
   state?: RecipeBuilderState,
-  label: string,
-//  description: string,
+  label: JSX.Element | string,
   field?: RecipeFieldType,
 }>) => (
   <div
@@ -76,12 +53,13 @@ export const PurposeFieldView = observer( ({state}: {
   const field = "purpose";
   const showHelp = state.showHelpForFn(field);
   return (
-    <RecipeFieldView {...{state, field}} label="Purpose" >
+    <RecipeFieldView {...{state, field}} label="purpose (required)" >
       <input type="text" spellCheck={false}
         className={css.PurposeOrHostNameTextField}
-        size={32}
+        size={40}
         value={state.purposeField ?? ""}
         placeholder=""
+        ref={ e => { if (e != null) { e?.focus(); showHelp() } } }
         onPaste={ e => {
           // If pasting a URL, paste only the domain
           const text = e.clipboardData.getData("text")
@@ -102,8 +80,11 @@ export const PurposeFieldView = observer( ({state}: {
 export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
   const field = "#";
   return (
-    <RecipeFieldView {...{state, field}} label={"Seq. #"} >
-      <NumberPlusMinusView textFieldClassName={css.SequenceNumberTextField} state={state.sequenceNumberState}
+    <RecipeFieldView {...{state, field}} label={"sequence #"} >
+      <NumberPlusMinusView 
+        textFieldClassName={css.SequenceNumberTextField}
+        state={state.sequenceNumberState}
+        placeholder={"1"}
         onFocusedOrChanged={state.showHelpForFn(field)} />
     </RecipeFieldView>
   )});
@@ -112,8 +93,11 @@ export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBui
     if (state.type !== "Password" || !state.mayEditLengthInChars) return null;
     const field  = "lengthInChars";
     return (
-      <RecipeFieldView {...{state, field}} label={"Length (chars)"} >
-        <NumberPlusMinusView textFieldClassName={css.LengthTextField} state={state.lengthInCharsState}
+      <RecipeFieldView {...{state, field}} label={"max length"} >
+        <NumberPlusMinusView
+          textFieldClassName={css.LengthTextField}
+          state={state.lengthInCharsState}
+          placeholder={"none"}
           onFocusedOrChanged={state.showHelpForFn(field)} />
       </RecipeFieldView>
     );
@@ -123,8 +107,11 @@ export const LengthInBytesFormFieldView = observer( ({state}: {state: RecipeBuil
   if (state.type !== "Secret" || !state.mayEditLengthInBytes) return null;
   const field  = "lengthInBytes";
   return (
-    <RecipeFieldView {...{state, field}} label={"Length (bytes)"} >
-      <NumberPlusMinusView textFieldClassName={css.LengthTextField} state={state.lengthInBytesState}
+    <RecipeFieldView {...{state, field}} label={"length (bytes)"} >
+      <NumberPlusMinusView
+        textFieldClassName={css.LengthTextField}
+        state={state.lengthInBytesState}
+        placeholder={"32"}
         onFocusedOrChanged={state.showHelpForFn(field)} />
     </RecipeFieldView>
   );
@@ -138,19 +125,28 @@ const RecipeFieldsHelpContentView = observer ( ( {state}: {state: RecipeBuilderS
     case "#": return (
       <>If you need more than one {secretType} for this purpose, add a sequence number.</>);
     case "purpose": return (<>
-        The purpose of the {secretType}.
-        If specified as a URL or comma-separate list of host names, the website(s) or app(s)
-        associated with the URL will be able to request the generated {secretType}.
+        If this {secretType} is for a website, paste its web address (URL) into the purpose field.<br/>
+        Be careful not to create your own purpose and forget it, as you cannot
+        re-create the {secretType} without it.
       </>);
     case "lengthInChars": return (<>
-      Apply a length-limit to the password.
+      Limit the length of the generated password to a maximum number of characters.
     </>);
     case "rawJson": return (<>
-      This is the recipe's internal JSON format for use only when the provided fields are insufficient.
+      The recipe's internal JSON format.
       <br/>
       <b>Be careful.</b>&nbsp;
+      Do not edit it manually unless absolutely necessary.
       Changing even one character will change the {secretType}.
-      If you can't re-create the exact recipe string used to generate a {secretType}, you will be unable to regenerate it.
+      If you can't re-create the exact recipe string used to generate a {secretType},
+      you will be unable to regenerate it.
+      { state.allowEditingOfRawRecipe ? null : (
+        <button
+          onClick={ () => state.setAllowEditingOfRawRecipe(true) }
+          className={ButtonsCSS.SubtleButton} >
+            edit it anyway
+        </button>
+      )}
     </>);
     default: return state.type == null ? (<>
       Choose a recipe or template above.
@@ -184,22 +180,35 @@ export const RecipeBuilderFieldsView = observer( ( {state}: {state: RecipeBuilde
 export const JsonFieldView = observer( ({state}: {
   state: RecipeBuilderState,
 } ) => {
-  const componentRef = React.useRef<HTMLTextAreaElement>(null);
-  const { width } = useContainerDimensions(componentRef)
+  const textAreaComponentRef = React.useRef<HTMLTextAreaElement>(null);
+  const divAreaComponentRef = React.useRef<HTMLDivElement>(null);
+  const editable = state.editing && state.allowEditingOfRawRecipe;
+  const { width } = useContainerDimensions(editable ? textAreaComponentRef : divAreaComponentRef)
 
   const field = "rawJson";
   return (
-    <RecipeFieldView {...{state, field}} label="Recipe in JSON format" >
+    <RecipeFieldView {...{state, field}}
+      label="recipe in JSON format">
       <div className={css.FormattedRecipeBox}>
         <div className={css.FormattedRecipeUnderlay} style={{width: `${width ?? 0}px`}} >
           <EnhancedRecipeView recipeJson={state.recipeJson} />
         </div>
-        <textarea spellCheck={false} ref={componentRef}
+        { editable ? (
+          <textarea spellCheck={false}
+          ref={textAreaComponentRef}
           disabled={!state.editing}
           className={css.FormattedRecipeTextField}
           value={state.recipeJson ?? ""}
+          style={{...(state.editing ? {} : {userSelect: "all"})}}
           onInput={ e => {state.setRecipeJson(e.currentTarget.value); }} 
-        />
+          />
+        ) : (
+          <div
+            ref={divAreaComponentRef}
+            className={css.FormattedRecipeDisabledDiv}
+            style={{userSelect: "all"}}
+          >{state.recipeJson ?? (<>&nbsp;</>)}</div>   
+        ) }
       </div>
     </RecipeFieldView>
   );
@@ -217,7 +226,7 @@ export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState
   if (state.type == null) return (<></>);
   return (
     <div className={css.RecipeBuilderBlock}>
-      <RecipeTypeSelectorView {...{state}} />
+      <SelectAndSaveTableHeaderView {...{state}} />
       <div className={css.RecipeFormFrame}>
         { !state.editing ? (<></>) : (
           <>
@@ -229,7 +238,7 @@ export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState
       </div>
       <div className={css.RecipeAndExplanationBlock} >
         {/* <LabeledEnhancedRecipeView state={state} /> */}
-        <RecipeDescriptionView type={state.type} recipeJson={state.recipeJson} /> 
+        <RecipeDescriptionView state={state} /> 
       </div>
     </div>
   );

@@ -1,8 +1,14 @@
 import React from "react";
 import { AndClause } from "../basics";
-import { DiceKeysAppSecretRecipe, StoredRecipe } from "../../dicekeys";
+import { DerivationRecipeType, DiceKeysAppSecretRecipe } from "../../dicekeys";
 import { describeRecipeType } from "./DescribeRecipeType";
 import css from "./Recipes.module.css";
+
+interface RecipeState {
+  type?: DerivationRecipeType;
+  recipeJson?: string;
+  recipeIsValid: boolean;
+}
 
 
 const HostNameView = ({host}: {host: string}) => (
@@ -11,8 +17,9 @@ const HostNameView = ({host}: {host: string}) => (
   (<><span className={css.host_name_span}>{ host }</span> (but not its subdomains)</>)
 )
 
-export const RecipeDescriptionContentView = ({type, recipeJson}: Partial<StoredRecipe>) => {
-  if (!type || !recipeJson) return (<i>Set at least one field above to create a recipe.</i>);
+export const RecipeDescriptionContentView = ({state}: {state: RecipeState}) => {
+  const {type, recipeJson, recipeIsValid} = state;
+  if (type == null || recipeJson == null || !recipeIsValid) return (<i>Enter a purpose for the recipe.</i>);
   let recipe: DiceKeysAppSecretRecipe | undefined = (() => {
     try {
       return JSON.parse(recipeJson ?? "{}") as DiceKeysAppSecretRecipe;
@@ -44,7 +51,7 @@ export const RecipeDescriptionContentView = ({type, recipeJson}: Partial<StoredR
   );
 }
 
-export const RecipeDescriptionView = (props: Partial<StoredRecipe>) => (
+export const RecipeDescriptionView = (props: {state: RecipeState}) => (
   <div className={css.RecipeDescriptionView} >
     <RecipeDescriptionContentView {...props} />
   </div>

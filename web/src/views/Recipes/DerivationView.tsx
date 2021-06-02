@@ -7,6 +7,7 @@ import { LoadRecipeView } from "./LoadRecipeView";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
+import { ContentBox, Spacer } from "../basics";
 
 interface DerivationViewProps {
   seedString: string;
@@ -16,11 +17,15 @@ export const DerivationViewWithState = observer( ( {recipeBuilderState, derivedF
   recipeBuilderState: RecipeBuilderState
   derivedFromRecipeState: DerivedFromRecipeState
 }) => (
-  <div className={css.DerivationView}>
-    <LoadRecipeView {...{state: recipeBuilderState}} />
-    <RecipeBuilderView state={recipeBuilderState} />
-    <DerivedFromRecipeView {...{state: derivedFromRecipeState}} />
-  </div>
+  <ContentBox>
+    <LoadRecipeView state={recipeBuilderState} />
+    <Spacer/>
+    <div className={css.DerivationView}>
+      <RecipeBuilderView state={recipeBuilderState} />
+      <DerivedFromRecipeView state={derivedFromRecipeState} />
+    </div>
+    <Spacer/>
+  </ContentBox>
 ));
 export const DerivationView = observer ( (props: DerivationViewProps) => {
   const recipeBuilderState =  new RecipeBuilderState();

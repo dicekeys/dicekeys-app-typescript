@@ -1,6 +1,6 @@
 import { action, makeAutoObservable } from "mobx";
 import {
-  StoredRecipe, DerivationRecipeType, builtInRecipeIdentifier, isRecipeBuiltIn, RecipeIdentifier, savedRecipeIdentifier, SavedRecipeIdentifier, BuiltInRecipeIdentifier
+  StoredRecipe, DerivationRecipeType, builtInRecipeIdentifier, isRecipeBuiltIn, RecipeIdentifier, savedRecipeIdentifier, SavedRecipeIdentifier, BuiltInRecipeIdentifier, DiceKeysAppSecretRecipe
 } from "../../dicekeys/StoredRecipe";
 import {
   addHostsToRecipeJson,
@@ -18,6 +18,7 @@ import {
 import { NumericTextFieldState } from "../basics/NumericTextFieldView";
 import { Recipe } from "@dicekeys/dicekeys-api-js";
 import { RecipeStore } from "../../state/stores/RecipeStore";
+import { isValidJson } from "../../utilities/json";
 
 // type EditingMode = "fields" | "json" | undefined;
 
@@ -36,10 +37,19 @@ export class RecipeBuilderState {
 
   //
   editing: boolean = false;
+  allowEditingOfRawRecipe: boolean = false;
+
   setStartEditing = action( () => {
     this.editing = true;
-    this.showHelpFor(undefined);
+    this.showHelpFor("purpose");
   })
+  stopEditing = action( () => {
+    this.editing = false;
+  });
+
+  setAllowEditingOfRawRecipe = action ( (editingRawRecipe: boolean) => {
+    this.allowEditingOfRawRecipe = editingRawRecipe;
+  });
 
   //////////////////////////////////////////
   // helpToDisplay while building a recipe
@@ -48,7 +58,7 @@ export class RecipeBuilderState {
    * The field to provide help for, or undefined to show help about the
    * type of secret being created
    */
-	helpToDisplay?: RecipeFieldType;
+	helpToDisplay?: RecipeFieldType = "purpose";
 	showHelpFor = action ( (recipeField?: RecipeFieldType) => {
 		this.helpToDisplay = recipeField;
 	} )
@@ -132,6 +142,20 @@ export class RecipeBuilderState {
 
   recipeJson: string | undefined;
 
+  get recipe(): DiceKeysAppSecretRecipe | undefined {
+    const {type, recipeJson} = this;
+    if (!type || !isValidJson(recipeJson)) return;
+    return JSON.parse(recipeJson) as DiceKeysAppSecretRecipe;
+  }
+
+  get recipeIsValid(): boolean {
+    const {recipe} = this;
+    return recipe != null && (
+      (recipe.purpose != null && recipe.purpose.length > 0) ||
+      (recipe.allow != null && recipe.allow.length > 0)
+    );
+  }
+
   get savedRecipeIdentifer(): SavedRecipeIdentifier | undefined {
     const {type, name, recipeJson} = this;
     if (type == null || name == null || recipeJson == null) return;
@@ -197,6 +221,7 @@ export class RecipeBuilderState {
     this.type = storedRecipe.type;
     // Edit if custom recipe
     this.editing = storedRecipe.name == null;
+    this.allowEditingOfRawRecipe = false;
     this.setRecipeJson(storedRecipe.recipeJson);
   });
 }
