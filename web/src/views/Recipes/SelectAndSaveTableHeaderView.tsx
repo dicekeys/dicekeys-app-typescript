@@ -20,7 +20,7 @@ const RecipeTypeSelectorView = observer( ({state}: {
           onChange={ (e) => {
             state.setType(e.currentTarget.value as DerivationRecipeType | undefined);
             state.setStartEditing();
-            state.showHelpFor(undefined);
+            state.showHelpFor("purpose");
           }}
         >
           <option key="none" disabled={true} hidden={true} value="">...</option>

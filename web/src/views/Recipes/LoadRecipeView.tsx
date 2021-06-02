@@ -20,7 +20,7 @@ export const LoadRecipeView = observer( ({state}: {
   )
   return (
     <div className={css.LoadRecipeView}
-      onMouseEnter={state.showHelpForFn(undefined)}
+      onMouseEnter={state.showHelpForFn("purpose")}
     >
       {/* <div> */}
         <select
