@@ -10,8 +10,16 @@ import {
   responseChannelNameFor,
   ElectronIpcSyncRequestChannelName,
   ElectronBridgeSyncApiResponse,
-  ElectronBridgeSyncApiRequest
+  ElectronBridgeSyncApiRequest,
+  ElectronBridgeListener,
+  ElectronIpcListenerRequestChannelName,
+  RemoveListener,
+  ElectronBridgeListenerApiCallbackParameters,
+  ElectronBridgeListenerApiSetupArgs,
+  ElectronBridgeListenerApiErrorCallbackParameters,
+  terminateChannelNameFor,
 } from './IElectronBridge';
+import { monitorForFidoDevicesConnectedViaUsb } from './SeedableHardwareKeys';
 import ipcRenderer = Electron.Renderer.ipcRenderer;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -103,6 +111,29 @@ const implementAsyncApi = <CHANNEL extends ElectronIpcAsyncRequestChannelName>(c
   })
 }
 
+const implementListenerApi = <CHANNEL extends ElectronIpcListenerRequestChannelName>(channel: CHANNEL,
+    implementation: ElectronBridgeListener<CHANNEL>
+  ) => {
+  const responseChannelName = responseChannelNameFor(channel);
+  const listenerCodeToRemovalFunction = new Map<string, RemoveListener>();
+  ipcMain.on(terminateChannelNameFor(channel), (event, code) => {
+    // Run the termination function
+    listenerCodeToRemovalFunction.get(code)?.();
+  })
+  ipcMain.on(channel, (event, code, ...setupArgs: ElectronBridgeListenerApiSetupArgs<CHANNEL>) => {
+    const removeListener = implementation(
+      (...callbackArgs: ElectronBridgeListenerApiCallbackParameters<CHANNEL>) => {
+        event.sender.send(responseChannelName, code, ...callbackArgs)
+      },
+      (...errorCallbackArgs: ElectronBridgeListenerApiErrorCallbackParameters<CHANNEL>) => {
+        event.sender.send( responseChannelName, exceptionCodeFor(code), ...errorCallbackArgs)
+      },
+      ...(setupArgs as []) // FIXME to make typescript happy
+    )
+    listenerCodeToRemovalFunction.set(code, removeListener)
+  })
+}
+
 implementSyncApi( "writeResultToStdOutAndExit", (result) => {
   process.stdout.write(result);
   process.stdout.write('\n');
@@ -125,3 +156,4 @@ implementSyncApi( "getCommandLineArguments", () => {
 });
 implementAsyncApi( "openFileDialog", (options) => dialog.showOpenDialog(mainWindow, options) );
 implementAsyncApi( "openMessageDialog", (options) => dialog.showMessageBox(mainWindow, options) );
+implementListenerApi("listenForSeedableSecurityKeys", monitorForFidoDevicesConnectedViaUsb );

@@ -1,3 +1,5 @@
+import { Device } from "./UsbDeviceMonitor";
+
 interface IElectronBridgeSync {
   writeResultToStdOutAndExit(result: string): void;
   getCommandLineArguments(): string[];
@@ -8,14 +10,21 @@ interface IElectronBridgeAsync {
   openMessageDialog(options: Electron.MessageBoxOptions): Promise<Electron.MessageBoxReturnValue>;
 }
 
-export interface IElectronBridge extends IElectronBridgeSync, IElectronBridgeAsync {
+export type RemoveListener = () => void;
+interface IElectronBridgeListener {
+  listenForSeedableSecurityKeys(successCallback: (devices: Device[]) => any, errorCallback: (error: any) => any): RemoveListener;
+}
+
+export interface IElectronBridge extends IElectronBridgeSync, IElectronBridgeAsync, IElectronBridgeListener {
 }
 
 export const responseChannelNameFor = <T extends string> (channelName: T) => `${channelName}-response` as const;
+export const terminateChannelNameFor = <T extends string> (channelName: T) => `${channelName}-terminate` as const;
 export const exceptionCodeFor = <T extends string> (code: T) => `exception:${code}` as const;
 
 export type ElectronIpcSyncRequestChannelName = keyof IElectronBridgeSync;
 export type ElectronIpcAsyncRequestChannelName = keyof IElectronBridgeAsync;
+export type ElectronIpcListenerRequestChannelName = keyof IElectronBridgeListener;
 
 export type ElectronBridgeAsyncApiRequest<ElectronBridgeApiChannelName extends ElectronIpcAsyncRequestChannelName> =
   Parameters<IElectronBridge[ElectronBridgeApiChannelName]>;
@@ -30,3 +39,21 @@ export type ElectronBridgeSyncApiRequest<ElectronBridgeApiChannelName extends El
 export type ElectronBridgeSyncApiResponse<ElectronBridgeApiChannelName extends ElectronIpcSyncRequestChannelName> =
   ReturnType<IElectronBridge[ElectronBridgeApiChannelName]>;
 
+export type ElectronBridgeListener<CHANNEL extends ElectronIpcListenerRequestChannelName> =
+    IElectronBridge[CHANNEL];
+export type ElectronBridgeListenerParameters<CHANNEL extends ElectronIpcListenerRequestChannelName> =
+    Parameters<ElectronBridgeListener<CHANNEL>>;
+
+export type ElectronBridgeListenerApiCallback<CHANNEL extends ElectronIpcListenerRequestChannelName> =
+    ElectronBridgeListenerParameters<CHANNEL>[0];
+export type ElectronBridgeListenerApiErrorCallback<CHANNEL extends ElectronIpcListenerRequestChannelName> =
+    ElectronBridgeListenerParameters<CHANNEL>[1];
+type TupleBeyondSecondElement<T> = T extends[a: any, b: any, ...args: infer A] ? A : never;
+export type ElectronBridgeListenerApiSetupArgs<CHANNEL extends ElectronIpcListenerRequestChannelName> =
+    TupleBeyondSecondElement<ElectronBridgeListenerParameters<CHANNEL>>;
+
+export type ElectronBridgeListenerApiCallbackParameters<CHANNEL extends ElectronIpcListenerRequestChannelName> =
+  Parameters<ElectronBridgeListenerApiCallback<CHANNEL>>;
+// Parameters<ElectronBridgeListenerApiCallback<CHANNEL>> extends [] ? Parameters<ElectronBridgeListenerApiCallback<CHANNEL>> : [];
+export type ElectronBridgeListenerApiErrorCallbackParameters<CHANNEL extends ElectronIpcListenerRequestChannelName> =
+    Parameters<ElectronBridgeListenerApiErrorCallback<CHANNEL>>;
