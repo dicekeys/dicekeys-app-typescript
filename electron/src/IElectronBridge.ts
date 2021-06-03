@@ -1,4 +1,13 @@
-import { Device } from "./UsbDeviceMonitor";
+export interface Device {
+  locationId: number;
+  vendorId: number;
+  productId: number;
+  deviceName: string;
+  manufacturer: string;
+  serialNumber: string;
+  deviceAddress: number;
+}
+
 
 interface IElectronBridgeSync {
   writeResultToStdOutAndExit(result: string): void;

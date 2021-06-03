@@ -117,7 +117,7 @@
   flex-direction: column;
   align-content: stretch;
   padding: 1rem;
-  min-width: 60rem;
+  min-width: 60vw;
   background-color: rgba(248,248,248,1);
   border-top-right-radius: 0.5rem;
   border-bottom-right-radius: 0.5rem;
@@ -291,7 +291,7 @@
 .DerivedValueBlock {
   padding-top: 1rem;
   min-height: 15vh;
-  min-width: 60rem;
+  min-width: 60vw;
   flex-direction: column;
   justify-content: flex-start;
   align-content: flex-start;

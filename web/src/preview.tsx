@@ -4,7 +4,6 @@ import { ErrorHandler } from "./views/ErrorHandler";
 import { ErrorState } from "./views/ErrorState";
 import { Preview_ScanDiceKeyView } from "./views/LoadingDiceKeys/ScanDiceKeyView";
 import { Preview_EnterDiceKeyView } from "./views/LoadingDiceKeys/EnterDiceKeyView";
-import { Preview_SeedHardwareKeyView } from "./views/WithSelectedDiceKey/SeedHardwareKeyView";
 import { Preview_StickerSheetView } from "./views/SVG/StickerSheetView";
 import { Preview_StickerTargetSheetView } from "./views/SVG/StickerTargetSheetView";
 import { Preview_FaceCopyingView } from "./views/SVG/FaceCopyingView";
@@ -24,7 +23,6 @@ const ApplicationErrorState = new ErrorState();
 
 addCenteredPreview("EnterDiceKey", () => ( <Preview_EnterDiceKeyView/> ));
 addCenteredPreview("ScanDiceKey", () => ( <Preview_ScanDiceKeyView/> ));
-addCenteredPreview("SeedHardwareKey", () => ( <Preview_SeedHardwareKeyView/> ));
 addPreviewWithMargins("StickerSheet", () => ( <Preview_StickerSheetView />));
 addPreviewWithMargins("StickerTargetSheet", () => ( <Preview_StickerTargetSheetView />));
 addPreviewWithMargins("FaceCopying", () => ( <Preview_FaceCopyingView />));

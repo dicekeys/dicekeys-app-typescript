@@ -1,8 +1,7 @@
 import {NavigationBars} from "../../css"
 import { observer } from "mobx-react";
 import React from "react";
-
-const isRunningInElectron: boolean = !!(window && window.process && "type" in window.process && (window.process as unknown as {type: string})["type"] != null);
+import { isElectron } from "../../utilities/is-electron";
 
 export const SimpleTopNavBar = observer( ( props: {
   title?: string,
@@ -13,11 +12,11 @@ export const SimpleTopNavBar = observer( ( props: {
   // Make the top left nav bar a button iff we're running in electron,
   // otherwise we're in the browser and this should be a no-op (undefined onClick handler)
   // as the web-based app relies on the back button within the browser.
-  const onClick = isRunningInElectron ? goBack : undefined;
+  const onClick = isElectron() ? goBack : undefined;
   return (
     <div className={NavigationBars.TopNavigationBar}>
       <span className={NavigationBars.NavLeftSide} onClick={ onClick } >{
-        isRunningInElectron ?
+        isElectron() ?
           // Show a back button in Electron
           (<>&#8592;</>) :
           // Don't show a back button for the web app, as the browser back button will work.

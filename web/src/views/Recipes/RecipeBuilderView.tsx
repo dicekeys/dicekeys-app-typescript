@@ -156,7 +156,7 @@ const RecipeFieldsHelpContentView = observer ( ( {state}: {state: RecipeBuilderS
   }
 });
 
-const RecipeFieldsHelpView = observer ( ( {state}: {state: RecipeBuilderState}) => (
+export const RecipeFieldsHelpView = observer ( ( {state}: {state: RecipeBuilderState}) => (
   <div className={css.RecipeHelpBlock}>
     <div className={css.RecipeHelpContent}>
       <div style={{display: "block"}}>
@@ -222,7 +222,7 @@ export const RecipeRawJsonView = observer( ( {state}: {state: RecipeBuilderState
 });
 
 
-export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState}) => {
+export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState, hideHeader?: boolean}) => {
   if (state.type == null) return (<></>);
   return (
     <div className={css.RecipeBuilderBlock}>
@@ -237,7 +237,6 @@ export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState
         <RecipeRawJsonView state={state} /> 
       </div>
       <div className={css.RecipeAndExplanationBlock} >
-        {/* <LabeledEnhancedRecipeView state={state} /> */}
         <RecipeDescriptionView state={state} /> 
       </div>
     </div>

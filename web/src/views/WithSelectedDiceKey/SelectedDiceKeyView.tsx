@@ -10,7 +10,7 @@ import imageOfSecretWithArrow from /*url:*/"../../images/Secret with Arrow.svg";
 import imageOfBackup from /*url:*/"../../images/Backup to DiceKey.svg";
 import { DerivationView } from "../Recipes/DerivationView";
 import { Navigation } from "../../state";
-import { SeedHardwareKeyView, SeedHardwareKeyViewState } from "./SeedHardwareKeyView";
+import { SeedHardwareKeyView } from "./SeedHardwareKeyView";
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 import { BackupView } from "../BackupView/BackupView";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
@@ -59,7 +59,7 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
       <DerivationView seedString={diceKey.toSeedString()} />
     );
     case Navigation.SelectedDiceKeySubViews.SeedHardwareKey: return (
-      <SeedHardwareKeyView diceKey={diceKey} seedHardwareKeyViewState={ new SeedHardwareKeyViewState(diceKey.toSeedString()) } />
+      <SeedHardwareKeyView seedString={diceKey.toSeedString()} />
     );
     case Navigation.SelectedDiceKeySubViews.Backup: return (
       <BackupView state={state.backupState} nextStepAfterEnd={() => {
@@ -91,10 +91,15 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
 addPreview("SelectedDiceKey", observer ( () => (
   <SelectedDiceKeyView
     goBack={() => alert("Back off man, I'm a scientist!")}
-    state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample))}
+    state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample), SubViews.DisplayDiceKey)}
 />)));
 
 addPreview("Recipes", () => (<SelectedDiceKeyView
       state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample), SubViews.DeriveSecrets)}
   />)
+);
+
+addPreview("SeedHardwareKey", () => (<SelectedDiceKeyView
+  state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample), SubViews.SeedHardwareKey)}
+/>)
 );

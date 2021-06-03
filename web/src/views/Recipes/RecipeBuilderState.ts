@@ -22,12 +22,30 @@ import { isValidJson } from "../../utilities/json";
 
 // type EditingMode = "fields" | "json" | undefined;
 
+interface RecipeBuilderStateConstructorOptions {
+  type?: DerivationRecipeType;
+  purpose?: string;
+  editing?: boolean;
+  purposeFieldNonEditableByDefault?: boolean;
+}
+
 /**
  * State for building and displaying recipes
  */
 export class RecipeBuilderState {
-  constructor() {
+  constructor(options: RecipeBuilderStateConstructorOptions = {}) {
+    const {
+      type = undefined,
+      purpose = "",
+      editing = false,
+      purposeFieldNonEditableByDefault = false,
+    } = options;
     makeAutoObservable(this);
+    this.type = type;
+    this.purposeField = purpose;
+    this.editing = editing;
+    this.purposeFieldNonEditableByDefault = purposeFieldNonEditableByDefault;
+    this._mayEditPurpose = !purposeFieldNonEditableByDefault;
   }
 
   type: DerivationRecipeType | undefined;
@@ -103,7 +121,10 @@ export class RecipeBuilderState {
   //////////////////////////////////////////
   // Purpose field ("purpose" or "allow")
   //////////////////////////////////////////
-  get mayEditPurpose(): boolean { return true };
+  public readonly purposeFieldNonEditableByDefault: boolean;
+  private _mayEditPurpose: boolean;
+  get mayEditPurpose(): boolean { return this._mayEditPurpose };
+  setMayEditPurpose = action ( (mayEditPurpose: boolean) => this._mayEditPurpose = mayEditPurpose);
   purposeField: string = "";
   /** The purpose of the recipe from the purpose form field if not a list of 1 or more hosts */
   get purpose(): string | undefined { return this.hosts != null || this.purposeField.length === 0 ? undefined : this.purposeField; }
