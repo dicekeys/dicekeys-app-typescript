@@ -1,3 +1,5 @@
+import * as Electron from "electron";
+
 export interface Device {
   locationId: number;
   vendorId: number;
@@ -7,7 +9,6 @@ export interface Device {
   serialNumber: string;
   deviceAddress: number;
 }
-
 
 interface IElectronBridgeSync {
   writeResultToStdOutAndExit(result: string): void;

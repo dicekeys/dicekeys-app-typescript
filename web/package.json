@@ -83,6 +83,7 @@
     "autoprefixer": "^9.8.6",
     "canvas": "^2.6.1",
     "core-js": "^3.12.1",
+    "electron": "^13.1.0",
     "jest": "^26.4.2",
     "jest-raw-loader": "^1.0.1",
     "jsdom": "^16.4.0",
