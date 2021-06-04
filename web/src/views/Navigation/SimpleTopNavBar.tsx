@@ -2,13 +2,13 @@ import {NavigationBars} from "../../css"
 import { observer } from "mobx-react";
 import React from "react";
 import { isElectron } from "../../utilities/is-electron";
+import { addressBarState } from "../../state/core/AddressBarState";
 
 export const SimpleTopNavBar = observer( ( props: {
   title?: string,
   goBack?: () => any,
 }) => {
-  // The default goBack action is to call window.history.back()
-  const {goBack = window.history.back } = props;
+  const {goBack = addressBarState.back } = props;
   // Make the top left nav bar a button iff we're running in electron,
   // otherwise we're in the browser and this should be a no-op (undefined onClick handler)
   // as the web-based app relies on the back button within the browser.

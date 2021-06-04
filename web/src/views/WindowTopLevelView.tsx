@@ -8,6 +8,7 @@ import { LoadDiceKeyView, LoadDiceKeyState } from "./LoadingDiceKeys/LoadDiceKey
 import {Layout} from "../css";
 import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
 import { AssemblyInstructionsState } from "./AssemblyInstructionsState";
+import { addressBarState } from "../state/core/AddressBarState";
 
 
 interface WindowTopLevelNavigationProps {
@@ -36,7 +37,7 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
     case SubViewsOfTopLevel.LoadDiceKeyView: return (
       <LoadDiceKeyView
         onDiceKeyRead={ onDiceKeyLoaded }
-        onCancelled={ () => window.history.back() }
+        onCancelled={ () => addressBarState.back }
         state={new LoadDiceKeyState("camera")} />
     )
     case SubViewsOfTopLevel.AssemblyInstructions: return (
