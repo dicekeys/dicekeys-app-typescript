@@ -18,7 +18,7 @@ import {
   ElectronBridgeListenerApiSetupArgs,
   ElectronBridgeListenerApiErrorCallbackParameters,
   terminateChannelNameFor,
-} from './IElectronBridge';
+} from '../../web/src/IElectronBridge';
 import { monitorForFidoDevicesConnectedViaUsb } from './SeedableHardwareKeys';
 import ipcRenderer = Electron.Renderer.ipcRenderer;
 

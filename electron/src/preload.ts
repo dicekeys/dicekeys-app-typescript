@@ -1,6 +1,10 @@
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
-import { ElectronBridgeListenerApiCallback, ElectronIpcListenerRequestChannelName, IElectronBridge } from "./IElectronBridge";
+import {
+  ElectronBridgeListenerApiCallback,
+  ElectronIpcListenerRequestChannelName,
+  IElectronBridge
+} from "../../web/src/IElectronBridge";
 import {contextBridge, ipcRenderer} from "electron";
 import {
   ElectronIpcAsyncRequestChannelName,
@@ -17,7 +21,7 @@ import {
   ElectronBridgeListenerApiErrorCallback,
   ElectronBridgeListenerApiCallbackParameters,
   ElectronBridgeListenerApiErrorCallbackParameters
-} from "./IElectronBridge";
+} from "../../web/src/IElectronBridge";
 
 const createIpcSyncRequestClientFunction = <CHANNEL extends ElectronIpcSyncRequestChannelName>(channel: CHANNEL) =>
   (...args: ElectronBridgeSyncApiRequest<CHANNEL>) => ipcRenderer.sendSync(channel, ...args) as ElectronBridgeSyncApiResponse<CHANNEL>

@@ -29,7 +29,7 @@ export const SeedHardwareKeyViewWithState = observer( ( {recipeBuilderState, der
   </ContentBox>
 ));
 
-import {IElectronBridge, Device} from "../../../../electron/src/IElectronBridge";
+import {IElectronBridge, Device} from "../../IElectronBridge";
 export const HardwareSecurityKeysView = observer ( () => {
   const {ElectronBridge} = window as {ElectronBridge?: IElectronBridge}
   const [devices, setDevices] = useState<Device[]>();
