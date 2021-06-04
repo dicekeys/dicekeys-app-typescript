@@ -2,15 +2,15 @@ import css from "./Recipes.module.css";
 import {ButtonsCSS} from "../../css";
 import React from "react";
 import { observer  } from "mobx-react";
-import { RecipeBuilderState } from "./RecipeBuilderState";
+import { RecipeFieldFocusState, RecipeBuilderState } from "./RecipeBuilderState";
 import { NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
 import { RecipeDescriptionView } from "./RecipeDescriptionView";
 import { EnhancedRecipeView } from "./EnhancedRecipeView";
 import { describeRecipeType } from "./DescribeRecipeType";
 import { SelectAndSaveTableHeaderView } from "./SelectAndSaveTableHeaderView";
-import { RecipeFieldType } from "../../dicekeys/ConstructRecipe";
 import { getRegisteredDomain } from "../../domains/get-registered-domain";
 import { useContainerDimensions } from "../../utilities/react-hooks/useContainerDimensions";
+import { CharButton } from "../../views/basics";
 
 // TO DO
 
@@ -25,41 +25,59 @@ export const RecipeFieldDescription = (props: React.PropsWithChildren<{}>) => (
   <div className={css.FieldToolTip}>{props.children}</div>
 )
 
-export const RecipeFieldView = observer ( ({state, label, field, children}: React.PropsWithChildren<{
-  state?: RecipeBuilderState,
+export const RecipeFieldView = observer ( ({
+  label, for: htmlFor, children, focusState, mayEdit, toggleEdit
+}: React.PropsWithChildren<
+  {
+  focusState: RecipeFieldFocusState
   label: JSX.Element | string,
-  field?: RecipeFieldType,
+  for?: string,
+  mayEdit?: boolean,
+  toggleEdit?: () => void,
 }>) => (
   <div
-    className={state?.helpToDisplay === field ? css.RecipeFieldSelected : css.RecipeField}
-    onMouseEnter={ state?.showHelpForFn(field) }
+    className={focusState.isFieldInFocus ? css.RecipeFieldSelected : css.RecipeField}
+    // onMouseEnter={ focus }
   >
     {children}
-    <label
-      className={css.FieldName}
-      onClick={ () => state?.showHelpFor( state?.helpToDisplay === field ? undefined: field ) }
-    >{ label }{field == null ? null : (<>&nbsp;&nbsp;&#9432;</>)}
-    </label>
+    <div className={css.RecipeFieldLabelRow}>
+      <div>&nbsp;</div>
+      <label htmlFor={htmlFor}
+        className={css.FieldLabel}
+        onClick={ focusState.toggleFocus }
+      >{ label }{ focusState.toggleFocus == null ? null : (<>&nbsp;&nbsp;&#9432;</>)}
+      </label>
+      { mayEdit == null || toggleEdit == null ? (null) : (
+      <div className={css.FieldEditButton}>
+        <CharButton onClick={toggleEdit}><span style={mayEdit ? {} : {textDecorationLine: "line-through"}}>&#9998;</span></CharButton>
+      </div> 
+      ) }
+    </div>
   </div>
 ));
 
 export const PurposeFieldView = observer( ({state}: {
   state: RecipeBuilderState,
 } ) => {
-  if (!state.mayEditPurpose) {
-    return null;
-    // FIXME
-  }
-  const field = "purpose";
-  const showHelp = state.showHelpForFn(field);
+  const field = "purpose"
+  const fieldFocusState = new RecipeFieldFocusState(state, field);
   return (
-    <RecipeFieldView {...{state, field}} label="purpose (required)" >
-      <input type="text" spellCheck={false}
+    <RecipeFieldView
+      focusState={fieldFocusState}
+      label="purpose (required)"
+      for={field}
+      mayEdit={state.mayEditPurpose}
+      toggleEdit={!state.purposeFieldNonEditableByDefault ? undefined : () => {
+        state.setMayEditPurpose(!state.mayEditPurpose)
+      }}
+    >
+      <input id={field} type="text" spellCheck={false}
         className={css.PurposeOrHostNameTextField}
+        disabled={!state.mayEditPurpose}
         size={40}
         value={state.purposeField ?? ""}
         placeholder=""
-        ref={ e => { if (e != null) { e?.focus(); showHelp() } } }
+        ref={ e => { if (e != null) { e?.focus(); fieldFocusState.focus() } } }
         onPaste={ e => {
           // If pasting a URL, paste only the domain
           const text = e.clipboardData.getData("text")
@@ -71,48 +89,49 @@ export const PurposeFieldView = observer( ({state}: {
             }
           }
         }}
-        onInput={ e => {state.setPurposeField(e.currentTarget.value); showHelp(); }} 
-        onFocus={ showHelp } />
+        onInput={ e => {state.setPurposeField(e.currentTarget.value); fieldFocusState.focus(); }} 
+        onFocus={ fieldFocusState.focus } />
     </RecipeFieldView>
   );
 });
 
 export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
-  const field = "#";
+  const fieldFocusState = new RecipeFieldFocusState(state, "#");
   return (
-    <RecipeFieldView {...{state, field}} label={"sequence #"} >
+    <RecipeFieldView focusState={fieldFocusState}
+    label={"sequence #"} >
       <NumberPlusMinusView 
         textFieldClassName={css.SequenceNumberTextField}
         state={state.sequenceNumberState}
         placeholder={"1"}
-        onFocusedOrChanged={state.showHelpForFn(field)} />
+        onFocusedOrChanged={fieldFocusState.focus} />
     </RecipeFieldView>
   )});
 
   export const LengthInCharsFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
     if (state.type !== "Password" || !state.mayEditLengthInChars) return null;
-    const field  = "lengthInChars";
+    const fieldFocusState = new RecipeFieldFocusState(state, "lengthInChars");
     return (
-      <RecipeFieldView {...{state, field}} label={"max length"} >
+      <RecipeFieldView focusState={fieldFocusState} label={"max length"} >
         <NumberPlusMinusView
           textFieldClassName={css.LengthTextField}
           state={state.lengthInCharsState}
           placeholder={"none"}
-          onFocusedOrChanged={state.showHelpForFn(field)} />
+          onFocusedOrChanged={fieldFocusState.focus} />
       </RecipeFieldView>
     );
   });
 
 export const LengthInBytesFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
   if (state.type !== "Secret" || !state.mayEditLengthInBytes) return null;
-  const field  = "lengthInBytes";
+  const fieldFocusState = new RecipeFieldFocusState(state, "lengthInBytes");
   return (
-    <RecipeFieldView {...{state, field}} label={"length (bytes)"} >
+    <RecipeFieldView focusState={fieldFocusState} label={"length (bytes)"} >
       <NumberPlusMinusView
         textFieldClassName={css.LengthTextField}
         state={state.lengthInBytesState}
         placeholder={"32"}
-        onFocusedOrChanged={state.showHelpForFn(field)} />
+        onFocusedOrChanged={fieldFocusState.focus} />
     </RecipeFieldView>
   );
 });
@@ -121,7 +140,7 @@ const RecipeFieldsHelpContentView = observer ( ( {state}: {state: RecipeBuilderS
   const secretType = state.type === "Password" ? "password" :
     state.type === "Secret" ? "secret" :
     "password, secret, or key"
-  switch(state.helpToDisplay) {
+  switch(state.fieldInFocus) {
     case "#": return (
       <>If you need more than one {secretType} for this purpose, add a sequence number.</>);
     case "purpose": return (<>
@@ -132,6 +151,9 @@ const RecipeFieldsHelpContentView = observer ( ( {state}: {state: RecipeBuilderS
     case "lengthInChars": return (<>
       Limit the length of the generated password to a maximum number of characters.
     </>);
+    case "lengthInBytes": return (<>
+      Set the number of bytes to generate for the {secretType}.
+    </>);
     case "rawJson": return (<>
       The recipe's internal JSON format.
       <br/>
@@ -140,13 +162,6 @@ const RecipeFieldsHelpContentView = observer ( ( {state}: {state: RecipeBuilderS
       Changing even one character will change the {secretType}.
       If you can't re-create the exact recipe string used to generate a {secretType},
       you will be unable to regenerate it.
-      { state.allowEditingOfRawRecipe ? null : (
-        <button
-          onClick={ () => state.setAllowEditingOfRawRecipe(true) }
-          className={ButtonsCSS.SubtleButton} >
-            edit it anyway
-        </button>
-      )}
     </>);
     default: return state.type == null ? (<>
       Choose a recipe or template above.
@@ -185,9 +200,13 @@ export const JsonFieldView = observer( ({state}: {
   const editable = state.editing && state.allowEditingOfRawRecipe;
   const { width } = useContainerDimensions(editable ? textAreaComponentRef : divAreaComponentRef)
 
-  const field = "rawJson";
+
+  const fieldFocusState = new RecipeFieldFocusState(state, "rawJson");
   return (
-    <RecipeFieldView {...{state, field}}
+    <RecipeFieldView
+      focusState={fieldFocusState}
+      toggleEdit={ state.toggleAllowEditingOfRawRecipe }
+      mayEdit={ state.allowEditingOfRawRecipe }
       label="recipe in JSON format">
       <div className={css.FormattedRecipeBox}>
         <div className={css.FormattedRecipeUnderlay} style={{width: `${width ?? 0}px`}} >
@@ -200,7 +219,8 @@ export const JsonFieldView = observer( ({state}: {
           className={css.FormattedRecipeTextField}
           value={state.recipeJson ?? ""}
           style={{...(state.editing ? {} : {userSelect: "all"})}}
-          onInput={ e => {state.setRecipeJson(e.currentTarget.value); }} 
+          onFocus={fieldFocusState.focus}
+          onInput={ e => {state.setRecipeJson(e.currentTarget.value); fieldFocusState.focus(); }} 
           />
         ) : (
           <div
@@ -213,6 +233,7 @@ export const JsonFieldView = observer( ({state}: {
     </RecipeFieldView>
   );
 });
+
 export const RecipeRawJsonView = observer( ( {state}: {state: RecipeBuilderState}) => {
   return (
     <div className={css.RecipeSingleFieldRow}>

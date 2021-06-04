@@ -160,6 +160,15 @@
   border-radius: 0.5rem;
 }
 
+.RecipeFieldLabelRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-self: stretch;
+  flex-grow: 1;
+  align-content: baseline;
+}
+
 .RecipeFields, .RecipeSingleFieldRow {
   display: flex;
   flex-direction: row;
@@ -168,7 +177,7 @@
 }
 
 .RecipeSingleFieldRow {
-  align-self: stretch;;
+  align-self: stretch;
 }
 
 .RecipeField, .RecipeFieldSelected {
@@ -188,7 +197,8 @@
   border-bottom-right-radius: 0.5rem;
 }
 
-.FieldName {
+.FieldLabel {
+  justify-self:center;
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -198,8 +208,16 @@
   user-select: none;
 }
 
-.FieldName:active {
+.FieldEditButton {
+  justify-self:flex-end;
+}
+
+.FieldLabel:active {
   background: gray
+}
+
+.FieldLabel:hover {
+  background: rgba(128,128,128,0.2)
 }
 
 .FieldToolTip {
@@ -216,7 +234,7 @@
   z-index: 1;
 }
 
-.FieldName:hover .FieldToolTip {
+.FieldLabel:hover .FieldToolTip {
   transform: translateY(-200%);
   visibility: visible;
 }
@@ -296,6 +314,33 @@
   justify-content: flex-start;
   align-content: flex-start;
   font-family: monospace;
+  overflow-wrap: anywhere;
+}
+
+.SeedingContentBlock {
+  background-color: rgba(147, 140, 47, 0.2);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  min-width: 60vw;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-content: flex-start;
+  overflow-wrap: anywhere;
+}
+
+.CannotSeedContentBlock {
+  background-color: rgba(231, 228, 22, 0.166);
+  color: rgba(72,0,0,1);
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  border-radius: 0.5rem;
+  min-width: 60vw;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-content: flex-start;
   overflow-wrap: anywhere;
 }
 

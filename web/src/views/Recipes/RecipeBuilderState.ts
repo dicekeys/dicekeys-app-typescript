@@ -29,6 +29,18 @@ interface RecipeBuilderStateConstructorOptions {
   purposeFieldNonEditableByDefault?: boolean;
 }
 
+
+export class RecipeFieldFocusState {
+  constructor(
+    private state: {fieldInFocus?: RecipeFieldType, setFieldInFocus: (field?: RecipeFieldType) => void},
+    private field: RecipeFieldType
+  ) {}
+
+  get isFieldInFocus(): boolean { return this.field === this.state.fieldInFocus};
+  focus = () => this.state.setFieldInFocus(this.field);
+  toggleFocus = () => this.state.setFieldInFocus(this.isFieldInFocus ? undefined : this.field);
+};
+
 /**
  * State for building and displaying recipes
  */
@@ -46,6 +58,9 @@ export class RecipeBuilderState {
     this.editing = editing;
     this.purposeFieldNonEditableByDefault = purposeFieldNonEditableByDefault;
     this._mayEditPurpose = !purposeFieldNonEditableByDefault;
+    if (purpose) {
+      this.setRecipeJson(addPurposeToRecipeJson(undefined, purpose));
+    }
   }
 
   type: DerivationRecipeType | undefined;
@@ -59,7 +74,7 @@ export class RecipeBuilderState {
 
   setStartEditing = action( () => {
     this.editing = true;
-    this.showHelpFor("purpose");
+    this.setFieldInFocus("purpose");
   })
   stopEditing = action( () => {
     this.editing = false;
@@ -68,6 +83,7 @@ export class RecipeBuilderState {
   setAllowEditingOfRawRecipe = action ( (editingRawRecipe: boolean) => {
     this.allowEditingOfRawRecipe = editingRawRecipe;
   });
+  toggleAllowEditingOfRawRecipe = () => this.setAllowEditingOfRawRecipe(!this.allowEditingOfRawRecipe);
 
   //////////////////////////////////////////
   // helpToDisplay while building a recipe
@@ -76,11 +92,10 @@ export class RecipeBuilderState {
    * The field to provide help for, or undefined to show help about the
    * type of secret being created
    */
-	helpToDisplay?: RecipeFieldType = "purpose";
-	showHelpFor = action ( (recipeField?: RecipeFieldType) => {
-		this.helpToDisplay = recipeField;
-	} )
-	showHelpForFn = (recipeField?: RecipeFieldType) => () => this.showHelpFor(recipeField);
+	fieldInFocus?: RecipeFieldType = "purpose";
+  setFieldInFocus = action ( (field?: RecipeFieldType) => {
+		this.fieldInFocus = field;
+	});
 
   /////////////////////////////////
   // SequenceNumber field ("#")
@@ -134,7 +149,6 @@ export class RecipeBuilderState {
     this.recipeJson = addHostsToRecipeJson(this.recipeJson, hosts);
     this.recipeJson = addPurposeToRecipeJson(this.recipeJson, purpose);
   });
-
 
   /**
    * The hosts for the "allow" restrictions of a recipe if the purpose field contains

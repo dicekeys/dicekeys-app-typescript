@@ -10,7 +10,7 @@ import imageOfSecretWithArrow from /*url:*/"../../images/Secret with Arrow.svg";
 import imageOfBackup from /*url:*/"../../images/Backup to DiceKey.svg";
 import { DerivationView } from "../Recipes/DerivationView";
 import { Navigation } from "../../state";
-import { SeedHardwareKeyView } from "./SeedHardwareKeyView";
+import { SeedHardwareKeyView } from "../Recipes/SeedHardwareKeyView";
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 import { BackupView } from "../BackupView/BackupView";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";

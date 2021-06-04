@@ -19,9 +19,7 @@ export const LoadRecipeView = observer( ({state}: {
     )
   )
   return (
-    <div className={css.LoadRecipeView}
-      onMouseEnter={state.showHelpForFn("purpose")}
-    >
+    <div className={css.LoadRecipeView} >
       {/* <div> */}
         <select
           className={css.SelectRecipe}
@@ -30,7 +28,7 @@ export const LoadRecipeView = observer( ({state}: {
           placeholder={"Placeholder"}
           onChange={ (e) => {
             state.loadRecipe(getStoredRecipe(e.currentTarget.value));
-            state.showHelpFor(undefined);
+            state.setFieldInFocus(undefined);
           }}
         >
           <option key="none" disabled={true} hidden={true} value="">Open or Create Recipe</option>
