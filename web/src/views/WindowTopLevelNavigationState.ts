@@ -1,4 +1,5 @@
 import { action, makeObservable, override, runInAction } from "mobx";
+import { addressBarState } from "../state/core/AddressBarState";
 import { DiceKey } from "../dicekeys/DiceKey";
 import { HasSubViews } from "../state/core";
 import { DiceKeyMemoryStore } from "../state/stores/DiceKeyMemoryStore";
@@ -21,7 +22,7 @@ const getDiceKeyFromPathRoot = (pathRoot: string | undefined) => {
   return {keyId, diceKey}
 };
 
-const getTopLevelNavStateFromPath = (path: string = window.location.pathname): (
+const getTopLevelNavStateFromPath = (path: string): (
   {subView?: SubViewsOfTopLevel, keyId?: string, diceKey?: DiceKey}
 ) => {
   const pathRoot = path.split("/")[1];
@@ -71,7 +72,7 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
   }
 
   updateAddressBar = action (() => {
-    const {subView: priorSubView} = getTopLevelNavStateFromPath();
+    const {subView: priorSubView} = getTopLevelNavStateFromPath(addressBarState.path);
     const {diceKey, keyId} = this.foregroundDiceKeyState;
     const newPathElements: string[] = ["", this.subView];
     if (keyId != null && diceKey != null) {
@@ -81,28 +82,27 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
           keyId;
     }
     const newPath = newPathElements.join("/");
-    const stateArgs = [{}, "", newPath] as const;
     if (this.subView === SubViewsOfTopLevel.DiceKeyView  &&
          (priorSubView === SubViewsOfTopLevel.LoadDiceKeyView ||
           priorSubView === SubViewsOfTopLevel.AssemblyInstructions
           ) && diceKey != null && keyId != null) {
       // When displaying a DiceKey after loading/assembling, replace the load/assembly state with the display state
-      window.history.replaceState(...stateArgs);
+      addressBarState.replaceState(newPath);
     } else {
-      window.history.pushState(...stateArgs);
+      addressBarState.pushState(newPath);
     }
   })
 
   constructor({
       subView = SubViews.AppHomeView,
       diceKey,
-    }: Partial<ReturnType<typeof getTopLevelNavStateFromPath>> = getTopLevelNavStateFromPath()
+    }: Partial<ReturnType<typeof getTopLevelNavStateFromPath>> = getTopLevelNavStateFromPath(addressBarState.path)
   ) {
     super(subView, () => this.updateAddressBar() );
     this.foregroundDiceKeyState = new DiceKeyState(diceKey);
 
-    window.addEventListener('popstate', (_: PopStateEvent) => {
-      const newState = getTopLevelNavStateFromPath();
+    addressBarState.onPopState( (path) => {
+      const newState = getTopLevelNavStateFromPath(path);
       if (newState.subView != this.subView) {
         runInAction(() => {
           this.rawSetSubView(newState.subView ?? SubViews.AppHomeView);

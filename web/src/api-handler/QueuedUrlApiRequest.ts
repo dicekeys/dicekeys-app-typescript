@@ -244,6 +244,7 @@ export class QueuedUrlApiRequest extends QueuedApiRequest {
   readonly hostValidatedViaAuthToken: boolean;
   readonly respondTo: string;
 
+  // FIXME -- will not work for electron
   transmitResponseUrl: (responseURL: URL) => any = (url: URL) => window.location.replace(url.toString());
 
   throwIfClientNotPermitted: () => void = () => throwIfUrlNotPermitted(this.host, this.pathname, this.hostValidatedViaAuthToken)(this.request);
