@@ -27,6 +27,15 @@ if (squirrelCheck()) {
     app.quit();
 }
 
+try {
+    // When files used in the browser window are changed, the page is reloaded.
+    require('electron-reloader')(module , {
+        ignore : ['src', 'dist', 'packaging', 'out'],
+        debug: false
+    });
+    // The try/catch is needed so it doesn't throw Cannot find module 'electron-reloader' in production.
+} catch {}
+
 let mainWindow: BrowserWindow
 
 function bootstrapApplication() {
@@ -39,6 +48,7 @@ function startApplication() {
     mainWindow = new BrowserWindow({
         height: 600,
         webPreferences: {
+            spellcheck: false,
             preload: path.resolve(__dirname, "..", "src", "preload.js")
         },
         width: 800,

@@ -123,3 +123,12 @@ and with tsc, and this isn't working well in the beta of parcel 2.
     "*.{ts,tsx}": ["@parcel/validator-typescript"]
   }
 ```
+
+## Electron notes
+
+### Electron Version locking
+Electron version has a dependency on `node-hid` and as a result Electron version must first be supported by `node-hid`.
+
+### Development mode
+Run web with `npm run watch-electron-html`, any change to the html files will trigger an update to the electron html contents.
+
