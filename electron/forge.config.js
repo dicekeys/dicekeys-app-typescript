@@ -46,7 +46,8 @@ module.exports = {
           productName: 'DiceKeys',
           maintainer: 'DiceKeys LLC',
           homepage: 'https://dicekeys.com',
-          categories: ['Utility']
+          categories: ['Utility'],
+          depends: ['libsecret-1-dev']
         }
       }
     },
@@ -55,7 +56,8 @@ module.exports = {
       "config": {
         options: {
           maintainer: 'DiceKeys LLC',
-          homepage: 'https://dicekeys.com'
+          homepage: 'https://dicekeys.com',
+          depends: ['libsecret-devel']
         }
       }
     },
