@@ -24,14 +24,14 @@ export type ElectronIpcListenerRequestChannelName = keyof IElectronBridgeListene
 
 export type ElectronBridgeAsyncApiRequest<ElectronBridgeApiChannelName extends ElectronIpcAsyncRequestChannelName> =
   Parameters<IElectronBridgeAsync[ElectronBridgeApiChannelName]>;
- 
+
 type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
 export type ElectronBridgeAsyncApiResponse<ElectronBridgeApiChannelName extends ElectronIpcAsyncRequestChannelName> =
   Awaited<ReturnType<IElectronBridgeAsync[ElectronBridgeApiChannelName]>>;
 
 export type ElectronBridgeSyncApiRequest<ElectronBridgeApiChannelName extends ElectronIpcSyncRequestChannelName> =
   Parameters<IElectronBridgeSync[ElectronBridgeApiChannelName]>;
-  
+
 export type ElectronBridgeSyncApiResponse<ElectronBridgeApiChannelName extends ElectronIpcSyncRequestChannelName> =
   ReturnType<IElectronBridgeSync[ElectronBridgeApiChannelName]>;
 

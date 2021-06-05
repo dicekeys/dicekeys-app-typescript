@@ -1,5 +1,6 @@
 import {app, BrowserWindow, dialog, ipcMain} from 'electron';
 import * as path from 'path';
+import * as keytar from 'keytar'
 
 import {squirrelCheck} from './electron-squirrel-startup'
 import {
@@ -168,4 +169,7 @@ implementSyncApi( "getCommandLineArguments", () => {
 });
 implementAsyncApi( "openFileDialog", (options) => dialog.showOpenDialog(mainWindow, options) );
 implementAsyncApi( "openMessageDialog", (options) => dialog.showMessageBox(mainWindow, options) );
+implementAsyncApi( "keytarGetPassword", (service: string, account: string) => keytar.getPassword(service, account));
+implementAsyncApi( "keytarSetPassword", (service: string, account: string, password: string) => keytar.setPassword(service, account, password));
+implementAsyncApi( "keytarDeletePassword", (service: string, account: string) => keytar.deletePassword(service, account));
 implementListenerApi("listenForSeedableSecurityKeys", monitorForFidoDevicesConnectedViaUsb );

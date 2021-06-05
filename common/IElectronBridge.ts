@@ -30,6 +30,10 @@ export interface IElectronBridgeSync {
 export  interface IElectronBridgeAsync {
   openFileDialog(options: OpenDialogOptions): Promise<OpenDialogReturnValue>;
   openMessageDialog(options: MessageBoxOptions): Promise<MessageBoxReturnValue>;
+  // keytar
+  keytarGetPassword(service: string, account: string): Promise<string | null>
+  keytarSetPassword(service: string, account: string, password: string): Promise<void>
+  keytarDeletePassword(service: string, account: string): Promise<boolean>;
 }
 
 export type RemoveListener = () => void;
