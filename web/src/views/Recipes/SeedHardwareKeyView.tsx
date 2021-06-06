@@ -10,25 +10,39 @@ import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
 const seedSecurityKeyPurpose = "seedSecurityKey";
 
 
-
-
 import {IElectronBridge, Device} from "../../../../common/IElectronBridge";
-export const HardwareSecurityKeysView = observer ( ({ElectronBridge}: {ElectronBridge: IElectronBridge}) => {
-  const [devices, setDevices] = useState<Device[]>();
-  const [error, setError] = useState<any>();
-  // Note, listenForSeedableSecurityKeys returns a cleanup function, which useEffect will call on destructuring.
-  // Do not revise below code without guaranteeing the returned cleanup function gets called.
-  useEffect( () => ElectronBridge.listenForSeedableSecurityKeys(setDevices, setError) );
-  return (<div className={css.SeedingContentBlock}>
-    Electron: {JSON.stringify(ElectronBridge)}
-    <br/>
-    Devices: {JSON.stringify(devices)}
-    <br/>
-    Error: {JSON.stringify(error)}
-  </div>);
-});
+import { action, makeAutoObservable } from "mobx";
 
 
+class SeedableDiceKeys {
+  destructor?: () => void;
+  devices?: Device[] = undefined;
+  setDevices = action ((devices: Device[]) => {
+    this.devices = devices;
+  });
+  error?: any;
+  setError = action ((error: any) => {
+    this.error = error;
+  });
+
+  constructor() {
+    const {ElectronBridge} = window as {ElectronBridge?: IElectronBridge}
+    this.destructor = ElectronBridge?.listenForSeedableSecurityKeys( this.setDevices, this.setError );
+    makeAutoObservable(this);
+  }
+
+  destroy() {
+    this.destructor?.();
+  }
+}
+
+export const HardwareSecurityKeysView = observer ( ({seedableDiceKeys}: {seedableDiceKeys?: SeedableDiceKeys}) => (
+<div className={css.SeedingContentBlock}>
+    Devices: {JSON.stringify(seedableDiceKeys?.devices)}
+    <br/>
+    Error: {JSON.stringify(seedableDiceKeys?.error)}
+  </div>
+));
 
 export const CannotSeedSecurityKeysView = () => (
   <div className={css.CannotSeedContentBlock}>
@@ -43,7 +57,9 @@ export const SeedHardwareKeyViewWithState = observer( ( {recipeBuilderState, der
   recipeBuilderState: RecipeBuilderState
   derivedFromRecipeState: DerivedFromRecipeState
 }) => {
-  const {ElectronBridge} = window as {ElectronBridge?: IElectronBridge}
+  const {ElectronBridge} = window as {ElectronBridge?: IElectronBridge};
+  const seedableDiceKeys = new SeedableDiceKeys();
+  useEffect( () => () => seedableDiceKeys.destroy() );
   return (
     <ContentBox>
       <Spacer/>
@@ -56,7 +72,7 @@ export const SeedHardwareKeyViewWithState = observer( ( {recipeBuilderState, der
         <DerivedFromRecipeView state={derivedFromRecipeState} />
         {/* <Spacer/> */}
         { ElectronBridge != null ? (
-          <HardwareSecurityKeysView {...{ElectronBridge}}/>
+          <HardwareSecurityKeysView {...{seedableDiceKeys}}/>
         ) : (
           <CannotSeedSecurityKeysView/>
         )}

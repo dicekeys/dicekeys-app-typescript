@@ -1,4 +1,4 @@
-import * as usbDetect from "usb-detection";
+import usbDetect from "usb-detection";
 
 /**
  * If you are polling devices() or doing repeated new HID.HID(vid,pid) to detect device plug / unplug,
@@ -59,8 +59,6 @@ export class UsbDeviceMonitor {
   startMonitoring = (deviceListUpdateCallback: DeviceListUpdateCallback, errorCallback?: ErrorCallback): StopMonitoringFunction => {
     if (this.onDeviceListChangedCallbacks.size == 0) {
       this.onDeviceListChangedCallbacks.add(deviceListUpdateCallback);
-      const size = this.onDeviceListChangedCallbacks.size;
-      console.log("Tried to add:",size, deviceListUpdateCallback, [...this.onDeviceListChangedCallbacks])
       usbDetect.startMonitoring();
       usbDetect.on("add", this.addDevice);
       usbDetect.on("remove", this.removeDevice)  
