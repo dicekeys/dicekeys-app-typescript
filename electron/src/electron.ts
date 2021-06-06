@@ -31,7 +31,7 @@ if (squirrelCheck()) {
 try {
     // When files used in the browser window are changed, the page is reloaded.
     require('electron-reloader')(module , {
-        ignore : ['src', 'dist', 'packaging', 'out'],
+        ignore : ['src', 'packaging', 'out'],
         debug: false
     });
     // The try/catch is needed so it doesn't throw Cannot find module 'electron-reloader' in production.

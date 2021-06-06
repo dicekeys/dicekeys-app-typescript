@@ -8,6 +8,7 @@
   "scripts": {
     "postinstall": "electron-rebuild",
     "start": "rimraf ./dist && tsc && electron-forge start",
+    "start-electron": "electron-forge start",
     "watch": "rimraf ./dist && tsc --watch",
     "package": "electron-forge package",
     "make": "electron-forge make",
