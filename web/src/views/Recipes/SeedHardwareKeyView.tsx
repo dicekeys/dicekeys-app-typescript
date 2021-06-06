@@ -12,7 +12,7 @@ const seedSecurityKeyPurpose = "seedSecurityKey";
 
 
 
-import {IElectronBridge, Device} from "../../IElectronBridge";
+import {IElectronBridge, Device} from "../../../../common/IElectronBridge";
 export const HardwareSecurityKeysView = observer ( ({ElectronBridge}: {ElectronBridge: IElectronBridge}) => {
   const [devices, setDevices] = useState<Device[]>();
   const [error, setError] = useState<any>();

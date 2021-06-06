@@ -1,12 +1,10 @@
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
+import {contextBridge, ipcRenderer} from "electron";
 import {
   ElectronBridgeListenerApiCallback,
   ElectronIpcListenerRequestChannelName,
-  IElectronBridge
-} from "../../web/src/IElectronBridge";
-import {contextBridge, ipcRenderer} from "electron";
-import {
+  IElectronBridge,
   ElectronIpcAsyncRequestChannelName,
   ElectronIpcSyncRequestChannelName,
   ElectronBridgeAsyncApiRequest,
@@ -21,7 +19,7 @@ import {
   ElectronBridgeListenerApiErrorCallback,
   ElectronBridgeListenerApiCallbackParameters,
   ElectronBridgeListenerApiErrorCallbackParameters
-} from "../../web/src/IElectronBridge";
+} from "./ElectronBridge";
 
 const createIpcSyncRequestClientFunction = <CHANNEL extends ElectronIpcSyncRequestChannelName>(channel: CHANNEL) =>
   (...args: ElectronBridgeSyncApiRequest<CHANNEL>) => ipcRenderer.sendSync(channel, ...args) as ElectronBridgeSyncApiResponse<CHANNEL>
@@ -35,7 +33,7 @@ const createIpcAsyncRequestClientFunction = <CHANNEL extends ElectronIpcAsyncReq
     const responseChannel = responseChannelNameFor(channel)
     // Create a listener function that will resolve the promise and stop listening when
     // the event code matches
-    const responseListener = (event: Electron.IpcRendererEvent, eventCode: string, response: ElectronBridgeAsyncApiResponse<CHANNEL>) => {
+    const responseListener = (_event: Electron.IpcRendererEvent, eventCode: string, response: ElectronBridgeAsyncApiResponse<CHANNEL>) => {
       if (eventCode === exceptionCodeFor(codeToMatch) ) {
         // The value is actually an exception and we should reject the promise.
         reject(response);
@@ -65,7 +63,7 @@ const createIpcAsyncRequestClientFunction = <CHANNEL extends ElectronIpcAsyncReq
   const responseChannel = responseChannelNameFor(channel);
   // Create a listener function that will resolve the promise and stop listening when
   // the event code matches
-  const responseListener = (event: Electron.IpcRendererEvent, eventCode: string, ...response: any[]) => {
+  const responseListener = (_event: Electron.IpcRendererEvent, eventCode: string, ...response: any[]) => {
     if (eventCode === exceptionCodeFor(codeToMatch) ) {
       // The value is actually an exception and we should reject the promise.
       const errorResponseArgs = response as ElectronBridgeListenerApiErrorCallbackParameters<CHANNEL>;
@@ -99,6 +97,7 @@ const electronBridgeTypeChecked: IElectronBridge = {
   openFileDialog: createIpcAsyncRequestClientFunction("openFileDialog"),
   openMessageDialog: createIpcAsyncRequestClientFunction("openMessageDialog"),
   listenForSeedableSecurityKeys: createIpcListenerRequestClientFunction("listenForSeedableSecurityKeys"),
+//  fix: {} as IElectronBridge["fix"]
 };
 
 // Expose the API

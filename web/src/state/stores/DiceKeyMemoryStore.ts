@@ -10,7 +10,7 @@ import { isElectron } from "../../utilities/is-electron";
 const readyEvent = new CustomEvent(this);
 let isReady = false;
 
-export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
+class DiceKeyMemoryStoreClass {
   protected keyIdToDiceKeyInHumanReadableForm: Record<string, DiceKeyInHumanReadableForm>;
   protected centerLetterAndDigitToKeyId: Record<string, string>;
 
@@ -80,7 +80,9 @@ export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
     this.keyIdToDiceKeyInHumanReadableForm = {};
     this.centerLetterAndDigitToKeyId = {}
     makeAutoObservable(this);
-    if (!isElectron()) {
+    if (isElectron()) {
+      isReady = true; readyEvent.send();
+    } else {
       // We don't need to save the DiceKeyStore in electron because there is only one window right now
       // and there's no chance of a refresh.
       autoSaveEncrypted(this, "DiceKeyStore", () => runInAction( () => { isReady = true; readyEvent.send();} ), true);
@@ -90,4 +92,5 @@ export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
       this.removeAll();
     })
   }
-})();
+}
+export const DiceKeyMemoryStore = new DiceKeyMemoryStoreClass();

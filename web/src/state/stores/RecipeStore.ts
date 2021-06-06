@@ -4,7 +4,7 @@ import { action, makeAutoObservable } from "mobx";
 import { autoSave } from "../core/AutoSave";
 import { jsonStringifyWithSortedFieldOrder } from "../../utilities/json";
 
-export const RecipeStore = new (class RecipeStore {
+class RecipeStoreClass {
   protected recipeJsonArray: string[];
 
   get recipeJsonSet(): Set<string> { return new Set(this.recipeJsonArray) }
@@ -48,4 +48,5 @@ export const RecipeStore = new (class RecipeStore {
     makeAutoObservable(this);
     autoSave(this, "RecipeStore");
   }
-})();
+}
+export const RecipeStore = new RecipeStoreClass();

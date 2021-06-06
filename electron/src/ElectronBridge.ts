@@ -1,32 +1,18 @@
-import * as Electron from "electron";
-
-export interface Device {
-  locationId: number;
-  vendorId: number;
-  productId: number;
-  deviceName: string;
-  manufacturer: string;
-  serialNumber: string;
-  deviceAddress: number;
+import type {
+  IElectronBridgeSync,
+  IElectronBridgeAsync,
+  IElectronBridgeListener,
+  IElectronBridge,
+  RemoveListener
+} from "../../common/IElectronBridge"
+export {
+  IElectronBridgeSync,
+  IElectronBridgeAsync,
+  IElectronBridgeListener,
+  IElectronBridge,
+  RemoveListener
 }
-
-interface IElectronBridgeSync {
-  writeResultToStdOutAndExit(result: string): void;
-  getCommandLineArguments(): string[];
-}
-
-interface IElectronBridgeAsync {
-  openFileDialog(options: Electron.OpenDialogOptions): Promise<Electron.OpenDialogReturnValue>;
-  openMessageDialog(options: Electron.MessageBoxOptions): Promise<Electron.MessageBoxReturnValue>;
-}
-
-export type RemoveListener = () => void;
-interface IElectronBridgeListener {
-  listenForSeedableSecurityKeys(successCallback: (devices: Device[]) => any, errorCallback: (error: any) => any): RemoveListener;
-}
-
-export interface IElectronBridge extends IElectronBridgeSync, IElectronBridgeAsync, IElectronBridgeListener {
-}
+// export * from "../../common/IElectronBridge";
 
 export const responseChannelNameFor = <T extends string> (channelName: T) => `${channelName}-response` as const;
 export const terminateChannelNameFor = <T extends string> (channelName: T) => `${channelName}-terminate` as const;
@@ -37,20 +23,20 @@ export type ElectronIpcAsyncRequestChannelName = keyof IElectronBridgeAsync;
 export type ElectronIpcListenerRequestChannelName = keyof IElectronBridgeListener;
 
 export type ElectronBridgeAsyncApiRequest<ElectronBridgeApiChannelName extends ElectronIpcAsyncRequestChannelName> =
-  Parameters<IElectronBridge[ElectronBridgeApiChannelName]>;
+  Parameters<IElectronBridgeAsync[ElectronBridgeApiChannelName]>;
  
 type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
 export type ElectronBridgeAsyncApiResponse<ElectronBridgeApiChannelName extends ElectronIpcAsyncRequestChannelName> =
-  Awaited<ReturnType<IElectronBridge[ElectronBridgeApiChannelName]>>;
+  Awaited<ReturnType<IElectronBridgeAsync[ElectronBridgeApiChannelName]>>;
 
 export type ElectronBridgeSyncApiRequest<ElectronBridgeApiChannelName extends ElectronIpcSyncRequestChannelName> =
-  Parameters<IElectronBridge[ElectronBridgeApiChannelName]>;
+  Parameters<IElectronBridgeSync[ElectronBridgeApiChannelName]>;
   
 export type ElectronBridgeSyncApiResponse<ElectronBridgeApiChannelName extends ElectronIpcSyncRequestChannelName> =
-  ReturnType<IElectronBridge[ElectronBridgeApiChannelName]>;
+  ReturnType<IElectronBridgeSync[ElectronBridgeApiChannelName]>;
 
 export type ElectronBridgeListener<CHANNEL extends ElectronIpcListenerRequestChannelName> =
-    IElectronBridge[CHANNEL];
+  IElectronBridgeListener[CHANNEL];
 export type ElectronBridgeListenerParameters<CHANNEL extends ElectronIpcListenerRequestChannelName> =
     Parameters<ElectronBridgeListener<CHANNEL>>;
 
@@ -64,6 +50,5 @@ export type ElectronBridgeListenerApiSetupArgs<CHANNEL extends ElectronIpcListen
 
 export type ElectronBridgeListenerApiCallbackParameters<CHANNEL extends ElectronIpcListenerRequestChannelName> =
   Parameters<ElectronBridgeListenerApiCallback<CHANNEL>>;
-// Parameters<ElectronBridgeListenerApiCallback<CHANNEL>> extends [] ? Parameters<ElectronBridgeListenerApiCallback<CHANNEL>> : [];
 export type ElectronBridgeListenerApiErrorCallbackParameters<CHANNEL extends ElectronIpcListenerRequestChannelName> =
     Parameters<ElectronBridgeListenerApiErrorCallback<CHANNEL>>;

@@ -4,7 +4,7 @@
   "productName": "DiceKeys",
   "description": "DiceKeys App",
   "version": "0.0.1",
-  "main": "dist/electron.js",
+  "main": "dist/src/electron.js",
   "scripts": {
     "postinstall": "electron-rebuild",
     "start": "tsc && electron-forge start",

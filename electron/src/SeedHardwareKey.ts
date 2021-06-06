@@ -114,9 +114,9 @@ class CtapHidInitResponseMessage {
   get capabilitiesFlags(): number{ return this.message.getInt8(16) }
 }
 
-const sendReport = (device: HIDDevice, data: DataView, reportType: number = 0): number => {
+const sendReport = (device: HIDDevice, data: DataView, reportType: number = 0x00): number => {
   let dataArray = new Uint8ClampedArray(data.buffer);
-  let dataParameter = [0x00, ...dataArray];
+  let dataParameter = [reportType, ...dataArray];
   let buffer = Buffer.from(dataParameter);
   return device.write(buffer);
 }

@@ -31,6 +31,9 @@ npm run start
 
 ## Running electron app
 ```
+cd common
+npm run build
+cd ..
 cd web
 npm install
 npm run build-electron-html
@@ -40,6 +43,7 @@ npm run start
 ```
 ## Build electron app for macOS
 
+First do all the steps before `npm run start` above
 ```
 cd electron
 npm run make

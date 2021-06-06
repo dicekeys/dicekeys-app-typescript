@@ -1,7 +1,7 @@
 import {app, BrowserWindow, dialog, ipcMain} from 'electron';
 import * as path from 'path';
 
-import * as squirrelCheck from './electron-squirrel-startup'
+import {squirrelCheck} from './electron-squirrel-startup'
 import {
   ElectronIpcAsyncRequestChannelName,
   ElectronBridgeAsyncApiRequest,
@@ -18,9 +18,9 @@ import {
   ElectronBridgeListenerApiSetupArgs,
   ElectronBridgeListenerApiErrorCallbackParameters,
   terminateChannelNameFor,
-} from '../../web/src/IElectronBridge';
+} from './ElectronBridge';
 import { monitorForFidoDevicesConnectedViaUsb } from './SeedableHardwareKeys';
-import ipcRenderer = Electron.Renderer.ipcRenderer;
+// import ipcRenderer = Electron.Renderer.ipcRenderer;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (squirrelCheck()) {
@@ -39,13 +39,13 @@ function startApplication() {
     mainWindow = new BrowserWindow({
         height: 600,
         webPreferences: {
-            preload: path.resolve(__dirname, "..", "dist", "preload.js")
+            preload: path.resolve(__dirname, "..", "src", "preload.js")
         },
         width: 800,
     });
 
     // and load the index.html of the app.
-    mainWindow.loadFile(path.resolve(__dirname, '..', 'app', 'electron.html'));
+    mainWindow.loadFile(path.resolve(__dirname, '..', '..', 'app', 'electron.html'));
 
     // Open the DevTools.
     mainWindow.webContents.openDevTools();
@@ -54,7 +54,7 @@ function startApplication() {
 const instanceLock = app.requestSingleInstanceLock()
 
 if (instanceLock) {
-    app.on('second-instance', (event, commandLine, workingDirectory) => {
+    app.on('second-instance', (_event, _commandLine, _workingDirectory) => {
         // Someone tried to run a second instance, we should focus our window.
         if (mainWindow) {
             if (mainWindow.isMinimized()) {
@@ -91,7 +91,6 @@ if (instanceLock) {
 
 
 const implementSyncApi = <CHANNEL extends ElectronIpcSyncRequestChannelName>(channel: CHANNEL, implementation: (...args: ElectronBridgeSyncApiRequest<CHANNEL>) => ElectronBridgeSyncApiResponse<CHANNEL>) => {
-  const responseChannelName = responseChannelNameFor(channel);
   ipcMain.on(channel, (event, ...args) => {
     try {
       event.returnValue = implementation(...(args as ElectronBridgeSyncApiRequest<CHANNEL>));
@@ -116,19 +115,22 @@ const implementListenerApi = <CHANNEL extends ElectronIpcListenerRequestChannelN
   ) => {
   const responseChannelName = responseChannelNameFor(channel);
   const listenerCodeToRemovalFunction = new Map<string, RemoveListener>();
-  ipcMain.on(terminateChannelNameFor(channel), (event, code) => {
+  ipcMain.on(terminateChannelNameFor(channel), (_event: Electron.IpcMainEvent, code) => {
     // Run the termination function
     listenerCodeToRemovalFunction.get(code)?.();
   })
-  ipcMain.on(channel, (event, code, ...setupArgs: ElectronBridgeListenerApiSetupArgs<CHANNEL>) => {
+  ipcMain.on(channel, (event: Electron.IpcMainEvent, ...args: any[]) => {
+    const [code, ...setupArgs] = args as [string, ElectronBridgeListenerApiSetupArgs<CHANNEL>];
     const removeListener = implementation(
-      (...callbackArgs: ElectronBridgeListenerApiCallbackParameters<CHANNEL>) => {
+      // ElectronIpcListenerRequestChannelName in below line should be CHANNEL, but appears to be typescript bug here
+      (...callbackArgs: ElectronBridgeListenerApiCallbackParameters<ElectronIpcListenerRequestChannelName>) => {
         event.sender.send(responseChannelName, code, ...callbackArgs)
       },
-      (...errorCallbackArgs: ElectronBridgeListenerApiErrorCallbackParameters<CHANNEL>) => {
+      // ElectronIpcListenerRequestChannelName in below line should be CHANNEL, but appears to be typescript bug here
+      (...errorCallbackArgs: ElectronBridgeListenerApiErrorCallbackParameters<ElectronIpcListenerRequestChannelName>) => {
         event.sender.send( responseChannelName, exceptionCodeFor(code), ...errorCallbackArgs)
       },
-      ...(setupArgs as []) // FIXME to make typescript happy
+      ...(setupArgs as unknown as []) // FIXME to make typescript happy
     )
     listenerCodeToRemovalFunction.set(code, removeListener)
   })
