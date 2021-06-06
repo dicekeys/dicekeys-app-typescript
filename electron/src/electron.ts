@@ -21,6 +21,7 @@ import {
   terminateChannelNameFor,
 } from './ElectronBridge';
 import { monitorForFidoDevicesConnectedViaUsb } from './SeedableHardwareKeys';
+import { enforceMacOSAppLocation } from "electron-util";
 // import ipcRenderer = Electron.Renderer.ipcRenderer;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -40,6 +41,10 @@ try {
 let mainWindow: BrowserWindow
 
 function bootstrapApplication() {
+    //On macOS, for security reasons, if an app is launched outside the Applications folder, it will run in a read-only disk image,
+    //which could cause subtle problems for your app. Use this method to ensure the app lives in the Applications folder.
+    enforceMacOSAppLocation()
+
     // Bootstrap if needed
     startApplication()
 }
