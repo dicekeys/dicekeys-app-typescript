@@ -58,8 +58,10 @@ function startApplication() {
     // and load the index.html of the app.
     mainWindow.loadFile(path.resolve(__dirname, '..', '..', 'app', 'electron.html'));
 
-    // Open the DevTools.
-    mainWindow.webContents.openDevTools();
+    if(!app.isPackaged){
+        // Open the DevTools.
+        mainWindow.webContents.openDevTools();
+    }
 }
 
 const instanceLock = app.requestSingleInstanceLock()
