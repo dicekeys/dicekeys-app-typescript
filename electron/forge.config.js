@@ -2,15 +2,17 @@ module.exports = {
   "packagerConfig": {
     "asar": false,
     "ignore": [
-      ".idea",
-      ".git",
-      ".gitignore",
-      ".eslintrc.json",
-      "tsconfig.json",
-      "forge.config.js",
-      "package-lock.json",
+      "^(\.idea)",
+      "^(\.git)",
+      "^(\.gitignore)",
+      "^(\.eslintrc)",
+      "(tsconfig.tsbuildinfo)",
+      "(tsconfig.json)",
+      "^(forge.config.js)",
+      "^(package-lock.json)",
       "^(/README.md$)",
-      "src"
+      "^/packaging",
+      "^/src",
     ],
     "executableName": "DiceKeys",
     "icon": "./packaging/icon.icns"
