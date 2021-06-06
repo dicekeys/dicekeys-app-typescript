@@ -167,10 +167,18 @@ implementSyncApi( "getCommandLineArguments", () => {
       return argv.slice(1)
   }
 });
+
 implementAsyncApi( "openFileDialog", (options) => dialog.showOpenDialog(mainWindow, options) );
 implementAsyncApi( "openMessageDialog", (options) => dialog.showMessageBox(mainWindow, options) );
-implementAsyncApi( "keytarGetPassword", (service: string, account: string) => keytar.getPassword(service, account));
-implementAsyncApi( "keytarSetPassword", (service: string, account: string, password: string) => keytar.setPassword(service, account, password));
-implementAsyncApi( "keytarDeletePassword", (service: string, account: string) => keytar.deletePassword(service, account));
-implementAsyncApi( "keytarFindCredentials", (service: string) => keytar.findCredentials(service));
 implementListenerApi("listenForSeedableSecurityKeys", monitorForFidoDevicesConnectedViaUsb );
+
+
+const keytarServiceName = "DiceKeys"
+implementAsyncApi( "getDiceKey", (id: string) => keytar.getPassword(keytarServiceName, id));
+implementAsyncApi( "setDiceKey", (id: string, humanReadableForm: string,) => keytar.setPassword(keytarServiceName, id, humanReadableForm));
+implementAsyncApi( "deleteDiceKey", (id: string) => keytar.deletePassword(keytarServiceName, id));
+implementAsyncApi( "getDiceKeys", async () => (await keytar.findCredentials(keytarServiceName))
+    .map(function (value: { account: string, password: string }) {
+        return {id: value.account, humanReadableForm: value.password}
+    })
+);
