@@ -50,13 +50,13 @@ const createIpcAsyncRequestClientFunction = <CHANNEL extends ElectronIpcAsyncReq
     ipcRenderer.send(channel, codeToMatch, ...args);
   });
 
-  const createIpcListenerRequestClientFunction =
-    <CHANNEL extends ElectronIpcListenerRequestChannelName>(channel: CHANNEL) =>
-      (
-        successCallback: ElectronBridgeListenerApiCallback<CHANNEL>,
-        errorCallback: ElectronBridgeListenerApiErrorCallback<CHANNEL>,
-        ...setupArgs: ElectronBridgeListenerApiSetupArgs<CHANNEL>
-      ): RemoveListener => {
+const createIpcListenerRequestClientFunction =
+  <CHANNEL extends ElectronIpcListenerRequestChannelName>(channel: CHANNEL) =>
+    (
+      successCallback: ElectronBridgeListenerApiCallback<CHANNEL>,
+      errorCallback: ElectronBridgeListenerApiErrorCallback<CHANNEL>,
+      ...setupArgs: ElectronBridgeListenerApiSetupArgs<CHANNEL>
+    ): RemoveListener => {
   // Create a code that allows us to match requests to responses
   const codeToMatch = `${Math.random()}:${Math.random()}`;
   // The response channel name is the name of the request channel type with suffix "-response" added
