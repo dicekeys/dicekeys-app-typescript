@@ -34,6 +34,7 @@ export  interface IElectronBridgeAsync {
   keytarGetPassword(service: string, account: string): Promise<string | null>
   keytarSetPassword(service: string, account: string, password: string): Promise<void>
   keytarDeletePassword(service: string, account: string): Promise<boolean>;
+  keytarFindCredentials(service: string): Promise<Array<{ account: string, password: string}>>;
 }
 
 export type RemoveListener = () => void;

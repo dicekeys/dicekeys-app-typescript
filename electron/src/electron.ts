@@ -172,4 +172,5 @@ implementAsyncApi( "openMessageDialog", (options) => dialog.showMessageBox(mainW
 implementAsyncApi( "keytarGetPassword", (service: string, account: string) => keytar.getPassword(service, account));
 implementAsyncApi( "keytarSetPassword", (service: string, account: string, password: string) => keytar.setPassword(service, account, password));
 implementAsyncApi( "keytarDeletePassword", (service: string, account: string) => keytar.deletePassword(service, account));
+implementAsyncApi( "keytarFindCredentials", (service: string) => keytar.findCredentials(service));
 implementListenerApi("listenForSeedableSecurityKeys", monitorForFidoDevicesConnectedViaUsb );

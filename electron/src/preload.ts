@@ -99,6 +99,7 @@ const electronBridgeTypeChecked: IElectronBridge = {
   keytarGetPassword: createIpcAsyncRequestClientFunction("keytarGetPassword"),
   keytarSetPassword: createIpcAsyncRequestClientFunction("keytarSetPassword"),
   keytarDeletePassword: createIpcAsyncRequestClientFunction("keytarDeletePassword"),
+  keytarFindCredentials: createIpcAsyncRequestClientFunction("keytarFindCredentials"),
   listenForSeedableSecurityKeys: createIpcListenerRequestClientFunction("listenForSeedableSecurityKeys"),
 //  fix: {} as IElectronBridge["fix"]
 };
