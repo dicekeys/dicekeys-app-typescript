@@ -96,6 +96,10 @@ const electronBridgeTypeChecked: IElectronBridge = {
   getCommandLineArguments: createIpcSyncRequestClientFunction("getCommandLineArguments"),
   openFileDialog: createIpcAsyncRequestClientFunction("openFileDialog"),
   openMessageDialog: createIpcAsyncRequestClientFunction("openMessageDialog"),
+  getDiceKey: createIpcAsyncRequestClientFunction("getDiceKey"),
+  setDiceKey: createIpcAsyncRequestClientFunction("setDiceKey"),
+  deleteDiceKey: createIpcAsyncRequestClientFunction("deleteDiceKey"),
+  getDiceKeys: createIpcAsyncRequestClientFunction("getDiceKeys"),
   listenForSeedableSecurityKeys: createIpcListenerRequestClientFunction("listenForSeedableSecurityKeys"),
 //  fix: {} as IElectronBridge["fix"]
 };

@@ -1,5 +1,6 @@
 import {app, BrowserWindow, dialog, ipcMain} from 'electron';
 import * as path from 'path';
+import * as keytar from 'keytar'
 
 import {squirrelCheck} from './electron-squirrel-startup'
 import {
@@ -27,6 +28,15 @@ if (squirrelCheck()) {
     app.quit();
 }
 
+try {
+    // When files used in the browser window are changed, the page is reloaded.
+    require('electron-reloader')(module , {
+        ignore : ['src', 'packaging', 'out'],
+        debug: false
+    });
+    // The try/catch is needed so it doesn't throw Cannot find module 'electron-reloader' in production.
+} catch {}
+
 let mainWindow: BrowserWindow
 
 function bootstrapApplication() {
@@ -39,6 +49,7 @@ function startApplication() {
     mainWindow = new BrowserWindow({
         height: 600,
         webPreferences: {
+            spellcheck: false,
             preload: path.resolve(__dirname, "..", "src", "preload.js")
         },
         width: 800,
@@ -47,8 +58,10 @@ function startApplication() {
     // and load the index.html of the app.
     mainWindow.loadFile(path.resolve(__dirname, '..', '..', 'app', 'electron.html'));
 
-    // Open the DevTools.
-    mainWindow.webContents.openDevTools();
+    if(!app.isPackaged){
+        // Open the DevTools.
+        mainWindow.webContents.openDevTools();
+    }
 }
 
 const instanceLock = app.requestSingleInstanceLock()
@@ -156,6 +169,18 @@ implementSyncApi( "getCommandLineArguments", () => {
       return argv.slice(1)
   }
 });
+
 implementAsyncApi( "openFileDialog", (options) => dialog.showOpenDialog(mainWindow, options) );
 implementAsyncApi( "openMessageDialog", (options) => dialog.showMessageBox(mainWindow, options) );
 implementListenerApi("listenForSeedableSecurityKeys", monitorForFidoDevicesConnectedViaUsb );
+
+
+const keytarServiceName = "DiceKeys"
+implementAsyncApi( "getDiceKey", (id: string) => keytar.getPassword(keytarServiceName, id));
+implementAsyncApi( "setDiceKey", (id: string, humanReadableForm: string,) => keytar.setPassword(keytarServiceName, id, humanReadableForm));
+implementAsyncApi( "deleteDiceKey", (id: string) => keytar.deletePassword(keytarServiceName, id));
+implementAsyncApi( "getDiceKeys", async () => (await keytar.findCredentials(keytarServiceName))
+    .map(function (value: { account: string, password: string }) {
+        return {id: value.account, humanReadableForm: value.password}
+    })
+);
