@@ -24,8 +24,7 @@ export interface CameraCaptureWithOverlayProperties {
 
 export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverlay extends React.Component<React.PropsWithChildren<CameraCaptureWithOverlayProperties>> {
 
- // private overlayCanvasElement: HTMLCanvasElement | null = null;
-  private renderingContext?: CanvasRenderingContext2D;
+  renderingContext?: CanvasRenderingContext2D;
 
   onFrameCaptured = async (frame: ImageData) => {
     const renderingContext = this.renderingContext;

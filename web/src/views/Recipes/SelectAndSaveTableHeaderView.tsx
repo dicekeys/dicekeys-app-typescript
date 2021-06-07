@@ -16,11 +16,11 @@ const RecipeTypeSelectorView = observer( ({state}: {
         <select
           className={css.SelectDerivedField}
           value={ state.type ?? "" }
-          onMouseEnter={state.showHelpForFn(undefined)}
+          onMouseEnter={() => state.setFieldInFocus(undefined)}
           onChange={ (e) => {
             state.setType(e.currentTarget.value as DerivationRecipeType | undefined);
             state.setStartEditing();
-            state.showHelpFor("purpose");
+            state.setFieldInFocus("purpose");
           }}
         >
           <option key="none" disabled={true} hidden={true} value="">...</option>

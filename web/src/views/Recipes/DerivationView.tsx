@@ -38,4 +38,3 @@ export const DerivationView = observer ( (props: DerivationViewProps) => {
 export const Preview_DerivationView = () => (
   <DerivationView seedString={DiceKey.testExample.toSeedString()} />
 )
-// export const DerivationViewPreview 

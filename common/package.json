@@ -1,0 +1,10 @@
+{
+  "author": "DiceKeys, LLC",
+  "description": "DiceKeys App Common files",
+  "scripts": {
+    "build": "tsc -p ."
+  },
+  "devDependencies": {
+    "electron": "^12.0.10"
+  }
+}

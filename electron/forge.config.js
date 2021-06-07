@@ -2,15 +2,17 @@ module.exports = {
   "packagerConfig": {
     "asar": false,
     "ignore": [
-      ".idea",
-      ".git",
-      ".gitignore",
-      ".eslintrc.json",
-      "tsconfig.json",
-      "forge.config.js",
-      "package-lock.json",
+      "^(\.idea)",
+      "^(\.git)",
+      "^(\.gitignore)",
+      "^(\.eslintrc)",
+      "(tsconfig.tsbuildinfo)",
+      "(tsconfig.json)",
+      "^(forge.config.js)",
+      "^(package-lock.json)",
       "^(/README.md$)",
-      "src"
+      "^/packaging",
+      "^/src",
     ],
     "executableName": "DiceKeys",
     "icon": "./packaging/icon.icns"
@@ -46,7 +48,8 @@ module.exports = {
           productName: 'DiceKeys',
           maintainer: 'DiceKeys LLC',
           homepage: 'https://dicekeys.com',
-          categories: ['Utility']
+          categories: ['Utility'],
+          depends: ['libsecret-1-dev']
         }
       }
     },
@@ -55,7 +58,8 @@ module.exports = {
       "config": {
         options: {
           maintainer: 'DiceKeys LLC',
-          homepage: 'https://dicekeys.com'
+          homepage: 'https://dicekeys.com',
+          depends: ['libsecret-devel']
         }
       }
     },

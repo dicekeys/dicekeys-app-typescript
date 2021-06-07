@@ -31,6 +31,9 @@ npm run start
 
 ## Running electron app
 ```
+cd common
+npm run build
+cd ..
 cd web
 npm install
 npm run build-electron-html
@@ -40,6 +43,7 @@ npm run start
 ```
 ## Build electron app for macOS
 
+First do all the steps before `npm run start` above
 ```
 cd electron
 npm run make
@@ -118,4 +122,30 @@ and with tsc, and this isn't working well in the beta of parcel 2.
   "validators": {
     "*.{ts,tsx}": ["@parcel/validator-typescript"]
   }
+```
+
+## Electron notes
+
+### Electron Version locking
+Electron version has a dependency on `node-hid` and as a result Electron version must first be supported by `node-hid`.
+
+### Development mode
+#### Refresh HTML contents
+
+You can run _web_ codebase with the following commands. Any change to the html files will trigger an update to the electron html contents without restarting the application itself.
+```
+cd web
+npm run watch-electron-html
+```
+
+#### Restart Electron
+Restarting electron every time there is a change in the _electron_ codebase can be accomplished by running the following commands in two separates terminal windows.
+```
+cd electron
+npm run watch
+```
+
+```
+cd electron
+npm run start-electron
 ```

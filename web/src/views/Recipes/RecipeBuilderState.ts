@@ -22,12 +22,45 @@ import { isValidJson } from "../../utilities/json";
 
 // type EditingMode = "fields" | "json" | undefined;
 
+interface RecipeBuilderStateConstructorOptions {
+  type?: DerivationRecipeType;
+  purpose?: string;
+  editing?: boolean;
+  purposeFieldNonEditableByDefault?: boolean;
+}
+
+
+export class RecipeFieldFocusState {
+  constructor(
+    private state: {fieldInFocus?: RecipeFieldType, setFieldInFocus: (field?: RecipeFieldType) => void},
+    private field: RecipeFieldType
+  ) {}
+
+  get isFieldInFocus(): boolean { return this.field === this.state.fieldInFocus};
+  focus = () => this.state.setFieldInFocus(this.field);
+  toggleFocus = () => this.state.setFieldInFocus(this.isFieldInFocus ? undefined : this.field);
+};
+
 /**
  * State for building and displaying recipes
  */
 export class RecipeBuilderState {
-  constructor() {
+  constructor(options: RecipeBuilderStateConstructorOptions = {}) {
+    const {
+      type = undefined,
+      purpose = "",
+      editing = false,
+      purposeFieldNonEditableByDefault = false,
+    } = options;
     makeAutoObservable(this);
+    this.type = type;
+    this.purposeField = purpose;
+    this.editing = editing;
+    this.purposeFieldNonEditableByDefault = purposeFieldNonEditableByDefault;
+    this._mayEditPurpose = !purposeFieldNonEditableByDefault;
+    if (purpose) {
+      this.setRecipeJson(addPurposeToRecipeJson(undefined, purpose));
+    }
   }
 
   type: DerivationRecipeType | undefined;
@@ -41,7 +74,7 @@ export class RecipeBuilderState {
 
   setStartEditing = action( () => {
     this.editing = true;
-    this.showHelpFor("purpose");
+    this.setFieldInFocus("purpose");
   })
   stopEditing = action( () => {
     this.editing = false;
@@ -50,6 +83,7 @@ export class RecipeBuilderState {
   setAllowEditingOfRawRecipe = action ( (editingRawRecipe: boolean) => {
     this.allowEditingOfRawRecipe = editingRawRecipe;
   });
+  toggleAllowEditingOfRawRecipe = () => this.setAllowEditingOfRawRecipe(!this.allowEditingOfRawRecipe);
 
   //////////////////////////////////////////
   // helpToDisplay while building a recipe
@@ -58,11 +92,10 @@ export class RecipeBuilderState {
    * The field to provide help for, or undefined to show help about the
    * type of secret being created
    */
-	helpToDisplay?: RecipeFieldType = "purpose";
-	showHelpFor = action ( (recipeField?: RecipeFieldType) => {
-		this.helpToDisplay = recipeField;
-	} )
-	showHelpForFn = (recipeField?: RecipeFieldType) => () => this.showHelpFor(recipeField);
+	fieldInFocus?: RecipeFieldType = "purpose";
+  setFieldInFocus = action ( (field?: RecipeFieldType) => {
+		this.fieldInFocus = field;
+	});
 
   /////////////////////////////////
   // SequenceNumber field ("#")
@@ -103,7 +136,10 @@ export class RecipeBuilderState {
   //////////////////////////////////////////
   // Purpose field ("purpose" or "allow")
   //////////////////////////////////////////
-  get mayEditPurpose(): boolean { return true };
+  public readonly purposeFieldNonEditableByDefault: boolean;
+  private _mayEditPurpose: boolean;
+  get mayEditPurpose(): boolean { return this._mayEditPurpose };
+  setMayEditPurpose = action ( (mayEditPurpose: boolean) => this._mayEditPurpose = mayEditPurpose);
   purposeField: string = "";
   /** The purpose of the recipe from the purpose form field if not a list of 1 or more hosts */
   get purpose(): string | undefined { return this.hosts != null || this.purposeField.length === 0 ? undefined : this.purposeField; }
@@ -113,7 +149,6 @@ export class RecipeBuilderState {
     this.recipeJson = addHostsToRecipeJson(this.recipeJson, hosts);
     this.recipeJson = addPurposeToRecipeJson(this.recipeJson, purpose);
   });
-
 
   /**
    * The hosts for the "allow" restrictions of a recipe if the purpose field contains

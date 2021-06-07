@@ -60,6 +60,13 @@ export class DerivedFromRecipeState {
     makeAutoObservable(this);
   }
 
+  get derivedSeedBytesHex(): string | undefined {
+    const {recipeState, api} = this;
+    const {type, recipeJson, recipeIsValid} = recipeState;
+    if (type !== "Secret" || recipeIsValid !== true || recipeJson == null) return;
+    return api.getSecretHexForRecipe(recipeJson);
+  };
+
   get derivedValue(): string | undefined {
     const {recipeState, api} = this;
     const {type, recipeJson, recipeIsValid} = recipeState;

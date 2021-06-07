@@ -5,11 +5,12 @@ import { action, makeAutoObservable, runInAction } from "mobx";
 import { autoSaveEncrypted } from "../core/AutoSave";
 import { AllAppWindowsAndTabsAreClosingEvent } from "../core/AllAppWindowsAndTabsAreClosingEvent";
 import { CustomEvent } from "../../utilities/event";
+import { isElectron } from "../../utilities/is-electron";
 
 const readyEvent = new CustomEvent(this);
 let isReady = false;
 
-export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
+class DiceKeyMemoryStoreClass {
   protected keyIdToDiceKeyInHumanReadableForm: Record<string, DiceKeyInHumanReadableForm>;
   protected centerLetterAndDigitToKeyId: Record<string, string>;
 
@@ -79,10 +80,17 @@ export const DiceKeyMemoryStore = new (class DiceKeyMemoryStore {
     this.keyIdToDiceKeyInHumanReadableForm = {};
     this.centerLetterAndDigitToKeyId = {}
     makeAutoObservable(this);
-    autoSaveEncrypted(this, "DiceKeyStore", () => runInAction( () => { isReady = true; readyEvent.send();} ), true);
+    if (isElectron()) {
+      isReady = true; readyEvent.send();
+    } else {
+      // We don't need to save the DiceKeyStore in electron because there is only one window right now
+      // and there's no chance of a refresh.
+      autoSaveEncrypted(this, "DiceKeyStore", () => runInAction( () => { isReady = true; readyEvent.send();} ), true);
+    }
     AllAppWindowsAndTabsAreClosingEvent.on( () => {
       // Empty the store if all app windows are closing.
       this.removeAll();
     })
   }
-})();
+}
+export const DiceKeyMemoryStore = new DiceKeyMemoryStoreClass();
