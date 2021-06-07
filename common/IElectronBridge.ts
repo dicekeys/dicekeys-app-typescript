@@ -37,7 +37,7 @@ export interface IElectronBridgeDiceKeysStoreAsync {
   getDiceKey(id: string): Promise<string | null>
   setDiceKey(id: string, humanReadableForm: string): Promise<void>
   deleteDiceKey(id: string): Promise<boolean>
-  getDiceKeys(): Promise<Array<{ id: string, humanReadableForm: string}>>
+  getDiceKeys(): Promise<{ id: string, humanReadableForm: string}[]>
 }
 
 export type RemoveListener = () => void;

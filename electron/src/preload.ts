@@ -1,10 +1,13 @@
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
 import {contextBridge, ipcRenderer} from "electron";
+import type {
+  IElectronBridge,
+  RemoveListener
+} from "../../common/IElectronBridge"
 import {
   ElectronBridgeListenerApiCallback,
   ElectronIpcListenerRequestChannelName,
-  IElectronBridge,
   ElectronIpcAsyncRequestChannelName,
   ElectronIpcSyncRequestChannelName,
   ElectronBridgeAsyncApiRequest,
@@ -14,19 +17,19 @@ import {
   ElectronBridgeListenerApiSetupArgs,
   exceptionCodeFor,
   responseChannelNameFor,
-  RemoveListener,
   terminateChannelNameFor,
   ElectronBridgeListenerApiErrorCallback,
   ElectronBridgeListenerApiCallbackParameters,
   ElectronBridgeListenerApiErrorCallbackParameters
-} from "./ElectronBridge";
+} from "./trusted-main-electron-process/ElectronBridge";
 
 const createIpcSyncRequestClientFunction = <CHANNEL extends ElectronIpcSyncRequestChannelName>(channel: CHANNEL) =>
   (...args: ElectronBridgeSyncApiRequest<CHANNEL>) => ipcRenderer.sendSync(channel, ...args) as ElectronBridgeSyncApiResponse<CHANNEL>
 
+type Awaited<T> = Promise<T> extends Promise<infer U> ? U : never;
 const createIpcAsyncRequestClientFunction = <CHANNEL extends ElectronIpcAsyncRequestChannelName>(channel: CHANNEL) =>
   (...args: ElectronBridgeAsyncApiRequest<CHANNEL>) =>
-  new Promise<ElectronBridgeAsyncApiResponse<CHANNEL>>( (resolve, reject) => {
+  new Promise<Awaited<ElectronBridgeAsyncApiResponse<CHANNEL>>>( (resolve, reject) => {
     // Create a code that allows us to match requests to responses
     const codeToMatch = `${Math.random()}:${Math.random()}`;
     // The response channel name is the name of the request channel type with suffix "-response" added
@@ -48,7 +51,7 @@ const createIpcAsyncRequestClientFunction = <CHANNEL extends ElectronIpcAsyncReq
     ipcRenderer.on(responseChannel, responseListener);
     // Send the request
     ipcRenderer.send(channel, codeToMatch, ...args);
-  });
+  }) as ElectronBridgeAsyncApiResponse<CHANNEL>;
 
 const createIpcListenerRequestClientFunction =
   <CHANNEL extends ElectronIpcListenerRequestChannelName>(channel: CHANNEL) =>
