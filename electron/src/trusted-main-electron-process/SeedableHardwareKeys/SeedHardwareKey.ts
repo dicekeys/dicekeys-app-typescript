@@ -1,5 +1,9 @@
 import * as HID from "node-hid";
 import * as crypto from "crypto"
+import {
+  DeviceUniqueIdentifier,
+  WriteSeedToFIDOKeyException
+} from "../ElectronBridge";
 
 
 // Error reported when the user fails to grant access
@@ -10,26 +14,15 @@ const CTAP_RESULT = {
   ERR_INVALID_COMMAND: 0x01,
 } as const;
 
-class SeedingException extends Error {
-  constructor(message?: string) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
 
-export class ExceptionUserDidNotAuthorizeSeeding extends SeedingException {}
-export class ExceptionKeyReportedInvalidLength extends SeedingException {}
-export class ExceptionKeyDoesNotSupportSeedingVersion extends SeedingException {}
-export class ExceptionKeyDoesNotSupportCommand extends SeedingException {}
-export class ExceptionUnknownSeedingException extends SeedingException {}
-
-const getExceptionForCtapResult = (ctapResult?: number): SeedingException => {
+const exceptionString = (s: WriteSeedToFIDOKeyException) => s;
+const getExceptionForCtapResult = (ctapResult?: number): WriteSeedToFIDOKeyException => {
   switch (ctapResult) {
-    case CTAP_RESULT.ERR_OPERATION_DENIED: return new ExceptionUserDidNotAuthorizeSeeding();
-    case CTAP_RESULT.ERR_INVALID_COMMAND: return new ExceptionKeyDoesNotSupportCommand();
-    case CTAP_RESULT.ERR_UNSUPPORTED_OPTION: return new ExceptionKeyDoesNotSupportSeedingVersion();
-    case CTAP_RESULT.ERR_INVALID_LENGTH: return new ExceptionKeyReportedInvalidLength();
-    default: return new ExceptionUnknownSeedingException();
+    case CTAP_RESULT.ERR_OPERATION_DENIED: return "UserDidNotAuthorizeSeeding";
+    case CTAP_RESULT.ERR_INVALID_COMMAND: return "KeyDoesNotSupportCommand";
+    case CTAP_RESULT.ERR_UNSUPPORTED_OPTION: return "KeyDoesNotSupportSeedingVersion";
+    case CTAP_RESULT.ERR_INVALID_LENGTH: return "KeyReportedInvalidLength";
+    default: return "UnknownSeedingException";
   }
 }
 
@@ -165,12 +158,13 @@ const sendCtapHidMessage = (device: HIDDevice, channel: number, command: number,
     }
 }
 
-const getChannel = (device: HIDDevice): number => {
+const getChannel = async (device: HIDDevice): Promise<number> => {
   let channelCreationNonce = Uint8ClampedArray.from(crypto.randomBytes(8));
 
   sendCtapHidMessage(device, BroadcastChannel, CTAP_HID_Commands.INIT, new DataView(channelCreationNonce.buffer));
   while (true) {
-    const response = device.readSync();
+    const response = await new Promise<number[]>( (resolve, reject) =>
+      device.read( (err, data) => { if (err != null) reject(err); else resolve(data); } ) );
     //console.log(`response: ${response}`);
     let buffer = Uint8ClampedArray.from(response).buffer;
     const packet = new CtapHidPacketReceived(new DataView(buffer));    
@@ -187,13 +181,13 @@ const getChannel = (device: HIDDevice): number => {
 }
 
 
-const sendWriteSeedMessage = (device: HIDDevice, channel: number, seed: Uint8ClampedArray, extState: Uint8ClampedArray): void => { 
+const sendWriteSeedMessage = async (device: HIDDevice, channel: number, seed: Uint8ClampedArray, extState: Uint8ClampedArray): Promise<void> => { 
   const commandVersion = 1;
   if (seed.length != 32) {
-    throw new ExceptionKeyReportedInvalidLength("Seed must be 32 bytes")
+    throw exceptionString("SeedShouldBe32Bytes")
   }
   if (extState.length > 256) {
-    throw new ExceptionKeyReportedInvalidLength("ExtState must be 32 bytes")
+    throw exceptionString("ExtStateShouldNotExceed256Bytes");
   }
 
   // SoloKeys code triggered by this call is at:
@@ -203,7 +197,8 @@ const sendWriteSeedMessage = (device: HIDDevice, channel: number, seed: Uint8Cla
   const message = new Uint8ClampedArray([commandVersion, ...seed, ...extState]);
   sendCtapHidMessage(device, channel, CTAP_HID_Commands.WRITE_SEED, new DataView(message.buffer));
   while (true) {
-    const response = device.readSync()
+    const response = await new Promise<number[]>( (resolve, reject) =>
+      device.read( (err, data) => { if (err != null) reject(err); else resolve(data); } ) );
     const packet = new CtapHidPacketReceived(new DataView(Uint8ClampedArray.from(response).buffer));
     if (packet.channel != channel) {
       // This message wasn't meant for us.
@@ -216,32 +211,48 @@ const sendWriteSeedMessage = (device: HIDDevice, channel: number, seed: Uint8Cla
       // The message contains a 1-byte error code to report what went wrong
       throw getExceptionForCtapResult(packet.message.getInt8(0));
     } else {
-      throw new ExceptionUnknownSeedingException(`HID Command ${packet.command} returned error byte ${packet.message.getUint8(0)}`);
+      throw  exceptionString(`UnknownSeedingException:${ packet.message.getUint8(0)}` as const);
     }
   }
 }
+
+const hexStringToUint8ClampedArray = (hexString?: string): Uint8ClampedArray =>
+  hexString == null || hexString.length === 0 ? new Uint8ClampedArray(0) :
+  new Uint8ClampedArray(hexString.match(/.{1,2}/g)!.map( (byte) => parseInt(byte, 16)));
 
 /**
  * Write a cryptographic seed to a seedable FIDO key 
  * https://github.com/dicekeys/seeding-webauthn
  * 
- * @param device The USB FIDO key to write to
+ * @param device A descriptor of the USB device to write to
  * @param seed The 32-byte cryptographic seed
  * @param extState Up to 256-bytes of additional state to store
  * 
  * @throws ExceptionUserDidNotAuthorizeSeeding if the user does not authorize the write by tapping on the button.
  * @throws SeedingException other exceptions (typically implementation issues)
  */
-export const writeSeedToFIDOKey = (deviceDescription: HID.Device, seed: Uint8ClampedArray, extState: Uint8ClampedArray = new Uint8ClampedArray(0)) => {
-  const {path} = deviceDescription;
+export const writeSeedToFIDOKey = async (deviceIdentifier: DeviceUniqueIdentifier, seedAs32BytesIn64CharHexFormat: string, extStateHexFormat?: string) => {
+  const {vendorId, productId, serialNumber} = deviceIdentifier;
+  const seed = hexStringToUint8ClampedArray(seedAs32BytesIn64CharHexFormat);
+  const extState = extStateHexFormat == null || extStateHexFormat.length == 0 ?
+    new Uint8ClampedArray(0) :
+    hexStringToUint8ClampedArray(extStateHexFormat ?? "");
+  if (seed.length !== 32) {
+    throw `Invalid seed length ${seed.length}`;
+  }
+  const hidDevice = HID.devices(vendorId, productId).find( d => d.serialNumber === serialNumber );
+  if (hidDevice == null) {
+    throw "device not found";
+  }
+  const {path} = hidDevice;
   // console.log(`Device path: ${path}`);
   if (!path) {
-    return;
+    throw "device has no path";
   }
-  const device = new HID.HID(path);
-  try {
-    const channel = getChannel(device);
-    return sendWriteSeedMessage(device, channel, seed, extState);
+  const device = new HID.HID(path);  try {
+    const channel = await getChannel(device);
+    await sendWriteSeedMessage(device, channel, seed, extState);
+    return "success" as const;
   } finally {
     device.close()
   }

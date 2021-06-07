@@ -12,13 +12,16 @@ export {
   MessageBoxReturnValue
 }
 
-export interface Device {
-  locationId: number;
+export interface DeviceUniqueIdentifier {
   vendorId: number;
   productId: number;
+  serialNumber: string;  
+}
+
+export interface Device extends DeviceUniqueIdentifier {
+  locationId: number;
   deviceName: string;
   manufacturer: string;
-  serialNumber: string;
   deviceAddress: number;
 }
 
@@ -27,7 +30,18 @@ export interface IElectronBridgeSync {
   getCommandLineArguments(): string[];
 }
 
-export interface IElectronBridgeAsync extends IElectronBridgeDialogsAsync, IElectronBridgeDiceKeysStoreAsync{}
+export type WriteSeedToFIDOKeyException = 
+  "UserDidNotAuthorizeSeeding" |
+  "SeedShouldBe32Bytes" |
+  "ExtStateShouldNotExceed256Bytes" |
+  "KeyDoesNotSupportSeedingVersion" |
+  "KeyDoesNotSupportCommand" |
+  "KeyReportedInvalidLength" |
+  `UnknownSeedingException` |
+  `UnknownSeedingException:${ string }`;
+export interface IElectronBridgeSeedingAsync {
+  writeSeedToFIDOKey: (deviceIdentifier: DeviceUniqueIdentifier, seedAs32BytesIn64CharHexFormat: string, extStateHex?: string) => Promise<"success">
+}
 
 export interface IElectronBridgeDialogsAsync{
   openFileDialog(options: OpenDialogOptions): Promise<OpenDialogReturnValue>;
@@ -45,6 +59,12 @@ export interface IElectronBridgeListener {
   listenForSeedableSecurityKeys(successCallback: (devices: Device[]) => any, errorCallback: (error: any) => any): RemoveListener;
 // for testing typings only  fix(sc: (a: string, b: number) => any, ec: (error: any) => any): RemoveListener;
 }
+
+export interface IElectronBridgeAsync extends
+  IElectronBridgeDialogsAsync,
+  IElectronBridgeDiceKeysStoreAsync,
+  IElectronBridgeSeedingAsync
+{}
 
 export interface IElectronBridge extends IElectronBridgeSync, IElectronBridgeAsync, IElectronBridgeListener {
 }

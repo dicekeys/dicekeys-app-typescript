@@ -97,6 +97,9 @@ const createIpcListenerRequestClientFunction =
 const electronBridgeTypeChecked: IElectronBridge = {
   writeResultToStdOutAndExit: createIpcSyncRequestClientFunction("writeResultToStdOutAndExit"),
   getCommandLineArguments: createIpcSyncRequestClientFunction("getCommandLineArguments"),
+
+  writeSeedToFIDOKey: createIpcAsyncRequestClientFunction("writeSeedToFIDOKey"),
+
   openFileDialog: createIpcAsyncRequestClientFunction("openFileDialog"),
   openMessageDialog: createIpcAsyncRequestClientFunction("openMessageDialog"),
   getDiceKey: createIpcAsyncRequestClientFunction("getDiceKey"),
