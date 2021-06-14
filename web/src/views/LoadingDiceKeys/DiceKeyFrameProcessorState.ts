@@ -1,6 +1,7 @@
 import {
-  FaceRead, renderFacesRead
+  FaceRead //, renderFacesRead
 } from "@dicekeys/read-dicekey-js";
+import {renderFacesRead} from "./renderFacesRead";
 import {
   allDiceErrorTypes, allFacesReadHaveMajorityValues
 } from "../../dicekeys/FacesRead";
@@ -156,9 +157,9 @@ export class DiceKeyFrameProcessorState {
     this.processFacesRead(facesRead);
 
     // Render the frame onto the screen
-   overlayCanvasCtx.clearRect(0, 0, width, height);
+   overlayCanvasCtx.clearRect(0, 0, overlayCanvasCtx.canvas.width, overlayCanvasCtx.canvas.height);
     if (this.facesRead) {
-      renderFacesRead(overlayCanvasCtx, this.facesRead, {});
+      renderFacesRead(overlayCanvasCtx, this.facesRead, {sourceImageSize: {width, height}});
     }
   });
 };
