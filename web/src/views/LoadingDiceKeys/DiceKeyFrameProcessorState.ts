@@ -1,7 +1,9 @@
 import {
-  FaceRead //, renderFacesRead
+  FaceRead,
 } from "@dicekeys/read-dicekey-js";
-import {renderFacesRead} from "./renderFacesRead";
+import {
+  renderFacesRead
+} from "./renderFacesRead";
 import {
   allDiceErrorTypes, allFacesReadHaveMajorityValues
 } from "../../dicekeys/FacesRead";
