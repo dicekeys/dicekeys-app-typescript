@@ -111,8 +111,8 @@ const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsSta
   const createdDiceKey = state.foregroundDiceKeyState.diceKey != null;
   const backedUpSuccessfully = state.backupState.validationStepViewState.backupScannedSuccessfully;
   return (
-    <PaddedContentBox>
-      <div style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center"}}>
+  <PaddedContentBox>
+      <div className={layoutCSS.VerticallyCentered}>
         <div style={{display: "block"}}>
           <Instruction>{createdDiceKey ? "You did it!" : "That's it!"}</Instruction>
           <Spacer/>

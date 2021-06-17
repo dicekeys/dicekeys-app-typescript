@@ -2,18 +2,19 @@
 .request_choice, .request_promise, .request_description {
   flex-shrink: 0;
   flex-grow: 0;
+  font-family: sans-serif;
   text-align: center;
 }
 .request_description {
   margin-top: 0px;
   margin-bottom: 15;
   color: #202000;
-  font-weight: 550;
+  font-weight: 400;
 }
 .request_choice {
   font-size: 2rem;
   color: #202000;
-  font-weight: 550;
+  font-weight: 400;
 }
 .request_promise {
   font-size: 1.6rem;
@@ -22,7 +23,11 @@
 }
 
 .known_application_name {
-  font-family: serif;
+  /* font-family: serif; */
+  font-weight: 400;
+  background-color: rgba(152, 160, 47, 0.1);
+  border-radius: 0.3rem;
+  /* text-decoration: rgba(152, 160, 47, 0.2) solid underline 0.2rem; */
 }
 
 .host_name {

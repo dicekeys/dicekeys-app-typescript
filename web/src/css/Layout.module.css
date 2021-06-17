@@ -8,6 +8,13 @@
   align-self: stretch;
 }
 
+.VerticallyCentered {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-grow: 1;
+}
+
 .ContentBox {
   justify-content: space-around;
 }

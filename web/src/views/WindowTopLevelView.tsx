@@ -9,7 +9,8 @@ import {Layout} from "../css";
 import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
 import { AssemblyInstructionsState } from "./AssemblyInstructionsState";
 import { addressBarState } from "../state/core/AddressBarState";
-
+import {ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
+import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
 
 interface WindowTopLevelNavigationProps {
   windowNavigationState: WindowTopLevelNavigationState;
@@ -28,6 +29,15 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
     if (diceKey != null) {
       windowNavigationState.navigateToSelectedDiceKeyView(diceKey);
     }
+  }
+
+  const {foregroundApiRequest} = ApiRequestsReceivedState;
+  if (foregroundApiRequest != null) {
+    return (
+      <ApproveApiRequestView queuedApiRequest={foregroundApiRequest}
+        onApiRequestResolved={ApiRequestsReceivedState.dequeueApiRequestReceived}
+      />
+    )
   }
 
   switch (windowNavigationState.subView) {

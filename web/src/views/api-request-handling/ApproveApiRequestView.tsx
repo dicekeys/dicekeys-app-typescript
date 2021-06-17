@@ -12,8 +12,10 @@ import {
 } from "../../phrasing/api";
 import { observer } from "mobx-react";
 import { CenteredControls } from "../../views/basics";
+import { addPreview } from "../../views/basics/Previews";
 
-// We recommend you never write down your DiceKey (there are better ways to copy it)
+import {QueuedUrlApiRequest} from "../../api-handler/QueuedUrlApiRequest";
+;// We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
 // had a legitimate reason to, removing orientations make it easier and more reliable.
 
@@ -32,13 +34,13 @@ export interface ApproveApiRequestViewProps {
   onApiRequestResolved: () => any;
 }
 
-export const HostDescriptorView = ( {host}: {host: string}) => {
+export const HostDescriptorView = ( {host, capitalize}: {host: string, capitalize?: boolean}) => {
   const knownHost = getKnownHost(host);
   return (knownHost != null) ? (
     <span className={styles.known_application_name}>{ knownHost}</span>
-  ) : (
-    <div>The website at <span className={styles.host_name}>{ host }</span></div>
-  )
+  ) : (<>
+    <span>{capitalize ? "T":"t"}he website at&nbsp;</span><span className={styles.host_name}>{ host }</span>
+  </>)
 }
 
 const DICEKEY = "DiceKey";
@@ -86,12 +88,12 @@ export const RequestDescriptionView = observer ( ({command, host, isRecipeSigned
 
 const KeyAccessRestrictionsView = observer( ({host}: {host: string}) => (
     <div className={styles.request_promise}>
-      <HostDescriptorView host={host}/> will not see your {DICEKEY}
+      <HostDescriptorView host={host} capitalize={true}/> will not see your {DICEKEY}
     </div>
   )
 );
 
-const ApproveApiRequestViewProps = observer( (props: ApproveApiRequestViewProps) => {
+export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProps) => {
   const { queuedApiRequest, onApiRequestResolved } = props;
   const { request, host } = queuedApiRequest;
   const { command } = request;
@@ -119,6 +121,21 @@ const ApproveApiRequestViewProps = observer( (props: ApproveApiRequestViewProps)
   )
 })
 
+addPreview("ApproveApiRequest", () => {
+  const request = new QueuedUrlApiRequest(new URL(
+    `https://dicekeys.app/?${""
+    }command=getSecret${""
+    }&requestId=${ encodeURIComponent("{\"testBogusField\": false}") 
+    }&respondTo=${ encodeURIComponent(`https://account.microsoft.com/--derived-secret-api--/`)
+    }${""}`
+  ));
+  return (
+    <ApproveApiRequestView
+      queuedApiRequest={request}
+      onApiRequestResolved={() => alert("request resolved")}
+    />
+  );
+});
 
 //   async render() {
 //     const {requestContext, appState} = this.options;

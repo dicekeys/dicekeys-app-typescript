@@ -10,6 +10,7 @@ const knownHostSuffixes: [string, string][] = [
   ["keepersecurity.com", "Keeper Security"],
   ["keepersecurity.eu", "Keeper Security"],
   ["lastpass.com", "LastPass"],
+  ["account.microsoft.com", "Microsoft"],
   ["localhost", "your password manager"]
 ];
 

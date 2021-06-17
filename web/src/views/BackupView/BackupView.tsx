@@ -99,7 +99,7 @@ const StepSelectBackupMedium = observer (({state}: {state: BackupViewState}) => 
         <FaceCopyingView medium={medium} diceKey={state.diceKeyState.diceKey} showArrow={true} indexOfLastFacePlaced={12} 
           maxWidth="60vw" maxHeight="30vh"
         />
-        <span style={{marginTop: "0.5rem"}}>Use {medium}</span>
+        <div className={css.LabelBelowButtonImage}>Use {medium}</div>
       </button>
     ))}
     </CenteredColumn>
