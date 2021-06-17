@@ -3,6 +3,8 @@ import * as IpcApiFactory from "./trusted-main-electron-process/IpcApiFactory";
 import * as TrustedMainElectronProcess from "./trusted-main-electron-process";
 import {squirrelCheck} from './electron-squirrel-startup';
 import {createBrowserWindow} from "./createBrowserWindow";
+// import {performWrite} from "./solo-writer";
+import * as ipc from 'node-ipc';
 
 // Force all the of APIs to lead by making the runtime environment
 // inspect the count of the keys of the module.
@@ -25,10 +27,10 @@ if (!app.requestSingleInstanceLock()) {
 
 try {
     // When files used in the browser window are changed, the page is reloaded.
-    require('electron-reloader')(module , {
-        ignore : ['src', 'packaging', 'out'],
-        debug: false
-    });
+    // require('electron-reloader')(module , {
+    //     ignore : ['src', 'packaging', 'out'],
+    //     debug: false
+    // });
     // The try/catch is needed so it doesn't throw Cannot find module 'electron-reloader' in production.
 } catch {}
 
@@ -80,3 +82,11 @@ app.on("window-all-closed", () => {
 // import {dialog} from 'electron';
 IpcApiFactory.implementAsyncApi( "openFileDialog", (options) => dialog.showOpenDialog(mainWindow, options) );
 IpcApiFactory.implementAsyncApi( "openMessageDialog", (options) => dialog.showMessageBox(mainWindow, options) );
+
+// performWrite("asdf").then(r => {
+//     console.log(r)
+// }, err => {
+//   console.log(err)
+// })
+
+ipc.serve();
