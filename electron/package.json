@@ -6,13 +6,13 @@
   "version": "0.0.1",
   "main": "dist/src/electron.js",
   "scripts": {
-    "postinstall": "electron-rebuild",
-    "start": "rimraf ./dist && tsc && electron-forge start",
-    "start-electron": "electron-forge start",
-    "watch": "rimraf ./dist && tsc --watch",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
+    "postinstall": "npx electron-rebuild --version 12.0.10 .",
+    "start": "npx rimraf ./dist && tsc && npx electron-forge start",
+    "start-electron": "npx electron-forge start",
+    "watch": "npx rimraf ./dist && tsc --watch",
+    "package": "npx electron-forge package",
+    "make": "npx electron-forge make",
+    "publish": "npx electron-forge publish",
     "lint": "eslint --ext .ts ."
   },
   "keywords": [],
@@ -34,11 +34,14 @@
     "@types/node-ipc": "^9.1.4",
     "@typescript-eslint/eslint-plugin": "^4.24.0",
     "@typescript-eslint/parser": "^4.24.0",
-    "electron": "^12.0.10",
+    "electron": "12.0.10",
+    "electron-prebuilt-compile": "8.2.0",
+    "electron-rebuild": "^2.3.5",
     "electron-reloader": "^1.2.1",
     "eslint": "^7.27.0",
     "eslint-plugin-import": "^2.23.3",
-    "typescript": "^4.2.4"
+    "rimraf": "^3.0.2",
+    "typescript": "^4.3.3"
   },
   "dependencies": {
     "keytar": "~7.6.0",

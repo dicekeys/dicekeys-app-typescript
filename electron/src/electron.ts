@@ -3,8 +3,7 @@ import * as IpcApiFactory from "./trusted-main-electron-process/IpcApiFactory";
 import * as TrustedMainElectronProcess from "./trusted-main-electron-process";
 import {squirrelCheck} from './electron-squirrel-startup';
 import {createBrowserWindow} from "./createBrowserWindow";
-// import {performWrite} from "./solo-writer";
-import * as ipc from 'node-ipc';
+import {performWrite} from "./solo-writer";
 
 // Force all the of APIs to lead by making the runtime environment
 // inspect the count of the keys of the module.
@@ -83,10 +82,8 @@ app.on("window-all-closed", () => {
 IpcApiFactory.implementAsyncApi( "openFileDialog", (options) => dialog.showOpenDialog(mainWindow, options) );
 IpcApiFactory.implementAsyncApi( "openMessageDialog", (options) => dialog.showMessageBox(mainWindow, options) );
 
-// performWrite("asdf").then(r => {
-//     console.log(r)
-// }, err => {
-//   console.log(err)
-// })
-
-ipc.serve();
+performWrite("asdf").then(r => {
+    console.log(r)
+}, err => {
+  console.log(err)
+})

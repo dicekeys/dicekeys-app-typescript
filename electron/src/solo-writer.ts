@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as ipc from 'node-ipc';
+import ipc from "node-ipc";
 import * as os from 'os';
 import * as path from 'path';
 import {app, remote} from "electron";
