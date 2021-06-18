@@ -64,7 +64,7 @@ export const throwIfUrlNotOnAllowList =
       }
       if (!isUrlOnAllowList(host, path, allow)) {
         throw new Exceptions.ClientNotAuthorizedException(
-          `Client ${host} and ${path} is not among list of allowed url: ${JSON.stringify(allow)}`
+          `Client ${host} and ${path} is not on this list of allowed urls: ${JSON.stringify(allow)}`
         );
       }
     }

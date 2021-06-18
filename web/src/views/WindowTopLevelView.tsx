@@ -35,6 +35,7 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
   if (foregroundApiRequest != null) {
     return (
       <ApproveApiRequestView queuedApiRequest={foregroundApiRequest}
+        settableDiceKeyState={windowNavigationState.foregroundDiceKeyState}
         onApiRequestResolved={ApiRequestsReceivedState.dequeueApiRequestReceived}
       />
     )
