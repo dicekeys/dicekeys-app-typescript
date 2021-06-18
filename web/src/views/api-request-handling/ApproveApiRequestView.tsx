@@ -18,6 +18,7 @@ import { QueuedUrlApiRequest } from "../../api-handler";
 import { visibility } from "../../utilities/visibility";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { uint8ArrayToHexString } from "../../utilities/convert";
+import { DiceKeyViewAutoSized } from "../../views/SVG/DiceKeyView";
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
@@ -153,9 +154,10 @@ export const ApiResultString = <COMMAND extends ApiCalls.Command>(
 
 export const ApiResponsePreview = observer ( <COMMAND extends ApiCalls.Command>(props: {
   command: COMMAND,
+  host: string,
   resultPromise: Promise<ApiCalls.ResponseForCommand<COMMAND>>
 }) => {
-  const {command, resultPromise} = props;
+  const {command, host, resultPromise} = props;
   const [apiResult, setApiResult] = React.useState<ApiCalls.ResponseForCommand<COMMAND> | undefined>(undefined);
   React.useEffect(() => {
     (async () => {
@@ -165,13 +167,22 @@ export const ApiResponsePreview = observer ( <COMMAND extends ApiCalls.Command>(
   }, []);
   if (apiResult == null) return null;
 
-  return (<div>{describeCommandResultType(command)}: { ApiResultString(command, apiResult) }</div>)
+  return (
+    <div style={{display: "flex", flexDirection:"column", alignItems:"center", alignContent: "center"}}>
+      <div style={{maxWidth: "80%", fontFamily: "monospace", borderBottom: "gray solid 1px"}}>
+        { ApiResultString(command, apiResult) }
+      </div>
+      <div style={{color: "rgba(0,0,0,0.666)", fontSize: ".75rem"}}>
+        {describeCommandResultType(command)} to be sent to <HostDescriptorView host={host}/>
+      </div>
+    </div>
+  )
 });
 
 
 const KeyAccessRestrictionsView = observer( ({command, host}: {command: ApiCalls.Command, host: string}) => (
     <div className={styles.request_promise}>
-      <HostDescriptorView host={host}/> will not see your {DICEKEY}. It will only see the {describeCommandResultType(command)}.
+      <HostDescriptorView host={host}/> will not see your {DICEKEY}. They will only receive the {describeCommandResultType(command)}.
     </div>
   )
 );
@@ -185,15 +196,20 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
     queuedApiRequest.sendUserDeclined();
     onApiRequestResolved();
   }
+  const seedString = diceKey?.toSeedString();
 
   const handleApproveRequestButton = () => {
-//    queuedApiRequest.respond(seedString);
+    if (seedString) {
+      queuedApiRequest.respond(seedString);
+    }
     onApiRequestResolved();
   }
 
 
+
   return (
     <div className={Layout.ColumnStretched}>
+      <Spacer/>
       <div className={styles.request_description}>
         <RequestDescriptionView {...{command, host}} />
         <KeyAccessRestrictionsView {...{command, host}} />
@@ -213,35 +229,52 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
           <Spacer/>
         </ContentBox>
       ) : (
-        <ApiResponsePreview
-          command={request.command}
-          resultPromise={queuedApiRequest.getResponse(diceKey.toSeedString()) as Promise<ApiCalls.ResponseForCommand<typeof command>> } />
+        <ContentBox>
+          <DiceKeyViewAutoSized
+            maxHeight="35vh"
+            maxWidth="50vw"
+            obscureAllButCenterDie={true}
+            faces={diceKey.faces}
+          />
+          <ApiResponsePreview
+            host={host}
+            command={request.command}
+            resultPromise={queuedApiRequest.getResponse(diceKey.toSeedString()) as Promise<ApiCalls.ResponseForCommand<typeof command>> } />
+        </ContentBox>
       )}
       <CenteredControls>
         <button className={ButtonsCSS.PushButton} onClick={handleDeclineRequestButton}>Cancel</button>
         <button className={ButtonsCSS.PushButton} style={visibility(diceKey != null)} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</button>
       </CenteredControls>
+      <Spacer/>
     </div>
   )
 })
-addPreview("ApproveApiRequest", () => {
-  const settableDiceKeyState = new DiceKeyState(DiceKey.testExample);
-  const request = new QueuedUrlApiRequest(new URL(
-    `https://dicekeys.app/?${""
-    }command=getSecret${""
-    }&requestId=${"testRequestId" 
-    }&recipe=${ encodeURIComponent("{\"allow\":[{\"host\":\"*.account.microsoft.com\"}],\"testBogusField\": false}") 
-    }&respondTo=${ encodeURIComponent(`https://account.microsoft.com/--derived-secret-api--/`)
-    }${""}`
-  ));
-  return (
-    <ApproveApiRequestView
-      queuedApiRequest={request}
-      onApiRequestResolved={() => alert("request resolved")}
-      settableDiceKeyState={settableDiceKeyState}
-    />
-  );
-});
+
+const createPreview = (name: string, urlString: string, diceKey?: DiceKey) => {
+  addPreview(name, () => {
+    const settableDiceKeyState = new DiceKeyState(diceKey);
+    const request = new QueuedUrlApiRequest(new URL(urlString))
+    return (
+      <ApproveApiRequestView
+        queuedApiRequest={request}
+        onApiRequestResolved={() => alert("request resolved")}
+        settableDiceKeyState={settableDiceKeyState}
+      />
+    );
+  });
+  
+}
+
+
+const msftAccountGetSecretRequestUrl = `https://dicekeys.app/?${""
+  }command=getSecret${""
+  }&requestId=${"testRequestId" 
+  }&recipe=${ encodeURIComponent("{\"allow\":[{\"host\":\"*.account.microsoft.com\"}],\"testBogusField\": false}") 
+  }&respondTo=${ encodeURIComponent(`https://account.microsoft.com/--derived-secret-api--/`)
+  }${""}`
+createPreview("Approve Api Request (no key)", msftAccountGetSecretRequestUrl);
+createPreview("Approve Api Request (key loaded)", msftAccountGetSecretRequestUrl, DiceKey.testExample);
 
 //   async render() {
 //     const {requestContext, appState} = this.options;
