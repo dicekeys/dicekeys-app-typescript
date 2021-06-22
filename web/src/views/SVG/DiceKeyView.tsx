@@ -10,6 +10,7 @@ const diceBoxColor = "#050350"; // must be in hex format as it is parsed as such
 
 export interface DiceKeyRenderOptions {
   highlightFaceAtIndex?: number;
+  obscureAllButCenterDie?: boolean;
   diceBoxColor?: [number, number, number];
   showLidTab?: boolean;
   leaveSpaceForTab?: boolean;
@@ -90,7 +91,18 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
           fill={diceBoxColor}
         />
         {
-          (faces ?? EmptyPartialDiceKey).map( (face, index) => (
+          (faces ?? EmptyPartialDiceKey).map( (face, index) =>
+            (index != 12 && props.obscureAllButCenterDie) ? (
+              <rect 
+
+                x={sizeModel.distanceBetweenDieCenters * (-2 + (index % 5)) -sizeModel.linearSizeOfFace/2}
+                y={sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5)) -sizeModel.linearSizeOfFace/2}
+                width={sizeModel.linearSizeOfFace} height={sizeModel.linearSizeOfFace}
+                rx={sizeModel.linearSizeOfFace/12} ry={sizeModel.linearSizeOfFace/12}
+                fill={ "rgba(96,123,202,.15)"
+              }
+            />
+            ) : (
             <FaceGroupView
               {...(onFaceClicked ? ({onFaceClicked: () => onFaceClicked(index) }) : {})}
               key={index}
@@ -102,8 +114,8 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
                 y: sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5))}
               }
               highlightThisFace={highlightFaceAtIndex == index}
-            />
-          ))
+            />)
+          )
         }
       </g>
     );

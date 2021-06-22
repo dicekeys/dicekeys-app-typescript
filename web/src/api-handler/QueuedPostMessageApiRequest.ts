@@ -54,7 +54,7 @@ export const throwIfHostNotOnAllowList =
     (allowList: WebBasedApplicationIdentity[]): void => {
       if (!isHostOnAllowList(host, allowList)) {
         throw new Exceptions.ClientNotAuthorizedException(
-          `Client '${host}' is not among list of allowed hosts: ${JSON.stringify(allowList)}`
+          `Client '${host}' is not on this list of allowed hosts: ${JSON.stringify(allowList)}`
         );
       }
     }
