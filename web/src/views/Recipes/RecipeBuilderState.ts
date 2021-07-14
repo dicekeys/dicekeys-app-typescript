@@ -72,9 +72,9 @@ export class RecipeBuilderState {
   } )
 
   type: DerivationRecipeType | undefined;
-  setType = action( (type: DerivationRecipeType | undefined) => {
-    this.type = type;
-  } )
+  // setType = action( (type: DerivationRecipeType | undefined) => {
+  //   this.type = type;
+  // } )
 
   //
   editing: boolean = false;

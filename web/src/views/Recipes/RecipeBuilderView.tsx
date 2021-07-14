@@ -247,7 +247,6 @@ export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState
   if (state.type == null) return (<></>);
   return (
     <div className={css.RecipeBuilderBlock}>
-      <SelectAndSaveTableHeaderView {...{state}} />
       <div className={css.RecipeFormFrame}>
         { !state.editing ? (<></>) : (
           <>
@@ -256,6 +255,7 @@ export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState
           </>
         )}
         <RecipeRawJsonView state={state} /> 
+        <SelectAndSaveTableHeaderView {...{state}} />
       </div>
       <div className={css.RecipeAndExplanationBlock} >
         <RecipeDescriptionView state={state} /> 

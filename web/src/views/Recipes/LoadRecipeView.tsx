@@ -20,31 +20,32 @@ export const LoadRecipeView = observer( ({state}: {
   )
   return (
     <div className={css.LoadRecipeView} >
+      (Re)create a &nbsp;
       {/* <div> */}
         <select
           className={css.SelectRecipe}
           // value={ state.recipeIdentifier ?? "" }
-          value={""}
+          value={state.recipeIdentifier ?? (state.type && customRecipeIdentifier({type: state.type})) ?? ""}
           placeholder={"Placeholder"}
           onChange={ (e) => {
             state.loadRecipe(getStoredRecipe(e.currentTarget.value));
             state.setFieldInFocus(undefined);
           }}
         >
-          <option key="none" disabled={true} hidden={true} value="">Open or Create Recipe</option>
+          <option key="none" disabled={true} hidden={true} value="">a secret from ...</option>
           {savedRecipes.length == 0 ? (<></>) : (
-            <optgroup key={"Saved Recipes"} label={"Saved Recipes"}>
+            <optgroup key={"Saved Recipes"} label={"use a saved recipe"}>
               { savedRecipes.map( savedRecipe => (
                 <option key={ savedRecipe.name } value={ savedRecipeIdentifier(savedRecipe)} >{ enhancedStoredRecipeName(savedRecipe) }</option>
               ))}
             </optgroup>
           )}
-          <optgroup key={"Built-in recipes"} label={"Built-in recipes"}>
+          <optgroup key={"Built-in recipes"} label={"use a built-in recipe"}>
             { builtInRecipes.map( template => (
               <option key={template.name} value={builtInRecipeIdentifier(template)} >{ enhancedStoredRecipeName(template) }</option>
             ))}
           </optgroup>
-          <optgroup key={"Custom"} label={"Custom recipe"}>
+          <optgroup key={"Custom"} label={"create a new recipe for a:"}>
             { DerivableObjectNameList.map( (recipeType) => (
               <option key={ recipeType } value={ customRecipeIdentifier({type: recipeType}) } >{ describeRecipeType(recipeType) }</option>
             ))}      
