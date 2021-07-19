@@ -20,6 +20,43 @@ import { Recipe } from "@dicekeys/dicekeys-api-js";
 import { RecipeStore } from "../../state/stores/RecipeStore";
 import { isValidJson } from "../../utilities/json";
 
+
+export enum RecipeEditingMode {
+  NoRecipe,
+
+  /**
+   * When loading a saved recipe, default to no editing.
+   * Transitions:
+   *   -> OnlyEditSequenceNumber, when user hits "edit"
+   */
+  NoEdit,
+
+  /**
+   * When using a built-in template (e.g. a built-in password or the
+   * template for a security-key secret), only allow editing
+   * of the sequence number.
+   * Transitions:
+   *   -> EditWithTemplateOnly, when user hits "edit all fields"
+   */
+  OnlyEditSequenceNumber,
+
+  /**
+   * Allow editing via fields exposed through template, but
+   * not of raw JSON
+   * Transitions:
+   *   -> EditIncludingRawJson, when user hits "edit raw recipe JSON"
+   */
+
+  EditWithTemplateOnly,
+
+  /**
+   * Allow editing via fields exposed through template and
+   * raw JSON.
+   */
+  EditIncludingRawJson,
+}
+
+
 // type EditingMode = "fields" | "json" | undefined;
 
 // interface RecipeBuilderStateConstructorOptions {
@@ -77,21 +114,18 @@ export class RecipeBuilderState {
   // } )
 
   //
-  editing: boolean = false;
-  allowEditingOfRawRecipe: boolean = false;
-
-  setStartEditing = action( () => {
-    this.editing = true;
-    this.setFieldInFocus("purpose");
+  editingMode: RecipeEditingMode = RecipeEditingMode.NoRecipe;
+  
+  setEditingMode = action( (editingMode: RecipeEditingMode) => {
+    this.editingMode = editingMode;
+    if (editingMode === RecipeEditingMode.OnlyEditSequenceNumber) {
+      this.setFieldInFocus("#");
+    } else if (editingMode === RecipeEditingMode.EditWithTemplateOnly) {
+      this.setFieldInFocus("purpose");
+    } else if (editingMode === RecipeEditingMode.EditIncludingRawJson) {
+      this.setFieldInFocus("rawJson");
+    }
   })
-  stopEditing = action( () => {
-    this.editing = false;
-  });
-
-  setAllowEditingOfRawRecipe = action ( (editingRawRecipe: boolean) => {
-    this.allowEditingOfRawRecipe = editingRawRecipe;
-  });
-  toggleAllowEditingOfRawRecipe = () => this.setAllowEditingOfRawRecipe(!this.allowEditingOfRawRecipe);
 
   //////////////////////////////////////////
   // helpToDisplay while building a recipe
@@ -274,21 +308,18 @@ export class RecipeBuilderState {
     this.lengthInCharsState.textValue = lengthInChars != null ? `${lengthInChars}` : ""
   });
 
+
   loadRecipe = action ((loadedRecipe?: LoadedRecipe) => {
     if (loadedRecipe == null) return;
     this.emptyAllRecipeFields();
     this.origin = loadedRecipe.origin;
     this.name = loadedRecipe.name ?? "";
     this.type = loadedRecipe.type;
-    // if (
-    //   loadedRecipe.type === "Password" && loadedRecipe.recipeJson != null &&
-    //   ((JSON.parse(loadedRecipe.recipeJson) as DiceKeysAppSecretRecipe).purpose?.length ?? 0) > 0) {
-    //   // This is a 
-    //   this.fieldsToHide = new Set<RecipeFieldType>(["purpose", "lengthInChars"])
-    // }
-    // Edit if custom recipe
-    this.editing = origin !== "Saved";
-    this.allowEditingOfRawRecipe = false;
     this.setRecipeJson(loadedRecipe.recipeJson);
+    this.setEditingMode(
+      loadedRecipe.origin === "Saved" ? RecipeEditingMode.NoEdit :
+      loadedRecipe.origin === "BuiltIn" ? RecipeEditingMode.OnlyEditSequenceNumber :
+      RecipeEditingMode.EditWithTemplateOnly
+    );
   });
 }

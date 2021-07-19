@@ -39,7 +39,7 @@ export const RecipeDescriptionContentView = observer ( ({state}: {state: RecipeS
     withClauses.push((<> sequence number <span className={css.sequence_number_span}>{recipe["#"]}</span></>));
   }  
   return (
-    <>Creates a {describeRecipeType(type).toLocaleLowerCase()}
+    <>Create a {describeRecipeType(type).toLocaleLowerCase()}
       { !recipe.purpose ? null : (
         <> for the purpose of &lsquo;<span className={css.host_name_span}>{ recipe.purpose }</span>&rsquo;</>
       )}{ !recipe.allow || recipe.allow.length == 0 ? null : (

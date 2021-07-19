@@ -1,7 +1,7 @@
 import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
-import { RecipeFieldFocusState, RecipeBuilderState } from "./RecipeBuilderState";
+import { RecipeFieldFocusState, RecipeBuilderState, RecipeEditingMode } from "./RecipeBuilderState";
 import { NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
 import { RecipeDescriptionView } from "./RecipeDescriptionView";
 import { EnhancedRecipeView } from "./EnhancedRecipeView";
@@ -197,30 +197,29 @@ export const JsonFieldView = observer( ({state}: {
 } ) => {
   const textAreaComponentRef = React.useRef<HTMLTextAreaElement>(null);
   const divAreaComponentRef = React.useRef<HTMLDivElement>(null);
-  const editable = state.editing && state.allowEditingOfRawRecipe;
+  const editable = state.editingMode === RecipeEditingMode.EditIncludingRawJson;
   const { width } = useContainerDimensions(editable ? textAreaComponentRef : divAreaComponentRef)
-
-
   const fieldFocusState = new RecipeFieldFocusState(state, "rawJson");
   return (
     <RecipeFieldView
       focusState={fieldFocusState}
-      toggleEdit={ state.toggleAllowEditingOfRawRecipe }
-      mayEdit={ state.allowEditingOfRawRecipe }
+//      toggleEdit={ state.toggleAllowEditingOfRawRecipe }
+      mayEdit={ editable }
       label="recipe in JSON format">
       <div className={css.FormattedRecipeBox}>
         <div className={css.FormattedRecipeUnderlay} style={{width: `${width ?? 0}px`}} >
           <EnhancedRecipeView recipeJson={state.recipeJson} />
         </div>
         { editable ? (
-          <textarea spellCheck={false}
-          ref={textAreaComponentRef}
-          disabled={!state.editing}
-          className={css.FormattedRecipeTextField}
-          value={state.recipeJson ?? ""}
-          style={{...(state.editing ? {} : {userSelect: "all"})}}
-          onFocus={fieldFocusState.focus}
-          onInput={ e => {state.setRecipeJson(e.currentTarget.value); fieldFocusState.focus(); }} 
+          <textarea
+            spellCheck={false}
+            ref={textAreaComponentRef}
+            disabled={!editable}
+            className={css.FormattedRecipeTextField}
+            value={state.recipeJson ?? ""}
+            style={{...(editable ? {} : {userSelect: "all"})}}
+            onFocus={fieldFocusState.focus}
+            onInput={ e => {state.setRecipeJson(e.currentTarget.value); fieldFocusState.focus(); }} 
           />
         ) : (
           <div
@@ -246,20 +245,22 @@ export const RecipeRawJsonView = observer( ( {state}: {state: RecipeBuilderState
 export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState, hideHeader?: boolean}) => {
   if (state.type == null) return (<></>);
   return (
+    <>
     <div className={css.RecipeBuilderBlock}>
+      <div className={css.RecipeAndExplanationBlock} >
+        <RecipeDescriptionView state={state} /> 
+      </div>
       <div className={css.RecipeFormFrame}>
-        { !state.editing ? (<></>) : (
+        { state.editingMode === RecipeEditingMode.NoEdit ? (<></>) : (
           <>
           <RecipeFieldsHelpView {...{state}} />
           <RecipeBuilderFieldsView state={state} />
           </>
         )}
         <RecipeRawJsonView state={state} /> 
-        <SelectAndSaveTableHeaderView {...{state}} />
-      </div>
-      <div className={css.RecipeAndExplanationBlock} >
-        <RecipeDescriptionView state={state} /> 
       </div>
     </div>
+    <SelectAndSaveTableHeaderView {...{state}} />
+    </>
   );
 });
