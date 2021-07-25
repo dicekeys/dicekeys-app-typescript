@@ -1,7 +1,12 @@
 import { action, makeAutoObservable } from "mobx";
 import { autoSave } from "./core";
 
-export class GlobalSharedToggleState {
+export interface ToggleState {
+  value: boolean;
+  toggle: () => void;
+}
+
+export class GlobalSharedToggleState implements ToggleState {
   value: boolean;
 
   toggle = action ( () => {

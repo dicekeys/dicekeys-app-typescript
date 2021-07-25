@@ -56,7 +56,7 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
       <DiceKeyViewAutoSized maxWidth="80vw" maxHeight="70vh" faces={diceKey.faces}/>
     );
     case Navigation.SelectedDiceKeySubViews.DeriveSecrets: return (
-      <DerivationView seedString={diceKey.toSeedString()} />
+      <DerivationView diceKey={diceKey} />
     );
     case Navigation.SelectedDiceKeySubViews.SeedHardwareKey: return (
       <SeedHardwareKeyView seedString={diceKey.toSeedString()} />

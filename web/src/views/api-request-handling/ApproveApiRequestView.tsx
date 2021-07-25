@@ -233,7 +233,6 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
           <DiceKeyViewAutoSized
             maxHeight="35vh"
             maxWidth="50vw"
-            obscureAllButCenterDie={true}
             faces={diceKey.faces}
           />
           <ApiResponsePreview

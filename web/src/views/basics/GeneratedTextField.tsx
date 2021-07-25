@@ -2,7 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import {Layout} from "../../css";
 import { CopyButtonProps, ObscureButtonProps, CopyButton, ObscureButton } from "./CharButton";
-import { GlobalSharedToggleState } from "../../state";
+import { ToggleState } from "../../state";
 
 const obscuringCharacter = String.fromCharCode(0x25A0); // * ■▓▒░
 
@@ -54,15 +54,15 @@ export const GeneratedTextFieldView  = observer( (props: GeneratedTextFieldViewP
   ));
 
 export const SecretFieldsCommonObscureButton = observer ( () => (
-  <ObscureButton obscureValue={GlobalSharedToggleState.ObscureSecretFields.value} toggleObscureValue={GlobalSharedToggleState.ObscureSecretFields.toggle} />
+  <ObscureButton obscureValue={ToggleState.ObscureSecretFields.value} toggleObscureValue={ToggleState.ObscureSecretFields.toggle} />
 ));
 export const SecretFieldWithCommonObscureState = observer ((props: CopyButtonProps) => (
-  <GeneratedTextFieldView {...props} obscureValue={ GlobalSharedToggleState.ObscureSecretFields.value } />
+  <GeneratedTextFieldView {...props} obscureValue={ ToggleState.ObscureSecretFields.value } />
 ));
 
 
 const GeneratedTextFieldViewWithSharedToggleStatePreCurry = observer (
-  (({toggleState, ...props}: CopyButtonProps & {toggleState: GlobalSharedToggleState.GlobalSharedToggleState}) => (
+  (({toggleState, ...props}: CopyButtonProps & {toggleState: ToggleState.ToggleState}) => (
       <GeneratedTextFieldView {...props}
         obscureValue={ toggleState.value }
         toggleObscureValue={ toggleState.toggle }
@@ -72,14 +72,14 @@ const GeneratedTextFieldViewWithSharedToggleStatePreCurry = observer (
 
 
 export const GeneratedTextFieldViewWithSharedToggleState =
-  ({toggleState, ...defaultProps}: {toggleState: GlobalSharedToggleState.GlobalSharedToggleState} & Partial<GeneratedTextFieldViewProps>) =>
+  ({toggleState, ...defaultProps}: {toggleState: ToggleState.ToggleState} & Partial<GeneratedTextFieldViewProps>) =>
     (props: CopyButtonProps) => (
       <GeneratedTextFieldViewWithSharedToggleStatePreCurry {...{toggleState, ...defaultProps, ...props}} />
     );
 
-export const GeneratedPasswordView = GeneratedTextFieldViewWithSharedToggleState({toggleState: new GlobalSharedToggleState.GlobalSharedToggleState("Password", true)});
-// export const GeneratedSecretView = GeneratedTextFieldViewWithSharedToggleState(new GlobalSharedToggleState("Secret", true));
-export const GeneratedDiceKeySeedFieldView = GeneratedTextFieldViewWithSharedToggleState({toggleState: new GlobalSharedToggleState.GlobalSharedToggleState("DiceKeySeed", true)});
+export const GeneratedPasswordView = GeneratedTextFieldViewWithSharedToggleState({toggleState: ToggleState.ObscureSecretFields});
+// export const GeneratedSecretView = GeneratedTextFieldViewWithSharedToggleState(new ToggleState("Secret", true));
+export const GeneratedDiceKeySeedFieldView = GeneratedTextFieldViewWithSharedToggleState({toggleState: ToggleState.ObscureDiceKey});
 
 const obscureDiceKeyInHumanReadableForm = (s: string) =>
   // The 12 triples before the center face should be obscured
@@ -90,7 +90,7 @@ const obscureDiceKeyInHumanReadableForm = (s: string) =>
   s.slice(12*3 + 2).split("").map( _ => obscuringCharacter).join("");
 
 export const DiceKeyAsSeedView = GeneratedTextFieldViewWithSharedToggleState({
-  toggleState: GlobalSharedToggleState.ObscureDiceKey,
+  toggleState: ToggleState.ObscureDiceKey,
   hideCopyButton: true,
   obscuringFunction: obscureDiceKeyInHumanReadableForm
 });

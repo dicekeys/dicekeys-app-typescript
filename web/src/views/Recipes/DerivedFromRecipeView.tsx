@@ -2,7 +2,7 @@ import React from "react";
 import { observer  } from "mobx-react";
 import css from "./Recipes.module.css";
 import { CharButton, CharButtonToolTip, OptionallyObscuredTextView, SecretFieldsCommonObscureButton } from "../basics";
-import { GlobalSharedToggleState } from "../../state";
+import { ToggleState } from "../../state";
 import { action } from "mobx";
 import { DerivedFromRecipeState, OutputFormats, OutputFormat } from "./DerivedFromRecipeState";
 import { DerivationRecipeType } from "../../dicekeys/StoredRecipe";
@@ -66,10 +66,10 @@ export const DerivedFromRecipeView = observer( ({state}: {state: DerivedFromReci
             <SecretFieldsCommonObscureButton />
             </div>
           { type === "Secret" && state.outputFieldForType[type] === "BIP39" && derivedValue != null ?
-            (<Bip39OutputView bip39String={derivedValue} obscureValue={ GlobalSharedToggleState.ObscureSecretFields.value } />)
+            (<Bip39OutputView bip39String={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />)
             : (
             <div className={css.DerivedValue}>
-              <OptionallyObscuredTextView value={derivedValue} obscureValue={ GlobalSharedToggleState.ObscureSecretFields.value } />
+              <OptionallyObscuredTextView value={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />
             </div>
           )}
         </>

@@ -5,12 +5,13 @@ import { EmptyPartialDiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
 import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox, viewBox } from "../../utilities/bounding-rects";
 import { WithBounds, OptionalAspectRatioProps } from "../../utilities/WithBounds";
+import { ToggleState } from "../../state";
 
 const diceBoxColor = "#050350"; // must be in hex format as it is parsed as such in this code.
 
 export interface DiceKeyRenderOptions {
   highlightFaceAtIndex?: number;
-  obscureAllButCenterDie?: boolean;
+  obscureAllButCenterDie?: ToggleState.ToggleState | boolean;
   diceBoxColor?: [number, number, number];
   showLidTab?: boolean;
   leaveSpaceForTab?: boolean;
@@ -65,16 +66,27 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
       leaveSpaceForTab = showLidTab,
       width: boundsWidth,
       height: boundsHeight,
+      obscureAllButCenterDie = ToggleState.ObscureDiceKey,
+      // If onFaceClick is not defined and obscureAllButCenterDie is,
+      // the when the face is clicked trigger the obscuring toggle
       onFaceClicked,
+      // The rest of the props are for the underlying svg <g> tag
       ...svgGroupProps
     } = props;
 
     const sizeModel = (showLidTab || leaveSpaceForTab) ?
       DiceKeySizeModel.fromBoundsWithTab(props) :
       DiceKeySizeModel.fromBoundsWithoutTab(props);
+
+
+    const obscure: boolean = typeof obscureAllButCenterDie === "object" ?
+      obscureAllButCenterDie?.value :
+      !!obscureAllButCenterDie;
   
     return (
-      <g {...svgGroupProps}>
+      <g {...svgGroupProps}
+        onClick={typeof obscureAllButCenterDie !== "object" ? undefined : obscureAllButCenterDie.toggle}
+        >
         { (!showLidTab) ? null : (
           // Lid tab as circle
           <circle
@@ -92,9 +104,9 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
         />
         {
           (faces ?? EmptyPartialDiceKey).map( (face, index) =>
-            (index != 12 && props.obscureAllButCenterDie) ? (
+            (index != 12 && obscure) ? (
+              // Obscure the DiceKey by rendering empty squares for all faces but the center face
               <rect 
-
                 x={sizeModel.distanceBetweenDieCenters * (-2 + (index % 5)) -sizeModel.linearSizeOfFace/2}
                 y={sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5)) -sizeModel.linearSizeOfFace/2}
                 width={sizeModel.linearSizeOfFace} height={sizeModel.linearSizeOfFace}
@@ -103,19 +115,20 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
               }
             />
             ) : (
-            <FaceGroupView
-              {...(onFaceClicked ? ({onFaceClicked: () => onFaceClicked(index) }) : {})}
-              key={index}
-              face={face}
-              backgroundColor={((!("letter" in face))&&(!("digit" in face))) ? "rgba(96,123,202,1)" : undefined}
-              linearSizeOfFace={sizeModel.linearSizeOfFace}
-              center={{
-                x: sizeModel.distanceBetweenDieCenters * (-2 + (index % 5)),
-                y: sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5))}
-              }
-              highlightThisFace={highlightFaceAtIndex == index}
-            />)
-          )
+              // Render the face
+              <FaceGroupView
+                {...(onFaceClicked ? ({onFaceClicked: () => onFaceClicked(index) }) : {})}
+                key={index}
+                face={face}
+                backgroundColor={((!("letter" in face))&&(!("digit" in face))) ? "rgba(96,123,202,1)" : undefined}
+                linearSizeOfFace={sizeModel.linearSizeOfFace}
+                center={{
+                  x: sizeModel.distanceBetweenDieCenters * (-2 + (index % 5)),
+                  y: sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5))}
+                }
+                highlightThisFace={highlightFaceAtIndex == index}
+              />)
+            )
         }
       </g>
     );

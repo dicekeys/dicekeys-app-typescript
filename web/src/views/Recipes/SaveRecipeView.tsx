@@ -34,6 +34,7 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
     state.editingMode === RecipeEditingMode.OnlyEditSequenceNumber ? RecipeEditingMode.EditWithTemplateOnly :
     state.editingMode === RecipeEditingMode.EditWithTemplateOnly ? RecipeEditingMode.EditIncludingRawJson : undefined;
   
+  
   return (
     <div className={css.SaveRecipeSubRow}>
       {/* <input disabled={!state.editingMode} type="text"
