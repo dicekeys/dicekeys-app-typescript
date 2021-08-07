@@ -55,7 +55,12 @@ First do all the steps of the previous section and then:
 ```
 cd electron
 npm run build
-npm run make
+
+# if you just want the .app 
+npm run pack
+
+# or dmg distribution files
+npm run dist 
 ```
 
 ## Build electron app for Windows/Linux
