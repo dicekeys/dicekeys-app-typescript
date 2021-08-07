@@ -242,11 +242,9 @@ class JsonAnnotationParser {
         const indexOfFieldValueEnd = this.indexIntoSourceJson;
         const asJsonString = this.sourceJson.substr(indexOfFieldValueStart, indexOfFieldValueEnd - indexOfFieldValueStart);
         fields.push({
-//          indexOfFieldValueStart, indexOfFieldValueEnd,
           indexOfLeadingComma, indexOfTrailingComma: undefined,
           asJsonString, value
         });
-        this.skipWhiteSpace();
         if (!this.isAt(",")) {
           break;
         }
@@ -297,7 +295,6 @@ class JsonAnnotationParser {
           value,
           asJsonString
         });
-        this.skipWhiteSpace();
         if (!this.isAt(",")) {
           break;
         }

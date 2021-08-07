@@ -302,6 +302,14 @@
   text-decoration-color: rgb(128, 0, 128, 0.5);
 }
 
+.comma_span, .quote_span, .bracket_span, .brace_span, .colon_span, .reserved_word {
+  color:rgba(0, 48, 128, 1)
+}
+
+.string_value_span, .number_value_span, .boolean_value_span, .null_value_span {
+  color: rgba(0, 0, 0, 1);
+}
+
 .PurposeOrHostNameTextField {
   min-width: 18rem;
 }
@@ -412,6 +420,20 @@
   border-width: 0;
   margin: 0;
   padding: 0;
+}
+
+.MultiLineRecipe {
+  border-width: 0;
+  margin: 0;
+  padding: 0;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.Depth0 {
+  margin-left: 0;
+}
+.Depth1 {
+  margin-left: 1rem;
 }
 
 .FormattedRecipeUnderlay {
