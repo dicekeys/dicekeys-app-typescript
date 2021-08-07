@@ -30,8 +30,16 @@ npm run start
 ```
 
 ## Running electron app
+
+```
+cd electron
+sh build_modules.sh
+npm run start
+```
+or manually
 ```
 cd common
+npm install
 npm run build
 cd ..
 cd web
@@ -43,11 +51,16 @@ npm run start
 ```
 ## Build electron app for macOS
 
-First do all the steps before `npm run start` above
+First do all the steps of the previous section and then:
 ```
 cd electron
 npm run build
-npm run make
+
+# if you just want the .app 
+npm run pack
+
+# or dmg distribution files
+npm run dist 
 ```
 
 ## Build electron app for Windows/Linux

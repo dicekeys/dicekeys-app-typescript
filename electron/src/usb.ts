@@ -3,7 +3,7 @@ import path from "path";
 
 export const isWin = process.platform == "win32"
 export const runUsbCommandsInSeparateProcess = false // a way to test is with macos / linux
-export const isUsbWriterProcess = process.argv[1].indexOf('usb-writer') != -1
+export const isUsbWriterProcess = process.argv[1] && process.argv[1].indexOf('usb-writer') != -1
 export const ipcSocketPath : string = process.platform == "win32" ? path.join('\\\\?\\pipe', process.cwd(), 'dicekeys') : 'usb.sock'
 
 export interface DeviceUniqueIdentifier {
