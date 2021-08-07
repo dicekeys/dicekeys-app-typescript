@@ -30,8 +30,16 @@ npm run start
 ```
 
 ## Running electron app
+
+```
+cd electron
+sh build_modules.sh
+npm run start
+```
+or manually
 ```
 cd common
+npm install
 npm run build
 cd ..
 cd web
@@ -43,7 +51,7 @@ npm run start
 ```
 ## Build electron app for macOS
 
-First do all the steps before `npm run start` above
+First do all the steps of the previous section and then:
 ```
 cd electron
 npm run build
