@@ -21,11 +21,11 @@ module.exports = {
         "extendInfo": {
             "CFBundleURLSchemes": ["dicekeys"]
         },
-        // "hardenedRuntime": true,
-        // "entitlements": "./packaging/entitlements.mac.plist",
-        // "entitlementsInherit": "./packaging/entitlements.mac.plist",
-        // "provisioningProfile": "./DiceKeys_Electron.provisionprofile",
-        // "gatekeeperAssess": false
+        "hardenedRuntime": true,
+        "entitlements": "./packaging/entitlements.mac.plist",
+        "entitlementsInherit": "./packaging/entitlements.mac.plist",
+        "provisioningProfile": "./DiceKeys_Electron.provisionprofile",
+        "gatekeeperAssess": false,
     },
     "directories": {
         "output": "out"
