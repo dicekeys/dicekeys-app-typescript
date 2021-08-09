@@ -98,20 +98,23 @@ class JsonAnnotationParser {
   ) {}
   private indexIntoSourceJson: number = 0;
 
+  private get beyondEnd() {
+    return this.indexIntoSourceJson >= this.sourceJson.length;
+  }
   private get c(): string {
     return this.sourceJson.charAt(this.indexIntoSourceJson);
   }
   private get charCode(): number {
     return this.sourceJson.charCodeAt(this.indexIntoSourceJson);
   }
-  private isAt = (c: string) => this.c === c;
+  private isAt = (c: string) => !this.beyondEnd && this.c === c;
   private advanceIfAt = (c: string) => {
     const isAt = this.isAt(c);
     if (isAt) { this.advance() }
     return isAt;
   }
-  private get atWhiteSpace() { return isWhiteSpaceCharCode(this.charCode); }
-  private get atDigit() { return isDigit(this.c); }
+  private get atWhiteSpace() { return !this.beyondEnd && isWhiteSpaceCharCode(this.charCode); }
+  private get atDigit() { return !this.beyondEnd && isDigit(this.c); }
 
   advance = (numberOfChars: number = 1) => {
     this.indexIntoSourceJson += numberOfChars;
@@ -142,7 +145,7 @@ class JsonAnnotationParser {
   private parseString = (): Omit<ParsedJsonString, keyof ParsedJsonElementCommon> => {
     const indexOfOpeningQuote = this.indexIntoSourceJson;
     this.verifyCharAndAdvance(`"`);
-    while (this.c !== `"`) {
+    while (!this.beyondEnd && this.c !== `"`) {
       // Advance two on a backslash which escapes the next character
       this.advance( this.c === '\\' ? 2 : 1);
       // WILL NOT correctly fail on \u that is not followed by 4 hex digits
@@ -170,12 +173,12 @@ class JsonAnnotationParser {
        // whole portion is just 0
       this.advance()
     } else {
-      while(isDigit(this.c)) { this.advance(); }
+      while(this.atDigit) { this.advance(); }
     }
     // optional fraction
     if (this.advanceIfAt('.')) {
       // there is a fraction
-      while (isDigit(this.c)) { this.advance(); }
+      while (this.atDigit) { this.advance(); }
     }
     // optional exponent
     if (this.c.toLocaleLowerCase() == "e") {
@@ -254,7 +257,7 @@ class JsonAnnotationParser {
         indexOfLeadingComma = this.indexIntoSourceJson;
         this.advance();
         whiteSpacePrecedingElement = this.skipWhiteSpace();
-      } while (true);
+      } while (!this.beyondEnd);
     }
     const indexOfClosingBracket = this.indexIntoSourceJson;
     this.verifyCharAndAdvance(']');
@@ -274,7 +277,7 @@ class JsonAnnotationParser {
     var indexOfLeadingComma: number | undefined;
     let whiteSpacePreceding = this.skipWhiteSpace();
     if (!this.isAt('}')) {
-      while (true) {
+      while (!this.beyondEnd) {
         const fieldName = this.parse(whiteSpacePreceding);
         if (fieldName.type !== "string") {
           throw `Expected field name at character ${this.indexIntoSourceJson}`;
