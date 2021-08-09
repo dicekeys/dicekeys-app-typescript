@@ -10,7 +10,6 @@ import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
 import { ContentBox, Spacer } from "../basics";
 import { DiceKeyViewAutoSized } from "../../views/SVG/DiceKeyView";
 import { ToggleState } from "../../state";
-import { EnhancedRecipeView } from "./EnhancedRecipeView";
 import { MultilineRecipeView } from "./MultilineRecipeView";
 
 interface DerivationViewProps {
@@ -27,22 +26,46 @@ export const DerivationViewWithState = observer( ( {diceKey, recipeBuilderState,
     <Spacer/>
     <div className={css.DerivationView}>
       <RecipeBuilderView state={recipeBuilderState} />
-      <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
-        <DiceKeyViewAutoSized faces={diceKey.faces} maxHeight="16vh" maxWidth="32vw"
-          obscureAllButCenterDie={ToggleState.ObscureDiceKey}
-        />{
-          recipeBuilderState.recipeJson == null ? null : (<>
-            <span style={{"marginLeft": "1vw", marginRight: "1vw", fontSize:"3vw"}}>+</span>
-            <div style={{
-              maxWidth: "40vw",
-              backgroundColor: "rgba(128,128,196,0.10)",
-              padding: "0.35rem",
-              borderRadius: "0.35rem",
-            }}>
-              <MultilineRecipeView state={recipeBuilderState} />
-            </div>
-          </>)
-        }
+      <div style={{display: "flex", flexDirection: "column", alignItems: "flex-start"}}>
+        <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
+          {/* Key */}
+          <span style={{width: "min(22.5vh, 25vw)", height: "min(22.5vh, 25vw)"}}>
+            <DiceKeyViewAutoSized faces={diceKey.faces} maxHeight="22.5vh" maxWidth="25vw"
+              obscureAllButCenterDie={ToggleState.ObscureDiceKey}
+            />
+          </span>
+          {/* Plus sign */}
+          <span style={{width: "5vw", textAlign: "center", fontSize:"3vw"}}>+</span>
+          {/* Recipe */}
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "flex-start",
+            width: "calc(60vw - 0.7rem)",
+            backgroundColor: "rgba(128,128,196,0.10)",
+            padding: "0.35rem",
+            borderRadius: "0.35rem",
+            color: "rgba(0, 0, 0, 0.5)",
+            minHeight: "calc(min(22.5vh, 25vw) - 0.7rem)",
+          }}>
+            <MultilineRecipeView state={recipeBuilderState} />
+          </div>
+        </div>
+        <div style={{display: "flex", flexDirection: "row", alignItems: "flex-start"}}>
+          <div style={{display: "flex", flexDirection: "row", width: "min(22.5vh, 25vw)", justifyContent: "center", alignItems: "baseline", color: "rgba(0, 0, 0, 0.5)"}}>
+            Key
+          </div>
+          <div style={{width: "5vw", textAlign: "center", fontSize: "3vw", paddingTop: "0.2vh"}}>
+            &#8659;
+          </div>
+          <div style={{width: "60vw", textAlign: "center", color: "rgba(0, 0, 0, 0.5)"}}>
+            Recipe
+          </div>
+        </div>
+        {/* <div style={{width: "5vw", paddingLeft:"min(22.5vh, 25vw)", textAlign: "center", fontSize: "3vw"}}>
+          &#8659;
+        </div> */}
       </div>
       <DerivedFromRecipeView state={derivedFromRecipeState} />
     </div>

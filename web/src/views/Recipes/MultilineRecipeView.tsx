@@ -114,34 +114,31 @@ const RecipeJsonFieldView = ({field} : {field: ParsedJsonObjectField}): JSX.Elem
   );
 }
 
-export const MultilineRecipeJsonView = ({recipeJson}: {recipeJson: string}): JSX.Element => {
+export const MultilineRecipeJsonView = ({recipeJson}: {recipeJson?: string}): JSX.Element => {
   try {
-    const recipeObject = parseAnnotatedJson(recipeJson);
-    if (recipeObject.type != "object") {
-      throw "invalid recipe";
+    const recipeObject = recipeJson == null ? undefined : parseAnnotatedJson(recipeJson);
+    if (recipeObject != null && recipeObject.type === "object") {
+      return (
+        <div className={[css.MultiLineRecipe, css.Depth0].join(" ")}>
+          {/* Display the opening brace ("{") and any white space before it */}
+          {recipeObject.leadingWhiteSpace}
+          <span className={[css.brace_span].join(" ")}>{`{`}</span>
+          {recipeObject.fields.map( (field) =>
+            (<RecipeJsonFieldView {...{key: field.name.value,recipeJson, field}} />)
+          )}
+          <span className={[css.brace_span].join(" ")}>{`}`}</span>
+          {recipeObject.trailingWhiteSpace}
+        </div>
+      );
     }
-    return (
-      <div className={[css.MultiLineRecipe, css.Depth0].join(" ")}>
-        {/* Display the opening brace ("{") and any white space before it */}
-        {recipeObject.leadingWhiteSpace}
-        <span className={[css.brace_span].join(" ")}>{`{`}</span>
-        {recipeObject.fields.map( (field) =>
-          (<RecipeJsonFieldView {...{key: field.name.value,recipeJson, field}} />)
-        )}
-        <span className={[css.brace_span].join(" ")}>{`}`}</span>
-        {recipeObject.trailingWhiteSpace}
-      </div>
-    );
-  } catch (e) {
-    return (<>{ recipeJson }</>)
-  }
+  } catch (e) {}
+  return (
+    <div className={[css.MultiLineRecipe, css.Depth0].join(" ")}>
+      { recipeJson || ( <>&nbsp;</>) }
+    </div>
+  );
 }
 
 export const MultilineRecipeView = observer( ( {state}: {state: RecipeBuilderState}) => (
-  <div className={css.RawRecipeView}>
-    {/* <div className={css.RawRecipeLabel}>Recipe:</div> */}
-    <div className={css.RawRecipeValue} >
-      <MultilineRecipeJsonView recipeJson={ state.recipeJson ?? "{}"  }/>
-    </div>
-  </div>
+  <MultilineRecipeJsonView recipeJson={ state.recipeJson  }/>
 ));

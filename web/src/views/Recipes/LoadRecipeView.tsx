@@ -32,7 +32,7 @@ export const LoadRecipeView = observer( ({state}: {
             state.setFieldInFocus(undefined);
           }}
         >
-          <option key="none" disabled={true} hidden={true} value="">a secret from ...</option>
+          <option key="none" disabled={true} hidden={true} value="">secret from ...</option>
           {savedRecipes.length == 0 ? (<></>) : (
             <optgroup key={"Saved Recipes"} label={"use a saved recipe"}>
               { savedRecipes.map( savedRecipe => (

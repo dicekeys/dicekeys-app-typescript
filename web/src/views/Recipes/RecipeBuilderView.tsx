@@ -246,21 +246,21 @@ export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState
   if (state.type == null) return (<></>);
   return (
     <>
-    <div className={css.RecipeBuilderBlock}>
-      <div className={css.RecipeAndExplanationBlock} >
-        <RecipeDescriptionView state={state} /> 
-      </div>
-      <div className={css.RecipeFormFrame}>
-        { state.editingMode === RecipeEditingMode.NoEdit ? (<></>) : (
+      <RecipeDescriptionView state={state} />
+      { state.editingMode === RecipeEditingMode.NoEdit ? (<></>) : (
+      // <div className={css.RecipeBuilderBlock}>
+        <div className={css.RecipeFormFrame}>
           <>
           <RecipeFieldsHelpView {...{state}} />
           <RecipeBuilderFieldsView state={state} />
+          { state.editingMode !== RecipeEditingMode.EditIncludingRawJson ? (<></>) : (
+            <RecipeRawJsonView state={state} />
+          )}
           </>
-        )}
-        <RecipeRawJsonView state={state} /> 
-      </div>
-    </div>
-    <SelectAndSaveTableHeaderView {...{state}} />
+        </div>
+      // </div>
+      ) }
+      <SelectAndSaveTableHeaderView {...{state}} />
     </>
   );
 });

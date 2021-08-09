@@ -124,14 +124,6 @@
   border-bottom-left-radius: 0.5rem;
 }
 
-.RecipeAndExplanationBlock {
-  padding-top: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-}
-
 .RecipeFormFrame {
   background-color: rgba(224, 224, 224, 1);
   border-radius: 0.5rem;
@@ -139,6 +131,8 @@
   flex-direction: column;
   align-items: center;
   padding: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .RecipeHelpBlock {
@@ -259,9 +253,12 @@
 }
 
 .RecipeDescriptionView {
-  margin-top: 0.25rem;
-  font-size: 1rem;
   display: block;
+  align-self: flex-start;
+  background-color: rgba(238, 238, 255, 1);
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 1rem;
 }
 
 
@@ -315,7 +312,6 @@
 }
 
 .DerivedValueBlock {
-  padding-top: 1rem;
   min-height: 15vh;
   min-width: 60vw;
   flex-direction: column;
