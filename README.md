@@ -150,6 +150,18 @@ and with tsc, and this isn't working well in the beta of parcel 2.
 ### Electron Version locking
 Electron version has a dependency on `node-hid` and as a result Electron version must first be supported by `node-hid`.
 
+### macOS - Supporting Associated Domains
+Associated domains establish a secure association between domains and Dicekeys app.
+
+See https://developer.apple.com/documentation/xcode/supporting-associated-domains
+
+_Electron app with a custom entitlements file not managed by XCode requires some extra tweaks that are documented in the entitlements file._
+
+Useful resources:
+- https://github.com/electron-userland/electron-builder/issues/4040
+- https://twitter-archive-eraser.medium.com/notarize-electron-apps-7a5f988406db
+- https://github.com/electron-userland/electron-builder/issues/3940
+
 ### Development mode
 #### Refresh HTML contents
 

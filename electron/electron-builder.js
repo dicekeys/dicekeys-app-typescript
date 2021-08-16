@@ -22,6 +22,9 @@ module.exports = {
             "CFBundleURLSchemes": ["dicekeys"]
         },
         "hardenedRuntime": true,
+        // Full specification is required as this file will replace the one from electron-builder.
+        // The equivalent XCode project can have fewer options but this won't work here as XCode adds required fields at
+        // compile time eg. com.apple.application-identifier
         "entitlements": "./packaging/entitlements.mac.plist",
         "entitlementsInherit": "./packaging/entitlements.mac.plist",
         "provisioningProfile": "./DiceKeys_Electron.provisionprofile",
