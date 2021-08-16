@@ -151,11 +151,9 @@ and with tsc, and this isn't working well in the beta of parcel 2.
 Electron version has a dependency on `node-hid` and as a result Electron version must first be supported by `node-hid`.
 
 ### macOS - Supporting Associated Domains
-Associated domains establish a secure association between domains and Dicekeys app.
+Associated Domains ([see Apple's developer documentation](https://developer.apple.com/documentation/xcode/supporting-associated-domains)) establish a secure association between the domain(s) associated with the DiceKeys app (dicekeys.app) and this application package.
 
-See https://developer.apple.com/documentation/xcode/supporting-associated-domains
-
-_Electron app with a custom entitlements file not managed by XCode requires some extra tweaks that are documented in the entitlements file._
+_To support associated domains, this electron app uses a custom entitlements file ([electron/packaging/entitlements.mac.plist](./electron/packaging/entitlements.mac.plist)) which is not managed by XCode.  That file includes documentation on entitlement settings required by this application to run without crashing._
 
 Useful resources:
 - https://github.com/electron-userland/electron-builder/issues/4040
