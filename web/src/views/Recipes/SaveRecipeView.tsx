@@ -24,16 +24,10 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
       runInAction( () => {
         RecipeStore.addRecipe(storedRecipe);
         state.setOrigin("Saved");
-        state.setEditingMode(RecipeEditingMode.NoEdit);
+        state.toggleEditingMode(RecipeEditingMode.NoEdit);
       });
     }
-  }
-
-  const nextEditingMode =
-    state.editingMode === RecipeEditingMode.NoEdit ? RecipeEditingMode.OnlyEditSequenceNumber :
-    state.editingMode === RecipeEditingMode.OnlyEditSequenceNumber ? RecipeEditingMode.EditWithTemplateOnly :
-    state.editingMode === RecipeEditingMode.EditWithTemplateOnly ? RecipeEditingMode.EditIncludingRawJson : undefined;
-  
+  } 
   
   return (
     <div className={css.SaveRecipeSubRow}>
@@ -55,15 +49,6 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
         onClick={saveOrDelete}
         >{state.savedRecipeIdentifer ? "delete" : "save"}
       </button>
-      { nextEditingMode == null ? undefined : (
-       <button
-          style={visibility(state.editingMode !== RecipeEditingMode.EditIncludingRawJson)}
-          onClick={() => state.setEditingMode(nextEditingMode)}
-        >{ nextEditingMode === RecipeEditingMode.OnlyEditSequenceNumber ? "edit" :
-          nextEditingMode === RecipeEditingMode.EditWithTemplateOnly ? "edit all fields" :
-          nextEditingMode === RecipeEditingMode.EditIncludingRawJson ? "edit raw recipe JSON" : ""
-        }</button>
-      )}
     </div>
     )
   }

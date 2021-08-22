@@ -31,14 +31,6 @@ export enum RecipeEditingMode {
    */
   NoEdit,
 
-  /**
-   * When using a built-in template (e.g. a built-in password or the
-   * template for a security-key secret), only allow editing
-   * of the sequence number.
-   * Transitions:
-   *   -> EditWithTemplateOnly, when user hits "edit all fields"
-   */
-  OnlyEditSequenceNumber,
 
   /**
    * Allow editing via fields exposed through template, but
@@ -84,23 +76,12 @@ export class RecipeFieldFocusState {
  * State for building and displaying recipes
  */
 export class RecipeBuilderState {
-//  fieldsToHide?: Set<RecipeFieldType>;
   fieldsToMakeNonEditableByDefault?: Set<RecipeFieldType>;
   constructor(loadedRecipe?: LoadedRecipe) {
     makeAutoObservable(this);
     if (loadedRecipe != null) {
       this.loadRecipe(loadedRecipe);
     }
-//    this.fieldsToHide = fieldsToHide;
-//    this.fieldsToMakeNonEditableByDefault = fieldsToMakeNonEditableByDefault;
-    // this.type = type;
-    // this.purposeField = purpose;
-    // this.editing = editing;
-//    this.purposeFieldNonEditableByDefault = purposeFieldNonEditableByDefault;
-//    this._mayEditPurpose = this.origin != "BuiltIn"; // !fieldsToMakeNonEditableByDefault?.has("purpose");
-    // if (purpose) {
-    //   this.setRecipeJson(addPurposeToRecipeJson(undefined, purpose));
-    // }
   }
 
   origin: LoadedRecipeOrigin | undefined;
@@ -109,23 +90,24 @@ export class RecipeBuilderState {
   } )
 
   type: DerivationRecipeType | undefined;
-  // setType = action( (type: DerivationRecipeType | undefined) => {
-  //   this.type = type;
-  // } )
-
-  //
   editingMode: RecipeEditingMode = RecipeEditingMode.NoRecipe;
-  
+
   setEditingMode = action( (editingMode: RecipeEditingMode) => {
-    this.editingMode = editingMode;
-    if (editingMode === RecipeEditingMode.OnlyEditSequenceNumber) {
-      this.setFieldInFocus("#");
-    } else if (editingMode === RecipeEditingMode.EditWithTemplateOnly) {
+    if (this.editingMode === editingMode) {
+      this.editingMode = RecipeEditingMode.NoEdit;
+    } else {
+      this.editingMode = editingMode;
+    }
+    if (editingMode === RecipeEditingMode.EditWithTemplateOnly) {
       this.setFieldInFocus("purpose");
     } else if (editingMode === RecipeEditingMode.EditIncludingRawJson) {
       this.setFieldInFocus("rawJson");
     }
   })
+
+  
+  toggleEditingMode = (editingMode: RecipeEditingMode) =>
+    this.setEditingMode(this.editingMode === editingMode ? RecipeEditingMode.NoEdit : editingMode);
 
   //////////////////////////////////////////
   // helpToDisplay while building a recipe
@@ -154,7 +136,7 @@ export class RecipeBuilderState {
     return !!this.fieldsToMakeNonEditableByDefault?.has("lengthInChars");
   }
   public get lengthInCharsFieldHide(): boolean {
-    return this.origin !== "Template";
+    return false;// this.origin !== "Template";
   }
   get mayEditLengthInChars(): boolean { return this.type === "Password" }
   lengthInCharsState = new NumericTextFieldState({minValue: 16, incrementBy: 4, defaultValue: 64, onChanged: (lengthInChars) => {
@@ -194,7 +176,7 @@ export class RecipeBuilderState {
     return !!this.fieldsToMakeNonEditableByDefault?.has("purpose");
   }
   public get purposeFieldHide(): boolean {
-    return this.origin !== "Template";
+    return false; // this.origin !== "Template";
   }
   private _mayEditPurpose: boolean = true;
   get mayEditPurpose(): boolean { return this._mayEditPurpose };
@@ -317,9 +299,9 @@ export class RecipeBuilderState {
     this.type = loadedRecipe.type;
     this.setRecipeJson(loadedRecipe.recipeJson);
     this.setEditingMode(
-      loadedRecipe.origin === "Saved" ? RecipeEditingMode.NoEdit :
-      loadedRecipe.origin === "BuiltIn" ? RecipeEditingMode.OnlyEditSequenceNumber :
-      RecipeEditingMode.EditWithTemplateOnly
+      loadedRecipe.origin === "Saved" || loadedRecipe.origin === "BuiltIn" ?
+        RecipeEditingMode.NoEdit :
+        RecipeEditingMode.EditWithTemplateOnly
     );
   });
 }

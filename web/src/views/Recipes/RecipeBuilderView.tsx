@@ -241,24 +241,15 @@ export const RecipeRawJsonView = observer( ( {state}: {state: RecipeBuilderState
 
 
 export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState, hideHeader?: boolean}) => {
-  if (state.type == null) return (<></>);
   return (
-    <>
-      {/* <RecipeDescriptionView state={state} /> */}
-      { state.editingMode === RecipeEditingMode.NoEdit || state.editingMode === RecipeEditingMode.OnlyEditSequenceNumber ? (<></>) : (
-      // <div className={css.RecipeBuilderBlock}>
-        <div className={css.RecipeFormFrame}>
-          <>
-          <RecipeFieldsHelpView {...{state}} />
-          <RecipeBuilderFieldsView state={state} />
-          { state.editingMode !== RecipeEditingMode.EditIncludingRawJson ? (<></>) : (
-            <RecipeRawJsonView state={state} />
-          )}
-          </>
-        </div>
-      // </div>
-      ) }
-      {/* <SelectAndSaveTableHeaderView {...{state}} /> */}
-    </>
+    <div className={css.RecipeFormFrame}
+      style={state.type != null && state.editingMode !== RecipeEditingMode.NoEdit ? {} : {visibility: "hidden"}}
+    >
+      <RecipeFieldsHelpView {...{state}} />
+      <RecipeBuilderFieldsView state={state} />
+      { state.editingMode !== RecipeEditingMode.EditIncludingRawJson ? (<></>) : (
+        <RecipeRawJsonView state={state} />
+      )}
+    </div>
   );
 });

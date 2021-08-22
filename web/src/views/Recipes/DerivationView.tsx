@@ -13,6 +13,7 @@ import { ToggleState } from "../../state";
 import { MultilineRecipeView } from "./MultilineRecipeView";
 import { RecipeDescriptionContentView } from "./RecipeDescriptionView";
 import { HoverState } from "../../state/reusable/HoverState";
+import { describeRecipeType } from "./DescribeRecipeType";
 
 interface DerivationViewProps {
   diceKey: DiceKey;
@@ -43,6 +44,29 @@ const RecipeEditStateButton = observer( ({selected, children, ...buttonArgs}: {
 
 type EditButtons = "Increment" | "Decrement" | "EditFields" | "EditRawJson";
 
+export const EditButtonHoverTextView = observer(
+  ({editButtonsHoverState, recipeBuilderState}: {
+    editButtonsHoverState: HoverState<EditButtons>,
+    recipeBuilderState: RecipeBuilderState,
+  }) => {
+    switch(editButtonsHoverState.state) {
+      case "Increment":
+        return recipeBuilderState.sequenceNumber! > 1 ?
+        (<>Increment the sequence number to change the {describeRecipeType(recipeBuilderState.type)}</>):
+        (<>Add a sequence number to create a different {describeRecipeType(recipeBuilderState.type)}</>);
+      case "Decrement":
+        return recipeBuilderState.sequenceNumber! > 2 ?
+        (<>Decrement the sequence number</>) :
+        recipeBuilderState.sequenceNumber! == 2 ?
+        (<>Remove the sequence number</>) : (<>&nbsp;</>);
+      case "EditFields":
+        return (<>Edit the fields of this recipe</>)
+      case "EditRawJson":
+        return (<>Edit this recipe's raw JSON.</>)
+        default: return (<>&nbsp;</>);
+    }
+});
+
 export const DerivationViewWithState = observer( ( {
   diceKey, recipeBuilderState, derivedFromRecipeState, editButtonsHoverState}: {
   diceKey: DiceKey,
@@ -51,11 +75,10 @@ export const DerivationViewWithState = observer( ( {
   editButtonsHoverState: HoverState<EditButtons>
 }) => (
   <ContentBox>
-    {/* <LoadRecipeView state={recipeBuilderState} /> */}
     <Spacer/>
-    <div>{editButtonsHoverState.state ?? "no hover state"}</div>
     <div className={css.DerivationView}>
       <RecipeBuilderView state={recipeBuilderState} />
+      <div><EditButtonHoverTextView {...{editButtonsHoverState, recipeBuilderState}}/></div>
       <div style={{display: "flex", flexDirection: "column", alignItems: "flex-start"}}>
         <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
           {/* Key */}
@@ -85,19 +108,23 @@ export const DerivationViewWithState = observer( ( {
                 alignItems: "flex-start"
             }}>
               <RecipeEditStateButton
+                hidden={recipeBuilderState.type == null || recipeBuilderState.sequenceNumber == null}
                 {...editButtonsHoverState.hoverStateActions("Decrement")}
                 onClick={recipeBuilderState.sequenceNumberState.decrement}>-</RecipeEditStateButton>
               <RecipeEditStateButton
+                hidden={recipeBuilderState.type == null}
                 {...editButtonsHoverState.hoverStateActions("Increment")}
                 onClick={recipeBuilderState.sequenceNumberState.increment}>+</RecipeEditStateButton>
               <RecipeEditStateButton
+                hidden={recipeBuilderState.type == null}
                 {...editButtonsHoverState.hoverStateActions("EditFields")}
                 selected={recipeBuilderState.editingMode === RecipeEditingMode.EditWithTemplateOnly}
-                onClick={()=>{recipeBuilderState.setEditingMode(RecipeEditingMode.EditWithTemplateOnly);}} style={{textDecoration: "underline"}}>&nbsp;&#9998;&nbsp;</RecipeEditStateButton>
+                onClick={()=>{recipeBuilderState.toggleEditingMode(RecipeEditingMode.EditWithTemplateOnly);}} style={{textDecoration: "underline"}}>&nbsp;&#9998;&nbsp;</RecipeEditStateButton>
               <RecipeEditStateButton
+                hidden={recipeBuilderState.type == null}
                 {...editButtonsHoverState.hoverStateActions("EditRawJson")}
                 selected={recipeBuilderState.editingMode === RecipeEditingMode.EditIncludingRawJson}
-                onClick={()=>{recipeBuilderState.setEditingMode(RecipeEditingMode.EditIncludingRawJson);}
+                onClick={()=>{recipeBuilderState.toggleEditingMode(RecipeEditingMode.EditIncludingRawJson);}
               }>{`{`}&#9998;{`}`}</RecipeEditStateButton>
               {/* <select style={{
               border: "none"
