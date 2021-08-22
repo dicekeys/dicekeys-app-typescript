@@ -11,7 +11,7 @@ const RecipeJsonAllowEntryFieldView = ({field} : {field: ParsedJsonObjectField})
   return (<>
     {name.leadingWhiteSpace}
     <span className={[css.quote_span].join(" ")}>{`"`}</span>
-    <span className={[css.string_value_span].join(" ")}>{
+    <span className={[css.string_field__span].join(" ")}>{
         name.value
     }</span>
     <span className={[css.quote_span].join(" ")}>{`"`}</span>
@@ -100,7 +100,7 @@ const RecipeJsonFieldView = ({field} : {field: ParsedJsonObjectField}): JSX.Elem
     <div className={[css.Depth1].join(" ")}>
       { field.name.leadingWhiteSpace}
       <span className={[css.quote_span].join(" ")}>"</span>
-      <span className={[css.string_value_span].join(" ")}>{field.name.value}</span>
+      <span className={[css.string_field_name_span].join(" ")}>{field.name.value}</span>
       <span className={[css.quote_span].join(" ")}>"</span>
       { field.name.trailingWhiteSpace }
       <span className={[css.colon_span].join(" ")}>:</span>

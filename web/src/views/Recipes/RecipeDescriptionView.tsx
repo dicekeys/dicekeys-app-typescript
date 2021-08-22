@@ -20,7 +20,7 @@ const HostNameView = ({host}: {host: string}) => (
 
 export const RecipeDescriptionContentView = observer ( ({state}: {state: RecipeState}) => {
   const {type, recipeJson, recipeIsValid} = state;
-  if (type == null || recipeJson == null || !recipeIsValid) return (<i>Enter a purpose for the recipe.</i>);
+  if (type == null || recipeJson == null || !recipeIsValid) return null;
   let recipe: DiceKeysAppSecretRecipe | undefined = (() => {
     try {
       return JSON.parse(recipeJson ?? "{}") as DiceKeysAppSecretRecipe;

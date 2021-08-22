@@ -3,10 +3,8 @@ import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeFieldFocusState, RecipeBuilderState, RecipeEditingMode } from "./RecipeBuilderState";
 import { NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
-import { RecipeDescriptionView } from "./RecipeDescriptionView";
 import { EnhancedRecipeView } from "./EnhancedRecipeView";
 import { describeRecipeType } from "./DescribeRecipeType";
-import { SelectAndSaveTableHeaderView } from "./SelectAndSaveTableHeaderView";
 import { getRegisteredDomain } from "../../domains/get-registered-domain";
 import { useContainerDimensions } from "../../utilities/react-hooks/useContainerDimensions";
 import { CharButton } from "../../views/basics";
@@ -246,8 +244,8 @@ export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState
   if (state.type == null) return (<></>);
   return (
     <>
-      <RecipeDescriptionView state={state} />
-      { state.editingMode === RecipeEditingMode.NoEdit ? (<></>) : (
+      {/* <RecipeDescriptionView state={state} /> */}
+      { state.editingMode === RecipeEditingMode.NoEdit || state.editingMode === RecipeEditingMode.OnlyEditSequenceNumber ? (<></>) : (
       // <div className={css.RecipeBuilderBlock}>
         <div className={css.RecipeFormFrame}>
           <>
@@ -260,7 +258,7 @@ export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState
         </div>
       // </div>
       ) }
-      <SelectAndSaveTableHeaderView {...{state}} />
+      {/* <SelectAndSaveTableHeaderView {...{state}} /> */}
     </>
   );
 });

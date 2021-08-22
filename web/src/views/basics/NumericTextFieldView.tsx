@@ -22,14 +22,16 @@ export class NumericTextFieldState {
     const numericValue = parseInt(this.textValue);
     return numericValue >= this.minValue ? numericValue : undefined;
   }
-  get decrement(): number | undefined {
-    return this.numericValue != null && (this.numericValue - this.incrementBy) > this.minValue ?
+  get decrementedValue(): number | undefined {
+    return this.numericValue != null && (this.numericValue - this.incrementBy) >= this.minValue ?
       (this.numericValue - this.incrementBy) :
       undefined;
   }
-  get increment(): number {
+  get incrementedValue(): number {
     return this.numericValue != null ? (this.numericValue + this.incrementBy) : (this.defaultValue ?? this.minValue);
   }
+  increment = () => this.setValue(this.incrementedValue);
+  decrement = () => this.setValue(this.decrementedValue);
 
   public readonly minValue;
   private defaultValue?: number;
@@ -94,12 +96,12 @@ export const NumberPlusMinusView = observer( (props: CommonProps & {
     state.setValue(newValue);
     onFocusedOrChanged?.()    
   });
-  const subtractOne = () => setValue(state.decrement);
-  const addOne = () => setValue(state.increment);
+  const subtractOne = () => setValue(state.decrementedValue);
+  const addOne = () => setValue(state.incrementedValue);
   return (
     <div className={css.hstack}>
       <CharButton hidden={state.numericValue == null} onClick={ subtractOne  }
-        >-<CharButtonToolTip>- 1 = {state.decrement ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
+        >-<CharButtonToolTip>- 1 = {state.decrementedValue ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
       <NumericTextField
         {...commonProps}
         className={ textFieldClassName }
@@ -127,6 +129,6 @@ export const NumberPlusMinusView = observer( (props: CommonProps & {
         } }
       />
       <CharButton onClick={ addOne }
-      >+<CharButtonToolTip>+ 1 = { state.increment }</CharButtonToolTip></CharButton>
+      >+<CharButtonToolTip>+ 1 = { state.incrementedValue }</CharButtonToolTip></CharButton>
     </div>
 )});

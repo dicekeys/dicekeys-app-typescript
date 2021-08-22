@@ -2,14 +2,44 @@
   margin: 0.25rem;
 }
 
-.SelectRecipe {
+.RecipeEditorButton, .RecipeEditorButtonActive {
+  border: none;
+  /* background-color: red; */
+  background-color: rgba(255, 255, 255, 0.666);
+  margin-top: 0px;
+  padding-top: 0px;
+  margin-right: 0.2rem;
+  margin-left: 0px;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  width: 2.5rem;
+  height: 1.5rem;
+  vertical-align: middle;
+}
+
+.RecipeEditorButtonActive {
+  background-color: rgba(128, 128, 128, 0.666);
+}
+
+.SelectRecipe, .SelectRecipeNoneSelectedYet {
   align-self: flex-start;
   border: none;
-  background-color: rgba(238, 238, 255, 1);
+  outline: 0px;
+  /* background-color: rgba(238, 238, 255, 1); */
   padding: 0.25rem;
-  border-radius: 0.5rem;;
+  border-radius: 0.5rem;
   /* border-top-left-radius: 0.5rem;
   border-top-right-radius: 0.5rem; */
+  color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(255, 254, 171, 0.1);
+  font-family: sans-serif;
+}
+
+.SelectRecipeNoneSelectedYet {
+  background-color: rgba(255, 254, 171, 1);
+  color: rgba(0, 0, 0, 0.75);
 }
 
 .DerivationView {
@@ -300,11 +330,15 @@
 }
 
 .comma_span, .quote_span, .bracket_span, .brace_span, .colon_span, .reserved_word {
-  color:rgba(0, 48, 128, 1)
+  color:rgba(0, 48, 128, 0.5)
 }
 
 .string_value_span, .number_value_span, .boolean_value_span, .null_value_span {
   color: rgba(0, 0, 0, 1);
+}
+
+.string_field_name_span {
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .PurposeOrHostNameTextField {
