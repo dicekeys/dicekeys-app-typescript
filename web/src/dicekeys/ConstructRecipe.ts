@@ -1,4 +1,4 @@
-import {Recipe, WebBasedApplicationIdentity} from "@dicekeys/dicekeys-api-js"
+import {Recipe} from "@dicekeys/dicekeys-api-js"
 import { modifyJson } from "../utilities/modifyJson";
 import { getRegisteredDomain } from "../domains/get-registered-domain";
 
@@ -101,10 +101,12 @@ export const recipeJsonToHosts = (recipeJson: string | undefined): string[] => {
   .sort();
 }
 
-export const purposeToListOfHosts = (purposeField: string | undefined): string[] | undefined => {
-  if (purposeField == null) return;
+export const parseCommaSeparatedListOfHosts = (
+  commaSeparatedListOfHosts: string | undefined
+): string[] | undefined => {
+  if (commaSeparatedListOfHosts == null) return;
   try {
-    const hosts = (purposeField).split(",")
+    const hosts = (commaSeparatedListOfHosts).split(",")
       .map( i => {
         const potentialHostName = i.trim();
         if (potentialHostName.length == 0) return;
@@ -123,15 +125,6 @@ export const purposeToListOfHosts = (purposeField: string | undefined): string[]
   } catch {}
   return undefined;
 }
-
-export const allowFieldToHostList = (allow: WebBasedApplicationIdentity[]) =>
-  allow.map( ({host}) => host.trim()).sort()
-
-export const hostsToPurpose = (hosts: string[]) =>
-  hosts.join(", ");
-
-export const allowFieldToPurpose = (allow: WebBasedApplicationIdentity[]) =>
-  hostsToPurpose(allowFieldToHostList(allow));
 
 export const getRecipeJson = (spec: AddableRecipeFields, templateRecipeJson?: string): string | undefined => {
   const {hosts, purpose, lengthInBytes, lengthInChars, sequenceNumber} = spec;
@@ -158,8 +151,8 @@ export const getRecipeJson = (spec: AddableRecipeFields, templateRecipeJson?: st
 export const recipeJsonToAddableFields = (recipeJson: string): AddableRecipeFields => {
   try {
     const {allow, ...parsed} = JSON.parse(recipeJson) as AddableRecipeFields & DiceKeysAppSecretRecipe;
-    if (allow != null) {
-      parsed.hosts = allowFieldToHostList(allow);
+    if (allow != null && allow.length > 0) {
+      parsed.hosts = allow.map( ({host}) => host.trim()).sort()
       // Current constructor allows either purpose or hosts, but not both
       delete parsed.purpose;
     }
@@ -173,17 +166,17 @@ export const recipeJsonToAddableFields = (recipeJson: string): AddableRecipeFiel
   }
 }
 
-export const isRecipeJsonConstructableFromFields = (recipeJson: string): boolean => {
-  if (recipeJson = "{}" || recipeJson == "") return true;
-  try {
-    const {allow, ...parsed} = JSON.parse(recipeJson) as AddableRecipeFields & DiceKeysAppSecretRecipe;
-    if (allow != null) {
-      parsed.hosts = allowFieldToHostList(allow);
-      // Current constructor allows either purpose or hosts, but not both
-      delete parsed.purpose;
-    }
-    return getRecipeJson(parsed) === recipeJson;
-  } catch {
-    return false;
-  }
-}
+// export const isRecipeJsonConstructableFromFields = (recipeJson: string): boolean => {
+//   if (recipeJson = "{}" || recipeJson == "") return true;
+//   try {
+//     const {allow, ...parsed} = JSON.parse(recipeJson) as AddableRecipeFields & DiceKeysAppSecretRecipe;
+//     if (allow != null) {
+//       parsed.hosts = allowFieldToHostList(allow);
+//       // Current constructor allows either purpose or hosts, but not both
+//       delete parsed.purpose;
+//     }
+//     return getRecipeJson(parsed) === recipeJson;
+//   } catch {
+//     return false;
+//   }
+// }

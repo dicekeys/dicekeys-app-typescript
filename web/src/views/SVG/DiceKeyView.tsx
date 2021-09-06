@@ -107,6 +107,7 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
             (index != 12 && obscure) ? (
               // Obscure the DiceKey by rendering empty squares for all faces but the center face
               <rect 
+                key={index}
                 x={sizeModel.distanceBetweenDieCenters * (-2 + (index % 5)) -sizeModel.linearSizeOfFace/2}
                 y={sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5)) -sizeModel.linearSizeOfFace/2}
                 width={sizeModel.linearSizeOfFace} height={sizeModel.linearSizeOfFace}

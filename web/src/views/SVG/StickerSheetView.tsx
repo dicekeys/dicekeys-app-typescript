@@ -64,6 +64,7 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & Bo
     return (
       <g {...svgGroupProps}>/* Sticker Sheet */
         <rect
+          key="Sheet"
           x={left} y={top}
           width={width} height={height}
           rx={radius} ry={radius}

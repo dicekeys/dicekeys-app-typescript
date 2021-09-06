@@ -1,8 +1,8 @@
 import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
-import { RecipeBuilderView } from ".";
-import { RecipeBuilderState, RecipeEditingMode } from "./RecipeBuilderState";
+//import { RecipeBuilderView } from ".";
+import { RecipeBuilderState, RecipeEditingMode, WizardStep } from "./RecipeBuilderState";
 import { SelectRecipeToLoadView } from "./LoadRecipeView";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
@@ -13,26 +13,190 @@ import { ToggleState } from "../../state";
 import { MultilineRecipeView } from "./MultilineRecipeView";
 import { RecipeDescriptionContentView } from "./RecipeDescriptionView";
 import { HoverState } from "../../state/reusable/HoverState";
-import { describeRecipeType } from "./DescribeRecipeType";
+import { RecipeBuilderView } from "./RecipeBuilderView";
 
 interface DerivationViewProps {
   diceKey: DiceKey;
 }
 
 /**
- *  [Add|Edit] sequence number  (sets to 2 if not set, if changed to 1 while in this mode, go back to no sequence number)
- *  Edit all fields (current editor)
- *  Edit raw JSON
- *  
  * 
- *    - +     sequence number
- *    pencil  edit raw fields 
- *    {}  edit raw json
+ * Step 0:
+//  *    Create a secret from:
+//  *      Re-create a secret from a saved recipe
+//  *        [list]
+//  *      Create a new secret from a built-in recipe
+// *         [list]
+//  *      Create a new secret without a built-in-recipe
+//  *        [secret type]
+ * 
+ * Step 1:
+ *    Recipe type determined, but 
+ *    Is this {recipeBuilderState.typeNameLc} for a website or service with a web address?
+ *      [yes]  [no]
+ * 
+ *    [Skip these steps and let me enter a raw recipe string]
+ *
+ * Step 2:
+ *    Choose purpose or domain
+ * 
+ * Step 3:
+ *    Editor turns on and other fields appear
+ * 
+ * Step 4:
+ *    Raw JSON activated?
+ *
+ * Is this <x> for a web page or service with a web address? (default yes for password)
+ * Paste the web page's link from your browser's address bar or enter the domain name (e.g., https://example.com or just example.com).
+ *     set declined flag
+ * For site:
+ * For purpose:
+
+* Unique purpose
+ * 
+ * List fields vertically
+ * 
+ * Optional fields: put in explanation and use "add" button
+ *    [add] to limit the number of characters
+ *    [add] to set change the length of the secret (current 32 bytes)
+ *    [add] a sequence number if you need another []
+ *
  * 
  */
 
+const InlineButton = observer( ({selected, children, ...buttonArgs}: {
+  selected?: boolean,
+} & React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => 
+  <button {...buttonArgs}
+    className={selected ? css.RecipeEditorButtonActive : css.RecipeEditorButton}
+  >{children}</button>
+);
+
+export const DomainOrPurposeQuestionView = observer ( ({state}: {
+  state: RecipeBuilderState}) => {
+    return (<div>
+      Protect this {state.typeNameLc} by limiting which website or application can request it?
+      <InlineButton
+        selected={state.usePurposeOrAllow === "allow"}
+        onClick={state.setUsePurposeOrAllowFn("allow")}
+      >yes</InlineButton>
+      <InlineButton
+        selected={state.usePurposeOrAllow === "purpose"}
+        onClick={state.setUsePurposeOrAllowFn("purpose")}
+      >no</InlineButton>
+    </div>);
+});
+
+export const AssociatedDomainsTextFieldView = observer( ({state}: {
+  state: RecipeBuilderState,
+} ) => {
+  return (
+    <input type="text"
+      className={css.PurposeOrHostNameTextField}
+      id={"AssociatedDomains"}
+      spellCheck={false}
+      size={40}
+      value={state.associatedDomainsTextField ?? ""}
+      placeholder="example.com"
+      onInput={ e => {state.setAssociatedDomainsTextField(e.currentTarget.value); }} 
+      onPaste={ state.pasteIntoAssociatedDomainsTextField }
+      onKeyUp={ e => {if (e.key === "Enter" && (state.hosts?.length ?? 0) > 0) { 
+        state.setPurposeOrAssociatedDomainsEntered(true);
+      }}}
+
+    />
+  );
+});
+
+export const PurposeFieldView = observer( ({state}: {
+  state: RecipeBuilderState,
+} ) => {
+  return (
+    <input type="text"
+      className={css.PurposeOrHostNameTextField}
+      id={"purpose"}
+      spellCheck={false}
+      size={40}
+      value={state.purposeField ?? ""}
+      placeholder=""
+      onInput={ e => {state.setPurposeField(e.currentTarget.value); }}
+      onKeyUp={ e => {if (e.key === "Enter" && e.currentTarget.value.length > 0) { 
+        state.setPurposeOrAssociatedDomainsEntered(true);
+      }}}
+    />
+  );
+});
+
+export const TextCompletionButton = ( {...attributes}: React.ButtonHTMLAttributes<HTMLButtonElement> = {}) => (
+  <button {...attributes}>&#9166;</button>
+);
+
+export const PurposeOrAssociatedDomainsEnteredButton = ({state}: {
+  state: RecipeBuilderState}) => (
+  <TextCompletionButton onClick={state.setPurposeOrAssociatedDomainsEnteredFn(true)} />
+);
+
+export const WizardFieldLabel = observer ( ({...attributes}: React.LabelHTMLAttributes<HTMLLabelElement>) => (
+  <label
+    style={{minWidth: "10rem", textAlign: "right"}}
+  >{attributes.children}</label>
+) );
+
+export const EnterAssociatedDomainsView = observer ( ({state}: {
+  state: RecipeBuilderState}) => {
+    return (<>
+      Paste the address of the website or enter its domain name (e.g., https://example.com or just example.com)
+      <div>
+      <WizardFieldLabel>Domain:</WizardFieldLabel>
+      <AssociatedDomainsTextFieldView { ...{state}} />
+      <TextCompletionButton
+        disabled={(state.hosts?.length ?? 0) === 0}
+        onClick={state.setPurposeOrAssociatedDomainsEnteredFn(true)}
+      />
+      </div>
+    </>);
+});
+
+export const EnterPurposeView = observer ( ({state}: {
+  state: RecipeBuilderState}) => {
+    return (<>
+      Enter a purpose for the {state.typeNameLc} (changing the purpose changes the {state.typeNameLc}).
+      <PurposeFieldView {...{state}} />
+      <TextCompletionButton
+        disabled={(state.purpose?.length ?? 0) === 0}
+        onClick={state.setPurposeOrAssociatedDomainsEnteredFn(true)}
+      />
+    </>);
+});
 
 
+export const RecipeWizardView = observer ( ({state}: {
+  state: RecipeBuilderState}) => {
+    switch (state.wizardStep) {
+      case WizardStep.PickRecipe:
+        return null;
+      case WizardStep.PickAddressVsPurpose: 
+        return (<DomainOrPurposeQuestionView {...{state}} />);
+      case WizardStep.EnterAddressOrPurpose:
+        if (state.usePurposeOrAllow == "allow") {
+          return (<EnterAssociatedDomainsView {...{state}} />)
+        } else {
+          return (<EnterPurposeView  {...{state}} />)
+        }
+      case WizardStep.EditAllFields:
+      case WizardStep.EditRawJson:
+      case WizardStep.DoneEditing:
+      default:
+          return null;
+    }
+    // if (state.type == null) return null;
+    // if (state.purposeIsToAssociateWithDomains == null) {
+    //   return (<DomainOrPurposeQuestionView {...{state}} />);
+    // }
+    // return (<>
+    //   Enter a purpose for the {state.typeNameLc} (changing the purpose changes the {state.typeNameLc}).
+    // </>);
+});
 
 const RecipeEditStateButton = observer( ({selected, children, ...buttonArgs}: {
   selected?: boolean,
@@ -52,8 +216,8 @@ export const EditButtonHoverTextView = observer(
     switch(editButtonsHoverState.state) {
       case "Increment":
         return recipeBuilderState.sequenceNumber! > 1 ?
-        (<>Increment the sequence number to change the {describeRecipeType(recipeBuilderState.type)}</>):
-        (<>Add a sequence number to create a different {describeRecipeType(recipeBuilderState.type)}</>);
+        (<>Increment the sequence number to change the {recipeBuilderState.typeNameLc}</>):
+        (<>Add a sequence number to create a different {recipeBuilderState.typeNameLc}</>);
       case "Decrement":
         return recipeBuilderState.sequenceNumber! > 2 ?
         (<>Decrement the sequence number</>) :
@@ -77,6 +241,7 @@ export const DerivationViewWithState = observer( ( {
   <ContentBox>
     <Spacer/>
     <div className={css.DerivationView}>
+      <RecipeWizardView state={recipeBuilderState} />
       <RecipeBuilderView state={recipeBuilderState} />
       <div><EditButtonHoverTextView {...{editButtonsHoverState, recipeBuilderState}}/></div>
       <div style={{display: "flex", flexDirection: "column", alignItems: "flex-start"}}>
