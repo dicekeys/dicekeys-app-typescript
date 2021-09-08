@@ -114,12 +114,31 @@ const RecipeJsonFieldView = ({field} : {field: ParsedJsonObjectField}): JSX.Elem
   );
 }
 
-export const MultilineRecipeJsonView = ({recipeJson}: {recipeJson?: string}): JSX.Element => {
+/**
+ * A view that pretty prints a recipe JSON string onto multiple lines with indentation and
+ * coloring for readability
+ * @param recipeJson The plaintext string containing a JSON recipe to display
+ * @returns 
+ */
+export const MultilineRecipeJsonView = observer( ({recipeJson}: {recipeJson?: string}): JSX.Element => {
   try {
     const recipeObject = recipeJson == null ? undefined : parseAnnotatedJson(recipeJson);
     if (recipeObject != null && recipeObject.type === "object") {
       return (
-        <div className={[css.MultiLineRecipe, css.Depth0].join(" ")}>
+        <div className={[css.MultiLineRecipe, css.Depth0].join(" ")}
+          onCopy={e => {
+            // When we display the recipe on multiple lines and with indentation,
+            // the browser may want include new line symbols (\n) to and white space
+            // to represent the that formatting, and so the copied raw JSON string
+            // may be different than the actual raw JSON string.
+            // To prevent this, we override the copy operation to ensure that copies
+            // always yield the raw, unmodified, plaintext of the raw JSON string without
+            // any added newlines or white space.
+            e.clipboardData.setData('text/plain', recipeJson ?? "");
+            e.preventDefault();
+          }
+        }
+        >
           {/* Display the opening brace ("{") and any white space before it */}
           {recipeObject.leadingWhiteSpace}
           <span className={[css.brace_span].join(" ")}>{`{`}</span>
@@ -137,8 +156,4 @@ export const MultilineRecipeJsonView = ({recipeJson}: {recipeJson?: string}): JS
       { recipeJson || ( <>&nbsp;</>) }
     </div>
   );
-}
-
-export const MultilineRecipeView = observer( ( {state}: {state: RecipeBuilderState}) => (
-  <MultilineRecipeJsonView recipeJson={ state.recipeJson  }/>
-));
+});

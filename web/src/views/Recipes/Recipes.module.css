@@ -42,13 +42,26 @@
   color: rgba(0, 0, 0, 0.75);
 }
 
+.RecipeWizardContainer {
+  min-height: 16vh;
+  width: calc(90vw - 1rem);
+  /* background-color: rgb(255, 176, 119); */
+  background-color: rgba(255, 254, 171, 0.5);
+  font-size: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+
 .DerivationView {
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 60vh;
-  margin-left: 5vw;
-  margin-right: 5vw;
   flex-grow: 1;
   flex-shrink: 0;
 }

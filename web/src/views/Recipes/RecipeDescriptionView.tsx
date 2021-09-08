@@ -18,6 +18,17 @@ const HostNameView = ({host}: {host: string}) => (
   (<><span className={css.host_name_span}>{ host }</span> (but not its subdomains)</>)
 )
 
+export const RecipePurposeContentView = ({recipe}: {recipe: DiceKeysAppSecretRecipe | undefined}) => (<>
+  { recipe == null || !recipe.purpose ? null : (
+    <> for the purpose of &lsquo;<span className={css.host_name_span}>{ recipe.purpose }</span>&rsquo;</>
+  )}{ recipe == null || !recipe.allow || recipe.allow.length == 0 ? null : (
+    <> for use by <AndClause items={recipe.allow.map( ({host}) => (<HostNameView {...{host}}/>)
+      )}/>
+    </>)}
+  </>
+);
+
+
 export const RecipeDescriptionContentView = observer ( ({state}: {state: RecipeState}) => {
   const {type, recipeJson, recipeIsValid} = state;
   if (type == null || recipeJson == null || !recipeIsValid) return null;
@@ -40,13 +51,15 @@ export const RecipeDescriptionContentView = observer ( ({state}: {state: RecipeS
   }  
   return (
     <>Create a {describeRecipeType(type).toLocaleLowerCase()}
-      { !recipe.purpose ? null : (
+     <RecipePurposeContentView {...{recipe}} />
+      {/* { !recipe.purpose ? null : (
         <> for the purpose of &lsquo;<span className={css.host_name_span}>{ recipe.purpose }</span>&rsquo;</>
       )}{ !recipe.allow || recipe.allow.length == 0 ? null : (
         <> for use by <AndClause items={recipe.allow.map( ({host}) => (<HostNameView {...{host}}/>)
           )}/>
         </>)
-      }{ withClauses.length == 0 ? null : (
+      } */}
+      { withClauses.length == 0 ? null : (
         <> with <AndClause items={withClauses}/></>
       )}.</>
   );

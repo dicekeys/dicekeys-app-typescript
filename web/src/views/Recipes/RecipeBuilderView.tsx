@@ -4,8 +4,9 @@ import { observer  } from "mobx-react";
 import { RecipeFieldFocusState, RecipeBuilderState, RecipeEditingMode } from "./RecipeBuilderState";
 import { NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
 import { EnhancedRecipeView } from "./EnhancedRecipeView";
-import { getRegisteredDomain } from "../../domains/get-registered-domain";
+//import { getRegisteredDomain } from "../../domains/get-registered-domain";
 import { useContainerDimensions } from "../../utilities/react-hooks/useContainerDimensions";
+import { visibility } from "../../utilities/visibility";
 // import { CharButton } from "../../views/basics";
 
 // TO DO
@@ -21,7 +22,7 @@ export const RecipeFieldDescription = (props: React.PropsWithChildren<{}>) => (
   <div className={css.FieldToolTip}>{props.children}</div>
 )
 
-export const RecipeFieldView = observer ( ({
+export const OldRecipeFieldView = observer ( ({
   label, for: htmlFor, children, focusState //, mayEdit, toggleEdit
 }: React.PropsWithChildren<
   {
@@ -52,6 +53,53 @@ export const RecipeFieldView = observer ( ({
   </div>
 ));
 
+export const RecipeFieldView = observer ( ({
+  label, for: htmlFor, children, focusState //, mayEdit, toggleEdit
+}: React.PropsWithChildren<
+  {
+  focusState: RecipeFieldFocusState
+  label: JSX.Element | string,
+  for?: string
+}>) => (
+  <div
+    className={focusState.isFieldInFocus ? css.RecipeFieldSelected : css.RecipeField}
+    // onMouseEnter={ focus }
+  >
+    {children}
+    <div className={css.RecipeFieldLabelRow}>
+      <label htmlFor={htmlFor}
+        className={css.FieldLabel}
+        onClick={ focusState.toggleFocus }
+      >{ label }{ focusState.toggleFocus == null ? null : (<>&nbsp;&nbsp;&#9432;</>)}
+      </label>
+    </div>
+  </div>
+));
+
+export const SiteFieldView = observer( ({state}: {
+  state: RecipeBuilderState,
+} ) => {
+  const field = "site"
+  const fieldFocusState = new RecipeFieldFocusState(state, field);
+  return (
+    <RecipeFieldView
+      focusState={fieldFocusState}
+      label="sites"
+      for={field}
+    >
+      <input id={field} type="text" spellCheck={false}
+        className={css.PurposeOrHostNameTextField}
+        size={40}
+        value={state.associatedDomainsTextField ?? ""}
+        placeholder=""
+        ref={ e => { if (e != null) { e?.focus(); fieldFocusState.focus() } } }
+        onPaste={ state.pasteIntoAssociatedDomainsTextField }
+        onInput={ e => {state.setAssociatedDomainsTextField(e.currentTarget.value); fieldFocusState.focus(); }} 
+        onFocus={ fieldFocusState.focus } />
+    </RecipeFieldView>
+  );
+});
+
 export const PurposeFieldView = observer( ({state}: {
   state: RecipeBuilderState,
 } ) => {
@@ -69,17 +117,7 @@ export const PurposeFieldView = observer( ({state}: {
         value={state.purposeField ?? ""}
         placeholder=""
         ref={ e => { if (e != null) { e?.focus(); fieldFocusState.focus() } } }
-        onPaste={ e => {
-          // If pasting a URL, paste only the domain
-          const text = e.clipboardData.getData("text")
-          if (text.startsWith("http://") || text.startsWith("https://")) {
-            const domain = getRegisteredDomain(text);
-            if (domain != null) {
-              state.setPurposeField(domain);
-              e.preventDefault();
-            }
-          }
-        }}
+        onPaste={ state.pasteIntoAssociatedDomainsTextField }
         onInput={ e => {state.setPurposeField(e.currentTarget.value); fieldFocusState.focus(); }} 
         onFocus={ fieldFocusState.focus } />
     </RecipeFieldView>
@@ -175,7 +213,11 @@ export const RecipeFieldsHelpView = observer ( ( {state}: {state: RecipeBuilderS
 export const RecipeBuilderFieldsView = observer( ( {state}: {state: RecipeBuilderState}) => {
   return (
     <div className={css.RecipeFields}>
-      <PurposeFieldView state={state} />
+      { state.usePurposeOrAllow === "allow" ? (
+        <SiteFieldView state={state} />
+      ) : state.usePurposeOrAllow === "purpose" ? (
+        <PurposeFieldView state={state} />
+      ) : null }
       <LengthInCharsFormFieldView state={state} />
       <LengthInBytesFormFieldView state={state} />
       <SequenceNumberFormFieldView state={state} />
@@ -236,7 +278,7 @@ export const RecipeRawJsonView = observer( ( {state}: {state: RecipeBuilderState
 export const RecipeBuilderView = observer( ( {state}: {state: RecipeBuilderState, hideHeader?: boolean}) => {
   return (
     <div className={css.RecipeFormFrame}
-      style={state.type != null && state.editingMode !== RecipeEditingMode.NoEdit ? {} : {visibility: "hidden"}}
+      style={{...visibility(state.type != null && state.editingMode !== RecipeEditingMode.NoEdit)}}
     >
       <RecipeFieldsHelpView {...{state}} />
       <RecipeBuilderFieldsView state={state} />

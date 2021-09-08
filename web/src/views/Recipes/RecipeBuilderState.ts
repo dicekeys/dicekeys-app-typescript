@@ -110,6 +110,9 @@ export class RecipeBuilderState {
   purposeOrAssociatedDomainsEntered?: boolean;
   setPurposeOrAssociatedDomainsEntered = action( (newValue: boolean | undefined) => {
     this.purposeOrAssociatedDomainsEntered = newValue;
+    if (newValue) {
+      this.editingMode = RecipeEditingMode.NoEdit;
+    }
   })
   setPurposeOrAssociatedDomainsEnteredFn = (newValue: boolean | undefined) =>
     () => this.setPurposeOrAssociatedDomainsEntered(newValue);
@@ -117,13 +120,16 @@ export class RecipeBuilderState {
   get wizardStep(): WizardStep {
     if (this.type == null) return WizardStep.PickRecipe;
     if (this.usePurposeOrAllow == null) return WizardStep.PickAddressVsPurpose;
-    if (!this.purposeOrAssociatedDomainsEntered) return WizardStep.EnterAddressOrPurpose;
+    if (!this.purposeOrAssociatedDomainsEntered === true) return WizardStep.EnterAddressOrPurpose;
     switch(this.editingMode) {
       case RecipeEditingMode.NoEdit: return WizardStep.DoneEditing;
       case RecipeEditingMode.EditWithTemplateOnly: return WizardStep.EditAllFields;
       case RecipeEditingMode.EditIncludingRawJson: return WizardStep.EditRawJson;
       case RecipeEditingMode.NoRecipe: return WizardStep.PickRecipe;
     }
+  }
+  get wizardComplete(): boolean {
+    return this.wizardStep > WizardStep.EnterAddressOrPurpose && this.type != null
   }
 
   editingMode: RecipeEditingMode = RecipeEditingMode.NoRecipe;
@@ -224,7 +230,10 @@ export class RecipeBuilderState {
     const trimmedField = (this.associatedDomainsTextField ?? "").trim();
     const connector = trimmedField.length === 0 ? "" :
       trimmedField[trimmedField.length-1] === "," ? " " : ", ";
-    this.setAssociatedDomainsTextField(trimmedField + connector + domain);
+    this.setAssociatedDomainsTextField(trimmedField + connector +
+      // Add a "*." up front if needed
+      (domain[0] === "*" || domain[0] === "." ? "" : "*.") +
+      domain);
   });
 
   //////////////////////////////////////////
@@ -243,7 +252,9 @@ export class RecipeBuilderState {
    * The hosts for the "allow" restrictions of a recipe if the purpose field contains
    * a URL or list of hosts
    */
-  get hosts(): string[] | undefined { return parseCommaSeparatedListOfHosts(this.associatedDomainsTextField); }
+  get hosts(): string[] | undefined {
+    return parseCommaSeparatedListOfHosts(this.associatedDomainsTextField);
+  }
   get associatedDomainsFieldContainsHosts(): boolean { return (this.hosts?.length ?? 0) > 0 }
 
   ///////////////////////////////////////////////
@@ -314,6 +325,7 @@ export class RecipeBuilderState {
   }
 
   emptyAllRecipeFields = action (() => {
+    this.type = undefined;
     this.recipeJson = undefined;
     this.name = "";
     this.purposeField = "";
@@ -355,11 +367,12 @@ export class RecipeBuilderState {
     this.origin = loadedRecipe.origin;
     this.name = loadedRecipe.name ?? "";
     this.type = loadedRecipe.type;
-    this.setRecipeJson(loadedRecipe.recipeJson);
-    this.setEditingMode(
-      loadedRecipe.origin === "Saved" || loadedRecipe.origin === "BuiltIn" ?
-        RecipeEditingMode.NoEdit :
-        RecipeEditingMode.EditWithTemplateOnly
-    );
+    this.recipeJson = loadedRecipe.recipeJson;
+    if (this.recipeJson != null) {
+      this.setFieldsFromRecipeJson(this.recipeJson)
+    }
+    this.editingMode = loadedRecipe.origin === "Saved" || loadedRecipe.origin === "BuiltIn" ?
+      RecipeEditingMode.NoEdit :
+      RecipeEditingMode.EditWithTemplateOnly;
   });
 }
