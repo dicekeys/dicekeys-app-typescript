@@ -3,26 +3,26 @@
   display: flex;
   flex-direction: row;
   flex: 0 0 auto;
-  font-size: 1.75rem;
   /* padding-top: 0.5rem;
   padding-bottom: 0.5rem; */
   text-align: center;
 }
 
 .TopNavigationBar {
-  height: 3rem;
+  height: 7vh;
+  font-size: 3.75vh;
   background-color: #5576C5;
 }
 
 .BottomNavigationBar {
-  height: 5rem;
+  height: 11vh;
+  font-size: 3.75vh;
   background-color: gray;
   align-items: baseline;
 }
 
-
 .BetweenTopAndBottomNavigationBars {
-  height: calc(100vh - 8rem);
+  height: calc(82vh);
   width: 100vw;
   display: flex;
   flex-direction: column;
@@ -30,7 +30,7 @@
 }
 
 .BelowTopNavigationBar {
-  height: calc(100vh-3rem);
+  height: calc(93vh);
 }
 
 /* .NavLeftSide, .NavRightSide, .NavCenter {
@@ -76,8 +76,8 @@
   width: 25vw;
   padding-right: 0;
   padding-left: 0;
-  margin-top: .5rem;
-  margin-bottom: .5rem;
+  margin-top: 1vh;
+  margin-bottom: 1vh;
   cursor: pointer;
 }
 
@@ -87,7 +87,7 @@
 
 .footer_icon {
   display: flex;
-  max-height: 2.25rem;
+  max-height: 5vh;
   flex-basis: 0;
   flex-grow: 1;
 }

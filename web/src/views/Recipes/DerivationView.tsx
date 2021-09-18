@@ -3,11 +3,11 @@ import React from "react";
 import { observer  } from "mobx-react";
 //import { RecipeBuilderView } from ".";
 import { RecipeBuilderState, RecipeEditingMode, WizardStep } from "./RecipeBuilderState";
-import { CreateANewRecipeOfTypeView, LoadBuiltInRecipeView, LoadSavedRecipeView, SelectRecipeToLoadView } from "./LoadRecipeView";
+import { SelectRecipeToLoadView } from "./LoadRecipeView";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
-import { ContentBox, Spacer } from "../basics";
+import { Spacer } from "../basics";
 import { DiceKeyViewAutoSized } from "../../views/SVG/DiceKeyView";
 import { ToggleState } from "../../state";
 import { MultilineRecipeJsonView } from "./MultilineRecipeView";
@@ -346,7 +346,7 @@ export const RecipeView = observer( ({recipeBuilderState, editButtonsHoverState}
 export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
   recipeBuilderState: RecipeBuilderState,
 }) => (
-  <div style={{minHeight:"24vw", marginTop: "1rem",
+  <div style={{minHeight:"24vh", marginTop: "1vh",
     display: "flex", flexDirection:"column", justifyContent:"center", alignItems:"center", alignContent: "center",
   }}
   >{ recipeBuilderState.wizardStep <= WizardStep.EnterAddressOrPurpose ? (
@@ -356,6 +356,9 @@ export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
     )}
   </div>
 ));
+
+// Regions: Header: 3rem
+// Regions: Footer: 5rem
 
 const screenWidthPercentUsed = 90;
 const diceKeyMaxWidthPercent = 22.5;

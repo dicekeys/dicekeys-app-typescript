@@ -360,12 +360,14 @@
 
 .DerivedValueBlock {
   min-height: 15vh;
+  max-height: 20vh;
   min-width: 60vw;
   flex-direction: column;
   justify-content: flex-start;
   align-content: flex-start;
   font-family: monospace;
   overflow-wrap: anywhere;
+  scroll-behavior: auto;
 }
 
 .SeedingContentBlock {
