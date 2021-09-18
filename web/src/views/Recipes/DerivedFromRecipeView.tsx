@@ -48,7 +48,7 @@ const SelectDerivedOutputType = observer( ({type, state}: {type?: DerivationReci
 ));
 
 export const DerivedFromRecipeView = observer( ({recipeBuilderState, state}: {
-    recipeBuilderState: RecipeBuilderState,
+    recipeBuilderState?: RecipeBuilderState,
     state: DerivedFromRecipeState
   }) => {
   const {recipeState: recipe, derivedValue} = state;
@@ -80,7 +80,7 @@ export const DerivedFromRecipeView = observer( ({recipeBuilderState, state}: {
           (<Bip39OutputView bip39String={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />)
           : (
           <div className={css.DerivedValue}>
-            { !recipeBuilderState.wizardComplete ? (
+            { recipeBuilderState != null && !recipeBuilderState.wizardComplete ? (
               <><i style={{color: "rgba(0,0,0,0.5"}}>A secret to be created by applying a recipe to your DiceKey</i></>
             ) : (
               <OptionallyObscuredTextView value={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />

@@ -14,10 +14,10 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
   }
   
   const saveOrDelete = () => {
-    const {savedRecipeIdentifer} = state;
-    if (savedRecipeIdentifer) {
+    const {savedRecipeIdentifier} = state;
+    if (savedRecipeIdentifier) {
       // This is already saved so must be the delete button
-      RecipeStore.removeRecipe(savedRecipeIdentifierToStoredRecipe(savedRecipeIdentifer));
+      RecipeStore.removeRecipe(savedRecipeIdentifierToStoredRecipe(savedRecipeIdentifier));
     } else {
       if (recipeJson==null) return;
       const storedRecipe: StoredRecipe = {name, recipeJson, type};
@@ -47,7 +47,7 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
         className={css.SaveButton}
         style={visibility(state.prescribedName != null || (state.name != null && state.name.length > 0))}
         onClick={saveOrDelete}
-        >{state.savedRecipeIdentifer ? "delete" : "save"}
+        >{state.savedRecipeIdentifier ? "delete" : "save"}
       </button>
     </div>
     )

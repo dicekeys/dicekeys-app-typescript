@@ -292,7 +292,7 @@ export class RecipeBuilderState {
     );
   }
 
-  get savedRecipeIdentifer(): SavedRecipeIdentifier | undefined {
+  get savedRecipeIdentifier(): SavedRecipeIdentifier | undefined {
     const {type, name, recipeJson} = this;
     if (type == null || name == null || recipeJson == null) return;
     const storedRecipe: StoredRecipe = {type, name, recipeJson};
@@ -302,7 +302,7 @@ export class RecipeBuilderState {
     return;
   }
 
-  get builtInRecipeIdentifer(): BuiltInRecipeIdentifier | undefined {
+  get builtInRecipeIdentifier(): BuiltInRecipeIdentifier | undefined {
     const {type, name, recipeJson} = this;
     if (type == null || name == null || recipeJson == null) return;
     const storedRecipe: StoredRecipe = {type, name, recipeJson};
@@ -313,7 +313,7 @@ export class RecipeBuilderState {
   }
 
   get recipeIdentifier(): RecipeIdentifier | undefined {
-    return this.savedRecipeIdentifer || this.builtInRecipeIdentifer;
+    return this.savedRecipeIdentifier || this.builtInRecipeIdentifier;
   }
 
   get areAllRecipeFieldsEmpty(): boolean {
