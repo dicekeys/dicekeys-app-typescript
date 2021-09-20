@@ -131,7 +131,7 @@ export const SeedHardwareKeyViewWithState = observer( ( {seedHardwareKeyViewStat
           <RecipeBuilderFieldsView state={seedHardwareKeyViewState.recipeBuilderState} />
           <RecipeRawJsonView state={seedHardwareKeyViewState.recipeBuilderState} /> 
         </div>
-        <DerivedFromRecipeView state={seedHardwareKeyViewState.derivedFromRecipeState} />
+        <DerivedFromRecipeView state={seedHardwareKeyViewState.derivedFromRecipeState} showPlaceholder={false} />
         {/* <Spacer/> */}
         { isElectron() != null ? (
           <HardwareSecurityKeysView {...{seedableDiceKeys, seedHardwareKeyViewState}}/>
