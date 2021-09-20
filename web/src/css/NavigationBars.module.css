@@ -6,6 +6,7 @@
   /* padding-top: 0.5rem;
   padding-bottom: 0.5rem; */
   text-align: center;
+  align-items: center;
 }
 
 .TopNavigationBar {
@@ -46,8 +47,8 @@
   flex-direction: row;
   align-items: center;
   min-width: 10%;
-  max-width: 25%;
-  flex-basis: 25%;
+  max-width: 12.5%;
+  flex-basis: 12.5%;
   flex-shrink: 1;
   padding-left: 1rem;
   padding-right: 1rem;
@@ -59,7 +60,7 @@
 }
 
 .NavCenter {
-  flex-basis: 50%;
+  flex-basis: 70%;
   flex-grow: 2;
   flex-shrink: 0;
 }

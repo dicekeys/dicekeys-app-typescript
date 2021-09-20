@@ -6,7 +6,6 @@ import { ToggleState } from "../../state";
 import { action } from "mobx";
 import { DerivedFromRecipeState, OutputFormats, OutputFormat } from "./DerivedFromRecipeState";
 import { DerivationRecipeType } from "../../dicekeys/StoredRecipe";
-import { RecipeBuilderState } from "./RecipeBuilderState";
 
 
 const Bip39OutputView = ({bip39String, obscureValue}: {bip39String: string, obscureValue: boolean}) => {
@@ -47,9 +46,9 @@ const SelectDerivedOutputType = observer( ({type, state}: {type?: DerivationReci
   </select>
 ));
 
-export const DerivedFromRecipeView = observer( ({recipeBuilderState, state}: {
-    recipeBuilderState?: RecipeBuilderState,
+export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
     state: DerivedFromRecipeState
+    showPlaceholder: boolean
   }) => {
   const {recipeState: recipe, derivedValue} = state;
   const {type} = recipe;
@@ -60,34 +59,34 @@ export const DerivedFromRecipeView = observer( ({recipeBuilderState, state}: {
     // FUTURE - provide user notification that copy happened.
   });
   return (
-    <div className={css.DerivedValueBlock}>
-        <div className={css.DerivedValueHeader}>
-          <SelectDerivedOutputType type={type} state={state} />
-          <span style={{width: "1rem"}}></span>
-          <span style={{width: "1rem"}}></span>
-          { type == null ? null : (
-            <>
-            <CharButton
-                hidden={derivedValue == null || type == null}
-                onClick={copyToClipboard}
-              >&#128203;<CharButtonToolTip>Copy {type == null ? "" : state.outputFieldForType[type].toLocaleLowerCase()} to clipboard</CharButtonToolTip>
-            </CharButton>
-            <SecretFieldsCommonObscureButton />
-            </>
-          )}
-          </div>
-        { type === "Secret" && state.outputFieldForType[type] === "BIP39" && derivedValue != null ?
-          (<Bip39OutputView bip39String={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />)
-          : (
-          <div className={css.DerivedValue}>
-            { recipeBuilderState != null && !recipeBuilderState.wizardComplete ? (
-              <><i style={{color: "rgba(0,0,0,0.5"}}>A secret to be created by applying a recipe to your DiceKey</i></>
-            ) : (
-              <OptionallyObscuredTextView value={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />
-            )}
-          </div>
+    <>
+      <div className={css.DerivedValueHeader}>
+        <SelectDerivedOutputType type={type} state={state} />
+        <span style={{width: "1rem"}}></span>
+        <span style={{width: "1rem"}}></span>
+        { type == null ? null : (
+          <>
+          <CharButton
+              hidden={derivedValue == null || type == null}
+              onClick={copyToClipboard}
+            >&#128203;<CharButtonToolTip>Copy {type == null ? "" : state.outputFieldForType[type].toLocaleLowerCase()} to clipboard</CharButtonToolTip>
+          </CharButton>
+          <SecretFieldsCommonObscureButton />
+          </>
         )}
-    </div>
+        </div>
+      { type === "Secret" && state.outputFieldForType[type] === "BIP39" && derivedValue != null ?
+        (<Bip39OutputView bip39String={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />)
+        : (
+        <div className={css.DerivedValue}>
+          { showPlaceholder ? (
+            <><i style={{color: "rgba(0,0,0,0.5"}}>A secret to be created by applying a recipe to your DiceKey</i></>
+          ) : (
+            <OptionallyObscuredTextView value={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />
+          )}
+        </div>
+      )}
+    </>
   );
   }
 );

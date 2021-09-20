@@ -1,7 +1,7 @@
-import css from "./Recipes.module.css";
+import css from "../Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
-import { parseAnnotatedJson, ParsedJsonArrayField, ParsedJsonObjectField } from "../../utilities/jsonParser";
+import { parseAnnotatedJson, ParsedJsonArrayField, ParsedJsonObjectField } from "../../../utilities/jsonParser";
 
 const RecipeJsonAllowEntryFieldView = ({field} : {field: ParsedJsonObjectField}) => {
   const {name, value} = field;

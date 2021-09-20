@@ -61,7 +61,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 60vh;
   flex-grow: 1;
   flex-shrink: 0;
 }
@@ -359,8 +358,6 @@
 }
 
 .DerivedValueBlock {
-  min-height: 15vh;
-  max-height: 20vh;
   min-width: 60vw;
   flex-direction: column;
   justify-content: flex-start;
