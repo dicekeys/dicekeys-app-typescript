@@ -3,8 +3,6 @@ import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeFieldFocusState, RecipeBuilderState, RecipeEditingMode } from "../RecipeBuilderState";
 import { NumberPlusMinusView } from "../../basics/NumericTextFieldView";
-// import { EnhancedRecipeView } from "../EnhancedRecipeView";
-// import { useContainerDimensions } from "../../../utilities/react-hooks/useContainerDimensions";
 import { visibility } from "../../../utilities/visibility";
 import * as Dimensions from "./Dimensions";
 import * as Colors from "./Colors";

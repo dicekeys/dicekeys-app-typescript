@@ -10,6 +10,11 @@ import { RecipeWizardView } from "./DerivationView/RecipeWizardView";
 import {KeyPlusRecipeView} from "./DerivationView/KeyPlusRecipeView";
 import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 
+// Complete design of fields with null values (add button)
+// Add raw JSON editor
+// Add save feature
+// Remove +- from editor if field editor showing
+// Add raw JSON option in wizard
 
 export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
   recipeBuilderState: RecipeBuilderState,
