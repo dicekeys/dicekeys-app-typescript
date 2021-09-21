@@ -1,1 +1,1 @@
-export {RecipeBuilderView as RecipeBuilderView} from "./RecipeBuilderView";
+export {RecipeBuilderView as RecipeBuilderView} from "./DerivationView/RecipeBuilderView";

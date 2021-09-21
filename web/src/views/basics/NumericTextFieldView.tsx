@@ -55,42 +55,33 @@ export class NumericTextFieldState {
   }
 }
 
-interface CommonProps {
+type CommonProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & {
   state: NumericTextFieldState;
-  size?: number;
-  placeholder?: string;
   onFocusedOrChanged?: () => any;
-  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
 }
 
-export interface NumericTextFieldProps extends CommonProps {
-  className?: string;
-};
-
-export const NumericTextField = observer ( (props: NumericTextFieldProps) => {
+export const NumericTextField = observer ( ({state, size, placeholder, onInput, onFocusedOrChanged, ...props}: CommonProps) => {
   return (
     <input
-      className={props.className}
       type="text"
-      size={props.size ?? 4}
-      value={props.state.textValue}
-      style={typeof props.state.numericValue == "number" ? {} :{color: "red"}}
-      placeholder={props.placeholder ?? "none"}
+      {...props}
+      size={size ?? 4}
+      placeholder={placeholder ?? "none"}
+      style={{...(typeof state.numericValue == "number" ? {} :{color: "red"}), ...props.style}}
+      value={state.textValue}
       onInput={ e => {
-        props.state.setValue(e.currentTarget.value);
-        props.onFocusedOrChanged?.();
+        state.setValue(e.currentTarget.value);
+        onFocusedOrChanged?.();
+        onInput?.(e);
       } }
-      onKeyDown={ props.onKeyDown }
-      onFocus={ () => props.onFocusedOrChanged?.() }
+      onFocus={ () => onFocusedOrChanged?.() }
     />
   )
 });
 
 
-export const NumberPlusMinusView = observer( (props: CommonProps & {
-  textFieldClassName: string,
-}) => {
-  const {textFieldClassName, onKeyDown, ...commonProps} = props;
+export const NumberPlusMinusView = observer( (props: CommonProps) => {
+  const {onKeyDown, ...commonProps} = props;
   const {state, onFocusedOrChanged} = commonProps;
   const setValue = action ((newValue: number | undefined) => {
     state.setValue(newValue);
@@ -104,7 +95,6 @@ export const NumberPlusMinusView = observer( (props: CommonProps & {
         >-<CharButtonToolTip>- 1 = {state.decrementedValue ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
       <NumericTextField
         {...commonProps}
-        className={ textFieldClassName }
         onKeyDown={ e => {
           onKeyDown?.(e);
           switch (e.key) {

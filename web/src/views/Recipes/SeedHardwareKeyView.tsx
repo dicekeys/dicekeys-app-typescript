@@ -2,7 +2,7 @@ import css from "./Recipes.module.css";
 import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
 import { CenteredControls, ContentBox, Instruction, PaddedContentBox, Spacer } from "../basics";
-import { RecipeFieldsHelpView, RecipeBuilderFieldsView, RecipeRawJsonView } from "./RecipeBuilderView"
+import { RecipeFieldsHelpView, RecipeBuilderFieldsView, RecipeRawJsonView } from "./DerivationView/RecipeBuilderView"
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";

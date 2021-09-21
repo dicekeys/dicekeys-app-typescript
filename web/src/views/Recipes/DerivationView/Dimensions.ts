@@ -17,3 +17,4 @@ export const plusSignViewWidth = `${plusSignWidthPercent}vw`;
 export const recipeViewWidthPercent = screenWidthPercentUsed - (diceKeyMaxWidthPercent + plusSignWidthPercent);
 export const recipeViewWidth = `${recipeViewWidthPercent}vw`;
 export const diceKeyBoxSize = `min(${diceKeyBoxMaxHeight},${diceKeyBoxMaxWidth})`;
+

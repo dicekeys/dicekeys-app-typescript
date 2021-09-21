@@ -204,8 +204,8 @@ export class RecipeBuilderState {
   public name: string = "";
   setName = action ( (name: string) => this.name = name );
 
-  associatedDomainsTextField: string = "";
-  setAssociatedDomainsTextField  = action ( (newValue: string) => {
+  associatedDomainsTextField?: string = undefined;
+  setAssociatedDomainsTextField  = action ( (newValue?: string) => {
     this.associatedDomainsTextField = newValue;
     const {recipeJson, hosts} = this;
     if (hosts?.length && hosts.length > 0) {
@@ -239,10 +239,10 @@ export class RecipeBuilderState {
   //////////////////////////////////////////
   // Purpose field ("purpose" or "allow")
   //////////////////////////////////////////
-  purposeField: string = "";
+  purposeField?: string;
   /** The purpose of the recipe from the purpose form field if not a list of 1 or more hosts */
   get purpose(): string | undefined { return this.purposeField?.length === 0 ? undefined : this.purposeField; }
-  setPurposeField = action ( (newPurposeFieldValue: string) => {
+  setPurposeField = action ( (newPurposeFieldValue?: string) => {
     this.purposeField = newPurposeFieldValue;
     this.recipeJson = addPurposeToRecipeJson(this.recipeJson, this.purpose);
   });
@@ -328,8 +328,8 @@ export class RecipeBuilderState {
     this.type = undefined;
     this.recipeJson = undefined;
     this.name = "";
-    this.purposeField = "";
-    this.associatedDomainsTextField = "";
+    this.purposeField = undefined;
+    this.associatedDomainsTextField = undefined;
     this.purposeOrAssociatedDomainsEntered = false;
     this.usePurposeOrAllow = undefined;
     this.sequenceNumberState.textValue = ""
@@ -345,8 +345,8 @@ export class RecipeBuilderState {
       }
     } catch {}
     const {purpose, hosts, sequenceNumber, lengthInBytes, lengthInChars} = recipeJsonToAddableFields(recipeJson);
+    this.purposeField = purpose;
     if (purpose != null) {
-      this.purposeField = purpose;
       this.usePurposeOrAllow = "purpose";
       this.purposeOrAssociatedDomainsEntered = true;
     }
@@ -354,6 +354,8 @@ export class RecipeBuilderState {
       this.usePurposeOrAllow = "allow";
       this.purposeOrAssociatedDomainsEntered = true;
       this.associatedDomainsTextField = hosts.join(", ")
+    } else {
+      this.associatedDomainsTextField = undefined;
     }
     this.sequenceNumberState.textValue = sequenceNumber != null ? `${sequenceNumber}` : ""
     this.lengthInBytesState.textValue = lengthInBytes != null ? `${lengthInBytes}` : "";

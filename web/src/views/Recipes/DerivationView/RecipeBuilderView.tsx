@@ -1,12 +1,12 @@
-import css from "./Recipes.module.css";
+import css from "../Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
-import { RecipeFieldFocusState, RecipeBuilderState, RecipeEditingMode } from "./RecipeBuilderState";
-import { NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
-import { EnhancedRecipeView } from "./EnhancedRecipeView";
+import { RecipeFieldFocusState, RecipeBuilderState, RecipeEditingMode } from "../RecipeBuilderState";
+import { NumberPlusMinusView } from "../../basics/NumericTextFieldView";
+import { EnhancedRecipeView } from "../EnhancedRecipeView";
 //import { getRegisteredDomain } from "../../domains/get-registered-domain";
-import { useContainerDimensions } from "../../utilities/react-hooks/useContainerDimensions";
-import { visibility } from "../../utilities/visibility";
+import { useContainerDimensions } from "../../../utilities/react-hooks/useContainerDimensions";
+import { visibility } from "../../../utilities/visibility";
 // import { CharButton } from "../../views/basics";
 
 // TO DO
@@ -17,6 +17,15 @@ import { visibility } from "../../utilities/visibility";
 
 // Make json parser more resilient to errors?
 // Add/remove field for other optional fields?
+
+// Sites:
+// [or]
+// Purpose:
+
+// Sequence number: none <edit>
+// Maximum length: none <edit>
+// JSON: auto-generated <customize>
+
 
 export const RecipeFieldDescription = (props: React.PropsWithChildren<{}>) => (
   <div className={css.FieldToolTip}>{props.children}</div>
@@ -53,6 +62,67 @@ export const OldRecipeFieldView = observer ( ({
   </div>
 ));
 
+export const BuilderFieldLabel = ({style, children, ...props}: React.DetailedHTMLProps<React.LabelHTMLAttributes<HTMLLabelElement>, HTMLLabelElement>) => (
+  <label {...props} style={{
+      fontSize: `min(2vh, 2vw)`, width: `20vw`,
+      ...style
+    }}>{ children}</label>
+);
+
+export const BuilderFieldValueContainer = ({children, ...props}: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>) => (
+  <div style={{
+      fontSize: `min(2vh, 2vw)`, width: `50vw`,
+    }} {...props}>{ children}</div>
+);
+
+export const BuilderFieldOptionalValue = observer ( ({
+  value, children, ...optProps
+}: React.PropsWithChildren<(
+  {
+    value: unknown,
+  } & ({} | {
+    defaultValueText: string,
+    estDefaultValueButtonLabel: string,
+    setDefaultValue: () => void,
+}))>) => (
+  <BuilderFieldValueContainer>{
+    (value == null && "defaultValueText" in optProps) ? (
+      <>
+        {optProps.defaultValueText}
+        <button onClick={optProps.setDefaultValue}>{optProps.setDefaultValue}</button>
+      </>
+    ) : children
+  }
+  </BuilderFieldValueContainer>
+));
+
+export const BuilderFieldContainer = ({children}: React.PropsWithChildren<{}>) => (
+  <div>{children}</div>
+);
+
+export const OptionalRecipeFieldView = observer ( ({
+  label, for: htmlFor, children, focusState //, mayEdit, toggleEdit
+}: React.PropsWithChildren<
+  {
+  focusState: RecipeFieldFocusState
+  label: string,
+  for?: string
+}>) => (
+  <div
+    className={focusState.isFieldInFocus ? css.RecipeFieldSelected : css.RecipeField}
+    // onMouseEnter={ focus }
+  >
+    {children}
+    <div className={css.RecipeFieldLabelRow}>
+      <label htmlFor={htmlFor}
+        className={css.FieldLabel}
+        onClick={ focusState.toggleFocus }
+      >{ label }{ focusState.toggleFocus == null ? null : (<>&nbsp;&nbsp;&#9432;</>)}
+      </label>
+    </div>
+  </div>
+));
+
 export const RecipeFieldView = observer ( ({
   label, for: htmlFor, children, focusState //, mayEdit, toggleEdit
 }: React.PropsWithChildren<
@@ -79,7 +149,7 @@ export const RecipeFieldView = observer ( ({
 export const SiteFieldView = observer( ({state}: {
   state: RecipeBuilderState,
 } ) => {
-  const field = "site"
+  const field = "sites"
   const fieldFocusState = new RecipeFieldFocusState(state, field);
   return (
     <RecipeFieldView
@@ -130,7 +200,7 @@ export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBui
     <RecipeFieldView focusState={fieldFocusState}
     label={"sequence #"} >
       <NumberPlusMinusView 
-        textFieldClassName={css.SequenceNumberTextField}
+        className={css.SequenceNumberTextField}
         state={state.sequenceNumberState}
         placeholder={"1"}
         onFocusedOrChanged={fieldFocusState.focus} />
@@ -143,7 +213,7 @@ export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBui
     return (
       <RecipeFieldView focusState={fieldFocusState} label={"max length"} >
         <NumberPlusMinusView
-          textFieldClassName={css.LengthTextField}
+          className={css.LengthTextField}
           state={state.lengthInCharsState}
           placeholder={"none"}
           onFocusedOrChanged={fieldFocusState.focus} />
@@ -157,7 +227,7 @@ export const LengthInBytesFormFieldView = observer( ({state}: {state: RecipeBuil
   return (
     <RecipeFieldView focusState={fieldFocusState} label={"length (bytes)"} >
       <NumberPlusMinusView
-        textFieldClassName={css.LengthTextField}
+        className={css.LengthTextField}
         state={state.lengthInBytesState}
         placeholder={"32"}
         onFocusedOrChanged={fieldFocusState.focus} />

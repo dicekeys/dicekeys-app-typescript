@@ -326,19 +326,19 @@
 
 .length_span {
   text-decoration: underline;
-  text-decoration-thickness: 0.15rem;
+  text-decoration-thickness: 2px;
   text-decoration-color: rgba(0, 64, 196, 0.5);
 }
 
 .sequence_number_span {
   text-decoration: underline;
-  text-decoration-thickness: 0.15rem;
+  text-decoration-thickness: 2px;
   text-decoration-color: rgba(16, 148, 16, 0.5);
 }
 .host_name_span /* , .PurposeOrHostNameTextField */ {
   text-decoration: underline;
-  text-decoration-thickness: 0.15rem;
-  text-decoration-color: rgb(128, 0, 128, 0.5);
+  text-decoration-thickness: 2px;
+  text-decoration-color: rgba(128, 0, 128, 0.5);
 }
 
 .comma_span, .quote_span, .bracket_span, .brace_span, .colon_span, .reserved_word {

@@ -79,7 +79,7 @@ export type DiceKeysAppSecretRecipe = Recipe & {
   purpose?: string;
 }
 
-export type RecipeFieldType = "rawJson" | "site" | keyof DiceKeysAppSecretRecipe;
+export type RecipeFieldType = "rawJson" | "sites" | keyof DiceKeysAppSecretRecipe;
 
 interface AddableRecipeFields {
   hosts?: string[];
