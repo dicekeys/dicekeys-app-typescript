@@ -10,11 +10,10 @@ import { RecipeWizardView } from "./DerivationView/RecipeWizardView";
 import {KeyPlusRecipeView} from "./DerivationView/KeyPlusRecipeView";
 import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 
-// Complete design of fields with null values (add button)
-// Add raw JSON editor
+// Need back button in wizard
+// Add raw JSON editor wizard
 // Add save feature
 // Remove +- from editor if field editor showing
-// Add raw JSON option in wizard
 
 export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
   recipeBuilderState: RecipeBuilderState,
@@ -50,7 +49,8 @@ export const DerivationView = ( ({diceKey}: {
   const recipeBuilderState =  new RecipeBuilderState();
   const derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, seedString});
   return (
-    <div style={{marginLeft: "5vw", marginRight: "5vw",
+    <div style={{
+      // marginLeft: "5vw", marginRight: "5vw",
       display: "flex",
       flexDirection: "column",
       justifyContent: "center",
@@ -70,7 +70,9 @@ export const DerivationView = ( ({diceKey}: {
       </div>
       {/* No spacer here since arrow should connect recipe to derived value */}
       <div style={{...ColumnStyle, alignItems: "flex-start", justifyContent: "flex-start",
-        height: `${Dimensions.DerivedValueBoxMaxHeight}vh`}}
+        height: `${Dimensions.DerivedValueBoxMaxHeight}vh`,
+        maxWidth: `${Dimensions.ScreenWidthPercentUsed}vw`
+      }}
       >
         <DerivedFromRecipeViewOrPlaceholder {...{recipeBuilderState, derivedFromRecipeState}} />
       </div>

@@ -1,4 +1,5 @@
 import css from "../Recipes.module.css";
+import * as Dimensions from "./Dimensions";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState, WizardStep } from "../RecipeBuilderState";
@@ -14,7 +15,7 @@ const InlineButton = observer( ({selected, children, ...buttonArgs}: {
 
 export const DomainOrPurposeQuestionView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
-    return (<div style={{fontSize: "1.25rem"}}>
+    return (<div>
       Is this {state.typeNameLc} for a website or application with a web address (URL)?
       <InlineButton
         selected={state.usePurposeOrAllow === "allow"}
@@ -85,7 +86,7 @@ export const WizardFieldLabel = observer ( ({...attributes}: React.LabelHTMLAttr
 export const EnterAssociatedDomainsView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
     return (<>
-      Paste the address of the website or enter its domain name (e.g., https://example.com or just example.com)
+      Paste the address of the website (e.g., https://example.com) or enter its domain name.
       <div>
         <WizardFieldLabel>Domain:</WizardFieldLabel>
         <AssociatedDomainsTextFieldView { ...{state}} />
@@ -119,7 +120,7 @@ export const RecipeWizardContentView = observer ( ({state}: {
     switch (state.wizardStep) {
       case WizardStep.PickRecipe:
         return (
-          <div style={{fontSize: "1.25rem", }}>
+          <div>
             <div style={{fontWeight: "bold"}}>Choose a <i>recipe</i> to create a password, key, or other secret from your DiceKey.</div>
             <div style={{marginTop: "0.5rem"}}>
               {/* <label>Recipe:</label> */}
@@ -147,9 +148,16 @@ export const RecipeWizardContentView = observer ( ({state}: {
     }
 });
 
+const WizardBorderWidth = "3px";
 export const RecipeWizardView = observer ( ({state}: {
   state: RecipeBuilderState}) => (state.wizardComplete) ? null : (
-    <div className={css.RecipeWizardContainer} style={{}}>
+    <div className={css.RecipeWizardContainer} style={{
+      width: `calc(${Dimensions.ScreenWidthPercentUsed}vw - (2 * (${Dimensions.BoxPadding} + ${WizardBorderWidth})))`,
+      padding: `${Dimensions.BoxPadding}`,
+      // borderStyle: "outset",
+      // borderWidth: WizardBorderWidth,
+      // borderColor: "black",
+    }}>
       <RecipeWizardContentView {...{state}} />
     </div>
 ));

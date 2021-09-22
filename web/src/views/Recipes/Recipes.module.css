@@ -44,16 +44,16 @@
 
 .RecipeWizardContainer {
   min-height: 16vh;
-  width: calc(90vw - 1rem);
+  /* width: calc(80vw - 1rem); */
   /* background-color: rgb(255, 176, 119); */
-  background-color: rgba(255, 254, 171, 0.5);
-  font-size: 1.25rem;
+  background-color: rgb(249, 249, 218);
+  font-size: 1.4rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   align-content: center;
-  padding: 0.5rem;
+  /* padding: 0.5rem; */
   border-radius: 0.5rem;
 }
 

@@ -146,19 +146,19 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
       <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
         {/* Key */}
         <span style={{width: Dimensions.DiceKeyBoxSize, height: Dimensions.DiceKeyBoxSize}}>
-          <DiceKeyViewAutoSized faces={diceKey.faces} maxHeight={Dimensions.diceKeyBoxMaxHeight} maxWidth={Dimensions.diceKeyBoxMaxWidth}
+          <DiceKeyViewAutoSized faces={diceKey.faces} maxHeight={Dimensions.diceKeyBoxMaxHeight} maxWidth={Dimensions.DiceKeyBoxMaxWidth}
             obscureAllButCenterDie={ToggleState.ObscureDiceKey}
           />
         </span>
         {/* Plus sign */}
-        <span style={{width: Dimensions.plusSignViewWidth, textAlign: "center", fontSize: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`}}>+</span>
+        <span style={{width: Dimensions.PlusSignViewWidth, textAlign: "center", fontSize: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`}}>+</span>
         <RecipeView {...{recipeBuilderState, editButtonsHoverState}} />
       </div>
       <div style={{display: "flex", flexDirection: "row", alignItems: "flex-start"}}>
         <div style={{display: "flex", fontFamily: "sans-serif", fontSize: `${Dimensions.LabelFontSizeVh}vh`, flexDirection: "row", width: Dimensions.DiceKeyBoxSize, justifyContent: "center", alignItems: "baseline", color: "rgba(0, 0, 0, 0.5)"}}>
           Key
         </div>
-        <div style={{width: Dimensions.plusSignViewWidth, textAlign: "center", fontSize: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`, height: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`, 
+        <div style={{width: Dimensions.PlusSignViewWidth, textAlign: "center", fontSize: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`, height: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`, 
         }}>{
           true || recipeBuilderState.wizardStep > WizardStep.EnterAddressOrPurpose ? 
             // Down arrow

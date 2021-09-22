@@ -6,8 +6,10 @@ import { NumberPlusMinusView } from "../../basics/NumericTextFieldView";
 import { visibility } from "../../../utilities/visibility";
 import * as Dimensions from "./Dimensions";
 import * as Colors from "./Colors";
+import { describeRecipeType } from "../DescribeRecipeType";
+import { EnhancedRecipeView } from "../EnhancedRecipeView";
 
-const fieldEditorWidth = Math.min(80, Dimensions.screenWidthPercentUsed)
+const fieldEditorWidth = Math.min(80, Dimensions.ScreenWidthPercentUsed)
 const labelWidthVw = 10;
 const labelValueMarginVw = 0.5;
 const valueElementWidthVw = fieldEditorWidth - (labelWidthVw + labelValueMarginVw);
@@ -25,11 +27,6 @@ const BuilderFieldLabel = ({style, children, ...props}: React.DetailedHTMLProps<
     }}>{ children}</label>
 );
 
-// export const BuilderFieldValueContainer = ({children, ...props}: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>) => (
-//   <div style={{ width: `50vw`,
-//     }} {...props}>{ children}</div>
-// );
-
 const ContainerForOptionalFieldValue = observer ( ({
   value, children, ...optProps
 }: React.PropsWithChildren<(
@@ -42,8 +39,11 @@ const ContainerForOptionalFieldValue = observer ( ({
   <>{
     (value == null) ? (
       <>
-        {optProps.defaultValueText}
-        <button onClick={optProps.setDefaultValue}>{optProps.setDefaultValueButtonLabel}</button>
+        <span style={{color: "rgba(128,128,128,1)"}}>{optProps.defaultValueText}</span>
+        <button
+          onClick={optProps.setDefaultValue}
+          style={{marginLeft: `1rem`}}
+        >{optProps.setDefaultValueButtonLabel}</button>
       </>
     ) : children
   }
@@ -101,7 +101,7 @@ export const PurposeFieldView = observer( ({state}: {
     <BuilderFieldContainer>
       <BuilderFieldLabel htmlFor={field}>Purpose:</BuilderFieldLabel>
       <input id={field} type="text" spellCheck={false}
-        className={css.PurposeOrHostNameTextField}
+        className={css.host_name_input_span}
         size={40}
         value={state.purposeField ?? ""}
         placeholder=""
@@ -115,12 +115,6 @@ export const PurposeFieldView = observer( ({state}: {
         onInput={ e => {state.setPurposeField(e.currentTarget.value); fieldFocusState.focus(); }} 
         onFocus={ fieldFocusState.focus } />
     </BuilderFieldContainer>
-    // <RecipeFieldView
-    //   focusState={fieldFocusState}
-    //   label="purpose (required)"
-    //   for={field}
-    // >
-    // </RecipeFieldView>
   );
 });
 
@@ -160,7 +154,7 @@ export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBui
         <BuilderFieldLabel htmlFor={field}>max length</BuilderFieldLabel>
         <ContainerForOptionalFieldValue
           value={state.lengthInCharsState.numericValue}
-          defaultValueText={"none"}
+          defaultValueText={"no limit"}
           setDefaultValue={() => state.lengthInCharsState.setValue(64)}
           setDefaultValueButtonLabel={"add"}
         >
@@ -186,12 +180,12 @@ export const LengthInBytesFormFieldView = observer( ({state}: {state: RecipeBuil
   const fieldFocusState = new RecipeFieldFocusState(state, field);
   return (
     <BuilderFieldContainer >
-      <BuilderFieldLabel htmlFor={field}>max length</BuilderFieldLabel>
+      <BuilderFieldLabel htmlFor={field}>length</BuilderFieldLabel>
       <ContainerForOptionalFieldValue
         value={state.lengthInBytesState.numericValue}
-        defaultValueText={"none"}
+        defaultValueText={"default (32 bytes)"}
         setDefaultValue={() => state.lengthInBytesState.setValue(64)}
-        setDefaultValueButtonLabel={"add"}
+        setDefaultValueButtonLabel={"modify"}
       > 
         <NumberPlusMinusView
           id={field}
@@ -209,6 +203,38 @@ export const LengthInBytesFormFieldView = observer( ({state}: {state: RecipeBuil
   );
 });
 
+export const RawJsonFieldView = observer( ({state}: {
+  state: RecipeBuilderState,
+} ) => {
+  const field = "rawJson";
+  const fieldFocusState = new RecipeFieldFocusState(state, field);
+  const textAreaComponentRef = React.useRef<HTMLTextAreaElement>(null);
+  return (
+    <BuilderFieldContainer>
+      <BuilderFieldLabel htmlFor={field}>raw json:</BuilderFieldLabel>
+        <div className={css.FormattedRecipeBox}>
+          <div className={css.FormattedRecipeUnderlay} style={{
+            width: `${valueElementWidthVw}vw`,
+          }} >
+            <EnhancedRecipeView recipeJson={state.recipeJson} />
+          </div>
+          <textarea
+            spellCheck={false}
+            ref={textAreaComponentRef}
+            className={css.FormattedRecipeTextField}
+            value={state.recipeJson ?? ""}
+            onFocus={fieldFocusState.focus}
+            onInput={ e => {state.setRecipeJson(e.currentTarget.value); fieldFocusState.focus(); }} 
+            style={{
+              width: `${valueElementWidthVw}vw`,
+            }}
+          />
+        </div>
+    </BuilderFieldContainer>
+  );
+});
+
+
 export const RecipeEditableFieldsView = observer( ( {state}: {state: RecipeBuilderState}) => {
   return (
     <div style={{
@@ -217,6 +243,11 @@ export const RecipeEditableFieldsView = observer( ( {state}: {state: RecipeBuild
       justifyContent: "flex-end",
       alignItems: "flex-start"
     }}>
+      <BuilderFieldContainer>
+        <span style={{fontSize: `1.05rem`, fontStyle: "italic"}}>Recipe instructions applicable to {
+          describeRecipeType(state.type, {pluralize: true})
+          }:</span>
+      </BuilderFieldContainer>
       { state.usePurposeOrAllow === "allow" ? (
         <SiteFieldView state={state} />
       ) : state.usePurposeOrAllow === "purpose" ? (
@@ -225,6 +256,9 @@ export const RecipeEditableFieldsView = observer( ( {state}: {state: RecipeBuild
       <LengthInCharsFormFieldView state={state} />
       <LengthInBytesFormFieldView state={state} />
       <SequenceNumberFormFieldView state={state} />
+      { state.editingMode !== RecipeEditingMode.EditIncludingRawJson ? null : (
+        <RawJsonFieldView state={state} />
+      )}
     </div>
   );
 });
