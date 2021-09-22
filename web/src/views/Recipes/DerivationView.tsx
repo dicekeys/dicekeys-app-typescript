@@ -50,7 +50,12 @@ export const DerivationView = ( ({diceKey}: {
   const recipeBuilderState =  new RecipeBuilderState();
   const derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, seedString});
   return (
-    <div style={{marginLeft: "5vw", marginRight: "5vw"}}>
+    <div style={{marginLeft: "5vw", marginRight: "5vw",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+    }}>
       <Spacer/>
       <div style={{...centeredColumnStyle,
         justifyContent: "flex-end",

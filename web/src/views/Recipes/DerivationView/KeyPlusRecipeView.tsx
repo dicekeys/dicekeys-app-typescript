@@ -104,13 +104,10 @@ const RecipeView = observer( ({recipeBuilderState, editButtonsHoverState}: {
       justifyContent: "space-around",
       alignItems: "flex-start",
       backgroundColor: "rgba(128,128,196,0.10)",
-      padding: "0.35rem",
-      // External width is 60% of the screen (60vw), with 0.7rem lost to padding (0.35rem on each side)
-      width: "calc(60vw - 0.7rem)",
-      // Min external height is the lesser of 22.5% of the window height or 25% of the window width,
-      // with 0.7rem removed for padding
-      minHeight: `calc(${Dimensions.diceKeyBoxSize} - 0.7rem)`,
-      borderRadius: "0.35rem",
+      padding: Dimensions.BoxPadding,
+      width: Dimensions.recipeViewWidth,
+      minHeight: `calc(${Dimensions.DiceKeyBoxSize} - 2 * (${Dimensions.BoxPadding}))`,
+      borderRadius: Dimensions.BoxPadding,
       color: "rgba(0, 0, 0, 1)",
     }}>
       { !recipeBuilderState.wizardComplete ? (
@@ -148,7 +145,7 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
     <div style={{display: "flex", flexDirection: "column", alignItems: "flex-start"}}>
       <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
         {/* Key */}
-        <span style={{width: Dimensions.diceKeyBoxSize, height: Dimensions.diceKeyBoxSize}}>
+        <span style={{width: Dimensions.DiceKeyBoxSize, height: Dimensions.DiceKeyBoxSize}}>
           <DiceKeyViewAutoSized faces={diceKey.faces} maxHeight={Dimensions.diceKeyBoxMaxHeight} maxWidth={Dimensions.diceKeyBoxMaxWidth}
             obscureAllButCenterDie={ToggleState.ObscureDiceKey}
           />
@@ -158,7 +155,7 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
         <RecipeView {...{recipeBuilderState, editButtonsHoverState}} />
       </div>
       <div style={{display: "flex", flexDirection: "row", alignItems: "flex-start"}}>
-        <div style={{display: "flex", fontFamily: "sans-serif", fontSize: `${Dimensions.LabelFontSizeVh}vh`, flexDirection: "row", width: Dimensions.diceKeyBoxSize, justifyContent: "center", alignItems: "baseline", color: "rgba(0, 0, 0, 0.5)"}}>
+        <div style={{display: "flex", fontFamily: "sans-serif", fontSize: `${Dimensions.LabelFontSizeVh}vh`, flexDirection: "row", width: Dimensions.DiceKeyBoxSize, justifyContent: "center", alignItems: "baseline", color: "rgba(0, 0, 0, 0.5)"}}>
           Key
         </div>
         <div style={{width: Dimensions.plusSignViewWidth, textAlign: "center", fontSize: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`, height: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`, 
