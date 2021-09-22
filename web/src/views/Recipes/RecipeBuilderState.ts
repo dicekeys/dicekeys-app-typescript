@@ -61,10 +61,10 @@ export enum RecipeEditingMode {
 export enum WizardStep {
   PickRecipe = 0,
   PickAddressVsPurpose = 1,
-  EnterAddressOrPurpose = 2,
-  EditAllFields = 3,
-  EditRawJson = 4,
-  DoneEditing = 5
+  EnterSite = 2.1,
+  EnterPurpose = 2.2,
+  EnterRawJson = 2.3,
+  Complete = 3
 }
 
 export class RecipeFieldFocusState {
@@ -100,36 +100,36 @@ export class RecipeBuilderState {
   get typeNameLc(): string { return this.typeName.toLocaleLowerCase() }
 
 
-  usePurposeOrAllow?: "purpose" | "allow" | undefined;
-  setUsePurposeOrAllow = action( (newValue: "purpose" | "allow" | undefined) => {
-    this.usePurposeOrAllow = newValue;
+  wizardSecondInput?: "purpose" | "allow" | "rawJson" | undefined;
+  setWizardSecondInput = action( (newValue: "purpose" | "allow" | "rawJson" | undefined) => {
+    this.wizardSecondInput = newValue;
   })
-  setUsePurposeOrAllowFn = (newValue: "purpose" | "allow" | undefined) =>
-    () => this.setUsePurposeOrAllow(newValue);
+  setWizardSecondInputFn = (newValue: "purpose" | "allow" | "rawJson" | undefined) =>
+    () => this.setWizardSecondInput(newValue);
 
-  purposeOrAssociatedDomainsEntered?: boolean;
+  wizardThirdInputEntered?: boolean;
   setPurposeOrAssociatedDomainsEntered = action( (newValue: boolean | undefined) => {
-    this.purposeOrAssociatedDomainsEntered = newValue;
+    this.wizardThirdInputEntered = newValue;
     if (newValue) {
       this.editingMode = RecipeEditingMode.NoEdit;
     }
   })
-  setPurposeOrAssociatedDomainsEnteredFn = (newValue: boolean | undefined) =>
+  setWizardThirdInputEnteredFn = (newValue: boolean | undefined) =>
     () => this.setPurposeOrAssociatedDomainsEntered(newValue);
 
   get wizardStep(): WizardStep {
     if (this.type == null) return WizardStep.PickRecipe;
-    if (this.usePurposeOrAllow == null) return WizardStep.PickAddressVsPurpose;
-    if (!this.purposeOrAssociatedDomainsEntered === true) return WizardStep.EnterAddressOrPurpose;
-    switch(this.editingMode) {
-      case RecipeEditingMode.NoEdit: return WizardStep.DoneEditing;
-      case RecipeEditingMode.EditWithTemplateOnly: return WizardStep.EditAllFields;
-      case RecipeEditingMode.EditIncludingRawJson: return WizardStep.EditRawJson;
-      case RecipeEditingMode.NoRecipe: return WizardStep.PickRecipe;
+    if (this.wizardSecondInput == null) return WizardStep.PickAddressVsPurpose;
+    if (this.wizardThirdInputEntered === true) return WizardStep.Complete;
+    switch(this.wizardSecondInput) {
+      case "allow": return WizardStep.EnterSite;
+      case "purpose": return WizardStep.EnterPurpose;
+      case "rawJson": return WizardStep.EnterRawJson;
     }
   }
+
   get wizardComplete(): boolean {
-    return this.wizardStep > WizardStep.EnterAddressOrPurpose && this.type != null
+    return this.wizardStep === WizardStep.Complete && this.type != null
   }
 
   editingMode: RecipeEditingMode = RecipeEditingMode.NoRecipe;
@@ -330,8 +330,8 @@ export class RecipeBuilderState {
     this.name = "";
     this.purposeField = undefined;
     this.associatedDomainsTextField = undefined;
-    this.purposeOrAssociatedDomainsEntered = false;
-    this.usePurposeOrAllow = undefined;
+    this.wizardThirdInputEntered = false;
+    this.wizardSecondInput = undefined;
     this.sequenceNumberState.textValue = ""
     this.lengthInBytesState.textValue = "";
     this.lengthInCharsState.textValue = ""
@@ -347,12 +347,12 @@ export class RecipeBuilderState {
     const {purpose, hosts, sequenceNumber, lengthInBytes, lengthInChars} = recipeJsonToAddableFields(recipeJson);
     this.purposeField = purpose;
     if (purpose != null) {
-      this.usePurposeOrAllow = "purpose";
-      this.purposeOrAssociatedDomainsEntered = true;
+      this.wizardSecondInput = "purpose";
+      this.wizardThirdInputEntered = true;
     }
     if (hosts != null) {
-      this.usePurposeOrAllow = "allow";
-      this.purposeOrAssociatedDomainsEntered = true;
+      this.wizardSecondInput = "allow";
+      this.wizardThirdInputEntered = true;
       this.associatedDomainsTextField = hosts.join(", ")
     } else {
       this.associatedDomainsTextField = undefined;

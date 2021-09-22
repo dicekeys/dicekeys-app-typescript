@@ -283,9 +283,9 @@ export const RecipeFieldsHelpView = observer ( ( {state}: {state: RecipeBuilderS
 export const RecipeBuilderFieldsView = observer( ( {state}: {state: RecipeBuilderState}) => {
   return (
     <div className={css.RecipeFields}>
-      { state.usePurposeOrAllow === "allow" ? (
+      { state.wizardSecondInput === "allow" ? (
         <SiteFieldView state={state} />
-      ) : state.usePurposeOrAllow === "purpose" ? (
+      ) : state.wizardSecondInput === "purpose" ? (
         <PurposeFieldView state={state} />
       ) : null }
       <LengthInCharsFormFieldView state={state} />

@@ -159,12 +159,7 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
           Key
         </div>
         <div style={{width: Dimensions.PlusSignViewWidth, textAlign: "center", fontSize: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`, height: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`, 
-        }}>{
-          true || recipeBuilderState.wizardStep > WizardStep.EnterAddressOrPurpose ? 
-            // Down arrow
-            (<>&#8659;</>) :
-            null
-        }
+        }}>&#8659;
         </div>
         <div style={{width: Dimensions.recipeViewWidth, fontFamily: "sans-serif", fontSize: "3vh", textAlign: "center", color: "rgba(0, 0, 0, 0.5)",
           ...visibility(recipeBuilderState.wizardComplete)

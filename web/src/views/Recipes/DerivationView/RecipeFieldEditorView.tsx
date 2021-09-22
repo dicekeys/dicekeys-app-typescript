@@ -248,9 +248,9 @@ export const RecipeEditableFieldsView = observer( ( {state}: {state: RecipeBuild
           describeRecipeType(state.type, {pluralize: true})
           }:</span>
       </BuilderFieldContainer>
-      { state.usePurposeOrAllow === "allow" ? (
+      { state.wizardSecondInput === "allow" ? (
         <SiteFieldView state={state} />
-      ) : state.usePurposeOrAllow === "purpose" ? (
+      ) : state.wizardSecondInput === "purpose" ? (
         <PurposeFieldView state={state} />
       ) : null }
       <LengthInCharsFormFieldView state={state} />

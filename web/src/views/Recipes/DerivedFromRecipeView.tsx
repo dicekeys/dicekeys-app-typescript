@@ -6,6 +6,7 @@ import { ToggleState } from "../../state";
 import { action } from "mobx";
 import { DerivedFromRecipeState, OutputFormats, OutputFormat } from "./DerivedFromRecipeState";
 import { DerivationRecipeType } from "../../dicekeys/StoredRecipe";
+import { describeRecipeType } from "./DescribeRecipeType";
 
 
 const Bip39OutputView = ({bip39String, obscureValue}: {bip39String: string, obscureValue: boolean}) => {
@@ -80,7 +81,7 @@ export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
         : (
         <div className={css.DerivedValue}>
           { showPlaceholder ? (
-            <><i style={{color: "rgba(0,0,0,0.5"}}>A secret to be created by applying a recipe to your DiceKey</i></>
+            <><i style={{color: "rgba(0,0,0,0.5"}}>A {describeRecipeType(recipe.type)} to be created by applying a recipe to your DiceKey</i></>
           ) : (
             <OptionallyObscuredTextView value={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />
           )}

@@ -1,7 +1,7 @@
 import * as Dimensions from "./DerivationView/Dimensions";
 import React from "react";
 import { observer  } from "mobx-react";
-import { RecipeBuilderState, WizardStep } from "./RecipeBuilderState";
+import { RecipeBuilderState } from "./RecipeBuilderState";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
@@ -17,11 +17,11 @@ import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 
 export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
   recipeBuilderState: RecipeBuilderState,
-}) => recipeBuilderState.wizardStep <= WizardStep.EnterAddressOrPurpose ? (
-    <RecipeWizardView state={recipeBuilderState} />
-  ) : (
+}) => recipeBuilderState.wizardComplete ? (
     <RecipeFieldEditorView state={recipeBuilderState} />
-  )
+  ) : (
+    <RecipeWizardView state={recipeBuilderState} />
+    )
 );
 
 export const DerivedFromRecipeViewOrPlaceholder = observer( ( {recipeBuilderState, derivedFromRecipeState}: {
