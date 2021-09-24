@@ -47,7 +47,6 @@ export enum RecipeEditingMode {
   EditIncludingRawJson,
 }
 
-
 // type EditingMode = "fields" | "json" | undefined;
 
 // interface RecipeBuilderStateConstructorOptions {
@@ -60,10 +59,9 @@ export enum RecipeEditingMode {
 
 export enum WizardStep {
   PickRecipe = 0,
-  PickAddressVsPurpose = 1,
-  EnterSite = 2.1,
-  EnterPurpose = 2.2,
-  EnterRawJson = 2.3,
+  EnterSite = 1,
+  EnterPurpose = 2.1,
+  EnterRawJson = 2.2,
   Complete = 3
 }
 
@@ -99,32 +97,56 @@ export class RecipeBuilderState {
   get typeName(): string { return describeRecipeType(this.type) }
   get typeNameLc(): string { return this.typeName.toLocaleLowerCase() }
 
+  rawJsonWarningDismissed: boolean = false;
+  dismissRawJsonWarning = action ( () => {
+    this.rawJsonWarningDismissed = true;
+  });
+  get showRawJsonWarning(): boolean {
+    return (
+      // If we're about to show a raw JSON editor
+      (
+        this.wizardStep === WizardStep.EnterRawJson ||
+        ( this.wizardComplete &&
+          this.editingMode === RecipeEditingMode.EditIncludingRawJson)  
+      ) &&
+      // and the user hasn't dismissed the warning of the dangers of this
+      !this.rawJsonWarningDismissed
+    );
+  }
+  abortEnteringRawJson = () => {
+    if (this.wizardStep === WizardStep.EnterRawJson) {
+      // Step back from the raw json step
+      this.setWizardPrimaryFieldOverride(undefined);
+    } else if (this.editingMode === RecipeEditingMode.EditIncludingRawJson) {
+      this.setEditingMode(RecipeEditingMode.NoEdit);
+    }
+  }
 
-  wizardSecondInput?: "purpose" | "allow" | "rawJson" | undefined;
-  setWizardSecondInput = action( (newValue: "purpose" | "allow" | "rawJson" | undefined) => {
-    this.wizardSecondInput = newValue;
+
+  wizardPrimaryFieldOverride?: "purpose" | "rawJson" | undefined;
+  setWizardPrimaryFieldOverride = action( (newValue: "purpose" | "rawJson" | undefined) => {
+    this.wizardPrimaryFieldOverride = newValue;
   })
-  setWizardSecondInputFn = (newValue: "purpose" | "allow" | "rawJson" | undefined) =>
-    () => this.setWizardSecondInput(newValue);
+  setWizardPrimaryFieldOverrideFn = (newValue: "purpose" | "rawJson" | undefined) =>
+    () => this.setWizardPrimaryFieldOverride(newValue);
 
-  wizardThirdInputEntered?: boolean;
-  setPurposeOrAssociatedDomainsEntered = action( (newValue: boolean | undefined) => {
-    this.wizardThirdInputEntered = newValue;
+  wizardPrimaryFieldEntered?: boolean;
+  setWizardPrimaryFieldEntered = action( (newValue: boolean | undefined) => {
+    this.wizardPrimaryFieldEntered = newValue;
     if (newValue) {
       this.editingMode = RecipeEditingMode.NoEdit;
     }
   })
-  setWizardThirdInputEnteredFn = (newValue: boolean | undefined) =>
-    () => this.setPurposeOrAssociatedDomainsEntered(newValue);
+  setWizardPrimaryFieldEnteredFn = (newValue: boolean | undefined) =>
+    () => this.setWizardPrimaryFieldEntered(newValue);
 
   get wizardStep(): WizardStep {
     if (this.type == null) return WizardStep.PickRecipe;
-    if (this.wizardSecondInput == null) return WizardStep.PickAddressVsPurpose;
-    if (this.wizardThirdInputEntered === true) return WizardStep.Complete;
-    switch(this.wizardSecondInput) {
-      case "allow": return WizardStep.EnterSite;
+    if (this.wizardPrimaryFieldEntered === true) return WizardStep.Complete;
+    switch(this.wizardPrimaryFieldOverride) {
       case "purpose": return WizardStep.EnterPurpose;
       case "rawJson": return WizardStep.EnterRawJson;
+      default: return WizardStep.EnterSite;
     }
   }
 
@@ -204,16 +226,16 @@ export class RecipeBuilderState {
   public name: string = "";
   setName = action ( (name: string) => this.name = name );
 
-  associatedDomainsTextField?: string = undefined;
-  setAssociatedDomainsTextField  = action ( (newValue?: string) => {
-    this.associatedDomainsTextField = newValue;
+  siteTextField?: string = undefined;
+  setSiteTextField  = action ( (newValue?: string) => {
+    this.siteTextField = newValue;
     const {recipeJson, hosts} = this;
     if (hosts?.length && hosts.length > 0) {
       this.recipeJson = addHostsToRecipeJson(recipeJson, hosts);
     }
   });
 
-  pasteIntoAssociatedDomainsTextField = action( (e: React.ClipboardEvent<HTMLInputElement>) => {
+  pasteIntoSiteTextField = action( (e: React.ClipboardEvent<HTMLInputElement>) => {
     // If pasting a URL, paste only the domain
     const text = e.clipboardData.getData("text");
     const domain = getRegisteredDomain(text);
@@ -227,10 +249,10 @@ export class RecipeBuilderState {
         // The domain has already been included. Don't re-paste it
         return;
     }
-    const trimmedField = (this.associatedDomainsTextField ?? "").trim();
+    const trimmedField = (this.siteTextField ?? "").trim();
     const connector = trimmedField.length === 0 ? "" :
       trimmedField[trimmedField.length-1] === "," ? " " : ", ";
-    this.setAssociatedDomainsTextField(trimmedField + connector +
+    this.setSiteTextField(trimmedField + connector +
       // Add a "*." up front if needed
       (domain[0] === "*" || domain[0] === "." ? "" : "*.") +
       domain);
@@ -253,9 +275,9 @@ export class RecipeBuilderState {
    * a URL or list of hosts
    */
   get hosts(): string[] | undefined {
-    return parseCommaSeparatedListOfHosts(this.associatedDomainsTextField);
+    return parseCommaSeparatedListOfHosts(this.siteTextField);
   }
-  get associatedDomainsFieldContainsHosts(): boolean { return (this.hosts?.length ?? 0) > 0 }
+  get SiteFieldContainsHosts(): boolean { return (this.hosts?.length ?? 0) > 0 }
 
   ///////////////////////////////////////////////
   // Deriving a recipe from all the form fields
@@ -329,9 +351,9 @@ export class RecipeBuilderState {
     this.recipeJson = undefined;
     this.name = "";
     this.purposeField = undefined;
-    this.associatedDomainsTextField = undefined;
-    this.wizardThirdInputEntered = false;
-    this.wizardSecondInput = undefined;
+    this.siteTextField = undefined;
+    this.wizardPrimaryFieldEntered = false;
+    this.wizardPrimaryFieldOverride = undefined;
     this.sequenceNumberState.textValue = ""
     this.lengthInBytesState.textValue = "";
     this.lengthInCharsState.textValue = ""
@@ -346,16 +368,17 @@ export class RecipeBuilderState {
     } catch {}
     const {purpose, hosts, sequenceNumber, lengthInBytes, lengthInChars} = recipeJsonToAddableFields(recipeJson);
     this.purposeField = purpose;
+    this.wizardPrimaryFieldOverride = "rawJson";
     if (purpose != null) {
-      this.wizardSecondInput = "purpose";
-      this.wizardThirdInputEntered = true;
+      this.wizardPrimaryFieldOverride = "purpose";
+      this.wizardPrimaryFieldEntered = true;
     }
     if (hosts != null) {
-      this.wizardSecondInput = "allow";
-      this.wizardThirdInputEntered = true;
-      this.associatedDomainsTextField = hosts.join(", ")
+      this.wizardPrimaryFieldOverride = undefined;
+      this.wizardPrimaryFieldEntered = true;
+      this.siteTextField = hosts.join(", ")
     } else {
-      this.associatedDomainsTextField = undefined;
+      this.siteTextField = undefined;
     }
     this.sequenceNumberState.textValue = sequenceNumber != null ? `${sequenceNumber}` : ""
     this.lengthInBytesState.textValue = lengthInBytes != null ? `${lengthInBytes}` : "";

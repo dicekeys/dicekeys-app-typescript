@@ -160,11 +160,11 @@ export const SiteFieldView = observer( ({state}: {
       <input id={field} type="text" spellCheck={false}
         className={css.PurposeOrHostNameTextField}
         size={40}
-        value={state.associatedDomainsTextField ?? ""}
+        value={state.siteTextField ?? ""}
         placeholder=""
         ref={ e => { if (e != null) { e?.focus(); fieldFocusState.focus() } } }
-        onPaste={ state.pasteIntoAssociatedDomainsTextField }
-        onInput={ e => {state.setAssociatedDomainsTextField(e.currentTarget.value); fieldFocusState.focus(); }} 
+        onPaste={ state.pasteIntoSiteTextField }
+        onInput={ e => {state.setSiteTextField(e.currentTarget.value); fieldFocusState.focus(); }} 
         onFocus={ fieldFocusState.focus } />
     </RecipeFieldView>
   );
@@ -187,7 +187,7 @@ export const PurposeFieldView = observer( ({state}: {
         value={state.purposeField ?? ""}
         placeholder=""
         ref={ e => { if (e != null) { e?.focus(); fieldFocusState.focus() } } }
-        onPaste={ state.pasteIntoAssociatedDomainsTextField }
+        onPaste={ state.pasteIntoSiteTextField }
         onInput={ e => {state.setPurposeField(e.currentTarget.value); fieldFocusState.focus(); }} 
         onFocus={ fieldFocusState.focus } />
     </RecipeFieldView>
@@ -283,9 +283,9 @@ export const RecipeFieldsHelpView = observer ( ( {state}: {state: RecipeBuilderS
 export const RecipeBuilderFieldsView = observer( ( {state}: {state: RecipeBuilderState}) => {
   return (
     <div className={css.RecipeFields}>
-      { state.wizardSecondInput === "allow" ? (
+      { state.wizardPrimaryFieldOverride == null ? (
         <SiteFieldView state={state} />
-      ) : state.wizardSecondInput === "purpose" ? (
+      ) : state.wizardPrimaryFieldOverride === "purpose" ? (
         <PurposeFieldView state={state} />
       ) : null }
       <LengthInCharsFormFieldView state={state} />

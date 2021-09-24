@@ -5,53 +5,71 @@ import { observer  } from "mobx-react";
 import { RecipeBuilderState, WizardStep } from "../RecipeBuilderState";
 import { SelectRecipeToLoadView } from "../LoadRecipeView";
 import { EnhancedRecipeView } from "../EnhancedRecipeView";
+import { describeRecipeType } from "../DescribeRecipeType";
 
-const InlineButton = observer( ({selected, children, ...buttonArgs}: {
-  selected?: boolean,
-} & React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => 
-  <button {...buttonArgs}
-    className={selected ? css.RecipeEditorButtonActive : css.RecipeEditorButton}
-  >{children}</button>
+const WizardBorderWidth = "3px";
+export const WizardPadding = `2rem`
+export const WizardStepContainer = ({children}: React.PropsWithChildren<{}>) => (
+  <div className={css.RecipeWizardContainer} style={{
+    width: `calc(${Dimensions.ScreenWidthPercentUsed}vw - (2 * (${WizardPadding} + ${WizardBorderWidth})))`,
+    padding: `${WizardPadding}`,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start"
+    // borderStyle: "outset",
+    // borderWidth: WizardBorderWidth,
+    // borderColor: "black",
+  }}>
+    {children}
+  </div>
 );
 
-export const DomainOrPurposeQuestionView = observer ( ({state}: {
-  state: RecipeBuilderState}) => {
-    return (<div>
-      Is this {state.typeNameLc} for a website or application with a web address (URL)?
-      <InlineButton
-        selected={state.wizardSecondInput === "allow"}
-        onClick={state.setWizardSecondInputFn("allow")}
-      >yes</InlineButton>
-      <InlineButton
-        selected={state.wizardSecondInput === "purpose"}
-        onClick={state.setWizardSecondInputFn("purpose")}
-      >no</InlineButton>
-      <a href="#"
-        onClick={e => {
-          e.preventDefault();
-          state.setWizardSecondInput("rawJson");
-        }}
-      >raw</a>
-    </div>);
-});
+export const WizardStepInstruction = ({children, style, ...props}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div {...props} style={{...style}} >
+    {children}
+  </div>
+);
 
-export const AssociatedDomainsTextFieldView = observer( ({state}: {
+export const WizardStepInstructionNote = ({children, style, ...props}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div {...props} style={{fontSize: `1rem`, ...style}} >
+    {children}
+  </div>
+);
+
+export const WizardFieldRow = ({children, style, ...props}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div {...props} style={{alignSelf: "center", marginTop: `1rem`, ...style}} >
+    {children}
+  </div>
+);
+
+export const WizardStepAlternatives = ({children}: React.PropsWithChildren<{}>) => (
+  <div style={{
+    alignSelf: "flex-end",
+    justifySelf: "flex-end",
+    marginTop: "1.5rem",
+  }
+  }>
+    {children}
+  </div>
+);
+
+export const SiteTextFieldView = observer( ({state}: {
   state: RecipeBuilderState,
 } ) => {
   return (
     <input type="text"
+      style={{marginLeft: `1rem`}}
       className={css.PurposeOrHostNameTextField}
-      id={"AssociatedDomains"}
+      id={"Site"}
       spellCheck={false}
-      size={40}
-      value={state.associatedDomainsTextField ?? ""}
+      size={60}
+      value={state.siteTextField ?? ""}
       placeholder="example.com"
-      onInput={ e => {state.setAssociatedDomainsTextField(e.currentTarget.value); }} 
-      onPaste={ state.pasteIntoAssociatedDomainsTextField }
+      onInput={ e => {state.setSiteTextField(e.currentTarget.value); }} 
+      onPaste={ state.pasteIntoSiteTextField }
       onKeyUp={ e => {if (e.key === "Enter" && (state.hosts?.length ?? 0) > 0) { 
-        state.setPurposeOrAssociatedDomainsEntered(true);
+        state.setWizardPrimaryFieldEntered(true);
       }}}
-
     />
   );
 });
@@ -64,22 +82,23 @@ export const RawJsonFieldView = observer( ({state}: {
   
   const textAreaComponentRef = React.useRef<HTMLTextAreaElement>(null);
   return (
-  <div className={css.FormattedRecipeBox}>
-  <div className={css.FormattedRecipeUnderlay} style={{
-    width: rawJsonFieldWidth,
-  }} >
-    <EnhancedRecipeView recipeJson={state.recipeJson} />
-  </div>
-  <textarea
-    spellCheck={false}
-    ref={textAreaComponentRef}
-    className={css.FormattedRecipeTextField}
-    value={state.recipeJson ?? ""}
-    onInput={ e => {state.setRecipeJson(e.currentTarget.value);  }} 
-    style={{
+  <div style={{display: "inline-block"}}>
+    <div className={css.FormattedRecipeUnderlay} style={{
       width: rawJsonFieldWidth,
-    }}
-  />
+    }} >
+      <EnhancedRecipeView recipeJson={state.recipeJson} />
+    </div>
+    <textarea
+      spellCheck={false}
+      ref={textAreaComponentRef}
+      className={css.FormattedRecipeTextField}
+      value={state.recipeJson ?? ""}
+      rows={2}
+      onInput={ e => {state.setRecipeJson(e.currentTarget.value);  }} 
+      style={{
+        width: rawJsonFieldWidth,
+      }}
+    />
 </div>
 )});
 
@@ -96,7 +115,7 @@ export const PurposeFieldView = observer( ({state}: {
       placeholder=""
       onInput={ e => {state.setPurposeField(e.currentTarget.value); }}
       onKeyUp={ e => {if (e.key === "Enter" && e.currentTarget.value.length > 0) { 
-        state.setPurposeOrAssociatedDomainsEntered(true);
+        state.setWizardPrimaryFieldEntered(true);
       }}}
     />
   );
@@ -106,9 +125,9 @@ export const TextCompletionButton = ( {...attributes}: React.ButtonHTMLAttribute
   <button {...attributes}>&#9166;</button>
 );
 
-export const PurposeOrAssociatedDomainsEnteredButton = ({state}: {
+export const PurposeOrSiteEnteredButton = ({state}: {
   state: RecipeBuilderState}) => (
-  <TextCompletionButton onClick={state.setWizardThirdInputEnteredFn(true)} />
+  <TextCompletionButton onClick={state.setWizardPrimaryFieldEnteredFn(true)} />
 );
 
 export const WizardFieldLabel = observer ( ({...attributes}: React.LabelHTMLAttributes<HTMLLabelElement>) => (
@@ -117,89 +136,114 @@ export const WizardFieldLabel = observer ( ({...attributes}: React.LabelHTMLAttr
   >{attributes.children}</label>
 ) );
 
-export const EnterAssociatedDomainsView = observer ( ({state}: {
+export const WizardStepEnterSiteView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
-    return (<>
-      Paste the address of the website (e.g., https://example.com) or enter its domain name.
-      <div>
-        <WizardFieldLabel>Domain:</WizardFieldLabel>
-        <AssociatedDomainsTextFieldView { ...{state}} />
-        <TextCompletionButton
-          disabled={(state.hosts?.length ?? 0) === 0}
-          onClick={state.setWizardThirdInputEnteredFn(true)}
-        />
-      </div>
-    </>);
+    return (
+      <WizardStepContainer>
+        <WizardStepInstruction>
+          Paste the address of the website (e.g., https://example.com) that this {describeRecipeType(state.type)} will be used for, or enter its domain name.
+        </WizardStepInstruction>
+        <WizardFieldRow>
+          {/* <WizardFieldLabel>Address/Domain</WizardFieldLabel> */}
+          <SiteTextFieldView { ...{state}} />
+          <TextCompletionButton
+            disabled={(state.hosts?.length ?? 0) === 0}
+            onClick={state.setWizardPrimaryFieldEnteredFn(true)}
+          />
+        </WizardFieldRow>
+        <WizardStepAlternatives>
+          <a href="" style={{fontSize: `0.9rem`}} onClick={(e) => {
+            e.preventDefault();
+            state.setWizardPrimaryFieldOverride("purpose")
+          }}>enter a purpose instead</a>
+          <a href="" style={{fontSize: `0.9rem`, marginLeft: `1rem`}}
+          onClick={(e) => {
+            e.preventDefault();
+            state.setWizardPrimaryFieldOverride("rawJson");
+          }}>enter raw json instead</a>
+        </WizardStepAlternatives>
+      </WizardStepContainer>);
 });
 
-export const EnterPurposeView = observer ( ({state}: {
+export const WizardStepEnterPurposeView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
-    return (<>
-      Enter a purpose for the {state.typeNameLc} (changing the purpose changes the {state.typeNameLc}).
-      <div>
-        <WizardFieldLabel>Purpose:</WizardFieldLabel>
-        <PurposeFieldView {...{state}} />
-        <TextCompletionButton
-          disabled={(state.purpose?.length ?? 0) === 0}
-          onClick={state.setWizardThirdInputEnteredFn(true)}
-        />
-      </div>
-    </>);
+    return (
+      <WizardStepContainer>
+        <WizardStepInstruction>
+          Enter a purpose for the {state.typeNameLc}.
+        </WizardStepInstruction>
+        {/* <WizardStepInstructionNote>Changing even one letter or space of the purpose changes the {state.typeNameLc}.</WizardStepInstructionNote> */}
+        <WizardFieldRow>
+          <WizardFieldLabel>Purpose:</WizardFieldLabel>
+          <PurposeFieldView {...{state}} />
+          <TextCompletionButton
+            disabled={(state.purpose?.length ?? 0) === 0}
+            onClick={state.setWizardPrimaryFieldEnteredFn(true)}
+          />
+        </WizardFieldRow>
+      </WizardStepContainer>
+    );
 });
 
-const EnterRawJsonStepView = observer ( ({state}: {
+
+
+const WizardStepEnterRawJsonStepView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
-    return (<>
-      If you're sure you know what you're doing, enter the raw JSON recipe for the {state.typeNameLc}.
-      <div>
-        <RawJsonFieldView {...{state}} />
-        <TextCompletionButton
-          disabled={state.recipe == null}
-          onClick={state.setWizardThirdInputEnteredFn(true)}
-        />
-      </div>
-    </>);
+    return (
+      <WizardStepContainer>
+        <WizardStepInstruction>
+        Paste or type the raw JSON recipe for the {state.typeNameLc}.
+        </WizardStepInstruction>
+        <WizardFieldRow>
+          <RawJsonFieldView {...{state}} />
+          <TextCompletionButton
+            disabled={state.recipe == null}
+            onClick={state.setWizardPrimaryFieldEnteredFn(true)}
+          />
+        </WizardFieldRow>
+      </WizardStepContainer>
+    );
 });
+
+export const RecipeWizardStepPickRecipeView = observer ( ({state}: {
+  state: RecipeBuilderState
+}) => (
+  <WizardStepContainer>
+      <WizardStepInstruction style={{fontWeight: "bold"}}>
+        Choose a <i>recipe</i> to create a password, key, or other secret from your DiceKey.
+        </WizardStepInstruction>
+      <WizardFieldRow>
+        <SelectRecipeToLoadView state={state} defaultOptionLabel={"recipe choices"} />
+      </WizardFieldRow>
+  </WizardStepContainer>
+));
 
 export const RecipeWizardContentView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
     switch (state.wizardStep) {
       case WizardStep.PickRecipe:
-        return (
-          <div>
-            <div style={{fontWeight: "bold"}}>Choose a <i>recipe</i> to create a password, key, or other secret from your DiceKey.</div>
-            <div style={{marginTop: "0.5rem"}}>
-              {/* <label>Recipe:</label> */}
-              <SelectRecipeToLoadView state={state} defaultOptionLabel={"recipe choices"} />
-            </div>
-            {/* <h3>Apply a <i>recipe</i> to your DiceKey to create a password, key, or other secret.</h3>
-            <LoadSavedRecipeView {...{state}} />
-            <LoadBuiltInRecipeView {...{state}} />
-            <CreateANewRecipeOfTypeView {...{state}} /> */}
-          </div>
-      );
-      case WizardStep.PickAddressVsPurpose: 
-        return (<DomainOrPurposeQuestionView {...{state}} />);
+        return (<RecipeWizardStepPickRecipeView {...{state}} />)
       case WizardStep.EnterSite:
-        return (<EnterAssociatedDomainsView {...{state}} />)
+        return (<WizardStepEnterSiteView {...{state}} />)
       case WizardStep.EnterPurpose:
-            return (<EnterPurposeView  {...{state}} />)
+            return (<WizardStepEnterPurposeView  {...{state}} />)
       case WizardStep.EnterRawJson:
-        return (<EnterRawJsonStepView {...{state}} />); // FIXME
+        return (<WizardStepEnterRawJsonStepView {...{state}} />); // FIXME
       case WizardStep.Complete: return null; // should never occur
     }
 });
 
-const WizardBorderWidth = "3px";
 export const RecipeWizardView = observer ( ({state}: {
-  state: RecipeBuilderState}) => (state.wizardComplete) ? null : (
-    <div className={css.RecipeWizardContainer} style={{
-      width: `calc(${Dimensions.ScreenWidthPercentUsed}vw - (2 * (${Dimensions.BoxPadding} + ${WizardBorderWidth})))`,
-      padding: `${Dimensions.BoxPadding}`,
-      // borderStyle: "outset",
-      // borderWidth: WizardBorderWidth,
-      // borderColor: "black",
-    }}>
-      <RecipeWizardContentView {...{state}} />
-    </div>
-));
+  state: RecipeBuilderState}) => {
+  switch (state.wizardStep) {
+    case WizardStep.PickRecipe:
+      return (<RecipeWizardStepPickRecipeView {...{state}} />)
+    case WizardStep.EnterSite:
+      return (<WizardStepEnterSiteView {...{state}} />)
+    case WizardStep.EnterPurpose:
+          return (<WizardStepEnterPurposeView  {...{state}} />)
+    case WizardStep.EnterRawJson:
+      return (<WizardStepEnterRawJsonStepView {...{state}} />); // FIXME
+    case WizardStep.Complete: return null;
+  }
+});

@@ -1,6 +1,6 @@
 import * as Dimensions from "./DerivationView/Dimensions";
 import React from "react";
-import { observer  } from "mobx-react";
+import { observer, Observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
@@ -10,10 +10,16 @@ import { RecipeWizardView } from "./DerivationView/RecipeWizardView";
 import {KeyPlusRecipeView} from "./DerivationView/KeyPlusRecipeView";
 import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 
-// Need back button in wizard
-// Add raw JSON editor wizard
+
+// Warning message display on raw json
+// Need back button in wizard for raw domain and purpose
+// Wizard should auto focus into input field.
+// Center the controls for the derived values
+// 
 // Add save feature
 // Remove +- from editor if field editor showing
+// Raw JSON will need name to save
+// Remove RecipeBuilderView from Security Key seeding
 
 export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
   recipeBuilderState: RecipeBuilderState,
@@ -23,13 +29,6 @@ export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
     <RecipeWizardView state={recipeBuilderState} />
     )
 );
-
-export const DerivedFromRecipeViewOrPlaceholder = observer( ( {recipeBuilderState, derivedFromRecipeState}: {
-  recipeBuilderState: RecipeBuilderState,
-  derivedFromRecipeState: DerivedFromRecipeState,
-}) => (
-  <DerivedFromRecipeView {...{showPlaceholder: !recipeBuilderState.wizardComplete, state: derivedFromRecipeState}} />
-));
 
 const ColumnStyle: React.CSSProperties = {
   display: "flex",
@@ -41,6 +40,17 @@ const centeredColumnStyle: React.CSSProperties = {
   alignItems: "center",
 }
 
+const RawJsonWarning = observer ( ({state}: {
+  state: RecipeBuilderState
+}) => {
+  return (
+    <div>
+      DANGER!
+      <button onClick={state.abortEnteringRawJson}>Cancel</button>
+      <button onClick={state.dismissRawJsonWarning}>I understand</button>
+    </div>
+  );
+});
 
 export const DerivationView = ( ({diceKey}: {
   diceKey: DiceKey;
@@ -48,37 +58,47 @@ export const DerivationView = ( ({diceKey}: {
   const seedString = diceKey.toSeedString();
   const recipeBuilderState =  new RecipeBuilderState();
   const derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, seedString});
-  return (
-    <div style={{
-      // marginLeft: "5vw", marginRight: "5vw",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      alignItems: "center",
-    }}>
-      <Spacer/>
-      <div style={{...centeredColumnStyle,
-        justifyContent: "flex-end",
-        height: `${Dimensions.WizardOrFieldsMaxHeight}vh`}}
-      >
-        <RecipeWizardOrFieldsView {...{recipeBuilderState}} />
+
+  // Renderer is wrapped in an observer so that it will update with recipeBuilderState
+  return (<Observer>{ () => {
+    if (recipeBuilderState.showRawJsonWarning) {
+      return (
+        <RawJsonWarning state={recipeBuilderState} />
+      )
+    }
+    return (
+      <div style={{
+        // marginLeft: "5vw", marginRight: "5vw",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        justifySelf: "center",
+      }}>
+        <Spacer/>
+        <div style={{...centeredColumnStyle,
+          justifyContent: "flex-end",
+          height: `${Dimensions.WizardOrFieldsMaxHeight}vh`}}
+        >
+          <RecipeWizardOrFieldsView {...{recipeBuilderState}} />
+        </div>
+        <Spacer/>
+        <div style={{...centeredColumnStyle, justifyContent: "flex-end"}}
+        >
+          <KeyPlusRecipeView {...{diceKey, recipeBuilderState}} />
+        </div>
+        {/* No spacer here since arrow should connect recipe to derived value */}
+        <div style={{...ColumnStyle, alignItems: "flex-start", justifyContent: "flex-start",
+          height: `${Dimensions.DerivedValueBoxMaxHeight}vh`,
+          maxWidth: `${Dimensions.ScreenWidthPercentUsed}vw`
+        }}
+        >
+          <DerivedFromRecipeView {...{showPlaceholder: !recipeBuilderState.recipeJson, state: derivedFromRecipeState}} />
+        </div>
+        <Spacer/>
       </div>
-      <Spacer/>
-      <div style={{...centeredColumnStyle, justifyContent: "flex-end"}}
-      >
-        <KeyPlusRecipeView {...{diceKey, recipeBuilderState}} />
-      </div>
-      {/* No spacer here since arrow should connect recipe to derived value */}
-      <div style={{...ColumnStyle, alignItems: "flex-start", justifyContent: "flex-start",
-        height: `${Dimensions.DerivedValueBoxMaxHeight}vh`,
-        maxWidth: `${Dimensions.ScreenWidthPercentUsed}vw`
-      }}
-      >
-        <DerivedFromRecipeViewOrPlaceholder {...{recipeBuilderState, derivedFromRecipeState}} />
-      </div>
-      <Spacer/>
-    </div>
-  )
+    )}}
+  </Observer>);
 });
 
 export const Preview_DerivationView = () => (

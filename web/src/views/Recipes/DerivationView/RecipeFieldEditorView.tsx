@@ -53,7 +53,7 @@ const ContainerForOptionalFieldValue = observer ( ({
 const BuilderFieldContainer = ({children}: React.PropsWithChildren<{}>) => (
   <div style={{
     display: "flex", flexDirection: "row", justifyContent: "flex-start", alignItems: "baseline",
-    fontSize: `min(2vh, 2vw)`,
+//    fontSize: `min(2vh, 2vw)`,
     marginTop: `0.25vh`,
   }}>{children}</div>
 );
@@ -68,7 +68,7 @@ const FieldUnderlineStyle = (textDecorationColor: Colors.All): React.CSSProperti
 export const SiteFieldView = observer( ({state}: {
   state: RecipeBuilderState,
 } ) => {
-  if (state.associatedDomainsTextField == null) return null;
+  if (state.siteTextField == null) return null;
   const field = "sites"
   const fieldFocusState = new RecipeFieldFocusState(state, field);
   return (
@@ -81,11 +81,11 @@ export const SiteFieldView = observer( ({state}: {
           borderColor: fieldBorderColor,
           ...FieldUnderlineStyle(Colors.PurposeOrSites),
         }}
-        value={state.associatedDomainsTextField ?? ""}
+        value={state.siteTextField ?? ""}
         placeholder=""
         ref={ e => { if (e != null) { e?.focus(); fieldFocusState.focus() } } }
-        onPaste={ state.pasteIntoAssociatedDomainsTextField }
-        onInput={ e => {state.setAssociatedDomainsTextField(e.currentTarget.value); fieldFocusState.focus(); }} 
+        onPaste={ state.pasteIntoSiteTextField }
+        onInput={ e => {state.setSiteTextField(e.currentTarget.value); fieldFocusState.focus(); }} 
         onFocus={ fieldFocusState.focus } />
     </BuilderFieldContainer>
   );
@@ -111,7 +111,7 @@ export const PurposeFieldView = observer( ({state}: {
           ...FieldUnderlineStyle(Colors.PurposeOrSites),
         }}
         ref={ e => { if (e != null) { e?.focus(); fieldFocusState.focus() } } }
-        onPaste={ state.pasteIntoAssociatedDomainsTextField }
+        onPaste={ state.pasteIntoSiteTextField }
         onInput={ e => {state.setPurposeField(e.currentTarget.value); fieldFocusState.focus(); }} 
         onFocus={ fieldFocusState.focus } />
     </BuilderFieldContainer>
@@ -241,16 +241,15 @@ export const RecipeEditableFieldsView = observer( ( {state}: {state: RecipeBuild
       display: "flex",
       flexDirection: "column",
       justifyContent: "flex-end",
-      alignItems: "flex-start"
+      alignItems: "flex-start",
+      ...visibility(state.type != null && state.editingMode !== RecipeEditingMode.NoEdit)
     }}>
-      <BuilderFieldContainer>
-        <span style={{fontSize: `1.05rem`, fontStyle: "italic"}}>Recipe instructions applicable to {
-          describeRecipeType(state.type, {pluralize: true})
-          }:</span>
-      </BuilderFieldContainer>
-      { state.wizardSecondInput === "allow" ? (
+      <div style={{fontSize: `1.1rem`}}>Recipe instructions applicable to {
+        describeRecipeType(state.type, {pluralize: true})
+        }:</div>
+      { state.wizardPrimaryFieldOverride == null ? (
         <SiteFieldView state={state} />
-      ) : state.wizardSecondInput === "purpose" ? (
+      ) : state.wizardPrimaryFieldOverride === "purpose" ? (
         <PurposeFieldView state={state} />
       ) : null }
       <LengthInCharsFormFieldView state={state} />
@@ -259,70 +258,24 @@ export const RecipeEditableFieldsView = observer( ( {state}: {state: RecipeBuild
       { state.editingMode !== RecipeEditingMode.EditIncludingRawJson ? null : (
         <RawJsonFieldView state={state} />
       )}
+      <div style={{fontSize: `0.9rem`, fontStyle: "italic"}}>
+        Even the smallest change to any field changes the entire {state.typeNameLc}.
+      </div>
     </div>
   );
 });
 
-// export const JsonFieldView = observer( ({state}: {
-//   state: RecipeBuilderState,
-// } ) => {
-//   const textAreaComponentRef = React.useRef<HTMLTextAreaElement>(null);
-//   const divAreaComponentRef = React.useRef<HTMLDivElement>(null);
-//   const editable = state.editingMode === RecipeEditingMode.EditIncludingRawJson;
-//   const { width } = useContainerDimensions(editable ? textAreaComponentRef : divAreaComponentRef)
-//   const fieldFocusState = new RecipeFieldFocusState(state, "rawJson");
-//   return (
-//     <RecipeFieldView
-//       focusState={fieldFocusState}
-// //      toggleEdit={ state.toggleAllowEditingOfRawRecipe }
-// //      mayEdit={ editable }
-//       label="recipe in JSON format">
-//       <div className={css.FormattedRecipeBox}>
-//         <div className={css.FormattedRecipeUnderlay} style={{width: `${width ?? 0}px`}} >
-//           <EnhancedRecipeView recipeJson={state.recipeJson} />
-//         </div>
-//         { editable ? (
-//           <textarea
-//             spellCheck={false}
-//             ref={textAreaComponentRef}
-//             disabled={!editable}
-//             className={css.FormattedRecipeTextField}
-//             value={state.recipeJson ?? ""}
-//             style={{...(editable ? {} : {userSelect: "all"})}}
-//             onFocus={fieldFocusState.focus}
-//             onInput={ e => {state.setRecipeJson(e.currentTarget.value); fieldFocusState.focus(); }} 
-//           />
-//         ) : (
-//           <div
-//             ref={divAreaComponentRef}
-//             className={css.FormattedRecipeDisabledDiv}
-//             style={{userSelect: "all"}}
-//           >{state.recipeJson ?? (<>&nbsp;</>)}</div>   
-//         ) }
-//       </div>
-//     </RecipeFieldView>
-//   );
-// });
-
-// export const RecipeRawJsonView = observer( ( {state}: {state: RecipeBuilderState}) => {
-//   return (
-//     <div className={css.RecipeSingleFieldRow}>
-//       <JsonFieldView state={state} />
-//     </div>
-//   );
-// });
-
 
 export const RecipeFieldEditorView = observer( ( {state}: {state: RecipeBuilderState, hideHeader?: boolean}) => {
   return (
-    <div 
-      style={{
-        display: `flex`,
-        flexDirection: `column`,
-        alignItems: `center`,
-        ...visibility(state.type != null && state.editingMode !== RecipeEditingMode.NoEdit)}}
-    >
+    // <div 
+    //   style={{
+    //     display: `flex`,
+    //     flexDirection: `column`,
+    //     alignItems: `center`,
+    //     ...visibility(state.type != null && state.editingMode !== RecipeEditingMode.NoEdit)}}
+    // >
       <RecipeEditableFieldsView state={state} />
-    </div>
+    // </div>
   );
 });

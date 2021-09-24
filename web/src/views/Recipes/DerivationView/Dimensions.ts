@@ -8,7 +8,7 @@ export const MaxContentViewHeight = 80;
 export const DownArrowAndPlusSignViewHeight = 4;
 export const LabelFontSizeVh = 3;
 export const KeyPlusRecipeViewMaxHeight = 28;
-export const WizardOrFieldsMaxHeight = 28;
+export const WizardOrFieldsMaxHeight = 22;
 export const DerivedValueBoxMaxHeight = MaxContentViewHeight - (KeyPlusRecipeViewMaxHeight + DownArrowAndPlusSignViewHeight + WizardOrFieldsMaxHeight);
 export const diceKeyBoxMaxHeight = `${KeyPlusRecipeViewMaxHeight}vh`;
 
