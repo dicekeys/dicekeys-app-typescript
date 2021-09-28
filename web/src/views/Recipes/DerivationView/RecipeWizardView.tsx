@@ -65,9 +65,14 @@ export const SiteTextFieldView = observer( ({state}: {
       size={60}
       value={state.siteTextField ?? ""}
       placeholder="example.com"
-      onInput={ e => {state.setSiteTextField(e.currentTarget.value); }} 
+      // Focus input when it's created
+      ref={ e => e?.focus() }
+      // Update our state store when the field changes
+      onInput={ e => {state.setSiteTextField(e.currentTarget.value); }}
+      // Special handling for pastes
       onPaste={ state.pasteIntoSiteTextField }
-      onKeyUp={ e => {if (e.key === "Enter" && (state.hosts?.length ?? 0) > 0) { 
+        // Handle enter key
+      onKeyUp={ e => {if (e.key === "Enter" && (state.hosts?.length ?? 0) > 0) {
         state.setWizardPrimaryFieldEntered(true);
       }}}
     />
@@ -76,11 +81,11 @@ export const SiteTextFieldView = observer( ({state}: {
 
 const rawJsonFieldWidth = '60vw'; // FIXME
 
-export const RawJsonFieldView = observer( ({state}: {
-  state: RecipeBuilderState
+export const RawJsonFieldView = observer( ({state, focusOnCreate}: {
+  state: RecipeBuilderState,
+  focusOnCreate?: boolean
 }) => {
-  
-  const textAreaComponentRef = React.useRef<HTMLTextAreaElement>(null);
+//  const textAreaComponentRef = React.useRef<HTMLTextAreaElement>(null);
   return (
   <div style={{display: "inline-block"}}>
     <div className={css.FormattedRecipeUnderlay} style={{
@@ -90,7 +95,8 @@ export const RawJsonFieldView = observer( ({state}: {
     </div>
     <textarea
       spellCheck={false}
-      ref={textAreaComponentRef}
+//      ref={textAreaComponentRef}
+      ref={ta => {if(focusOnCreate) {ta?.focus() }}}
       className={css.FormattedRecipeTextField}
       value={state.recipeJson ?? ""}
       rows={2}
@@ -113,6 +119,8 @@ export const PurposeFieldView = observer( ({state}: {
       size={40}
       value={state.purposeField ?? ""}
       placeholder=""
+      // Focus input when it's created
+      ref={ e => e?.focus() }
       onInput={ e => {state.setPurposeField(e.currentTarget.value); }}
       onKeyUp={ e => {if (e.key === "Enter" && e.currentTarget.value.length > 0) { 
         state.setWizardPrimaryFieldEntered(true);
@@ -195,7 +203,7 @@ const WizardStepEnterRawJsonStepView = observer ( ({state}: {
         Paste or type the raw JSON recipe for the {state.typeNameLc}.
         </WizardStepInstruction>
         <WizardFieldRow>
-          <RawJsonFieldView {...{state}} />
+          <RawJsonFieldView {...{state, focusOnCreate: true}} />
           <TextCompletionButton
             disabled={state.recipe == null}
             onClick={state.setWizardPrimaryFieldEnteredFn(true)}

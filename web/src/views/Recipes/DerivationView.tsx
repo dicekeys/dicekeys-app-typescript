@@ -13,7 +13,6 @@ import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 
 // Warning message display on raw json
 // Need back button in wizard for raw domain and purpose
-// Wizard should auto focus into input field.
 // Center the controls for the derived values
 // 
 // Add save feature
