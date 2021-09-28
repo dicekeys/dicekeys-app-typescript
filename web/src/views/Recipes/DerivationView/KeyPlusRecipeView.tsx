@@ -74,11 +74,11 @@ const RecipeView = observer( ({recipeBuilderState, editButtonsHoverState}: {
       alignItems: "flex-start"
     }}>
       <RecipeEditStateButton
-        hidden={!recipeBuilderState.wizardComplete || recipeBuilderState.sequenceNumber == null}
+        hidden={!recipeBuilderState.wizardComplete || recipeBuilderState.editingMode !== RecipeEditingMode.NoEdit || recipeBuilderState.sequenceNumber == null}
         {...editButtonsHoverState.hoverStateActions("Decrement")}
         onClick={recipeBuilderState.sequenceNumberState.decrement}>-</RecipeEditStateButton>
       <RecipeEditStateButton
-        hidden={!recipeBuilderState.wizardComplete}
+        hidden={!recipeBuilderState.wizardComplete || recipeBuilderState.editingMode !== RecipeEditingMode.NoEdit}
         {...editButtonsHoverState.hoverStateActions("Increment")}
         onClick={recipeBuilderState.sequenceNumberState.increment}>+</RecipeEditStateButton>
       <RecipeEditStateButton

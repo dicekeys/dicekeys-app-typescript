@@ -16,7 +16,6 @@ import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 // Center the controls for the derived values
 // 
 // Add save feature
-// Remove +- from editor if field editor showing
 // Raw JSON will need name to save
 // Remove RecipeBuilderView from Security Key seeding
 //
