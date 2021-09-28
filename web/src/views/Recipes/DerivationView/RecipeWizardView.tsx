@@ -8,11 +8,13 @@ import { EnhancedRecipeView } from "../EnhancedRecipeView";
 import { describeRecipeType } from "../DescribeRecipeType";
 
 const WizardBorderWidth = "3px";
-export const WizardPadding = `2rem`
+export const WizardPaddingH = `1.5rem`
+export const WizardPaddingV = `0.5rem`
 export const WizardStepContainer = ({children}: React.PropsWithChildren<{}>) => (
   <div className={css.RecipeWizardContainer} style={{
-    width: `calc(${Dimensions.ScreenWidthPercentUsed}vw - (2 * (${WizardPadding} + ${WizardBorderWidth})))`,
-    padding: `${WizardPadding}`,
+    width: `calc(${Dimensions.ScreenWidthPercentUsed}vw - (2 * (${WizardPaddingH} + ${WizardBorderWidth})))`,
+    paddingLeft: WizardPaddingH, paddingRight: WizardPaddingH,
+    paddingTop: WizardPaddingV, paddingBottom: WizardPaddingV,
     display: "flex",
     flexDirection: "column",
     alignItems: "flex-start"
@@ -37,7 +39,11 @@ export const WizardStepInstructionNote = ({children, style, ...props}: React.HTM
 );
 
 export const WizardFieldRow = ({children, style, ...props}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div {...props} style={{alignSelf: "center", marginTop: `1rem`, ...style}} >
+  <div {...props} style={{
+    alignSelf: "center",
+    // marginTop: `1rem`,
+    ...style
+  }} >
     {children}
   </div>
 );
@@ -46,7 +52,7 @@ export const WizardStepAlternatives = ({children}: React.PropsWithChildren<{}>) 
   <div style={{
     alignSelf: "flex-end",
     justifySelf: "flex-end",
-    marginTop: "1.5rem",
+    marginTop: "1rem",
   }
   }>
     {children}

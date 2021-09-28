@@ -11,7 +11,7 @@ import {KeyPlusRecipeView} from "./DerivationView/KeyPlusRecipeView";
 import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 
 
-// Warning message display on raw json
+
 // Need back button in wizard for raw domain and purpose
 // Center the controls for the derived values
 // 
@@ -19,6 +19,8 @@ import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 // Remove +- from editor if field editor showing
 // Raw JSON will need name to save
 // Remove RecipeBuilderView from Security Key seeding
+//
+// convert manual styling to css?
 
 export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
   recipeBuilderState: RecipeBuilderState,
@@ -43,10 +45,47 @@ const RawJsonWarning = observer ( ({state}: {
   state: RecipeBuilderState
 }) => {
   return (
-    <div>
-      DANGER!
-      <button onClick={state.abortEnteringRawJson}>Cancel</button>
-      <button onClick={state.dismissRawJsonWarning}>I understand</button>
+    <div style={{
+      width: `80vw`,
+      height: `100%`,
+      justifySelf: "stretch",
+      alignSelf: "stretch",
+      display: "flex", flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "yellow",
+      paddingLeft: `10vw`, paddingRight: `10vw`,
+    }}>
+      <div style={{
+        marginLeft: `10vw`, marginRight: `10vw`,
+        display: "flex", flexDirection: "column",
+        justifyContent: "flex-start",
+        alignItems: "center",
+        backgroundColor: "yellow",
+      }}>
+        <div>
+          <h3>
+            Entering a recipe in raw JSON format can be dangerous.
+          </h3>
+          <li>
+            If you enter a recipe provided by someone else, it could be a trick to get you to re-create a secret you use for another application or purpose.
+          </li>
+          <li>
+            If you generate the recipe yourself and forget even a single character, you will be unable to re-generate the same secret again.
+            (Saving the recipe won't help you if you lose the device(s) it's saved on.)
+          </li>
+        </div>
+        <div style={{
+          display: "flex", flexDirection: "row",
+          marginTop: `1rem`,
+          alignItems: "flex-start",
+        }}>
+          <button onClick={state.abortEnteringRawJson}>Go back</button>
+          <button style={{
+              marginLeft: `2rem`, alignSelf: "flex-end"
+            }} onClick={state.dismissRawJsonWarning}>I accept the risk</button>
+        </div>
+      </div>
     </div>
   );
 });
