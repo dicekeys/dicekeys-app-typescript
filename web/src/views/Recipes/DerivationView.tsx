@@ -12,9 +12,6 @@ import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 
 
 
-// Need back button in wizard for raw domain and purpose
-// Center the controls for the derived values
-// 
 // Add save feature
 // Raw JSON will need name to save
 // Remove RecipeBuilderView from Security Key seeding
@@ -115,8 +112,8 @@ export const DerivationView = ( ({diceKey}: {
         <Spacer/>
         <div style={{...centeredColumnStyle,
           justifyContent: "flex-end",
-          height: `${Dimensions.WizardOrFieldsMaxHeight}vh`}}
-        >
+          height: `${Dimensions.WizardOrFieldsMaxHeight}vh`,
+        }}>
           <RecipeWizardOrFieldsView {...{recipeBuilderState}} />
         </div>
         <Spacer/>
@@ -125,7 +122,7 @@ export const DerivationView = ( ({diceKey}: {
           <KeyPlusRecipeView {...{diceKey, recipeBuilderState}} />
         </div>
         {/* No spacer here since arrow should connect recipe to derived value */}
-        <div style={{...ColumnStyle, alignItems: "flex-start", justifyContent: "flex-start",
+        <div style={{...ColumnStyle, alignItems: "center", justifyContent: "flex-start",
           height: `${Dimensions.DerivedValueBoxMaxHeight}vh`,
           maxWidth: `${Dimensions.ScreenWidthPercentUsed}vw`
         }}

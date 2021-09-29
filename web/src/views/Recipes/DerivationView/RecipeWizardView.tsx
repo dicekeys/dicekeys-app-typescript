@@ -6,6 +6,7 @@ import { RecipeBuilderState, WizardStep } from "../RecipeBuilderState";
 import { SelectRecipeToLoadView } from "../LoadRecipeView";
 import { EnhancedRecipeView } from "../EnhancedRecipeView";
 import { describeRecipeType } from "../DescribeRecipeType";
+import {EventHandlerOverridesDefault} from "../../../utilities/EventHandlerOverridesDefault";
 
 const WizardBorderWidth = "3px";
 export const WizardPaddingH = `1.5rem`
@@ -17,7 +18,9 @@ export const WizardStepContainer = ({children}: React.PropsWithChildren<{}>) => 
     paddingTop: WizardPaddingV, paddingBottom: WizardPaddingV,
     display: "flex",
     flexDirection: "column",
-    alignItems: "flex-start"
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    minHeight: `${Dimensions.WizardMinHeightInVh}vh`,
     // borderStyle: "outset",
     // borderWidth: WizardBorderWidth,
     // borderColor: "black",
@@ -52,7 +55,7 @@ export const WizardStepAlternatives = ({children}: React.PropsWithChildren<{}>) 
   <div style={{
     alignSelf: "flex-end",
     justifySelf: "flex-end",
-    marginTop: "1rem",
+    marginTop: "0.5rem",
   }
   }>
     {children}
@@ -166,15 +169,12 @@ export const WizardStepEnterSiteView = observer ( ({state}: {
           />
         </WizardFieldRow>
         <WizardStepAlternatives>
-          <a href="" style={{fontSize: `0.9rem`}} onClick={(e) => {
-            e.preventDefault();
-            state.setWizardPrimaryFieldOverride("purpose")
-          }}>enter a purpose instead</a>
+          <a href="" style={{fontSize: `0.9rem`}}
+            onClick={EventHandlerOverridesDefault( () => state.setWizardPrimaryFieldOverride("purpose") )}
+          >enter a purpose instead</a>
           <a href="" style={{fontSize: `0.9rem`, marginLeft: `1rem`}}
-          onClick={(e) => {
-            e.preventDefault();
-            state.setWizardPrimaryFieldOverride("rawJson");
-          }}>enter raw json instead</a>
+            onClick={EventHandlerOverridesDefault( () => state.setWizardPrimaryFieldOverride("rawJson") )}
+          >enter raw json instead</a>
         </WizardStepAlternatives>
       </WizardStepContainer>);
 });
@@ -188,13 +188,22 @@ export const WizardStepEnterPurposeView = observer ( ({state}: {
         </WizardStepInstruction>
         {/* <WizardStepInstructionNote>Changing even one letter or space of the purpose changes the {state.typeNameLc}.</WizardStepInstructionNote> */}
         <WizardFieldRow>
-          <WizardFieldLabel>Purpose:</WizardFieldLabel>
+          {/* <WizardFieldLabel>Purpose:</WizardFieldLabel> */}
           <PurposeFieldView {...{state}} />
           <TextCompletionButton
             disabled={(state.purpose?.length ?? 0) === 0}
             onClick={state.setWizardPrimaryFieldEnteredFn(true)}
           />
         </WizardFieldRow>
+        <WizardStepAlternatives>
+          <a href="" style={{fontSize: `0.9rem`}} onClick={EventHandlerOverridesDefault(() => 
+            state.setWizardPrimaryFieldOverride(undefined)
+          )}>enter a web address instead</a>
+          <a href=""
+            style={{fontSize: `0.9rem`, marginLeft: `1rem`}}
+            onClick={EventHandlerOverridesDefault( ()  => state.setWizardPrimaryFieldOverride("rawJson")) }
+          >enter raw json instead</a>
+        </WizardStepAlternatives>
       </WizardStepContainer>
     );
 });
@@ -215,6 +224,14 @@ const WizardStepEnterRawJsonStepView = observer ( ({state}: {
             onClick={state.setWizardPrimaryFieldEnteredFn(true)}
           />
         </WizardFieldRow>
+        <WizardStepAlternatives>
+          <a href="" style={{fontSize: `0.9rem`}} onClick={EventHandlerOverridesDefault(() => 
+            state.setWizardPrimaryFieldOverride(undefined)
+          )}>enter a web address instead</a>
+          <a href="" style={{fontSize: `0.9rem`, marginLeft: `1rem`}}
+            onClick={EventHandlerOverridesDefault( () => state.setWizardPrimaryFieldOverride("purpose") )}
+          >enter a purpose instead</a>
+        </WizardStepAlternatives>
       </WizardStepContainer>
     );
 });
@@ -223,12 +240,16 @@ export const RecipeWizardStepPickRecipeView = observer ( ({state}: {
   state: RecipeBuilderState
 }) => (
   <WizardStepContainer>
+    <div/>
+    <div>
       <WizardStepInstruction style={{fontWeight: "bold"}}>
         Choose a <i>recipe</i> to create a password, key, or other secret from your DiceKey.
         </WizardStepInstruction>
       <WizardFieldRow>
         <SelectRecipeToLoadView state={state} defaultOptionLabel={"recipe choices"} />
       </WizardFieldRow>
+    </div>
+    <div/>
   </WizardStepContainer>
 ));
 

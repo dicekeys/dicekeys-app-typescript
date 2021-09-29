@@ -158,7 +158,11 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
         <div style={{display: "flex", fontFamily: "sans-serif", fontSize: `${Dimensions.LabelFontSizeVh}vh`, flexDirection: "row", width: Dimensions.DiceKeyBoxSize, justifyContent: "center", alignItems: "baseline", color: "rgba(0, 0, 0, 0.5)"}}>
           Key
         </div>
-        <div style={{width: Dimensions.PlusSignViewWidth, textAlign: "center", fontSize: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`, height: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`, 
+        <div style={{
+          width: Dimensions.PlusSignViewWidth, textAlign: "center",
+          paddingBottom: `${0.15 * Dimensions.DownArrowAndPlusSignViewHeight}vh`,
+          fontSize: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`,
+          height: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`,
         }}>&#8659;
         </div>
         <div style={{width: Dimensions.recipeViewWidth, fontFamily: "sans-serif", fontSize: "3vh", textAlign: "center", color: "rgba(0, 0, 0, 0.5)",

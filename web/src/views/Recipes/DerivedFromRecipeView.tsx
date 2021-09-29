@@ -7,7 +7,7 @@ import { action } from "mobx";
 import { DerivedFromRecipeState, OutputFormats, OutputFormat } from "./DerivedFromRecipeState";
 import { DerivationRecipeType } from "../../dicekeys/StoredRecipe";
 import { describeRecipeType } from "./DescribeRecipeType";
-
+import * as Dimensions from "./DerivationView/Dimensions";
 
 const Bip39OutputView = ({bip39String, obscureValue}: {bip39String: string, obscureValue: boolean}) => {
   let bip39WordArray = bip39String.split(" ");
@@ -32,7 +32,12 @@ const Bip39OutputView = ({bip39String, obscureValue}: {bip39String: string, obsc
 
 const SelectDerivedOutputType = observer( ({type, state}: {type?: DerivationRecipeType, state: DerivedFromRecipeState}) => (
   <select
-    className={css.SelectRecipeType}
+    style={{
+      padding: `0.25rem`,
+      minWidth: `6rem`,
+      marginLeft: `calc(${Dimensions.DiceKeyBoxSize} - 1.5rem)`
+    }}  
+//    className={css.SelectRecipeType}
     disabled={type==null}
     value={ (type == null) ? "NullType" : state.outputFieldForType[type]}
     onChange={ (e) => state.setOutputField(e.currentTarget.value as OutputFormat) }
@@ -75,7 +80,7 @@ export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
           <SecretFieldsCommonObscureButton />
           </>
         )}
-        </div>
+      </div>
       { type === "Secret" && state.outputFieldForType[type] === "BIP39" && derivedValue != null ?
         (<Bip39OutputView bip39String={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />)
         : (

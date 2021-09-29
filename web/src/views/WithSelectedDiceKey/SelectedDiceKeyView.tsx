@@ -16,6 +16,7 @@ import { BackupView } from "../BackupView/BackupView";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { SelectedDiceKeyViewState } from "./SelectedDiceKeyViewState";
 import { addPreview } from "../basics/Previews";
+import { EventHandlerOverridesDefault } from "../../utilities/EventHandlerOverridesDefault";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 // const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
@@ -31,7 +32,7 @@ const FooterButtonView = observer( ( props: SelectedDiceKeyViewProps & {
 } ) => (
   <div
     className={props.state.subView === props.subView ? NavigationBars.footer_button_selected : NavigationBars.footer_button}
-    onClick={(e) => { props.onClick(); e.preventDefault(); }}
+    onClick={EventHandlerOverridesDefault(props.onClick)}
   ><img className={NavigationBars.footer_icon} src={props.imageSrc}/><div>{props.labelStr}</div></div>
 ));
 
