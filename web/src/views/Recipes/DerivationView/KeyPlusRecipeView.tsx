@@ -1,7 +1,7 @@
 import React from "react";
 import css from "../Recipes.module.css";
 import { observer  } from "mobx-react";
-import { RecipeBuilderState, RecipeEditingMode, WizardStep } from "../RecipeBuilderState";
+import { RecipeBuilderState, RecipeEditingMode } from "../RecipeBuilderState";
 import { DiceKey } from "../../../dicekeys/DiceKey";
 import { DiceKeyViewAutoSized } from "../../../views/SVG/DiceKeyView";
 import { ToggleState } from "../../../state";
@@ -93,7 +93,7 @@ const RecipeView = observer( ({recipeBuilderState, editButtonsHoverState}: {
         onClick={()=>{recipeBuilderState.toggleEditingMode(RecipeEditingMode.EditIncludingRawJson);}
       }>{`{`}&#9998;{`}`}</RecipeEditStateButton>
       <button className={css.RecipeEditorButton}
-        hidden={recipeBuilderState.wizardStep === WizardStep.PickRecipe}
+        hidden={!recipeBuilderState.wizardComplete}
         {...editButtonsHoverState.hoverStateActions("RemoveRecipe")}
         onClick={()=>{recipeBuilderState.emptyAllRecipeFields()}}
       >&#x2715;</button>
@@ -105,7 +105,7 @@ const RecipeView = observer( ({recipeBuilderState, editButtonsHoverState}: {
       alignItems: "flex-start",
       backgroundColor: "rgba(128,128,196,0.10)",
       padding: Dimensions.BoxPadding,
-      width: Dimensions.recipeViewWidth,
+      width: Dimensions.recipeViewWidthCalculated,
       minHeight: `calc(${Dimensions.DiceKeyBoxSize} - 2 * (${Dimensions.BoxPadding}))`,
       borderRadius: Dimensions.BoxPadding,
       color: "rgba(0, 0, 0, 1)",
@@ -121,7 +121,7 @@ const RecipeView = observer( ({recipeBuilderState, editButtonsHoverState}: {
         <>
           <MultilineRecipeJsonView recipeJson={ recipeBuilderState.recipeJson  }/>
           { recipeBuilderState.recipeJson == null ? null : (
-            <div style={{minHeight: "0.5vh", width: "calc(60vw - 0.7rem)", borderBottom: "1px solid rgba(0,0,0,0.1)"}}></div>
+            <div style={{minHeight: "0.5vh", width: `calc(${Dimensions.recipeViewWidthFormula } - 0.7rem)`, borderBottom: "1px solid rgba(0,0,0,0.1)"}}></div>
           )}
           <div>
             <RecipeDescriptionContentView state={recipeBuilderState} />
@@ -165,7 +165,7 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
           height: `${Dimensions.DownArrowAndPlusSignViewHeight}vh`,
         }}>&#8659;
         </div>
-        <div style={{width: Dimensions.recipeViewWidth, fontFamily: "sans-serif", fontSize: "3vh", textAlign: "center", color: "rgba(0, 0, 0, 0.5)",
+        <div style={{width: Dimensions.recipeViewWidthCalculated, fontFamily: "sans-serif", fontSize: "3vh", textAlign: "center", color: "rgba(0, 0, 0, 0.5)",
           ...visibility(recipeBuilderState.recipeIsNotEmpty)
         }}>
           Recipe
