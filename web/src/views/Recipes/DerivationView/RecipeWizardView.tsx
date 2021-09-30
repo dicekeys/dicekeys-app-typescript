@@ -73,7 +73,7 @@ export const SiteTextFieldView = observer( ({state}: {
       spellCheck={false}
       size={60}
       value={state.siteTextField ?? ""}
-      placeholder="example.com"
+      placeholder="https://example.com"
       // Focus input when it's created
       ref={ e => e?.focus() }
       // Update our state store when the field changes
@@ -158,7 +158,7 @@ export const WizardStepEnterSiteView = observer ( ({state}: {
     return (
       <WizardStepContainer>
         <WizardStepInstruction>
-          Paste the address of the website (e.g., https://example.com) that this {describeRecipeType(state.type)} will be used for, or enter its domain name.
+          Paste or enter the address of the website that will use this {describeRecipeType(state.type)}.
         </WizardStepInstruction>
         <WizardFieldRow>
           {/* <WizardFieldLabel>Address/Domain</WizardFieldLabel> */}

@@ -306,6 +306,10 @@ export class RecipeBuilderState {
     return;
   }
 
+  get recipeIsNotEmpty(): boolean {
+    return this.recipeJson != null && this.recipeJson.length > 2 && this.recipe != null;
+  }
+
   get recipeIsValid(): boolean {
     const {recipe} = this;
     return recipe != null && (

@@ -110,7 +110,7 @@ const RecipeView = observer( ({recipeBuilderState, editButtonsHoverState}: {
       borderRadius: Dimensions.BoxPadding,
       color: "rgba(0, 0, 0, 1)",
     }}>
-      { !recipeBuilderState.wizardComplete ? (
+      { !recipeBuilderState.recipeIsNotEmpty ? (
         <div style={{
           fontSize: `${Dimensions.LabelFontSizeVh}vh`,
           fontFamily: "sans-serif",
@@ -166,10 +166,9 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
         }}>&#8659;
         </div>
         <div style={{width: Dimensions.recipeViewWidth, fontFamily: "sans-serif", fontSize: "3vh", textAlign: "center", color: "rgba(0, 0, 0, 0.5)",
-          ...visibility(recipeBuilderState.wizardComplete)
+          ...visibility(recipeBuilderState.recipeIsNotEmpty)
         }}>
           Recipe
-          {/* to (re)create a <SelectRecipeToLoadView state={recipeBuilderState} /> */}
         </div>
       </div>
     </div>

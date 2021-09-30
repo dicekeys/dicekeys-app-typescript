@@ -17,6 +17,7 @@ import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 // Remove RecipeBuilderView from Security Key seeding
 //
 // convert manual styling to css?
+//https://styled-components.com/docs/api#typescript
 
 export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
   recipeBuilderState: RecipeBuilderState,
@@ -127,7 +128,7 @@ export const DerivationView = ( ({diceKey}: {
           maxWidth: `${Dimensions.ScreenWidthPercentUsed}vw`
         }}
         >
-          <DerivedFromRecipeView {...{showPlaceholder: !recipeBuilderState.recipeJson, state: derivedFromRecipeState}} />
+          <DerivedFromRecipeView {...{showPlaceholder: !recipeBuilderState.recipeIsNotEmpty, state: derivedFromRecipeState}} />
         </div>
         <Spacer/>
       </div>
