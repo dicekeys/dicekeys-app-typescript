@@ -1,14 +1,15 @@
 import * as Dimensions from "./DerivationView/Dimensions";
 import React from "react";
 import { observer, Observer  } from "mobx-react";
-import { RecipeBuilderState } from "./RecipeBuilderState";
+import { RecipeBuilderState, RecipeEditingMode } from "./RecipeBuilderState";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
-import { Spacer } from "../basics";
+//import { Spacer } from "../basics";
 import { RecipeWizardView } from "./DerivationView/RecipeWizardView";
 import {KeyPlusRecipeView} from "./DerivationView/KeyPlusRecipeView";
 import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
+import { SelectRecipeToLoadView } from "./LoadRecipeView";
 
 
 
@@ -21,8 +22,13 @@ import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 
 export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
   recipeBuilderState: RecipeBuilderState,
-}) => recipeBuilderState.wizardComplete ? (
-    <RecipeFieldEditorView state={recipeBuilderState} />
+}) => recipeBuilderState.wizardComplete ? ( recipeBuilderState.editingMode === RecipeEditingMode.NoEdit ?
+    (
+      <div style={{width: `${Dimensions.ScreenWidthPercentUsed}vw`}}>
+        <SelectRecipeToLoadView state={recipeBuilderState} defaultOptionLabel={"change recipe"} />
+      </div>
+    ) :
+    (<RecipeFieldEditorView state={recipeBuilderState} />)
   ) : (
     <RecipeWizardView state={recipeBuilderState} />
     )
@@ -103,21 +109,21 @@ export const DerivationView = ( ({diceKey}: {
     }
     return (
       <div style={{
-        // marginLeft: "5vw", marginRight: "5vw",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
         justifySelf: "center",
       }}>
-        <Spacer/>
-        <div style={{...centeredColumnStyle,
-          justifyContent: "flex-end",
+        {/* <Spacer/> */}
+        <div style={{...ColumnStyle,
+          justifyContent: "center",
+          alignContent: "flex-start",
           height: `${Dimensions.WizardOrFieldsMaxHeight}vh`,
         }}>
           <RecipeWizardOrFieldsView {...{recipeBuilderState}} />
         </div>
-        <Spacer/>
+        {/* <Spacer/> */}
         <div style={{...centeredColumnStyle, justifyContent: "flex-end"}}
         >
           <KeyPlusRecipeView {...{diceKey, recipeBuilderState}} />
@@ -130,7 +136,7 @@ export const DerivationView = ( ({diceKey}: {
         >
           <DerivedFromRecipeView {...{showPlaceholder: !recipeBuilderState.recipeIsNotEmpty, state: derivedFromRecipeState}} />
         </div>
-        <Spacer/>
+        {/* <Spacer/> */}
       </div>
     )}}
   </Observer>);

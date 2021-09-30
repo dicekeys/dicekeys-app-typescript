@@ -34,7 +34,8 @@ const EditButtonHoverTextView = observer(
       case "EditRawJson":
         return (<>Edit this recipe's raw JSON.</>)
       case "RemoveRecipe":
-        return (<>Discard this recipe and start over.</>)
+        // FIXME -- if saved "Close" otherwise "Discard"
+        return (<>Close this recipe and start over.</>)
         default: return (<>&nbsp;</>);
     }
 });
@@ -141,7 +142,13 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
   return (
   <>
   {/* Width: 90% (max): [22.5vw (max) for key] + [5vw for + sign] + [62.5vw] for recipe */}
-    <div style={{alignSelf: "flex-end", fontSize:"0.9rem"}}><EditButtonHoverTextView {...{editButtonsHoverState, recipeBuilderState}}/></div>
+    <div style={{display: "block", position: "relative",
+      width: `${Dimensions.ScreenWidthPercentUsed}vw`,
+    }}>
+      <div style={{position: "absolute", bottom: 0, right: 0, width: `${Dimensions.recipeViewWidthCalculated}vw`,
+        textAlign: 'right',
+        fontSize:"0.9rem"}}><EditButtonHoverTextView {...{editButtonsHoverState, recipeBuilderState}}/></div>
+    </div>
     <div style={{display: "flex", flexDirection: "column", alignItems: "flex-start"}}>
       <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
         {/* Key */}
