@@ -53,7 +53,6 @@ const ContainerForOptionalFieldValue = observer ( ({
 const BuilderFieldContainer = ({children}: React.PropsWithChildren<{}>) => (
   <div style={{
     display: "flex", flexDirection: "row", justifyContent: "flex-start", alignItems: "baseline",
-//    fontSize: `min(2vh, 2vw)`,
     marginTop: `0.25vh`,
   }}>{children}</div>
 );

@@ -8,7 +8,7 @@ import { visibility } from "../../utilities/visibility";
 import { runInAction } from "mobx";
 
 export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) => {
-  const {name, recipeJson, type} = state;
+  const {nameField, recipeJson, type} = state;
   if (type == null || recipeJson == null) {
     return null;
   }
@@ -20,7 +20,7 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
       RecipeStore.removeRecipe(savedRecipeIdentifierToStoredRecipe(savedRecipeIdentifier));
     } else {
       if (recipeJson==null) return;
-      const storedRecipe: StoredRecipe = {name, recipeJson, type};
+      const storedRecipe: StoredRecipe = {name: nameField, recipeJson, type};
       runInAction( () => {
         RecipeStore.addRecipe(storedRecipe);
         state.setOrigin("Saved");
@@ -45,7 +45,7 @@ export const SaveRecipeView = observer( ( {state}: {state: RecipeBuilderState}) 
       <span className={css.SaveRecipeNameExtension} >&nbsp;{ getStoredRecipeNameSuffix(state) }&nbsp;</span> */}
       <button
         className={css.SaveButton}
-        style={visibility(state.prescribedName != null || (state.name != null && state.name.length > 0))}
+        style={visibility(state.prescribedName != null || (state.nameField != null && state.nameField.length > 0))}
         onClick={saveOrDelete}
         >{state.savedRecipeIdentifier ? "delete" : "save"}
       </button>

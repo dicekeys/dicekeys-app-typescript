@@ -11,14 +11,18 @@ import { RecipeDescriptionContentView, RecipePurposeContentView } from "../Recip
 import { MultilineRecipeJsonView } from "./MultilineRecipeView";
 import * as Dimensions from "./Dimensions";
 
-type EditButtons = "Increment" | "Decrement" | "EditFields" | "EditRawJson" | "RemoveRecipe";
+type RecipeRibbonButtons = "SaveOrDelete" | "Increment" | "Decrement" | "EditFields" | "EditRawJson" | "RemoveRecipe";
 
 const EditButtonHoverTextView = observer(
   ({editButtonsHoverState, recipeBuilderState}: {
-    editButtonsHoverState: HoverState<EditButtons>,
+    editButtonsHoverState: HoverState<RecipeRibbonButtons>,
     recipeBuilderState: RecipeBuilderState,
   }) => {
     switch(editButtonsHoverState.state) {
+      case "SaveOrDelete":
+        return recipeBuilderState.savedRecipeIdentifier != null ?
+        (<>Delete from saved recipe list</>) :
+        (<>Save this recipe locally</>)
       case "Increment":
         return recipeBuilderState.sequenceNumber! > 1 ?
         (<>Increment the sequence number to change the {recipeBuilderState.typeNameLc}</>):
@@ -48,57 +52,71 @@ const RecipeEditStateButton = observer( ({selected, children, ...buttonArgs}: {
   >{children}</button>
 );
 
+const RecipeRibbonButtons = observer( ({recipeBuilderState, editButtonsHoverState}: {
+  recipeBuilderState: RecipeBuilderState,
+  editButtonsHoverState: HoverState<RecipeRibbonButtons>
+}) => (
+  <div style={{
+    // Absolute positioned touching the top
+    position: "absolute",
+    zIndex: 1,
+    marginRight: "0.5rem",
+    // offset close to the right edge
+    alignSelf: "flex-end",
+    justifySelf: "flex-start",
+    // With round-cornered padding on the bottom
+    borderBottomLeftRadius: "0.25rem",
+    borderBottomRightRadius: "0.25rem",
+    paddingLeft: "0.5rem",
+    paddingRight: "0.5rem",
+    paddingBottom: "0.25rem",
+    // With buttons in a row from right to left in the box
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "flex-start"
+  }}>
+    <RecipeEditStateButton
+      style={visibility(recipeBuilderState.wizardComplete && recipeBuilderState.sequenceNumber != null)} //  || recipeBuilderState.editingMode !== RecipeEditingMode.NoEdit
+      {...editButtonsHoverState.hoverStateActions("Decrement")}
+      onClick={recipeBuilderState.sequenceNumberState.decrement}>-</RecipeEditStateButton>
+    <RecipeEditStateButton
+      style={visibility(recipeBuilderState.wizardComplete)} // || recipeBuilderState.editingMode !== RecipeEditingMode.NoEdit
+      {...editButtonsHoverState.hoverStateActions("Increment")}
+      onClick={recipeBuilderState.sequenceNumberState.increment}>+</RecipeEditStateButton>
+    <RecipeEditStateButton
+      style={{
+        ...visibility(recipeBuilderState.wizardComplete),
+        textDecoration: "underline"
+      }}
+      {...editButtonsHoverState.hoverStateActions("EditFields")}
+      selected={recipeBuilderState.editingMode === RecipeEditingMode.EditWithTemplateOnly}
+      onClick={()=>{recipeBuilderState.toggleEditingMode(RecipeEditingMode.EditWithTemplateOnly);}}>&nbsp;&#9998;&nbsp;</RecipeEditStateButton>
+    <RecipeEditStateButton
+      style={visibility(recipeBuilderState.wizardComplete)}
+      {...editButtonsHoverState.hoverStateActions("EditRawJson")}
+      selected={recipeBuilderState.editingMode === RecipeEditingMode.EditIncludingRawJson}
+      onClick={()=>{recipeBuilderState.toggleEditingMode(RecipeEditingMode.EditIncludingRawJson);}
+    }>{`{`}&#9998;{`}`}</RecipeEditStateButton>
+    <RecipeEditStateButton
+      style={{...visibility(recipeBuilderState.wizardComplete), minWidth: `7rem`}}
+      {...editButtonsHoverState.hoverStateActions("SaveOrDelete")}
+        onClick={recipeBuilderState.saveOrDelete}>
+        { recipeBuilderState.savedRecipeIdentifier == null ? (<>save</>): (<>delete</>) }
+      </RecipeEditStateButton>
+    <RecipeEditStateButton
+      style={visibility(recipeBuilderState.wizardComplete)}
+      {...editButtonsHoverState.hoverStateActions("RemoveRecipe")}
+      onClick={()=>{recipeBuilderState.emptyAllRecipeFields()}}
+    >&#x2715;</RecipeEditStateButton>
+  </div>
+));
 
 const RecipeView = observer( ({recipeBuilderState, editButtonsHoverState}: {
   recipeBuilderState: RecipeBuilderState,
-  editButtonsHoverState: HoverState<EditButtons>
+  editButtonsHoverState: HoverState<RecipeRibbonButtons>
 }) => (
   <div style={{display: "flex", flexDirection:"column"}}>
-    {/* Ribbon buttons */}
-    <div style={{
-      // Absolute positioned touching the top
-      position: "absolute",
-      zIndex: 1,
-      marginRight: "0.5rem",
-      // offset close to the right edge
-      alignSelf: "flex-end",
-      justifySelf: "flex-start",
-      // With round-cornered padding on the bottom
-      borderBottomLeftRadius: "0.25rem",
-      borderBottomRightRadius: "0.25rem",
-      paddingLeft: "0.5rem",
-      paddingRight: "0.5rem",
-      paddingBottom: "0.25rem",
-      // With buttons in a row from right to left in the box
-      display: "flex",
-      flexDirection: "row",
-      alignItems: "flex-start"
-    }}>
-      <RecipeEditStateButton
-        hidden={!recipeBuilderState.wizardComplete || recipeBuilderState.editingMode !== RecipeEditingMode.NoEdit || recipeBuilderState.sequenceNumber == null}
-        {...editButtonsHoverState.hoverStateActions("Decrement")}
-        onClick={recipeBuilderState.sequenceNumberState.decrement}>-</RecipeEditStateButton>
-      <RecipeEditStateButton
-        hidden={!recipeBuilderState.wizardComplete || recipeBuilderState.editingMode !== RecipeEditingMode.NoEdit}
-        {...editButtonsHoverState.hoverStateActions("Increment")}
-        onClick={recipeBuilderState.sequenceNumberState.increment}>+</RecipeEditStateButton>
-      <RecipeEditStateButton
-        hidden={!recipeBuilderState.wizardComplete}
-        {...editButtonsHoverState.hoverStateActions("EditFields")}
-        selected={recipeBuilderState.editingMode === RecipeEditingMode.EditWithTemplateOnly}
-        onClick={()=>{recipeBuilderState.toggleEditingMode(RecipeEditingMode.EditWithTemplateOnly);}} style={{textDecoration: "underline"}}>&nbsp;&#9998;&nbsp;</RecipeEditStateButton>
-      <RecipeEditStateButton
-        hidden={!recipeBuilderState.wizardComplete}
-        {...editButtonsHoverState.hoverStateActions("EditRawJson")}
-        selected={recipeBuilderState.editingMode === RecipeEditingMode.EditIncludingRawJson}
-        onClick={()=>{recipeBuilderState.toggleEditingMode(RecipeEditingMode.EditIncludingRawJson);}
-      }>{`{`}&#9998;{`}`}</RecipeEditStateButton>
-      <button className={css.RecipeEditorButton}
-        hidden={!recipeBuilderState.wizardComplete}
-        {...editButtonsHoverState.hoverStateActions("RemoveRecipe")}
-        onClick={()=>{recipeBuilderState.emptyAllRecipeFields()}}
-      >&#x2715;</button>
-    </div>
+    <RecipeRibbonButtons {...{recipeBuilderState, editButtonsHoverState}} />
     <div style={{
       display: "flex",
       flexDirection: "column",
@@ -138,7 +156,7 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
   diceKey: DiceKey,
   recipeBuilderState: RecipeBuilderState
 }) => {
-  const editButtonsHoverState = new HoverState<EditButtons>();
+  const editButtonsHoverState = new HoverState<RecipeRibbonButtons>();
   return (
   <>
   {/* Width: 90% (max): [22.5vw (max) for key] + [5vw for + sign] + [62.5vw] for recipe */}

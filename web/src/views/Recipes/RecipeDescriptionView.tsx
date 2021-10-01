@@ -50,7 +50,8 @@ export const RecipeDescriptionContentView = observer ( ({state}: {state: RecipeS
     withClauses.push((<> sequence number <span className={css.sequence_number_span}>{recipe["#"]}</span></>));
   }  
   return (
-    <>Create a {describeRecipeType(type)}
+    <>
+     Create a {describeRecipeType(type)}
      <RecipePurposeContentView {...{recipe}} />
       {/* { !recipe.purpose ? null : (
         <> for the purpose of &lsquo;<span className={css.host_name_span}>{ recipe.purpose }</span>&rsquo;</>

@@ -1,6 +1,17 @@
 import { action, makeAutoObservable } from "mobx";
 import {
-  StoredRecipe, DerivationRecipeType, builtInRecipeIdentifier, isRecipeBuiltIn, RecipeIdentifier, savedRecipeIdentifier, SavedRecipeIdentifier, BuiltInRecipeIdentifier, DiceKeysAppSecretRecipe, LoadedRecipe, LoadedRecipeOrigin
+  StoredRecipe,
+  StoredRecipeUniqueIdentifier,
+  DerivationRecipeType,
+  builtInRecipeIdentifier,
+  isRecipeBuiltIn,
+  RecipeIdentifier,
+  savedRecipeIdentifier,
+  SavedRecipeIdentifier,
+  BuiltInRecipeIdentifier,
+  DiceKeysAppSecretRecipe,
+  LoadedRecipe,
+  LoadedRecipeOrigin,
 } from "../../dicekeys/StoredRecipe";
 import {
   addHostsToRecipeJson,
@@ -223,8 +234,8 @@ export class RecipeBuilderState {
     return this.purpose?.substr(0, 20) ?? this.hosts?.join(", ");
   }
 
-  public name: string = "";
-  setName = action ( (name: string) => this.name = name );
+  public nameField?: string | undefined;
+  setNameField = action ( (name: string) => this.nameField = name );
 
   siteTextField?: string = undefined;
   setSiteTextField  = action ( (newValue?: string) => {
@@ -318,20 +329,44 @@ export class RecipeBuilderState {
     );
   }
 
+  get asStoredRecipe(): StoredRecipe | undefined {
+    const {type, nameField, recipeJson} = this;
+    if (type == null || recipeJson == null) return;
+    return {type, name: nameField, recipeJson};
+  }
+
+  get recipeIsSaved(): boolean {
+    const storedRecipe = this.asStoredRecipe;
+    return (storedRecipe != null && RecipeStore.isRecipeSaved(storedRecipe));
+  }
+
   get savedRecipeIdentifier(): SavedRecipeIdentifier | undefined {
-    const {type, name, recipeJson} = this;
-    if (type == null || name == null || recipeJson == null) return;
-    const storedRecipe: StoredRecipe = {type, name, recipeJson};
-    if (RecipeStore.isRecipeSaved(storedRecipe)) {
+    const storedRecipe = this.asStoredRecipe;
+    if (storedRecipe != null && RecipeStore.isRecipeSaved(storedRecipe)) {
       return savedRecipeIdentifier(storedRecipe);
     }
     return;
   }
 
+  saveOrDelete = action (() => {
+    const storedRecipe = this.asStoredRecipe;
+    if (storedRecipe == null) return;
+    if (RecipeStore.isRecipeSaved(storedRecipe)) {
+      // delete the saved recipe
+      RecipeStore.removeRecipe(storedRecipe);
+    } else {
+      // save the recipe
+      const storedRecipe = this.asStoredRecipe;
+      if (storedRecipe != null) {
+        RecipeStore.addRecipe(storedRecipe);
+      } 
+    }
+  });
+
   get builtInRecipeIdentifier(): BuiltInRecipeIdentifier | undefined {
-    const {type, name, recipeJson} = this;
-    if (type == null || name == null || recipeJson == null) return;
-    const storedRecipe: StoredRecipe = {type, name, recipeJson};
+    const {type, recipeJson} = this;
+    if (type == null || recipeJson == null) return;
+    const storedRecipe: StoredRecipeUniqueIdentifier = {type, recipeJson};
     if (isRecipeBuiltIn(storedRecipe)) {
       return builtInRecipeIdentifier(storedRecipe);
     }
@@ -343,7 +378,7 @@ export class RecipeBuilderState {
   }
 
   get areAllRecipeFieldsEmpty(): boolean {
-    return this.name == "" &&
+    return (this.nameField == null || this.nameField) === "" &&
       this.purposeField == "" &&
       this.sequenceNumber == null &&
       this.lengthInBytes == null &&
@@ -353,7 +388,7 @@ export class RecipeBuilderState {
   emptyAllRecipeFields = action (() => {
     this.type = undefined;
     this.recipeJson = undefined;
-    this.name = "";
+    this.nameField = undefined;
     this.purposeField = undefined;
     this.siteTextField = undefined;
     this.wizardPrimaryFieldEntered = false;
@@ -394,7 +429,7 @@ export class RecipeBuilderState {
     if (loadedRecipe == null) return;
     this.emptyAllRecipeFields();
     this.origin = loadedRecipe.origin;
-    this.name = loadedRecipe.name ?? "";
+    this.nameField = loadedRecipe.name ?? "";
     this.type = loadedRecipe.type;
     this.recipeJson = loadedRecipe.recipeJson;
     if (this.recipeJson != null) {

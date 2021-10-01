@@ -64,14 +64,14 @@ export const OldRecipeFieldView = observer ( ({
 
 export const BuilderFieldLabel = ({style, children, ...props}: React.DetailedHTMLProps<React.LabelHTMLAttributes<HTMLLabelElement>, HTMLLabelElement>) => (
   <label {...props} style={{
-      fontSize: `min(2vh, 2vw)`, width: `20vw`,
+      width: `20vw`,
       ...style
     }}>{ children}</label>
 );
 
 export const BuilderFieldValueContainer = ({children, ...props}: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>) => (
   <div style={{
-      fontSize: `min(2vh, 2vw)`, width: `50vw`,
+      width: `50vw`,
     }} {...props}>{ children}</div>
 );
 

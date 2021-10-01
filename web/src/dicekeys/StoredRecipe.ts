@@ -4,12 +4,16 @@ import { jsonStringifyWithSortedFieldOrder } from "../utilities/json";
 
 export type DerivationRecipeType = DerivableObjectName
 
-export interface StoredRecipe {
+export interface StoredRecipeUniqueIdentifier {
   readonly type: DerivationRecipeType;
-  readonly name: string;
   readonly recipeJson: string;
 }
-export class BuiltInRecipe<NAME extends string = string> {
+
+export interface StoredRecipe extends StoredRecipeUniqueIdentifier {
+  readonly name?: string;
+}
+
+export class BuiltInRecipe<NAME extends string = string> implements StoredRecipe {
   constructor(
     public readonly type: DerivationRecipeType,
     public readonly name: NAME,
@@ -109,7 +113,7 @@ export const getStoredRecipeNameSuffix = (storedRecipe: Partial<StoredRecipe>): 
     const recipe = JSON.parse(recipeJson) as DiceKeysAppSecretRecipe;
     const {lengthInBytes, lengthInChars} = recipe;
     const sequenceNumber = recipe["#"];
-    return `${describeRecipeType(type)}${
+    return ` ${describeRecipeType(type)}${
           lengthInBytes == null ? "" : ` (${lengthInBytes} bytes)`
       }${ lengthInChars == null ? "" : ` (${lengthInChars} chars)`
       }${ sequenceNumber == null ? "" : ` #${sequenceNumber}`
@@ -119,9 +123,30 @@ export const getStoredRecipeNameSuffix = (storedRecipe: Partial<StoredRecipe>): 
   }
 }
 
-export const enhancedStoredRecipeName = (storedRecipe: StoredRecipe): string => {
-  const {name} = storedRecipe;
-  return `${name} ${getStoredRecipeNameSuffix(storedRecipe)}`;
+export const defaultOnException = <R, DEFAULT = undefined>(
+  fn: () => R | DEFAULT,
+  defaultValue: DEFAULT = undefined as unknown as DEFAULT
+): R | DEFAULT => {
+  try { return fn(); } catch {} return defaultValue;
+}
+
+export const recipeDefaultBaseName = (recipe: Recipe): string | undefined =>
+  recipe.purpose?.substr(0, 20) ?? recipe.allow?.map( ({host})=> host).join(", ");
+
+export const enhancedRecipeName = (recipe: Recipe, baseName?: string): string | undefined => {
+  const base = baseName ?? recipeDefaultBaseName(recipe);
+  if (base == null) return;
+  return `${base}${getStoredRecipeNameSuffix(recipe)}`;
+}
+
+export const enhancedStoredRecipeName = (storedRecipe: StoredRecipe): string | undefined => {
+  try {
+    const recipe = JSON.parse(storedRecipe.recipeJson) as Recipe;
+    const base = storedRecipe.name ?? recipeDefaultBaseName(recipe);
+    return `${base}${getStoredRecipeNameSuffix(storedRecipe)}`;
+} catch {
+    return;
+  }
 }
 
 export const isRecipeBuiltIn = (storedRecipe: Partial<StoredRecipe>): boolean =>

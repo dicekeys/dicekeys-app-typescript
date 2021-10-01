@@ -14,13 +14,19 @@
   border-top-right-radius: 0px;
   border-bottom-left-radius: 0.5rem;
   border-bottom-right-radius: 0.5rem;
-  width: 2.5rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  min-width: 2rem;
   height: 1.5rem;
   vertical-align: middle;
 }
 
 .RecipeEditorButtonActive {
   background-color: rgba(128, 128, 128, 0.666);
+}
+
+.RecipeEditorButton:hover {
+  background-color: rgba(128, 128, 128, 0.5);
 }
 
 .SelectRecipe, .SelectRecipeNoneSelectedYet {
