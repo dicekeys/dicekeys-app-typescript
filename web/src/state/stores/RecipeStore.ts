@@ -19,10 +19,11 @@ class RecipeStoreClass {
 
   removeRecipe = action ( (storedRecipeToRemove: StoredRecipe) => {
     this.recipeJsonArray = [...this.recipeJsonArray].filter( (recipeJson) => {
+      // Filter out (return false) any matching recipes
       try {
         const storedRecipe = JSON.parse(recipeJson) as StoredRecipe
-        return storedRecipeToRemove.recipeJson === storedRecipe.recipeJson &&
-          storedRecipeToRemove.type === storedRecipe.type;
+        return storedRecipeToRemove.recipeJson !== storedRecipe.recipeJson ||
+          storedRecipeToRemove.type !== storedRecipe.type;
       } catch {
         return false;
       }

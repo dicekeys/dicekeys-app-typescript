@@ -332,7 +332,15 @@ export class RecipeBuilderState {
   get asStoredRecipe(): StoredRecipe | undefined {
     const {type, nameField, recipeJson} = this;
     if (type == null || recipeJson == null) return;
-    return {type, name: nameField, recipeJson};
+    return {
+      type,
+      recipeJson,
+      // only include name: if the nameField is set.
+      ...(nameField != null && nameField.length > 0 ?
+          {name: nameField} :
+          {}
+      )
+      };
   }
 
   get recipeIsSaved(): boolean {
@@ -356,12 +364,12 @@ export class RecipeBuilderState {
       RecipeStore.removeRecipe(storedRecipe);
     } else {
       // save the recipe
-      const storedRecipe = this.asStoredRecipe;
-      if (storedRecipe != null) {
-        RecipeStore.addRecipe(storedRecipe);
-      } 
-    }
+      RecipeStore.addRecipe(storedRecipe);
+      this.setOrigin("Saved");
+      this.toggleEditingMode(RecipeEditingMode.NoEdit);
+  }
   });
+
 
   get builtInRecipeIdentifier(): BuiltInRecipeIdentifier | undefined {
     const {type, recipeJson} = this;

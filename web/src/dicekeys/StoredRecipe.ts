@@ -106,18 +106,23 @@ export type DiceKeysAppSecretRecipe = Recipe & {
   purpose?: string;
 }
 
+
+export const getRecipeNameSuffix = (recipe: DiceKeysAppSecretRecipe, type: DerivableObjectName): string => {
+  const {lengthInBytes, lengthInChars} = recipe;
+  const sequenceNumber = recipe["#"];
+  return ` ${describeRecipeType(type)}${
+        lengthInBytes == null ? "" : ` (${lengthInBytes} bytes)`
+    }${ lengthInChars == null ? "" : ` (${lengthInChars} chars)`
+    }${ sequenceNumber == null ? "" : ` #${sequenceNumber}`
+  }`;
+}
+
 export const getStoredRecipeNameSuffix = (storedRecipe: Partial<StoredRecipe>): string => {
   const {type, recipeJson} = storedRecipe;
   if (!type || !recipeJson) return "";
   try {
     const recipe = JSON.parse(recipeJson) as DiceKeysAppSecretRecipe;
-    const {lengthInBytes, lengthInChars} = recipe;
-    const sequenceNumber = recipe["#"];
-    return ` ${describeRecipeType(type)}${
-          lengthInBytes == null ? "" : ` (${lengthInBytes} bytes)`
-      }${ lengthInChars == null ? "" : ` (${lengthInChars} chars)`
-      }${ sequenceNumber == null ? "" : ` #${sequenceNumber}`
-    }`;
+    return getRecipeNameSuffix(recipe, type);
   } catch {
     return describeRecipeType(type);
   }
@@ -133,17 +138,16 @@ export const defaultOnException = <R, DEFAULT = undefined>(
 export const recipeDefaultBaseName = (recipe: Recipe): string | undefined =>
   recipe.purpose?.substr(0, 20) ?? recipe.allow?.map( ({host})=> host).join(", ");
 
-export const enhancedRecipeName = (recipe: Recipe, baseName?: string): string | undefined => {
-  const base = baseName ?? recipeDefaultBaseName(recipe);
+export const enhancedRecipeName = (recipe: Recipe, type: DerivationRecipeType, baseName?: string): string | undefined => {
+  const base = (baseName != null && baseName.length > 0) ? baseName : recipeDefaultBaseName(recipe);
   if (base == null) return;
-  return `${base}${getStoredRecipeNameSuffix(recipe)}`;
+  return `${base}${getRecipeNameSuffix(recipe, type)}`;
 }
 
 export const enhancedStoredRecipeName = (storedRecipe: StoredRecipe): string | undefined => {
   try {
     const recipe = JSON.parse(storedRecipe.recipeJson) as Recipe;
-    const base = storedRecipe.name ?? recipeDefaultBaseName(recipe);
-    return `${base}${getStoredRecipeNameSuffix(storedRecipe)}`;
+    return enhancedRecipeName(recipe, storedRecipe.type,  storedRecipe.name);
 } catch {
     return;
   }

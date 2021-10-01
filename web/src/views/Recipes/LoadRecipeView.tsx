@@ -36,9 +36,12 @@ export const SelectRecipeToLoadView = observer( ({
       <option key="none" disabled={true} hidden={true} value="">{defaultOptionLabel}</option>
       {savedRecipes.length == 0 ? (<></>) : (
         <optgroup key={"Saved Recipes"} label={"use a saved recipe"}>
-          { savedRecipes.map( savedRecipe => (
-            <option key={ savedRecipe.name } value={ savedRecipeIdentifier(savedRecipe)} >{ enhancedStoredRecipeName(savedRecipe) }</option>
-          ))}
+          { savedRecipes.map( savedRecipe => {
+            const id = savedRecipeIdentifier(savedRecipe);
+            return (
+              <option key={ id } value={ id } >{ enhancedStoredRecipeName(savedRecipe) }</option>
+            )
+          })}
         </optgroup>
       )}
       <optgroup key={"Built-in recipes"} label={"use a built-in recipe"}>
