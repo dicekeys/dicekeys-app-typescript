@@ -21,9 +21,6 @@ export const WizardStepContainer = ({children}: React.PropsWithChildren<{}>) => 
     alignItems: "flex-start",
     justifyContent: "space-between",
     minHeight: `${Dimensions.WizardMinHeightInVh}vh`,
-    // borderStyle: "outset",
-    // borderWidth: WizardBorderWidth,
-    // borderColor: "black",
   }}>
     {children}
   </div>
@@ -34,6 +31,24 @@ export const WizardStepInstruction = ({children, style, ...props}: React.HTMLAtt
     {children}
   </div>
 );
+
+export const WizardBack = ({onBack}: {onBack: () => void}) => (
+  <div style={{
+    position: "relative",
+    alignSelf: "flex-end",
+    justifySelf: "flex-start",
+  }
+  }>
+    <a href="" onClick={e => {e.preventDefault(); onBack() }} style={{
+      position: "absolute",
+      textDecoration: "none",
+      zIndex: 1,
+      right: 0,
+    }}>&larr;
+    </a>
+  </div>
+);
+
 
 export const WizardStepInstructionNote = ({children, style, ...props}: React.HTMLAttributes<HTMLDivElement>) => (
   <div {...props} style={{fontSize: `1rem`, ...style}} >
@@ -104,7 +119,6 @@ export const RawJsonFieldView = observer( ({state, focusOnCreate}: {
     </div>
     <textarea
       spellCheck={false}
-//      ref={textAreaComponentRef}
       ref={ta => {if(focusOnCreate) {ta?.focus() }}}
       className={css.FormattedRecipeTextField}
       value={state.recipeJson ?? ""}
@@ -157,6 +171,7 @@ export const WizardStepEnterSiteView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
     return (
       <WizardStepContainer>
+        <WizardBack onBack={state.emptyAllRecipeFields} />
         <WizardStepInstruction>
           Paste or enter the address of the website that will use this {describeRecipeType(state.type)}.
         </WizardStepInstruction>
@@ -183,6 +198,7 @@ export const WizardStepEnterPurposeView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
     return (
       <WizardStepContainer>
+        <WizardBack onBack={state.emptyAllRecipeFields} />
         <WizardStepInstruction>
           Enter a purpose for the {state.typeNameLc}.
         </WizardStepInstruction>
@@ -214,8 +230,9 @@ const WizardStepEnterRawJsonStepView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
     return (
       <WizardStepContainer>
+        <WizardBack onBack={state.emptyAllRecipeFields} />
         <WizardStepInstruction>
-        Paste or type the raw JSON recipe for the {state.typeNameLc}.
+          Paste or type the raw JSON recipe for the {state.typeNameLc}.
         </WizardStepInstruction>
         <WizardFieldRow>
           <RawJsonFieldView {...{state, focusOnCreate: true}} />
