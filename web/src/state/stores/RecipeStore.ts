@@ -10,8 +10,6 @@ import { jsonStringifyWithSortedFieldOrder } from "../../utilities/json";
 class RecipeStoreClass {
   protected recipeJsonArray: string[];
 
-  get recipeJsonSet(): Set<string> { return new Set(this.recipeJsonArray) }
-
   addRecipe = action ( (storedRecipe: StoredRecipe) => {
     this.removeRecipe(storedRecipe);
     this.recipeJsonArray.push(jsonStringifyWithSortedFieldOrder(storedRecipe));
