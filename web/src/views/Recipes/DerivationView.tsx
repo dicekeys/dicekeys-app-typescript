@@ -5,16 +5,12 @@ import { RecipeBuilderState, RecipeEditingMode } from "./RecipeBuilderState";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
-//import { Spacer } from "../basics";
 import { RecipeWizardView } from "./DerivationView/RecipeWizardView";
 import {KeyPlusRecipeView} from "./DerivationView/KeyPlusRecipeView";
 import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 import { SelectRecipeToLoadView } from "./LoadRecipeView";
 
 
-
-// Add save feature
-// Raw JSON will need name to save
 // Remove RecipeBuilderView from Security Key seeding
 //
 // convert manual styling to css?

@@ -18,19 +18,20 @@ export const SelectRecipeToLoadView = observer( ({
   const builtInRecipes = BuiltInRecipes.filter(
     builtInRecipe => savedRecipes.every( savedRecipe =>
       builtInRecipe.recipeJson != savedRecipe.recipeJson ||
-      builtInRecipe.type != savedRecipe.type  ||
-      builtInRecipe.name != savedRecipe.name
+      builtInRecipe.type != savedRecipe.type
     )
   )
   return (
     <select
       className={state.recipeIdentifier ? css.SelectRecipe : css.SelectRecipeNoneSelectedYet}
-      // value={ state.recipeIdentifier ?? "" }
-      value={state.recipeIdentifier ?? (state.type && customRecipeIdentifier({type: state.type})) ?? ""}
+      value=""
       placeholder={"Placeholder"}
       onChange={ (e) => {
         state.loadRecipe(getStoredRecipe(e.currentTarget.value));
         state.setFieldInFocus(undefined);
+        if (e.currentTarget.value !=  null) {
+          e.currentTarget.value;
+        }
       }}
     >
       <option key="none" disabled={true} hidden={true} value="">{defaultOptionLabel}</option>

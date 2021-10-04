@@ -167,6 +167,7 @@ export const WizardFieldLabel = observer ( ({...attributes}: React.LabelHTMLAttr
   >{attributes.children}</label>
 ) );
 
+
 export const WizardStepEnterSiteView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
     return (
@@ -191,6 +192,35 @@ export const WizardStepEnterSiteView = observer ( ({state}: {
             onClick={EventHandlerOverridesDefault( () => state.setWizardPrimaryFieldOverride("rawJson") )}
           >enter raw json instead</a>
         </WizardStepAlternatives>
+      </WizardStepContainer>);
+});
+
+export const WizardStepSaveView = observer ( ({state}: {
+  state: RecipeBuilderState}) => {
+    return (
+      <WizardStepContainer>
+        <WizardBack onBack={state.cancelSave} />
+        <WizardStepInstruction>
+          Enter name to associate with this recipe.
+        </WizardStepInstruction>
+        <WizardFieldRow>
+          <input type="text"
+            id={"nameToSave"}
+            spellCheck={false}
+            size={30}
+            value={state.nameField ?? ""}
+            // Focus input when it's created
+            ref={ e => e?.focus() }
+            onInput={ e => {state.setNameField(e.currentTarget.value); }}
+            onKeyUp={ e => {if (e.key === "Enter" && e.currentTarget.value.length > 0) { 
+              state.completeSave()
+            }}}
+          />
+          <button
+            disabled={(state.nameField?.length ?? 0) === 0}
+            onClick={state.completeSave}          
+          >save</button>
+        </WizardFieldRow>
       </WizardStepContainer>);
 });
 
@@ -270,20 +300,6 @@ export const RecipeWizardStepPickRecipeView = observer ( ({state}: {
   </WizardStepContainer>
 ));
 
-export const RecipeWizardContentView = observer ( ({state}: {
-  state: RecipeBuilderState}) => {
-    switch (state.wizardStep) {
-      case WizardStep.PickRecipe:
-        return (<RecipeWizardStepPickRecipeView {...{state}} />)
-      case WizardStep.EnterSite:
-        return (<WizardStepEnterSiteView {...{state}} />)
-      case WizardStep.EnterPurpose:
-            return (<WizardStepEnterPurposeView  {...{state}} />)
-      case WizardStep.EnterRawJson:
-        return (<WizardStepEnterRawJsonStepView {...{state}} />); // FIXME
-      case WizardStep.Complete: return null; // should never occur
-    }
-});
 
 export const RecipeWizardView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
@@ -295,7 +311,9 @@ export const RecipeWizardView = observer ( ({state}: {
     case WizardStep.EnterPurpose:
           return (<WizardStepEnterPurposeView  {...{state}} />)
     case WizardStep.EnterRawJson:
-      return (<WizardStepEnterRawJsonStepView {...{state}} />); // FIXME
+      return (<WizardStepEnterRawJsonStepView {...{state}} />);
+    case WizardStep.Save:
+      return (<WizardStepSaveView {...{state}} />);
     case WizardStep.Complete: return null;
   }
 });

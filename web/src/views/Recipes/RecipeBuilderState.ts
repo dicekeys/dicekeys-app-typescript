@@ -73,7 +73,8 @@ export enum WizardStep {
   EnterSite = 1,
   EnterPurpose = 2.1,
   EnterRawJson = 2.2,
-  Complete = 3
+  Complete = 3,
+  Save = 4,
 }
 
 export class RecipeFieldFocusState {
@@ -151,9 +152,16 @@ export class RecipeBuilderState {
   setWizardPrimaryFieldEnteredFn = (newValue: boolean | undefined) =>
     () => this.setWizardPrimaryFieldEntered(newValue);
 
+  showSave?: boolean = false;
+  setShowSave = action ((newValue: boolean) => {
+    this.showSave = newValue;
+  });
+
   get wizardStep(): WizardStep {
     if (this.type == null) return WizardStep.PickRecipe;
-    if (this.wizardPrimaryFieldEntered === true) return WizardStep.Complete;
+    if (this.wizardPrimaryFieldEntered === true) {
+      return this.showSave ? WizardStep.Save : WizardStep.Complete;
+    }
     switch(this.wizardPrimaryFieldOverride) {
       case "purpose": return WizardStep.EnterPurpose;
       case "rawJson": return WizardStep.EnterRawJson;
@@ -162,7 +170,7 @@ export class RecipeBuilderState {
   }
 
   get wizardComplete(): boolean {
-    return this.wizardStep === WizardStep.Complete && this.type != null
+    return this.wizardStep === WizardStep.Complete && this.type != null;
   }
 
   editingMode: RecipeEditingMode = RecipeEditingMode.NoRecipe;
@@ -356,6 +364,34 @@ export class RecipeBuilderState {
     return;
   }
 
+  startSave = action( () => {
+    if (this.nameField == null || this.nameField.length === 0) {
+      this.nameField = this.prescribedName ?? "";
+    }
+    this.showSave = true;
+  });
+
+  cancelSave = action( () => {
+    this.nameField = undefined;
+    this.showSave = false;
+  });
+
+  completeSave = action( () => {
+    const storedRecipe = this.asStoredRecipe;
+    if (storedRecipe) {
+      RecipeStore.addRecipe({
+        ...storedRecipe,
+        // Only add a name field if it doesn't match the prescribed name.
+        ...( (this.nameField != null && this.nameField !== this.prescribedName) ?
+          {name: this.nameField} : {})
+      });
+      this.setOrigin("Saved");
+      this.toggleEditingMode(RecipeEditingMode.NoEdit);
+    }
+    this.nameField = undefined;
+    this.showSave = false;
+});
+
   saveOrDelete = action (() => {
     const storedRecipe = this.asStoredRecipe;
     if (storedRecipe == null) return;
@@ -364,9 +400,7 @@ export class RecipeBuilderState {
       RecipeStore.removeRecipe(storedRecipe);
     } else {
       // save the recipe
-      RecipeStore.addRecipe(storedRecipe);
-      this.setOrigin("Saved");
-      this.toggleEditingMode(RecipeEditingMode.NoEdit);
+      this.startSave();
   }
   });
 
