@@ -1,11 +1,11 @@
 import css from "./Recipes.module.css";
 import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
-import { CenteredControls, ContentBox, Instruction, PaddedContentBox, Spacer } from "../basics";
-import { RecipeFieldsHelpView, RecipeBuilderFieldsView, RecipeRawJsonView } from "./DerivationView/RecipeBuilderView"
+import { CenteredControls, Instruction, PaddedContentBox, Spacer } from "../basics";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
+import * as Dimensions from "./DerivationView/Dimensions";
 
 const seedSecurityKeyPurpose = "seedSecurityKey";
 
@@ -19,6 +19,9 @@ import {
 import { action, makeAutoObservable } from "mobx";
 import { isElectron } from "../../utilities/is-electron";
 import { LoadedRecipe } from "../../dicekeys/StoredRecipe";
+import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
+import { KeyPlusRecipeView } from "./DerivationView/KeyPlusRecipeView";
+import { DiceKey } from "../../dicekeys/DiceKey";
 
 
 class SeedableDiceKeys {
@@ -81,9 +84,10 @@ export const PressCountdownSecondsView = observer( ({whenStarted}: {whenStarted:
   return (<>{ Math.max(0, 8 - secondsPassed) }</>);
 })
 
-export const SeedHardwareKeyViewWithState = observer( ( {seedHardwareKeyViewState, seedableDiceKeys}: {
+export const SeedHardwareKeyViewWithState = observer( ( {diceKey, seedHardwareKeyViewState, seedableDiceKeys}: {
   seedHardwareKeyViewState: SeedHardwareKeyViewState,
   seedableDiceKeys: SeedableDiceKeys,
+  diceKey: DiceKey
 }) => {
   if (seedHardwareKeyViewState.writeInProgress) {
     return (
@@ -123,24 +127,35 @@ export const SeedHardwareKeyViewWithState = observer( ( {seedHardwareKeyViewStat
       </PaddedContentBox>
     )  
   } else return (
-    <ContentBox>
-      <Spacer/>
-      <div className={css.DerivationView}>
-        <div className={css.RecipeFormFrame}>
-          <RecipeFieldsHelpView state={seedHardwareKeyViewState.recipeBuilderState} />
-          <RecipeBuilderFieldsView state={seedHardwareKeyViewState.recipeBuilderState} />
-          <RecipeRawJsonView state={seedHardwareKeyViewState.recipeBuilderState} /> 
-        </div>
-        <DerivedFromRecipeView state={seedHardwareKeyViewState.derivedFromRecipeState} showPlaceholder={false} />
-        {/* <Spacer/> */}
-        { isElectron() != null ? (
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      justifySelf: "center",
+    }}> 
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignContent: "flex-start",
+        height: `${Dimensions.WizardOrFieldsMaxHeight}vh`,
+      }}>
+        <RecipeFieldEditorView state={seedHardwareKeyViewState.recipeBuilderState} />
+      </div>
+      <div style={{display: "flex",
+        flexDirection: "column", 
+        alignItems: "center", justifyContent: "flex-end"
+      }}>
+          <KeyPlusRecipeView {...{diceKey, recipeBuilderState: seedHardwareKeyViewState.recipeBuilderState}} />
+      </div>
+      <DerivedFromRecipeView state={seedHardwareKeyViewState.derivedFromRecipeState} showPlaceholder={false} />
+      { isElectron() ? (
           <HardwareSecurityKeysView {...{seedableDiceKeys, seedHardwareKeyViewState}}/>
         ) : (
           <CannotSeedSecurityKeysView/>
         )}
-      </div>
-      <Spacer/>
-    </ContentBox>
+    </div>
   )
 });
 
@@ -195,13 +210,13 @@ class SeedHardwareKeyViewState {
   }
 }
 
-export const SeedHardwareKeyView = observer ( (props: {seedString: string}) => {
-  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(props.seedString);
+export const SeedHardwareKeyView = observer ( ({diceKey}: {diceKey: DiceKey}) => {
+  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(diceKey.toSeedString());
   const seedableDiceKeys = new SeedableDiceKeys();
   useEffect( () => () => seedableDiceKeys.destroy() );  
 
   return (
-    <SeedHardwareKeyViewWithState {...{seedHardwareKeyViewState, seedableDiceKeys}}/>
+    <SeedHardwareKeyViewWithState {...{diceKey, seedHardwareKeyViewState, seedableDiceKeys}}/>
   )
 });
 

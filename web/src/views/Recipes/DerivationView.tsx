@@ -10,12 +10,6 @@ import {KeyPlusRecipeView} from "./DerivationView/KeyPlusRecipeView";
 import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 import { SelectRecipeToLoadView } from "./LoadRecipeView";
 
-
-// Remove RecipeBuilderView from Security Key seeding
-//
-// convert manual styling to css?
-//https://styled-components.com/docs/api#typescript
-
 export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
   recipeBuilderState: RecipeBuilderState,
 }) => recipeBuilderState.wizardComplete ? ( recipeBuilderState.editingMode === RecipeEditingMode.NoEdit ?
