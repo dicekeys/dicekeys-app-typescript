@@ -31,7 +31,7 @@
     }
   },
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js  --runInBand --detectOpenHandles",
     "start": "parcel src/index.html",
     "preview": "parcel src/preview.html",
     "build": "tsc -p .",
