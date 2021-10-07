@@ -11,7 +11,7 @@ import {
 export class VerifyRecipeWorker extends WorkerRequest<VerifyRequest, VerifyResponse, VerifyRequestMessage> {
   constructor() {
     super(
-      () => new Worker("./recipe-proof-worker.ts"),
+      () => new Worker(new URL("./recipe-proof-worker.ts" /*, import.meta.url*/), {type: 'module'}),
       request => ({action: "verify", ...request})  
     )
   }

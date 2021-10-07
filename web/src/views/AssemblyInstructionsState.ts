@@ -39,12 +39,14 @@ export class AssemblyInstructionsState {
   }
   userChoseToSkipScanningStep: boolean = false;
   setUserChoseToSkipScanningStep = action ( () => this.userChoseToSkipScanningStep = true );
-  backupState = new BackupViewState(this.foregroundDiceKeyState);
+
+  backupState: BackupViewState;
 
   constructor(
     public foregroundDiceKeyState: SettableDiceKeyState,
     public step: AssemblyInstructionsStep = AssemblyInstructionsStep.START_INCLUSIVE,
   ) {
+    this.backupState = new BackupViewState(this.foregroundDiceKeyState);
     makeAutoObservable(this);
   }
 }

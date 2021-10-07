@@ -17,6 +17,7 @@ import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { SelectedDiceKeyViewState } from "./SelectedDiceKeyViewState";
 import { addPreview } from "../basics/Previews";
 import { EventHandlerOverridesDefault } from "../../utilities/EventHandlerOverridesDefault";
+import { BottomNavigationBar, FooterButtonDiv, FooterIconImg } from "../../views/Navigation/NavigationBars";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 // const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
@@ -30,21 +31,21 @@ const FooterButtonView = observer( ( props: SelectedDiceKeyViewProps & {
   subView: Navigation.SelectedDiceKeySubViews, imageSrc: string, labelStr: string
   onClick: () => void
 } ) => (
-  <div
-    className={props.state.subView === props.subView ? NavigationBars.footer_button_selected : NavigationBars.footer_button}
+  <FooterButtonDiv selected={props.state.subView === props.subView}
     onClick={EventHandlerOverridesDefault(props.onClick)}
-  ><img className={NavigationBars.footer_icon} src={props.imageSrc}/><div>{props.labelStr}</div></div>
+  ><FooterIconImg src={props.imageSrc}/><div>{props.labelStr}</div>
+  </FooterButtonDiv>
 ));
 
 const SelectedDiceKeyViewStateFooter = observer( ( props: SelectedDiceKeyViewProps) => {
   const navState = props.state;
   return (
-  <div className={NavigationBars.BottomNavigationBar}>
-    <FooterButtonView {...props} labelStr={`DiceKey`} subView={SubViews.DisplayDiceKey} imageSrc={imageOfDiceKeyIcon} onClick={navState.navigateToDisplayDiceKey} />
-    <FooterButtonView {...props} labelStr={`Seed`} subView={SubViews.SeedHardwareKey} imageSrc={imageOfUsbKey} onClick={navState.navigateToSeedHardwareKey} />
-    <FooterButtonView {...props} labelStr={`Secret`} subView={SubViews.DeriveSecrets} imageSrc={imageOfSecretWithArrow} onClick={navState.navigateToDeriveSecrets} />
-    <FooterButtonView {...props} labelStr={`Backup`} subView={SubViews.Backup} imageSrc={imageOfBackup} onClick={navState.navigateToBackup} />
-  </div>
+    <BottomNavigationBar>
+      <FooterButtonView {...props} labelStr={`DiceKey`} subView={SubViews.DisplayDiceKey} imageSrc={imageOfDiceKeyIcon} onClick={navState.navigateToDisplayDiceKey} />
+      <FooterButtonView {...props} labelStr={`Seed`} subView={SubViews.SeedHardwareKey} imageSrc={imageOfUsbKey} onClick={navState.navigateToSeedHardwareKey} />
+      <FooterButtonView {...props} labelStr={`Secret`} subView={SubViews.DeriveSecrets} imageSrc={imageOfSecretWithArrow} onClick={navState.navigateToDeriveSecrets} />
+      <FooterButtonView {...props} labelStr={`Backup`} subView={SubViews.Backup} imageSrc={imageOfBackup} onClick={navState.navigateToBackup} />
+    </BottomNavigationBar>
   );
 });
 

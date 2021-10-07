@@ -29,29 +29,35 @@ export const fractionBoxWithLidTabToBoxWithoutLidTab = 1.1;
 
 const fractionOfHeightDevotedToTabIfPresent = 0.1;
 
-export class DiceKeySizeModel {
-  constructor(public readonly linearSizeOfFace: number = 1, public readonly includeSpaceForTab: boolean = false) {}
+export const DiceKeySizeModel = (linearSizeOfFace: number = 1, includeSpaceForTab: boolean = false) => {
+  const tabFraction = includeSpaceForTab ? fractionOfHeightDevotedToTabIfPresent : 0;
 
-  static fromBounds = (widthOverHeight: number, includeSpaceForTab: boolean) => (bounds: Bounds) =>
-    new DiceKeySizeModel(fitRectangleWithAspectRatioIntoABoundingBox(widthOverHeight)(bounds).width / ratioOfBoxWidthToFaceSize, includeSpaceForTab);
-    static fromBoundsWithTab = DiceKeySizeModel.fromBounds(1/(1-fractionOfHeightDevotedToTabIfPresent), true);
-    static fromBoundsWithoutTab = DiceKeySizeModel.fromBounds(1, false);
+  const linearSizeOfBox = linearSizeOfFace * ratioOfBoxWidthToFaceSize;
+  const distanceBetweenDieCenters = linearSizeOfFace * (1 + distanceBetweenFacesAsFractionOfLinearSizeOfFace);
+  const linearSizeOfBoxWithTab = linearSizeOfBox * (1 + tabFraction);
 
-  tabFraction = this.includeSpaceForTab ? fractionOfHeightDevotedToTabIfPresent : 0;
-
-  linearSizeOfBox = this.linearSizeOfFace * ratioOfBoxWidthToFaceSize;
-  distanceBetweenDieCenters = this.linearSizeOfFace * (1 + distanceBetweenFacesAsFractionOfLinearSizeOfFace);
-  linearSizeOfBoxWithTab = this.linearSizeOfBox * (1 + this.tabFraction);
-
-  width = this.linearSizeOfBox;
-  height = this.linearSizeOfBox * (1 / (1 - this.tabFraction));
-  get bounds() { const {width, height} = this; return {width, height}; }
+  const width = linearSizeOfBox;
+  const height = linearSizeOfBox * (1 / (1 - tabFraction));
+  const bounds = {width, height};
 
 
-  top = -this.linearSizeOfBox / 2;
-  left = -this.linearSizeOfBox / 2;
-  radius = this.linearSizeOfBox / 50;
+  const top = -linearSizeOfBox / 2;
+  const left = -linearSizeOfBox / 2;
+  const radius = linearSizeOfBox / 50;
+
+  return {
+    linearSizeOfFace, includeSpaceForTab,
+    tabFraction, linearSizeOfBox,
+    distanceBetweenDieCenters, linearSizeOfBoxWithTab,
+    width, height, bounds, top, left, radius
+  }
 }
+
+const DiceKeySizeModelFromBounds = (widthOverHeight: number, includeSpaceForTab: boolean) => (bounds: Bounds) =>
+    DiceKeySizeModel(fitRectangleWithAspectRatioIntoABoundingBox(widthOverHeight)(bounds).width / ratioOfBoxWidthToFaceSize, includeSpaceForTab);
+export const DiceKeySizeModelFromBoundsWithTab = DiceKeySizeModelFromBounds(1/(1-fractionOfHeightDevotedToTabIfPresent), true);
+export const DiceKeySizeModelFromBoundsWithoutTab = DiceKeySizeModelFromBounds(1, false);
+
 
 type DiceKeySvgGroupProps = {
   faces?: PartialDiceKey,
@@ -75,8 +81,8 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
     } = props;
 
     const sizeModel = (showLidTab || leaveSpaceForTab) ?
-      DiceKeySizeModel.fromBoundsWithTab(props) :
-      DiceKeySizeModel.fromBoundsWithoutTab(props);
+      DiceKeySizeModelFromBoundsWithTab(props) :
+      DiceKeySizeModelFromBoundsWithoutTab(props);
 
 
     const obscure: boolean = typeof obscureAllButCenterDie === "object" ?

@@ -1,8 +1,11 @@
-import {NavigationBars} from "../../css"
 import { observer } from "mobx-react";
 import React from "react";
 import { isElectron } from "../../utilities/is-electron";
 import { addressBarState } from "../../state/core/AddressBarState";
+import {
+  TopNavigationBar,
+  TopNavLeftSide, TopNavCenter, TopNavRightSide
+} from "./NavigationBars";
 
 export const SimpleTopNavBar = observer( ( props: {
   title?: string,
@@ -14,16 +17,18 @@ export const SimpleTopNavBar = observer( ( props: {
   // as the web-based app relies on the back button within the browser.
   const onClick = isElectron() ? goBack : undefined;
   return (
-    <div className={NavigationBars.TopNavigationBar}>
-      <span className={NavigationBars.NavLeftSide} onClick={ onClick } >{
+    <TopNavigationBar>
+    {/* <div className={NavigationBars.TopNavigationBar}> */}
+      <TopNavLeftSide onClick={ onClick } >{
         isElectron() ?
           // Show a back button in Electron
           (<>&#8592;</>) :
           // Don't show a back button for the web app, as the browser back button will work.
           (<></>)
-        }</span>
-      <span className={NavigationBars.NavCenter}>{props.title ?? ""}</span>
-      <span className={NavigationBars.NavRightSide}></span>
-    </div>
+        }</TopNavLeftSide>
+      <TopNavCenter>{props.title ?? ""}</TopNavCenter>
+      <TopNavRightSide></TopNavRightSide>
+    {/* </div> */}
+    </TopNavigationBar>
   )
 });

@@ -2,7 +2,7 @@ import { DiceKey } from "../dicekeys/DiceKey";
 
 import { Crypto } from "@peculiar/webcrypto"
 import { TestDiceKeys } from "./TestDiceKeys";
-global.crypto = new Crypto();
+global.crypto = new Crypto() as typeof global.crypto;
 
 
 describe("Formats: Bip39", () => {

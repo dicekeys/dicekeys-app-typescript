@@ -27,12 +27,12 @@ export class BackupViewState {
     public readonly diceKeyState: SettableDiceKeyState,
     public step: BackupStep = BackupStep.START_INCLUSIVE
   ) {
+    this.validationStepViewState = new ValidateBackupViewState(this.diceKeyState, this.diceKeyScannedFromBackup);
     makeAutoObservable(this);
   }
-
+  validationStepViewState: ValidateBackupViewState;
   backupMedium?: BackupMedium;
   diceKeyScannedFromBackup = new DiceKeyState();
-  validationStepViewState = new ValidateBackupViewState(this.diceKeyState, this.diceKeyScannedFromBackup);
 
   setBackupMedium = (newMedium: BackupMedium) => action ( () => {
     this.backupMedium = newMedium;

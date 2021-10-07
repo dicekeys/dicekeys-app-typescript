@@ -4,8 +4,9 @@
 import {
   Recipe,
   UrlApi,
-  stringToUtf8ByteArray, UnsealingInstructions, UnsealingKeyRecipe
+  UnsealingInstructions, UnsealingKeyRecipe
 } from "@dicekeys/dicekeys-api-js";
+import { strToUTF8Arr } from "../utilities/utf8";
 import {
   QueuedUrlApiRequest
 } from "../api-handler/QueuedUrlApiRequest";
@@ -13,7 +14,7 @@ import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { jsonStringifyWithSortedFieldOrder } from "../utilities/json";
 
 import { Crypto } from "@peculiar/webcrypto"
-global.crypto = new Crypto();
+global.crypto = new Crypto() as typeof global.crypto;
 
 const defaultSeedString = "a bogus seed";
 
@@ -49,7 +50,7 @@ describe("End To End Url Api Tests", () => {
     allow: [{host: defaultRespondToHost}]
   }));
   const testMessage = "The secret ingredient is dihydrogen monoxide";
-  const testMessageByteArray = stringToUtf8ByteArray(testMessage);
+  const testMessageByteArray = strToUTF8Arr(testMessage);
 
   test("symmetricKeySealAndUnseal", async () => {
     const client = getMockClient();

@@ -3,7 +3,7 @@ import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox } from "./bounding-rects";
-export {Bounds};
+export type {Bounds};
 
 // https://stackoverflow.com/questions/43817118/how-to-get-the-width-of-a-react-element
 export const useContainerDimensions = (myRef: React.RefObject<any>, setBounds: (bounds: {width: number, height: number}) => any) => {
