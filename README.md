@@ -30,8 +30,16 @@ npm run start
 ```
 
 ## Running electron app
+
+```
+cd electron
+sh build_modules.sh
+npm run start
+```
+or manually
 ```
 cd common
+npm install
 npm run build
 cd ..
 cd web
@@ -43,10 +51,16 @@ npm run start
 ```
 ## Build electron app for macOS
 
-First do all the steps before `npm run start` above
+First do all the steps of the previous section and then:
 ```
 cd electron
-npm run make
+npm run build
+
+# if you just want the .app 
+npm run pack
+
+# or dmg distribution files
+npm run dist 
 ```
 
 ## Build electron app for Windows/Linux
@@ -92,6 +106,13 @@ parcel src/preview.html
 Then load [http://localhost:1234/](http://localhost:1234/)
 
 
+### Windows USB device handling
+Windows require the app to have admin rights in order to list usb devices and write to them.
+When the app runs on windows it creates an IPC (named pipes) and executes a script (`usb-writer.js`) with elevated priviledges (UAC)
+that listens to the parent IPC.
+
+For easier development `alwaysSpawnClient` can be set to `true` for all OS's to spawn an IPC server even if is not required.
+
 ## Security notes
 
 ### Dependencies
@@ -128,6 +149,16 @@ and with tsc, and this isn't working well in the beta of parcel 2.
 
 ### Electron Version locking
 Electron version has a dependency on `node-hid` and as a result Electron version must first be supported by `node-hid`.
+
+### macOS - Supporting Associated Domains
+Associated Domains ([see Apple's developer documentation](https://developer.apple.com/documentation/xcode/supporting-associated-domains)) establish a secure association between the domain(s) associated with the DiceKeys app (dicekeys.app) and this application package.
+
+_To support associated domains, this electron app uses a custom entitlements file ([electron/packaging/entitlements.mac.plist](./electron/packaging/entitlements.mac.plist)) which is not managed by XCode.  That file includes documentation on entitlement settings required by this application to run without crashing._
+
+Useful resources:
+- https://github.com/electron-userland/electron-builder/issues/4040
+- https://twitter-archive-eraser.medium.com/notarize-electron-apps-7a5f988406db
+- https://github.com/electron-userland/electron-builder/issues/3940
 
 ### Development mode
 #### Refresh HTML contents
