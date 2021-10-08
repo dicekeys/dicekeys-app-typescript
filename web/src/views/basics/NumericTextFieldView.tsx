@@ -1,11 +1,11 @@
 
-import css from "./basic.module.css";
 import React from "react";
 import { observer } from "mobx-react";
 import { CharButton, CharButtonToolTip } from "../../views/basics";
 
 
 import { action, makeAutoObservable } from "mobx";
+import styled from "styled-components";
 
 
 export class NumericTextFieldState {
@@ -79,6 +79,11 @@ export const NumericTextField = observer ( ({state, size, placeholder, onInput, 
   )
 });
 
+const RowVerticallyCenteredDiv = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+`;
 
 export const NumberPlusMinusView = observer( (props: CommonProps) => {
   const {onKeyDown, ...commonProps} = props;
@@ -90,8 +95,8 @@ export const NumberPlusMinusView = observer( (props: CommonProps) => {
   const subtractOne = () => setValue(state.decrementedValue);
   const addOne = () => setValue(state.incrementedValue);
   return (
-    <div className={css.hstack}>
-      <CharButton hidden={state.numericValue == null} onClick={ subtractOne  }
+    <RowVerticallyCenteredDiv>
+      <CharButton invisible={state.numericValue == null} onClick={ subtractOne  }
         >-<CharButtonToolTip>- 1 = {state.decrementedValue ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
       <NumericTextField
         {...commonProps}
@@ -120,5 +125,5 @@ export const NumberPlusMinusView = observer( (props: CommonProps) => {
       />
       <CharButton onClick={ addOne }
       >+<CharButtonToolTip>+ 1 = { state.incrementedValue }</CharButtonToolTip></CharButton>
-    </div>
+    </RowVerticallyCenteredDiv>
 )});

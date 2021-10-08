@@ -170,7 +170,7 @@ interface AssemblyInstructionsViewProps {
 const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  AssemblyInstructionsViewProps) => (
   <StepFooterView               
     aboveFooter={(state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.foregroundDiceKeyState.diceKey == null) ? (
-        <StepButton hidden={state.userChoseToSkipScanningStep == null}
+        <StepButton invisible={state.userChoseToSkipScanningStep == null}
           onClick={ state.setUserChoseToSkipScanningStep }
           style={{marginBottom: "0.5rem"}}
         >Let me skip scanning and backing up my DiceKey

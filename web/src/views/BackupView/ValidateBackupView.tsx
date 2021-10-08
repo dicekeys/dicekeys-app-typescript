@@ -1,5 +1,4 @@
 import React from "react";
-import css from "./BackupView.module.css";
 import { DiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { observer } from "mobx-react";
 import { ScanDiceKeyView } from "../LoadingDiceKeys/ScanDiceKeyView";
@@ -8,6 +7,33 @@ import { AndClause, CenteredControls, ContentBox, ContentRow, Instruction, Space
 import { ValidateBackupViewState, FaceErrorDescriptor } from "./ValidateBackupViewState";
 import { visibility } from "../../utilities/visibility";
 import { PushButton } from "../../css/Button";
+import styled from "styled-components";
+import { ComparisonBox } from ".";
+
+const ErrorStepViewBox = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0.1;
+  flex-grow: 0.1;
+`;
+
+const ErrorExplanation = styled.div`
+  min-width: 20vw;
+  font-size: 1.1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-content: baseline
+`;
+
+const MinWidthButtonContainer = styled.div<{invisible?: boolean}>`
+  min-width: 10vw;
+  visibility: ${props=>props.invisible ? "hidden" : "visible"}
+`;
 
 export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateBackupViewState}) => {
   const onDiceKeyRead = (diceKey: DiceKey) => {
@@ -32,7 +58,7 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
   } else {
     return (<>
       <ContentRow>
-        <div className={css.ComparisonBox}>
+        <ComparisonBox>
           <DiceKeyViewAutoSized faces={viewState.diceKeyState.diceKey?.faces}
             aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
@@ -40,8 +66,8 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
           <CenteredControls>
             <PushButton onClick={viewState.startScanningOriginal}>Re-scan your original DiceKey</PushButton>
           </CenteredControls>
-        </div>
-        <div className={css.ComparisonBox} >
+        </ComparisonBox>
+        <ComparisonBox>
           <DiceKeyViewAutoSized faces={viewState.diceKeyScanned?.faces ?? [] as unknown as PartialDiceKey }
             aspectRatioWidthOverHeight={1} maxWidth={"35vw"} maxHeight={"40vh"}
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
@@ -52,7 +78,7 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
             }</PushButton>  
           </CenteredControls>
 
-        </div>
+        </ComparisonBox>
       </ContentRow>
       <Spacer/>
       { viewState.backupScannedSuccessfully ? (<>
@@ -97,24 +123,24 @@ const ErrorItemView = ({errorDescriptor}: {errorDescriptor: FaceErrorDescriptor}
 const ErrorStepView = observer ( ({viewState}: {viewState: ValidateBackupViewState}) => {
   const {errorIndex = 0, numberOfFacesWithErrors} = viewState;
   return (
-  <div className={css.ErrorStepViewBox}>
-    <div className={css.MinWidthButtonContainer} style={{ ...( (errorIndex) > 0 ? {} : {visibility: "hidden"})}}>
+  <ErrorStepViewBox>
+    <MinWidthButtonContainer style={{ ...( (errorIndex) > 0 ? {} : {visibility: "hidden"})}}>
       <PushButton
-        hidden={errorIndex == 0 || errorIndex == null}
+        invisible={errorIndex == 0 || errorIndex == null}
         onClick={() => viewState.setErrorIndex((errorIndex ?? 1) - 1)}
         >previous
       </PushButton>
-    </div>
-    <div className={css.ErrorExplanation}>
+    </MinWidthButtonContainer>
+    <ErrorExplanation>
       Error {errorIndex + 1} of {numberOfFacesWithErrors}
-    </div>
-    <div className={css.MinWidthButtonContainer} style={visibility(errorIndex < numberOfFacesWithErrors-1)}>
+    </ErrorExplanation>
+    <MinWidthButtonContainer style={visibility(errorIndex < numberOfFacesWithErrors-1)}>
       <PushButton
-        hidden={errorIndex >= numberOfFacesWithErrors - 1 }
+        invisible={errorIndex >= numberOfFacesWithErrors - 1 }
         onClick={() => viewState.setErrorIndex((errorIndex ?? 0) + 1)}
       >next
       </PushButton>
-    </div>
-  </div>
+    </MinWidthButtonContainer>
+  </ErrorStepViewBox>
 
 )});

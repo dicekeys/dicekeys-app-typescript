@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import { action } from "mobx";
 import styled from "styled-components";
 
-const CharButtonCss = styled.button`
+const CharButtonCss = styled.button<{invisible?: boolean}>`
   display: flex;
   justify-content: center;
   align-items: baseline;
@@ -14,6 +14,7 @@ const CharButtonCss = styled.button`
   height: 1.5rem;
   width: 1.5rem;
   user-select: none;
+  visibility: ${p=>p.invisible?"hidden":"visible"};
   &:focus {
     outline:0;
   }
@@ -27,7 +28,7 @@ const CharButtonCss = styled.button`
   }
 `;
 
-export const CharButton = (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+export const CharButton = (props: React.ButtonHTMLAttributes<HTMLButtonElement> & {invisible?: boolean}) => (
   <CharButtonCss {...props} tabIndex={-1} />
 );
 
@@ -60,7 +61,7 @@ export const CopyButton = observer ( (props: CopyButtonProps) => {
     // FUTURE - provide user notification that copy happened.
   });
   return (
-   <CharButton hidden={props.value == null} onClick={copyToClipboard}>&#128203;<CharButtonToolTip></CharButtonToolTip></CharButton>
+   <CharButton invisible={props.value == null} onClick={copyToClipboard}>&#128203;<CharButtonToolTip></CharButtonToolTip></CharButton>
   );
 });
 

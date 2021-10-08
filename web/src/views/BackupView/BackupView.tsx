@@ -1,4 +1,3 @@
-import css from "./BackupView.module.css";
 import { DiceKey, Face } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
@@ -15,37 +14,81 @@ import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 import {BackupStep, BackupViewState} from "./BackupViewState";
 import { StepButton } from "../../css/Button";
+import styled from "styled-components";
 
-const IntroToBackingUpToADiceKeyView = () => (<>
+export const ComparisonBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items:center;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  &:first-of-type {
+    margin-left: 0;
+  }
+  &:last-of-type {
+    margin-right: 0;  
+  }
+`;
+
+
+const FeatureCardButton = styled.button`
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  align-items: stretch;
+  align-content: center;
+  padding-top: 1.5vh;
+  padding-bottom: 1.5vh;
+  margin-top: 1.5vh;
+  margin-bottom: 1.5vh;
+  border-radius: min(1vh,1vw);
+  padding-left: 1vw;
+  padding-right: 1vw;
+  border: none;
+  &:hover {
+    background: rgba(128,128,128,0.2);
+  }
+  &:not(:first-of-type) {
+    margin-top: 1vh;
+  }
+`;
+
+const LabelBelowButtonImage = styled.div`
+  margin-top: 0.5rem;
+`;
+
+
+const IntroToBackingUpToADiceKeyView = () => (
   <ContentBox>
     <Spacer/>
     <Instruction>Open your DiceKey kit and take out the box bottom and the 25 dice.</Instruction>
     <Spacer/>
     <Center>
-      <div className={css.ComparisonBox}>
+      <ComparisonBox>
         <DiceKeyViewAutoSized maxHeight="60vh" maxWidth="45vw" />
-      </div>
+      </ComparisonBox>
     </Center>
     <Spacer/>
     <Instruction>Next, you will replicate the first DiceKey by copying the arrangement of dice.</Instruction>
     <Spacer/>
     <div>Need another DiceKey?  You can <a target="_blank" href="https://dicekeys.com/store">order more</a>.</div>
   </ContentBox>
-</>)
+)
 const IntroToBackingUpToASticKeyView = () => (
   <ContentBox>
     <Spacer />
     <Instruction>Unwrap your SticKeys it.</Instruction>
     <Spacer />
     <Center>
-      <div className={css.ComparisonBox}>
+      <ComparisonBox>
         <StickerSheetView maxHeight="60vh" maxWidth="45vw" />
         5 sticker sheets
-      </div>
-      <div className={css.ComparisonBox} >
+      </ComparisonBox>
+      <ComparisonBox>
         <StickerTargetSheetView maxHeight="60vh" maxWidth="45vw" />
         1 target sheet
-      </div>
+      </ComparisonBox>
     </Center>
     <Spacer />
     <Instruction>Next, you will create a copy of your DiceKey on the target sheet by placing stickers.</Instruction>
@@ -92,15 +135,14 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, i
 const StepSelectBackupMedium = observer (({state}: {state: BackupViewState}) => (
   <ColumnCentered>{
   [BackupMedium.SticKey, BackupMedium.DiceKey].map( medium => (
-      <button key={medium}
-        className={css.FeatureCardButton}
+      <FeatureCardButton key={medium}
         onClick={state.setBackupMedium(medium)}
       >
         <FaceCopyingView medium={medium} diceKey={state.diceKeyState.diceKey} showArrow={true} indexOfLastFacePlaced={12} 
           maxWidth="60vw" maxHeight="30vh"
         />
-        <div className={css.LabelBelowButtonImage}>Use {medium}</div>
-      </button>
+        <LabelBelowButtonImage>Use {medium}</LabelBelowButtonImage>
+      </FeatureCardButton>
     ))}
     </ColumnCentered>
   ));

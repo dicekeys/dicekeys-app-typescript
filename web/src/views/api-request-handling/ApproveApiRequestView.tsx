@@ -1,5 +1,4 @@
 import React from "react";
-import styles from "./api-request-container.module.css";
 import {
   ApiCalls, PasswordJson, SealingKeyJson, SecretJson, SignatureVerificationKeyJson, SigningKeyJson, SymmetricKeyJson, UnsealingKeyJson} from "@dicekeys/dicekeys-api-js";
 import {
@@ -20,6 +19,47 @@ import { DiceKeyViewAutoSized } from "../../views/SVG/DiceKeyView";
 import { PushButton } from "../../css/Button";
 import { FlexColumnWideVerticallyStretched } from "../../css/FlexContainers";
 
+import styled from "styled-components";
+
+const HostNameSpan = styled.span`
+  font-family: monospace;
+`;
+
+const RequestCommonDiv = styled.div`
+  flex-shrink: 0;
+  flex-grow: 0;
+  font-family: sans-serif;
+  text-align: center;
+`;
+
+const RequestDescription = styled(RequestCommonDiv)`
+  margin-top: 0px;
+  margin-bottom: 15;
+  color: #202000;
+  font-weight: 400;
+`;
+
+const RequestChoice = styled(RequestCommonDiv)`
+  font-size: 1.6666rem;
+  color: #202000;
+  font-weight: 400;
+`
+
+const RequestPromise = styled(RequestCommonDiv)`
+  margin-top: 0.5rem;
+  font-size: 1.1rem;
+  color: #001000;
+  text-align: center;
+`;
+
+const KnownApplicationNameSpan = styled.span`
+  /* font-family: serif; */
+  font-weight: 400;
+  /* background-color: rgba(152, 160, 47, 0.1); */
+  /* border-radius: 0.3rem; */
+  /* text-decoration: rgba(152, 160, 47, 0.2) solid underline 0.2rem; */
+`;
+
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
 // had a legitimate reason to, removing orientations make it easier and more reliable.
@@ -34,6 +74,8 @@ import { FlexColumnWideVerticallyStretched } from "../../css/FlexContainers";
 // The hint does make it possible for others to know that you used the same  DiceKey for multiple
 // accounts.
 
+
+
 export interface ApproveApiRequestViewProps {
   queuedApiRequest: QueuedApiRequest;
   settableDiceKeyState: SettableDiceKeyState
@@ -43,9 +85,9 @@ export interface ApproveApiRequestViewProps {
 export const HostDescriptorView = ( {host}: {host: string}) => {
   const knownHost = getKnownHost(host);
   return (knownHost != null) ? (
-    <span className={styles.known_application_name}>{ knownHost}</span>
+    <KnownApplicationNameSpan>{ knownHost}</KnownApplicationNameSpan>
   ) : (
-    <div>The website at <span className={styles.host_name}>{ host }</span></div>
+    <div>The website at <HostNameSpan>{ host }</HostNameSpan></div>
   )
 }
 
@@ -81,29 +123,29 @@ export const RequestDescriptionView = ({command, host, isRecipeSigned = false}: 
   // use your DiceKey to 
   switch (command) {
     case "getPassword":
-      return (<div className={styles.request_choice}>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} a password?</div>);
+      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} a password?</RequestChoice>);
     case "getSecret":
-      return (<div className={styles.request_choice}>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} a secret code?</div>);
+      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} a secret code?</RequestChoice>);
     case "getUnsealingKey":
-      return (<div className={styles.request_choice}>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} keys to encode and decode secrets?</div>);
+      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} keys to encode and decode secrets?</RequestChoice>);
     case "getSymmetricKey":
-      return (<div className={styles.request_choice}>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to a {createOrRecreate} key to encode and decode secrets?</div>);
+      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to a {createOrRecreate} key to encode and decode secrets?</RequestChoice>);
     case "sealWithSymmetricKey":
-      return (<div className={styles.request_choice}>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to encode a secret?</div>);
+      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to encode a secret?</RequestChoice>);
     case "unsealWithSymmetricKey":
-      return (<div className={styles.request_choice}>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to decode a secret?</div>);
+      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to decode a secret?</RequestChoice>);
     case "unsealWithUnsealingKey":
-      return (<div className={styles.request_choice}>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to decode a secret?</div>);
+      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to decode a secret?</RequestChoice>);
     // Less common
     case "getSigningKey":
-      return (<div className={styles.request_choice}>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} keys to sign data?</div>);
+      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} keys to sign data?</RequestChoice>);
     case "generateSignature":
-      return (<div className={styles.request_choice}>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to add its digital signature to data?</div>);
+      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to add its digital signature to data?</RequestChoice>);
     case "getSignatureVerificationKey":
-      return (<div className={styles.request_choice}>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} a key used to verify data it has signed?</div>);
+      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} a key used to verify data it has signed?</RequestChoice>);
       // Uncommon
     case "getSealingKey": 
-      return (<div className={styles.request_choice}>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} keys to store secrets?</div>);
+      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} keys to store secrets?</RequestChoice>);
     // Never
     // default:
     //     throw new Exceptions.InvalidCommand("Invalid API Command: " + command);
@@ -181,9 +223,9 @@ export const ApiResponsePreview = observer ( <COMMAND extends ApiCalls.Command>(
 
 
 const KeyAccessRestrictionsView = observer( ({command, host}: {command: ApiCalls.Command, host: string}) => (
-    <div className={styles.request_promise}>
+    <RequestPromise>
       <HostDescriptorView host={host}/> will not see your {DICEKEY}. They will only receive the {describeCommandResultType(command)}.
-    </div>
+    </RequestPromise>
   )
 );
 
@@ -210,10 +252,10 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
   return (
     <FlexColumnWideVerticallyStretched>
       <Spacer/>
-      <div className={styles.request_description}>
+      <RequestDescription>
         <RequestDescriptionView {...{command, host}} />
         <KeyAccessRestrictionsView {...{command, host}} />
-      </div>
+      </RequestDescription>
       { diceKey == null ? (
         <ContentBox>
           <Spacer/>
@@ -243,7 +285,7 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
       )}
       <CenteredControls>
         <PushButton onClick={handleDeclineRequestButton}>Cancel</PushButton>
-        <PushButton hidden={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
+        <PushButton invisible={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
       </CenteredControls>
       <Spacer/>
     </FlexColumnWideVerticallyStretched>
@@ -274,49 +316,3 @@ const msftAccountGetSecretRequestUrl = `https://dicekeys.app/?${""
   }${""}`
 createPreview("Approve Api Request (no key)", msftAccountGetSecretRequestUrl);
 createPreview("Approve Api Request (key loaded)", msftAccountGetSecretRequestUrl, DiceKey.testExample);
-
-//   async render() {
-//     const {requestContext, appState} = this.options;
-//     const {request, host} =requestContext;
-//     const diceKey = appState.diceKey;
-//     super.render(
-//       (!diceKey && this.userAskedToLoadDiceKey) ?
-//         // Load a DiceKey
-//         new LoadAndStoreDiceKey({
-//           onExceptionEvent: this.options.onExceptionEvent
-//         }).with( e => {
-//           e.completedEvent.on( this.handleLoadCompleteOrCancel );
-//           e.cancelledEvent.on( this.handleLoadCompleteOrCancel );
-//         })
-//       : [
-//         // Show request
-//         Div({class: styles.request_description},
-//           Div({class: styles.request_choice}, API.describeRequestChoice(request.command, host, !!this.areRecipeVerified) ),
-//           Div({class: styles.request_promise}, API.describeDiceKeyAccessRestrictions(host) ),
-//         ),
-//         ( diceKey ?
-//           new ApproveApiCommand({...this.options, diceKey}).with( e => this.apiResponseSettings = e )
-//           :
-//           Div({class: layoutStyles.CenteredColumn},
-//             Img({src: RenderedOpenDiceKey, style: 'max-width: 25vw; max-height: 25vh;',
-//               events: events => events.click.on( () => {
-//                 this.userAskedToLoadDiceKey = true; this.renderSoon(); } ),
-//             }),
-//             Instructions(
-//               `To allow this action, you'll first need to load your DiceKey.`
-//             ),
-//             Button({events: events => events.click.on( () => {
-//               this.userAskedToLoadDiceKey = true;
-//               this.renderSoon();
-//             })}, `Load DiceKey`)
-//           )
-//         ),
-//         CenteredControls(
-//         InputButton({value: "Cancel", clickHandler: this.handleCancelButton}),
-//         diceKey == null ? undefined :
-//           InputButton({value: shortDescribeCommandsAction(this.options.requestContext.request.command), clickHandler: this.handleContinueButton} )
-//         ),
-//       ]
-//     );
-//   }
-// }

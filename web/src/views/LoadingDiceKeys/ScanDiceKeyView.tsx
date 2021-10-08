@@ -1,4 +1,3 @@
-import cssRequiredNotice from "./camera-permissions-required-notification.module.css";
 import { observer } from "mobx-react";
 import React from "react";
 import { FaceRead } from "@dicekeys/read-dicekey-js";
@@ -10,9 +9,40 @@ import { DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
 import { MediaStreamState } from "./MediaStreamState";
 import { CameraSelectionView } from "./CameraSelectionView";
 import { ColumnStretched } from "../../views/basics";
+import styled from "styled-components";
 
 const minCameraWidth = 1024;
 const minCameraHeight = 720;
+
+
+const NotificationDiv = styled.div`
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  align-content: center;
+  padding-left: 2vw;
+  padding-right: 2vw;
+  padding-top: 0.25vh;
+  padding-bottom: 0.25vh;
+  background-color: yellow;
+  font-size: 1.5rem
+`;
+
+const PrimaryInstruction = styled.div`
+  display: flex;
+  font-size: 1.5rem
+`;
+
+const SecondaryInstruction = styled.div`
+  display: flex;
+  font-size: 1.0em;
+`;
+
 const defaultMediaTrackConstraints: MediaTrackConstraints = {
   width: {
 //          ideal: Math.min(camera.capabilities?.width?.max ?? defaultCameraDimensions.width, defaultCameraDimensions.width),
@@ -39,14 +69,14 @@ type ScanDiceKeyViewProps = React.PropsWithoutRef<{
 
 const PermissionRequiredView = () => {
   return (
-    <div className={cssRequiredNotice.notification}>
-      <div className={cssRequiredNotice.primary_instruction}>
+    <NotificationDiv>
+      <PrimaryInstruction>
         You need to grant &ldquo;allow always&rdquo; permission to your device's cameras to scan DiceKeys.
-      </div>
-      <div className={cssRequiredNotice.secondary_instruction}>
+      </PrimaryInstruction>
+      <SecondaryInstruction>
        If this message does not go away after granting permissions, refresh this page.
-      </div>
-    </div>
+      </SecondaryInstruction>
+    </NotificationDiv>
   )
 }
 
@@ -56,14 +86,14 @@ const NoCameraAvailableView = ({minCameraWidth, minCameraHeight}: {
   minCameraHeight: number
 }) => {
   return (
-    <div className={cssRequiredNotice.notification}>
-      <div className={cssRequiredNotice.primary_instruction}>
+    <NotificationDiv>
+      <PrimaryInstruction>
         You do not have a sufficiently-high resolution camera available to scan your DiceKey.
-      </div>
-      <div className={cssRequiredNotice.secondary_instruction}>
+      </PrimaryInstruction>
+      <SecondaryInstruction>
         You need a camera with resolution at least {minCameraWidth}&times;{minCameraHeight}.
-      </div>
-    </div>
+      </SecondaryInstruction>
+    </NotificationDiv>
   )
 }
 

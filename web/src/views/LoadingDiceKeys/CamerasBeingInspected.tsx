@@ -3,14 +3,19 @@ import {observer} from "mobx-react";
 import {
   CamerasOnThisDevice
 } from "./CamerasOnThisDevice";
-import css from "./cameras-being-inspected.module.css";
+import styled from "styled-components";
 
+const CameraNameDiv = styled.div`
+  color: green;
+  font-size: 1.25rem;
+`;
 // export interface CamerasBeingInspectedOptions extends React.Props{}
 
+// FIXME, class names below are no-ops.
 export const CamerasBeingInspected = observer( () => {
   const camerasOnThisDevice = CamerasOnThisDevice.instance;
   return (
-    <div className={css.camera_name}>
+    <CameraNameDiv>
       <div key="heading" className={""} >Identifying device cameras...</div>
       { camerasOnThisDevice.cameras.map( (camera) => (
           <div key={camera.deviceId} className={"camera-on-this-device, camera-found"} >{camera.name}</div>
@@ -24,6 +29,6 @@ export const CamerasBeingInspected = observer( () => {
           <div key={camera.deviceId} className={"camera-on-this-device, camera-to-be-added"} >{camera.label ?? camera.deviceId}</div>
         ))
       }
-    </div>
+    </CameraNameDiv>
   )
 });

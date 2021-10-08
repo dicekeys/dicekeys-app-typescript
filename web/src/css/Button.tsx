@@ -1,8 +1,8 @@
 import styled from "styled-components";
 
-export const PushButton = styled.button<{hidden?: boolean}>`
+export const PushButton = styled.button<{invisible?: boolean}>`
   display: block;
-  visibility: ${props => props.hidden ? "hidden" : "visible"};
+  visibility: ${props => props.invisible ? "hidden" : "visible"};
   width: fit-content;
   align-self: center;
   border-radius: 0.25rem;
@@ -15,7 +15,7 @@ export const PushButton = styled.button<{hidden?: boolean}>`
   }
 `;
 
-export const StepButton = styled.button`
+export const StepButton = styled.button<{invisible?: boolean}>`
   min-width: 3rem;
   cursor: arrow;
   justify-content: center;
@@ -26,6 +26,7 @@ export const StepButton = styled.button`
   margin-right: 0.25rem;
   border-radius: 0.25rem;
   user-select: none;
+  visibility: ${props=>props.invisible ? "hidden":"visible"};
   &:hover {
     background-color: rgba(128,128,128,1);
   }

@@ -1,29 +1,42 @@
-import React, { PropsWithChildren } from "react";
-import css from "./basic.module.css";
-import LayoutCss from "../../css/Layout.module.css";
 import styled from "styled-components";
 
-export const PreviewView = ({children}: PropsWithChildren<{}>) => (
-  <div className={css.PreviewContainer}>
-    {children}
-  </div>
-);
+export const PreviewView = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: normal;
+  align-items: stretch;
+  height: 100vh;
+  width: 96vw;
+  padding-left: 2vw;
+  padding-right: 2vw
+`
 
-export const Spacer = () => (
-  <div className={LayoutCss.Spacer} />
-);
+export const Spacer = styled.div`
+  flex-grow: 1;
+  flex-shrink: 1;
+`;
 
-export const ResizableImage = (props: {src: string, alt: string}) => (
-  <figure className={LayoutCss.ResizableImage}>
-    <img {...props} />
-  </figure>
-)
+/**
+ CSS-FIXME -- these won't scale below the original image size
+*/
+export const ResizableImage = styled.img`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-grow: 10;
+  flex-shrink: 10;
+  flex-basis: calc(min(25vw,25vh));
+  min-height: 0;
+  min-width: 0;
+  margin: none;
+  overflow: hidden
+`;
 
-export const Center = ({children}: React.PropsWithChildren<{}>) => (
-  <div className={LayoutCss.Center}>
-    {children}
-  </div>
-)
+export const Center = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content:center;
+`;
 
 export const ContentBox  = styled.div`
   display: flex;

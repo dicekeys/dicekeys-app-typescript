@@ -73,7 +73,7 @@ export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
         { type == null ? null : (
           <>
           <CharButton
-              hidden={derivedValue == null || type == null}
+              invisible={derivedValue == null || type == null}
               onClick={copyToClipboard}
             >&#128203;<CharButtonToolTip>Copy {type == null ? "" : state.outputFieldForType[type].toLocaleLowerCase()} to clipboard</CharButtonToolTip>
           </CharButton>

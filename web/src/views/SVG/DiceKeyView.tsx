@@ -1,4 +1,3 @@
-import css from "./dicekey-view.module.css"
 import React from "react";
 import { observer } from "mobx-react";
 import { EmptyPartialDiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
@@ -6,6 +5,7 @@ import { FaceGroupView } from "./FaceView";
 import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox, viewBox } from "../../utilities/bounding-rects";
 import { WithBounds, OptionalAspectRatioProps } from "../../utilities/WithBounds";
 import { ToggleState } from "../../state";
+import styled from "styled-components";
 
 const diceBoxColor = "#050350"; // must be in hex format as it is parsed as such in this code.
 
@@ -141,10 +141,19 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
     );
 });
 
+const DiceKeySvgElement = styled.svg`
+  display: flex;
+  flex-basis: 0;
+  flex-grow: 1;
+  flex-shrink: 5;
+  align-self: center;
+  justify-self: center;
+`;
+
 export const DiceKeyViewFixedSize = observer( (props: {faces: PartialDiceKey} & Bounds & DiceKeyRenderOptions) => (
-  <svg className={css.dicekey_svg} viewBox={viewBox(props)}>
+  <DiceKeySvgElement viewBox={viewBox(props)}>
     <DiceKeySvgGroup {...props} />
-  </svg>
+  </DiceKeySvgElement>
 ));
 
 export const DiceKeyViewAutoSized = observer( (

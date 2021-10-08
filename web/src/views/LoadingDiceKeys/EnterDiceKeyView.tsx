@@ -1,5 +1,4 @@
 import React from "react";
-import styles from "./enter-dicekey.module.css";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 
@@ -14,6 +13,13 @@ import { FaceDigit, FaceLetter, FaceOrientationLetterTrbl, FaceOrientationLetter
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 import { PrimaryView } from "../../css/Page";
 import { ColumnStretched } from "../../views/basics";
+import styled from "styled-components";
+
+const KeyHints = styled.div`
+  text-align: center;
+  font-size: 1.25rem;
+  margin-bottom: .25rem;
+`;
 
 export class EnterDiceKeyState {
   currentFaceIndex: number = 0;
@@ -132,9 +138,9 @@ export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.C
   render() {
     return (
       <ColumnStretched>
-        <div className={styles.key_hints}>
+        <KeyHints>
           To rotate the current face, use either &lt; &gt;, - +, or CTRL arrow (right and left arrows).
-        </div>
+        </KeyHints>
         <DiceKeyViewAutoSized
           maxHeight="50vh"
           maxWidth="80vw"
