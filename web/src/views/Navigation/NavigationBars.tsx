@@ -31,6 +31,9 @@ export const BottomNavigationBar = styled(TopBottomNavigationBase)`
 
 export const BelowTopNavigationBarWithNoBottomBar = styled.div`
   height: ${100-TopNavigationBarHeightInVh}vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
 `;
 
 export const BetweenTopAndBottomNavigationBars = styled.div`

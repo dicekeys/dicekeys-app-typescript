@@ -23,7 +23,6 @@
   display: flex;
   position: absolute;
   visibility: hidden;
-
   background: rgba(192,192,192,.75);
   color: rgba(0, 0, 0, .75);
   text-align: center;
