@@ -1,5 +1,4 @@
 import css from "./BackupView.module.css";
-import stepFooterCSS from "../Navigation/StepFooterView.module.css";
 import { DiceKey, Face } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
@@ -7,7 +6,7 @@ import React from "react";
 import { StepFooterView } from "../Navigation/StepFooterView";
 import { FaceCopyingView } from "../SVG/FaceCopyingView";
 import { FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
-import { Center, CenteredColumn, ContentBox, Instruction, PaddedContentBox, Spacer } from "../basics";
+import { Center, ColumnCentered, ContentBox, Instruction, PaddedContentBox, Spacer } from "../basics";
 import { addPreviewWithMargins } from "../basics/Previews";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupView } from "./ValidateBackupView";
@@ -15,6 +14,7 @@ import { StickerSheetView } from "../SVG/StickerSheetView";
 import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 import {BackupStep, BackupViewState} from "./BackupViewState";
+import { StepButton } from "../../css/Button";
 
 const IntroToBackingUpToADiceKeyView = () => (<>
   <ContentBox>
@@ -90,7 +90,7 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, i
 });
 
 const StepSelectBackupMedium = observer (({state}: {state: BackupViewState}) => (
-  <CenteredColumn>{
+  <ColumnCentered>{
   [BackupMedium.SticKey, BackupMedium.DiceKey].map( medium => (
       <button key={medium}
         className={css.FeatureCardButton}
@@ -102,7 +102,7 @@ const StepSelectBackupMedium = observer (({state}: {state: BackupViewState}) => 
         <div className={css.LabelBelowButtonImage}>Use {medium}</div>
       </button>
     ))}
-    </CenteredColumn>
+    </ColumnCentered>
   ));
 
 const BackupStepSwitchView = observer ( ({state}: BackupViewProps) => {
@@ -149,11 +149,11 @@ export const BackupStepFooterView = observer ( ({
   <StepFooterView 
     aboveFooter = {
       (state.step === BackupStep.Validate && !state.userChoseToSkipValidationStep && !state.validationStepViewState.backupScannedSuccessfully) ? (
-        <button className={stepFooterCSS.StepButton}
+        <StepButton
           onClick={state.setUserChoseToSkipValidationStep}
           style={{marginBottom: "0.5rem"}}  
         >Let me skip this step
-        </button>
+        </StepButton>
       ): undefined}
     pprev={state.setStepTo(state.step <= BackupStep.FirstFace ? undefined : BackupStep.FirstFace)}
     prev={

@@ -34,16 +34,6 @@
   margin-top: 0.25rem;
 }
 
-.PrimaryView {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  align-items: stretch;
-  align-content: stretch;
-}
-
 .MarginsAroundForm {
   margin: 2rem;
 }
@@ -75,6 +65,9 @@
 }
 
 .ColumnCentered {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
   justify-content: space-evenly;
   align-items: center;
   align-content: center;
@@ -140,6 +133,8 @@
 }
 
 .CenteredColumn {
+  display: flex;
+  flex-direction: column;
   justify-content: space-evenly;
   align-items: center;
   align-content: center;

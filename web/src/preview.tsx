@@ -10,9 +10,9 @@ import { Preview_FaceCopyingView } from "./views/SVG/FaceCopyingView";
 import { getPreview, addPreviewWithMargins, addCenteredPreview, getPreviewNames } from "./views/basics/Previews";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
-import {ButtonsCSS} from "./css"
 import {WindowRoutingView} from "./views/WindowTopLevelView";
 import { DiceKeyMemoryStore } from "./state";
+import { PushButton } from "./css/Button";
 
 // To make sure everything is loaded, load the view for the app even if we're not using it.
 if (!WindowRoutingView) {
@@ -51,7 +51,7 @@ const Previews = observer ( () => {
     return (
       <div style={{display: "flex", flexDirection: "column", justifyContent: "space-around", alignContent: "space-around"}}>
         {getPreviewNames().map( name => (
-          <button key={name} className={ButtonsCSS.PushButton} onClick={() => previewState.setName(name)}>{name}</button>
+          <PushButton key={name} onClick={() => previewState.setName(name)}>{name}</PushButton>
         ))}
       </div>
     );

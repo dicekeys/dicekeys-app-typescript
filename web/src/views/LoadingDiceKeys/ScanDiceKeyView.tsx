@@ -7,9 +7,9 @@ import { DiceKeyFrameProcessorState } from "./DiceKeyFrameProcessorState";
 import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
 import { CamerasOnThisDevice } from "./CamerasOnThisDevice";
 import { DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
-import { Layout } from "../../css";
 import { MediaStreamState } from "./MediaStreamState";
 import { CameraSelectionView } from "./CameraSelectionView";
+import { ColumnStretched } from "../../views/basics";
 
 const minCameraWidth = 1024;
 const minCameraHeight = 720;
@@ -100,10 +100,10 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
     }
 
     return (
-      <div className={Layout.ColumnStretched}>
+      <ColumnStretched>
         <CameraCaptureWithOverlay onFrameCaptured={this.onFrameCaptured} mediaStreamState={this.mediaStreamState} {...{maxWidth, maxHeight, showBoxOverlay}} />
         <CameraSelectionView mediaStreamState={this.mediaStreamState} cameras={cameras} />
-      </div>
+      </ColumnStretched>
     );
   }
 });

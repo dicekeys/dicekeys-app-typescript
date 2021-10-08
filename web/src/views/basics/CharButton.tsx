@@ -1,15 +1,50 @@
-import {SpecialTags} from "../../css";
 import React from "react";
 import { observer } from "mobx-react";
 import { action } from "mobx";
+import styled from "styled-components";
+
+const CharButtonCss = styled.button`
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  background: none;
+  border: none;
+  margin-left: 0.1rem;
+  margin-right: 0.1rem;
+  height: 1.5rem;
+  width: 1.5rem;
+  user-select: none;
+  &:focus {
+    outline:0;
+  }
+  &:active {
+    background: gray;
+  }
+  &:hover {
+    transform: translateY(-100%);
+    visibility: visible;
+    font-size: .75rem;
+  }
+`;
 
 export const CharButton = (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
-  <button className={SpecialTags.CharButton} {...props} tabIndex={-1} />
+  <CharButtonCss {...props} tabIndex={-1} />
 );
 
-export const CharButtonToolTip = (props: React.PropsWithChildren<{}>) => (
-  <span className={SpecialTags.CharButtonToolTip}>{props.children}</span>
-)
+export const CharButtonToolTip = styled.span`
+  display: flex;
+  position: absolute;
+  visibility: hidden;
+  background: rgba(192,192,192,.75);
+  color: rgba(0, 0, 0, .75);
+  text-align: center;
+  padding: 3px;
+  border-radius: 3px;
+  z-index: 1;
+  transform: translateY(-100%);
+  visibility: visible;
+  font-size: .75rem;
+`;
 
 export interface CopyButtonProps {
   value?: string;

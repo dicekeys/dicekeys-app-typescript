@@ -1,8 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
-import {Layout} from "../../css";
 import { CopyButtonProps, ObscureButtonProps, CopyButton, ObscureButton } from "./CharButton";
 import { ToggleState } from "../../state";
+import { RowCentered } from ".";
 
 const obscuringCharacter = String.fromCharCode(0x25A0); // * ■▓▒░
 
@@ -46,7 +46,7 @@ export const OptionallyObscuredTextView = observer( (props: OptionallyObscuredTe
 export type GeneratedTextFieldViewProps = Partial<ObscureButtonProps> & CopyButtonProps & OptionallyObscuredTextProps;
 
 export const GeneratedTextFieldView  = observer( (props: GeneratedTextFieldViewProps) => (
-    <div className={Layout.RowCentered}>
+    <div className={RowCentered}>
       <div key={"value"} style={{fontFamily: "monospace"}}><OptionallyObscuredTextView {...props} /> { props.obscureValue ? (props.obscuringFunction ?? defaultObscuringFunction)(props.value ?? "") : props.value }</div>
       <ObscureButton {...props} />
       <CopyButton {...props}/>

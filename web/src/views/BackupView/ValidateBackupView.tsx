@@ -1,6 +1,5 @@
 import React from "react";
 import css from "./BackupView.module.css";
-import {ButtonsCSS} from "../../css"
 import { DiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { observer } from "mobx-react";
 import { ScanDiceKeyView } from "../LoadingDiceKeys/ScanDiceKeyView";
@@ -8,6 +7,7 @@ import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 import { AndClause, CenteredControls, ContentBox, ContentRow, Instruction, Spacer } from "../basics";
 import { ValidateBackupViewState, FaceErrorDescriptor } from "./ValidateBackupViewState";
 import { visibility } from "../../utilities/visibility";
+import { PushButton } from "../../css/Button";
 
 export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateBackupViewState}) => {
   const onDiceKeyRead = (diceKey: DiceKey) => {
@@ -26,7 +26,7 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
         onDiceKeyRead={ onDiceKeyRead }
       />
       <CenteredControls>
-          <button className={ButtonsCSS.PushButton} onClick={viewState.stopScanning} >Stop scanning</button>
+          <PushButton onClick={viewState.stopScanning} >Stop scanning</PushButton>
       </CenteredControls>
     </>)
   } else {
@@ -38,7 +38,7 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />
           <CenteredControls>
-            <button className={ButtonsCSS.PushButton} onClick={viewState.startScanningOriginal}>Re-scan your original DiceKey</button>
+            <PushButton onClick={viewState.startScanningOriginal}>Re-scan your original DiceKey</PushButton>
           </CenteredControls>
         </div>
         <div className={css.ComparisonBox} >
@@ -47,9 +47,9 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
           />
           <CenteredControls>
-            <button className={ButtonsCSS.PushButton}  onClick={viewState.startScanningBackup} >{
+            <PushButton  onClick={viewState.startScanningBackup} >{
               viewState.diceKeyScannedFromBackupState.diceKey == null ? (<>Scan backup to verify</>) : (<>Re-scan Backup</>)
-            }</button>  
+            }</PushButton>  
           </CenteredControls>
 
         </div>
@@ -99,23 +99,21 @@ const ErrorStepView = observer ( ({viewState}: {viewState: ValidateBackupViewSta
   return (
   <div className={css.ErrorStepViewBox}>
     <div className={css.MinWidthButtonContainer} style={{ ...( (errorIndex) > 0 ? {} : {visibility: "hidden"})}}>
-      <button
-        className={ButtonsCSS.PushButton}
+      <PushButton
         hidden={errorIndex == 0 || errorIndex == null}
         onClick={() => viewState.setErrorIndex((errorIndex ?? 1) - 1)}
         >previous
-      </button>
+      </PushButton>
     </div>
     <div className={css.ErrorExplanation}>
       Error {errorIndex + 1} of {numberOfFacesWithErrors}
     </div>
     <div className={css.MinWidthButtonContainer} style={visibility(errorIndex < numberOfFacesWithErrors-1)}>
-      <button
-        className={ButtonsCSS.PushButton}
+      <PushButton
         hidden={errorIndex >= numberOfFacesWithErrors - 1 }
         onClick={() => viewState.setErrorIndex((errorIndex ?? 0) + 1)}
       >next
-      </button>
+      </PushButton>
     </div>
   </div>
 

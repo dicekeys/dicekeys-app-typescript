@@ -2,8 +2,8 @@
 import React from "react";
 import {observer} from "mobx-react";
 import css from "./StepFooterView.module.css";
-import {ButtonsCSS} from "../../css";
 import { visibility } from "../../utilities/visibility";
+import { PushButton } from "../../css/Button";
 
 interface StepFooterViewProps {
   prev?: () => any;
@@ -22,11 +22,11 @@ export const StepFooterView = observer ( (props: StepFooterViewProps) => (
       </div>
     ) }
     <div className={css.StepFooterRow}>
-      <button className={ButtonsCSS.StepButton} style={visibility(props.pprev != null)} onClick={ props.pprev } >&lt;&lt;</button>
-      <button className={ButtonsCSS.StepButton} style={visibility(props.prev != null)} onClick={ props.prev } >&lt; previous</button>
+      <PushButton style={visibility(props.pprev != null)} onClick={ props.pprev } >&lt;&lt;</PushButton>
+      <PushButton style={visibility(props.prev != null)} onClick={ props.prev } >&lt; previous</PushButton>
       <div className={css.SpaceBetweenLeftAndRightButtons}></div>
-      <button className={ButtonsCSS.StepButton} style={visibility(props.next != null)} onClick={ props.next } >{props.nextIsDone ? "done" : "next"} &gt;</button>
-      <button className={ButtonsCSS.StepButton} style={visibility(props.nnext != null)} onClick={ props.nnext } >&gt;&gt;</button>
+      <PushButton style={visibility(props.next != null)} onClick={ props.next } >{props.nextIsDone ? "done" : "next"} &gt;</PushButton>
+      <PushButton style={visibility(props.nnext != null)} onClick={ props.nnext } >&gt;&gt;</PushButton>
     </div>
   </div>
 ));

@@ -1,6 +1,5 @@
 import React from "react";
 import styles from "./api-request-container.module.css";
-import {ButtonsCSS, Layout} from "../../css";
 import {
   ApiCalls, PasswordJson, SealingKeyJson, SecretJson, SignatureVerificationKeyJson, SigningKeyJson, SymmetricKeyJson, UnsealingKeyJson} from "@dicekeys/dicekeys-api-js";
 import {
@@ -15,10 +14,11 @@ import { DiceKeyState, SettableDiceKeyState } from "../../state/Window/DiceKeySt
 import { ScanDiceKeyView } from "../../views/LoadingDiceKeys/ScanDiceKeyView";
 import { addPreview } from "../../views/basics/Previews";
 import { QueuedUrlApiRequest } from "../../api-handler";
-import { visibility } from "../../utilities/visibility";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { uint8ArrayToHexString } from "../../utilities/convert";
 import { DiceKeyViewAutoSized } from "../../views/SVG/DiceKeyView";
+import { PushButton } from "../../css/Button";
+import { FlexColumnWideVerticallyStretched } from "../../css/FlexContainers";
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
 // or read it over the phone (which you should never be asked to do), but if you
@@ -208,7 +208,7 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
 
 
   return (
-    <div className={Layout.ColumnStretched}>
+    <FlexColumnWideVerticallyStretched>
       <Spacer/>
       <div className={styles.request_description}>
         <RequestDescriptionView {...{command, host}} />
@@ -242,11 +242,11 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
         </ContentBox>
       )}
       <CenteredControls>
-        <button className={ButtonsCSS.PushButton} onClick={handleDeclineRequestButton}>Cancel</button>
-        <button className={ButtonsCSS.PushButton} style={visibility(diceKey != null)} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</button>
+        <PushButton onClick={handleDeclineRequestButton}>Cancel</PushButton>
+        <PushButton hidden={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
       </CenteredControls>
       <Spacer/>
-    </div>
+    </FlexColumnWideVerticallyStretched>
   )
 })
 

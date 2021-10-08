@@ -1,5 +1,4 @@
-import layoutCSS from "../../css/Layout.module.css";
-import {NavigationBars} from "../../css"
+//import layoutCSS from "../../css/Layout.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { DiceKey } from "../../dicekeys/DiceKey";
@@ -17,7 +16,8 @@ import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { SelectedDiceKeyViewState } from "./SelectedDiceKeyViewState";
 import { addPreview } from "../basics/Previews";
 import { EventHandlerOverridesDefault } from "../../utilities/EventHandlerOverridesDefault";
-import { BottomNavigationBar, FooterButtonDiv, FooterIconImg } from "../../views/Navigation/NavigationBars";
+import { BetweenTopAndBottomNavigationBars, BottomNavigationBar, FooterButtonDiv, FooterIconImg } from "../../views/Navigation/NavigationBars";
+import { PageAsFlexColumn } from "../../css/Page";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 // const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
@@ -78,14 +78,14 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
   const {goBack} = props;
   if (!diceKey) return null;
   return (
-    <div className={layoutCSS.HeaderFooterContentBox}>
+    <PageAsFlexColumn>
       <SimpleTopNavBar title={diceKey.nickname} goBack={goBack} />
-      <div className={NavigationBars.BetweenTopAndBottomNavigationBars}>
+      <BetweenTopAndBottomNavigationBars>
         <SelectedDiceKeySubViewSwitch {...{...props}} />
-      </div>
+      </BetweenTopAndBottomNavigationBars>
       <SelectedDiceKeyViewStateFooter {...props} />
-    </div>
-  );
+    </PageAsFlexColumn>
+    );
 });
 
 

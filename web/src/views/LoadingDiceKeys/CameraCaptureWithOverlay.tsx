@@ -1,7 +1,5 @@
 import React from "react";
 
-import { Layout } from "../../css";
-import css from "./ScanDiceKey.module.css";
 import { observer } from "mobx-react";
 import { OverlayCanvas } from "../basics/overlay-canvas";
 import { createReactObservableBounds } from "../basics/bounds";
@@ -10,7 +8,9 @@ import { FrameGrabberUsingImageCapture } from "./FrameGrabberUsingImageCapture";
 import { FrameGrabberFromVideoElement } from "./FrameGrabberFromVideoElement";
 import { WithSettableBounds, SettableBounds } from "../../utilities/WithBounds";
 
+import {ColumnCentered} from "../basics/Layout"
 import ScanningOverlayImage from /*url:*/"../../images/Scanning Overlay.svg";
+import styled from "styled-components";
 
 export const imageCaptureSupported: boolean = (window.hasOwnProperty("ImageCapture"));
 
@@ -21,6 +21,12 @@ export interface CameraCaptureWithOverlayProperties {
   maxWidth?: string;
   maxHeight?: string;
 }
+
+const MiddleOverlayImg = styled.img`
+  position: absolute;
+  background: rgba(0, 0, 0, 0);
+  z-index: 8;
+`;
 
 export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverlay extends React.Component<React.PropsWithChildren<CameraCaptureWithOverlayProperties>> {
 
@@ -64,7 +70,7 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
     const {maxWidth="100vw", maxHeight="75vh"} = this.props;
   
     return (
-      <div className={Layout.ColumnCentered}>
+      <ColumnCentered>
         <WithSettableBounds settableBounds={this.settableBounds} aspectRatioWidthOverHeight={1} {...{maxWidth, maxHeight}}>
           { bounds => (<>
             <video
@@ -74,7 +80,7 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
               ref={withVideoElementRef}
             />
             { !showBoxOverlay ? null : (
-              <img className={css.MiddleOverlay}
+              <MiddleOverlayImg
                 src={ScanningOverlayImage} 
                 width={bounds.width}
                 height={bounds.height}
@@ -86,7 +92,7 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
             } />
           </>)
         }</WithSettableBounds>
-      </div>
+      </ColumnCentered>
     );
   }
 });

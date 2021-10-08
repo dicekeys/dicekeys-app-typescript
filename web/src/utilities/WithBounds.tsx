@@ -1,9 +1,30 @@
-import css from "./WithBounds.module.css"
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox } from "./bounding-rects";
 export type {Bounds};
+import styled from "styled-components";
+
+const WithBoundsDiv = styled.div`
+  /* NOTE stretch not supported in flex-box */
+  display: flex;
+  justify-self: stretch;
+  align-self: center;
+  justify-content: space-around;
+  align-content: space-around;
+  flex-grow: 1;
+  flex-shrink: 1;
+  padding: 0;
+  margin: 0;
+`;
+
+const WithBoundsRow = styled(WithBoundsDiv)`
+  flex-direction: row;
+`
+
+const WithBoundsColumn = styled(WithBoundsDiv)`
+  flex-direction: row;
+`
 
 // https://stackoverflow.com/questions/43817118/how-to-get-the-width-of-a-react-element
 export const useContainerDimensions = (myRef: React.RefObject<any>, setBounds: (bounds: {width: number, height: number}) => any) => {
@@ -74,7 +95,9 @@ const createAspectRatioStyle = (props: OptionalAspectRatioProps): React.CSSPrope
   }
 }
 
-export const WithSettableBounds = observer( (props: WithBoundsProps & {settableBounds: SettableBounds} & React.HTMLAttributes<HTMLDivElement>) => {
+export const WithSettableBounds = observer( (props: WithBoundsProps &
+  {settableBounds: SettableBounds} & React.HTMLAttributes<HTMLDivElement>
+) => {
   const componentRef = React.useRef<HTMLDivElement>(null);
 
   const {
@@ -90,18 +113,16 @@ export const WithSettableBounds = observer( (props: WithBoundsProps & {settableB
 
   const flexWeightAsCSS = weight == null ? {} : {flexGrow: weight, flexShrink: weight};
   return (
-    <div 
-      className={css.WithBoundsRow}
-      {...divProps}
+    <WithBoundsRow {...divProps}
       style={{
         ...flexWeightAsCSS,
         ...aspectRatioStyle,
         ...style,
     }} ref={componentRef}>
-      <div className={css.WithBoundsColumn} >
+      <WithBoundsColumn>
         { children(settableBounds) }
-       </div>
-    </div>
+       </WithBoundsColumn>
+    </WithBoundsRow>
   )
 });
 
