@@ -2,51 +2,37 @@ import React from "react";
 import { observer  } from "mobx-react";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
-import imageOfDiceKeyIcon from /*url:*/"../../images/DiceKey Icon.svg";
-import imageOfUsbKey from /*url:*/"../../images/USB Key.svg";
-import imageOfSecretWithArrow from /*url:*/"../../images/Secret with Arrow.svg";
-import imageOfBackup from /*url:*/"../../images/Backup to DiceKey.svg";
 import { DerivationView } from "../Recipes/DerivationView";
 import { Navigation } from "../../state";
 import { SeedHardwareKeyView } from "../Recipes/SeedHardwareKeyView";
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 import { BackupView } from "../BackupView/BackupView";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
-import { SelectedDiceKeyViewState } from "./SelectedDiceKeyViewState";
 import { addPreview } from "../basics/Previews";
-import { EventHandlerOverridesDefault } from "../../utilities/EventHandlerOverridesDefault";
-import { BetweenTopAndBottomNavigationBars, BottomNavigationBar, FooterButtonDiv, FooterIconImg } from "../../views/Navigation/NavigationBars";
 import { PageAsFlexColumn } from "../../css/Page";
+import {
+  BottomIconBarHeightInVh,
+  SelectedDiceKeyBottomIconBarView,
+  SelectedDiceKeyViewProps,
+} from "./SelectedDiceKeyBottomIconBarView";
+import { TopNavigationBarHeightInVh } from "../../views/Navigation/TopNavigationBar";
+import styled from "styled-components";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
-// const saveSupported = isElectron() && false; // To support save, investigate https://github.com/atom/node-keytar
+export const HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh = 100 - (
+  TopNavigationBarHeightInVh + BottomIconBarHeightInVh
+);
 
-interface SelectedDiceKeyViewProps {
-  state: SelectedDiceKeyViewState;
-  goBack?: () => any;
-}
+export const BetweenTopNavigationBarAndBottomIconBar = styled.div`
+  height: ${HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh}vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  flex: 0 0 auto;
+`;
 
-const FooterButtonView = observer( ( props: SelectedDiceKeyViewProps & {
-  subView: Navigation.SelectedDiceKeySubViews, imageSrc: string, labelStr: string
-  onClick: () => void
-} ) => (
-  <FooterButtonDiv selected={props.state.subView === props.subView}
-    onClick={EventHandlerOverridesDefault(props.onClick)}
-  ><FooterIconImg src={props.imageSrc}/><div>{props.labelStr}</div>
-  </FooterButtonDiv>
-));
-
-const SelectedDiceKeyViewStateFooter = observer( ( props: SelectedDiceKeyViewProps) => {
-  const navState = props.state;
-  return (
-    <BottomNavigationBar>
-      <FooterButtonView {...props} labelStr={`DiceKey`} subView={SubViews.DisplayDiceKey} imageSrc={imageOfDiceKeyIcon} onClick={navState.navigateToDisplayDiceKey} />
-      <FooterButtonView {...props} labelStr={`Seed`} subView={SubViews.SeedHardwareKey} imageSrc={imageOfUsbKey} onClick={navState.navigateToSeedHardwareKey} />
-      <FooterButtonView {...props} labelStr={`Secret`} subView={SubViews.DeriveSecrets} imageSrc={imageOfSecretWithArrow} onClick={navState.navigateToDeriveSecrets} />
-      <FooterButtonView {...props} labelStr={`Backup`} subView={SubViews.Backup} imageSrc={imageOfBackup} onClick={navState.navigateToBackup} />
-    </BottomNavigationBar>
-  );
-});
+const IdealMinimumContentMargin = `2rem`
 
 const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewProps) => {
   const {foregroundDiceKeyState } = state;
@@ -54,7 +40,11 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
   if (!diceKey) return null;
   switch(state.subView) {
     case Navigation.SelectedDiceKeySubViews.DisplayDiceKey: return (
-      <DiceKeyViewAutoSized maxWidth="80vw" maxHeight="70vh" faces={diceKey.faces}/>
+      <DiceKeyViewAutoSized
+        maxWidth={`100vw - (${IdealMinimumContentMargin})`}
+        maxHeight={`${HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh}vh - 2 * (${IdealMinimumContentMargin})`}
+        faces={diceKey.faces}
+      />
     );
     case Navigation.SelectedDiceKeySubViews.DeriveSecrets: return (
       <DerivationView diceKey={diceKey} />
@@ -79,10 +69,10 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
   return (
     <PageAsFlexColumn>
       <SimpleTopNavBar title={diceKey.nickname} goBack={goBack} />
-      <BetweenTopAndBottomNavigationBars>
+      <BetweenTopNavigationBarAndBottomIconBar>
         <SelectedDiceKeySubViewSwitch {...{...props}} />
-      </BetweenTopAndBottomNavigationBars>
-      <SelectedDiceKeyViewStateFooter {...props} />
+      </BetweenTopNavigationBarAndBottomIconBar>
+      <SelectedDiceKeyBottomIconBarView {...props} />
     </PageAsFlexColumn>
     );
 });

@@ -90,8 +90,8 @@ const createAspectRatioStyle = (props: OptionalAspectRatioProps): React.CSSPrope
   if (aspectRatioWidthOverHeight === 0 || maxWidth === null || maxHeight === null) {
     return {}
   } else return {
-    width: `min(${maxWidth}, ${maxHeight} * ${aspectRatioWidthOverHeight})`,
-    height: `min(${maxHeight}, ${maxWidth} / ${aspectRatioWidthOverHeight})`,
+    width: `calc(min((${maxWidth}), (${maxHeight}) * (${aspectRatioWidthOverHeight})))`,
+    height: `calc(min((${maxHeight}), (${maxWidth}) / (${aspectRatioWidthOverHeight})))`,
   }
 }
 

@@ -19,7 +19,7 @@ import { PushButton, StepButton } from "../css/Button";
 import { ColumnVerticallyCentered, ContentBox } from "./basics/Layout";
 import { PrimaryView } from "../css/Page";
 import styled from "styled-components";
-import { BelowTopNavigationBarWithNoBottomBar } from "./Navigation/NavigationBars";
+import { BelowTopNavigationBarWithNoBottomBar } from "./Navigation/TopNavigationBar";
 
 const StepRandomizeView = () => (
   <PaddedContentBox>
