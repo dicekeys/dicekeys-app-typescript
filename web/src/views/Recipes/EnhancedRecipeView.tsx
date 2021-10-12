@@ -1,9 +1,10 @@
-import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { DiceKeysAppSecretRecipe } from "../../dicekeys";
 import { JsxReplacer } from "../../utilities/JsxReplacer";
+import { FormattedRecipeSpan, HostNameSpan, LengthFieldValueSpan, SequenceNumberValueSpan } from "./DerivationView/RecipeStyles";
+import styled from "styled-components";
 
 export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
   try {
@@ -12,14 +13,14 @@ export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
     const sequenceNumber = recipe["#"];
     if (sequenceNumber != null && sequenceNumber >= 2) {
       replacer.replace(`"#":${sequenceNumber}`, (<>
-          "#":<span className={css.sequence_number_span}>{sequenceNumber}</span>
+          "#":<SequenceNumberValueSpan>{sequenceNumber}</SequenceNumberValueSpan>
         </>));
     }
     const lengthInChars = recipe.lengthInChars;
     if (lengthInChars != null) {
       replacer.replace(`"lengthInChars":${lengthInChars}`, (<>
           "lengthInChars":
-          <span className={[css.FormattedRecipeSpan, css.length_span].join(" ")}>{lengthInChars}</span>
+          <LengthFieldValueSpan>{lengthInChars}</LengthFieldValueSpan>
         </>));
     }
     const purpose = recipe.purpose;
@@ -27,23 +28,21 @@ export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
       const jsonEncodedPurpose = JSON.stringify(purpose)
       const jsonEscapedPurpose = jsonEncodedPurpose.substr(1, jsonEncodedPurpose.length - 2);
       replacer.replace(`"purpose":${jsonEncodedPurpose}`, (<>
-          "purpose":"<span className={[css.FormattedRecipeSpan, css.host_name_span].join(" ")}>{jsonEscapedPurpose}</span>"
+          "purpose":"<HostNameSpan>{jsonEscapedPurpose}</HostNameSpan>"
         </>));
     }
     const allow = recipe.allow;
     if (allow != null) {
       allow.forEach( ({host}) => {
         replacer.replace(`"host":"${host}"`, (<>
-          "host":"<span className={[css.FormattedRecipeSpan, css.host_name_span].join(" ")}>{
-            host
-          }</span>"
+          "host":"<HostNameSpan>{host}</HostNameSpan>"
         </>));
       });
     }
     return (
       <>
         {replacer.replacement.map( (item, index) => (
-          <span className={css.FormattedRecipeSpan} key={`${index}`}>{item}</span>
+          <FormattedRecipeSpan key={`${index}`}>{item}</FormattedRecipeSpan>
         ))}
       </>
     );
@@ -52,18 +51,38 @@ export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
   }
 }
 
+const RawRecipeViewContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  font-size: 0.9rem;
+`;
+
+const RawRecipeLabelDiv = styled.div`
+  margin-right: 0.5rem;
+  font-style: italic;
+  user-select: none;
+`;
+
+const RawRecipeValueDiv = styled.div`
+  overflow-wrap: break-word;
+  font-family: monospace;
+  color: rgba(0, 0, 0, 0.75);
+`;
+
+const EmptyRawRecipeSpan = styled.span`
+  font-style: italic;
+`
+
 export const LabeledEnhancedRecipeView = observer( ( {state}: {state: RecipeBuilderState}) => (
-  <div className={css.RawRecipeView}>
-    <div className={css.RawRecipeLabel}>Recipe:</div>
-    <div className={css.RawRecipeValue}
-        // contentEditable={true} 
-        // onInput={ e => { state.setFieldsFromRecipeJson(e.currentTarget.textContent!); e.preventDefault(); }}
-    >
+  <RawRecipeViewContainer>
+    <RawRecipeLabelDiv>Recipe:</RawRecipeLabelDiv>
+    <RawRecipeValueDiv>
       {state.recipeJson == null ? (
-        <i>{"{}"}</i>
+        <EmptyRawRecipeSpan>{"{}"}</EmptyRawRecipeSpan>
       ) : (
-      <EnhancedRecipeView recipeJson={ state.recipeJson  }/>
+        <EnhancedRecipeView recipeJson={ state.recipeJson  }/>
       )}
-    </div>
-  </div>
+    </RawRecipeValueDiv>
+  </RawRecipeViewContainer>
 ));

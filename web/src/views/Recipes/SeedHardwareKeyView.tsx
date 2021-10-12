@@ -1,4 +1,3 @@
-import css from "./Recipes.module.css";
 import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
 import { CenteredControls, Instruction, PaddedContentBox, Spacer } from "../basics";
@@ -22,6 +21,7 @@ import { LoadedRecipe } from "../../dicekeys/StoredRecipe";
 import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 import { KeyPlusRecipeView } from "./DerivationView/KeyPlusRecipeView";
 import { DiceKey } from "../../dicekeys/DiceKey";
+import styled from "styled-components";
 
 
 class SeedableDiceKeys {
@@ -46,6 +46,17 @@ class SeedableDiceKeys {
   }
 }
 
+const SeedingContentBlockDiv = styled.div`
+  background-color: rgba(147, 140, 47, 0.2);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  min-width: 60vw;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-content: flex-start;
+  overflow-wrap: anywhere;
+`;
+
 export const HardwareSecurityKeysView = observer ( ({seedableDiceKeys, seedHardwareKeyViewState}: {
   seedableDiceKeys: SeedableDiceKeys,
   seedHardwareKeyViewState: SeedHardwareKeyViewState
@@ -54,7 +65,7 @@ export const HardwareSecurityKeysView = observer ( ({seedableDiceKeys, seedHardw
   const {ElectronBridge} = window as {ElectronBridge?: IElectronBridge}
   if (devices == null || ElectronBridge == null) return null;
   return (
-    <div className={css.SeedingContentBlock}>
+    <SeedingContentBlockDiv>
       { devices.map( device => (
         <button
           key={device.serialNumber}
@@ -62,16 +73,16 @@ export const HardwareSecurityKeysView = observer ( ({seedableDiceKeys, seedHardw
         >Seed {device.deviceName} ({device.serialNumber})
         </button>
       ))}
-    </div>
-)}
-);
+    </SeedingContentBlockDiv>
+  );
+});
 
 export const CannotSeedSecurityKeysView = () => (
-  <div className={css.CannotSeedContentBlock}>
+  <SeedingContentBlockDiv>
     Web browsers currently prevent web-based applications from using USB to seed hardware security keys.
     <br/>
     To seed a security key, you'll need to use the DiceKeys app on Android, Windows, Linux, or MacOS.
-  </div>
+  </SeedingContentBlockDiv>
 )
 
 export const PressCountdownSecondsView = observer( ({whenStarted}: {whenStarted: number}) => {

@@ -216,13 +216,23 @@ export const BackupStepFooterView = observer ( ({
   />
 ));
 
+const BackViewDiv = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-around;
+  align-content: stretch;
+  align-items: center;
+
+`
+
 export const BackupView = observer ( (props: BackupViewProps) => (
-  <div className="BackupViewTop" style={{display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "space-around", alignContent: "stretch", alignItems: "center" }}>
+  <BackViewDiv>
     {/* Header, empty for spacing purposes only */}
     <div></div>
     <BackupContentView state={props.state} />
     <BackupStepFooterView {...props} />
-  </div>));
+  </BackViewDiv>));
 
 
 

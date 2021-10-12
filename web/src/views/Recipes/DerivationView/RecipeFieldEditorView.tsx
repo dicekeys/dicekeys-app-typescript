@@ -1,31 +1,28 @@
-import css from "../Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeFieldFocusState, RecipeBuilderState, RecipeEditingMode } from "../RecipeBuilderState";
 import { NumberPlusMinusView } from "../../basics/NumericTextFieldView";
 import { visibility } from "../../../utilities/visibility";
-import * as Dimensions from "./Dimensions";
-import * as Colors from "./Colors";
 import { describeRecipeType } from "../DescribeRecipeType";
 import { EnhancedRecipeView } from "../EnhancedRecipeView";
+import { BuilderLabelValueMarginVw,
+  BuilderLabelWidthVw,
+  HostNameInputField,
+  FormattedRecipeTextAreaJson,
+  FormattedRecipeUnderlayJson,
+  FormattedRecipeBox,
+  SequenceNumberInputField,
+  LengthInputField,
+} from "./RecipeStyles";
+import styled from "styled-components";
 
-const fieldEditorWidth = Math.min(80, Dimensions.ScreenWidthPercentUsed)
-const labelWidthVw = 10;
-const labelValueMarginVw = 0.5;
-const valueElementWidthVw = fieldEditorWidth - (labelWidthVw + labelValueMarginVw);
-
-const fieldBorderColor = `rgba(128, 128, 128, 0.2)`;
-
-const BuilderFieldLabel = ({style, children, ...props}: React.DetailedHTMLProps<React.LabelHTMLAttributes<HTMLLabelElement>, HTMLLabelElement>) => (
-  <label {...props} style={{
-      width: `${labelWidthVw}vw`,
-      textAlign: "right",
-      paddingRight: `${labelValueMarginVw}vw`,
-      marginRight: `${labelValueMarginVw}vw`,
-      borderRight: `1px rgba(128,128,128, 0.5) solid`,
-      ...style
-    }}>{ children}</label>
-);
+const BuilderFieldLabel = styled.label`
+    width: ${BuilderLabelWidthVw}vw;
+    text-align: right;
+    padding-right: ${BuilderLabelValueMarginVw}vw;
+    margin-right: ${BuilderLabelValueMarginVw}vw;
+    border-right: 1px rgba(128,128,128, 0.5) solid;
+    `;
 
 const ContainerForOptionalFieldValue = observer ( ({
   value, children, ...optProps
@@ -50,19 +47,13 @@ const ContainerForOptionalFieldValue = observer ( ({
   </>
 ));
 
-const BuilderFieldContainer = ({children}: React.PropsWithChildren<{}>) => (
-  <div style={{
-    display: "flex", flexDirection: "row", justifyContent: "flex-start", alignItems: "baseline",
-    marginTop: `0.25vh`,
-  }}>{children}</div>
-);
-
-const FieldUnderlineStyle = (textDecorationColor: Colors.All): React.CSSProperties => ({
-  textDecorationColor,
-  textDecorationLine: "underline",
-  textDecorationThickness: `2px`,
-  textDecorationStyle: "solid",
-});
+const BuilderFieldContainer = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: baseline;
+    margin-top: 0.25vh;
+`;
 
 export const SiteFieldView = observer( ({state}: {
   state: RecipeBuilderState,
@@ -73,13 +64,7 @@ export const SiteFieldView = observer( ({state}: {
   return (
     <BuilderFieldContainer>
       <BuilderFieldLabel htmlFor={field}>sites</BuilderFieldLabel>
-      <input id={field} type="text" spellCheck={false}
-        className={css.host_name_input_span}
-        style={{
-          width: `${valueElementWidthVw}vw`,
-          borderColor: fieldBorderColor,
-          ...FieldUnderlineStyle(Colors.PurposeOrSites),
-        }}
+      <HostNameInputField id={field}
         value={state.siteTextField ?? ""}
         placeholder=""
         ref={ e => { if (e != null) { e?.focus(); fieldFocusState.focus() } } }
@@ -99,16 +84,10 @@ export const PurposeFieldView = observer( ({state}: {
   return (
     <BuilderFieldContainer>
       <BuilderFieldLabel htmlFor={field}>Purpose:</BuilderFieldLabel>
-      <input id={field} type="text" spellCheck={false}
-        className={css.host_name_input_span}
+      <HostNameInputField id={field}
         size={40}
         value={state.purposeField ?? ""}
         placeholder=""
-        style={{
-          width: `${valueElementWidthVw}vw`,
-          borderColor: fieldBorderColor,
-          ...FieldUnderlineStyle(Colors.PurposeOrSites),
-        }}
         ref={ e => { if (e != null) { e?.focus(); fieldFocusState.focus() } } }
         onPaste={ state.pasteIntoSiteTextField }
         onInput={ e => {state.setPurposeField(e.currentTarget.value); fieldFocusState.focus(); }} 
@@ -131,17 +110,16 @@ export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBui
       >
         <NumberPlusMinusView
           id={field}
-          className={css.SequenceNumberTextField}
           state={state.sequenceNumberState}
-          placeholder={"1"}
-          style={{
-            borderColor: fieldBorderColor,
-            ...FieldUnderlineStyle(Colors.SequenceNumber),
-          }}
-          onFocusedOrChanged={fieldFocusState.focus} />
+        >
+          <SequenceNumberInputField
+            value={state.sequenceNumberState.textValue}
+            onFocus={fieldFocusState.focus}
+            onChange={fieldFocusState.focus}
+          />
+        </NumberPlusMinusView>
       </ContainerForOptionalFieldValue>
     </BuilderFieldContainer>    
-    // <RecipeFieldView focusState={fieldFocusState}
   )});
 
   export const LengthInCharsFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
@@ -157,17 +135,18 @@ export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBui
           setDefaultValue={() => state.lengthInCharsState.setValue(64)}
           setDefaultValueButtonLabel={"add"}
         >
-          <NumberPlusMinusView
-            id={field}
-            className={css.LengthTextField}
-            state={state.lengthInCharsState}
+        <NumberPlusMinusView
+          id={field}
+          state={state.lengthInCharsState}
+        >
+          <LengthInputField
+            value={state.lengthInCharsState.textValue}
             placeholder={"none"}
-            style={{
-              borderColor: fieldBorderColor,
-              ...FieldUnderlineStyle(Colors.LengthLimit),
-            }}
-            onFocusedOrChanged={fieldFocusState.focus} />
-          <i>characters</i>
+            onFocus={fieldFocusState.focus}
+            onChange={fieldFocusState.focus}
+          />
+        </NumberPlusMinusView>  
+        <i>characters</i>
         </ContainerForOptionalFieldValue>
       </BuilderFieldContainer>
     );
@@ -185,17 +164,18 @@ export const LengthInBytesFormFieldView = observer( ({state}: {state: RecipeBuil
         defaultValueText={"default (32 bytes)"}
         setDefaultValue={() => state.lengthInBytesState.setValue(64)}
         setDefaultValueButtonLabel={"modify"}
-      > 
+      >
         <NumberPlusMinusView
           id={field}
-          className={css.LengthTextField}
           state={state.lengthInBytesState}
-          placeholder={"64"}
-          style={{
-            borderColor: fieldBorderColor,
-            ...FieldUnderlineStyle(Colors.LengthLimit),
-          }}
-          onFocusedOrChanged={fieldFocusState.focus} />
+        >
+          <LengthInputField
+            value={state.lengthInBytesState.textValue}
+            placeholder={"32"}
+            onFocus={fieldFocusState.focus}
+            onChange={fieldFocusState.focus}
+          />
+        </NumberPlusMinusView>  
         <i>bytes</i>
       </ContainerForOptionalFieldValue>
     </BuilderFieldContainer>
@@ -211,24 +191,17 @@ export const RawJsonFieldView = observer( ({state}: {
   return (
     <BuilderFieldContainer>
       <BuilderFieldLabel htmlFor={field}>raw json:</BuilderFieldLabel>
-        <div className={css.FormattedRecipeBox}>
-          <div className={css.FormattedRecipeUnderlay} style={{
-            width: `${valueElementWidthVw}vw`,
-          }} >
-            <EnhancedRecipeView recipeJson={state.recipeJson} />
-          </div>
-          <textarea
-            spellCheck={false}
-            ref={textAreaComponentRef}
-            className={css.FormattedRecipeTextField}
-            value={state.recipeJson ?? ""}
-            onFocus={fieldFocusState.focus}
-            onInput={ e => {state.setRecipeJson(e.currentTarget.value); fieldFocusState.focus(); }} 
-            style={{
-              width: `${valueElementWidthVw}vw`,
-            }}
-          />
-        </div>
+      <FormattedRecipeBox>
+        <FormattedRecipeUnderlayJson>
+          <EnhancedRecipeView recipeJson={state.recipeJson} />
+        </FormattedRecipeUnderlayJson>
+        <FormattedRecipeTextAreaJson
+          ref={textAreaComponentRef}
+          value={state.recipeJson ?? ""}
+          onFocus={fieldFocusState.focus}
+          onInput={ e => {state.setRecipeJson(e.currentTarget.value); fieldFocusState.focus(); }} 
+        />
+      </FormattedRecipeBox>
     </BuilderFieldContainer>
   );
 });

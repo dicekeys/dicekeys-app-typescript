@@ -1,5 +1,4 @@
 import React from "react";
-import css from "../Recipes.module.css";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState, RecipeEditingMode } from "../RecipeBuilderState";
 import { DiceKey } from "../../../dicekeys/DiceKey";
@@ -10,8 +9,35 @@ import { visibility } from "../../../utilities/visibility";
 import { RecipeDescriptionContentView, RecipePurposeContentView } from "../RecipeDescriptionView";
 import { MultilineRecipeJsonView } from "./MultilineRecipeView";
 import * as Dimensions from "./Dimensions";
+import styled from "styled-components";
 
 type RecipeRibbonButtons = "SaveOrDelete" | "Increment" | "Decrement" | "EditFields" | "EditRawJson" | "RemoveRecipe";
+
+const RecipeEditStateButton = styled.button<{$selected?: boolean; invisible?: boolean}>`
+  border: none;;
+  margin-top: 0px;
+  padding-top: 0px;
+  margin-right: 0.2rem;
+  margin-left: 0px;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  min-width: 2rem;
+  height: 1.5rem;
+  vertical-align: middle;
+  visibility: ${(p)=>p.invisible ? "hidden" : "visible"};
+  background-color: ${(p) => p.$selected ?
+    `rgba(128, 128, 128, 0.666)` :
+    `rgba(255, 255, 255, 0.666)`
+  };
+
+  &:hover {
+    background-color: rgba(128, 128, 128, 0.5);
+  }
+`;
 
 const EditButtonHoverTextView = observer(
   ({editButtonsHoverState, recipeBuilderState}: {
@@ -44,13 +70,6 @@ const EditButtonHoverTextView = observer(
     }
 });
 
-const RecipeEditStateButton = observer( ({selected, children, ...buttonArgs}: {
-  selected?: boolean,
-} & React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => 
-  <button {...buttonArgs}
-    className={selected ? css.RecipeEditorButtonActive : css.RecipeEditorButton}
-  >{children}</button>
-);
 
 const RecipeRibbonButtons = observer( ({recipeBuilderState, editButtonsHoverState}: {
   recipeBuilderState: RecipeBuilderState,
@@ -76,35 +95,34 @@ const RecipeRibbonButtons = observer( ({recipeBuilderState, editButtonsHoverStat
     alignItems: "flex-start"
   }}>
     <RecipeEditStateButton
-      style={visibility(recipeBuilderState.wizardComplete && recipeBuilderState.sequenceNumber != null)} //  || recipeBuilderState.editingMode !== RecipeEditingMode.NoEdit
+      invisible={!recipeBuilderState.wizardComplete || recipeBuilderState.sequenceNumber == null}
       {...editButtonsHoverState.hoverStateActions("Decrement")}
       onClick={recipeBuilderState.sequenceNumberState.decrement}>-</RecipeEditStateButton>
     <RecipeEditStateButton
-      style={visibility(recipeBuilderState.wizardComplete)} // || recipeBuilderState.editingMode !== RecipeEditingMode.NoEdit
+      invisible={!recipeBuilderState.wizardComplete}
       {...editButtonsHoverState.hoverStateActions("Increment")}
       onClick={recipeBuilderState.sequenceNumberState.increment}>+</RecipeEditStateButton>
     <RecipeEditStateButton
-      style={{
-        ...visibility(recipeBuilderState.wizardComplete),
-        textDecoration: "underline"
-      }}
+      invisible={!recipeBuilderState.wizardComplete}
+      style={{textDecoration: "underline"}}
       {...editButtonsHoverState.hoverStateActions("EditFields")}
-      selected={recipeBuilderState.editingMode === RecipeEditingMode.EditWithTemplateOnly}
+      $selected={recipeBuilderState.editingMode === RecipeEditingMode.EditWithTemplateOnly}
       onClick={()=>{recipeBuilderState.toggleEditingMode(RecipeEditingMode.EditWithTemplateOnly);}}>&nbsp;&#9998;&nbsp;</RecipeEditStateButton>
     <RecipeEditStateButton
-      style={visibility(recipeBuilderState.wizardComplete)}
+      invisible={!recipeBuilderState.wizardComplete}
       {...editButtonsHoverState.hoverStateActions("EditRawJson")}
-      selected={recipeBuilderState.editingMode === RecipeEditingMode.EditIncludingRawJson}
+      $selected={recipeBuilderState.editingMode === RecipeEditingMode.EditIncludingRawJson}
       onClick={()=>{recipeBuilderState.toggleEditingMode(RecipeEditingMode.EditIncludingRawJson);}
     }>{`{`}&#9998;{`}`}</RecipeEditStateButton>
     <RecipeEditStateButton
-      style={{...visibility(recipeBuilderState.wizardComplete), minWidth: `7rem`}}
+      invisible={!recipeBuilderState.wizardComplete}
+      style={{minWidth: `7rem`}}
       {...editButtonsHoverState.hoverStateActions("SaveOrDelete")}
         onClick={recipeBuilderState.saveOrDelete}>
         { recipeBuilderState.savedRecipeIdentifier == null ? (<>save</>): (<>delete</>) }
       </RecipeEditStateButton>
     <RecipeEditStateButton
-      style={visibility(recipeBuilderState.wizardComplete)}
+      invisible={!recipeBuilderState.wizardComplete}
       {...editButtonsHoverState.hoverStateActions("RemoveRecipe")}
       onClick={()=>{recipeBuilderState.emptyAllRecipeFields()}}
     >&#x2715;</RecipeEditStateButton>

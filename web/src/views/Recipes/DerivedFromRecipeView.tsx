@@ -1,6 +1,5 @@
 import React from "react";
 import { observer  } from "mobx-react";
-import css from "./Recipes.module.css";
 import { CharButton, CharButtonToolTip, OptionallyObscuredTextView, SecretFieldsCommonObscureButton } from "../basics";
 import { ToggleState } from "../../state";
 import { action } from "mobx";
@@ -8,6 +7,43 @@ import { DerivedFromRecipeState, OutputFormats, OutputFormat } from "./DerivedFr
 import { DerivationRecipeType } from "../../dicekeys/StoredRecipe";
 import { describeRecipeType } from "./DescribeRecipeType";
 import * as Dimensions from "./DerivationView/Dimensions";
+import styled from "styled-components";
+
+const Bip39Field = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-flow: wrap;
+  justify-content: flex-start;
+  align-content: flex-start;
+  user-select: all;
+`;
+
+const Bip39WordSpan = styled.span`
+  display: flex;
+  flex-flow: nowrap;
+  flex-direction: row;
+  align-items: baseline;
+`;
+
+const Bip39WordAndIndex = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+`;
+
+const Bip39WordAboveIndex = styled.div`
+  border-bottom: 1px gray solid;
+  align-items: baseline;
+`;
+const Bip39IndexBelowWord = styled.div`
+  font-size: 0.5rem;
+  flex-direction: row;
+  color: gray;
+  align-items: baseline;
+  user-select: none;
+`;
 
 const Bip39OutputView = ({bip39String, obscureValue}: {bip39String: string, obscureValue: boolean}) => {
   let bip39WordArray = bip39String.split(" ");
@@ -15,29 +51,29 @@ const Bip39OutputView = ({bip39String, obscureValue}: {bip39String: string, obsc
     bip39WordArray = bip39WordArray.map( plaintextWord => "************".substr(0, plaintextWord.length) ).sort();
   }
   return (
-    <div className={css.Bip39Field}>{
+    <Bip39Field>{
       bip39WordArray.map( (word, index) => (
-        <span key={index} className={css.Bip39WordSpan}>
+        <Bip39WordSpan key={index}>
           { // put spaces between words by inserting space before every word but first
             index !== 0 ? (<>&nbsp;</>) : null}
-          <div key={index} className={css.Bip39WordAndIndex}>
-            <div className={css.Bip39WordAboveIndex}>{word}</div>
-            <div className={css.Bip39IndexBelowWord}>{`${index+1}`}</div>
-          </div>
-        </span>
+          <Bip39WordAndIndex key={index}>
+            <Bip39WordAboveIndex>{word}</Bip39WordAboveIndex>
+            <Bip39IndexBelowWord>{`${index+1}`}</Bip39IndexBelowWord>
+          </Bip39WordAndIndex>
+        </Bip39WordSpan>
       ))
-    }</div>
+    }</Bip39Field>
   )
 }
 
+const SelectOutputType = styled.select`
+  padding: 0.25rem;
+  min-width: 6rem;
+  margin-left: calc(${Dimensions.DiceKeyBoxSize} - 1.5rem);
+ `
+
 const SelectDerivedOutputType = observer( ({type, state}: {type?: DerivationRecipeType, state: DerivedFromRecipeState}) => (
-  <select
-    style={{
-      padding: `0.25rem`,
-      minWidth: `6rem`,
-      marginLeft: `calc(${Dimensions.DiceKeyBoxSize} - 1.5rem)`
-    }}  
-//    className={css.SelectRecipeType}
+  <SelectOutputType
     disabled={type==null}
     value={ (type == null) ? "NullType" : state.outputFieldForType[type]}
     onChange={ (e) => state.setOutputField(e.currentTarget.value as OutputFormat) }
@@ -49,8 +85,16 @@ const SelectDerivedOutputType = observer( ({type, state}: {type?: DerivationReci
           <option key={format} value={format}>{format}</option>
         ))  
     }
-  </select>
+  </SelectOutputType>
 ));
+
+const DerivedValueHeaderDiv = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-self: flex-start;
+  width: 90vw;
+`
 
 export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
     state: DerivedFromRecipeState
@@ -66,7 +110,7 @@ export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
   });
   return (
     <>
-      <div className={css.DerivedValueHeader}>
+      <DerivedValueHeaderDiv>
         <SelectDerivedOutputType type={type} state={state} />
         <span style={{width: "1rem"}}></span>
         <span style={{width: "1rem"}}></span>
@@ -80,17 +124,17 @@ export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
           <SecretFieldsCommonObscureButton />
           </>
         )}
-      </div>
+      </DerivedValueHeaderDiv>
       { type === "Secret" && state.outputFieldForType[type] === "BIP39" && derivedValue != null ?
         (<Bip39OutputView bip39String={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />)
         : (
-        <div className={css.DerivedValue}>
+        <DerivedValueHeaderDiv>
           { showPlaceholder ? (
             <><i style={{color: "rgba(0,0,0,0.5"}}>A {describeRecipeType(recipe.type)} to be created by applying a recipe to your DiceKey</i></>
           ) : (
             <OptionallyObscuredTextView value={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />
           )}
-        </div>
+        </DerivedValueHeaderDiv>
       )}
     </>
   );

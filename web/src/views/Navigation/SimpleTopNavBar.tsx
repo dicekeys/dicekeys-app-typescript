@@ -18,7 +18,6 @@ export const SimpleTopNavBar = observer( ( props: {
   const onClick = isElectron() ? goBack : undefined;
   return (
     <TopNavigationBar>
-    {/* <div className={NavigationBars.TopNavigationBar}> */}
       <TopNavLeftSide onClick={ onClick } >{
         isElectron() ?
           // Show a back button in Electron
@@ -28,7 +27,6 @@ export const SimpleTopNavBar = observer( ( props: {
         }</TopNavLeftSide>
       <TopNavCenter>{props.title ?? ""}</TopNavCenter>
       <TopNavRightSide></TopNavRightSide>
-    {/* </div> */}
     </TopNavigationBar>
   )
 });

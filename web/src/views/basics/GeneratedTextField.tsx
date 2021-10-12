@@ -3,6 +3,7 @@ import { observer } from "mobx-react";
 import { CopyButtonProps, ObscureButtonProps, CopyButton, ObscureButton } from "./CharButton";
 import { ToggleState } from "../../state";
 import { RowCentered } from ".";
+import styled from "styled-components";
 
 const obscuringCharacter = String.fromCharCode(0x25A0); // * ■▓▒░
 
@@ -45,12 +46,20 @@ export const OptionallyObscuredTextView = observer( (props: OptionallyObscuredTe
 
 export type GeneratedTextFieldViewProps = Partial<ObscureButtonProps> & CopyButtonProps & OptionallyObscuredTextProps;
 
+const GeneratedTextValueDiv = styled.div`
+  font-family: monospace;
+`
+
 export const GeneratedTextFieldView  = observer( (props: GeneratedTextFieldViewProps) => (
-    <div className={RowCentered}>
-      <div key={"value"} style={{fontFamily: "monospace"}}><OptionallyObscuredTextView {...props} /> { props.obscureValue ? (props.obscuringFunction ?? defaultObscuringFunction)(props.value ?? "") : props.value }</div>
+    <RowCentered>
+      <GeneratedTextValueDiv key={"value"}><OptionallyObscuredTextView {...props} />{
+        props.obscureValue ?
+          (props.obscuringFunction ?? defaultObscuringFunction)(props.value ?? "") :
+          props.value
+      }</GeneratedTextValueDiv>
       <ObscureButton {...props} />
       <CopyButton {...props}/>
-    </div>
+    </RowCentered>
   ));
 
 export const SecretFieldsCommonObscureButton = observer ( () => (

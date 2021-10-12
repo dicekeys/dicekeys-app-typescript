@@ -1,4 +1,3 @@
-import css from "../Recipes.module.css";
 import * as Dimensions from "./Dimensions";
 import React from "react";
 import { observer  } from "mobx-react";
@@ -7,85 +6,79 @@ import { SelectRecipeToLoadView } from "../LoadRecipeView";
 import { EnhancedRecipeView } from "../EnhancedRecipeView";
 import { describeRecipeType } from "../DescribeRecipeType";
 import {EventHandlerOverridesDefault} from "../../../utilities/EventHandlerOverridesDefault";
+import styled from "styled-components";
+import {
+  FormattedJsonContainer,
+  FormattedRecipeTextAreaJson,
+  FormattedRecipeUnderlayJson,
+  HostNameInputField,
+  PurposeInputField
+} from "./RecipeStyles";
 
 const WizardBorderWidth = "3px";
-export const WizardPaddingH = `1.5rem`
-export const WizardPaddingV = `0.5rem`
-export const WizardStepContainer = ({children}: React.PropsWithChildren<{}>) => (
-  <div className={css.RecipeWizardContainer} style={{
-    width: `calc(${Dimensions.ScreenWidthPercentUsed}vw - (2 * (${WizardPaddingH} + ${WizardBorderWidth})))`,
-    paddingLeft: WizardPaddingH, paddingRight: WizardPaddingH,
-    paddingTop: WizardPaddingV, paddingBottom: WizardPaddingV,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    minHeight: `${Dimensions.WizardMinHeightInVh}vh`,
-  }}>
-    {children}
-  </div>
-);
+const WizardPaddingH = `1.5rem`;
+const WizardPaddingV = `0.5rem`;
 
-export const WizardStepInstruction = ({children, style, ...props}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div {...props} style={{...style}} >
-    {children}
-  </div>
-);
+const WizardStepContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  background-color: rgb(249, 249, 218);
+  font-size: 1.3rem;
+  align-content: center;
+  border-radius: 0.5rem;
+  width: calc(${Dimensions.ScreenWidthPercentUsed}vw - (2 * (${WizardPaddingH} + ${WizardBorderWidth})));
+  padding-left: ${WizardPaddingH};
+  padding-right: ${WizardPaddingH};
+  padding-top: ${WizardPaddingV};
+  padding-bottom: ${WizardPaddingV};
+  min-height: ${Dimensions.WizardMinHeightInVh}vh;
+`;
+
+
+const WizardStepInstruction = styled.div``;
+
+const WizardBackDiv = styled.div`
+  position: relative;
+  align-self: flex-end;
+  justify-self: flex-start;
+`;
+
+const WizardBackAnchor = styled.a`
+  position: "absolute";
+  text-decoration: "none";
+  z-index: 1;
+  right: 0;
+`;
 
 export const WizardBack = ({onBack}: {onBack: () => void}) => (
-  <div style={{
-    position: "relative",
-    alignSelf: "flex-end",
-    justifySelf: "flex-start",
-  }
-  }>
-    <a href="" onClick={e => {e.preventDefault(); onBack() }} style={{
-      position: "absolute",
-      textDecoration: "none",
-      zIndex: 1,
-      right: 0,
-    }}>&larr;
-    </a>
-  </div>
+  <WizardBackDiv>
+    <WizardBackAnchor onClick={e => {e.preventDefault(); onBack() }}>&larr;
+    </WizardBackAnchor>
+  </WizardBackDiv>
 );
 
+export const WizardStepInstructionNote = styled.div`
+  font-size: 1rem;
+`;
 
-export const WizardStepInstructionNote = ({children, style, ...props}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div {...props} style={{fontSize: `1rem`, ...style}} >
-    {children}
-  </div>
-);
+export const WizardFieldRow = styled.div`
+  align-self: center;
+`;
 
-export const WizardFieldRow = ({children, style, ...props}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div {...props} style={{
-    alignSelf: "center",
-    // marginTop: `1rem`,
-    ...style
-  }} >
-    {children}
-  </div>
-);
-
-export const WizardStepAlternatives = ({children}: React.PropsWithChildren<{}>) => (
-  <div style={{
-    alignSelf: "flex-end",
-    justifySelf: "flex-end",
-    marginTop: "0.5rem",
-  }
-  }>
-    {children}
-  </div>
-);
+export const WizardStepAlternatives = styled.div`
+  align-self: flex-end;
+  justify-self: flex-end;
+  margin-top: 0.5rem;
+`;
 
 export const SiteTextFieldView = observer( ({state}: {
   state: RecipeBuilderState,
 } ) => {
   return (
-    <input type="text"
-      style={{marginLeft: `1rem`}}
-      className={css.PurposeOrHostNameTextField}
+    <HostNameInputField
       id={"Site"}
-      spellCheck={false}
       size={60}
       value={state.siteTextField ?? ""}
       placeholder="https://example.com"
@@ -103,42 +96,29 @@ export const SiteTextFieldView = observer( ({state}: {
   );
 });
 
-const rawJsonFieldWidth = '60vw'; // FIXME
 
 export const RawJsonFieldView = observer( ({state, focusOnCreate}: {
   state: RecipeBuilderState,
   focusOnCreate?: boolean
 }) => {
-//  const textAreaComponentRef = React.useRef<HTMLTextAreaElement>(null);
   return (
-  <div style={{display: "inline-block"}}>
-    <div className={css.FormattedRecipeUnderlay} style={{
-      width: rawJsonFieldWidth,
-    }} >
+  <FormattedJsonContainer>
+    <FormattedRecipeUnderlayJson>
       <EnhancedRecipeView recipeJson={state.recipeJson} />
-    </div>
-    <textarea
-      spellCheck={false}
+    </FormattedRecipeUnderlayJson>
+    <FormattedRecipeTextAreaJson
       ref={ta => {if(focusOnCreate) {ta?.focus() }}}
-      className={css.FormattedRecipeTextField}
       value={state.recipeJson ?? ""}
-      rows={2}
       onInput={ e => {state.setRecipeJson(e.currentTarget.value);  }} 
-      style={{
-        width: rawJsonFieldWidth,
-      }}
     />
-</div>
+  </FormattedJsonContainer>
 )});
 
 export const PurposeFieldView = observer( ({state}: {
   state: RecipeBuilderState,
-} ) => {
-  return (
-    <input type="text"
-      className={css.PurposeOrHostNameTextField}
+} ) => (
+    <PurposeInputField
       id={"purpose"}
-      spellCheck={false}
       size={40}
       value={state.purposeField ?? ""}
       placeholder=""
@@ -149,8 +129,8 @@ export const PurposeFieldView = observer( ({state}: {
         state.setWizardPrimaryFieldEntered(true);
       }}}
     />
-  );
-});
+  )
+);
 
 export const TextCompletionButton = ( {...attributes}: React.ButtonHTMLAttributes<HTMLButtonElement> = {}) => (
   <button {...attributes}>&#9166;</button>
@@ -161,12 +141,20 @@ export const PurposeOrSiteEnteredButton = ({state}: {
   <TextCompletionButton onClick={state.setWizardPrimaryFieldEnteredFn(true)} />
 );
 
-export const WizardFieldLabel = observer ( ({...attributes}: React.LabelHTMLAttributes<HTMLLabelElement>) => (
-  <label
-    style={{minWidth: "10rem", marginRight: "1rem", textAlign: "right"}}
-  >{attributes.children}</label>
-) );
+export const WizardFieldLabel = styled.label`
+  min-width: 10rem;
+  margin-right: 1rem;
+  text-align: right;
+`;
 
+const WizardStepAlternativeAnchor = styled.a.attrs(() => ({
+  href: ""
+}))`
+  font-size: 0.9rem;
+  &::not(::first-of-type) {
+    margin-left: 1rem;
+  }
+`;
 
 export const WizardStepEnterSiteView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
@@ -185,15 +173,17 @@ export const WizardStepEnterSiteView = observer ( ({state}: {
           />
         </WizardFieldRow>
         <WizardStepAlternatives>
-          <a href="" style={{fontSize: `0.9rem`}}
+          <WizardStepAlternativeAnchor
             onClick={EventHandlerOverridesDefault( () => state.setWizardPrimaryFieldOverride("purpose") )}
-          >enter a purpose instead</a>
-          <a href="" style={{fontSize: `0.9rem`, marginLeft: `1rem`}}
+          >enter a purpose instead</WizardStepAlternativeAnchor>
+          <WizardStepAlternativeAnchor
             onClick={EventHandlerOverridesDefault( () => state.setWizardPrimaryFieldOverride("rawJson") )}
-          >enter raw json instead</a>
+          >enter raw json instead</WizardStepAlternativeAnchor>
         </WizardStepAlternatives>
-      </WizardStepContainer>);
+      </WizardStepContainer>
+    );
 });
+
 
 export const WizardStepSaveView = observer ( ({state}: {
   state: RecipeBuilderState}) => {
@@ -242,13 +232,12 @@ export const WizardStepEnterPurposeView = observer ( ({state}: {
           />
         </WizardFieldRow>
         <WizardStepAlternatives>
-          <a href="" style={{fontSize: `0.9rem`}} onClick={EventHandlerOverridesDefault(() => 
+          <WizardStepAlternativeAnchor onClick={EventHandlerOverridesDefault(() => 
             state.setWizardPrimaryFieldOverride(undefined)
-          )}>enter a web address instead</a>
-          <a href=""
-            style={{fontSize: `0.9rem`, marginLeft: `1rem`}}
+          )}>enter a web address instead</WizardStepAlternativeAnchor>
+          <WizardStepAlternativeAnchor
             onClick={EventHandlerOverridesDefault( ()  => state.setWizardPrimaryFieldOverride("rawJson")) }
-          >enter raw json instead</a>
+          >enter raw json instead</WizardStepAlternativeAnchor>
         </WizardStepAlternatives>
       </WizardStepContainer>
     );
@@ -272,31 +261,31 @@ const WizardStepEnterRawJsonStepView = observer ( ({state}: {
           />
         </WizardFieldRow>
         <WizardStepAlternatives>
-          <a href="" style={{fontSize: `0.9rem`}} onClick={EventHandlerOverridesDefault(() => 
+          <WizardStepAlternativeAnchor onClick={EventHandlerOverridesDefault(() => 
             state.setWizardPrimaryFieldOverride(undefined)
-          )}>enter a web address instead</a>
-          <a href="" style={{fontSize: `0.9rem`, marginLeft: `1rem`}}
+          )}>enter a web address instead</WizardStepAlternativeAnchor>
+          <WizardStepAlternativeAnchor
             onClick={EventHandlerOverridesDefault( () => state.setWizardPrimaryFieldOverride("purpose") )}
-          >enter a purpose instead</a>
+          >enter a purpose instead</WizardStepAlternativeAnchor>
         </WizardStepAlternatives>
       </WizardStepContainer>
     );
 });
 
+const WizardStepPrimaryInstruction = styled(WizardStepInstruction)`
+  font-weight: bold;
+`;
+
 export const RecipeWizardStepPickRecipeView = observer ( ({state}: {
   state: RecipeBuilderState
 }) => (
   <WizardStepContainer>
-    <div/>
-    <div>
-      <WizardStepInstruction style={{fontWeight: "bold"}}>
-        Choose a <i>recipe</i> to create a password, key, or other secret from your DiceKey.
-        </WizardStepInstruction>
-      <WizardFieldRow>
-        <SelectRecipeToLoadView state={state} defaultOptionLabel={"recipe choices"} />
-      </WizardFieldRow>
-    </div>
-    <div/>
+    <WizardStepPrimaryInstruction>
+      Choose a <i>recipe</i> to create a password, key, or other secret from your DiceKey.
+      </WizardStepPrimaryInstruction>
+    <WizardFieldRow>
+      <SelectRecipeToLoadView state={state} defaultOptionLabel={"recipe choices"} />
+    </WizardFieldRow>
   </WizardStepContainer>
 ));
 

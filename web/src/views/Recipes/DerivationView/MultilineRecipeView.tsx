@@ -1,32 +1,41 @@
-import css from "../Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { parseAnnotatedJson, ParsedJsonArrayField, ParsedJsonObjectField } from "../../../utilities/jsonParser";
+import {
+  HostNameSpan,
+  InBraces,
+  InBrackets,
+  IndentJson,
+  InDoubleQuotes,
+  JsonNameValueSeparationColon,
+  LengthFieldValueSpan,
+  MultiLineRecipeDiv,
+  PurposeSpan,
+  QuotedFieldNameSpan,
+  RecipeCommaSeparator,
+  RecipeStringValueSpan,
+  RecipeValueTypeUnknownSpan,
+  SequenceNumberValueSpan
+} from "./RecipeStyles";
+import { EventHandlerOverridesDefault } from "../../../utilities/EventHandlerOverridesDefault";
+
 
 const RecipeJsonAllowEntryFieldView = ({field} : {field: ParsedJsonObjectField}) => {
   const {name, value} = field;
   return (<>
     {name.leadingWhiteSpace}
-    <span className={[css.quote_span].join(" ")}>{`"`}</span>
-    <span className={[css.string_field__span].join(" ")}>{
-        name.value
-    }</span>
-    <span className={[css.quote_span].join(" ")}>{`"`}</span>
+    <QuotedFieldNameSpan>{name.value}</QuotedFieldNameSpan>
     {name.trailingWhiteSpace}
-    <span className={[css.colon_span].join(" ")}>:</span>
+    <JsonNameValueSeparationColon/>
     {value.leadingWhiteSpace}
     {
       (value.type === "string") ? (
-        <>
-          <span className={[css.quote_span].join(" ")}>{`"`}</span>
-          <span className={[
-              css.string_value_span,
-              name.value === "host" ? css.host_name_span : ""
-            ].join(" ")}>{
-              value.value
-          }</span>
-          <span className={[css.quote_span].join(" ")}>{`"`}</span>
-        </>
+        <InDoubleQuotes>
+          { name.value === "host" ?
+            (<HostNameSpan>{value.value}</HostNameSpan>) :
+            (<RecipeStringValueSpan>{value.value}</RecipeStringValueSpan>)
+          }
+        </InDoubleQuotes>
       ) : field.asJsonString
     }
     {value.trailingWhiteSpace}
@@ -38,20 +47,20 @@ const RecipeJsonAllowArrayFieldView = ({field} : {field: ParsedJsonArrayField}) 
   if (allowObject.type !== "object") return null;
   const {fields} = allowObject;
   return (
-    <div className={[css.Depth1, css.allow].join(" ")}>
+    <IndentJson>
       { allowObject.leadingWhiteSpace}
-      <span className={[css.brace_span].join(" ")}>{`{`}</span>
-      { fields.map( field => (
-        <RecipeJsonAllowEntryFieldView {...{key: field.name.value, field}} />
-      ) ) }
-      <span className={[css.brace_span].join(" ")}>{`}`}</span>
+      <InBrackets>{
+        fields.map( field => (
+          <RecipeJsonAllowEntryFieldView {...{key: field.name.value, field}} />
+        ))
+      }</InBrackets>
       { allowObject.trailingWhiteSpace }
       {
         // Add trailing comma if present
         field.indexOfTrailingComma == null ? null : (
-          <span className={[css.comma_span].join(" ")}>,</span>
+          <RecipeCommaSeparator/>
       ) }
-    </div>
+    </IndentJson>
   );
 }
 
@@ -59,55 +68,49 @@ const RecipeJsonFieldValueView = ({field} : {field: ParsedJsonObjectField}) => {
   const {asJsonString: valueAsJsonString} = field;
   switch (field.name.value) {
     case "allow": 
-    if (field.value.type !== "array") return null;
-    return (<>
-      <span className={[css.bracket_span].join(" ")}>{`[`}</span>
-      {field.value.fields.map( (field, index) => (
-        <RecipeJsonAllowArrayFieldView {...{key: index.toString(), field}} />
-      )) }
-      <span className={[css.bracket_span].join(" ")}>{`]`}</span>
-    </>);
+      if (field.value.type !== "array") return null;
+      return (
+        <InBrackets>{
+          field.value.fields.map( (field, index) => (
+            <RecipeJsonAllowArrayFieldView {...{key: index.toString(), field}} />
+          ))
+        }</InBrackets>
+      );
       case "#": return (
-      <span className={[css.number_value_span, css.sequence_number_span].join(" ")}>{valueAsJsonString}</span>
+        <SequenceNumberValueSpan>{valueAsJsonString}</SequenceNumberValueSpan>
     );
     case "purpose": return field.value.type !== "string" ? null : (
-      <>
-        <span className={[css.quote_span].join(" ")}>{`"`}</span>
-        <span className={[css.string_value_span, css.host_name_span].join(" ")}>{field.value.value}</span>
-        <span className={[css.quote_span].join(" ")}>{`"`}</span>
-      </>
+      <InDoubleQuotes>
+        <RecipeStringValueSpan><PurposeSpan>{field.value.value}</PurposeSpan></RecipeStringValueSpan>
+      </InDoubleQuotes>
     );
     case "lengthInChars": return (
-      <span className={[css.number_value_span, css.length_span].join(" ")}>{valueAsJsonString}</span>
+      <LengthFieldValueSpan>{valueAsJsonString}</LengthFieldValueSpan>
     );
     default: return (field.value.type === "string") ? (
-        <>
-          <span className={[css.quote_span].join(" ")}>{`"`}</span>
-          <span key={field.name.value} className={"MultiLineRecipe"}>{ valueAsJsonString }</span>
-          <span className={[css.quote_span].join(" ")}>{`"`}</span>
-        </>
+        <InDoubleQuotes>
+          <RecipeStringValueSpan>{ valueAsJsonString }</RecipeStringValueSpan>
+        </InDoubleQuotes>
       ) : (
-        <span key={field.name.value} className={"MultiLineRecipe"}>{ valueAsJsonString }</span>
+        <RecipeValueTypeUnknownSpan>{ valueAsJsonString }</RecipeValueTypeUnknownSpan>
       );
   }
 }
 
 const RecipeJsonFieldView = ({field} : {field: ParsedJsonObjectField}): JSX.Element => {
   return (
-    <div className={[css.Depth1].join(" ")}>
+    <IndentJson>
       { field.name.leadingWhiteSpace}
-      <span className={[css.quote_span].join(" ")}>"</span>
-      <span className={[css.string_field_name_span].join(" ")}>{field.name.value}</span>
-      <span className={[css.quote_span].join(" ")}>"</span>
+      <QuotedFieldNameSpan>{field.name.value}</QuotedFieldNameSpan>
       { field.name.trailingWhiteSpace }
-      <span className={[css.colon_span].join(" ")}>:</span>
+      <JsonNameValueSeparationColon/>
       { field.value.leadingWhiteSpace }
       <RecipeJsonFieldValueView {...{field}}/>
       { field.value.trailingWhiteSpace }
       { field.indexOfTrailingComma == null ? null : (
-          <span className={[css.comma_span].join(" ")}>,</span>
+          <RecipeCommaSeparator/>
       )}
-    </div>
+    </IndentJson>
   );
 }
 
@@ -122,8 +125,8 @@ export const MultilineRecipeJsonView = observer( ({recipeJson}: {recipeJson?: st
     const recipeObject = recipeJson == null ? undefined : parseAnnotatedJson(recipeJson);
     if (recipeObject != null && recipeObject.type === "object") {
       return (
-        <div className={[css.MultiLineRecipe, css.Depth0].join(" ")}
-          onCopy={e => {
+        <MultiLineRecipeDiv
+          onCopy={EventHandlerOverridesDefault(e => {
             // When we display the recipe on multiple lines and with indentation,
             // the browser may want include new line symbols (\n) to and white space
             // to represent the that formatting, and so the copied raw JSON string
@@ -132,25 +135,23 @@ export const MultilineRecipeJsonView = observer( ({recipeJson}: {recipeJson?: st
             // always yield the raw, unmodified, plaintext of the raw JSON string without
             // any added newlines or white space.
             e.clipboardData.setData('text/plain', recipeJson ?? "");
-            e.preventDefault();
-          }
-        }
+          })}
         >
           {/* Display the opening brace ("{") and any white space before it */}
           {recipeObject.leadingWhiteSpace}
-          <span className={[css.brace_span].join(" ")}>{`{`}</span>
-          {recipeObject.fields.map( (field) =>
-            (<RecipeJsonFieldView {...{key: field.name.value,recipeJson, field}} />)
-          )}
-          <span className={[css.brace_span].join(" ")}>{`}`}</span>
+          <InBraces>{
+            recipeObject.fields.map( (field) =>
+              (<RecipeJsonFieldView {...{key: field.name.value,recipeJson, field}} />)
+            )
+          }</InBraces>
           {recipeObject.trailingWhiteSpace}
-        </div>
+        </MultiLineRecipeDiv>
       );
     }
   } catch (e) {}
   return (
-    <div className={[css.MultiLineRecipe, css.Depth0].join(" ")}>
+    <MultiLineRecipeDiv>
       { recipeJson || ( <>&nbsp;</>) }
-    </div>
+    </MultiLineRecipeDiv>
   );
 });

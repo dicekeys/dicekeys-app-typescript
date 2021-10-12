@@ -60,24 +60,21 @@ type CommonProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputEl
   onFocusedOrChanged?: () => any;
 }
 
-export const NumericTextField = observer ( ({state, size, placeholder, onInput, onFocusedOrChanged, ...props}: CommonProps) => {
-  return (
-    <input
-      type="text"
-      {...props}
-      size={size ?? 4}
-      placeholder={placeholder ?? "none"}
-      style={{...(typeof state.numericValue == "number" ? {} :{color: "red"}), ...props.style}}
-      value={state.textValue}
-      onInput={ e => {
-        state.setValue(e.currentTarget.value);
-        onFocusedOrChanged?.();
-        onInput?.(e);
-      } }
-      onFocus={ () => onFocusedOrChanged?.() }
-    />
-  )
-});
+// export const NumericTextField = observer ( ({state, size, placeholder, onInput, onFocusedOrChanged, ...props}: CommonProps) => {
+//   return (
+//     <InputNumericText
+//       // {...props}
+//       $valueIsValidNumber={typeof state.numericValue === "number"}
+//       value={state.textValue}
+//       onInput={ e => {
+//         state.setValue(e.currentTarget.value);
+//         onFocusedOrChanged?.();
+//         onInput?.(e);
+//       } }
+//       onFocus={ () => onFocusedOrChanged?.() }
+//     />
+//   )
+// });
 
 const RowVerticallyCenteredDiv = styled.div`
   display: flex;
@@ -85,45 +82,53 @@ const RowVerticallyCenteredDiv = styled.div`
   align-items: center;
 `;
 
-export const NumberPlusMinusView = observer( (props: CommonProps) => {
-  const {onKeyDown, ...commonProps} = props;
-  const {state, onFocusedOrChanged} = commonProps;
-  const setValue = action ((newValue: number | undefined) => {
-    state.setValue(newValue);
-    onFocusedOrChanged?.()    
-  });
-  const subtractOne = () => setValue(state.decrementedValue);
-  const addOne = () => setValue(state.incrementedValue);
+export const IncrementDecrementKeyHandler = ({increment, decrement}: {increment: () => void, decrement: () =>void}): React.KeyboardEventHandler => (e) => {
+  switch (e.key) {
+    case "ArrowUp":
+    case "+":
+    case "=":
+    case ".":
+    case ">":
+      increment();
+      e.preventDefault();
+      break;
+    case "ArrowDown":
+    case "-":
+    case "_":
+    case ",":
+    case "<":
+      decrement();
+      e.preventDefault();
+      break;
+    default:
+  }
+}
+
+export const NumberPlusMinusView = observer( (props: React.PropsWithChildren<CommonProps>) => {
+  const {children, onKeyDown, ...commonProps} = props;
+  const {state,
+  //  onFocusedOrChanged
+  } = commonProps;
+  // const setValue = action ((newValue: number | undefined) => {
+  //   state.setValue(newValue);
+  //   onFocusedOrChanged?.()    
+  // });
+  // const keyHandler = IncrementDecrementKeyHandler(state);
+  // const subtractOne = () => setValue(state.decrementedValue);
+  // const addOne = () => setValue(state.incrementedValue);
   return (
     <RowVerticallyCenteredDiv>
-      <CharButton invisible={state.numericValue == null} onClick={ subtractOne  }
+      <CharButton invisible={state.numericValue == null} onClick={ state.decrement  }
         >-<CharButtonToolTip>- 1 = {state.decrementedValue ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
-      <NumericTextField
+      {children}
+      {/* <NumericTextField
         {...commonProps}
         onKeyDown={ e => {
           onKeyDown?.(e);
-          switch (e.key) {
-            case "ArrowUp":
-            case "+":
-            case "=":
-            case ".":
-            case ">":
-              addOne();
-              e.preventDefault();
-              break;
-            case "ArrowDown":
-            case "-":
-            case "_":
-            case ",":
-            case "<":
-              subtractOne();
-              e.preventDefault();
-              break;
-            default:
-          }
+          keyHandler(e);
         } }
-      />
-      <CharButton onClick={ addOne }
+      /> */}
+      <CharButton onClick={ state.increment }
       >+<CharButtonToolTip>+ 1 = { state.incrementedValue }</CharButtonToolTip></CharButton>
     </RowVerticallyCenteredDiv>
 )});

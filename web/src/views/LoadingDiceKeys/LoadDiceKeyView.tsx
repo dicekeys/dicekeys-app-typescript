@@ -9,7 +9,6 @@ import { DiceKey, DiceKeyFaces } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import { CenteredControls, ColumnStretched } from "../basics";
-import { visibility } from "../../utilities/visibility";
 import { PushButton } from "../../css/Button";
 
 
@@ -66,13 +65,13 @@ export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
       <LoadDiceKeySubView {...props} {...{state}} />
       <CenteredControls>
         { onCancelled ? (
-          <button className={PushButton} onClick={ onCancelled } >Cancel</button>          
+          <PushButton onClick={ onCancelled } >Cancel</PushButton>          
         ) : null }
-        <button className={PushButton} onClick={ () => state.setMode(state.mode === "camera" ? "manual" : "camera") } >{state.mode !== "camera" ? "Use Camera" : "Enter Manually"}</button>        
-        <button className={PushButton}
-          style={visibility(state.mode === "manual" || state.enterDiceKeyState.isValid)}
+        <PushButton onClick={ () => state.setMode(state.mode === "camera" ? "manual" : "camera") } >{state.mode !== "camera" ? "Use Camera" : "Enter Manually"}</PushButton>        
+        <PushButton
+          invisible={state.mode !== "manual" && !state.enterDiceKeyState.isValid}
           onClick={ onDonePressedWithinEnterDiceKey }
-        >Done</button>          
+        >Done</PushButton>          
       </CenteredControls>
     </ColumnStretched>
   )});

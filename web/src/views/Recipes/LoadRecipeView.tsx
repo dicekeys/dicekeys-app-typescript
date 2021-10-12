@@ -1,10 +1,28 @@
-import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { BuiltInRecipes, enhancedStoredRecipeName, getStoredRecipe, savedRecipeIdentifier, builtInRecipeIdentifier, customRecipeIdentifier } from "../../dicekeys/StoredRecipe";
 import { RecipeStore } from "../../state/stores/RecipeStore";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { DerivableObjectNameList, describeRecipeType } from "./DescribeRecipeType";
+import styled, {css} from "styled-components";
+
+const SelectRecipe = styled.select<{$nothingChosenYet: boolean}>`
+  align-self: flex-start;
+  border: none;
+  outline: 0px;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(255, 254, 171, 0.1);
+  font-family: sans-serif;
+  background-color: rgba(255, 254, 171, 0.1);
+  font-family: sans-serif;
+  ${(props) => props.$nothingChosenYet ? css`
+    background-color: rgba(255, 254, 171, 1);
+    color: rgba(0, 0, 0, 0.75);
+  ` : ``}
+`;
+
 
 export const SelectRecipeToLoadView = observer( ({
   state,
@@ -22,8 +40,7 @@ export const SelectRecipeToLoadView = observer( ({
     )
   )
   return (
-    <select
-      className={state.recipeIdentifier ? css.SelectRecipe : css.SelectRecipeNoneSelectedYet}
+    <SelectRecipe $nothingChosenYet={!state.recipeIdentifier}
       value=""
       placeholder={"Placeholder"}
       onChange={ (e) => {
@@ -55,7 +72,7 @@ export const SelectRecipeToLoadView = observer( ({
           <option key={ recipeType } value={ customRecipeIdentifier({type: recipeType}) } >{ describeRecipeType(recipeType) }</option>
         ))}
       </optgroup>
-    </select>
+    </SelectRecipe>
   );
 });
 
@@ -67,9 +84,9 @@ export const CreateANewRecipeOfTypeView = observer( ({state}: {
   return (
     <>
     <label>Create a recipe for a new:</label>
-    <select
-      className={state.recipeIdentifier ? css.SelectRecipe : css.SelectRecipeNoneSelectedYet}
-//      placeholder={"Placeholder"}
+    <SelectRecipe
+      $nothingChosenYet={!state.recipeIdentifier}
+      //      placeholder={"Placeholder"}
       onChange={ (e) => {
         state.loadRecipe(getStoredRecipe(e.currentTarget.value));
       }}
@@ -78,7 +95,7 @@ export const CreateANewRecipeOfTypeView = observer( ({state}: {
       { DerivableObjectNameList.map( (recipeType) => (
           <option key={ recipeType } value={ customRecipeIdentifier({type: recipeType}) } >{ describeRecipeType(recipeType) }</option>
       ))}      
-    </select>
+    </SelectRecipe>
     </>
   );
 });
@@ -99,8 +116,7 @@ export const LoadBuiltInRecipeView = observer( ({state}: {
   return (
     <div>
       <label>Load built-in recipe:</label>
-      <select
-          className={state.recipeIdentifier ? css.SelectRecipe : css.SelectRecipeNoneSelectedYet}
+      <SelectRecipe $nothingChosenYet={!state.recipeIdentifier}
   //      placeholder={"Placeholder"}
         onChange={ (e) => {
           state.loadRecipe(getStoredRecipe(e.currentTarget.value));
@@ -110,7 +126,7 @@ export const LoadBuiltInRecipeView = observer( ({state}: {
         { builtInRecipes.map( template => (
           <option key={template.name} value={builtInRecipeIdentifier(template)} >{ enhancedStoredRecipeName(template) }</option>
         ))}
-      </select>
+      </SelectRecipe>
     </div>
   );
 });
@@ -123,9 +139,8 @@ export const LoadSavedRecipeView = observer( ({state}: {
   return (
     <div>
       <label>Load saved recipe:</label>
-      <select
+      <SelectRecipe $nothingChosenYet={!state.recipeIdentifier}
         title="Load saved recipe"
-        className={state.recipeIdentifier ? css.SelectRecipe : css.SelectRecipeNoneSelectedYet}
         placeholder={"Placeholder"}
         onChange={ (e) => {
           state.loadRecipe(getStoredRecipe(e.currentTarget.value));
@@ -135,16 +150,20 @@ export const LoadSavedRecipeView = observer( ({state}: {
         {savedRecipes.map( savedRecipe => (
               <option key={ savedRecipe.name } value={ savedRecipeIdentifier(savedRecipe)} >{ enhancedStoredRecipeName(savedRecipe) }</option>
             ))}
-      </select>
+      </SelectRecipe>
     </div>
   );
 });
 
+const LoadRecipeViewDiv = styled.div`
+  margin: 0.25rem;
+`;
+
 export const LoadRecipeView = ({state}: {
   state: RecipeBuilderState,
 }) => (
-    <div className={css.LoadRecipeView} >
+    <LoadRecipeViewDiv>
       (Re)create a &nbsp;
       <SelectRecipeToLoadView {...{state}} />
-    </div>
+    </LoadRecipeViewDiv>
 );

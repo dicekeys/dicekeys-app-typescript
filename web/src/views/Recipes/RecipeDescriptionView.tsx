@@ -2,8 +2,9 @@ import React from "react";
 import { AndClause } from "../basics";
 import { DerivationRecipeType, DiceKeysAppSecretRecipe } from "../../dicekeys";
 import { describeRecipeType } from "./DescribeRecipeType";
-import css from "./Recipes.module.css";
 import { observer } from "mobx-react";
+import { HostNameSpan, LengthFieldValueSpan, PurposeSpan, SequenceNumberValueSpan } from "./DerivationView/RecipeStyles";
+import styled from "styled-components";
 
 interface RecipeState {
   type?: DerivationRecipeType;
@@ -14,13 +15,13 @@ interface RecipeState {
 
 const HostNameView = ({host}: {host: string}) => (
   host.startsWith("*.") ?
-  (<><span className={css.host_name_span}>{ host.substring(2) }</span> (and its subdomains)</>) :
-  (<><span className={css.host_name_span}>{ host }</span> (but not its subdomains)</>)
+  (<><HostNameSpan>{ host.substring(2) }</HostNameSpan> (and its subdomains)</>) :
+  (<><HostNameSpan>{ host }</HostNameSpan> (but not its subdomains)</>)
 )
 
 export const RecipePurposeContentView = ({recipe}: {recipe: DiceKeysAppSecretRecipe | undefined}) => (<>
   { recipe == null || !recipe.purpose ? null : (
-    <> for the purpose of &lsquo;<span className={css.host_name_span}>{ recipe.purpose }</span>&rsquo;</>
+    <> for the purpose of &lsquo;<PurposeSpan>{ recipe.purpose }</PurposeSpan>&rsquo;</>
   )}{ recipe == null || !recipe.allow || recipe.allow.length == 0 ? null : (
     <> for use by <AndClause items={recipe.allow.map( ({host}) => (<HostNameView {...{host}}/>)
       )}/>
@@ -44,30 +45,32 @@ export const RecipeDescriptionContentView = observer ( ({state}: {state: RecipeS
   }
   const withClauses: JSX.Element[] = [];
   if (type === "Password" && recipe.lengthInChars) {
-    withClauses.push((<> a maximum length of <span className={css.length_span}>{ recipe.lengthInChars }</span> characters</>));
+    withClauses.push((<> a maximum length of <LengthFieldValueSpan>{ recipe.lengthInChars }</LengthFieldValueSpan> characters</>));
   }
   if (recipe["#"]) {
-    withClauses.push((<> sequence number <span className={css.sequence_number_span}>{recipe["#"]}</span></>));
+    withClauses.push((<> sequence number <SequenceNumberValueSpan>{recipe["#"]}</SequenceNumberValueSpan></>));
   }  
   return (
     <>
      Create a {describeRecipeType(type)}
      <RecipePurposeContentView {...{recipe}} />
-      {/* { !recipe.purpose ? null : (
-        <> for the purpose of &lsquo;<span className={css.host_name_span}>{ recipe.purpose }</span>&rsquo;</>
-      )}{ !recipe.allow || recipe.allow.length == 0 ? null : (
-        <> for use by <AndClause items={recipe.allow.map( ({host}) => (<HostNameView {...{host}}/>)
-          )}/>
-        </>)
-      } */}
       { withClauses.length == 0 ? null : (
         <> with <AndClause items={withClauses}/></>
       )}.</>
   );
 });
 
+const RecipeDescriptionViewDiv = styled.div`
+  display: block;
+  align-self: flex-start;
+  background-color: rgba(238, 238, 255, 1);
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+`;
+
 export const RecipeDescriptionView = (props: {state: RecipeState}) => (
-  <div className={css.RecipeDescriptionView} >
+  <RecipeDescriptionViewDiv>
     <RecipeDescriptionContentView {...props} />
-  </div>
+  </RecipeDescriptionViewDiv>
 )
