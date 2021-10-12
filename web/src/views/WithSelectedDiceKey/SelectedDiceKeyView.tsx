@@ -79,11 +79,11 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
 
 
 
-addPreview("SelectedDiceKey", observer ( () => (
+addPreview("SelectedDiceKey", () => (
   <SelectedDiceKeyView
     goBack={() => alert("Back off man, I'm a scientist!")}
     state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample), SubViews.DisplayDiceKey)}
-/>)));
+/>));
 
 addPreview("Recipes", () => (<SelectedDiceKeyView
       state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample), SubViews.DeriveSecrets)}
