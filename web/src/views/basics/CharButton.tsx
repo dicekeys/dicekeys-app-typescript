@@ -2,10 +2,13 @@ import React from "react";
 import { observer } from "mobx-react";
 import { action } from "mobx";
 import styled from "styled-components";
+import type {InferComponentProps} from "../../utilities/InferComponentProps";
+
+interface CharButtonExtraProps {invisible?: boolean};
 
 export const CharButton = styled.button.attrs(() =>({
-  tabIndex: -1
-}))<{invisible?: boolean}>`
+  tabIndex: -1 as number // Widening type from -1 to number is hack to fix typing issues in StyledComponents/InferComponentProps
+}))<CharButtonExtraProps>`
   display: flex;
   justify-content: center;
   align-items: baseline;
@@ -25,44 +28,42 @@ export const CharButton = styled.button.attrs(() =>({
   visibility: ${p=>p.invisible?"hidden":"visible"};
 `;
 
+type CharButton = typeof CharButton;
+
 export const CharButtonToolTip = styled.span`
-  display: flex;
-  position: absolute;
   visibility: hidden;
+  ${CharButton}:hover & {
+    visibility: visible;
+  }
+  position: absolute;
+  text-align: center;
+  font-size: .75rem;
   background: rgba(192,192,192,.75);
   color: rgba(0, 0, 0, .75);
-  text-align: center;
   padding: 3px;
   border-radius: 3px;
   z-index: 1;
   transform: translateY(-100%);
-  font-size: .75rem;
-  ${CharButton}:hover & {
-    visibility: visible;
-  }
 `;
 
-export interface CopyButtonProps {
-  value?: string;
-  hideCopyButton?: boolean;
-}
-
-export const CopyButton = observer ( (props: CopyButtonProps) => {
-  if (props.hideCopyButton) return null;
-  const copyToClipboard = action ( () => {
-    if (props.value != null) {
-      navigator.clipboard.writeText(props.value);
-    }
-    // FUTURE - provide user notification that copy happened.
-  });
-  return (
-   <CharButton invisible={props.value == null} onClick={copyToClipboard}>&#128203;<CharButtonToolTip></CharButtonToolTip></CharButton>
-  );
+const copyToClipboard = (value?: string) => action ( () => {
+  if (value != null) {
+    navigator.clipboard.writeText(value);
+  }
+  // FUTURE - provide user notification that copy happened.
 });
+
+
+export const CopyButton = ({
+  valueToCopy, onClick, invisible, ...props
+}: InferComponentProps<typeof CharButton> & {valueToCopy?: string}) => (
+   <CharButton {...props} invisible={valueToCopy == null || invisible} onClick={(e)=>{copyToClipboard(valueToCopy); onClick?.(e);}}
+   >&#128203;<CharButtonToolTip>Copy</CharButtonToolTip></CharButton>
+);
 
 export interface ObscureButtonProps {
   obscureValue: boolean;
-  toggleObscureValue: () => any;
+  toggleObscureValue: () => void;
 }
 const hasObscureButtonProps = (props: Partial<ObscureButtonProps>): props is ObscureButtonProps =>
   props.obscureValue !== undefined && !!props.toggleObscureValue

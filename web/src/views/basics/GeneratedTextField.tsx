@@ -1,6 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { CopyButtonProps, ObscureButtonProps, CopyButton, ObscureButton } from "./CharButton";
+import { ObscureButtonProps, CopyButton, ObscureButton } from "./CharButton";
 import { ToggleState } from "../../state";
 import { RowCentered } from ".";
 import styled from "styled-components";
@@ -44,7 +44,7 @@ export const OptionallyObscuredTextView = observer( (props: OptionallyObscuredTe
   <>{ OptionallyObscuredText(props) }</>
 ));
 
-export type GeneratedTextFieldViewProps = Partial<ObscureButtonProps> & CopyButtonProps & OptionallyObscuredTextProps;
+export type GeneratedTextFieldViewProps = Partial<ObscureButtonProps> & OptionallyObscuredTextProps & {hideCopyButton?: boolean};
 
 const GeneratedTextValueDiv = styled.div`
   font-family: monospace;
@@ -58,20 +58,20 @@ export const GeneratedTextFieldView  = observer( (props: GeneratedTextFieldViewP
           props.value
       }</GeneratedTextValueDiv>
       <ObscureButton {...props} />
-      <CopyButton {...props}/>
+      <CopyButton {...props} invisible={!!props.hideCopyButton} valueToCopy={props.value} />
     </RowCentered>
   ));
 
 export const SecretFieldsCommonObscureButton = observer ( () => (
   <ObscureButton obscureValue={ToggleState.ObscureSecretFields.value} toggleObscureValue={ToggleState.ObscureSecretFields.toggle} />
 ));
-export const SecretFieldWithCommonObscureState = observer ((props: CopyButtonProps) => (
+export const SecretFieldWithCommonObscureState = observer ((props: GeneratedTextFieldViewProps) => (
   <GeneratedTextFieldView {...props} obscureValue={ ToggleState.ObscureSecretFields.value } />
 ));
 
 
 const GeneratedTextFieldViewWithSharedToggleStatePreCurry = observer (
-  (({toggleState, ...props}: CopyButtonProps & {toggleState: ToggleState.ToggleState}) => (
+  (({toggleState, ...props}: GeneratedTextFieldViewProps & {toggleState: ToggleState.ToggleState}) => (
       <GeneratedTextFieldView {...props}
         obscureValue={ toggleState.value }
         toggleObscureValue={ toggleState.toggle }
@@ -82,7 +82,7 @@ const GeneratedTextFieldViewWithSharedToggleStatePreCurry = observer (
 
 export const GeneratedTextFieldViewWithSharedToggleState =
   ({toggleState, ...defaultProps}: {toggleState: ToggleState.ToggleState} & Partial<GeneratedTextFieldViewProps>) =>
-    (props: CopyButtonProps) => (
+    (props: GeneratedTextFieldViewProps) => (
       <GeneratedTextFieldViewWithSharedToggleStatePreCurry {...{toggleState, ...defaultProps, ...props}} />
     );
 
