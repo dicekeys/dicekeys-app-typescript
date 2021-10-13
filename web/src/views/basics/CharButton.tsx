@@ -1,8 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { action } from "mobx";
 import styled from "styled-components";
 import type {InferComponentProps} from "../../utilities/InferComponentProps";
+import { copyToClipboard } from "../../utilities/copyToClipboard";
 
 interface CharButtonExtraProps {invisible?: boolean};
 
@@ -45,14 +45,6 @@ export const CharButtonToolTip = styled.span`
   z-index: 1;
   transform: translateY(-100%);
 `;
-
-const copyToClipboard = (value?: string) => action ( () => {
-  if (value != null) {
-    navigator.clipboard.writeText(value);
-  }
-  // FUTURE - provide user notification that copy happened.
-});
-
 
 export const CopyButton = ({
   valueToCopy, onClick, invisible, ...props

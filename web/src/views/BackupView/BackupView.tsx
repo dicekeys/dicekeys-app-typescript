@@ -15,7 +15,7 @@ import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 import {BackupStep, BackupViewState} from "./BackupViewState";
 import { StepButton } from "../../css/Button";
 import styled from "styled-components";
-import { BetweenTopNavigationBarAndBottomIconBar } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
+import { SelectedDiceKeyContentRegionWitoutSideMargins } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 
 export const ComparisonBox = styled.div`
   display: flex;
@@ -228,7 +228,7 @@ export const BackupStepFooterView = observer ( ({
   />
       )});
 
-const BackViewContentContainer = styled(BetweenTopNavigationBarAndBottomIconBar)``
+const BackViewContentContainer = styled(SelectedDiceKeyContentRegionWitoutSideMargins)``
 
 export const BackupView = observer ( (props: BackupViewProps) => (
   <BackViewContentContainer>

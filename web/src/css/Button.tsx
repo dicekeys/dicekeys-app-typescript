@@ -15,6 +15,21 @@ export const PushButton = styled.button<{invisible?: boolean}>`
   }
 `;
 
+export const ButtonRow = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  margin-top: 0.5rem;
+  justify-content: center;
+  align-items: baseline;
+`;
+
+export const OptionButton = styled(PushButton)`
+  &:not(:first-child) {
+    margin-left: 2rem;
+  }
+`
+
 export const StepButton = styled.button<{invisible?: boolean}>`
   min-width: 3rem;
   cursor: arrow;

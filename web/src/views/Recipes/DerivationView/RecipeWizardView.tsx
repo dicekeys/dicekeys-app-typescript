@@ -28,7 +28,7 @@ const WizardStepContainer = styled.div`
   font-size: 1.3rem;
   align-content: center;
   border-radius: 0.5rem;
-  width: calc(${Dimensions.ScreenWidthPercentUsed}vw - (2 * (${WizardPaddingH} + ${WizardBorderWidth})));
+  width: calc(${Dimensions.ContentWidthInVw}vw - (2 * (${WizardPaddingH} + ${WizardBorderWidth})));
   padding-left: ${WizardPaddingH};
   padding-right: ${WizardPaddingH};
   padding-top: ${WizardPaddingV};

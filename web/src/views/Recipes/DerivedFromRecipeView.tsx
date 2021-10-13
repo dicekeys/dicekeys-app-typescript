@@ -2,12 +2,12 @@ import React from "react";
 import { observer  } from "mobx-react";
 import { CharButton, CharButtonToolTip, OptionallyObscuredTextView, SecretFieldsCommonObscureButton } from "../basics";
 import { ToggleState } from "../../state";
-import { action } from "mobx";
 import { DerivedFromRecipeState, OutputFormats, OutputFormat } from "./DerivedFromRecipeState";
 import { DerivationRecipeType } from "../../dicekeys/StoredRecipe";
 import { describeRecipeType } from "./DescribeRecipeType";
 import * as Dimensions from "./DerivationView/Dimensions";
 import styled from "styled-components";
+import { copyToClipboard } from "../../utilities/copyToClipboard";
 
 const Bip39Field = styled.div`
   display: flex;
@@ -102,12 +102,6 @@ export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
   }) => {
   const {recipeState: recipe, derivedValue} = state;
   const {type} = recipe;
-  const copyToClipboard = action ( () => {
-    if (derivedValue != null) {
-      navigator.clipboard.writeText(derivedValue);
-    }
-    // FUTURE - provide user notification that copy happened.
-  });
   return (
     <>
       <DerivedValueHeaderDiv>
@@ -118,7 +112,7 @@ export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
           <>
           <CharButton
               invisible={derivedValue == null || type == null}
-              onClick={copyToClipboard}
+              onClick={() => copyToClipboard(derivedValue)}
             >&#128203;<CharButtonToolTip>Copy {type == null ? "" : state.outputFieldForType[type].toLocaleLowerCase()} to clipboard</CharButtonToolTip>
           </CharButton>
           <SecretFieldsCommonObscureButton />

@@ -2,7 +2,7 @@ import React from "react";
 import styled, {css} from "styled-components";
 import * as Dimensions from "./Dimensions";
 
-export const FieldEditorWidth = Math.min(80, Dimensions.ScreenWidthPercentUsed)
+export const FieldEditorWidth = Math.min(80, Dimensions.ContentWidthInVw)
 export const BuilderLabelWidthVw = 10;
 export const BuilderLabelValueMarginVw = 0.5;
 export const ValueElementWidthVw = FieldEditorWidth - (BuilderLabelWidthVw + BuilderLabelValueMarginVw);
