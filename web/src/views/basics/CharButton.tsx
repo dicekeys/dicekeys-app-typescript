@@ -3,7 +3,9 @@ import { observer } from "mobx-react";
 import { action } from "mobx";
 import styled from "styled-components";
 
-const CharButtonCss = styled.button<{invisible?: boolean}>`
+export const CharButton = styled.button.attrs(() =>({
+  tabIndex: -1
+}))<{invisible?: boolean}>`
   display: flex;
   justify-content: center;
   align-items: baseline;
@@ -14,23 +16,14 @@ const CharButtonCss = styled.button<{invisible?: boolean}>`
   height: 1.5rem;
   width: 1.5rem;
   user-select: none;
-  visibility: ${p=>p.invisible?"hidden":"visible"};
   &:focus {
     outline:0;
   }
   &:active {
     background: gray;
   }
-  &:hover {
-    transform: translateY(-100%);
-    visibility: visible;
-    font-size: .75rem;
-  }
+  visibility: ${p=>p.invisible?"hidden":"visible"};
 `;
-
-export const CharButton = (props: React.ButtonHTMLAttributes<HTMLButtonElement> & {invisible?: boolean}) => (
-  <CharButtonCss {...props} tabIndex={-1} />
-);
 
 export const CharButtonToolTip = styled.span`
   display: flex;
@@ -43,8 +36,10 @@ export const CharButtonToolTip = styled.span`
   border-radius: 3px;
   z-index: 1;
   transform: translateY(-100%);
-  visibility: visible;
   font-size: .75rem;
+  ${CharButton}:hover & {
+    visibility: visible;
+  }
 `;
 
 export interface CopyButtonProps {
