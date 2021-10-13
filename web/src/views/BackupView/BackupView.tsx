@@ -15,6 +15,7 @@ import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
 import {BackupStep, BackupViewState} from "./BackupViewState";
 import { StepButton } from "../../css/Button";
 import styled from "styled-components";
+import { BetweenTopNavigationBarAndBottomIconBar } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 
 export const ComparisonBox = styled.div`
   display: flex;
@@ -30,7 +31,6 @@ export const ComparisonBox = styled.div`
     margin-right: 0;  
   }
 `;
-
 
 const FeatureCardButton = styled.button`
   display: flex;
@@ -57,7 +57,6 @@ const FeatureCardButton = styled.button`
 const LabelBelowButtonImage = styled.div`
   margin-top: 0.5rem;
 `;
-
 
 const IntroToBackingUpToADiceKeyView = () => (
   <ContentBox>
@@ -98,6 +97,10 @@ const IntroToBackingUpToASticKeyView = () => (
   </ContentBox>
 );
 
+const CopyFaceInstruction = styled(Instruction)`
+  min-height: 9rem;
+`;
+
 const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, index: number, medium: BackupMedium}) => {
   const sheetIndex = FaceLetters.indexOf(face.letter) % 5;
   const firstLetterOnSheet = FaceLetters[sheetIndex * 5];
@@ -105,7 +108,7 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, i
   const indexMod5 = index % 5;
   const {letter, digit, orientationAsLowercaseLetterTrbl: oriented} = face;
 
-  return (<div style={{minHeight: "7rem"}}><Instruction>
+  return (<CopyFaceInstruction>
     { medium === BackupMedium.SticKey ? (<>
         Remove the {letter}{digit} sticker
         from the sheet with letters {firstLetterOnSheet} to {lastLetterOnSheet}.
@@ -129,7 +132,7 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, i
       oriented === "r" ? (<>turned the right (90 degrees clockwise of upright)</>) :
       oriented === "l" ? (<>turned the left (90 degrees counterclockwise of upright)</>) : ""
     }.
-  </Instruction></div>);
+  </CopyFaceInstruction>);
 });
 
 const StepSelectBackupMedium = observer (({state}: {state: BackupViewState}) => (
@@ -182,20 +185,29 @@ interface BackupViewProps {
   thereAreMoreStepsAfterLastStepOfBackup?: boolean;
 }
 
+const RowAboveFooter = styled.div`
+  margin-bottom: 0.5rem;
+`
+
 export const BackupStepFooterView = observer ( ({
     state,
     prevStepBeforeStart,
     nextStepAfterEnd,
     thereAreMoreStepsAfterLastStepOfBackup
-  }: BackupViewProps) => (
+  }: BackupViewProps) => {
+  if (state.step === BackupStep.SelectBackupMedium) return (<div>&nbsp;</div> );
+  return (
   <StepFooterView 
     aboveFooter = {
-      (state.step === BackupStep.Validate && !state.userChoseToSkipValidationStep && !state.validationStepViewState.backupScannedSuccessfully) ? (
-        <StepButton
-          onClick={state.setUserChoseToSkipValidationStep}
-          style={{marginBottom: "0.5rem"}}  
-        >Let me skip this step
-        </StepButton>
+      (state.step === BackupStep.Validate) ? (
+        <RowAboveFooter>
+          <StepButton
+            invisible={state.userChoseToSkipValidationStep || state.validationStepViewState.backupScannedSuccessfully}
+            onClick={state.setUserChoseToSkipValidationStep}
+            style={{marginBottom: "0.5rem"}}  
+          >Let me skip this step
+          </StepButton>
+        </RowAboveFooter>
       ): undefined}
     pprev={state.setStepTo(state.step <= BackupStep.FirstFace ? undefined : BackupStep.FirstFace)}
     prev={
@@ -214,27 +226,17 @@ export const BackupStepFooterView = observer ( ({
       state.setStepTo(state.stepPlus1)}
     nnext={state.step >= BackupStep.FirstFace && state.step < BackupStep.LastFace - 1 ? state.setStepTo(BackupStep.Validate) : undefined}  
   />
-));
+      )});
 
-const BackViewDiv = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  justify-content: space-around;
-  align-content: stretch;
-  align-items: center;
-
-`
+const BackViewContentContainer = styled(BetweenTopNavigationBarAndBottomIconBar)``
 
 export const BackupView = observer ( (props: BackupViewProps) => (
-  <BackViewDiv>
+  <BackViewContentContainer>
     {/* Header, empty for spacing purposes only */}
-    <div></div>
+    <div>&nbsp;</div>
     <BackupContentView state={props.state} />
     <BackupStepFooterView {...props} />
-  </BackViewDiv>));
-
-
+  </BackViewContentContainer>));
 
 
 

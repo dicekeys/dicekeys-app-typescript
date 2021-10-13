@@ -11,26 +11,11 @@ import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { addPreview } from "../basics/Previews";
 import { PageAsFlexColumn } from "../../css/Page";
 import {
-  BottomIconBarHeightInVh,
   SelectedDiceKeyBottomIconBarView,
   SelectedDiceKeyViewProps,
 } from "./SelectedDiceKeyBottomIconBarView";
-import { TopNavigationBarHeightInVh } from "../../views/Navigation/TopNavigationBar";
-import styled from "styled-components";
+import { BetweenTopNavigationBarAndBottomIconBar, HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh } from "./SelectedDiceKeyLayout";
 const SubViews = Navigation.SelectedDiceKeySubViews
-
-export const HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh = 100 - (
-  TopNavigationBarHeightInVh + BottomIconBarHeightInVh
-);
-
-export const BetweenTopNavigationBarAndBottomIconBar = styled.div`
-  height: ${HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh}vh;
-  width: 100vw;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  flex: 0 0 auto;
-`;
 
 const IdealMinimumContentMargin = `2rem`
 
