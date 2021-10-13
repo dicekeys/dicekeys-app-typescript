@@ -1,4 +1,4 @@
-import "core-js/stable";
+// import "core-js/stable";
 // import "regenerator-runtime/runtime";
 
 // Hack to allow the webassembly module to load since it looks for window

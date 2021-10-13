@@ -82,7 +82,7 @@ const EditButtonHoverTextView = ({
             case "EditFields":
               return (<>Edit the fields of this recipe</>);
             case "EditRawJson":
-              return (<>Edit this recipe's raw JSON.</>);
+              return (<>Edit this recipe&apos;s raw JSON.</>);
             case "RemoveRecipe":
               // FIXME -- if saved "Close" otherwise "Discard"
               return (<>Close this recipe and start over.</>);
@@ -155,44 +155,57 @@ const RecipeRibbonButtons = observer( ({recipeBuilderState, editButtonsHoverStat
   </RecipeButtonRibbon>
 ));
 
+const RecipeViewContainer = styled.div`
+  display: flex;
+  flex-direction:column;
+`;
+
+const RecipeViewRoundedRect = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: flex-start;
+  background-color: rgba(128,128,196,0.10);
+  padding: ${Dimensions.BoxPadding};
+  width: ${Dimensions.recipeViewWidthCalculated};
+  min-height: calc(${Dimensions.DiceKeyBoxSize} - 2 * (${Dimensions.BoxPadding}));
+  border-radius: ${Dimensions.BoxPadding};
+  color: rgba(0, 0, 0, 1);
+`;
+
+const InteriorLabelForRecipe = styled.div`
+  font-size: ${Dimensions.LabelFontSizeVh}vh;
+  font-family: sans-serif;
+  margin-left: 1rem;
+  color: rgba(0,0,0,0.5);
+`;
+
+const RecipeSeparator = styled.div`
+  min-height: "0.5vh";
+  width: calc(${Dimensions.recipeViewWidthFormula } - 0.7rem);
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+`;
+
 const RecipeView = observer( ({recipeBuilderState, editButtonsHoverState}: {
   recipeBuilderState: RecipeBuilderState,
   editButtonsHoverState: HoverState<RecipeRibbonButtons>
 }) => (
-  <div style={{display: "flex", flexDirection:"column"}}>
+  <RecipeViewContainer>
     <RecipeRibbonButtons {...{recipeBuilderState, editButtonsHoverState}} />
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-around",
-      alignItems: "flex-start",
-      backgroundColor: "rgba(128,128,196,0.10)",
-      padding: Dimensions.BoxPadding,
-      width: Dimensions.recipeViewWidthCalculated,
-      minHeight: `calc(${Dimensions.DiceKeyBoxSize} - 2 * (${Dimensions.BoxPadding}))`,
-      borderRadius: Dimensions.BoxPadding,
-      color: "rgba(0, 0, 0, 1)",
-    }}>
+    <RecipeViewRoundedRect>
       { !recipeBuilderState.recipeIsNotEmpty ? (
-        <div style={{
-          fontSize: `${Dimensions.LabelFontSizeVh}vh`,
-          fontFamily: "sans-serif",
-          marginLeft: "1rem",
-          color: "rgba(0,0,0,0.5)",
-        }}>Recipe</div>
+        <InteriorLabelForRecipe>Recipe</InteriorLabelForRecipe>
       ) : (
         <>
           <MultilineRecipeJsonView recipeJson={ recipeBuilderState.recipeJson  }/>
-          { recipeBuilderState.recipeJson == null ? null : (
-            <div style={{minHeight: "0.5vh", width: `calc(${Dimensions.recipeViewWidthFormula } - 0.7rem)`, borderBottom: "1px solid rgba(0,0,0,0.1)"}}></div>
-          )}
+          <RecipeSeparator/>
           <div>
             <RecipeDescriptionContentView state={recipeBuilderState} />
           </div>  
         </>
       ) }
-    </div>
-  </div>
+    </RecipeViewRoundedRect>
+  </RecipeViewContainer>
 ));
 
 
