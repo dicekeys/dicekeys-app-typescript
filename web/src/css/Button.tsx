@@ -2,6 +2,9 @@ import styled from "styled-components";
 
 export const PushButton = styled.button<{invisible?: boolean}>`
   display: block;
+  cursor: grab;
+  font-size: 1rem;
+  user-select: none;
   visibility: ${props => props.invisible ? "hidden" : "visible"};
   width: fit-content;
   align-self: center;
@@ -32,7 +35,7 @@ export const OptionButton = styled(PushButton)`
 
 export const StepButton = styled.button<{invisible?: boolean}>`
   min-width: 3rem;
-  cursor: arrow;
+  cursor: grab;
   justify-content: center;
   align-items: baseline;
   background: none;

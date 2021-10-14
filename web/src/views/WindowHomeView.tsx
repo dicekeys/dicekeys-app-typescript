@@ -12,6 +12,7 @@ import styled from "styled-components";
 
 const SubViewButton = styled.button`
   display: flex;
+  cursor: grab;
   flex-direction: column;
   align-items: center;
   border: none;

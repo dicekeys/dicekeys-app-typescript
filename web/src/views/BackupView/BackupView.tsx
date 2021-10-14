@@ -34,6 +34,7 @@ export const ComparisonBox = styled.div`
 
 const FeatureCardButton = styled.button`
   display: flex;
+  cursor: grab;
   flex-direction: column;
   justify-content: stretch;
   align-items: stretch;

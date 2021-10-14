@@ -30,7 +30,7 @@ export const FooterButtonDiv = styled.div<{selected: boolean}>`
   padding-left: 0;
   margin-top: 1vh;
   margin-bottom: 1vh;
-  cursor: pointer;
+  cursor: grab;
   filter: ${(props) => props.selected ? `invert(100%)` : `none` };
   &:hover {
     filter: invert(75%);

@@ -38,6 +38,7 @@ if (!isElectron()) {
 // });
 
 window.addEventListener('load', () => {
+  document.body.style.setProperty("margin", "0px");
   DiceKeyMemoryStore.onReady( () => {
     ReactDOM.render((
       <ErrorHandler errorState={ApplicationErrorState}>

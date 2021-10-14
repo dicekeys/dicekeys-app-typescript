@@ -103,6 +103,7 @@ const RecipeButtonRibbon = styled.div`
   padding-left: 0.5rem;
   padding-right: 0.5rem;
   padding-bottom: 0.25rem;
+  cursor: grab;
   // With buttons in a row from right to left in the box
   display: flex;
   flex-direction: row;

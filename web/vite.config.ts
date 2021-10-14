@@ -5,4 +5,10 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   root: "./src/",
+  build: {
+    // Required for dependency on BigInt and number literals ending in n (1n)
+    target: "es2020",
+    // Write output into web subdirectory of repository's /dist directory
+    outDir: "../../dist/web/"
+  }
 })
