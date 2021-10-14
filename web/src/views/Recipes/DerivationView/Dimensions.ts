@@ -15,7 +15,7 @@ export const LabelFontSizeVh = 3;
 export const KeyPlusRecipeViewMaxHeight = 35;
 export const WizardOrFieldsMaxHeight = 24;
 export const WizardMinHeightInVh = 14;
-export const MinimumVerticalMarginAtTopBottomNavBarsVh = 1;
+export const MinimumVerticalMarginAtTopBottomNavBarsVh = 2;
 export const DerivedValueBoxMaxHeight = MaxContentViewHeight - (
   KeyPlusRecipeViewMaxHeight +
   DownArrowAndPlusSignViewHeight +
