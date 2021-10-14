@@ -118,6 +118,7 @@ const DerivedValueContentDiv = styled.div`
   font-family: monospace;
   white-space: pre;
   overflow-y: auto;
+  user-select: all;
 `;
 
 const HeaderButtonBar = styled.div`
