@@ -2,7 +2,6 @@ import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeFieldFocusState, RecipeBuilderState, RecipeEditingMode } from "../RecipeBuilderState";
 import { NumberPlusMinusView } from "../../basics/NumericTextFieldView";
-import { visibility } from "../../../utilities/visibility";
 import { describeRecipeType } from "../DescribeRecipeType";
 import { EnhancedRecipeView } from "../EnhancedRecipeView";
 import { BuilderLabelValueMarginVw,
@@ -15,14 +14,22 @@ import { BuilderLabelValueMarginVw,
   LengthInputField,
 } from "./RecipeStyles";
 import styled from "styled-components";
+import { DerivationViewSection } from "./DerivationViewLayout";
 
 const BuilderFieldLabel = styled.label`
-    width: ${BuilderLabelWidthVw}vw;
-    text-align: right;
-    padding-right: ${BuilderLabelValueMarginVw}vw;
-    margin-right: ${BuilderLabelValueMarginVw}vw;
-    border-right: 1px rgba(128,128,128, 0.5) solid;
-    `;
+  width: ${BuilderLabelWidthVw}vw;
+  text-align: right;
+  padding-right: ${BuilderLabelValueMarginVw}vw;
+  margin-right: ${BuilderLabelValueMarginVw}vw;
+  border-right: 1px rgba(128,128,128, 0.5) solid;
+`;
+
+const OptionalFieldLabel = styled.span`
+  color: rgba(128,128,128,1);
+`
+const OptionalFieldActivationButton = styled.button`
+  margin-left: 1rem;
+`;
 
 const ContainerForOptionalFieldValue = observer ( ({
   value, children, ...optProps
@@ -36,11 +43,13 @@ const ContainerForOptionalFieldValue = observer ( ({
   <>{
     (value == null) ? (
       <>
-        <span style={{color: "rgba(128,128,128,1)"}}>{optProps.defaultValueText}</span>
-        <button
+        <OptionalFieldLabel>{optProps.defaultValueText}</OptionalFieldLabel>
+        <OptionalFieldActivationButton
           onClick={optProps.setDefaultValue}
           style={{marginLeft: `1rem`}}
-        >{optProps.setDefaultValueButtonLabel}</button>
+        >{
+          optProps.setDefaultValueButtonLabel
+        }</OptionalFieldActivationButton>
       </>
     ) : children
   }
@@ -206,16 +215,17 @@ export const RawJsonFieldView = observer( ({state}: {
   );
 });
 
+const RecipeFieldEditorContainer = styled(DerivationViewSection)<{$invisible?: boolean}>`
+  justify-content: flex-end;
+  align-items: flex-start;
+  visibility: ${props => props.$invisible ? "hidden" : "visible"};
+`
 
-export const RecipeEditableFieldsView = observer( ( {state}: {state: RecipeBuilderState}) => {
+export const RecipeFieldEditorView = observer( ( {state}: {state: RecipeBuilderState}) => {
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "flex-end",
-      alignItems: "flex-start",
-      ...visibility(state.type != null && state.editingMode !== RecipeEditingMode.NoEdit)
-    }}>
+    <RecipeFieldEditorContainer
+      $invisible={state.type == null || state.editingMode === RecipeEditingMode.NoEdit}
+    >
       <div style={{fontSize: `1.1rem`}}>Recipe instructions applicable to {
         describeRecipeType(state.type, {pluralize: true})
         }:</div>
@@ -233,21 +243,6 @@ export const RecipeEditableFieldsView = observer( ( {state}: {state: RecipeBuild
       <div style={{fontSize: `0.9rem`, fontStyle: "italic"}}>
         Even the smallest change to any field changes the entire {state.typeNameLc}.
       </div>
-    </div>
-  );
-});
-
-
-export const RecipeFieldEditorView = observer( ( {state}: {state: RecipeBuilderState, hideHeader?: boolean}) => {
-  return (
-    // <div 
-    //   style={{
-    //     display: `flex`,
-    //     flexDirection: `column`,
-    //     alignItems: `center`,
-    //     ...visibility(state.type != null && state.editingMode !== RecipeEditingMode.NoEdit)}}
-    // >
-      <RecipeEditableFieldsView state={state} />
-    // </div>
+    </RecipeFieldEditorContainer>
   );
 });
