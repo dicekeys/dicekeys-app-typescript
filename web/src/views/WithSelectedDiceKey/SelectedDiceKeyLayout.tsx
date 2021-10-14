@@ -4,7 +4,7 @@ import {
 import { TopNavigationBarHeightInVh } from "../../views/Navigation/TopNavigationBar";
 import styled from "styled-components";
 
-export const ScreenWidthPercentUsed = 85;
+export const ScreenWidthPercentUsed = 90;
 export const SideMarginInVw = (100 - ScreenWidthPercentUsed) / 2;
 
 export const HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh = 100 - (

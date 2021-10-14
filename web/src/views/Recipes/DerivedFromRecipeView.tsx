@@ -116,7 +116,8 @@ const DerivedValueContentDiv = styled.div`
   padding-left: ${DerivedValueContentDivLeftRightPadding};
   padding-right: ${DerivedValueContentDivLeftRightPadding};
   font-family: monospace;
-  font-size: 0.95rem;
+  white-space: pre;
+  overflow-y: auto;
 `;
 
 const HeaderButtonBar = styled.div`

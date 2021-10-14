@@ -151,7 +151,7 @@ const WizardStepAlternativeAnchor = styled.a.attrs(() => ({
   href: ""
 }))`
   font-size: 0.9rem;
-  &::not(::first-of-type) {
+  &:not(:first-of-type) {
     margin-left: 1rem;
   }
 `;
