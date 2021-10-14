@@ -150,8 +150,8 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
         </span>
       </ElementInPlusSignColumn>
       {/* Recipe label (hidden if there's no recipe and label is inside recipe box) */}
-      <ElementInRecipeColumn style={visibility(recipeBuilderState.recipeIsNotEmpty)}>
-        <BigCaptionOrLabel>
+      <ElementInRecipeColumn>
+        <BigCaptionOrLabel style={visibility(recipeBuilderState.recipeIsNotEmpty)}>
           Recipe
         </BigCaptionOrLabel>
       </ElementInRecipeColumn>
