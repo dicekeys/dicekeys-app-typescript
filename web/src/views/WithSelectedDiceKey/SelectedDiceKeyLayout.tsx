@@ -4,8 +4,8 @@ import {
 import { TopNavigationBarHeightInVh } from "../../views/Navigation/TopNavigationBar";
 import styled from "styled-components";
 
-export const ScreenWidthPercentUsed = 90;
-export const SideMarginInVw = (100 - ScreenWidthPercentUsed) / 2;
+const RecommendedSideMarginAsVw = 5;
+export const WidthBetweenSideMarginsAsVw = 100 - 2 * RecommendedSideMarginAsVw;
 
 export const HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh = 100 - (
   TopNavigationBarHeightInVh + BottomIconBarHeightInVh
@@ -21,6 +21,7 @@ export const SelectedDiceKeyContentRegionWitoutSideMargins = styled.div`
 `;
 
 export const SelectedDiceKeyContentRegionInsideSideMargins = styled(SelectedDiceKeyContentRegionWitoutSideMargins)`
-  padding-left: ${SideMarginInVw}vw;
-  padding-right: ${SideMarginInVw}vw;
+  padding-left: ${RecommendedSideMarginAsVw}vw;
+  padding-right: ${RecommendedSideMarginAsVw}vw;
+  width: calc(100vw - (2 * (${RecommendedSideMarginAsVw}vw)));
 `;

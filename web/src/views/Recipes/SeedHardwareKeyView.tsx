@@ -4,7 +4,7 @@ import { CenteredControls, Instruction, PaddedContentBox, Spacer } from "../basi
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
-import * as Dimensions from "./DerivationView/Dimensions";
+import * as Dimensions from "./DerivationView/DerivationViewLayout";
 
 const seedSecurityKeyPurpose = "seedSecurityKey";
 

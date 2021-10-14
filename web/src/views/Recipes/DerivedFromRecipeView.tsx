@@ -5,7 +5,7 @@ import { ToggleState } from "../../state";
 import { DerivedFromRecipeState, OutputFormats, OutputFormat } from "./DerivedFromRecipeState";
 import { DerivationRecipeType } from "../../dicekeys/StoredRecipe";
 import { describeRecipeType } from "./DescribeRecipeType";
-import * as Dimensions from "./DerivationView/Dimensions";
+import * as Dimensions from "./DerivationView/DerivationViewLayout";
 import styled from "styled-components";
 import { copyToClipboard } from "../../utilities/copyToClipboard";
 

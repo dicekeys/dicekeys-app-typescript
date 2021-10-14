@@ -3,7 +3,7 @@ import { observer, Observer  } from "mobx-react";
 import { RecipeBuilderState, RecipeEditingMode } from "../RecipeBuilderState";
 import { HoverState } from "../../../state/reusable/HoverState";
 import { RecipePurposeContentView } from "../RecipeDescriptionView";
-import * as Dimensions from "./Dimensions";
+import * as Dimensions from "./DerivationViewLayout";
 import styled from "styled-components";
 
 export type RecipeRibbonButtons = "SaveOrDelete" | "Increment" | "Decrement" | "EditFields" | "EditRawJson" | "RemoveRecipe";
@@ -44,7 +44,6 @@ const EditButtonHoverTextInnerContainer = styled.div`
   position: absolute;
   bottom: 0;
   right: 0;
-//  width: ${Dimensions.recipeViewWidthCalculated};
   width: ${Dimensions.ContentWidthInVw}vw;
   text-align: right;
   font-size:0.9rem

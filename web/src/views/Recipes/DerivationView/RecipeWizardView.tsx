@@ -1,4 +1,4 @@
-import * as Dimensions from "./Dimensions";
+import * as Dimensions from "./DerivationViewLayout";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState, WizardStep } from "../RecipeBuilderState";
@@ -35,7 +35,6 @@ const WizardStepContainer = styled.div`
   padding-bottom: ${WizardPaddingV};
   min-height: ${Dimensions.WizardMinHeightInVh}vh;
 `;
-
 
 const WizardStepInstruction = styled.div``;
 
@@ -103,14 +102,15 @@ export const RawJsonFieldView = observer( ({state, focusOnCreate}: {
 }) => {
   return (
   <FormattedJsonContainer>
-    <FormattedRecipeUnderlayJson>
-      <EnhancedRecipeView recipeJson={state.recipeJson} />
-    </FormattedRecipeUnderlayJson>
     <FormattedRecipeTextAreaJson
       ref={ta => {if(focusOnCreate) {ta?.focus() }}}
       value={state.recipeJson ?? ""}
       onInput={ e => {state.setRecipeJson(e.currentTarget.value);  }} 
-    />
+    >
+      <FormattedRecipeUnderlayJson>
+        <EnhancedRecipeView recipeJson={state.recipeJson} />
+      </FormattedRecipeUnderlayJson>
+    </FormattedRecipeTextAreaJson>
   </FormattedJsonContainer>
 )});
 

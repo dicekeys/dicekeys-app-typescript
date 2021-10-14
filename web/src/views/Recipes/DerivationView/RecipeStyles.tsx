@@ -1,6 +1,6 @@
 import React from "react";
 import styled, {css} from "styled-components";
-import * as Dimensions from "./Dimensions";
+import * as Dimensions from "./DerivationViewLayout";
 
 export const FieldEditorWidth = Math.min(80, Dimensions.ContentWidthInVw)
 export const BuilderLabelWidthVw = 10;
@@ -176,7 +176,8 @@ export const FormattedRecipeBox = styled.div`
 
 const rawJsonFieldWidth = '60vw'; // FIXME
 
-const FormattedRecipeUnderlay = styled.div`
+const FormattedRecipeStyle = css`
+  width: calc(85vw-3rem);
   flex-grow: 1;
   overflow-wrap: break-word;
   word-wrap: break-word;
@@ -187,36 +188,27 @@ const FormattedRecipeUnderlay = styled.div`
   text-align: start;
   font: 400 0.75rem monospace; 
   border-width: 2px;
-  width: calc(85vw-3rem);
   padding: 1px 2px;
   border-style: inset;
   border-image: initial;
   border-radius: 2px;
   margin: 0;
   text-indent: 0;
+`
+
+const FormattedRecipeUnderlay = styled.div`
+  ${FormattedRecipeStyle}
+  position: absolute;
+  z-index: -1;
+  border-color: rgba(0,0,0,0);
+  color: rgba(0,0,0,0);
 `;
 
 const FormattedRecipeTextArea = styled.textarea.attrs(() => ({
   spellCheck: false,
   rows: 2,
 }))`
-  flex-grow: 1;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  letter-spacing: normal;
-  word-spacing: normal;
-  text-transform: none;
-  text-align: start;
-  font: 400 0.75rem monospace; 
-  border-width: 2px;
-  width: calc(85vw-3rem);
-  padding: 1px 2px;
-  border-style: inset;
-  border-image: initial;
-  border-radius: 2px;
-  margin: 0;
-  text-indent: 0;
+  ${FormattedRecipeStyle}
   display: flex;
   position: relative;
   align-self: stretch;

@@ -12,13 +12,20 @@ import {
   EditButtonHoverTextView,
   RecipeRibbonButtons,
   RecipeRibbonButtonsView
-} from "./RecipeRibbonButtons";import * as Dimensions from "./Dimensions";
+} from "./RecipeRibbonButtons";
+import {
+  KeyPlusRecipeColumn
+} from "./DerivationViewLayout";
+import * as Dimensions from "./DerivationViewLayout";
 import styled from "styled-components";
 
+export const PlusSignWidthPercent = 5;
+export const PlusSignViewWidth = `${PlusSignWidthPercent}vw` as const;
+export const RecipeColumnWidthFormula = `(${Dimensions.ContentWidthInVw}vw - (${Dimensions.DiceKeyBoxSize} + ${PlusSignWidthPercent}vw))` as const;
 
 const BigCaptionOrLabel = styled.span`
   font-family: sans-serif;
-  font-size: ${Dimensions.LabelFontSizeVh}vh;
+  font-size: 3vh;
   flex-direction: row;
   color: rgba(0, 0, 0, 0.5)
 `;
@@ -28,16 +35,20 @@ const RecipeViewContainer = styled.div`
   flex-direction:column;
 `;
 
+
+const RecipeRoundedRectRadiusAndPadding = `0.35rem`;
+const RecipeColumnWidthWithinPaddingFormula = `(${RecipeColumnWidthFormula} - (2  * (${RecipeRoundedRectRadiusAndPadding})))` as const;
+
 const RecipeViewRoundedRect = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-around;
   align-items: flex-start;
   background-color: rgba(128,128,196,0.10);
-  padding: ${Dimensions.BoxPadding};
-  width: ${Dimensions.recipeViewWidthCalculated};
-  min-height: calc(${Dimensions.DiceKeyBoxSize} - 2 * (${Dimensions.BoxPadding}));
-  border-radius: ${Dimensions.BoxPadding};
+  padding: ${RecipeRoundedRectRadiusAndPadding};
+  width: calc(${RecipeColumnWidthWithinPaddingFormula});
+  min-height: calc(${Dimensions.DiceKeyBoxSize} - 2 * (${RecipeRoundedRectRadiusAndPadding}));
+  border-radius: ${RecipeRoundedRectRadiusAndPadding};
   color: rgba(0, 0, 0, 1);
 `;
 
@@ -46,8 +57,9 @@ const InteriorLabelForRecipe = styled(BigCaptionOrLabel)`
 `;
 
 const RecipeSeparator = styled.div`
-  min-height: "0.5vh";
-  width: calc(${Dimensions.recipeViewWidthFormula } - 0.7rem);
+  margin-top: 0.25vh;
+  margin-bottom: 0.25vh;
+  width: calc(${RecipeColumnWidthWithinPaddingFormula} - 0.7rem);
   border-bottom: 1px solid rgba(0,0,0,0.1);
 `;
 
@@ -72,12 +84,6 @@ const RecipeView = observer( ({recipeBuilderState, editButtonsHoverState}: {
   </RecipeViewContainer>
 ));
 
-const KeyPlusRecipeColumn = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-`;
-
 const KeyPlusRecipeRow = styled.div`
   display: flex;
   flex-direction: row;
@@ -98,12 +104,12 @@ const ElementInDiceKeyColumn = styled(RowElement)`
 `;
 
 const ElementInPlusSignColumn = styled(RowElement)`
-  width: calc(${Dimensions.PlusSignViewWidth});
+  width: calc(${PlusSignViewWidth});
   font-size: ${Dimensions.DownArrowAndPlusSignViewHeight}vh;
 `;
 
 const ElementInRecipeColumn = styled(RowElement)`
-  width: calc(${Dimensions.recipeViewWidthFormula});
+  width: calc(${RecipeColumnWidthFormula});
 `;
 
 export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
