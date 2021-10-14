@@ -141,9 +141,10 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
           Key
         </BigCaptionOrLabel>
       </ElementInDiceKeyColumn>
-      {/* Down arrow */}
+      {/* Down arrow as HTML entity &#8659; */}
       <ElementInPlusSignColumn>
         <span style={{
+          /* Adjust arrow placement so that it doesn't overflow bottom */
           marginTop: `-${0.15 * Dimensions.DownArrowAndPlusSignViewHeight}vh`,
         }}>&#8659;
         </span>

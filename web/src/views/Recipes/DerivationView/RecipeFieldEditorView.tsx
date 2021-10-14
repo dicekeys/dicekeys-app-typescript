@@ -46,7 +46,6 @@ const ContainerForOptionalFieldValue = observer ( ({
         <OptionalFieldLabel>{optProps.defaultValueText}</OptionalFieldLabel>
         <OptionalFieldActivationButton
           onClick={optProps.setDefaultValue}
-          style={{marginLeft: `1rem`}}
         >{
           optProps.setDefaultValueButtonLabel
         }</OptionalFieldActivationButton>
@@ -221,14 +220,25 @@ const RecipeFieldEditorContainer = styled(DerivationViewSection)<{$invisible?: b
   visibility: ${props => props.$invisible ? "hidden" : "visible"};
 `
 
+const HeaderInstruction = styled.div`
+  font-size: 1.1rem;
+`
+
+const FooterGentleWarning = styled.div`
+  font-size: 0.9rem;
+  font-style: italic;
+`
+
 export const RecipeFieldEditorView = observer( ( {state}: {state: RecipeBuilderState}) => {
   return (
     <RecipeFieldEditorContainer
       $invisible={state.type == null || state.editingMode === RecipeEditingMode.NoEdit}
     >
-      <div style={{fontSize: `1.1rem`}}>Recipe instructions applicable to {
-        describeRecipeType(state.type, {pluralize: true})
-        }:</div>
+      <HeaderInstruction>
+        Recipe instructions applicable to {
+          describeRecipeType(state.type, {pluralize: true})
+        }:
+      </HeaderInstruction>
       { state.wizardPrimaryFieldOverride == null ? (
         <SiteFieldView state={state} />
       ) : state.wizardPrimaryFieldOverride === "purpose" ? (
@@ -240,9 +250,9 @@ export const RecipeFieldEditorView = observer( ( {state}: {state: RecipeBuilderS
       { state.editingMode !== RecipeEditingMode.EditIncludingRawJson ? null : (
         <RawJsonFieldView state={state} />
       )}
-      <div style={{fontSize: `0.9rem`, fontStyle: "italic"}}>
+      <FooterGentleWarning>
         Even the smallest change to any field changes the entire {state.typeNameLc}.
-      </div>
+      </FooterGentleWarning>
     </RecipeFieldEditorContainer>
   );
 });
