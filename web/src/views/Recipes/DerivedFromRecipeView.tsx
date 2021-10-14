@@ -67,10 +67,11 @@ const Bip39OutputView = ({bip39String, obscureValue}: {bip39String: string, obsc
 }
 
 const SelectOutputType = styled.select`
-  padding: 0.25rem;
+  font-size: 1rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
   min-width: 6rem;
-  margin-left: calc(${Dimensions.DiceKeyBoxSize} - 1.5rem);
- `
+`;
 
 const SelectDerivedOutputType = observer( ({type, state}: {type?: DerivationRecipeType, state: DerivedFromRecipeState}) => (
   <SelectOutputType
@@ -88,13 +89,41 @@ const SelectDerivedOutputType = observer( ({type, state}: {type?: DerivationReci
   </SelectOutputType>
 ));
 
+const PlaceholderDerivedValueContainer = styled.div`
+  font-family: sans-serif;
+  font-style: italic;
+  color: rgba(0,0,0,0.5);
+`;
+
+const DerivedValueHeaderFormula = `((${Dimensions.DiceKeyBoxSize}) - 1.5rem)`;
 const DerivedValueHeaderDiv = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
+  align-content: baseline;
   align-self: flex-start;
-  width: 90vw;
+  padding-left: calc(${DerivedValueHeaderFormula});
+  width: calc(${Dimensions.ContentWidthInVw}vw - (${DerivedValueHeaderFormula}));
 `
+
+const DerivedValueContentDivLeftRightPadding = `0.5rem`;
+
+const DerivedValueContentDiv = styled.div`
+  width: calc(${Dimensions.ContentWidthInVw}vw - 2 * (${DerivedValueContentDivLeftRightPadding}));
+  border-width: 1px;
+  border-color: rgba(128,128,128,0.5);
+  border-style: solid;
+  padding-left: ${DerivedValueContentDivLeftRightPadding};
+  padding-right: ${DerivedValueContentDivLeftRightPadding};
+  font-family: monospace;
+  font-size: 0.95rem;
+`;
+
+const HeaderButtonBar = styled.div`
+  display: flex;
+  flex-direction: row;
+  margin-left: 2rem;
+`;
 
 export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
     state: DerivedFromRecipeState
@@ -106,29 +135,29 @@ export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
     <>
       <DerivedValueHeaderDiv>
         <SelectDerivedOutputType type={type} state={state} />
-        <span style={{width: "1rem"}}></span>
-        <span style={{width: "1rem"}}></span>
-        { type == null ? null : (
-          <>
-          <CharButton
-              invisible={derivedValue == null || type == null}
-              onClick={() => copyToClipboard(derivedValue)}
-            >&#128203;<CharButtonToolTip>Copy {type == null ? "" : state.outputFieldForType[type].toLocaleLowerCase()} to clipboard</CharButtonToolTip>
-          </CharButton>
-          <SecretFieldsCommonObscureButton />
-          </>
+        { type == null || derivedValue == null ? null : (
+          <HeaderButtonBar>
+            <CharButton
+                invisible={derivedValue == null || type == null}
+                onClick={() => copyToClipboard(derivedValue)}
+              >&#128203;<CharButtonToolTip>Copy {type == null ? "" : state.outputFieldForType[type].toLocaleLowerCase()} to clipboard</CharButtonToolTip>
+            </CharButton>
+            <SecretFieldsCommonObscureButton />
+          </HeaderButtonBar>
         )}
       </DerivedValueHeaderDiv>
       { type === "Secret" && state.outputFieldForType[type] === "BIP39" && derivedValue != null ?
         (<Bip39OutputView bip39String={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />)
         : (
-        <DerivedValueHeaderDiv>
+        <DerivedValueContentDiv>
           { showPlaceholder ? (
-            <><i style={{color: "rgba(0,0,0,0.5"}}>A {describeRecipeType(recipe.type)} to be created by applying a recipe to your DiceKey</i></>
+            <PlaceholderDerivedValueContainer>
+              A {describeRecipeType(recipe.type)} to be created by applying a recipe to your DiceKey
+            </PlaceholderDerivedValueContainer>
           ) : (
             <OptionallyObscuredTextView value={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />
           )}
-        </DerivedValueHeaderDiv>
+        </DerivedValueContentDiv>
       )}
     </>
   );
