@@ -1,8 +1,5 @@
 import {ipcMain} from 'electron';
 import type {
-  // IElectronBridgeSync,
-  // IElectronBridgeAsync,
-  // IElectronBridgeListener,
   RemoveListener
 } from "../../../common/IElectronBridge"
 

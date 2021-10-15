@@ -9,7 +9,7 @@ import * as Dimensions from "./DerivationView/DerivationViewLayout";
 const seedSecurityKeyPurpose = "seedSecurityKey";
 
 
-import {
+import type {
   IElectronBridge,
   Device,
   DeviceUniqueIdentifier,

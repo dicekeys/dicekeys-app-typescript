@@ -1,6 +1,6 @@
 import * as IpcApiFactory from "./IpcApiFactory";
 import {app, BrowserWindow, ipcRenderer} from "electron";
-import {RemoveListener} from "../../../common/IElectronBridge";
+import type {RemoveListener} from "../../../common/IElectronBridge";
 
 let appLinkUrl: string[]
 
