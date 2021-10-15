@@ -5,7 +5,7 @@ import { SimpleTopNavBar } from "./Navigation/SimpleTopNavBar";
 import { StepFooterView } from "./Navigation/StepFooterView";
 import IllustrationOfShakingBag from /*url:*/"../images/Illustration of shaking bag.svg";
 import BoxBottomAfterRoll from /*url:*/"../images/Box Bottom After Roll.svg";
-import BoxBottomAllDiceInPlace from /*url:*/"../images/Box Bottom All DIce In Place.svg";
+import BoxBottomAllDiceInPlace from /*url:*/"../images/Box Bottom All Dice In Place.svg";
 import ScanDiceKeyImage from /*url:*/"../images/Scanning a DiceKey.svg";
 import SealBox from /*url:*/"../images/Seal Box.svg";
 import { DiceKeyViewAutoSized } from "./SVG/DiceKeyView";
