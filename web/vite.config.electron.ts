@@ -13,6 +13,7 @@ export default defineConfig({
     target: "es2020",
     // Write output into electron subdirectory of repository's /dist directory
     outDir: "../../dist/electron/",
+    sourcemap: true,
     
     // Compile the electron.html file as the root
     rollupOptions: {

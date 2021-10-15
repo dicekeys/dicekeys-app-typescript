@@ -9,6 +9,8 @@ export default defineConfig({
     // Required for dependency on BigInt and number literals ending in n (1n)
     target: "es2020",
     // Write output into web subdirectory of repository's /dist directory
-    outDir: "../../dist/web/"
+    outDir: "../../dist/web/",
+    // Always generate sourcemaps for debugging
+    sourcemap: true,
   }
 })
