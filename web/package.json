@@ -37,7 +37,7 @@
     "clean": "rimraf dist/",
     "build-app": "rimraf dist/web & vite build src/web/index.html --no-minify --out-dir dist/web/",
     "old-build-electron-html": "rimraf ../electron/app && vite build src/electron.html --no-minify --public-url ./ --out-dir ../electron/app",
-    "build-electron-html": "rimraf ../dist/electron && vite build --config ./vite.config.electron.ts",
+    "build-electron-html": "rimraf ../dist/electron-html && vite build --config ./vite.config.electron.ts",
     "watch-electron-html": "rimraf ../electron/app && vite watch src/electron.html --public-url ./ --out-dir ../electron/app",
     "upload-production": "gsutil -m cp dist/web/* gs://dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/*.js",
     "update-production": "npm run -s build-app & npm run -s upload-production",
