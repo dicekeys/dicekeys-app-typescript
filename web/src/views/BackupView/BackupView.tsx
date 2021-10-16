@@ -136,14 +136,20 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, i
   </CopyFaceInstruction>);
 });
 
-const StepSelectBackupMedium = observer (({state}: {state: BackupViewState}) => (
+const StepSelectBackupMedium = observer (({state, prevStepBeforeStart}: BackupViewProps) => (
   <ColumnCentered>{
   [BackupMedium.SticKey, BackupMedium.DiceKey].map( medium => (
       <FeatureCardButton key={medium}
         onClick={state.setBackupMedium(medium)}
       >
         <FaceCopyingView medium={medium} diceKey={state.diceKeyState.diceKey} showArrow={true} indexOfLastFacePlaced={12} 
-          maxWidth="60vw" maxHeight="30vh"
+          maxWidth="60vw"
+          maxHeight={prevStepBeforeStart != null ? 
+            // Leave space for a footer with a previous step button
+            "20vh" :
+            // No need for footer with space for previous step button.
+            "30vh"
+          }
         />
         <LabelBelowButtonImage>Use {medium}</LabelBelowButtonImage>
       </FeatureCardButton>
@@ -183,7 +189,6 @@ interface BackupViewProps {
   state: BackupViewState;
   prevStepBeforeStart?: () => any;
   nextStepAfterEnd?: () => any;
-  thereAreMoreStepsAfterLastStepOfBackup?: boolean;
 }
 
 const RowAboveFooter = styled.div`
@@ -193,10 +198,9 @@ const RowAboveFooter = styled.div`
 export const BackupStepFooterView = observer ( ({
     state,
     prevStepBeforeStart,
-    nextStepAfterEnd,
-    thereAreMoreStepsAfterLastStepOfBackup
+    nextStepAfterEnd
   }: BackupViewProps) => {
-  if (state.step === BackupStep.SelectBackupMedium) return (<div>&nbsp;</div> );
+  if (state.step === BackupStep.SelectBackupMedium && !prevStepBeforeStart) return (<div>&nbsp;</div> );
   return (
   <StepFooterView 
     aboveFooter = {
@@ -210,21 +214,22 @@ export const BackupStepFooterView = observer ( ({
           </StepButton>
         </RowAboveFooter>
       ): undefined}
-    pprev={state.setStepTo(state.step <= BackupStep.FirstFace ? undefined : BackupStep.FirstFace)}
+    pprev={state.step <= BackupStep.FirstFace ? undefined : state.setStepTo(BackupStep.FirstFace)}
     prev={
       // If at the start, allow a parent to set a previous step (for embedding backup into assembly instructions)
       state.step === BackupStep.START_INCLUSIVE ? prevStepBeforeStart :
       state.setStepTo(state.stepMinus1)
     }
-    nextIsDone={state.step === (BackupStep.END_EXCLUSIVE - 1) && !thereAreMoreStepsAfterLastStepOfBackup}
+    nextIsDone={state.step === (BackupStep.END_EXCLUSIVE - 1) && nextStepAfterEnd == null}
     next={
       // If at the end, allow a parent to set a next step (for embedding backup into assembly instructions)
       state.step === (BackupStep.Validate) ? (
         (state.validationStepViewState.backupScannedSuccessfully || state.userChoseToSkipValidationStep) ? (nextStepAfterEnd ?? state.setStepTo(state.stepPlus1)) : undefined
       ) :
       // Don't show next when selecting a backup medium
-      state.step === BackupStep.SelectBackupMedium ? undefined :
-      state.setStepTo(state.stepPlus1)}
+      state.step === BackupStep.SelectBackupMedium ?
+        undefined :
+        state.setStepTo(state.stepPlus1)}
     nnext={state.step >= BackupStep.FirstFace && state.step < BackupStep.LastFace - 1 ? state.setStepTo(BackupStep.Validate) : undefined}  
   />
       )});

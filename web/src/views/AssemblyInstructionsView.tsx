@@ -202,8 +202,6 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
               nextStepAfterEnd={props.state.goToNextStep}
               /* If stepping back from the first step of backup, move to the previous assembly step */
               prevStepBeforeStart={props.state.goToPrevStep}
-              /* ensures that last step isn't marked as "done" as more assembly steps follow */
-              thereAreMoreStepsAfterLastStepOfBackup={true}
             />
           ) : (
             /* Show the step footer for all steps other than the sub-steps of the Backup process */
