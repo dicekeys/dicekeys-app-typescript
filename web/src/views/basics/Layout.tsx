@@ -35,7 +35,8 @@ export const ResizableImage = styled.img`
 export const Center = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content:center;
+  justify-content: center;
+  align-self: center;
 `;
 
 export const ContentBox  = styled.div`
@@ -63,6 +64,8 @@ export const ContentRow  = styled.div`
 
 export const ColumnCentered = styled.div`
   display: flex;
+  align-self: center;
+  justify-self: center;
   flex-direction: column;
   justify-content: space-evenly;
   align-items: center;

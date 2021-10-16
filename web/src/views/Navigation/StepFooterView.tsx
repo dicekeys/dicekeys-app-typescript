@@ -6,10 +6,11 @@ import styled from "styled-components";
 
 const StepFooter = styled.div`
   display: flex;
+  justify-self: flex-end;
   flex-direction: column;
   justify-content: center;
   align-content: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1vh;
   width: 80vw;
   align-self: center;
 `;
