@@ -48,7 +48,7 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
     case SubViewsOfTopLevel.LoadDiceKeyView: return (
       <LoadDiceKeyView
         onDiceKeyRead={ onDiceKeyLoaded }
-        onCancelled={ () => addressBarState.back }
+        onCancelled={ addressBarState.back }
         state={new LoadDiceKeyState("camera")} />
     )
     case SubViewsOfTopLevel.AssemblyInstructions: return (
