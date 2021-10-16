@@ -16,9 +16,6 @@ export const Spacer = styled.div`
   flex-shrink: 1;
 `;
 
-/**
- CSS-FIXME -- these won't scale below the original image size
-*/
 export const ResizableImage = styled.img`
   display: flex;
   flex-direction: column;

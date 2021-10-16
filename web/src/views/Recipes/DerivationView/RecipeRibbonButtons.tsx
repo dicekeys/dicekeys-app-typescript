@@ -79,7 +79,6 @@ export const EditButtonHoverTextView = ({
             case "EditRawJson":
               return (<>Edit this recipe&apos;s raw JSON.</>);
             case "RemoveRecipe":
-              // FIXME -- if saved "Close" otherwise "Discard"
               return (<>Close this recipe and start over.</>);
               default: return (<>&nbsp;</>);
           } // end switch

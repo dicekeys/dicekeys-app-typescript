@@ -92,7 +92,7 @@ export class DerivedFromRecipeState {
             return doubleSpaceJson(api.getPasswordJsonForRecipe(recipeJson))
         }
       case "Secret":
-        switch (this.outputFieldFor("Secret")) {  // FIXME -- format JSON
+        switch (this.outputFieldFor("Secret")) {
           case "BIP39":
             return api.getSecretBip39ForRecipe(recipeJson);
           case "Hex":

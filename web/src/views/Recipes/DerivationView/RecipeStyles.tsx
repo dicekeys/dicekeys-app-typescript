@@ -174,7 +174,7 @@ export const FormattedRecipeBox = styled.div`
   width: 100%
 `;
 
-const rawJsonFieldWidth = '60vw'; // FIXME
+const rawJsonFieldWidth = '60vw';
 
 const FormattedRecipeStyle = css`
   width: calc(85vw-3rem);
