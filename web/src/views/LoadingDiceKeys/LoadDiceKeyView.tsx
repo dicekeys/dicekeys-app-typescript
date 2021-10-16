@@ -69,7 +69,7 @@ export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
         ) : null }
         <PushButton onClick={ () => state.setMode(state.mode === "camera" ? "manual" : "camera") } >{state.mode !== "camera" ? "Use Camera" : "Enter Manually"}</PushButton>        
         <PushButton
-          invisible={state.mode !== "manual" && !state.enterDiceKeyState.isValid}
+          invisible={state.mode !== "manual" || !state.enterDiceKeyState.isValid}
           onClick={ onDonePressedWithinEnterDiceKey }
         >Done</PushButton>          
       </CenteredControls>
