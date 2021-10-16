@@ -1,14 +1,14 @@
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";
-import { DiceKeysAppSecretRecipe } from "../../dicekeys";
 import { JsxReplacer } from "../../utilities/JsxReplacer";
 import { FormattedRecipeSpan, HostNameSpan, LengthFieldValueSpan, SequenceNumberValueSpan } from "./DerivationView/RecipeStyles";
 import styled from "styled-components";
+import { Recipe } from "@dicekeys/dicekeys-api-js";
 
 export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
   try {
-    const recipe = (recipeJson == null ? {} : JSON.parse(recipeJson)) as DiceKeysAppSecretRecipe;
+    const recipe = (recipeJson == null ? {} : JSON.parse(recipeJson)) as Recipe;
     const replacer = new JsxReplacer(recipeJson ?? "");
     const sequenceNumber = recipe["#"];
     if (sequenceNumber != null && sequenceNumber >= 2) {
@@ -16,7 +16,7 @@ export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
           "#":<SequenceNumberValueSpan>{sequenceNumber}</SequenceNumberValueSpan>
         </>));
     }
-    const lengthInChars = recipe.lengthInChars;
+    const lengthInChars = "lengthInChars" in recipe ? recipe.lengthInChars : undefined;
     if (lengthInChars != null) {
       replacer.replace(`"lengthInChars":${lengthInChars}`, (<>
           "lengthInChars":

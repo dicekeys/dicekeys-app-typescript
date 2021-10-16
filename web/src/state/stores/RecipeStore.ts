@@ -1,11 +1,11 @@
 import {
   StoredRecipe,
-  defaultOnException,
   recipeDefaultBaseName,
 } from "../../dicekeys/StoredRecipe";
 import { action, makeAutoObservable } from "mobx";
 import { autoSave } from "../core/AutoSave";
 import { jsonStringifyWithSortedFieldOrder } from "../../utilities/json";
+import { defaultOnException } from "../../utilities/default-on-exception";
 
 class RecipeStoreClass {
   protected recipeJsonArray: string[];

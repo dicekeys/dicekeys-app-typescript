@@ -1,13 +1,14 @@
 import React from "react";
 import { AndClause } from "../basics";
-import { DerivationRecipeType, DiceKeysAppSecretRecipe } from "../../dicekeys";
+import { Recipe, DerivableObjectName } from "@dicekeys/dicekeys-api-js";
 import { describeRecipeType } from "./DescribeRecipeType";
 import { observer } from "mobx-react";
 import { HostNameSpan, LengthFieldValueSpan, PurposeSpan, SequenceNumberValueSpan } from "./DerivationView/RecipeStyles";
 import styled from "styled-components";
+import { defaultOnException } from "../../utilities/default-on-exception";
 
 interface RecipeState {
-  type?: DerivationRecipeType;
+  type?: DerivableObjectName;
   recipeJson?: string;
   recipeIsValid: boolean;
 }
@@ -19,7 +20,7 @@ const HostNameView = ({host}: {host: string}) => (
   (<><HostNameSpan>{ host }</HostNameSpan> (but not its subdomains)</>)
 )
 
-export const RecipePurposeContentView = ({recipe}: {recipe: DiceKeysAppSecretRecipe | undefined}) => (<>
+export const RecipePurposeContentView = ({recipe}: {recipe: Recipe | undefined}) => (<>
   { recipe == null || !recipe.purpose ? null : (
     <> for the purpose of &lsquo;<PurposeSpan>{ recipe.purpose }</PurposeSpan>&rsquo;</>
   )}{ recipe == null || !recipe.allow || recipe.allow.length == 0 ? null : (
@@ -33,18 +34,13 @@ export const RecipePurposeContentView = ({recipe}: {recipe: DiceKeysAppSecretRec
 export const RecipeDescriptionContentView = observer ( ({state}: {state: RecipeState}) => {
   const {type, recipeJson, recipeIsValid} = state;
   if (type == null || recipeJson == null || !recipeIsValid) return null;
-  let recipe: DiceKeysAppSecretRecipe | undefined = (() => {
-    try {
-      return JSON.parse(recipeJson ?? "{}") as DiceKeysAppSecretRecipe;
-    } catch {
-      return undefined;
-    }
-  })();
+  let recipe = defaultOnException( () => (JSON.parse(recipeJson ?? "{}") as Recipe) );
   if (recipe == null) {
     return (<><i>Improperly formatted JSON {describeRecipeType(type)} recipe</i></>);
   }
+
   const withClauses: JSX.Element[] = [];
-  if (type === "Password" && recipe.lengthInChars) {
+  if (type === "Password" && "lengthInChars" in recipe) {
     withClauses.push((<> a maximum length of <LengthFieldValueSpan>{ recipe.lengthInChars }</LengthFieldValueSpan> characters</>));
   }
   if (recipe["#"]) {

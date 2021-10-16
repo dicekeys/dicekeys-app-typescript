@@ -9,7 +9,6 @@ import {
   savedRecipeIdentifier,
   SavedRecipeIdentifier,
   BuiltInRecipeIdentifier,
-  DiceKeysAppSecretRecipe,
   LoadedRecipe,
   LoadedRecipeOrigin,
 } from "../../dicekeys/StoredRecipe";
@@ -315,11 +314,11 @@ export class RecipeBuilderState {
 
   recipeJson: string | undefined;
 
-  get recipe(): DiceKeysAppSecretRecipe | undefined {
+  get recipe(): Recipe | undefined {
     try {
       const {type, recipeJson} = this;
       if (type != null && recipeJson != null) {
-        return JSON.parse(recipeJson) as DiceKeysAppSecretRecipe;
+        return JSON.parse(recipeJson) as Recipe;
       }
     } catch {}
     return;

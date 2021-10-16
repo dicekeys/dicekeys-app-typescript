@@ -97,22 +97,11 @@ export const getStoredRecipe = (recipeIdentifier?: PotentialRecipeIdentifier): L
     storedRecipeIfCustomRecipeIdentifier(recipeIdentifier);
 }
 
-export type DiceKeysAppSecretRecipe = Recipe & {
-  // FIXME -- definition of recipe out of date in API, fix that and remove this hack
-  lengthInChars?: number;
-  lengthInBytes?: number;
-  // Sequence numbers
-  '#'?: number;
-  purpose?: string;
-}
-
-
-export const getRecipeNameSuffix = (recipe: DiceKeysAppSecretRecipe, type: DerivableObjectName): string => {
-  const {lengthInBytes, lengthInChars} = recipe;
+export const getRecipeNameSuffix = (recipe: Recipe, type: DerivableObjectName): string => {
   const sequenceNumber = recipe["#"];
   return ` ${describeRecipeType(type)}${
-        lengthInBytes == null ? "" : ` (${lengthInBytes} bytes)`
-    }${ lengthInChars == null ? "" : ` (${lengthInChars} chars)`
+        "lengthInBytes" in recipe ? ` (${recipe.lengthInBytes} bytes)` : ""
+    }${ "lengthInChars" in recipe ? ` (${recipe.lengthInChars} chars)` : ""
     }${ sequenceNumber == null ? "" : ` #${sequenceNumber}`
   }`;
 }
@@ -121,18 +110,11 @@ export const getStoredRecipeNameSuffix = (storedRecipe: Partial<StoredRecipe>): 
   const {type, recipeJson} = storedRecipe;
   if (!type || !recipeJson) return "";
   try {
-    const recipe = JSON.parse(recipeJson) as DiceKeysAppSecretRecipe;
+    const recipe = JSON.parse(recipeJson) as Recipe;
     return getRecipeNameSuffix(recipe, type);
   } catch {
     return describeRecipeType(type);
   }
-}
-
-export const defaultOnException = <R, DEFAULT = undefined>(
-  fn: () => R | DEFAULT,
-  defaultValue: DEFAULT = undefined as unknown as DEFAULT
-): R | DEFAULT => {
-  try { return fn(); } catch {} return defaultValue;
 }
 
 export const recipeDefaultBaseName = (recipe: Recipe): string | undefined =>
