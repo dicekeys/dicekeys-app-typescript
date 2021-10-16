@@ -78,7 +78,7 @@ const IntroToBackingUpToADiceKeyView = () => (
 const IntroToBackingUpToASticKeyView = () => (
   <ContentBox>
     <Spacer />
-    <Instruction>Unwrap your SticKeys it.</Instruction>
+    <Instruction>Unwrap your SticKeys kit.</Instruction>
     <Spacer />
     <Center>
       <ComparisonBox>
@@ -137,23 +137,26 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, i
 });
 
 const StepSelectBackupMedium = observer (({state, prevStepBeforeStart}: BackupViewProps) => (
-  <ColumnCentered>{
-  [BackupMedium.SticKey, BackupMedium.DiceKey].map( medium => (
-      <FeatureCardButton key={medium}
-        onClick={state.setBackupMedium(medium)}
-      >
-        <FaceCopyingView medium={medium} diceKey={state.diceKeyState.diceKey} showArrow={true} indexOfLastFacePlaced={12} 
-          maxWidth="60vw"
-          maxHeight={prevStepBeforeStart != null ? 
-            // Leave space for a footer with a previous step button
-            "20vh" :
-            // No need for footer with space for previous step button.
-            "30vh"
-          }
-        />
-        <LabelBelowButtonImage>Use {medium}</LabelBelowButtonImage>
-      </FeatureCardButton>
-    ))}
+  <ColumnCentered>
+    <Instruction>Do you want to back up your key to a DiceKey kit or a SticKey kit?</Instruction>{
+      ([[BackupMedium.SticKey, "Use a SticKey kit (stickers on a paper sheet)"],
+        [BackupMedium.DiceKey, "Use a DiceKey kit (25 dice in a plastic box)"]
+      ] as [BackupMedium, string][]).map( ([medium, label]) => (
+        <FeatureCardButton key={medium}
+          onClick={state.setBackupMedium(medium)}
+        >
+          <FaceCopyingView medium={medium} diceKey={state.diceKeyState.diceKey} showArrow={true} indexOfLastFacePlaced={12} 
+            maxWidth="60vw"
+            maxHeight={prevStepBeforeStart != null ? 
+              // Leave space for a footer with a previous step button
+              "20vh" :
+              // No need for footer with space for previous step button.
+              "25vh"
+            }
+          />
+          <LabelBelowButtonImage>{label}</LabelBelowButtonImage>
+        </FeatureCardButton>
+      ))}
     </ColumnCentered>
   ));
 
