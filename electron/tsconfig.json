@@ -5,7 +5,7 @@
       /* Visit https://aka.ms/tsconfig.json to read more about this file */
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */
-    "target": "ES2020",                       /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019', 'ES2020', or 'ESNEXT'. */
+    "target": "esnext",                       /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019', 'ES2020', or 'ESNEXT'. */
     "module": "commonjs",                     /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', 'es2020', or 'ESNext'. */
     "lib": ["es2019"],                   /* Specify library files to be included in the compilation. */
     // "allowJs": true,                       /* Allow javascript files to be compiled. */
@@ -44,12 +44,13 @@
     "moduleResolution": "node",            /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */
     "resolveJsonModule": true,
     "baseUrl": "./",                       /* Base directory to resolve non-absolute module names. */
-    // "paths": {},                           /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
+    // "paths": {},                        /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
     "paths": {
       "*" : ["node_modules/@types", "node_modules/", "src/@types/", "src/"],
       "~*": ["./src/*"]
     },
-    "rootDirs": ["./src", "../web/src"],                        /* List of root folders whose combined content represents the structure of the project at runtime. */
+    "rootDir": "./src/",
+    "rootDirs": ["./src"], // , "../web/src"      /* List of root folders whose combined content represents the structure of the project at runtime. */
     // "typeRoots": [],                       /* List of folders to include type definitions from. */
     // "typeRoots": ["node_modules/@types", "src/@types/", "../web/src/"],
     // "types": [],                           /* Type declaration files to be included in compilation. */

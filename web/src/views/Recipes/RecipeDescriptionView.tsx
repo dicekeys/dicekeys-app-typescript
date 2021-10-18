@@ -1,11 +1,14 @@
 import React from "react";
 import { AndClause } from "../basics";
-import { DerivationRecipeType, DiceKeysAppSecretRecipe } from "../../dicekeys";
+import { Recipe, DerivableObjectName } from "@dicekeys/dicekeys-api-js";
 import { describeRecipeType } from "./DescribeRecipeType";
-import css from "./Recipes.module.css";
+import { observer } from "mobx-react";
+import { HostNameSpan, LengthFieldValueSpan, PurposeSpan, SequenceNumberValueSpan } from "./DerivationView/RecipeStyles";
+import styled from "styled-components";
+import { defaultOnException } from "../../utilities/default-on-exception";
 
 interface RecipeState {
-  type?: DerivationRecipeType;
+  type?: DerivableObjectName;
   recipeJson?: string;
   recipeIsValid: boolean;
 }
@@ -13,46 +16,57 @@ interface RecipeState {
 
 const HostNameView = ({host}: {host: string}) => (
   host.startsWith("*.") ?
-  (<><span className={css.host_name_span}>{ host.substring(2) }</span> (and its subdomains)</>) :
-  (<><span className={css.host_name_span}>{ host }</span> (but not its subdomains)</>)
+  (<><HostNameSpan>{ host.substring(2) }</HostNameSpan> (and its subdomains)</>) :
+  (<><HostNameSpan>{ host }</HostNameSpan> (but not its subdomains)</>)
 )
 
-export const RecipeDescriptionContentView = ({state}: {state: RecipeState}) => {
+export const RecipePurposeContentView = ({recipe}: {recipe: Recipe | undefined}) => (<>
+  { recipe == null || !recipe.purpose ? null : (
+    <> for the purpose of &lsquo;<PurposeSpan>{ recipe.purpose }</PurposeSpan>&rsquo;</>
+  )}{ recipe == null || !recipe.allow || recipe.allow.length == 0 ? null : (
+    <> for use by <AndClause items={recipe.allow.map( ({host}) => (<HostNameView {...{host}}/>)
+      )}/>
+    </>)}
+  </>
+);
+
+
+export const RecipeDescriptionContentView = observer ( ({state}: {state: RecipeState}) => {
   const {type, recipeJson, recipeIsValid} = state;
-  if (type == null || recipeJson == null || !recipeIsValid) return (<i>Enter a purpose for the recipe.</i>);
-  let recipe: DiceKeysAppSecretRecipe | undefined = (() => {
-    try {
-      return JSON.parse(recipeJson ?? "{}") as DiceKeysAppSecretRecipe;
-    } catch {
-      return undefined;
-    }
-  })();
+  if (type == null || recipeJson == null || !recipeIsValid) return null;
+  let recipe = defaultOnException( () => (JSON.parse(recipeJson ?? "{}") as Recipe) );
   if (recipe == null) {
-    return (<><i>Improperly formatted JSON {describeRecipeType(type).toLocaleLowerCase()} recipe</i></>);
+    return (<><i>Improperly formatted JSON {describeRecipeType(type)} recipe</i></>);
   }
+
   const withClauses: JSX.Element[] = [];
-  if (type === "Password" && recipe.lengthInChars) {
-    withClauses.push((<> a maximum length of <span className={css.length_span}>{ recipe.lengthInChars }</span> characters</>));
+  if (type === "Password" && "lengthInChars" in recipe) {
+    withClauses.push((<> a maximum length of <LengthFieldValueSpan>{ recipe.lengthInChars }</LengthFieldValueSpan> characters</>));
   }
   if (recipe["#"]) {
-    withClauses.push((<> sequence number <span className={css.sequence_number_span}>{recipe["#"]}</span></>));
+    withClauses.push((<> sequence number <SequenceNumberValueSpan>{recipe["#"]}</SequenceNumberValueSpan></>));
   }  
   return (
-    <>Creates a {describeRecipeType(type).toLocaleLowerCase()}
-      { !recipe.purpose ? null : (
-        <> for the purpose of &lsquo;<span className={css.host_name_span}>{ recipe.purpose }</span>&rsquo;</>
-      )}{ !recipe.allow || recipe.allow.length == 0 ? null : (
-        <> for use by <AndClause items={recipe.allow.map( ({host}) => (<HostNameView {...{host}}/>)
-          )}/>
-        </>)
-      }{ withClauses.length == 0 ? null : (
+    <>
+     Create a {describeRecipeType(type)}
+     <RecipePurposeContentView {...{recipe}} />
+      { withClauses.length == 0 ? null : (
         <> with <AndClause items={withClauses}/></>
       )}.</>
   );
-}
+});
+
+const RecipeDescriptionViewDiv = styled.div`
+  display: block;
+  align-self: flex-start;
+  background-color: rgba(238, 238, 255, 1);
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+`;
 
 export const RecipeDescriptionView = (props: {state: RecipeState}) => (
-  <div className={css.RecipeDescriptionView} >
+  <RecipeDescriptionViewDiv>
     <RecipeDescriptionContentView {...props} />
-  </div>
+  </RecipeDescriptionViewDiv>
 )

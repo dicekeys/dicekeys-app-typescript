@@ -2,7 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import { DiceKey, EmptyPartialDiceKey } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
-import {portraitSheetWidthOverHeight, StickerSheetSizeModel} from "./StickerSheetView"
+import {portraitSheetWidthOverHeight, StickerSheetSizeModel, StickerSheetSizeModelFromBounds} from "./StickerSheetView"
 import { Bounds, viewBox } from "../../utilities/bounding-rects";
 import { OptionalMaxSizeCalcProps, WithBounds } from "../../utilities/WithBounds";
 
@@ -54,7 +54,7 @@ export const StickerTargetSheetSvgGroup = observer( (props: StickerTargetSheetVi
       highlightThisFace,
       transform,
     } = props;
-    const sizeModel = StickerSheetSizeModel.fromBounds(props);
+    const sizeModel = StickerSheetSizeModelFromBounds(props);
 
     return (
       <g {...{transform}}>/* Sticker Sheet */
@@ -95,7 +95,7 @@ export const StickerTargetSheetSvgGroup = observer( (props: StickerTargetSheetVi
 
 export const StickerTargetSheetView = observer( ({maxWidth, maxHeight, ...props}: StickerTargetSheetViewProps & OptionalMaxSizeCalcProps) => (
   <WithBounds aspectRatioWidthOverHeight={portraitSheetWidthOverHeight} {...{maxWidth, maxHeight}}>{ ({bounds}) => {
-  const sizeModel = StickerSheetSizeModel.fromBounds(bounds);
+  const sizeModel = StickerSheetSizeModelFromBounds(bounds);
   return (
     <svg viewBox={viewBox(bounds)}>
     <StickerTargetSheetSvgGroup {...{...props, ...sizeModel.bounds}} />

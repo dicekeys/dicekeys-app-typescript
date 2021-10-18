@@ -13,24 +13,24 @@ export const portraitSheetWidthOverHeight = 130 / 155; // sheets are manufacture
 const ratioOfPortraitSheetLengthToFaceSize =  ratioOfPortraitSheetWidthToFaceSize / portraitSheetWidthOverHeight;
 
 const fitPortraitSheetIntoBounds = fitRectangleWithAspectRatioIntoABoundingBox(portraitSheetWidthOverHeight);
+
+export const StickerSheetSizeModel = (linearSizeOfFace: number) => {
+  const width = linearSizeOfFace * ratioOfPortraitSheetWidthToFaceSize;
+  const height = linearSizeOfFace * ratioOfPortraitSheetLengthToFaceSize;
+  const bounds = {width, height};
+  const distanceBetweenDieCenters = linearSizeOfFace * (1 + distanceBetweenFacesAsFractionOfLinearSizeOfFace);
+  const top = -height / 2;
+  const left = -width / 2;
+  const radius = 0;
+  return {linearSizeOfFace, width, height, bounds, distanceBetweenDieCenters, top, left, radius};
+}
+export type StickerSheetSizeModel = ReturnType<typeof StickerSheetSizeModel>;
 export type StickerSheetSizeModelOptions = {linearSizeOfFace: number} | Bounds | {sizeModel: StickerSheetSizeModel};
 
-export class StickerSheetSizeModel {
-  constructor(public readonly linearSizeOfFace: number) {}
-
-  width = this.linearSizeOfFace * ratioOfPortraitSheetWidthToFaceSize;
-  height = this.linearSizeOfFace * ratioOfPortraitSheetLengthToFaceSize;
-  get bounds() { const {width, height} = this; return {width, height}; }
-  distanceBetweenDieCenters = this.linearSizeOfFace * (1 + distanceBetweenFacesAsFractionOfLinearSizeOfFace);
-  top = -this.height / 2;
-  left = -this.width / 2;
-  radius = 0;
-
-  static fromBounds = (bounds: Bounds): StickerSheetSizeModel =>
-    new StickerSheetSizeModel(
-      fitPortraitSheetIntoBounds(bounds).width / ratioOfPortraitSheetWidthToFaceSize
-    );
-}
+export const StickerSheetSizeModelFromBounds = (bounds: Bounds) =>
+ StickerSheetSizeModel(
+  fitPortraitSheetIntoBounds(bounds).width / ratioOfPortraitSheetWidthToFaceSize
+);
 
 type StickerSheetViewProps = {
   showLetter?: FaceLetter;
@@ -51,7 +51,7 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & Bo
     } = props;
     const {
       top, left, width, height, radius, linearSizeOfFace, distanceBetweenDieCenters
-    } = StickerSheetSizeModel.fromBounds(props);
+    } = StickerSheetSizeModelFromBounds(props);
     const hideFacesSet = new Set<string>( (hideFaces ?? []).map( ({letter, digit}) => `${letter}${digit}`) );
     const hideFace = ({letter, digit}: {letter: string, digit: string}) =>
       hideFacesSet.has(`${letter}${digit}`);
@@ -64,6 +64,7 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & Bo
     return (
       <g {...svgGroupProps}>/* Sticker Sheet */
         <rect
+          key="Sheet"
           x={left} y={top}
           width={width} height={height}
           rx={radius} ry={radius}
@@ -95,7 +96,7 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & Bo
 
 export const StickerSheetView = observer( ({maxWidth, maxHeight, ...props}: StickerSheetViewProps & OptionalMaxSizeCalcProps) => (
     <WithBounds aspectRatioWidthOverHeight={portraitSheetWidthOverHeight} {...{maxWidth, maxHeight}}>{ ({bounds}) => {
-    const sizeModel = StickerSheetSizeModel.fromBounds(bounds);
+    const sizeModel = StickerSheetSizeModelFromBounds(bounds);
     return (
       <svg viewBox={viewBox(bounds)}>
       <StickerSheetSvgGroup {...{...props, ...sizeModel.bounds}} showLetter="A" />

@@ -10,13 +10,13 @@ export const createBrowserWindow = () => {
     height: 600,
     webPreferences: {
       spellcheck: false,
-      preload: path.resolve(__dirname, "..", "src", "preload.js")
+      preload: path.resolve(__dirname, "..", "dist", "preload.js")
     },
     width: 800,
   });
 
   // and load the index.html of the app.
-  window.loadFile(path.resolve(__dirname, '..', '..', 'app', 'electron.html'));
+  window.loadFile(path.resolve(__dirname, '..', '..', 'dist', 'electron-html', 'electron.html'));
 
   if(!app.isPackaged){
     // Open the DevTools.

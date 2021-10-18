@@ -3,7 +3,7 @@ import { toBip39, bip39ToByteArray, diceKeyToBip39String, bip39StringToDiceKey a
 
 import { Crypto } from "@peculiar/webcrypto"
 import { TestDiceKeys } from "./TestDiceKeys";
-global.crypto = new Crypto();
+global.crypto = new Crypto() as typeof global.crypto;
 
 const testVectorsFromSpec: [string, string][] = [
 	[

@@ -6,12 +6,15 @@ import {
   ApiFactory,
   PostMessageApiFactory,
   SecretRecipe, PasswordRecipe,
-  stringToUtf8ByteArray, UnsealingInstructions
+  UnsealingInstructions
 } from "@dicekeys/dicekeys-api-js"
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { jsonStringifyWithSortedFieldOrder } from "../utilities/json";
 import { QueuedPostMessageApiRequest, PostMessageRequestEvent } from "../api-handler/QueuedPostMessageApiRequest";
+import { strToUTF8Arr } from "../utilities/utf8";
 
+import { Crypto } from "@peculiar/webcrypto"
+global.crypto = new Crypto() as typeof global.crypto;
 
 const defaultSeedString = "a bogus seed";
 const defaultRequestHost = "client.app";
@@ -85,7 +88,7 @@ describe("End-to-end API tests using the PostMessage API", () => {
     clientMayRetrieveKey: true
   }));
   const testMessage = "The secret ingredient is dihydrogen monoxide";
-  const testMessageByteArray = stringToUtf8ByteArray(testMessage);
+  const testMessageByteArray = strToUTF8Arr(testMessage);
 
   test("symmetricKeySealAndUnseal", async () => {
     const {packagedSealedMessageJson} = await sealWithSymmetricKey({

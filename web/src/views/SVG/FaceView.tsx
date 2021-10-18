@@ -59,12 +59,13 @@ const UndoverlineGroupView = ({lineType, code}: { lineType: "underline" | "overl
   return (
     <g>
       <rect
-          x={undoverlineLeft}
-          y={lineTop}
-          height={FaceDimensionsFractional.undoverlineThickness}
-          width={FaceDimensionsFractional.undoverlineLength}
-          fill={textShade}
-          stroke='none'
+        key={"UndoverlineBackground"}
+        x={undoverlineLeft}
+        y={lineTop}
+        height={FaceDimensionsFractional.undoverlineThickness}
+        width={FaceDimensionsFractional.undoverlineLength}
+        fill={textShade}
+        stroke='none'
       />
       { positionsSetOf11BitCode(code).map( (pos) => (
         <rect

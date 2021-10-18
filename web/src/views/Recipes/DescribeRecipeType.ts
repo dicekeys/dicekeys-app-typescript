@@ -3,14 +3,22 @@ import { DerivableObjectName, DerivableObjectNames } from "@dicekeys/dicekeys-ap
 export const DerivableObjectNameList =
 Object.keys(DerivableObjectNames) as DerivableObjectName[]
 
-export const describeRecipeType = (type: DerivableObjectName): string => {
+export const describeRecipeType = (
+  type: DerivableObjectName | undefined,
+  {capitalize, pluralize}: {
+    capitalize?: boolean,
+    pluralize?: boolean,
+  } = {}  
+): string => {
+  const s = pluralize ? "s" : "";
+  const cap = (s: string): string => capitalize ? s.toLocaleUpperCase() : s; 
   switch (type) {
-    case "Secret": return "seed or other secret";
-    case "SigningKey": return "signing/authentication key";
-    case "SymmetricKey": return "symmetric cryptographic key";
-    case "UnsealingKey": return "public/private key pair";
-    case "Password": return "password";
-    default: return type;
+    case "Secret": return `${cap('s')}eed${s} or other secret${s}`;
+    case "SigningKey": return `${cap('s')}igning/authentication key${s}`;
+    case "SymmetricKey": return `${cap('s')}ymmetric cryptographic key${s}`;
+    case "UnsealingKey": return `${cap('p')}ublic/private key pair${s}`;
+    case "Password": return `${cap('p')}assword${s}`;
+    default: return `${cap('s')}ecret${s}`;
   }
 }
 

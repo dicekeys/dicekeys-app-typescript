@@ -5,12 +5,12 @@ import {WindowTopLevelNavigationState as WindowTopLevelNavigationState, SubViews
 import { SelectedDiceKeyView } from "./WithSelectedDiceKey/SelectedDiceKeyView";
 import { WindowHomeView } from "./WindowHomeView";
 import { LoadDiceKeyView, LoadDiceKeyState } from "./LoadingDiceKeys/LoadDiceKeyView";
-import {Layout} from "../css";
 import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
 import { AssemblyInstructionsState } from "./AssemblyInstructionsState";
 import { addressBarState } from "../state/core/AddressBarState";
 import {ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
 import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
+import { PrimaryView } from "../css";
 
 interface WindowTopLevelNavigationProps {
   windowNavigationState: WindowTopLevelNavigationState;
@@ -48,7 +48,7 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
     case SubViewsOfTopLevel.LoadDiceKeyView: return (
       <LoadDiceKeyView
         onDiceKeyRead={ onDiceKeyLoaded }
-        onCancelled={ () => addressBarState.back }
+        onCancelled={ addressBarState.back }
         state={new LoadDiceKeyState("camera")} />
     )
     case SubViewsOfTopLevel.AssemblyInstructions: return (
@@ -67,7 +67,7 @@ export const WindowTopLevelView = observer ( (props: Partial<WindowTopLevelNavig
     windowNavigationState = new WindowTopLevelNavigationState(),
   } = props;
   return (
-  <div className={Layout.PrimaryView} >
+  <PrimaryView>
     <WindowRoutingView {...{windowNavigationState}} />
-  </div>
+  </PrimaryView>
 )});

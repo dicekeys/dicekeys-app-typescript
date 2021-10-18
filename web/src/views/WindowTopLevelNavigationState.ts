@@ -22,9 +22,8 @@ const getDiceKeyFromPathRoot = (pathRoot: string | undefined) => {
   return {keyId, diceKey}
 };
 
-const getTopLevelNavStateFromPath = (path: string): (
-  {subView?: SubViewsOfTopLevel, keyId?: string, diceKey?: DiceKey}
-) => {
+const getTopLevelNavStateFromPath = (path: string):
+  {subView?: SubViewsOfTopLevel, keyId?: string, diceKey?: DiceKey}  => {
   const pathRoot = path.split("/")[1];
   switch(pathRoot) {
     case SubViewsOfTopLevel.AppHomeView:

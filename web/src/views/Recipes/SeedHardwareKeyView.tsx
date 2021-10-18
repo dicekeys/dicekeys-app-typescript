@@ -1,16 +1,15 @@
-import css from "./Recipes.module.css";
 import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
-import { CenteredControls, ContentBox, Instruction, PaddedContentBox, Spacer } from "../basics";
-import { RecipeFieldsHelpView, RecipeBuilderFieldsView, RecipeRawJsonView } from "./RecipeBuilderView"
+import { CenteredControls, Instruction, PaddedContentBox, Spacer } from "../basics";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
+import * as Dimensions from "./DerivationView/DerivationViewLayout";
 
 const seedSecurityKeyPurpose = "seedSecurityKey";
 
 
-import {
+import type {
   IElectronBridge,
   Device,
   DeviceUniqueIdentifier,
@@ -18,6 +17,11 @@ import {
 } from "../../../../common/IElectronBridge";
 import { action, makeAutoObservable } from "mobx";
 import { isElectron } from "../../utilities/is-electron";
+import { LoadedRecipe } from "../../dicekeys/StoredRecipe";
+import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
+import { KeyPlusRecipeView } from "./DerivationView/KeyPlusRecipeView";
+import { DiceKey } from "../../dicekeys/DiceKey";
+import styled from "styled-components";
 
 
 class SeedableDiceKeys {
@@ -42,6 +46,17 @@ class SeedableDiceKeys {
   }
 }
 
+const SeedingContentBlockDiv = styled.div`
+  background-color: rgba(147, 140, 47, 0.2);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  min-width: 60vw;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-content: flex-start;
+  overflow-wrap: anywhere;
+`;
+
 export const HardwareSecurityKeysView = observer ( ({seedableDiceKeys, seedHardwareKeyViewState}: {
   seedableDiceKeys: SeedableDiceKeys,
   seedHardwareKeyViewState: SeedHardwareKeyViewState
@@ -50,7 +65,7 @@ export const HardwareSecurityKeysView = observer ( ({seedableDiceKeys, seedHardw
   const {ElectronBridge} = window as {ElectronBridge?: IElectronBridge}
   if (devices == null || ElectronBridge == null) return null;
   return (
-    <div className={css.SeedingContentBlock}>
+    <SeedingContentBlockDiv>
       { devices.map( device => (
         <button
           key={device.serialNumber}
@@ -58,16 +73,16 @@ export const HardwareSecurityKeysView = observer ( ({seedableDiceKeys, seedHardw
         >Seed {device.deviceName} ({device.serialNumber})
         </button>
       ))}
-    </div>
-)}
-);
+    </SeedingContentBlockDiv>
+  );
+});
 
 export const CannotSeedSecurityKeysView = () => (
-  <div className={css.CannotSeedContentBlock}>
+  <SeedingContentBlockDiv>
     Web browsers currently prevent web-based applications from using USB to seed hardware security keys.
     <br/>
     To seed a security key, you'll need to use the DiceKeys app on Android, Windows, Linux, or MacOS.
-  </div>
+  </SeedingContentBlockDiv>
 )
 
 export const PressCountdownSecondsView = observer( ({whenStarted}: {whenStarted: number}) => {
@@ -80,9 +95,10 @@ export const PressCountdownSecondsView = observer( ({whenStarted}: {whenStarted:
   return (<>{ Math.max(0, 8 - secondsPassed) }</>);
 })
 
-export const SeedHardwareKeyViewWithState = observer( ( {seedHardwareKeyViewState, seedableDiceKeys}: {
+export const SeedHardwareKeyViewWithState = observer( ( {diceKey, seedHardwareKeyViewState, seedableDiceKeys}: {
   seedHardwareKeyViewState: SeedHardwareKeyViewState,
   seedableDiceKeys: SeedableDiceKeys,
+  diceKey: DiceKey
 }) => {
   if (seedHardwareKeyViewState.writeInProgress) {
     return (
@@ -122,24 +138,35 @@ export const SeedHardwareKeyViewWithState = observer( ( {seedHardwareKeyViewStat
       </PaddedContentBox>
     )  
   } else return (
-    <ContentBox>
-      <Spacer/>
-      <div className={css.DerivationView}>
-        <div className={css.RecipeFormFrame}>
-          <RecipeFieldsHelpView state={seedHardwareKeyViewState.recipeBuilderState} />
-          <RecipeBuilderFieldsView state={seedHardwareKeyViewState.recipeBuilderState} />
-          <RecipeRawJsonView state={seedHardwareKeyViewState.recipeBuilderState} /> 
-        </div>
-        <DerivedFromRecipeView state={seedHardwareKeyViewState.derivedFromRecipeState} />
-        {/* <Spacer/> */}
-        { isElectron() != null ? (
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      justifySelf: "center",
+    }}> 
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignContent: "flex-start",
+        height: `${Dimensions.WizardOrFieldsMaxHeight}vh`,
+      }}>
+        <RecipeFieldEditorView state={seedHardwareKeyViewState.recipeBuilderState} />
+      </div>
+      <div style={{display: "flex",
+        flexDirection: "column", 
+        alignItems: "center", justifyContent: "flex-end"
+      }}>
+          <KeyPlusRecipeView {...{diceKey, recipeBuilderState: seedHardwareKeyViewState.recipeBuilderState}} />
+      </div>
+      <DerivedFromRecipeView state={seedHardwareKeyViewState.derivedFromRecipeState} showPlaceholder={false} />
+      { isElectron() ? (
           <HardwareSecurityKeysView {...{seedableDiceKeys, seedHardwareKeyViewState}}/>
         ) : (
           <CannotSeedSecurityKeysView/>
         )}
-      </div>
-      <Spacer/>
-    </ContentBox>
+    </div>
   )
 });
 
@@ -148,11 +175,11 @@ class SeedHardwareKeyViewState {
   derivedFromRecipeState: DerivedFromRecipeState;
   constructor(public readonly seedString: string) {
     const recipeBuilderState = new RecipeBuilderState({
+      origin: "BuiltIn",
+//      name: "",
       type: "Secret",
-      purpose: seedSecurityKeyPurpose,
-      editing: true,
-      purposeFieldNonEditableByDefault: true, 
-    });
+      recipeJson: `{"purpose":"${seedSecurityKeyPurpose}"}`,// purpose: ,
+    } as LoadedRecipe<"BuiltIn">);
     const derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, seedString});
     this.recipeBuilderState = recipeBuilderState;
     this.derivedFromRecipeState = derivedFromRecipeState;
@@ -194,13 +221,13 @@ class SeedHardwareKeyViewState {
   }
 }
 
-export const SeedHardwareKeyView = observer ( (props: {seedString: string}) => {
-  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(props.seedString);
+export const SeedHardwareKeyView = observer ( ({diceKey}: {diceKey: DiceKey}) => {
+  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(diceKey.toSeedString());
   const seedableDiceKeys = new SeedableDiceKeys();
   useEffect( () => () => seedableDiceKeys.destroy() );  
 
   return (
-    <SeedHardwareKeyViewWithState {...{seedHardwareKeyViewState, seedableDiceKeys}}/>
+    <SeedHardwareKeyViewWithState {...{diceKey, seedHardwareKeyViewState, seedableDiceKeys}}/>
   )
 });
 

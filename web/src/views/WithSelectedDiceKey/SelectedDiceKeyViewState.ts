@@ -40,6 +40,7 @@ export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubView
     initialSubView: SelectedDiceKeySubViews = getSelectedDiceKeySubViewFromPath(addressBarState.path)
   ) {
     super(initialSubView, () => this.updateAddressBar());
+    this.backupState = new BackupViewState(this.foregroundDiceKeyState);
 
     addressBarState.onPopState( path => 
       this.rawSetSubView(getSelectedDiceKeySubViewFromPath(path))
@@ -64,7 +65,7 @@ export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubView
     }
   }
 
-  backupState = new BackupViewState(this.foregroundDiceKeyState);
+  backupState: BackupViewState;
 
   navigateToDisplayDiceKey = this.navigateToSubView(SelectedDiceKeySubViews.DisplayDiceKey);
   navigateToBackup = this.navigateToSubView(SelectedDiceKeySubViews.Backup);

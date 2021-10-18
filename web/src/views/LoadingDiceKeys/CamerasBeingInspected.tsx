@@ -3,27 +3,37 @@ import {observer} from "mobx-react";
 import {
   CamerasOnThisDevice
 } from "./CamerasOnThisDevice";
-import css from "./cameras-being-inspected.module.css";
+import styled from "styled-components";
 
+const CameraNameDiv = styled.div`
+  color: green;
+  font-size: 1.25rem;
+`;
 // export interface CamerasBeingInspectedOptions extends React.Props{}
 
+const CameraOnThisDevice = styled.div``;
+const CameraFound = styled(CameraOnThisDevice)``;
+const CameraUnreadable = styled(CameraOnThisDevice)``;
+const CameraToBeAdded = styled(CameraOnThisDevice)``;
+
+// FIXME, class names below are no-ops.
 export const CamerasBeingInspected = observer( () => {
   const camerasOnThisDevice = CamerasOnThisDevice.instance;
   return (
-    <div className={css.camera_name}>
-      <div key="heading" className={""} >Identifying device cameras...</div>
+    <CameraNameDiv>
+      <div key="heading">Identifying device cameras...</div>
       { camerasOnThisDevice.cameras.map( (camera) => (
-          <div key={camera.deviceId} className={"camera-on-this-device, camera-found"} >{camera.name}</div>
+          <CameraFound key={camera.deviceId} >{camera.name}</CameraFound>
         ))
       }
       { [...camerasOnThisDevice.unreadableCameraDevices.values()].map( ({cameraDevice}) => (
-          <div key={cameraDevice.deviceId} className={"camera-on-this-device, camera-unreadable"} >{cameraDevice.label ?? cameraDevice.deviceId}</div>
+          <CameraUnreadable key={cameraDevice.deviceId}>{cameraDevice.label ?? cameraDevice.deviceId}</CameraUnreadable>
         ))
       }
       { [...camerasOnThisDevice.camerasToBeAdded.values()].map( (camera) => (
-          <div key={camera.deviceId} className={"camera-on-this-device, camera-to-be-added"} >{camera.label ?? camera.deviceId}</div>
+          <CameraToBeAdded key={camera.deviceId}>{camera.label ?? camera.deviceId}</CameraToBeAdded>
         ))
       }
-    </div>
+    </CameraNameDiv>
   )
 });

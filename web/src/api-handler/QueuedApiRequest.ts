@@ -1,9 +1,6 @@
 import {
   ApiCalls, Recipe, Exceptions
 } from "@dicekeys/dicekeys-api-js";
-import {
-  ComputeApiCommandWorker
-} from "../workers/call-api-command-worker"
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { SeededApiCommands } from "./SeededApiCommands";
 import { ApiRequestObject } from "@dicekeys/dicekeys-api-js/dist/api-calls";
@@ -78,14 +75,17 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
   async getResponse(seedString: string): Promise<ApiCalls.Response> {
     this.throwIfNotPermitted();
     const request = this.mutatedRequest ?? this.request;
-    const response = (typeof global.Worker !== "undefined") ?
-      // We're in an environment with web workers. Await a remote execute
-      (await new ComputeApiCommandWorker().calculate({seedString, request})) :
+    const {requestId} = this.request;
+    if (typeof Worker === "undefined") {
       // We have no choice but to run synchronously in this process
       // (fortunately, that means we're non-interactive and just testing)
-      new SeededApiCommands(await SeededCryptoModulePromise, seedString).executeRequest<ApiRequestObject>(request);
-      const {requestId} = this.request;
+      const response = new SeededApiCommands(await SeededCryptoModulePromise, seedString).executeRequest<ApiRequestObject>(request);
       return {requestId, ...response};
+    } else {
+      // We're in an environment with web workers. Await a remote execute
+      const ComputeApiCommandWorkerModule = await import ("../workers/call-api-command-worker");
+      return await new ComputeApiCommandWorkerModule.ComputeApiCommandWorker().calculate({seedString, request});
+    }
   }
 
   /**

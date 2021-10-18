@@ -1,7 +1,8 @@
-import {
+import type {
     ProcessFrameResponse,
     ProcessFrameRequest
 } from "../../workers/dicekey-image-frame-worker"
+import DiceKeyImageFrameWorker from "../../workers/dicekey-image-frame-worker?worker";
 import { CustomEvent } from "../../utilities/event";
 export const imageCaptureSupported: boolean = (typeof ImageCapture === "function");
 
@@ -31,8 +32,11 @@ class DiceKeyFrameWorkerClient {
     // Create an event for receiving messages from the worker process
     this.workerMessageReceivedEvent = new CustomEvent(this);
     // Create the worker for processing camera frames
-    this.frameWorker = new Worker('../../workers/dicekey-image-frame-worker.ts');
-    // this.frameWorker = new Worker(new URL('../../workers/dicekey-image-frame-worker.ts'/*,  import.meta.url */ ));
+    this.frameWorker = new DiceKeyImageFrameWorker();
+    //  new Worker(
+    //   new URL('../../workers/dicekey-image-frame-worker.ts' /* , import.meta.url */),
+    //   {type: 'module'}
+    // );
     // Attach the message-received event to the worker
     this.frameWorker.addEventListener( "message", this.workerMessageReceivedEvent.send );
     // Use a promise to track when the worker has sent us its ready message

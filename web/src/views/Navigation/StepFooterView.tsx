@@ -1,9 +1,30 @@
 
 import React from "react";
 import {observer} from "mobx-react";
-import css from "./StepFooterView.module.css";
-import {ButtonsCSS} from "../../css";
-import { visibility } from "../../utilities/visibility";
+import { PushButton } from "../../css/Button";
+import styled from "styled-components";
+
+const StepFooter = styled.div`
+  display: flex;
+  justify-self: flex-end;
+  flex-direction: column;
+  justify-content: center;
+  align-content: center;
+  margin-bottom: 1vh;
+  width: 80vw;
+  align-self: center;
+`;
+
+const StepFooterRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: baseline;
+`;
+
+const SpaceBetweenLeftAndRightButtons = styled.div`
+  min-width: 6rem;
+`;
 
 interface StepFooterViewProps {
   prev?: () => any;
@@ -15,18 +36,18 @@ interface StepFooterViewProps {
 }
 
 export const StepFooterView = observer ( (props: StepFooterViewProps) => (
-  <div className={css.StepFooter}>
+  <StepFooter>
     { props.aboveFooter == null ? null : (
-      <div className={css.StepFooterRow}>
+      <StepFooterRow>
         {props.aboveFooter}
-      </div>
+      </StepFooterRow>
     ) }
-    <div className={css.StepFooterRow}>
-      <button className={ButtonsCSS.StepButton} style={visibility(props.pprev != null)} onClick={ props.pprev } >&lt;&lt;</button>
-      <button className={ButtonsCSS.StepButton} style={visibility(props.prev != null)} onClick={ props.prev } >&lt; previous</button>
-      <div className={css.SpaceBetweenLeftAndRightButtons}></div>
-      <button className={ButtonsCSS.StepButton} style={visibility(props.next != null)} onClick={ props.next } >{props.nextIsDone ? "done" : "next"} &gt;</button>
-      <button className={ButtonsCSS.StepButton} style={visibility(props.nnext != null)} onClick={ props.nnext } >&gt;&gt;</button>
-    </div>
-  </div>
+    <StepFooterRow>
+      <PushButton invisible={props.pprev == null} onClick={ props.pprev } >&lt;&lt;</PushButton>
+      <PushButton invisible={props.prev == null} onClick={ props.prev } >&lt; previous</PushButton>
+      <SpaceBetweenLeftAndRightButtons></SpaceBetweenLeftAndRightButtons>
+      <PushButton invisible={props.next == null} onClick={ props.next } >{props.nextIsDone ? "done" : "next"} &gt;</PushButton>
+      <PushButton invisible={props.nnext == null} onClick={ props.nnext } >&gt;&gt;</PushButton>
+    </StepFooterRow>
+  </StepFooter>
 ));

@@ -1,50 +1,48 @@
-import css from "./Recipes.module.css";
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeBuilderState } from "./RecipeBuilderState";
-import { DiceKeysAppSecretRecipe } from "../../dicekeys";
+import { JsxReplacer } from "../../utilities/JsxReplacer";
+import { FormattedRecipeSpan, HostNameSpan, LengthFieldValueSpan, SequenceNumberValueSpan } from "./DerivationView/RecipeStyles";
+import styled from "styled-components";
+import { Recipe } from "@dicekeys/dicekeys-api-js";
 
 export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
   try {
-    const recipe = (recipeJson == null ? {} : JSON.parse(recipeJson)) as DiceKeysAppSecretRecipe;
-    var ingredients: (JSX.Element | string)[] = [recipeJson ?? ""];
-    const replace = (stringToReplace: string, replacementElement: JSX.Element) => {
-      ingredients = ingredients.reduce( (result, item ) => {
-        if (typeof item !== "string" || item.indexOf(stringToReplace) < 0) {
-          result.push(item);
-        } else {
-          const indexOfString = item.indexOf(stringToReplace);
-          const prefix = item.substr(0, indexOfString);
-          const suffix = item.substr(indexOfString + stringToReplace.length);
-          result.push(prefix, replacementElement, suffix);
-        }
-        return result;
-      }, [] as (JSX.Element | string)[])
-    }
+    const recipe = (recipeJson == null ? {} : JSON.parse(recipeJson)) as Recipe;
+    const replacer = new JsxReplacer(recipeJson ?? "");
     const sequenceNumber = recipe["#"];
     if (sequenceNumber != null && sequenceNumber >= 2) {
-      replace(`"#":${sequenceNumber}`, (<>"#":<span className={css.sequence_number_span}>{sequenceNumber}</span></>));
+      replacer.replace(`"#":${sequenceNumber}`, (<>
+          "#":<SequenceNumberValueSpan>{sequenceNumber}</SequenceNumberValueSpan>
+        </>));
     }
-    const lengthInChars = recipe.lengthInChars;
+    const lengthInChars = "lengthInChars" in recipe ? recipe.lengthInChars : undefined;
     if (lengthInChars != null) {
-      replace(`"lengthInChars":${lengthInChars}`, (<>"lengthInChars":<span className={[css.FormattedRecipeSpan, css.length_span].join(" ")}>{lengthInChars}</span></>));
+      replacer.replace(`"lengthInChars":${lengthInChars}`, (<>
+          "lengthInChars":
+          <LengthFieldValueSpan>{lengthInChars}</LengthFieldValueSpan>
+        </>));
     }
     const purpose = recipe.purpose;
     if (purpose != null) {
       const jsonEncodedPurpose = JSON.stringify(purpose)
       const jsonEscapedPurpose = jsonEncodedPurpose.substr(1, jsonEncodedPurpose.length - 2);
-      replace(`"purpose":${jsonEncodedPurpose}`, (<>"purpose":"<span className={[css.FormattedRecipeSpan, css.host_name_span].join(" ")}>{jsonEscapedPurpose}</span>"</>));
+      replacer.replace(`"purpose":${jsonEncodedPurpose}`, (<>
+          "purpose":"<HostNameSpan>{jsonEscapedPurpose}</HostNameSpan>"
+        </>));
     }
     const allow = recipe.allow;
     if (allow != null) {
       allow.forEach( ({host}) => {
-        replace(`"host":"${host}"`, (<>"host":"<span className={[css.FormattedRecipeSpan, css.host_name_span].join(" ")}>{host}</span>"</>));
+        replacer.replace(`"host":"${host}"`, (<>
+          "host":"<HostNameSpan>{host}</HostNameSpan>"
+        </>));
       });
     }
     return (
       <>
-        {ingredients.map( (item, index) => (
-          <span className={css.FormattedRecipeSpan} key={`${index}`}>{item}</span>
+        {replacer.replacement.map( (item, index) => (
+          <FormattedRecipeSpan key={`${index}`}>{item}</FormattedRecipeSpan>
         ))}
       </>
     );
@@ -53,18 +51,38 @@ export const EnhancedRecipeView = ({recipeJson}: {recipeJson?: string}) => {
   }
 }
 
+const RawRecipeViewContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  font-size: 0.9rem;
+`;
+
+const RawRecipeLabelDiv = styled.div`
+  margin-right: 0.5rem;
+  font-style: italic;
+  user-select: none;
+`;
+
+const RawRecipeValueDiv = styled.div`
+  overflow-wrap: break-word;
+  font-family: monospace;
+  color: rgba(0, 0, 0, 0.75);
+`;
+
+const EmptyRawRecipeSpan = styled.span`
+  font-style: italic;
+`
+
 export const LabeledEnhancedRecipeView = observer( ( {state}: {state: RecipeBuilderState}) => (
-  <div className={css.RawRecipeView}>
-    <div className={css.RawRecipeLabel}>Recipe:</div>
-    <div className={css.RawRecipeValue}
-        // contentEditable={true} 
-        // onInput={ e => { state.setFieldsFromRecipeJson(e.currentTarget.textContent!); e.preventDefault(); }}
-    >
+  <RawRecipeViewContainer>
+    <RawRecipeLabelDiv>Recipe:</RawRecipeLabelDiv>
+    <RawRecipeValueDiv>
       {state.recipeJson == null ? (
-        <i>{"{}"}</i>
+        <EmptyRawRecipeSpan>{"{}"}</EmptyRawRecipeSpan>
       ) : (
-      <EnhancedRecipeView recipeJson={ state.recipeJson  }/>
+        <EnhancedRecipeView recipeJson={ state.recipeJson  }/>
       )}
-    </div>
-  </div>
+    </RawRecipeValueDiv>
+  </RawRecipeViewContainer>
 ));

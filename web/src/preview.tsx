@@ -10,9 +10,10 @@ import { Preview_FaceCopyingView } from "./views/SVG/FaceCopyingView";
 import { getPreview, addPreviewWithMargins, addCenteredPreview, getPreviewNames } from "./views/basics/Previews";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
-import {ButtonsCSS} from "./css"
 import {WindowRoutingView} from "./views/WindowTopLevelView";
 import { DiceKeyMemoryStore } from "./state";
+import { PushButton } from "./css/Button";
+import styled from "styled-components";
 
 // To make sure everything is loaded, load the view for the app even if we're not using it.
 if (!WindowRoutingView) {
@@ -43,17 +44,24 @@ class PreviewState {
 
 const previewState = new PreviewState();
 
+const PreviewDiv = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-content: space-around;
+`;
+
 const Previews = observer ( () => {
   const {preview} = previewState;
   if (preview != null && typeof preview === "function") {
     return preview();
   } else {
     return (
-      <div style={{display: "flex", flexDirection: "column", justifyContent: "space-around", alignContent: "space-around"}}>
+      <PreviewDiv>
         {getPreviewNames().map( name => (
-          <button key={name} className={ButtonsCSS.PushButton} onClick={() => previewState.setName(name)}>{name}</button>
+          <PushButton key={name} onClick={() => previewState.setName(name)}>{name}</PushButton>
         ))}
-      </div>
+      </PreviewDiv>
     );
   }
 });

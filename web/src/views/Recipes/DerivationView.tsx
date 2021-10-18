@@ -1,40 +1,59 @@
-import css from "./Recipes.module.css";
 import React from "react";
-import { observer  } from "mobx-react";
-import { RecipeBuilderView } from ".";
-import { RecipeBuilderState } from "./RecipeBuilderState";
-import { LoadRecipeView } from "./LoadRecipeView";
+import { observer, Observer  } from "mobx-react";
+import { RecipeBuilderState, RecipeEditingMode } from "./RecipeBuilderState";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
-import { ContentBox, Spacer } from "../basics";
+import { RecipeWizardView } from "./DerivationView/RecipeWizardView";
+import {KeyPlusRecipeView} from "./DerivationView/KeyPlusRecipeView";
+import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
+import { SelectRecipeToLoadView } from "./LoadRecipeView";
+import {
+  DerivationViewContainer,
+  DerivedContentContainer,
+  RecipeWizardOrFieldsContainer
+} from "./DerivationView/DerivationViewLayout";
+import { RawJsonWarning } from "./DerivationView/RawJsonWarning";
 
-interface DerivationViewProps {
-  seedString: string;
-}
 
-export const DerivationViewWithState = observer( ( {recipeBuilderState, derivedFromRecipeState}: {
-  recipeBuilderState: RecipeBuilderState
-  derivedFromRecipeState: DerivedFromRecipeState
+export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
+  recipeBuilderState: RecipeBuilderState,
 }) => (
-  <ContentBox>
-    <LoadRecipeView state={recipeBuilderState} />
-    <Spacer/>
-    <div className={css.DerivationView}>
-      <RecipeBuilderView state={recipeBuilderState} />
-      <DerivedFromRecipeView state={derivedFromRecipeState} />
-    </div>
-    <Spacer/>
-  </ContentBox>
+  <RecipeWizardOrFieldsContainer>{
+    recipeBuilderState.wizardComplete ? (
+      recipeBuilderState.editingMode === RecipeEditingMode.NoEdit ?
+        (<SelectRecipeToLoadView state={recipeBuilderState} defaultOptionLabel={"change recipe"} />) :
+        (<RecipeFieldEditorView state={recipeBuilderState} />)
+    ) : (
+      <RecipeWizardView state={recipeBuilderState} />
+    )
+  }</RecipeWizardOrFieldsContainer>
 ));
-export const DerivationView = observer ( (props: DerivationViewProps) => {
+
+
+export const DerivationView = ( ({diceKey}: {
+  diceKey: DiceKey;
+}) => {
+  const seedString = diceKey.toSeedString();
   const recipeBuilderState =  new RecipeBuilderState();
-  const derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, seedString: props.seedString});
-  return (
-    <DerivationViewWithState {...{recipeBuilderState, derivedFromRecipeState}}/>
-  )
+  const derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, seedString});
+
+  // Renderer is wrapped in an observer so that it will update with recipeBuilderState
+  return (<Observer>{ () => {
+    return recipeBuilderState.showRawJsonWarning ? (
+      <RawJsonWarning state={recipeBuilderState} />
+    ) : (
+      <DerivationViewContainer>
+        <RecipeWizardOrFieldsView {...{recipeBuilderState}} />
+        <KeyPlusRecipeView {...{diceKey, recipeBuilderState}} />
+        <DerivedContentContainer>
+          <DerivedFromRecipeView {...{showPlaceholder: !recipeBuilderState.recipeIsNotEmpty, state: derivedFromRecipeState}} />
+        </DerivedContentContainer>
+      </DerivationViewContainer>
+    )}}
+  </Observer>);
 });
 
 export const Preview_DerivationView = () => (
-  <DerivationView seedString={DiceKey.testExample.toSeedString()} />
+  <DerivationView diceKey={DiceKey.testExample} />
 )

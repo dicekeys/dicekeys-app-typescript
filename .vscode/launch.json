@@ -35,7 +35,7 @@
           "name": "Launch localhost in Microsoft Edge",
           "type": "edge",
           "request": "launch",
-          "url": "http://localhost:1234/",
+          "url": "http://localhost:3000/",
           "webRoot": "${workspaceFolder}/web/src"
       },
   ]
