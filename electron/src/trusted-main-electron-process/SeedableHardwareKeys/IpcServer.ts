@@ -10,7 +10,7 @@ import {
     StopMonitoringFunction
 } from "./UsbDeviceMonitor";
 import {ExecException} from "child_process";
-import {DeviceUniqueIdentifier} from "../../../../common/IElectronBridge";
+import type {DeviceUniqueIdentifier} from "../../../../common/IElectronBridge";
 import {IpcResponsePacket, ipcSocketPath, isWin, WriteSeedToFIDOKeyRequestPacket, WriteSeedToFIDOKeyResponsePacket} from "../../usb";
 
 function escapeParamCmd(value: any): string {
