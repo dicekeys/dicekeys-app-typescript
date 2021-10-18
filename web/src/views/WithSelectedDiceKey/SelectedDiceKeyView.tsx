@@ -14,7 +14,7 @@ import {
   SelectedDiceKeyBottomIconBarView,
   SelectedDiceKeyViewProps,
 } from "./SelectedDiceKeyBottomIconBarView";
-import { SelectedDiceKeyContentRegionWitoutSideMargins, HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh } from "./SelectedDiceKeyLayout";
+import { SelectedDiceKeyContentRegionWithoutSideMargins, HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh } from "./SelectedDiceKeyLayout";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 const IdealMinimumContentMargin = `2rem`
@@ -54,9 +54,9 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
   return (
     <PageAsFlexColumn>
       <SimpleTopNavBar title={diceKey.nickname} goBack={goBack} />
-      <SelectedDiceKeyContentRegionWitoutSideMargins>
+      <SelectedDiceKeyContentRegionWithoutSideMargins>
         <SelectedDiceKeySubViewSwitch {...{...props}} />
-      </SelectedDiceKeyContentRegionWitoutSideMargins>
+      </SelectedDiceKeyContentRegionWithoutSideMargins>
       <SelectedDiceKeyBottomIconBarView {...props} />
     </PageAsFlexColumn>
     );

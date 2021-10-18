@@ -17,9 +17,10 @@ import { DiceKey } from "../../dicekeys/DiceKey";
 import { uint8ArrayToHexString } from "../../utilities/convert";
 import { DiceKeyViewAutoSized } from "../../views/SVG/DiceKeyView";
 import { PushButton } from "../../css/Button";
-import { FlexColumnWideVerticallyStretched } from "../../css/FlexContainers";
 
 import styled from "styled-components";
+import { PageAsFlexColumn } from "../../css/Page";
+import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 
 const HostNameSpan = styled.span`
   font-family: monospace;
@@ -250,7 +251,11 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
 
 
   return (
-    <FlexColumnWideVerticallyStretched>
+    <PageAsFlexColumn>
+      <SimpleTopNavBar
+        title={`${diceKey?.nickname ?? ""}`} //  using ${diceKey?.nickname ?? ""}
+        goBack={handleDeclineRequestButton}
+      />
       <Spacer/>
       <RequestDescription>
         <RequestDescriptionView {...{command, host}} />
@@ -273,8 +278,8 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
       ) : (
         <ContentBox>
           <DiceKeyViewAutoSized
-            maxHeight="35vh"
-            maxWidth="50vw"
+            maxHeight="50vh"
+            maxWidth="60vw"
             faces={diceKey.faces}
           />
           <ApiResponsePreview
@@ -288,7 +293,7 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
         <PushButton invisible={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
       </CenteredControls>
       <Spacer/>
-    </FlexColumnWideVerticallyStretched>
+    </PageAsFlexColumn>
   )
 })
 

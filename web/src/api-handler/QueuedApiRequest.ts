@@ -76,7 +76,7 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
     this.throwIfNotPermitted();
     const request = this.mutatedRequest ?? this.request;
     const {requestId} = this.request;
-    if (typeof global.Worker === "undefined") {
+    if (typeof Worker === "undefined") {
       // We have no choice but to run synchronously in this process
       // (fortunately, that means we're non-interactive and just testing)
       const response = new SeededApiCommands(await SeededCryptoModulePromise, seedString).executeRequest<ApiRequestObject>(request);
