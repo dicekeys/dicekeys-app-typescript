@@ -10,9 +10,9 @@ Install [TypeScript](https://www.typescriptlang.org/download) in your system.
 npm install -g typescript
 ```
 
-Install [Parcel](https://parceljs.org/) in your system.
+Install [vite](https://vitejs.dev/) in your system.
 ```
-npm install -g parcel-bundler
+npm install -g vite
 ```
 
 Make sure you have access to [GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-with-a-personal-access-token).
