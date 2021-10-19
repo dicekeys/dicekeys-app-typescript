@@ -117,6 +117,7 @@ const UnitFaceGroupView = observer ( ({face, ...svgGroupProps}: {face: Partial<F
           y={-FaceDimensionsFractional.undoverlineLength / 2 + FaceDimensionsFractional.textBaselineY}
           fontFamily={FontFamily}
           fill={textShade}
+          style={{userSelect: "none"}}
           fontSize={FaceDimensionsFractional.fontSize}
           fontWeight={FontWeight}
           letterSpacing={`${FaceDimensionsFractional.spaceBetweenLetterAndDigit}px`}
