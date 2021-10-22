@@ -1,4 +1,3 @@
-import * as HID from "node-hid";
 import * as crypto from "crypto"
 import {
   DeviceUniqueIdentifier,
@@ -79,8 +78,6 @@ class CtapHidPacketReceived {
   }
 }
 
-type HIDDevice = HID.HID
-
 /// A class used to decode the contents of an HID INIT response
 class CtapHidInitResponseMessage {
   /// Decode an HID INIT response message from the data within the response
@@ -109,11 +106,11 @@ class CtapHidInitResponseMessage {
   get capabilitiesFlags(): number{ return this.message.getInt8(16) }
 }
 
-const sendReport = (device: HIDDevice, data: DataView, reportType: number = 0x00): number => {
+const sendReport = (device: HIDDevice, data: DataView, reportType: number = 0x00): Promise<void> => {
   let dataArray = new Uint8ClampedArray(data.buffer);
   let dataParameter = [reportType, ...dataArray];
   let buffer = Buffer.from(dataParameter);
-  return device.write(buffer);
+  return device.sendReport(0, buffer);
 }
 
 const sendCtapHidMessage = (device: HIDDevice, channel: number, command: number, data: DataView) => {
@@ -165,11 +162,9 @@ const getChannel = async (device: HIDDevice): Promise<number> => {
 
   sendCtapHidMessage(device, BroadcastChannel, CTAP_HID_Commands.INIT, new DataView(channelCreationNonce.buffer));
   while (true) {
-    const response = await new Promise<number[]>( (resolve, reject) =>
-      device.read( (err, data) => { if (err != null) reject(err); else resolve(data); } ) );
+    const response = await device.receiveFeatureReport(0);
     //console.log(`response: ${response}`);
-    let buffer = Uint8ClampedArray.from(response).buffer;
-    const packet = new CtapHidPacketReceived(new DataView(buffer));
+    const packet = new CtapHidPacketReceived(new DataView(response.buffer));
     const message = new CtapHidInitResponseMessage(packet.message);
     if (message.nonce.every( (byte, index) => byte == channelCreationNonce[index] )) {
       // The nonces match so this is the channel we requested
@@ -199,9 +194,8 @@ const sendWriteSeedMessage = async (device: HIDDevice, channel: number, seed: Ui
   const message = new Uint8ClampedArray([commandVersion, ...seed, ...extState]);
   sendCtapHidMessage(device, channel, CTAP_HID_Commands.WRITE_SEED, new DataView(message.buffer));
   while (true) {
-    const response = await new Promise<number[]>( (resolve, reject) =>
-      device.read( (err, data) => { if (err != null) reject(err); else resolve(data); } ) );
-    const packet = new CtapHidPacketReceived(new DataView(Uint8ClampedArray.from(response).buffer));
+    const response = await device.receiveFeatureReport(0);
+    const packet = new CtapHidPacketReceived(new DataView(response.buffer));
     if (packet.channel != channel) {
       // This message wasn't meant for us.
       continue;
@@ -248,16 +242,17 @@ export const writeSeedToFIDOKey = async (deviceIdentifier: DeviceUniqueIdentifie
   if (seed.length !== 32) {
     throw `Invalid seed length ${seed.length}`;
   }
-  const hidDevice = HID.devices(vendorId, productId).find( d => d.serialNumber === serialNumber );
-  if (hidDevice == null) {
+  const device = (await navigator.hid.getDevices()).find( d => d.productId === productId && d.vendorId === vendorId );
+  if (device == null) {
     throw "device not found";
   }
-  const {path} = hidDevice;
-  // console.log(`Device path: ${path}`);
-  if (!path) {
-    throw "device has no path";
-  }
-  const device = new HID.HID(path);  try {
+  // const {path} = hidDevice;
+  // // console.log(`Device path: ${path}`);
+  // if (!path) {
+  //   throw "device has no path";
+  // }
+  // const device = new HID.HID(path);
+  try {
     const channel = await getChannel(device);
     await sendWriteSeedMessage(device, channel, seed, extState);
     return "success" as const;

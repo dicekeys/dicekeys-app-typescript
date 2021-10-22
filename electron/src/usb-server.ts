@@ -2,6 +2,9 @@ import * as TrustedMainElectronProcess from "./trusted-main-electron-process";
 import {monitorForFidoDevicesConnectedViaUsb} from "./trusted-main-electron-process/SeedableHardwareKeys/SeedableHardwareKeys";
 import {app} from "electron";
 
+// The default Chromium HID block list blocks access to FIDO keys,
+// so we need to disable the block list.
+app.commandLine.appendSwitch('disable-hid-blocklist');
 
 // Force all the of APIs to lead by making the runtime environment
 // inspect the count of the keys of the module.
