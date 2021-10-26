@@ -4,6 +4,12 @@ import {
 } from 'electron';
 import * as path from 'path';
 
+
+export const FiltersForUsbDeviceASeedableFIDOKey: HIDDeviceFilter[] = [
+  {vendorId: 0x10c4, productId: 0x8acf},
+  {vendorId: 0x0483, productId: 0xa2ca},
+];  
+
 export const createBrowserWindow = () => {
   // Create the browser window.
   const window = new BrowserWindow({
@@ -14,6 +20,32 @@ export const createBrowserWindow = () => {
     },
     width: 800,
   });
+
+  window.webContents.session.setPermissionCheckHandler((_webContents, permission, requestingOrigin, _details) => {
+    switch (permission) {
+      case "media":
+        return requestingOrigin.startsWith("file://");
+      // Allow access to WebHID so we can interact with seedable FIDO keys
+      case "hid":
+        return requestingOrigin.startsWith("file://");
+      // Deny other access
+      case "serial":
+      default:
+        return false;
+    }
+  });
+
+  window.webContents.session.setDevicePermissionHandler((details) => {
+    // Deny requests that are from web content (outside the file system)
+    if (details.origin.startsWith("file://") && details.deviceType === 'hid') {
+      return FiltersForUsbDeviceASeedableFIDOKey.some(
+        filter =>
+          filter.productId === details.device.productId &&
+          filter.vendorId === details.device.vendorId
+      );
+    }
+    return false;
+  })
 
   // and load the index.html of the app.
   window.loadFile(path.resolve(__dirname, '..', '..', 'dist', 'electron-html', 'electron.html'));
