@@ -6,7 +6,7 @@
   "version": "0.0.1",
   "main": "dist/electron.js",
   "scripts": {
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "electron-builder install-app-deps --arch arm64,x64",
     "watch": "rimraf ./dist && tsc --watch",
     "build": "rimraf ./dist tsconfig.tsbuildinfo && tsc",
     "start": "rimraf ./dist tsconfig.tsbuildinfo && tsc && electron .",
@@ -33,11 +33,11 @@
     "eslint-plugin-import": "^2.25.2",
     "keytar": "^7.7.0",
     "rimraf": "^3.0.2",
-    "typescript": "^4.4.4",
-    "usb-detection": "^4.13.0"
+    "typescript": "^4.4.4"
   },
   "dependencies": {
     "node-hid": "^2.1.1",
-    "sudo-prompt": "github:zvin/sudo-prompt#7cdede2f0da28fbcc2db48402d7d935f3a825c91"
+    "sudo-prompt": "github:zvin/sudo-prompt#7cdede2f0da28fbcc2db48402d7d935f3a825c91",
+    "usb-detection": "^4.13.0"
   }
 }
