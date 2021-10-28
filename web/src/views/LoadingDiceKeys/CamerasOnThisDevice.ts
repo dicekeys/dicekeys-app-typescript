@@ -37,7 +37,7 @@ const withTimeout = (timeoutInMs: number = 5000) =>
       }
     });
   });
-const with3SecondTimeout = withTimeout(5000);
+const with5SecondTimeout = withTimeout(5000);
 
 export type Camera = MediaDeviceInfo & MediaTrackSettings & {name: string, capabilities: MediaTrackCapabilities | undefined};
 
@@ -71,17 +71,25 @@ const compareCameras = (a: Camera, b: Camera): number => {
 
 export class CamerasOnThisDevice {
 
-  private static _instance: CamerasOnThisDevice | undefined;
+  private static _instances = new Map<string, CamerasOnThisDevice>();
 
-  public static get instance(): CamerasOnThisDevice {
-    if (this._instance == null) {
-      this._instance = new CamerasOnThisDevice();
-    }
-    return this._instance;
+  public static instance(minWidth: number | undefined, minHeight: number | undefined): CamerasOnThisDevice {
+    const key = `${minWidth}:${minHeight}`;
+    if (CamerasOnThisDevice._instances.has(key)) {
+      // Return the existing instance
+      return CamerasOnThisDevice._instances.get(key)!
+    };
+    // Create an instance
+    const camerasOnThisDevice = new CamerasOnThisDevice(minWidth, minHeight);
+    this._instances.set(key, camerasOnThisDevice);
+    return camerasOnThisDevice;
   }
 
-  private constructor() {
-    makeAutoObservable(this);
+  private constructor(public readonly minWidth: number | undefined, public readonly minHeight: number | undefined) {
+    makeAutoObservable(this, {
+      minWidth: false,
+      minHeight: false,
+    });
     this.addAttachedAndRemovedDetachedCameras();
     // Start getting a list of cameras
     // Make sure we update the camera list whenever a camera is added or removed
@@ -111,8 +119,14 @@ export class CamerasOnThisDevice {
    * then sorted by label
    */
   public get cameras(): Camera[] {
-    const sortedCameras = [...this.camerasByDeviceId.values()]
-      .sort( (a, b) => compareCameras(a, b) );
+    const filteredCameras = [...this.camerasByDeviceId.values()].filter( (camera) => {
+      const {minWidth, minHeight} = this;
+      const width = camera.capabilities?.width?.max;
+      const height = camera.capabilities?.height?.max;
+      return (height == null || minHeight == null || height >= minHeight) &&
+      (width == null || minWidth == null ||  width >= minWidth)
+    })
+    const sortedCameras = filteredCameras.sort( (a, b) => compareCameras(a, b) );
     return sortedCameras;
   }
 
@@ -134,7 +148,7 @@ export class CamerasOnThisDevice {
     const {deviceId} = cameraDevice;
     try {
       // Get a media stream so that we can get settings from the track
-      const stream = await with3SecondTimeout( () => navigator.mediaDevices.getUserMedia({video: videoConstraintsForDevice(deviceId)}) );
+      const stream = await with5SecondTimeout( () => navigator.mediaDevices.getUserMedia({video: videoConstraintsForDevice(deviceId)}) );
       if (!stream) return;
       const tracks = stream.getVideoTracks();
       if (!tracks || tracks.length === 0) {
@@ -243,14 +257,17 @@ export class CamerasOnThisDevice {
           // followed by getSettings
           [...this.camerasToBeAdded.values()].map( camera => this.tryAddCamera(camera) )
         ));
-        for (const cameraDevice of this.camerasToBeAdded.values()) {
+        const camerasWeFailedToAddDuringTheFirstTry = [...this.camerasToBeAdded.values()].filter( 
+          camera => !this.camerasByDeviceId.has(camera.deviceId)
+        );
+        for (const camera of camerasWeFailedToAddDuringTheFirstTry) {
           // I hope you're as horrified as I am by the use of await in a loop.
           // This is our here by last resort since some devices will not let us
           // inspect cameras in parallel.
           // This could be bad if a device had 50 cameras attached, so um, maybe this
           // is an intentional plot to accidentally take down surveillance systems that
           // might accidentally run this code?  Yeah, that's the ticket!
-            await with3SecondTimeout( () => this.tryAddCamera(cameraDevice) );
+          await with5SecondTimeout( () => this.tryAddCamera(camera) );
         }
       }
     } catch (e) {
