@@ -88,7 +88,7 @@ export const SiteTextFieldView = observer( ({state}: {
       // Special handling for pastes
       onPaste={ state.pasteIntoSiteTextField }
         // Handle enter key
-      onKeyUp={ e => {if (e.key === "Enter" && (state.hosts?.length ?? 0) > 0) {
+      onKeyUp={ e => {if (e.key === "Enter" && state.hosts.length > 0) {
         state.setWizardPrimaryFieldEntered(true);
       }}}
     />
@@ -168,7 +168,7 @@ export const WizardStepEnterSiteView = observer ( ({state}: {
           {/* <WizardFieldLabel>Address/Domain</WizardFieldLabel> */}
           <SiteTextFieldView { ...{state}} />
           <TextCompletionButton
-            disabled={(state.hosts?.length ?? 0) === 0}
+            disabled={state.hosts.length === 0}
             onClick={state.setWizardPrimaryFieldEnteredFn(true)}
           />
         </WizardFieldRow>

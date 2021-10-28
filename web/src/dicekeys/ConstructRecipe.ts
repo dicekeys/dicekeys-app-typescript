@@ -1,6 +1,6 @@
 import {Recipe} from "@dicekeys/dicekeys-api-js"
 import { modifyJson } from "../utilities/modifyJson";
-import { getRegisteredDomain } from "../domains/get-registered-domain";
+import { isValidDomainOrWildcardDomain } from "../utilities/domains";
 
 const addOrAppendFieldToJsonObjectString =
   <T=any>(fieldName: string, quote: boolean = false, doNotAddIfValueIs?: T) =>
@@ -94,28 +94,13 @@ export const recipeJsonToHosts = (recipeJson: string | undefined): string[] => {
 
 export const parseCommaSeparatedListOfHosts = (
   commaSeparatedListOfHosts: string | undefined
-): string[] | undefined => {
-  if (commaSeparatedListOfHosts == null) return;
-  try {
-    const hosts = (commaSeparatedListOfHosts).split(",")
-      .map( i => {
-        const potentialHostName = i.trim();
-        if (potentialHostName.length == 0) return;
-        // Get JavaScript's URL parser to validate the hostname for us
-        const registeredDomain = getRegisteredDomain(potentialHostName);
-        if (registeredDomain != null) {
-          return registeredDomain
-        } else {
-          return;
-        }
-      })
-      .filter( i =>  i != null && i.length > 0 ) as string[];
-    if (hosts.length > 0) {
-      return hosts;
-    }
-  } catch {}
-  return undefined;
-}
+): string[] => {
+  return (commaSeparatedListOfHosts ?? "").split(",")
+    // trim the entries
+    .map( s => s.trim() )
+    // filter out those that aren't domains or wildcard domains
+    .filter( isValidDomainOrWildcardDomain );
+};
 
 export const getRecipeJson = (spec: AddableRecipeFields, templateRecipeJson?: string): string | undefined => {
   const {hosts, purpose, lengthInBytes, lengthInChars, sequenceNumber} = spec;

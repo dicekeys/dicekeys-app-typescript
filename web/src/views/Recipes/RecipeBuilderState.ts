@@ -27,7 +27,7 @@ import { Recipe } from "@dicekeys/dicekeys-api-js";
 import { RecipeStore } from "../../state/stores/RecipeStore";
 import { describeRecipeType } from "./DescribeRecipeType";
 import React from "react";
-import { getRegisteredDomain } from "../../domains/get-registered-domain";
+import { getWildcardOfRegisteredDomainFromCandidateWebUrl, isValidDomainOrWildcardDomain, removeWildcardPrefixIfPresent } from "../../utilities/domains";
 
 
 export enum RecipeEditingMode {
@@ -238,7 +238,7 @@ export class RecipeBuilderState {
   // Name field ("name") to be saved
   ////////////////////////////////////
   get prescribedName(): string | undefined {
-    return this.purpose?.substr(0, 20) ?? this.hosts?.join(", ");
+    return this.purpose?.substr(0, 20) ?? this.hosts.join(", ");
   }
 
   public nameField?: string | undefined;
@@ -248,32 +248,43 @@ export class RecipeBuilderState {
   setSiteTextField  = action ( (newValue?: string) => {
     this.siteTextField = newValue;
     const {recipeJson, hosts} = this;
-    if (hosts?.length && hosts.length > 0) {
-      this.recipeJson = addHostsToRecipeJson(recipeJson, hosts);
-    }
+    this.recipeJson = addHostsToRecipeJson(
+      recipeJson,
+      (hosts.length > 0) ?
+        // this will construct an allow clause with the set of hosts.
+        hosts :
+        // This will remove the allow clause from the recipe
+        undefined
+      );
   });
 
   pasteIntoSiteTextField = action( (e: React.ClipboardEvent<HTMLInputElement>) => {
     // If pasting a URL, paste only the domain
-    const text = e.clipboardData.getData("text");
-    const domain = getRegisteredDomain(text);
+    const clipboardText = e.clipboardData.getData("text").trim();
+    const domain = isValidDomainOrWildcardDomain(clipboardText) ?
+      // This appears to be an attempt to paste in a wildcard domain,
+      // and so processing it further would be 
+      clipboardText :
+      getWildcardOfRegisteredDomainFromCandidateWebUrl(clipboardText);
+
     if (domain == null || domain.length == 0) {
       // no valid domain or url pasted so use default paste behavior.
       return;
     }
     // The paste contained a valid domain, so override default paste.
     e.preventDefault();
-    if ((this.recipe?.allow ?? []).some( x => x.host === domain)) {
+    if ((this.recipe?.allow ?? []).some( x =>
+        removeWildcardPrefixIfPresent(x.host) === removeWildcardPrefixIfPresent(domain) )
+    ) {
         // The domain has already been included. Don't re-paste it
         return;
     }
+    // Add the new domain to the end of the list, ensuring a ", " precedes it
+    // if there are already other domain entries on the list.
     const trimmedField = (this.siteTextField ?? "").trim();
     const connector = trimmedField.length === 0 ? "" :
       trimmedField[trimmedField.length-1] === "," ? " " : ", ";
-    this.setSiteTextField(trimmedField + connector +
-      // Add a "*." up front if needed
-      (domain[0] === "*" || domain[0] === "." ? "" : "*.") +
-      domain);
+    this.setSiteTextField(trimmedField + connector + domain);
   });
 
   //////////////////////////////////////////
@@ -292,10 +303,10 @@ export class RecipeBuilderState {
    * The hosts for the "allow" restrictions of a recipe if the purpose field contains
    * a URL or list of hosts
    */
-  get hosts(): string[] | undefined {
+  get hosts(): string[] {
     return parseCommaSeparatedListOfHosts(this.siteTextField);
   }
-  get SiteFieldContainsHosts(): boolean { return (this.hosts?.length ?? 0) > 0 }
+  get SiteFieldContainsHosts(): boolean { return this.hosts.length > 0}
 
   ///////////////////////////////////////////////
   // Deriving a recipe from all the form fields

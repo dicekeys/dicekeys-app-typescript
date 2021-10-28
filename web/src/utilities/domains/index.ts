@@ -3,7 +3,34 @@
 import {PublicSuffixDataList} from "./public_suffix_list";
 
 const domainRegexp = new RegExp("(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]");
-const isValidDomainRexExp = (candidate: string): boolean => domainRegexp.test(candidate);
+
+export const isValidDomainSyntax = (candidate: string): boolean => domainRegexp.test(candidate);
+
+export const isValidDomainOrWildcardDomain = (candidate: string): boolean =>
+  // Is valid wildcard domain
+  ( candidate.startsWith("*.") && isValidDomainSyntax(candidate.substr(2)) ) ||
+  // Is valid non-wildcard domain
+  ( isValidDomainSyntax(candidate) );
+
+export const removeWildcardPrefixIfPresent = (s: string): string => {
+  return s.startsWith("*.") ? s.substr(2) : s;
+}
+
+export const extractDomainIfWebUrl = (candidateUrl: string): string | undefined => {
+  try {
+    const {protocol, host} = new URL(candidateUrl);
+    if ((protocol === "http:" || protocol === "https:") &&
+        isValidDomainOrWildcardDomain(host))
+      return host;
+  } catch {
+    // Return undefined if not a valid URL
+  }
+  return;
+}
+
+export const isWebUrl = (candidate: string): boolean =>
+  !!extractDomainIfWebUrl(candidate);
+
 
 type LabelMap = {[domain: string]: LabelMap} & {isTerminalNode?: boolean};
 /**
@@ -85,41 +112,42 @@ export const getDomainFromDomainOrUrlString = (domainOrUrl: string): string | un
         (protocol === "http:" || protocol === "https:" || protocol === "mailto:") &&
         getDepthOfPublicSuffix(host) > 0  
       ) {
-      return isValidDomainRexExp(host) ? host : undefined;
+      return isValidDomainSyntax(host) ? host : undefined;
 
     }
   } catch {}
   return undefined;
 }
 
-/**
- * Given a HTTP(s) URL or domain name, find the shortest domain suffix
- * that should be registered a registry. This is expected to be the domain
- * registered by the owner of the URL/domain with a registry, and therefore
- * one that represents the scope of the domain space that belongs to the
- * business which registered the domain.
- * 
- * For example, vault.bitwarden.com is a subdomain of bitwarden.com,
- * which Bitwarden registered with the .com registry.  Therefore,
- * it's registered domain is "bitwarden.com", the shortest suffix
- * registered with the registrar.
- * 
- * @param domainOrUrl A domain name or an HTTP(s) URL.
- */
-export const getRegisteredDomain = (domainOrUrl: string): string | undefined => {
-  const includesSubdomains = domainOrUrl.startsWith("*.");
-  const domain = getDomainFromDomainOrUrlString(
-    includesSubdomains ? domainOrUrl.substr(2) : domainOrUrl
-  );
-  if (domain == null) {
-    return undefined;
-  }
+export const getRegisteredDomainFromValidNonwildcardDomain = (domain: string): string => {
   const labels = domain.split(".");
   const depthOfPublicSuffix = getDepthOfPublicSuffix(domain);
   // The registered domain will have one label in addition to the public suffix
   // of the registry.  Hence, for the public suffix of "com" with 1 label,
   // "dicekeys.com", the registered domain, will ha ve 2 labels.
   const depthOfRegisteredSuffix = Math.min(depthOfPublicSuffix + 1, labels.length);
-  return (includesSubdomains ? "*." : "") +
-    labels.slice(labels.length - depthOfRegisteredSuffix, labels.length).join(".");
+  // create the registered domain by joining the labels to the correct depth.
+  return labels.slice(labels.length - depthOfRegisteredSuffix, labels.length).join(".");
 }
+
+/**
+ * Given a string that may be an HTTP(s) URL, return a wildcard
+ * of the registered hostname.  If the string is not a valid
+ * web URL, return undefined.
+ * 
+ * For example, https://vault.bitwarden.com/stuff is a URL with a host
+ * that is a subdomain of bitwarden.com, and Bitwarden is the domain
+ * registered with the .com registry.  Therefore, this function
+ * would return "*.bitwarden.com".
+ * 
+ * @param domainOrUrl A domain name or an HTTP(s) URL.
+ */
+export const getWildcardOfRegisteredDomainFromCandidateWebUrl = (candidateUrl: string): string | undefined => {
+  const domain = extractDomainIfWebUrl(candidateUrl);
+  return domain == null ?
+    // This was not a web URL with a valid domain
+    undefined :
+    // Return the domain with prefixed with '*.' to indicate it's a wildcard
+    `*.${getRegisteredDomainFromValidNonwildcardDomain(domain)}`
+}
+
