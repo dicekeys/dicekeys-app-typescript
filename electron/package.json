@@ -4,12 +4,12 @@
   "productName": "DiceKeys",
   "description": "DiceKeys App",
   "version": "0.0.1",
-  "main": "dist/electron.js",
+  "main": "electron-js/electron.js",
   "scripts": {
-    "postinstall": "electron-builder install-app-deps",
-    "watch": "rimraf ./dist && tsc --watch",
-    "build": "rimraf ./dist tsconfig.tsbuildinfo && tsc",
-    "start": "rimraf ./dist tsconfig.tsbuildinfo && tsc && electron .",
+    "postinstall": "electron-builder install-app-deps --arch arm64 && electron-builder install-app-deps --arch x64",
+    "watch": "rimraf ./electron-js && tsc --watch",
+    "build": "rimraf ./electron-js tsconfig.tsbuildinfo && tsc",
+    "start": "rimraf ./electron-js tsconfig.tsbuildinfo && tsc && electron .",
     "start-electron": "electron .",
     "lint": "eslint --ext .ts .",
     "pack": "electron-builder --dir --config=electron-builder.js",
@@ -25,19 +25,19 @@
     "@types/node-hid": "^1.3.1",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
-    "electron": "^15.2.0",
+    "electron": "^12.2.2",
     "electron-builder": "^22.11.11",
     "electron-builder-squirrel-windows": "^22.11.11",
     "electron-reloader": "^1.2.1",
     "eslint": "^8.0.1",
     "eslint-plugin-import": "^2.25.2",
-    "keytar": "^7.7.0",
     "rimraf": "^3.0.2",
-    "typescript": "^4.4.4",
-    "usb-detection": "^4.13.0"
+    "typescript": "^4.4.4"
   },
   "dependencies": {
     "node-hid": "^2.1.1",
+    "usb-detection": "^4.10.0",
+    "keytar": "^7.7.0",
     "sudo-prompt": "github:zvin/sudo-prompt#7cdede2f0da28fbcc2db48402d7d935f3a825c91"
   }
 }

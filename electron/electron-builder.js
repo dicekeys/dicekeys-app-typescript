@@ -13,6 +13,7 @@ module.exports = {
         "!electron-builder.js",
         "!packaging",
         "!src",
+        "!build_modules.sh",
     ],
     "mac": {
         "category": "public.app-category.utilities",

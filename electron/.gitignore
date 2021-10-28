@@ -88,4 +88,5 @@ typings/
 # Electron-Forge
 out/
 
-app/
+/electron-html/
+/electron-js/
