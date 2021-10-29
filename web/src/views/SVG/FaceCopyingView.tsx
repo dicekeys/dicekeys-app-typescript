@@ -87,11 +87,13 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
       </>) : medium === "DiceKey" ? (<>
         <DiceKeySvgGroup
           faces={diceKey?.faces}
+          sizeModel={diceKeySizeModel}
           {...diceKeySizeModel.bounds}
           highlightFaceAtIndex={indexOfLastFacePlaced}
           transform={`translate(${xoffsetImageCenterToLeftSheetCenter})`}
         />
         <DiceKeySvgGroup
+          sizeModel={diceKeySizeModel}
           faces={diceKey?.faces.map( (face, index) =>
             index <= (indexOfLastFacePlaced ?? 24) ? face : {} ) as PartialDiceKey
           }

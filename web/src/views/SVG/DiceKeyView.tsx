@@ -51,6 +51,7 @@ export const DiceKeySizeModel = (linearSizeOfFace: number = 1, includeSpaceForTa
     width, height, bounds, top, left, radius
   }
 }
+export type DiceKeySizeModel = ReturnType<typeof DiceKeySizeModel>;
 
 const DiceKeySizeModelFromBounds = (widthOverHeight: number, includeSpaceForTab: boolean) => (bounds: Bounds) =>
     DiceKeySizeModel(fitRectangleWithAspectRatioIntoABoundingBox(widthOverHeight)(bounds).width / ratioOfBoxWidthToFaceSize, includeSpaceForTab);
@@ -59,26 +60,22 @@ export const DiceKeySizeModelFromBoundsWithoutTab = DiceKeySizeModelFromBounds(1
 
 const sizeModelWithTab = DiceKeySizeModel(1, true);
 const sizeModelWithoutTab = DiceKeySizeModel(1, false);
-
 type DiceKeySvgGroupProps = DiceKeyRenderOptions & React.SVGAttributes<SVGGElement>
 
-
-export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
+export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeModel: DiceKeySizeModel}) => {
     const {
       faces,
       highlightFaceAtIndex,
       showLidTab = false,
       leaveSpaceForTab = showLidTab,
       obscureAllButCenterDie = ToggleState.ObscureDiceKey,
+      sizeModel,
       // If onFaceClick is not defined and obscureAllButCenterDie is,
       // the when the face is clicked trigger the obscuring toggle
-      onFaceClicked,
+      onFaceClicked, 
       // The rest of the props are for the underlying svg <g> tag
       ...svgGroupProps
     } = props;
-
-    const sizeModel = (showLidTab || leaveSpaceForTab) ?
-      sizeModelWithTab : sizeModelWithoutTab;
 
 
     const obscure: boolean = typeof obscureAllButCenterDie === "object" ?
@@ -146,7 +143,7 @@ const DiceKeySvgElement = styled.svg`
   justify-self: center;
 `;
 
-export const DiceKeyView = observer( ({
+export const DiceKeyView = ({
   // DiceKeyRenderOptions
   faces,
   highlightFaceAtIndex,
@@ -160,16 +157,18 @@ export const DiceKeyView = observer( ({
   // Props to pass down to svg element.
   style,
   ...svgProps
-}: {size?: string} & DiceKeyRenderOptions & React.SVGAttributes<SVGElement>) => (
-  <DiceKeySvgElement
-    {...svgProps}
-    viewBox={viewBox(((showLidTab || leaveSpaceForTab) ? sizeModelWithTab : sizeModelWithoutTab).bounds)}
-    // width={size}
-    // height={size}
-    preserveAspectRatio="meet"
-    style={(size != null ? {...style, width: size, height: size, minHeight: size, minWidth: size} : {...style}) }
-  >
-    <DiceKeySvgGroup {...{faces,highlightFaceAtIndex,obscureAllButCenterDie,diceBoxColor,showLidTab,leaveSpaceForTab,onFaceClicked,}} />
-  </DiceKeySvgElement>
-));
-
+}: {size?: string} & DiceKeyRenderOptions & React.SVGAttributes<SVGElement>) => {
+  const sizeModel = (showLidTab || leaveSpaceForTab) ? sizeModelWithTab : sizeModelWithoutTab;
+  return (
+    <DiceKeySvgElement
+      {...svgProps}
+      viewBox={viewBox((sizeModel.bounds))}
+      // width={size}
+      // height={size}
+      preserveAspectRatio="meet"
+      style={(size != null ? {...style, width: size, height: size, minHeight: size, minWidth: size} : {...style}) }
+    >
+      <DiceKeySvgGroup {...{faces,sizeModel,highlightFaceAtIndex,obscureAllButCenterDie,diceBoxColor,showLidTab,leaveSpaceForTab,onFaceClicked,}} />
+    </DiceKeySvgElement>
+  );
+};
