@@ -6,13 +6,11 @@ import { fitRectangleWithAspectRatioIntoABoundingBox, viewBox, Bounds } from "..
 import { ToggleState } from "../../state";
 import styled from "styled-components";
 
-const diceBoxColor = "#050350"; // must be in hex format as it is parsed as such in this code.
-
 export interface DiceKeyRenderOptions {
   faces?: PartialDiceKey;
   highlightFaceAtIndex?: number;
   obscureAllButCenterDie?: ToggleState.ToggleState | boolean;
-  diceBoxColor?: [number, number, number];
+  diceBoxColor?: string; // [number, number, number];
   showLidTab?: boolean;
   leaveSpaceForTab?: boolean;
   onFaceClicked?: (faceIndex: number) => any;
@@ -65,6 +63,7 @@ type DiceKeySvgGroupProps = DiceKeyRenderOptions & React.SVGAttributes<SVGGEleme
 export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeModel: DiceKeySizeModel}) => {
     const {
       faces,
+      diceBoxColor =  "#050350",
       highlightFaceAtIndex,
       showLidTab = false,
       leaveSpaceForTab = showLidTab,
@@ -76,7 +75,6 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
       // The rest of the props are for the underlying svg <g> tag
       ...svgGroupProps
     } = props;
-
 
     const obscure: boolean = typeof obscureAllButCenterDie === "object" ?
       obscureAllButCenterDie?.value :
@@ -165,7 +163,7 @@ export const DiceKeyView = ({
       viewBox={viewBox((sizeModel.bounds))}
       // width={size}
       // height={size}
-      preserveAspectRatio="meet"
+      preserveAspectRatio="xMidYMid meet"
       style={(size != null ? {...style, width: size, height: size, minHeight: size, minWidth: size} : {...style}) }
     >
       <DiceKeySvgGroup {...{faces,sizeModel,highlightFaceAtIndex,obscureAllButCenterDie,diceBoxColor,showLidTab,leaveSpaceForTab,onFaceClicked,}} />
