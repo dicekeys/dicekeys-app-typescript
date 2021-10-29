@@ -46,6 +46,7 @@ const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
         <ScanDiceKeyView
           maxWidth="100vw"
           maxHeight="65vh"
+          showBoxOverlay={false}
           onFacesRead={ (diceKey) => props.onDiceKeyRead( new DiceKey(diceKey.map( faceRead => faceRead.toFace()) as DiceKeyFaces), "camera") }/>
       </div>
     );

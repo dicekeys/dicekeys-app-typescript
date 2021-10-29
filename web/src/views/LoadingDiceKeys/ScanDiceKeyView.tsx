@@ -145,7 +145,10 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
     }
     return (
       <ColumnStretched>
-        <CameraCaptureWithOverlay onFrameCaptured={this.onFrameCaptured} mediaStreamState={this.mediaStreamState} {...{maxWidth, maxHeight, showBoxOverlay}} />
+        <CameraCaptureWithOverlay
+          onFrameCaptured={this.onFrameCaptured}
+          mediaStreamState={this.mediaStreamState}
+          {...{maxWidth, maxHeight, showBoxOverlay}} />
         <CameraSelectionView mediaStreamState={this.mediaStreamState} cameras={cameras} />
       </ColumnStretched>
     );
