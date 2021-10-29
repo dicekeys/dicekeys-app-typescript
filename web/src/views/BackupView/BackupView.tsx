@@ -11,7 +11,7 @@ import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupView } from "./ValidateBackupView";
 import { StickerSheetView } from "../SVG/StickerSheetView";
 import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
-import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
+import { DiceKeyView } from "../SVG/DiceKeyView";
 import {BackupStep, BackupViewState} from "./BackupViewState";
 import { StepButton } from "../../css/Button";
 import styled from "styled-components";
@@ -67,7 +67,7 @@ const IntroToBackingUpToADiceKeyView = () => (
     <Spacer/>
     <Center>
       <ComparisonBox>
-        <DiceKeyViewAutoSized maxHeight="55vh" maxWidth="45vw" />
+        <DiceKeyView size={`min(55vh,45vw)`} />
       </ComparisonBox>
     </Center>
     <Spacer/>

@@ -8,14 +8,14 @@ import {
   getKnownHost
 } from "../../phrasing/api";
 import { observer } from "mobx-react";
-import { Center, CenteredControls, ContentBox, Spacer } from "../../views/basics";
+import { Center, CenteredControls, ContentBox, Spacer, Instruction } from "../../views/basics";
 import { DiceKeyState, SettableDiceKeyState } from "../../state/Window/DiceKeyState";
 import { ScanDiceKeyView } from "../../views/LoadingDiceKeys/ScanDiceKeyView";
 import { addPreview } from "../../views/basics/Previews";
 import { QueuedUrlApiRequest } from "../../api-handler";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import { uint8ArrayToHexString } from "../../utilities/convert";
-import { DiceKeyViewAutoSized } from "../../views/SVG/DiceKeyView";
+import { DiceKeyView } from "../../views/SVG/DiceKeyView";
 import { PushButton } from "../../css/Button";
 
 import styled from "styled-components";
@@ -265,9 +265,9 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
         <ContentBox>
           <Spacer/>
           <Center>
-            <div style={{fontSize: "1.5rem", fontWeight: 700}}>
+            <Instruction>
               To allow this action, you'll first need to load your DiceKey.
-            </div>
+            </Instruction>
           </Center>
           <Spacer/>
           <ScanDiceKeyView
@@ -277,9 +277,8 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
         </ContentBox>
       ) : (
         <ContentBox>
-          <DiceKeyViewAutoSized
-            maxHeight="50vh"
-            maxWidth="60vw"
+          <DiceKeyView
+            size="min(50vh,60vw)"
             faces={diceKey.faces}
           />
           <ApiResponsePreview

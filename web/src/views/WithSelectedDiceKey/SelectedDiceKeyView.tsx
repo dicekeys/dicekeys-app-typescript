@@ -1,7 +1,7 @@
 import React from "react";
 import { observer  } from "mobx-react";
 import { DiceKey } from "../../dicekeys/DiceKey";
-import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
+import { DiceKeyView } from "../SVG/DiceKeyView";
 import { DerivationView } from "../Recipes/DerivationView";
 import { Navigation } from "../../state";
 import { SeedHardwareKeyView } from "../Recipes/SeedHardwareKeyView";
@@ -25,9 +25,8 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
   if (!diceKey) return null;
   switch(state.subView) {
     case Navigation.SelectedDiceKeySubViews.DisplayDiceKey: return (
-      <DiceKeyViewAutoSized
-        maxWidth={`100vw - (${IdealMinimumContentMargin})`}
-        maxHeight={`${HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh}vh - 2 * (${IdealMinimumContentMargin})`}
+      <DiceKeyView
+        size={`calc(min(100vw - (${IdealMinimumContentMargin}), ${HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh}vh - 2 * (${IdealMinimumContentMargin})))`}
         faces={diceKey.faces}
       />
     );

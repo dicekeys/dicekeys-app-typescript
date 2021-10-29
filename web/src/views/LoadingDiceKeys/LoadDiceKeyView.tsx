@@ -8,8 +8,10 @@ import {
 import { DiceKey, DiceKeyFaces } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
-import { CenteredControls, ColumnStretched } from "../basics";
+import { CenteredControls, Center, Instruction, Spacer } from "../basics";
 import { PushButton } from "../../css/Button";
+import { PrimaryView } from "../../css/Page";
+import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 
 
 type Mode = "camera" | "manual";
@@ -36,13 +38,18 @@ type LoadDiceKeyProps = {
 
 const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
   switch(props.state.mode) {
-    case "camera": return ( 
-      <ScanDiceKeyView
-        maxWidth="100vw"
-        maxHeight="65vh"
-        onFacesRead={ (diceKey) => props.onDiceKeyRead( new DiceKey(diceKey.map( faceRead => faceRead.toFace()) as DiceKeyFaces), "camera") }/>
+    case "camera": return (
+      <div>
+        <Center>
+          <Instruction>Place your DiceKey into the camera's field of view.</Instruction>
+        </Center>
+        <ScanDiceKeyView
+          maxWidth="100vw"
+          maxHeight="65vh"
+          onFacesRead={ (diceKey) => props.onDiceKeyRead( new DiceKey(diceKey.map( faceRead => faceRead.toFace()) as DiceKeyFaces), "camera") }/>
+      </div>
     );
-    case "manual": return (  
+    case "manual": return (
       <EnterDiceKeyView state={props.state.enterDiceKeyState} />
     );
   }
@@ -61,7 +68,9 @@ export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
   }
 
   return (
-    <ColumnStretched>
+    <PrimaryView>
+      <SimpleTopNavBar title={ state.mode === "manual" ? "Enter your DiceKey" : "Scan your DiceKey"} />
+      <Spacer/>
       <LoadDiceKeySubView {...props} {...{state}} />
       <CenteredControls>
         { onCancelled ? (
@@ -73,5 +82,6 @@ export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
           onClick={ onDonePressedWithinEnterDiceKey }
         >Done</PushButton>          
       </CenteredControls>
-    </ColumnStretched>
+      <Spacer/>
+    </PrimaryView>
   )});

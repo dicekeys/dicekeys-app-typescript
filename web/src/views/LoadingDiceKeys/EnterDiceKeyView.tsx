@@ -10,15 +10,13 @@ import {
   validateDiceKey,
 } from "../../dicekeys/DiceKey";
 import { FaceDigit, FaceLetter, FaceOrientationLetterTrbl, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
-import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
+import { DiceKeyView } from "../SVG/DiceKeyView";
+import { Instruction, Center } from "../../views/basics";
 import { PrimaryView } from "../../css/Page";
-import { ColumnStretched } from "../../views/basics";
 import styled from "styled-components";
 
-const KeyHints = styled.div`
-  text-align: center;
+const KeyHints = styled(Instruction)`
   font-size: 1.25rem;
-  margin-bottom: .25rem;
 `;
 
 export class EnterDiceKeyState {
@@ -137,18 +135,22 @@ export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.C
 
   render() {
     return (
-      <ColumnStretched>
-        <KeyHints>
-          To rotate the current face, use either &lt; &gt;, - +, or CTRL arrow (right and left arrows).
-        </KeyHints>
-        <DiceKeyViewAutoSized
-          maxHeight="50vh"
-          maxWidth="80vw"
+      <>
+        <Center>
+          <Instruction>Type in your DiceKey one face at a time.</Instruction>
+        </Center>
+        <Center>
+          <KeyHints>
+            To rotate the current face, use either &lt; &gt;, - +, or CTRL arrow (right and left arrows).
+          </KeyHints>
+        </Center>
+        <DiceKeyView
+          size="min(50vh,80vw)"
           faces={this.props.state.partialDiceKey}
           highlightFaceAtIndex={this.props.state.currentFaceIndex}
           onFaceClicked={ (index) => this.props.state.setCurrentFaceIndex(index)  }  
         />
-      </ColumnStretched>
+      </>
     );
   }
 });

@@ -8,7 +8,7 @@ import BoxBottomAfterRoll from /*url:*/"../images/Box Bottom After Roll.svg";
 import BoxBottomAllDiceInPlace from /*url:*/"../images/Box Bottom All Dice In Place.svg";
 import ScanDiceKeyImage from /*url:*/"../images/Scanning a DiceKey.svg";
 import SealBox from /*url:*/"../images/Seal Box.svg";
-import { DiceKeyViewAutoSized } from "./SVG/DiceKeyView";
+import { DiceKeyView } from "./SVG/DiceKeyView";
 import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
 import { Spacer, ResizableImage, Instruction, CenteredControls, Center, PaddedContentBox } from "./basics/";
 import { BackupStepFooterView, BackupStepSwitchView } from "./BackupView";
@@ -112,7 +112,7 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
       </CenteredControls>
     </>) : diceKey != null ? (<>
         <Center>
-          <DiceKeyViewAutoSized maxHeight="50vh" maxWidth="70vw" faces={diceKey.faces} />
+          <DiceKeyView size={`min(50vh,70vw)`} faces={diceKey.faces} />
         </Center>
         <CenteredControls>
           <PushButton onClick={startScanning} >Scan again</PushButton>
