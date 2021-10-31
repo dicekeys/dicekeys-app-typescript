@@ -11,7 +11,7 @@ import {
 } from "../../dicekeys/DiceKey";
 import { FaceDigit, FaceLetter, FaceOrientationLetterTrbl, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
 import { DiceKeyView } from "../SVG/DiceKeyView";
-import { Instruction, Center } from "../../views/basics";
+import { Instruction, CenterColumn } from "../../views/basics";
 import { PrimaryView } from "../../css/Page";
 import styled from "styled-components";
 
@@ -136,14 +136,12 @@ export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.C
   render() {
     return (
       <>
-        <Center>
+        <CenterColumn>
           <Instruction>Type in your DiceKey one face at a time.</Instruction>
-        </Center>
-        <Center>
           <KeyHints>
             To rotate the current face, use either &lt; &gt;, - +, or CTRL arrow (right and left arrows).
           </KeyHints>
-        </Center>
+        </CenterColumn>
         <DiceKeyView
           size="min(50vh,80vw)"
           faces={this.props.state.partialDiceKey}

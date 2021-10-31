@@ -8,7 +8,7 @@ import {
   getKnownHost
 } from "../../phrasing/api";
 import { observer } from "mobx-react";
-import { Center, CenteredControls, ContentBox, Spacer, Instruction } from "../../views/basics";
+import { CenterRow, CenteredControls, ContentBox, Spacer, Instruction } from "../../views/basics";
 import { DiceKeyState, SettableDiceKeyState } from "../../state/Window/DiceKeyState";
 import { ScanDiceKeyView } from "../../views/LoadingDiceKeys/ScanDiceKeyView";
 import { addPreview } from "../../views/basics/Previews";
@@ -264,11 +264,11 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
       { diceKey == null ? (
         <ContentBox>
           <Spacer/>
-          <Center>
+          <CenterRow>
             <Instruction>
               To allow this action, you'll first need to load your DiceKey.
             </Instruction>
-          </Center>
+          </CenterRow>
           <Spacer/>
           <ScanDiceKeyView
             onDiceKeyRead={settableDiceKeyState.setDiceKey}

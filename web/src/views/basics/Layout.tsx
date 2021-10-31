@@ -29,11 +29,22 @@ export const ResizableImage = styled.img`
   overflow: hidden
 `;
 
-export const Center = styled.div`
+export const CenterRow = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: center;
+  align-content: center;
   align-self: center;
+  justify-self: center;
+`;
+
+export const CenterColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+  justify-self: center;
 `;
 
 export const ContentBox  = styled.div`

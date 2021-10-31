@@ -10,7 +10,7 @@ import ScanDiceKeyImage from /*url:*/"../images/Scanning a DiceKey.svg";
 import SealBox from /*url:*/"../images/Seal Box.svg";
 import { DiceKeyView } from "./SVG/DiceKeyView";
 import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
-import { Spacer, ResizableImage, Instruction, CenteredControls, Center, PaddedContentBox } from "./basics/";
+import { Spacer, ResizableImage, Instruction, CenteredControls, CenterRow, PaddedContentBox } from "./basics/";
 import { BackupStepFooterView, BackupStepSwitchView } from "./BackupView";
 import { addPreview } from "./basics/Previews";
 import {AssemblyInstructionsStep, AssemblyInstructionsState} from "./AssemblyInstructionsState";
@@ -111,9 +111,9 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
         <PushButton onClick={stopScanning}>Cancel</PushButton>
       </CenteredControls>
     </>) : diceKey != null ? (<>
-        <Center>
+        <CenterRow>
           <DiceKeyView size={`min(50vh,70vw)`} faces={diceKey.faces} />
-        </Center>
+        </CenterRow>
         <CenteredControls>
           <PushButton onClick={startScanning} >Scan again</PushButton>
         </CenteredControls>

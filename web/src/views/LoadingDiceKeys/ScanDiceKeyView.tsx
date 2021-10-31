@@ -8,7 +8,6 @@ import { Camera, CamerasOnThisDevice } from "./CamerasOnThisDevice";
 import { DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
 import { MediaStreamState } from "./MediaStreamState";
 import { CameraSelectionView } from "./CameraSelectionView";
-import { ColumnStretched } from "../../views/basics";
 import styled from "styled-components";
 import { isElectron } from "../../utilities/is-electron";
 // import { CamerasBeingInspected } from "./CamerasBeingInspected";
@@ -144,13 +143,13 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
       return ( <NoCameraAvailableView minCameraWidth={minCameraWidth} minCameraHeight={minCameraHeight} /> );
     }
     return (
-      <ColumnStretched>
+      <>
         <CameraCaptureWithOverlay
           onFrameCaptured={this.onFrameCaptured}
           mediaStreamState={this.mediaStreamState}
           {...{maxWidth, maxHeight, showBoxOverlay}} />
         <CameraSelectionView mediaStreamState={this.mediaStreamState} cameras={cameras} />
-      </ColumnStretched>
+      </>
     );
   }
 });
