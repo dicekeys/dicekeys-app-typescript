@@ -3,7 +3,7 @@ import { DiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { observer } from "mobx-react";
 import { ScanDiceKeyView } from "../LoadingDiceKeys/ScanDiceKeyView";
 import { DiceKeyView } from "../SVG/DiceKeyView";
-import { AndClause, CenteredControls, ContentBox, ContentRow, Instruction, Spacer } from "../basics";
+import { AndClause, CenteredControls, ContentBox, ContentRow, CenterColumn, Instruction, Spacer } from "../basics";
 import { ValidateBackupViewState, FaceErrorDescriptor } from "./ValidateBackupViewState";
 import { visibility } from "../../utilities/visibility";
 import { PushButton } from "../../css/Button";
@@ -45,16 +45,15 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
     viewState.stopScanning();
   };
   if (viewState.scanning) {
-    return (<>
+    return (<CenterColumn>
       <ScanDiceKeyView
-        maxWidth="80vw"
-        maxHeight="50vh"      
+        maxHeight="55vh"
         onDiceKeyRead={ onDiceKeyRead }
       />
       <CenteredControls>
           <PushButton onClick={viewState.stopScanning} >Stop scanning</PushButton>
       </CenteredControls>
-    </>)
+    </CenterColumn>)
   } else {
     return (<>
       <ContentRow>

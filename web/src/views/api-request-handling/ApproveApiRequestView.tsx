@@ -8,7 +8,7 @@ import {
   getKnownHost
 } from "../../phrasing/api";
 import { observer } from "mobx-react";
-import { CenterRow, CenteredControls, ContentBox, Spacer, Instruction } from "../../views/basics";
+import { CenterColumn, CenteredControls, ContentBox, Spacer, Instruction } from "../../views/basics";
 import { DiceKeyState, SettableDiceKeyState } from "../../state/Window/DiceKeyState";
 import { ScanDiceKeyView } from "../../views/LoadingDiceKeys/ScanDiceKeyView";
 import { addPreview } from "../../views/basics/Previews";
@@ -19,7 +19,7 @@ import { DiceKeyView } from "../../views/SVG/DiceKeyView";
 import { PushButton } from "../../css/Button";
 
 import styled from "styled-components";
-import { PageAsFlexColumn } from "../../css/Page";
+import { PrimaryView } from "../../css/Page";
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 
 const HostNameSpan = styled.span`
@@ -251,7 +251,7 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
 
 
   return (
-    <PageAsFlexColumn>
+    <PrimaryView>
       <SimpleTopNavBar
         title={`${diceKey?.nickname ?? ""}`} //  using ${diceKey?.nickname ?? ""}
         goBack={handleDeclineRequestButton}
@@ -262,19 +262,19 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
         <KeyAccessRestrictionsView {...{command, host}} />
       </RequestDescription>
       { diceKey == null ? (
-        <ContentBox>
+        <>
           <Spacer/>
-          <CenterRow>
+          <CenterColumn>
             <Instruction>
               To allow this action, you'll first need to load your DiceKey.
             </Instruction>
-          </CenterRow>
+            <ScanDiceKeyView
+              onDiceKeyRead={settableDiceKeyState.setDiceKey}
+              maxHeight={"60vh"}
+            />
+          </CenterColumn>
           <Spacer/>
-          <ScanDiceKeyView
-            onDiceKeyRead={settableDiceKeyState.setDiceKey}
-          />
-          <Spacer/>
-        </ContentBox>
+        </>
       ) : (
         <ContentBox>
           <DiceKeyView
@@ -292,7 +292,7 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
         <PushButton invisible={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
       </CenteredControls>
       <Spacer/>
-    </PageAsFlexColumn>
+    </PrimaryView>
   )
 })
 

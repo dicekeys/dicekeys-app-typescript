@@ -22,6 +22,7 @@ export const BelowTopNavigationBarWithNoBottomBar = styled.div`
   width: 100vw;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 `;
 
 const TopNavRegion = styled.div`

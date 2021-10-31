@@ -93,17 +93,21 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
       }
     };
 
-    const {maxWidth="100vw", maxHeight="75vh"} = this.props;  
+    const {maxWidth, maxHeight} = this.props;  
 
     return (
-      // <WithSettableBounds settableBounds={this.settableBounds} aspectRatioWidthOverHeight={1} {...{maxWidth, maxHeight}}>{
-      //   bounds => (
         <>
           <video
-            // width={bounds.width}
-            // height={bounds.height}
-            style={(maxWidth != null && maxHeight != null) ? {width: `calc(min(${maxWidth}, ${maxHeight}))`} : {width: `100%`}}
-            autoPlay={true}
+            style={
+              (maxWidth != null && maxHeight != null) ?
+                {width: `calc(min(${maxWidth}, ${maxHeight}))`, height: "auto"} :
+              (maxWidth != null) ?
+                {width: `${maxWidth}`, height: "auto"} :
+              (maxHeight != null) ?
+                {width: "auto", maxHeight: `${maxHeight}`} :
+                {width: `100%`, height: "auto"}
+              }
+              autoPlay={true}
             ref={withVideoElementRef}
           />
           { !showBoxOverlay ? null : (
@@ -115,8 +119,6 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
             ref={ e => { this.renderingContext = e?.getContext("2d") ?? undefined; }
           } />
         </>
-      //   )
-      // }</WithSettableBounds>
     );
   }
 });
