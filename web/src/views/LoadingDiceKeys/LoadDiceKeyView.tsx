@@ -12,6 +12,7 @@ import { CenteredControls, CenterColumn, Instruction, Spacer } from "../basics";
 import { PushButton } from "../../css/Button";
 import { PrimaryView } from "../../css/Page";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
+import { BelowTopNavigationBarWithSideMarginsButNoBottomBar } from "../../views/Navigation/TopNavigationBar";
 
 
 type Mode = "camera" | "manual";
@@ -42,8 +43,7 @@ const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
         <CenterColumn>
           <Instruction>Place your DiceKey into the camera's field of view.</Instruction>
           <ScanDiceKeyView
-            // maxWidth="100vw"
-            // maxHeight="65vh"
+            maxHeight="70vh"
             showBoxOverlay={true}
             onFacesRead={ (diceKey) => props.onDiceKeyRead( new DiceKey(diceKey.map( faceRead => faceRead.toFace()) as DiceKeyFaces), "camera") }
           />
@@ -70,6 +70,7 @@ export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
   return (
     <PrimaryView>
       <SimpleTopNavBar title={ state.mode === "manual" ? "Enter your DiceKey" : "Scan your DiceKey"} />
+      <BelowTopNavigationBarWithSideMarginsButNoBottomBar>
       <Spacer/>
       <LoadDiceKeySubView {...props} {...{state}} />
       <CenteredControls>
@@ -83,5 +84,6 @@ export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
         >Done</PushButton>          
       </CenteredControls>
       <Spacer/>
+      </BelowTopNavigationBarWithSideMarginsButNoBottomBar>
     </PrimaryView>
   )});
