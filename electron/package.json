@@ -35,6 +35,7 @@
     "typescript": "^4.4.4"
   },
   "dependencies": {
+    "electron-nightly": "^17.0.0-nightly.20211101",
     "keytar": "^7.7.0",
     "sudo-prompt": "github:zvin/sudo-prompt#7cdede2f0da28fbcc2db48402d7d935f3a825c91"
   }
