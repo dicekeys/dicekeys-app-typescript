@@ -30,7 +30,7 @@ export interface RenderFaceReadOptions {
  * @param faceRead 
  */
 export const renderFaceRead = (ctx: CanvasRenderingContext2D, faceRead: FaceRead, options: RenderFaceReadOptions = {}) => {
-  const destMinEdgeLength = Math.min(ctx.canvas.width);
+  const destMinEdgeLength = Math.min(ctx.canvas.width, ctx.canvas.height);
   const srcMinEdgeLength = options.sourceImageSize ? Math.min(options.sourceImageSize.width, options.sourceImageSize.height) : 1024;
   const scale = destMinEdgeLength / srcMinEdgeLength;
   const faceDimensions = getFaceSizeAndAngle(faceRead);

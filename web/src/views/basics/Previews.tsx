@@ -1,5 +1,5 @@
 import React from "react";
-import { Center, PreviewView } from "./Layout";
+import { CenterRow, PreviewView } from "./Layout";
 
 
 const PreviewMap = new Map<string, () => JSX.Element | null>();
@@ -11,4 +11,4 @@ export const addPreview = (name: string, previewFn: () => JSX.Element | null ) =
 export const addPreviewWithMargins = (name: string, previewFn: () => JSX.Element | null ) =>
   addPreview(name, () => (<PreviewView>{ previewFn() }</PreviewView>))
 export const addCenteredPreview = (name: string, previewFn: () => JSX.Element | null ) =>
-  addPreview(name, () => (<Center>{ previewFn() }</Center>))
+  addPreview(name, () => (<CenterRow>{ previewFn() }</CenterRow>))

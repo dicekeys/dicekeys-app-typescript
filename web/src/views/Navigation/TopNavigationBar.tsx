@@ -22,7 +22,16 @@ export const BelowTopNavigationBarWithNoBottomBar = styled.div`
   width: 100vw;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 `;
+
+export const BelowTopNavigationBarWithSideMarginsButNoBottomBar = styled(BelowTopNavigationBarWithNoBottomBar)`
+  margin-left: 5vw;
+  margin-right: 5vw;
+  width: 90vw;
+  justify-content: space-around;
+`
+
 
 const TopNavRegion = styled.div`
   margin-top: 0.5rem;

@@ -2,17 +2,15 @@ import React from "react";
 import { observer } from "mobx-react";
 import { EmptyPartialDiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
-import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox, viewBox } from "../../utilities/bounding-rects";
-import { WithBounds, OptionalAspectRatioProps } from "../../utilities/WithBounds";
+import { fitRectangleWithAspectRatioIntoABoundingBox, viewBox, Bounds } from "../../utilities/bounding-rects";
 import { ToggleState } from "../../state";
 import styled from "styled-components";
 
-const diceBoxColor = "#050350"; // must be in hex format as it is parsed as such in this code.
-
 export interface DiceKeyRenderOptions {
+  faces?: PartialDiceKey;
   highlightFaceAtIndex?: number;
   obscureAllButCenterDie?: ToggleState.ToggleState | boolean;
-  diceBoxColor?: [number, number, number];
+  diceBoxColor?: string; // [number, number, number];
   showLidTab?: boolean;
   leaveSpaceForTab?: boolean;
   onFaceClicked?: (faceIndex: number) => any;
@@ -40,7 +38,6 @@ export const DiceKeySizeModel = (linearSizeOfFace: number = 1, includeSpaceForTa
   const height = linearSizeOfBox * (1 / (1 - tabFraction));
   const bounds = {width, height};
 
-
   const top = -linearSizeOfBox / 2;
   const left = -linearSizeOfBox / 2;
   const radius = linearSizeOfBox / 50;
@@ -52,38 +49,32 @@ export const DiceKeySizeModel = (linearSizeOfFace: number = 1, includeSpaceForTa
     width, height, bounds, top, left, radius
   }
 }
+export type DiceKeySizeModel = ReturnType<typeof DiceKeySizeModel>;
 
 const DiceKeySizeModelFromBounds = (widthOverHeight: number, includeSpaceForTab: boolean) => (bounds: Bounds) =>
     DiceKeySizeModel(fitRectangleWithAspectRatioIntoABoundingBox(widthOverHeight)(bounds).width / ratioOfBoxWidthToFaceSize, includeSpaceForTab);
 export const DiceKeySizeModelFromBoundsWithTab = DiceKeySizeModelFromBounds(1/(1-fractionOfHeightDevotedToTabIfPresent), true);
 export const DiceKeySizeModelFromBoundsWithoutTab = DiceKeySizeModelFromBounds(1, false);
 
+const sizeModelWithTab = DiceKeySizeModel(1, true);
+const sizeModelWithoutTab = DiceKeySizeModel(1, false);
+type DiceKeySvgGroupProps = DiceKeyRenderOptions & React.SVGAttributes<SVGGElement>
 
-type DiceKeySvgGroupProps = {
-  faces?: PartialDiceKey,
-} & Bounds & DiceKeyRenderOptions & React.SVGAttributes<SVGGElement>
-
-
-export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps) => {
+export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeModel: DiceKeySizeModel}) => {
     const {
       faces,
+      diceBoxColor =  "#050350",
       highlightFaceAtIndex,
       showLidTab = false,
       leaveSpaceForTab = showLidTab,
-      width: boundsWidth,
-      height: boundsHeight,
       obscureAllButCenterDie = ToggleState.ObscureDiceKey,
+      sizeModel,
       // If onFaceClick is not defined and obscureAllButCenterDie is,
       // the when the face is clicked trigger the obscuring toggle
-      onFaceClicked,
+      onFaceClicked, 
       // The rest of the props are for the underlying svg <g> tag
       ...svgGroupProps
     } = props;
-
-    const sizeModel = (showLidTab || leaveSpaceForTab) ?
-      DiceKeySizeModelFromBoundsWithTab(props) :
-      DiceKeySizeModelFromBoundsWithoutTab(props);
-
 
     const obscure: boolean = typeof obscureAllButCenterDie === "object" ?
       obscureAllButCenterDie?.value :
@@ -150,20 +141,32 @@ const DiceKeySvgElement = styled.svg`
   justify-self: center;
 `;
 
-export const DiceKeyViewFixedSize = observer( (props: {faces: PartialDiceKey} & Bounds & DiceKeyRenderOptions) => (
-  <DiceKeySvgElement viewBox={viewBox(props)}>
-    <DiceKeySvgGroup {...props} />
-  </DiceKeySvgElement>
-));
-
-export const DiceKeyViewAutoSized = observer( (
-  {faces, aspectRatioWidthOverHeight, maxWidth, maxHeight, ...props}:
-    {faces?: PartialDiceKey} & OptionalAspectRatioProps & DiceKeyRenderOptions & {style?: React.CSSProperties}
-) => (
-      <WithBounds {...{aspectRatioWidthOverHeight, maxWidth, maxHeight}}>{({bounds}) => (
-        <svg viewBox={viewBox(bounds)}>
-          <DiceKeySvgGroup {...{...props, faces, ...bounds, height: bounds.height}} />
-        </svg>
-      )}</WithBounds> 
-    )    
-);
+export const DiceKeyView = ({
+  // DiceKeyRenderOptions
+  faces,
+  highlightFaceAtIndex,
+  obscureAllButCenterDie,
+  diceBoxColor,
+  showLidTab,
+  leaveSpaceForTab,
+  onFaceClicked,
+  // Prop specific to this view
+  size,
+  // Props to pass down to svg element.
+  style,
+  ...svgProps
+}: {size?: string} & DiceKeyRenderOptions & React.SVGAttributes<SVGElement>) => {
+  const sizeModel = (showLidTab || leaveSpaceForTab) ? sizeModelWithTab : sizeModelWithoutTab;
+  return (
+    <DiceKeySvgElement
+      {...svgProps}
+      viewBox={viewBox((sizeModel.bounds))}
+      // width={size}
+      // height={size}
+      preserveAspectRatio="xMidYMid meet"
+      style={(size != null ? {...style, width: size, height: size, minHeight: size, minWidth: size} : {...style}) }
+    >
+      <DiceKeySvgGroup {...{faces,sizeModel,highlightFaceAtIndex,obscureAllButCenterDie,diceBoxColor,showLidTab,leaveSpaceForTab,onFaceClicked,}} />
+    </DiceKeySvgElement>
+  );
+};

@@ -56,7 +56,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
   const modelBounds = {width: width * fractionalWidths[0], height: height};
   const stickerSheetSizeModel = StickerSheetSizeModelFromBounds(modelBounds);
   const diceKeySizeModel = DiceKeySizeModelFromBoundsWithoutTab( matchSticKeyAspectRatio ?
-    // Adjust height from 6-face hight to 5 face height
+    // Adjust height from 6-face height to 5 face height
     {width: modelBounds.width, height: modelBounds.height - stickerSheetSizeModel.linearSizeOfFace}:
     modelBounds);
   const sheetSizeModel = (medium === "SticKey") ? stickerSheetSizeModel : diceKeySizeModel;
@@ -87,11 +87,13 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
       </>) : medium === "DiceKey" ? (<>
         <DiceKeySvgGroup
           faces={diceKey?.faces}
+          sizeModel={diceKeySizeModel}
           {...diceKeySizeModel.bounds}
           highlightFaceAtIndex={indexOfLastFacePlaced}
           transform={`translate(${xoffsetImageCenterToLeftSheetCenter})`}
         />
         <DiceKeySvgGroup
+          sizeModel={diceKeySizeModel}
           faces={diceKey?.faces.map( (face, index) =>
             index <= (indexOfLastFacePlaced ?? 24) ? face : {} ) as PartialDiceKey
           }

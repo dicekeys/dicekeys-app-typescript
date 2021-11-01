@@ -5,13 +5,13 @@ import React from "react";
 import { StepFooterView } from "../Navigation/StepFooterView";
 import { FaceCopyingView } from "../SVG/FaceCopyingView";
 import { FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
-import { Center, Instruction, Spacer } from "../basics";
+import { CenterRow, Instruction, Spacer } from "../basics";
 import { addPreviewWithMargins } from "../basics/Previews";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupView } from "./ValidateBackupView";
 import { StickerSheetView } from "../SVG/StickerSheetView";
 import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
-import { DiceKeyViewAutoSized } from "../SVG/DiceKeyView";
+import { DiceKeyView } from "../SVG/DiceKeyView";
 import {BackupStep, BackupViewState} from "./BackupViewState";
 import { StepButton } from "../../css/Button";
 import styled from "styled-components";
@@ -65,11 +65,11 @@ const IntroToBackingUpToADiceKeyView = () => (
     <Spacer/>
     <Instruction>Open your DiceKey kit and take out the box bottom and the 25 dice.</Instruction>
     <Spacer/>
-    <Center>
+    <CenterRow>
       <ComparisonBox>
-        <DiceKeyViewAutoSized maxHeight="55vh" maxWidth="45vw" />
+        <DiceKeyView size={`min(55vh,45vw)`} />
       </ComparisonBox>
-    </Center>
+    </CenterRow>
     <Spacer/>
     <Instruction>Next, you will replicate the first DiceKey by copying the arrangement of dice.</Instruction>
     <Spacer/>
@@ -81,7 +81,7 @@ const IntroToBackingUpToASticKeyView = () => (
     <Spacer />
     <Instruction>Unwrap your SticKeys kit.</Instruction>
     <Spacer />
-    <Center>
+    <CenterRow>
       <ComparisonBox>
         <StickerSheetView maxHeight="55vh" maxWidth="45vw" />
         5 sticker sheets
@@ -90,7 +90,7 @@ const IntroToBackingUpToASticKeyView = () => (
         <StickerTargetSheetView maxHeight="55vh" maxWidth="45vw" />
         1 target sheet
       </ComparisonBox>
-    </Center>
+    </CenterRow>
     <Spacer />
     <Instruction>Next, you will create a copy of your DiceKey on the target sheet by placing stickers.</Instruction>
     <Spacer />
