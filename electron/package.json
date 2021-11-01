@@ -6,10 +6,10 @@
   "version": "0.0.1",
   "main": "dist/electron.js",
   "scripts": {
-    "postinstall": "electron-builder install-app-deps --arch arm64,x64",
+    "postinstall": "electron-builder install-app-deps --arch arm64 && electron-builder install-app-deps --arch x64",
     "watch": "rimraf ./dist && tsc --watch",
     "build": "rimraf ./dist tsconfig.tsbuildinfo && tsc",
-    "start": "rimraf ./dist tsconfig.tsbuildinfo && tsc && electron .",
+    "start": "rimraf ./dist tsconfig.tsbuildinfo && tsc && electron --version && electron .",
     "start-electron": "electron .",
     "lint": "eslint --ext .ts .",
     "pack": "electron-builder --dir --config=electron-builder.js",
