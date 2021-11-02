@@ -1,15 +1,15 @@
-import styled from "styled-components";
-import { cssCalc, cssCalcInputExpr } from "../../utilities";
+import styled, {css} from "styled-components";
+import { cssCalc, cssCalcTyped, cssCalcInputExpr } from "../../utilities";
 
 export const InstructionTextHeight = `1.65rem`;
-export const InstructionLineHeight = cssCalc(`1.2 * ${cssCalcInputExpr(InstructionTextHeight)}`)
+export const InstructionLineHeight = cssCalcTyped(`1.2 * ${cssCalcInputExpr(InstructionTextHeight)}`);
 export const InstructionVerticalMargin = `0.5rem`;
 
-// 2 * ${cssCalcInputExpr(InstructionVerticalMargin)} + 
-export const InstructionHeightForLines = <LINES extends number>(lines: LINES) =>
-  cssCalc(`${lines} * ${cssCalcInputExpr(InstructionLineHeight)}`);
+// export const InstructionHeightForLines = <LINES extends number>(lines: LINES) =>
+//   cssCalcTyped(`${lines} * ${cssCalcInputExpr(InstructionLineHeight)}`);
 
-export const Instruction = styled.div`
+export const Instruction = styled.div<{minLines?: number}>`
+  ${({minLines}) => minLines == null ? "" : css`min-height: ${cssCalc`${minLines} * ${InstructionLineHeight}`}; max-height: 100vh;` }
   font-size: ${InstructionTextHeight};
   margin-top: ${InstructionVerticalMargin};
   margin-bottom: ${InstructionVerticalMargin};

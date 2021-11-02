@@ -5,7 +5,7 @@ import React from "react";
 import { StepFooterView } from "../Navigation/StepFooterView";
 import { FaceCopyingView } from "../SVG/FaceCopyingView";
 import { FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
-import { CenterRow, Instruction, InstructionHeightForLines, Spacer } from "../basics";
+import { CenterRow, Instruction, Spacer } from "../basics";
 import { addPreviewWithMargins } from "../basics/Previews";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupView } from "./ValidateBackupView";
@@ -101,10 +101,6 @@ const IntroToBackingUpToASticKeyView = () => (
   </>
 );
 
-const CopyFaceInstruction = styled(Instruction)`
-  min-height: ${InstructionHeightForLines(4)};
-`;
-
 const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, index: number, medium: BackupMedium}) => {
   const sheetIndex = FaceLetters.indexOf(face.letter) % 5;
   const firstLetterOnSheet = FaceLetters[sheetIndex * 5];
@@ -112,7 +108,7 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, i
   const indexMod5 = index % 5;
   const {letter, digit, orientationAsLowercaseLetterTrbl: oriented} = face;
 
-  return (<CopyFaceInstruction>
+  return (<Instruction minLines={4}>
     { medium === BackupMedium.SticKey ? (<>
         Remove the {letter}{digit} sticker
         from the sheet with letters {firstLetterOnSheet} to {lastLetterOnSheet}.
@@ -136,7 +132,7 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, i
       oriented === "r" ? (<>turned the right (90 degrees clockwise of upright)</>) :
       oriented === "l" ? (<>turned the left (90 degrees counterclockwise of upright)</>) : ""
     }.
-  </CopyFaceInstruction>);
+  </Instruction>);
 });
 
 const StepSelectBackupMedium = observer (({state, prevStepBeforeStart}: BackupViewProps) => (
