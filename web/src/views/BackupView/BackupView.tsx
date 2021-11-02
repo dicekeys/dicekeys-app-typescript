@@ -5,7 +5,7 @@ import React from "react";
 import { StepFooterView } from "../Navigation/StepFooterView";
 import { FaceCopyingView } from "../SVG/FaceCopyingView";
 import { FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
-import { CenterRow, Instruction, Spacer } from "../basics";
+import { CenterRow, Instruction, InstructionHeightForLines, Spacer } from "../basics";
 import { addPreviewWithMargins } from "../basics/Previews";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupView } from "./ValidateBackupView";
@@ -60,6 +60,9 @@ const LabelBelowButtonImage = styled.div`
   margin-top: 0.5rem;
 `;
 
+const NoteDiv = styled.div`
+` 
+
 const IntroToBackingUpToADiceKeyView = () => (
   <>
     <Spacer/>
@@ -67,13 +70,13 @@ const IntroToBackingUpToADiceKeyView = () => (
     <Spacer/>
     <CenterRow>
       <ComparisonBox>
-        <DiceKeyView size={`min(55vh,45vw)`} />
+        <DiceKeyView size={`min(35vh,45vw)`} />
       </ComparisonBox>
     </CenterRow>
     <Spacer/>
     <Instruction>Next, you will replicate the first DiceKey by copying the arrangement of dice.</Instruction>
     <Spacer/>
-    <div>Need another DiceKey?  You can <a target="_blank" href="https://dicekeys.com/store">order more</a>.</div>
+    <NoteDiv>Need another DiceKey?  You can <a target="_blank" href="https://dicekeys.com/store">order more</a>.</NoteDiv>
   </>
 )
 const IntroToBackingUpToASticKeyView = () => (
@@ -94,13 +97,12 @@ const IntroToBackingUpToASticKeyView = () => (
     <Spacer />
     <Instruction>Next, you will create a copy of your DiceKey on the target sheet by placing stickers.</Instruction>
     <Spacer />
-    <div>Out of SticKeys?  You can <a  target="_blank" href="https://dicekeys.com/store">order more</a>.</div>
-    <Spacer />
+    <NoteDiv>Out of SticKeys?  You can <a  target="_blank" href="https://dicekeys.com/store">order more</a>.</NoteDiv>
   </>
 );
 
 const CopyFaceInstruction = styled(Instruction)`
-  min-height: 9rem;
+  min-height: ${InstructionHeightForLines(4)};
 `;
 
 const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, index: number, medium: BackupMedium}) => {
@@ -186,9 +188,10 @@ const BackupContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-self: stretch;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: flex-start;
-  margin-top: 2vh;
+  flex-grow: 1;
+  /* margin-top: 2vh; */
 `
 
 export const BackupContentView = observer ( (props: BackupViewProps) => (
@@ -255,7 +258,6 @@ const BackViewContentContainer = styled(SelectedDiceKeyContentRegionInsideSideMa
 export const BackupView = observer ( (props: BackupViewProps) => (
   <BackViewContentContainer>
     <BackupContentView state={props.state} />
-    <Spacer/>
     <BackupStepFooterView {...props} />
   </BackViewContentContainer>));
 
