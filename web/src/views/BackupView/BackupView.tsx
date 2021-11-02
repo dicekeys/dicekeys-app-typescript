@@ -83,11 +83,11 @@ const IntroToBackingUpToASticKeyView = () => (
     <Spacer />
     <CenterRow>
       <ComparisonBox>
-        <StickerSheetView maxHeight="55vh" maxWidth="45vw" />
+        <StickerSheetView maxHeight="45vh" maxWidth="45vw" />
         5 sticker sheets
       </ComparisonBox>
       <ComparisonBox>
-        <StickerTargetSheetView maxHeight="55vh" maxWidth="45vw" />
+        <StickerTargetSheetView maxHeight="45vh" maxWidth="45vw" />
         1 target sheet
       </ComparisonBox>
     </CenterRow>
@@ -150,9 +150,9 @@ const StepSelectBackupMedium = observer (({state, prevStepBeforeStart}: BackupVi
             maxWidth="60vw"
             maxHeight={prevStepBeforeStart != null ? 
               // Leave space for a footer with a previous step button
-              "20vh" :
+              "18vh" :
               // No need for footer with space for previous step button.
-              "25vh"
+              "22vh"
             }
           />
           <LabelBelowButtonImage>{label}</LabelBelowButtonImage>
@@ -172,7 +172,7 @@ export const BackupStepSwitchView = observer ( ({state}: BackupViewProps) => {
     default: return (backupMedium == null || step < BackupStep.FirstFace || step > BackupStep.LastFace) ? (<></>) : (
       <>
         <FaceCopyingView medium={backupMedium} diceKey={diceKey} indexOfLastFacePlaced={faceIndex}
-           maxWidth="80vw" maxHeight="55vh"
+           maxWidth="80vw" maxHeight="45vh"
         />
         { diceKey == null ? null : (
           <CopyFaceInstructionView medium={backupMedium} face={diceKey.faces[faceIndex]} index={faceIndex} />
