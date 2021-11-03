@@ -36,6 +36,7 @@ export const BelowTopNavigationBarWithSideMarginsButNoBottomBar = styled(BelowTo
 const TopNavRegion = styled.div`
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
+  user-select: none;
 `;
 
 const TopEdgeNavRegion = styled(TopNavRegion)`
