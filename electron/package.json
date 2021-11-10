@@ -34,7 +34,7 @@
     "typescript": "^4.4.4"
   },
   "dependencies": {
-    "electron-nightly": "^17.0.0-nightly.20211102",
+    "electron": "^16.0.0-beta.8",
     "keytar": "^7.7.0"
   }
 }
