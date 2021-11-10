@@ -1,18 +1,17 @@
-import usbDetect from "usb-detection";
-
 /**
  * If you are polling devices() or doing repeated new HID.HID(vid,pid) to detect device plug / unplug,
  * consider instead using node-usb-detection. node-usb-detection uses OS-specific,
  * non-bus enumeration ways to detect device plug / unplug.
  */
 
-export type Device = usbDetect.Device;
+
+export type Device = HIDDevice;
 export type DeviceListUpdateCallback = (devices: Device[]) => any;
 export type ErrorCallback = (error: any) => any;
 export type StopMonitoringFunction = () => void;
 
 const getDeviceKey = (device: Device): string =>
-  `${ device.productId ?? ""}:${ device.vendorId ?? ""}:${ device.serialNumber ?? "" }`
+  `${ device.productId ?? ""}:${ device.vendorId ?? ""}:${ device.productName ?? "" }`
 
 /**
  * A static class that tracks the set of seedable FIDO keys
@@ -27,12 +26,11 @@ export class UsbDeviceMonitor {
   private deviceMap = new Map<string, Device>();
   private onDeviceListChangedCallbacks: Set<DeviceListUpdateCallback> = new Set();
   private _findDevicesResult?: Promise<Device[]>;
-//  public get findDevicesResult() { return this._findDevicesResult }
 
   private findDevices = async (): Promise<Device[]> => {
     try {
-      const devices = (await usbDetect.find());
-      const filteredDevices = devices.filter(this.deviceFilter);
+      const devices = (await navigator.hid.getDevices());
+      const filteredDevices = this.deviceFilter == null ? devices : devices.filter(this.deviceFilter);
       for (const device of filteredDevices) {
         this.deviceMap.set(getDeviceKey(device), device)
       }
@@ -57,14 +55,13 @@ export class UsbDeviceMonitor {
    * If this is not called, the process will be unable to exit.
    */
   startMonitoring = (deviceListUpdateCallback: DeviceListUpdateCallback, errorCallback?: ErrorCallback): StopMonitoringFunction => {
-    if (this.onDeviceListChangedCallbacks.size == 0) {
-      this.onDeviceListChangedCallbacks.add(deviceListUpdateCallback);
-      usbDetect.startMonitoring();
-      usbDetect.on("add", this.addDevice);
-      usbDetect.on("remove", this.removeDevice)  
+    const numberOfOtherCallbacksListening = this.onDeviceListChangedCallbacks.size;
+    this.onDeviceListChangedCallbacks.add(deviceListUpdateCallback);
+    if (numberOfOtherCallbacksListening === 0) {
+      navigator.hid.addEventListener('connect',this.addDevice);
+      navigator.hid.addEventListener('disconnect',this.removeDevice);
       this._findDevicesResult = this.findDevices();
     } else {
-      this.onDeviceListChangedCallbacks.add(deviceListUpdateCallback);
       const {devices} = this;
       if (devices.length > 0) {
         deviceListUpdateCallback(devices);
@@ -77,26 +74,27 @@ export class UsbDeviceMonitor {
   private stopMonitoring = (callback: DeviceListUpdateCallback) => () => {
     this.onDeviceListChangedCallbacks.delete(callback);
     if (this.onDeviceListChangedCallbacks.size == 0) {
-      usbDetect.stopMonitoring();
+      navigator.hid.removeEventListener('connect',this.addDevice);
+      navigator.hid.removeEventListener('disconnect',this.removeDevice);
     }
   }
 
-  private addDevice = (device: Device) => {
-    if (this.deviceFilter(device)) {
+  private addDevice = ({device}: {device: Device}) => {
+    if (this.deviceFilter == null || this.deviceFilter(device)) {
       this.deviceMap.set(getDeviceKey(device), device);
       this.notifyOnKeysChangedListeners();
     }
   }
 
-  private removeDevice = (device: Device) => {
-    if (this.deviceFilter(device)) {
+  private removeDevice = ({device}: {device: Device}) => {
+    if (this.deviceFilter == null || this.deviceFilter(device)) {
       this.deviceMap.delete(getDeviceKey(device));
       this.notifyOnKeysChangedListeners();
     }
   }
 
   constructor(
-    private deviceFilter: (device: Device) => boolean
+    private deviceFilter?: (device: Device) => boolean
   ) {}
 
 
