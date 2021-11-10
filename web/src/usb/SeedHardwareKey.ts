@@ -111,8 +111,18 @@ class CtapHidInitResponseMessage {
 // const sendReport = (device: HIDDevice, data: DataView, reportType: number = 0x00): Promise<void> => {
 //   let dataArray = new Uint8ClampedArray(data.buffer);
 // //  let dataParameter = [reportType, ...dataArray];
-//   return device.sendFeatureReport(reportType, dataArray);
+//   return device.sendReport(reportType, dataArray);
 // }
+
+const receiveNextHIDInputReportEvent = (device: HIDDevice, reportId: number = 0) => new Promise<HIDInputReportEvent>( (resolve, _reject) => {
+  const receiveReportHandler = (event: HIDInputReportEvent) => {
+    if (event.reportId === reportId) {
+      resolve(event);
+      device.removeEventListener("inputreport", receiveReportHandler);
+    }
+  }
+  device.addEventListener("inputreport", receiveReportHandler);
+});
 
 const sendCtapHidMessage = async (device: HIDDevice, channel: number, command: number, data: DataView): Promise<void> => {
   /*
@@ -135,8 +145,8 @@ const sendCtapHidMessage = async (device: HIDDevice, channel: number, command: n
   while (dest < hidPacketLengthInBytes && src < data.byteLength) {
     initializationPacket.setUint8(dest++, data.getUint8(src++));
   }
-  // await device.sendFeatureReport(REPORT_ID_NOT_USED, new Uint8ClampedArray([REPORT_ID_NOT_USED, ...initializationPacketArray]) );
-  await device.sendFeatureReport(REPORT_ID_NOT_USED, initializationPacketArray);
+  // await device.sendReport(REPORT_ID_NOT_USED, new Uint8ClampedArray([REPORT_ID_NOT_USED, ...initializationPacketArray]) );
+  await device.sendReport(REPORT_ID_NOT_USED, initializationPacketArray);
 
   while(src < data.byteLength && packetSequenceByte < 0x80) {
       /**
@@ -155,8 +165,8 @@ const sendCtapHidMessage = async (device: HIDDevice, channel: number, command: n
       while (dest < hidPacketLengthInBytes && src < data.byteLength) {
         continuationPacket.setUint8(dest++, data.getUint8(src++));
       }
-      // await device.sendFeatureReport(REPORT_ID_NOT_USED, new Uint8ClampedArray([REPORT_ID_NOT_USED, ...continuationPacketArray]) );
-      await device.sendFeatureReport(REPORT_ID_NOT_USED, continuationPacketArray);
+      // await device.sendReport(REPORT_ID_NOT_USED, new Uint8ClampedArray([REPORT_ID_NOT_USED, ...continuationPacketArray]) );
+      await device.sendReport(REPORT_ID_NOT_USED, continuationPacketArray);
     }
 }
 
@@ -166,9 +176,9 @@ const getChannel = async (device: HIDDevice): Promise<number> => {
 
   await sendCtapHidMessage(device, BroadcastChannel, CTAP_HID_Commands.INIT, new DataView(channelCreationNonce.buffer));
   while (true) {
-    const response = await device.receiveFeatureReport(REPORT_ID_NOT_USED);
+    const {data} = await receiveNextHIDInputReportEvent(device, REPORT_ID_NOT_USED);
     //console.log(`response: ${response}`);
-    const packet = new CtapHidPacketReceived(new DataView(response.buffer));
+    const packet = new CtapHidPacketReceived(data);
     const message = new CtapHidInitResponseMessage(packet.message);
     if (message.nonce.every( (byte, index) => byte == channelCreationNonce[index] )) {
       // The nonces match so this is the channel we requested
@@ -198,8 +208,8 @@ const sendWriteSeedMessage = async (device: HIDDevice, channel: number, seed: Ui
   const message = new Uint8ClampedArray([commandVersion, ...seed, ...extState]);
   await sendCtapHidMessage(device, channel, CTAP_HID_Commands.WRITE_SEED, new DataView(message.buffer));
   while (true) {
-    const response = await device.receiveFeatureReport(REPORT_ID_NOT_USED);
-    const packet = new CtapHidPacketReceived(new DataView(response.buffer));
+    const {data} = await receiveNextHIDInputReportEvent(device, REPORT_ID_NOT_USED);
+    const packet = new CtapHidPacketReceived(data);
     if (packet.channel != channel) {
       // This message wasn't meant for us.
       continue;
