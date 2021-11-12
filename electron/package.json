@@ -4,12 +4,12 @@
   "productName": "DiceKeys",
   "description": "DiceKeys App",
   "version": "0.0.1",
-  "main": "dist/electron.js",
+  "main": "electron-js/electron.js",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
-    "watch": "rimraf ./dist && tsc --watch",
-    "build": "rimraf ./dist tsconfig.tsbuildinfo && tsc",
-    "start": "rimraf ./dist tsconfig.tsbuildinfo && tsc && electron --version && electron .",
+    "watch": "rimraf ./electron-js && tsc --watch",
+    "build": "rimraf ./electron-js tsconfig.tsbuildinfo && tsc",
+    "start": "rimraf ./electron-js tsconfig.tsbuildinfo && tsc && electron --version && electron .",
     "start-electron": "electron .",
     "lint": "eslint --ext .ts .",
     "pack": "electron-builder --dir --config=electron-builder.js",
@@ -25,6 +25,7 @@
     "@types/w3c-web-hid": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
+    "electron": "^16.0.0-beta.8",
     "electron-builder": "^22.11.11",
     "electron-builder-squirrel-windows": "^22.11.11",
     "electron-reloader": "^1.2.1",
@@ -34,7 +35,6 @@
     "typescript": "^4.4.4"
   },
   "dependencies": {
-    "electron": "^16.0.0-beta.8",
     "keytar": "^7.7.0"
   }
 }

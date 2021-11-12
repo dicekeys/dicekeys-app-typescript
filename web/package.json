@@ -9,22 +9,10 @@
   },
   "electron-html": "electron/app/electron.html",
   "targets": {
-    "main": {
-      "includeNodeModules": true,
-      "outputFormat": "commonjs",
-      "engines": {
-        "electron": ">=15.x"
-      },
-      "distDir": "dist/electron/",
-      "source": [
-        "src/electron/electron.ts",
-        "src/electron/preload.ts"
-      ]
-    },
     "electron-html": {
       "includeNodeModules": false,
       "outputFormat": "commonjs",
-      "distDir": "dist/electron/",
+      "distDir": "../electron/electron-html/",
       "source": [
         "src/electron/electron.html"
       ]
@@ -36,8 +24,8 @@
     "build": "tsc --noEmit; vite build",
     "clean": "rimraf dist/",
     "build-app": "rimraf dist/web & vite build src/web/index.html --no-minify --out-dir dist/web/",
-    "build-electron-html": "rimraf ../dist/electron-html && vite build --config ./vite.config.electron.ts",
-    "watch-electron-html": "rimraf ../dist/electron-html && vite build --watch --config ./vite.config.electron.ts",
+    "build-electron-html": "rimraf ../electron/electron-html && vite build --config ./vite.config.electron.ts",
+    "watch-electron-html": "rimraf ../electron/electron-html && vite build --watch --config ./vite.config.electron.ts",
     "upload-production": "gsutil -m cp dist/web/* gs://dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/*.js",
     "update-production": "npm run -s build-app & npm run -s upload-production",
     "upload-staging": "gsutil -m cp dist/web/* gs://staging.dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://staging.dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://staging.dicekeys.app/*.js",
