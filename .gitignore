@@ -25,4 +25,4 @@ electron/electron-js/
 electron/electron-html/
 
 # buildinfo files
-*.buildinfo
+*.tsbuildinfo
