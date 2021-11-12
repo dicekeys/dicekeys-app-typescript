@@ -524,6 +524,16 @@ export class DiceKey {
   get centerLetterAndDigit(): string { return this.centerFace.letter + this.centerFace.digit }
   get nickname(): string { return`DiceKey with ${this.centerLetterAndDigit} in center`; }
 
+  rotateToTurnCenterFaceUpright = (): DiceKey => {
+    const centerFacesOrientationTrbl = this.faces[12].orientationAsLowercaseLetterTrbl;
+    switch (centerFacesOrientationTrbl) {
+      case "t": return this;
+      case "l": return this.rotate(1);
+      case "b": return this.rotate(2);
+      case "r": return this.rotate(3);
+    }
+  }
+
   compareTo = (other: DiceKey): DiceKeyComparisonResult =>
   // Compare DiceKey a against the four possible rotations of B to get the list of errors
   ([0, 1, 2, 3] as const)
