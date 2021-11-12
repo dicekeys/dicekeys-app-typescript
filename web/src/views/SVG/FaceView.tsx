@@ -9,7 +9,6 @@ import {
   UndoverlineCodes, getUndoverlineCodes,
   FaceDimensionsFractional
 } from "@dicekeys/read-dicekey-js";
-import { OptionalAspectRatioProps, WithBounds } from "../../utilities/WithBounds";
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
@@ -129,9 +128,19 @@ const UnitFaceGroupView = observer ( ({face, ...svgGroupProps}: {face: Partial<F
   );
 });
 
+
+interface FaceViewProps {
+  face: Partial<Face>;
+  highlightThisFace?: boolean;
+  backgroundColor?: string;
+  stroke?: string;
+  strokeWidth?: string | number;
+  onFaceClicked?: () => any;
+}
+
 interface FaceGroupViewProps extends FaceViewProps {
   center?: Point;
-  linearSizeOfFace: number;
+  linearSizeOfFace?: number;
   linearFractionOfCoverage?: number;
   transform?: string;
 }
@@ -185,28 +194,11 @@ export const FaceGroupView = observer( ({
   )
 });
 
-interface FaceViewProps {
-  face: Partial<Face>;
-  highlightThisFace?: boolean;
-  backgroundColor?: string;
-  stroke?: string;
-  strokeWidth?: string | number;
-  onFaceClicked?: () => any;
-  style?: React.CSSProperties;
-  className?: string;
-}
-export const FaceView = observer( ({
-    style, className,
-    aspectRatioWidthOverHeight, maxWidth, maxHeight,
-    ...props
-  }: FaceViewProps & OptionalAspectRatioProps) => (
-      <WithBounds {...{aspectRatioWidthOverHeight, maxWidth, maxHeight,className,style}}>{ ({bounds}) => {
-        const linearSizeOfFace = Math.min(bounds.height, bounds.width);
-        const center = {x: linearSizeOfFace/2, y: linearSizeOfFace/2};
-        return(
-        <svg>
-          <FaceGroupView {...{...props, linearSizeOfFace, center}} />
-        </svg>
-      )}}</WithBounds>
-    )
-    );
+export const FaceView = ({
+    face, highlightThisFace, backgroundColor, stroke, strokeWidth, onFaceClicked,
+    ...svgProps
+  }: FaceViewProps & React.SVGAttributes<SVGElement>) => (
+  <svg {...svgProps}>
+    <FaceGroupView {...{face, highlightThisFace, backgroundColor, stroke, strokeWidth, onFaceClicked}} />
+  </svg>
+);

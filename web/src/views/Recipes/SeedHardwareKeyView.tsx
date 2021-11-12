@@ -5,16 +5,11 @@ import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { RecipeBuilderState } from "./RecipeBuilderState";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
 import * as Dimensions from "./DerivationView/DerivationViewLayout";
+import { UsbDeviceMonitor } from "../../usb/UsbDeviceMonitor";
+import { writeSeedToFIDOKey, WriteSeedToFIDOKeyException } from "../../usb/SeedHardwareKey";
 
 const seedSecurityKeyPurpose = "seedSecurityKey";
 
-
-import type {
-  IElectronBridge,
-  Device,
-  DeviceUniqueIdentifier,
-  WriteSeedToFIDOKeyException
-} from "../../../../common/IElectronBridge";
 import { action, makeAutoObservable } from "mobx";
 import { isElectron } from "../../utilities/is-electron";
 import { LoadedRecipe } from "../../dicekeys/StoredRecipe";
@@ -23,11 +18,21 @@ import { KeyPlusRecipeView } from "./DerivationView/KeyPlusRecipeView";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import styled from "styled-components";
 
+export const isUsbDeviceASeedableFIDOKey = ({vendorId, productId}: HIDDevice): boolean =>
+  (vendorId == 0x10c4 && productId == 0x8acf) ||
+  (vendorId == 0x0483 && productId == 0xa2ca);
+
+export const FiltersForUsbDeviceASeedableFIDOKey: HIDDeviceFilter[] = [
+  {vendorId: 0x10c4, productId: 0x8acf},
+  {vendorId: 0x0483, productId: 0xa2ca},
+];
+
+const usbDeviceMonitor = new UsbDeviceMonitor(isUsbDeviceASeedableFIDOKey) ;
 
 class SeedableDiceKeys {
   destructor?: () => void;
-  devices?: Device[] = undefined;
-  setDevices = action ((devices: Device[]) => {
+  devices?: HIDDevice[] = undefined;
+  setDevices = action ((devices: HIDDevice[]) => {
     this.devices = devices
   });
   error?: any;
@@ -36,8 +41,7 @@ class SeedableDiceKeys {
   });
 
   constructor() {
-    const {ElectronBridge} = window as {ElectronBridge?: IElectronBridge}
-    this.destructor = ElectronBridge?.listenForSeedableSecurityKeys( this.setDevices, this.setError );
+    this.destructor = usbDeviceMonitor.startMonitoring(this.setDevices, this.setError);
     makeAutoObservable(this);
   }
 
@@ -62,15 +66,14 @@ export const HardwareSecurityKeysView = observer ( ({seedableDiceKeys, seedHardw
   seedHardwareKeyViewState: SeedHardwareKeyViewState
 }) => {
   const {devices} = seedableDiceKeys;
-  const {ElectronBridge} = window as {ElectronBridge?: IElectronBridge}
-  if (devices == null || ElectronBridge == null) return null;
+  if (devices == null) return null;
   return (
     <SeedingContentBlockDiv>
       { devices.map( device => (
         <button
-          key={device.serialNumber}
-          onClick={ () => seedHardwareKeyViewState.write({...device}) }
-        >Seed {device.deviceName} ({device.serialNumber})
+          key={device.productName}
+          onClick={ () => seedHardwareKeyViewState.write(device) }
+        >Seed {device.productName}
         </button>
       ))}
     </SeedingContentBlockDiv>
@@ -210,12 +213,11 @@ class SeedHardwareKeyViewState {
     this.writeSucceeded = true;
   });
 
-  write = (deviceIdentifier: DeviceUniqueIdentifier) => {
+  write = (device: HIDDevice) => {
     const seed = this.derivedFromRecipeState.derivedSeedBytesHex;
-    const {ElectronBridge} = window as {ElectronBridge?: IElectronBridge}
-    if (!seed || !ElectronBridge) return;
+    if (!seed) return;
     this.setWriteStarted();
-    ElectronBridge.writeSeedToFIDOKey(deviceIdentifier, seed)
+    writeSeedToFIDOKey(device, seed)
       .then( () => this.setWriteSucceeded() )
       .catch ( this.setWriteError );
   }

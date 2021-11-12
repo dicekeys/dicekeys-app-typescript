@@ -2,13 +2,11 @@ import React from "react";
 
 import { observer } from "mobx-react";
 import { OverlayCanvas } from "../basics/overlay-canvas";
-import { createReactObservableBounds } from "../basics/bounds";
+import { createReactObservableBounds, ObservableBounds } from "../basics/bounds";
 import { MediaStreamState } from "./MediaStreamState";
 import { FrameGrabberUsingImageCapture } from "./FrameGrabberUsingImageCapture";
 import { FrameGrabberFromVideoElement } from "./FrameGrabberFromVideoElement";
-import { WithSettableBounds, SettableBounds } from "../../utilities/WithBounds";
 
-import {ColumnCentered} from "../basics/Layout"
 import ScanningOverlayImage from /*url:*/"../../images/Scanning Overlay.svg";
 import styled from "styled-components";
 
@@ -21,6 +19,36 @@ export interface CameraCaptureWithOverlayProperties {
   maxWidth?: string;
   maxHeight?: string;
 }
+
+
+export const MiddleOverlaySquare = observer ( ({bounds}: {bounds: ObservableBounds}) => {
+  const {width, height, left, top} = bounds.contentRect;
+  const squareSize = Math.min(width, height);
+  const adjustedTop = top + (height - squareSize) / 2;
+  const adjustedLeft = left + (width - squareSize) / 2;
+  return (
+    <MiddleOverlayImg
+      src={ScanningOverlayImage} 
+      width={squareSize}
+      height={squareSize}
+      style={{left: adjustedLeft, top: adjustedTop}}
+    />
+  );
+}
+);
+
+export const CameraCaptureVideoAndOverlayContainer = styled.div`
+  display: flex;
+  align-self: center;
+  justify-self: center;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  flex-grow: 5;
+  flex-shrink: 5;
+`;
+  
 
 const MiddleOverlayImg = styled.img`
   position: absolute;
@@ -39,8 +67,6 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
     }
   }
 
-  settableBounds = new SettableBounds();
-
   render() {
     const [videoElementBounds, makeThisVideoElementsBoundsObservable] = createReactObservableBounds();
     const useImageCapture = imageCaptureSupported;
@@ -50,9 +76,9 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
     // we can set the focus mode to something close.  Otherwise, the overlay may
     // encourage the user to put the DiceKey closer than the camera can focus on it.
     const {showBoxOverlay = mediaStreamState.supportsFixedFocus} = this.props;
+    const track = mediaStreamState.mediaStream?.getTracks()[0];
+    const aspectRatio = track?.getSettings().aspectRatio ?? 1;
     if (useImageCapture) {
-      const {mediaStream} = mediaStreamState;
-      const track = mediaStream?.getTracks()[0];
       if (track) {
         new FrameGrabberUsingImageCapture(track, this.onFrameCaptured);;
       }
@@ -60,39 +86,39 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
          
     const withVideoElementRef = (videoElement: HTMLVideoElement | null) => {
       if (videoElement == null) return;
-        videoElement.srcObject = this.props.mediaStreamState.mediaStream ?? null;
+      videoElement.srcObject = mediaStreamState.mediaStream ?? null;
       makeThisVideoElementsBoundsObservable(videoElement);
       if (useVideoElementCapture && videoElement.srcObject != null) {
         new FrameGrabberFromVideoElement(videoElement, this.onFrameCaptured) 
       }
     };
 
-    const {maxWidth="100vw", maxHeight="75vh"} = this.props;
-  
+    const {maxWidth, maxHeight} = this.props;  
+
     return (
-      <ColumnCentered>
-        <WithSettableBounds settableBounds={this.settableBounds} aspectRatioWidthOverHeight={1} {...{maxWidth, maxHeight}}>
-          { bounds => (<>
-            <video
-              width={bounds.width}
-              height={bounds.height}
+        <>
+          <video
+            style={
+              (maxWidth != null && maxHeight != null) ?
+                {width: `calc(min(${maxWidth}, ${maxHeight}))`, height: "auto"} :
+              (maxWidth != null) ?
+                {width: `${maxWidth}`, height: "auto"} :
+              (maxHeight != null) ?
+                {width: "auto", maxHeight: `${maxHeight}`} :
+                {width: `100%`, height: "auto"}
+              }
               autoPlay={true}
-              ref={withVideoElementRef}
-            />
-            { !showBoxOverlay ? null : (
-              <MiddleOverlayImg
-                src={ScanningOverlayImage} 
-                width={bounds.width}
-                height={bounds.height}
-              />
-            )}
-            <OverlayCanvas
-              bounds={videoElementBounds}
-              ref={ e => { this.renderingContext = e?.getContext("2d") ?? undefined; }
-            } />
-          </>)
-        }</WithSettableBounds>
-      </ColumnCentered>
+            ref={withVideoElementRef}
+          />
+          { !showBoxOverlay ? null : (
+            <MiddleOverlaySquare bounds={videoElementBounds} />
+          )}
+          <OverlayCanvas
+            aspectRatio={aspectRatio}
+            bounds={videoElementBounds}
+            ref={ e => { this.renderingContext = e?.getContext("2d") ?? undefined; }
+          } />
+        </>
     );
   }
 });

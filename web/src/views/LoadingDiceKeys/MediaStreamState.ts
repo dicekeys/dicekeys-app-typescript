@@ -1,5 +1,5 @@
 import { action, makeAutoObservable } from "mobx";
-import { CamerasOnThisDevice } from "./CamerasOnThisDevice";
+import type { Camera, CamerasOnThisDevice } from "./CamerasOnThisDevice";
 
 export class MediaStreamState {
   public _deviceId: string | undefined;
@@ -33,19 +33,14 @@ export class MediaStreamState {
     this._supportsFixedFocus = supportsFixedFocus;
   });
 
-  setDeviceId = async (deviceId?: string) => {
-    if (deviceId == null) {
-      this.clear();
-      return;
-    }
-    const camera = CamerasOnThisDevice.instance.camerasByDeviceId.get(deviceId);
-    if (camera != null) {
-      // console.log("Setting camera with capabilities ", {...camera.capabilities}, JSON.stringify(camera.capabilities))
-    }
+  get defaultDevice(): Camera | undefined { return this.camerasOnThisDevice.cameras[0] }
+
+  setCamera = async(camera: Camera) => {
+    const {deviceId, capabilities} = camera;
     // Test if the camera supports manual focus and, if set, set focal distance to up-close
-    const minFocusDistance = camera?.capabilities?.focusDistance?.min;
+    const minFocusDistance = capabilities?.focusDistance?.min;
     const supportsFixedFocus = minFocusDistance != null && 
-      (camera?.capabilities?.focusMode ?? []).indexOf("manual") !== -1;
+      (capabilities?.focusMode ?? []).indexOf("manual") !== -1;
     const focusConstraints = supportsFixedFocus && minFocusDistance == null ? {} : {
       advanced: [{focusMode: "manual", focusDistance: {ideal: minFocusDistance, max: minFocusDistance}}]
     }
@@ -54,11 +49,37 @@ export class MediaStreamState {
       ...focusConstraints,
       deviceId,
     };
-    const mediaStream = await navigator.mediaDevices.getUserMedia({video: mediaTrackConstraints});
+    const mediaStream = await (async () => {
+      try {
+        return await navigator.mediaDevices.getUserMedia({video: mediaTrackConstraints});
+      } catch (e) {
+        if (e instanceof OverconstrainedError) {
+          console.log("Camera Overconstrained", deviceId, mediaTrackConstraints);
+        }
+        throw e;
+    }})();
+    console.log("Camera selected", mediaStream.getTracks()[0]?.getSettings());
     this.setDeviceIdAndMediaStream(deviceId, mediaStream, supportsFixedFocus);
   }
 
-  constructor(private defaultMediaTrackConstraints: MediaTrackConstraints) {
-    makeAutoObservable(this);
+  setDeviceId = async (deviceId?: string) => {
+    if (deviceId == null) {
+      this.clear();
+      return;
+    }
+    const camera = this.camerasOnThisDevice.camerasByDeviceId.get(deviceId);
+    if (camera != null) {
+      // console.log("Setting camera with capabilities ", {...camera.capabilities}, JSON.stringify(camera.capabilities))
+      await this.setCamera(camera);
+    }
   }
+
+  constructor(readonly camerasOnThisDevice: CamerasOnThisDevice, readonly defaultMediaTrackConstraints: MediaTrackConstraints) {
+    makeAutoObservable(this, {
+      camerasOnThisDevice: false,
+      defaultMediaTrackConstraints: false
+    });
+  }
+
+
 }

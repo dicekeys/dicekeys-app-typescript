@@ -8,15 +8,15 @@ import BoxBottomAfterRoll from /*url:*/"../images/Box Bottom After Roll.svg";
 import BoxBottomAllDiceInPlace from /*url:*/"../images/Box Bottom All Dice In Place.svg";
 import ScanDiceKeyImage from /*url:*/"../images/Scanning a DiceKey.svg";
 import SealBox from /*url:*/"../images/Seal Box.svg";
-import { DiceKeyViewAutoSized } from "./SVG/DiceKeyView";
+import { DiceKeyView } from "./SVG/DiceKeyView";
 import { ScanDiceKeyView } from "./LoadingDiceKeys/ScanDiceKeyView";
-import { Spacer, ResizableImage, Instruction, CenteredControls, Center, PaddedContentBox } from "./basics/";
+import { Spacer, ResizableImage, Instruction, CenteredControls, CenterRow, PaddedContentBox } from "./basics/";
 import { BackupStepFooterView, BackupStepSwitchView } from "./BackupView";
 import { addPreview } from "./basics/Previews";
 import {AssemblyInstructionsStep, AssemblyInstructionsState} from "./AssemblyInstructionsState";
 import { DiceKeyState } from "../state/Window/DiceKeyState";
 import { PushButton, StepButton } from "../css/Button";
-import { ColumnVerticallyCentered } from "./basics/Layout";
+import { CenterColumn, ColumnVerticallyCentered } from "./basics/Layout";
 import { PrimaryView } from "../css/Page";
 import styled from "styled-components";
 import { BelowTopNavigationBarWithNoBottomBar, TopNavigationBarHeightInVh } from "./Navigation/TopNavigationBar";
@@ -32,6 +32,7 @@ const AssemblyInstructionsContainer = styled(BelowTopNavigationBarWithNoBottomBa
   margin-right: 5vw;
   width: 90vw;
   height: calc(100vh - ${TopNavigationBarHeightInVh}vh - ${WarningFooterTotalHeightFormula});
+  justify-content: space-around;
 `
 
 const WarningFooterDiv = styled.div<{invisible?: boolean}>`
@@ -99,21 +100,17 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
   }
   const {diceKey} = state.foregroundDiceKeyState;
   return (<PaddedContentBox>
-    <Spacer/>
+    {/* <Spacer/> */}
     <Instruction>Scan the dice in the bottom of the box (without sealing the box top into place.)</Instruction>
-    <Spacer/>
-    { scanning ? (<>
-      <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead }
-        maxWidth="80vw"
-        maxHeight="50vh"
-      />
+    { scanning ? (<CenterColumn>
+      <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } maxHeight={`50vh`} />
       <CenteredControls>
         <PushButton onClick={stopScanning}>Cancel</PushButton>
       </CenteredControls>
-    </>) : diceKey != null ? (<>
-        <Center>
-          <DiceKeyViewAutoSized maxHeight="50vh" maxWidth="70vw" faces={diceKey.faces} />
-        </Center>
+    </CenterColumn>) : diceKey != null ? (<>
+        <CenterRow>
+          <DiceKeyView size={`min(50vh,70vw)`} faces={diceKey.faces} />
+        </CenterRow>
         <CenteredControls>
           <PushButton onClick={startScanning} >Scan again</PushButton>
         </CenteredControls>
@@ -219,10 +216,10 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
           ) : (
             <>
               {/* Header, empty for spacing purposes only */}
-              <Spacer/>
+              {/* <Spacer/> */}
               {/* Content */}
               <AssemblyInstructionsStepSwitchView state={state} />
-              <Spacer/>
+              {/* <Spacer/> */}
               {/* Show the step footer for all steps other than the sub-steps of the Backup process */}
               <AssemblyInstructionsStepFooterView {...props}  />
             </>

@@ -105,7 +105,7 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
       if (newState.subView != this.subView) {
         runInAction(() => {
           this.rawSetSubView(newState.subView ?? SubViews.AppHomeView);
-          this.foregroundDiceKeyState.setDiceKey(diceKey);
+          this.foregroundDiceKeyState.setDiceKey(newState.diceKey);
         });
       }
     });

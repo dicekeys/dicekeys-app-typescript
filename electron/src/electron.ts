@@ -5,6 +5,10 @@ import {squirrelCheck} from './electron-squirrel-startup';
 import {createBrowserWindow} from "./createBrowserWindow";
 import {registerAppLinkProtocol, sendAppLink} from "./trusted-main-electron-process/AppLinksApi";
 
+// Disable the HID Block List so that FIDO devices can be enumerated
+// and seeds can be written to them.
+app.commandLine.appendSwitch('disable-hid-blocklist', "true");
+
 // Force all the of APIs to lead by making the runtime environment
 // inspect the count of the keys of the module.
 if (Object.keys(TrustedMainElectronProcess).length === 0) {

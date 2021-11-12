@@ -19,3 +19,10 @@ web/.npmrc
 !.vscode/launch.json
 !.vscode/extensions.json
 *.provisionprofile
+
+# electron build dirs
+electron/electron-js/
+electron/electron-html/
+
+# buildinfo files
+*.buildinfo

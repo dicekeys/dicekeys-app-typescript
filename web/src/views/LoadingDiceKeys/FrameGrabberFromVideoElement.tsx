@@ -9,26 +9,6 @@ export class FrameGrabberFromVideoElement {
   private readonly captureCanvas: HTMLCanvasElement = document.createElement("canvas");
   private captureCanvasCtx: CanvasRenderingContext2D = this.captureCanvas.getContext("2d")!;
 
-  // private videoElement?: HTMLVideoElement;
-
-  // setVideoElement = action((videoElement?: HTMLVideoElement) => {
-  //   this.videoElement = videoElement;
-  // });
-
-  // private frameGrabCallback?: (frame: ImageData) => any = undefined;
-
-  // setCallback = action((callback?: (frame: ImageData) => any) => {
-  //   this.frameGrabCallback = callback;
-  //   if (callback) {
-  //     withDefined(this.timeout, timeout => clearTimeout(timeout));
-  //     this.frameGrabLoopIteration();
-  //   }
-  // });
-
-  // constructor(callback?: (frame: ImageData) => any) {
-  //   makeAutoObservable(this);
-  //   this.setCallback(callback);
-  // }
   constructor(private videoElement: HTMLVideoElement, private callback: (frame: ImageData) => any) {
     this.frameGrabLoopIteration();
   }

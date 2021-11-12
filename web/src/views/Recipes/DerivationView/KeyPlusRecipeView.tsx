@@ -2,7 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import { RecipeBuilderState } from "../RecipeBuilderState";
 import { DiceKey } from "../../../dicekeys/DiceKey";
-import { DiceKeyViewAutoSized } from "../../../views/SVG/DiceKeyView";
+import { DiceKeyView } from "../../../views/SVG/DiceKeyView";
 import { ToggleState } from "../../../state";
 import { HoverState } from "../../../state/reusable/HoverState";
 import { visibility } from "../../../utilities/visibility";
@@ -101,6 +101,7 @@ const RowElement = styled.div`
 
 const ElementInDiceKeyColumn = styled(RowElement)`
   width: calc(${Dimensions.DiceKeyBoxSize});
+  height: auto;
 `;
 
 const ElementInPlusSignColumn = styled(RowElement)`
@@ -123,7 +124,7 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
     <KeyPlusRecipeRow>
       {/* Key */}
       <ElementInDiceKeyColumn>
-        <DiceKeyViewAutoSized faces={diceKey.faces} maxHeight={Dimensions.DiceKeyBoxMaxHeight} maxWidth={Dimensions.DiceKeyBoxMaxWidth}
+        <DiceKeyView faces={diceKey.faces} size={`min(${Dimensions.DiceKeyBoxMaxHeight},${Dimensions.DiceKeyBoxMaxWidth})`}
           obscureAllButCenterDie={ToggleState.ObscureDiceKey}
         />
       </ElementInDiceKeyColumn>
