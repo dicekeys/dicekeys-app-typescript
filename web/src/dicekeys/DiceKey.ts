@@ -31,13 +31,32 @@ export type TupleOf25Items<T> = [
   T, T, T, T, T
 ];
 
-export type ReadOnlyTupleOf25Items<T> = /* readonly */ [
+export type ReadOnlyTupleOf25Items<T> = readonly [
   T, T, T, T, T,
   T, T, T, T, T,
   T, T, T, T, T,
   T, T, T, T, T,
   T, T, T, T, T
 ];
+export const ReadOnlyTupleOf25Items = <T>(fromArray: T[] | ReadOnlyTupleOf25Items<T>): ReadOnlyTupleOf25Items<T> => {
+  if (fromArray.length !== 25) {
+    throw new Error("Expected tuple of 25 items");
+  }
+  // Hack to make TypeScript happy that lengths match,
+  // making a copy since the source might not have been read-only.
+  return [...fromArray] as unknown as ReadOnlyTupleOf25Items<T>;
+}
+
+/**
+ * A DiceKey is an array of 25 dice in a 5x5 grid, ordered from left to right and then top down.
+ * To canonicalize which element in the grid is the top-left (element #1, or item 0 in the array),
+ * we choose the one with the lowest unicode string (the one with the letter with the lowest
+ * charCode.) 
+ */
+ export type DiceKeyFaces<F extends Face = Face> = ReadOnlyTupleOf25Items<F>;
+ export const DiceKeyFaces = <F extends Face = Face>(faces: F[] | DiceKeyFaces<F>) => ReadOnlyTupleOf25Items<F>(faces);
+ export type PartialDiceKey = ReadOnlyTupleOf25Items<Partial<Face>>
+ 
 
 /**
  * Reduce the set of possible digits to 0..24 for precise index of 25 faces.
@@ -135,22 +154,23 @@ export const validateDiceKey = (diceKey: readonly Partial<Face>[], {
 
 
 
-const getRandomDiceKey = (numberOfFaces: number = 6): DiceKeyFaces => {
+const getRandomDiceKey = (numberOfFacesPerDie: number = 6): DiceKeyFaces => {
   const remainingLetters = [...FaceLetters];
-  return Array.from({ length: NumberOfFacesInKey }, (): Face => {
-    // Pull out a letter at random from the remainingLetters array
-    const letterIndex = getRandomUInt32() % remainingLetters.length;
-    const letter = remainingLetters.splice(letterIndex, 1)[0] as FaceLetter;
-    // Generate a digit at random
-    const digit = ((getRandomUInt32() % numberOfFaces) + 1).toString() as FaceDigit;
-    const clockwiseOrientationsFromUpright = getRandomUInt32() % 4;
-    const orientationAsLowercaseLetterTrbl =
-      FaceOrientationLettersTrbl[Clockwise90DegreeRotationsFromUpright(clockwiseOrientationsFromUpright % 4)];
-    const faceAndOrientation: Face = {
-      digit, letter, orientationAsLowercaseLetterTrbl
-    };
-    return faceAndOrientation;
-  }) as DiceKeyFaces;
+  return DiceKeyFaces(
+    Array.from({ length: NumberOfFacesInKey }, (): Face => {
+      // Pull out a letter at random from the remainingLetters array
+      const letterIndex = getRandomUInt32() % remainingLetters.length;
+      const letter = remainingLetters.splice(letterIndex, 1)[0] as FaceLetter;
+      // Generate a digit at random
+      const digit = ((getRandomUInt32() % numberOfFacesPerDie) + 1).toString() as FaceDigit;
+      const clockwiseOrientationsFromUpright = getRandomUInt32() % 4;
+      const orientationAsLowercaseLetterTrbl =
+        FaceOrientationLettersTrbl[Clockwise90DegreeRotationsFromUpright(clockwiseOrientationsFromUpright % 4)];
+      const faceAndOrientation: Face = {
+        digit, letter, orientationAsLowercaseLetterTrbl
+      };
+      return faceAndOrientation;
+  }));
 }
 
 /**
@@ -207,15 +227,6 @@ const diceKeyFromHumanReadableForm = (
   validateDiceKey(diceKey, {throwOnFailures: true, ...validationOptions});
   return diceKey;
 }
-
-/**
- * A DiceKey is an array of 25 dice in a 5x5 grid, ordered from left to right and then top down.
- * To canonicalize which element in the grid is the top-left (element #1, or item 0 in the array),
- * we choose the one with the lowest unicode string (the one with the letter with the lowest
- * charCode.) 
- */
-export type DiceKeyFaces<F extends Face = Face> = ReadOnlyTupleOf25Items<F>;
-export type PartialDiceKey = ReadOnlyTupleOf25Items<Partial<Face>>
 
 export const EmptyPartialDiceKey = Array.from(Array(25).keys()).map( () => ({}) );
 /**
@@ -334,9 +345,11 @@ export function rotateDiceKey<F extends Face = Face>(
   clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright,
   rotateFaceFn: RotateFaceFn<F> = defaultRotateFaceFn
 ) : DiceKeyFaces<F> {
-  return rotationIndexes5x5[clockwise90DegreeRotationsFromUpright]
+  return ReadOnlyTupleOf25Items(
+    rotationIndexes5x5[clockwise90DegreeRotationsFromUpright]
       .map( i => diceKey[i] )
-      .map( faceAndRotation => rotateFaceFn(faceAndRotation, clockwise90DegreeRotationsFromUpright) ) as DiceKeyFaces<F>;
+      .map( faceAndRotation => rotateFaceFn(faceAndRotation, clockwise90DegreeRotationsFromUpright) )
+   );//  as DiceKeyFaces<F>;
 }
 
 const FaceRotationsNonStationary = [1, 2, 3] as const;
@@ -411,13 +424,21 @@ const digitEncodingSize = BigInt(6) ** BigInt(24);
 const uniqueOrientationEncodingSize = BigInt(4) ** BigInt(24);
 export const SizeOfNumericEncodingForUniqueLetters = uniqueLetterEncodingSize * digitEncodingSize * uniqueOrientationEncodingSize;
 
+
+export interface PublicDiceKeyDescriptor {
+  readonly centerFaceLetter: string;
+  readonly centerFaceDigit: string;
+  readonly keyId: string;
+};
+
+
 export class DiceKey {
   public readonly faces: ReadOnlyTupleOf25Items<Face>;
-  constructor(faces: Face[], validate: boolean = true) {
+  constructor(faces: Face[] | DiceKeyFaces, validate: boolean = true) {
     if (validate) {
       validateDiceKey(faces, {throwOnFailures: validate});
     }
-    this.faces = faces as ReadOnlyTupleOf25Items<Face>;
+    this.faces = DiceKeyFaces(faces);
   }
 
   static fromNumericForm = (numericForm: bigint): DiceKey => {
@@ -471,7 +492,7 @@ export class DiceKey {
       orientationAsLowercaseLetterTrbl: orientations[index]
     } as Face));
 
-    return new DiceKey(faces as DiceKeyFaces)
+    return new DiceKey(faces)
   }
 
   get inNumericForm(): bigint | undefined {
@@ -550,12 +571,18 @@ export class DiceKey {
     crypto.subtle.digest("SHA-256",  new TextEncoder().encode(this.toSeedString())).then( hash =>
       uint8ClampedArrayToHexString(new Uint8ClampedArray(hash.slice(0, 8)))).catch( e => { throw e } );
 
+  publicDescriptor = async (): Promise<PublicDiceKeyDescriptor> => ({
+    keyId: await this.keyId(),
+    centerFaceDigit: this.centerFace.letter,
+    centerFaceLetter: this.centerFace.letter,
+  })
+
   static testExample = new DiceKey(
     [...Array(25).keys()].map( (i)  => ({
       letter: FaceLetters[i],
       digit: FaceDigits[i % 6],
       orientationAsLowercaseLetterTrbl: "trbl"[i % 4]
-    } as Face ) ) as ReadOnlyTupleOf25Items<Face>
+    } as Face ) )
   )
 }
 
