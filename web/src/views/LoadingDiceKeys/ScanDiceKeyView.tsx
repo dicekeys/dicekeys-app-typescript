@@ -5,7 +5,7 @@ import { CameraCaptureWithOverlay } from "./CameraCaptureWithOverlay";
 import { DiceKeyFrameProcessorState } from "./DiceKeyFrameProcessorState";
 import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
 import { Camera, CamerasOnThisDevice } from "./CamerasOnThisDevice";
-import { DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
+import { TupleOf25Items, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { MediaStreamState } from "./MediaStreamState";
 import { CameraSelectionView } from "./CameraSelectionView";
 import styled from "styled-components";
@@ -62,7 +62,7 @@ const defaultMediaTrackConstraints: MediaTrackConstraints = {
 
 type ScanDiceKeyViewProps = React.PropsWithoutRef<{
   onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
-  onDiceKeyRead?: (diceKey: DiceKey) => any,
+  onDiceKeyRead?: (diceKey: DiceKeyWithKeyId) => any,
   showBoxOverlay?: boolean;
   maxWidth?: string;
   maxHeight?: string;

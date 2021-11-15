@@ -31,41 +31,27 @@ export interface IElectronBridgeSync {
   getAppLink(): string[];
 }
 
-export type WriteSeedToFIDOKeyException = 
-  "UserDidNotAuthorizeSeeding" |
-  "SeedShouldBe32Bytes" |
-  "ExtStateShouldNotExceed256Bytes" |
-  "KeyDoesNotSupportSeedingVersion" |
-  "KeyDoesNotSupportCommand" |
-  "KeyReportedInvalidLength" |
-  `UnknownSeedingException` |
-  `UnknownSeedingException:${ string }`;
-export interface IElectronBridgeSeedingAsync {
-  writeSeedToFIDOKey: (deviceIdentifier: DeviceUniqueIdentifier, seedAs32BytesIn64CharHexFormat: string, extStateHex?: string) => Promise<"success">
-}
-
 export interface IElectronBridgeDialogsAsync{
   openFileDialog(options: OpenDialogOptions): Promise<OpenDialogReturnValue>;
   openMessageDialog(options: MessageBoxOptions): Promise<MessageBoxReturnValue>;
 }
 export interface IElectronBridgeDiceKeysStoreAsync {
-  getDiceKey(id: string): Promise<string | null>
-  setDiceKey(id: string, humanReadableForm: string): Promise<void>
-  deleteDiceKey(id: string): Promise<boolean>
-  getDiceKeys(): Promise<{ id: string, humanReadableForm: string}[]>
+  getDiceKeyFromCredentialStore(id: string): Promise<string | null>
+  storeDiceKeyInCredentialStore(id: string, humanReadableForm: string): Promise<void>
+  deleteDiceKeyFromCredentialStore(id: string): Promise<boolean>
+  // getDiceKeys(): Promise<{ id: string, humanReadableForm: string}[]>
+  // getDiceKeyIdsAndCenterFaces(): Promise<{id: string, letter: string, digit: string}[]>;
 }
 
 export type RemoveListener = () => void;
 export interface IElectronBridgeListener {
-  listenForSeedableSecurityKeys(successCallback: (devices: Device[]) => any, errorCallback: (error: any) => any): RemoveListener;
   listenForAppLinks(callback: (appLink: string[]) => any, errorCallback: (error: any) => any): RemoveListener;
 // for testing typings only  fix(sc: (a: string, b: number) => any, ec: (error: any) => any): RemoveListener;
 }
 
 export interface IElectronBridgeAsync extends
   IElectronBridgeDialogsAsync,
-  IElectronBridgeDiceKeysStoreAsync,
-  IElectronBridgeSeedingAsync
+  IElectronBridgeDiceKeysStoreAsync
 {}
 
 export interface IElectronBridge extends IElectronBridgeSync, IElectronBridgeAsync, IElectronBridgeListener {

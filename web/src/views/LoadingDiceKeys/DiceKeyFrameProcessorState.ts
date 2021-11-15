@@ -14,7 +14,17 @@ import {
   FaceReadWithImageIfErrorFound
 } from "../../dicekeys/FacesRead"
 import { action, makeAutoObservable } from "mobx";
-import { DiceKey, Face, TupleOf25Items } from "../../dicekeys/DiceKey";
+import {  DiceKeyFaces, DiceKeyWithKeyId, Face, TupleOf25Items } from "../../dicekeys/DiceKey";
+
+
+
+const validateFaceRead = (faceRead: FaceRead): Face => {
+  const {letter, digit, orientationAsLowercaseLetterTrbl} = faceRead;
+  if (letter == null || digit == null || orientationAsLowercaseLetterTrbl === "?") {
+    throw new Error("Invalid face read");
+  }
+  return {letter, digit, orientationAsLowercaseLetterTrbl}
+}
 
 export class DiceKeyFrameProcessorState {
   facesRead?: FaceRead[];
@@ -45,11 +55,11 @@ export class DiceKeyFrameProcessorState {
   private framesSinceErrorsNarrowedToJustBitErrors: number | undefined;
 
   public onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
-  public onDiceKeyRead?: (diceKeyRead: DiceKey) => any
+  public onDiceKeyRead?: (diceKeyRead: DiceKeyWithKeyId) => any
 
   constructor({onFacesRead, onDiceKeyRead}: {
     onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
-    onDiceKeyRead?: (diceKeyRead: DiceKey) => any
+    onDiceKeyRead?: (diceKeyRead: DiceKeyWithKeyId) => any
   }) {
     this.onDiceKeyRead = onDiceKeyRead;
     this.onFacesRead = onFacesRead;
@@ -66,8 +76,14 @@ export class DiceKeyFrameProcessorState {
       this.onFacesRead = undefined;
     }
     if (this.bestFacesRead && this.onDiceKeyRead) {
-      this.onDiceKeyRead(new DiceKey(this.bestFacesRead.map( faceRead => faceRead.toFace() ) as TupleOf25Items<Face>))
+      const onDiceKeyReadCallback = this.onDiceKeyRead;
       this.onDiceKeyRead = undefined;
+      try {
+        // If the DiceKey validates, call the onDiceKeyRead callback we just removed
+        DiceKeyWithKeyId.create(DiceKeyFaces(this.bestFacesRead.map( faceRead => validateFaceRead(faceRead) ))).then( 
+          diceKeyWithKeyId => onDiceKeyReadCallback(diceKeyWithKeyId)
+        )
+      } catch {}
     }
     return true;
   })

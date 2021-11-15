@@ -1,6 +1,6 @@
 import React from "react";
 import { observer  } from "mobx-react";
-import { DiceKey } from "../../dicekeys/DiceKey";
+import { DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
 import { DiceKeyView } from "../SVG/DiceKeyView";
 import { DerivationView } from "../Recipes/DerivationView";
 import { Navigation } from "../../state";
@@ -66,15 +66,15 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
 addPreview("SelectedDiceKey", () => (
   <SelectedDiceKeyView
     goBack={() => alert("Back off man, I'm a scientist!")}
-    state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample), SubViews.DisplayDiceKey)}
+    state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKeyWithoutKeyId.testExample), SubViews.DisplayDiceKey)}
 />));
 
 addPreview("Recipes", () => (<SelectedDiceKeyView
-      state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample), SubViews.DeriveSecrets)}
+      state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKeyWithoutKeyId.testExample), SubViews.DeriveSecrets)}
   />)
 );
 
 addPreview("SeedHardwareKey", () => (<SelectedDiceKeyView
-  state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample), SubViews.SeedHardwareKey)}
+  state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKeyWithoutKeyId.testExample), SubViews.SeedHardwareKey)}
 />)
 );

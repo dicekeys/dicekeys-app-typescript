@@ -1,6 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { DiceKey, Face, PartialDiceKey } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithoutKeyId, Face, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { StickerTargetSheetSvgGroup } from "./StickerTargetSheetView";
 import { DiceKeySizeModelFromBoundsWithoutTab, DiceKeySvgGroup } from "./DiceKeyView";
 import { StickerSheetSvgGroup, portraitSheetWidthOverHeight, StickerSheetSizeModelFromBounds } from "./StickerSheetView";
@@ -157,7 +157,7 @@ export const SticKeyCopyingView = observer( (props: Omit<FaceCopyingViewProps, "
 
 export const Preview_FaceCopyingView = ({indexOfLastFacePlaced=23}: {indexOfLastFacePlaced?: number}) => (
   <>
-    <DiceKeyCopyingView diceKey={DiceKey.testExample} indexOfLastFacePlaced={indexOfLastFacePlaced} />
-    <SticKeyCopyingView diceKey={DiceKey.testExample} matchSticKeyAspectRatio={true} indexOfLastFacePlaced={indexOfLastFacePlaced} />
+    <DiceKeyCopyingView diceKey={DiceKeyWithoutKeyId.testExample} indexOfLastFacePlaced={indexOfLastFacePlaced} />
+    <SticKeyCopyingView diceKey={DiceKeyWithoutKeyId.testExample} matchSticKeyAspectRatio={true} indexOfLastFacePlaced={indexOfLastFacePlaced} />
   </>
 )

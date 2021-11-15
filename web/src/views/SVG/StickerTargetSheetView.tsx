@@ -1,6 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { DiceKey, EmptyPartialDiceKey } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithoutKeyId, EmptyPartialDiceKey } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
 import {portraitSheetWidthOverHeight, StickerSheetSizeModel, StickerSheetSizeModelFromBounds} from "./StickerSheetView"
 import { Bounds, viewBox } from "../../utilities/bounding-rects";
@@ -106,5 +106,5 @@ export const StickerTargetSheetView = observer( ({maxWidth, maxHeight, ...props}
 
 
 export const Preview_StickerTargetSheetView = () => (
-  <StickerTargetSheetView diceKey={DiceKey.testExample} maxHeight="50vh" maxWidth="50vw" indexOfLastFacePlaced={12} />
+  <StickerTargetSheetView diceKey={DiceKeyWithoutKeyId.testExample} maxHeight="50vh" maxWidth="50vw" indexOfLastFacePlaced={12} />
 )

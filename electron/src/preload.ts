@@ -97,18 +97,16 @@ const createIpcListenerRequestClientFunction =
 const electronBridgeTypeChecked: IElectronBridge = {
   writeResultToStdOutAndExit: createIpcSyncRequestClientFunction("writeResultToStdOutAndExit"),
   getCommandLineArguments: createIpcSyncRequestClientFunction("getCommandLineArguments"),
-  getAppLink: createIpcSyncRequestClientFunction("getAppLink"),
 
-  writeSeedToFIDOKey: createIpcAsyncRequestClientFunction("writeSeedToFIDOKey"),
+  getAppLink: createIpcSyncRequestClientFunction("getAppLink"),
+  listenForAppLinks: createIpcListenerRequestClientFunction("listenForAppLinks"),
 
   openFileDialog: createIpcAsyncRequestClientFunction("openFileDialog"),
   openMessageDialog: createIpcAsyncRequestClientFunction("openMessageDialog"),
-  getDiceKey: createIpcAsyncRequestClientFunction("getDiceKey"),
-  setDiceKey: createIpcAsyncRequestClientFunction("setDiceKey"),
-  deleteDiceKey: createIpcAsyncRequestClientFunction("deleteDiceKey"),
-  getDiceKeys: createIpcAsyncRequestClientFunction("getDiceKeys"),
-  listenForSeedableSecurityKeys: createIpcListenerRequestClientFunction("listenForSeedableSecurityKeys"),
-  listenForAppLinks: createIpcListenerRequestClientFunction("listenForAppLinks"),
+
+  getDiceKeyFromCredentialStore: createIpcAsyncRequestClientFunction("getDiceKeyFromCredentialStore"),
+  storeDiceKeyInCredentialStore: createIpcAsyncRequestClientFunction("storeDiceKeyInCredentialStore"),
+  deleteDiceKeyFromCredentialStore: createIpcAsyncRequestClientFunction("deleteDiceKeyFromCredentialStore"),
 //  fix: {} as IElectronBridge["fix"]
 };
 

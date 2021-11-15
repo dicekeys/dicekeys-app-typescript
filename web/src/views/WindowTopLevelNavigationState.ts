@@ -1,6 +1,6 @@
 import { action, makeObservable, override, runInAction } from "mobx";
 import { addressBarState } from "../state/core/AddressBarState";
-import { DiceKey } from "../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { HasSubViews } from "../state/core";
 import { DiceKeyMemoryStore } from "../state/stores/DiceKeyMemoryStore";
 import { DiceKeyState } from "../state/Window/DiceKeyState";
@@ -53,13 +53,10 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
     this.navigateTo(SubViews.DiceKeyView);
   });
 
-  navigateToSelectedDiceKeyView = async (diceKey: DiceKey) => {
-    const keyId = await diceKey.keyId();
-    runInAction( () => {
-      DiceKeyMemoryStore.addDiceKeyForKeyId(keyId, diceKey);
-      this.navigateToSelectedDiceKeyViewForKeyId(keyId);
-    });
-  }
+  navigateToSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
+    DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
+    this.navigateToSelectedDiceKeyViewForKeyId(diceKey.keyId);
+  });
 
   get subView(): SubViews {
     switch(this._subView) {

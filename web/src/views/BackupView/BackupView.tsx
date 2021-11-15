@@ -1,4 +1,4 @@
-import { DiceKey, Face } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyFaces, DiceKeyWithoutKeyId, Face } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
@@ -270,29 +270,29 @@ class PreviewDiceKeyState {
   })
 }
 addPreviewWithMargins("Backup", () => ( 
-  <BackupView state={new BackupViewState(new PreviewDiceKeyState(DiceKey.testExample), BackupStep.SelectBackupMedium)} />
+  <BackupView state={new BackupViewState(new PreviewDiceKeyState(DiceKeyWithoutKeyId.testExample), BackupStep.SelectBackupMedium)} />
 ));
 
 addPreviewWithMargins("BackupNoErrors", () => {
-  const diceKeyState = new PreviewDiceKeyState(DiceKey.testExample);
+  const diceKeyState = new PreviewDiceKeyState(DiceKeyWithoutKeyId.testExample);
   const state = new BackupViewState(diceKeyState);
   state.setBackupMedium(BackupMedium.DiceKey);
   state.setStep(BackupStep.Validate);
-  state.diceKeyScannedFromBackup.setDiceKey(DiceKey.testExample)
+  state.diceKeyScannedFromBackup.setDiceKey(DiceKeyWithoutKeyId.testExample)
   return (<BackupView state={state} />
 )});
 
 addPreviewWithMargins("Backup1Error", () => {
-  const diceKeyState = new PreviewDiceKeyState(DiceKey.testExample);
+  const diceKeyState = new PreviewDiceKeyState(DiceKeyWithoutKeyId.testExample);
   const state = new BackupViewState(diceKeyState);
   state.setBackupMedium(BackupMedium.DiceKey);
-  const diceKeyWithErrors = new DiceKey(diceKeyState.diceKey.rotate(1).faces.map( (face, index) => {
+  const diceKeyWithErrors = new DiceKeyWithoutKeyId(DiceKeyFaces(diceKeyState.diceKey.rotate(1).faces.map( (face, index) => {
       switch(index) {
         case 3: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 5) % FaceLetters.length]};
         default: return face;
       }
     }
-  ));
+  )));
   state.setStep(BackupStep.Validate);
   state.diceKeyScannedFromBackup.setDiceKey(diceKeyWithErrors)
   return ( 
@@ -300,10 +300,10 @@ addPreviewWithMargins("Backup1Error", () => {
 )});
 
 addPreviewWithMargins("BackupShowErrors", () => {
-  const diceKeyState = new PreviewDiceKeyState(DiceKey.testExample);
+  const diceKeyState = new PreviewDiceKeyState(DiceKeyWithoutKeyId.testExample);
   const state = new BackupViewState(diceKeyState);
   state.setBackupMedium(BackupMedium.DiceKey);
-  const diceKeyWithErrors = new DiceKey(diceKeyState.diceKey.rotate(1).faces.map( (face, index) => {
+  const diceKeyWithErrors = new DiceKeyWithoutKeyId(DiceKeyFaces(diceKeyState.diceKey.rotate(1).faces.map( (face, index) => {
       switch(index) {
         case 3: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 5) % FaceLetters.length]};
         case 8: return {...face, digit: FaceDigits[(FaceDigits.indexOf(face.digit) + 3) % FaceDigits.length]};
@@ -316,7 +316,7 @@ addPreviewWithMargins("BackupShowErrors", () => {
         default: return face;
       }
     }
-  ));
+  )));
   state.setStep(BackupStep.Validate);
   state.diceKeyScannedFromBackup.setDiceKey(diceKeyWithErrors)
   return ( 
