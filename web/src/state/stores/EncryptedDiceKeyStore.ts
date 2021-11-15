@@ -28,7 +28,6 @@ class EncryptedDiceKeyStoreClass {
     this._publicDescriptorsOfEncryptedDiceKeys = sortPublicDiceKeyDescriptors(publicDescriptorsOfEncryptedDiceKeys);
   });
 
-
   has = ({keyId}: {keyId: string} | PublicDiceKeyDescriptor) => this.publicDescriptorsOfEncryptedDiceKeys.some(
     descriptor => keyId === descriptor.keyId
   );

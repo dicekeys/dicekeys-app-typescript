@@ -42,7 +42,7 @@ class DiceKeyMemoryStoreClass {
   });
 
   removeDiceKey = async (diceKeyOrKeyId: DiceKeyWithKeyId | string) => {
-    const keyId = typeof(diceKeyOrKeyId) === "string" ? diceKeyOrKeyId : await diceKeyOrKeyId.keyId;
+    const keyId = typeof(diceKeyOrKeyId) === "string" ? diceKeyOrKeyId : diceKeyOrKeyId.keyId;
     this.removeDiceKeyForKeyId(keyId);
   };
 
