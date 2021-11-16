@@ -2,14 +2,16 @@ import { observer } from "mobx-react";
 import React from "react";
 import {WindowTopLevelNavigationState} from "../state/Window";
 
-import LoadDiceKeyImage from /*url:*/"../images/Scanning a DiceKey.svg";
-import AssemblyImage1 from /*url:*/"../images/Illustration of shaking bag.svg";
-import AssemblyImage2 from /*url:*/"../images/Box Bottom After Roll.svg";
-import AssemblyImage3 from /*url:*/"../images/Seal Box.svg";
+import LoadDiceKeyImage from "../images/Scanning a DiceKey.svg";
+import AssemblyImage1 from "../images/Illustration of shaking bag.svg";
+import AssemblyImage2 from "../images/Box Bottom After Roll.svg";
+import AssemblyImage3 from "../images/Seal Box.svg";
 import { PrimaryView } from "../css/Page";
 import { ColumnCentered } from "./basics";
 import styled from "styled-components";
 import { SimpleTopNavBar } from "./Navigation/SimpleTopNavBar";
+import {RUNNING_IN_ELECTRON} from "../utilities/is-electron";
+import { EncryptedDiceKeyStore } from "../state/stores/EncryptedDiceKeyStore";
 
 const SubViewButton = styled.button`
   display: flex;
@@ -46,10 +48,26 @@ interface WindowHomeViewProps {
 }
 export const WindowHomeView = observer ( (props: WindowHomeViewProps) => {
   const {windowNavigationState} = props;
+  const storedDiceKeys = RUNNING_IN_ELECTRON ?
+    EncryptedDiceKeyStore.storedDiceKeys : [];
   return (
     <PrimaryView>
       <SimpleTopNavBar title="DiceKeys App" />
       <ColumnCentered>
+        { (!RUNNING_IN_ELECTRON) ? null : storedDiceKeys.map( storedDiceKeyDescriptor => (
+          <SubViewButton
+            onClick={async () => {
+              const diceKey = await EncryptedDiceKeyStore.load(storedDiceKeyDescriptor);
+              if (diceKey != null) {
+                windowNavigationState.navigateToSelectedDiceKeyView(diceKey);
+              } else {
+                console.log(`EncryptedDiceKeyStore.load returned null`)
+              }
+            }}
+          >
+          <SubViewButtonCaption>{`Open DiceKey with ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit} at center`}</SubViewButtonCaption>{
+          }</SubViewButton>
+        )) }
         {/* 
           Load DiceKey button
           */}

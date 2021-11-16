@@ -41,7 +41,7 @@ class EncryptedDiceKeyStoreClass {
     ]);
   };
 
-  load = async ({keyId}: {keyId: string} | PublicDiceKeyDescriptor): Promise<DiceKey | undefined> => {
+  load = async ({keyId}: {keyId: string} | PublicDiceKeyDescriptor): Promise<DiceKeyWithKeyId | undefined> => {
     try {
       const diceKeyInHumanReadableForm = await electronBridge.getDiceKeyFromCredentialStore(keyId);
       if (diceKeyInHumanReadableForm != null && diceKeyInHumanReadableForm.length === 75) {
