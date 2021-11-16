@@ -472,8 +472,8 @@ const facesFromNumericForm = (numericForm: bigint): DiceKeyFaces => {
 
 
 export interface PublicDiceKeyDescriptor {
-  readonly centerFaceLetter: string;
-  readonly centerFaceDigit: string;
+  readonly centerFaceLetter: FaceLetter;
+  readonly centerFaceDigit: FaceDigit;
   readonly keyId: string;
 };
 
@@ -623,7 +623,7 @@ export class DiceKeyWithKeyId extends DiceKeyBase {
   
   publicDescriptor = async (): Promise<PublicDiceKeyDescriptor> => ({
     keyId: this.keyId,
-    centerFaceDigit: this.centerFace.letter,
+    centerFaceDigit: this.centerFace.digit,
     centerFaceLetter: this.centerFace.letter,
   })
 
