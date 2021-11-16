@@ -23,15 +23,12 @@ class DiceKeyMemoryStoreClass {
   }
 
   addDiceKeyForKeyId = action ( (keyId: string, diceKey: DiceKey) => {
-    // console.log(`addDiceKeyForKeyId(${keyId}) ${diceKey}`);
     if (!(keyId in this.diceKeyForKeyId)) {
-      this.keyIdToDiceKeyInHumanReadableForm[keyId] = diceKey.inHumanReadableForm;
+      this.keyIdToDiceKeyInHumanReadableForm[keyId] = diceKey.rotateToTurnCenterFaceUpright().inHumanReadableForm;
       // Append the letter/digit to the end of the array (or start a new array)
       if (!(diceKey.centerLetterAndDigit in this.centerLetterAndDigitToKeyId)) {
         this.centerLetterAndDigitToKeyId[diceKey.centerLetterAndDigit] = keyId;        
       }
-      // this.centerLetterAndDigitToKeyId[diceKey.centerLetterAndDigit] =
-      //   [...(this.centerLetterAndDigitToKeyId[diceKey.centerLetterAndDigit] ?? []), keyId];
     }
   });
 
@@ -81,10 +78,10 @@ class DiceKeyMemoryStoreClass {
     this.centerLetterAndDigitToKeyId = {}
     makeAutoObservable(this);
     if (isElectron()) {
-      isReady = true; readyEvent.send();
-    } else {
       // We don't need to save the DiceKeyStore in electron because there is only one window right now
       // and there's no chance of a refresh.
+      isReady = true; readyEvent.send();
+    } else {
       autoSaveEncrypted(this, "DiceKeyStore", () => runInAction( () => { isReady = true; readyEvent.send();} ), true);
     }
     AllAppWindowsAndTabsAreClosingEvent.on( () => {

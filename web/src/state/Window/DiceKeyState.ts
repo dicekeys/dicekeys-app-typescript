@@ -10,7 +10,8 @@ export interface SettableDiceKeyState {
 export class DiceKeyState implements SettableDiceKeyState {
   keyId?: string = undefined;
   public get diceKey(): DiceKey | undefined {
-    return this.keyId ? DiceKeyMemoryStore.diceKeyForKeyId(this.keyId) : undefined;
+    const {keyId} = this;
+    return keyId ? DiceKeyMemoryStore.diceKeyForKeyId(keyId) : undefined;
   };
 
   constructor(
@@ -24,10 +25,17 @@ export class DiceKeyState implements SettableDiceKeyState {
     }
   }
 
-  setKeyId = action( (keyId?: string) => this.keyId = keyId );
+  setKeyId = action( (keyId?: string) => {
+    const oldKeyId = this.keyId;
+    if (keyId != oldKeyId && oldKeyId != null) {
+      // Pull the DiceKey we're no longer using out of the memory store.
+      DiceKeyMemoryStore.removeDiceKey(oldKeyId);
+    }
+    this.keyId = keyId
+  });
 
   setKeyIdAndDiceKey = action ( (keyId: string, diceKey:DiceKey) => {
-    DiceKeyMemoryStore.addDiceKeyForKeyId(keyId, diceKey);
+    DiceKeyMemoryStore.addDiceKeyForKeyId(keyId, diceKey.rotateToTurnCenterFaceUpright());
     this.keyId = keyId;
   });
 
