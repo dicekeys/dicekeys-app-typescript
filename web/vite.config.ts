@@ -5,7 +5,11 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   root: "./src/",
+  base: "./",
+  define: {VITE_SET_APP_RUNNING_IN_ELECTRON: "false"},
   build: {
+    // for debugging
+    minify: false,
     // Required for dependency on BigInt and number literals ending in n (1n)
     target: "es2020",
     // Write output into web subdirectory of repository's /dist directory

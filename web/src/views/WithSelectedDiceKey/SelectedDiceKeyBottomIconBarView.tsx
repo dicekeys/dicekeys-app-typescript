@@ -5,8 +5,8 @@ import imageOfUsbKey from /*url:*/"../../images/USB Key.svg";
 import imageOfSecretWithArrow from /*url:*/"../../images/Secret with Arrow.svg";
 import imageOfBackup from /*url:*/"../../images/Backup to DiceKey.svg";
 import { Navigation } from "../../state";
-import { SelectedDiceKeyViewState } from "./SelectedDiceKeyViewState";
 import { EventHandlerOverridesDefault } from "../../utilities/EventHandlerOverridesDefault";
+import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 import styled from "styled-components";
@@ -43,12 +43,6 @@ export const FooterIconImg = styled.img`
   flex-basis: 0;
   flex-grow: 1;
 `;
-
-export interface SelectedDiceKeyViewProps {
-  state: SelectedDiceKeyViewState;
-  goBack?: () => any;
-}
-
 const FooterButtonView = observer( ( props: SelectedDiceKeyViewProps & {
   subView: Navigation.SelectedDiceKeySubViews, imageSrc: string, labelStr: string
   onClick: () => void

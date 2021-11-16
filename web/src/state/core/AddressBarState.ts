@@ -1,7 +1,7 @@
 
 // TO DO: QueuedUrlApiRequests, replace transmitResponseUrl: (responseURL: URL) => any = (url: URL) => window.location.replace(url.toString());
 
-import { isElectron } from "../../utilities/is-electron";
+import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 
 interface AddressBarState {
   path: string;
@@ -36,6 +36,6 @@ class ElectronMockAddressBarState implements AddressBarState {
   replaceState = (path: string) => this.pathStack[0] = path;
 }
 
-export const addressBarState: AddressBarState = isElectron() ?
+export const addressBarState: AddressBarState = RUNNING_IN_ELECTRON ?
   new ElectronMockAddressBarState() :
   new BrowserAddressBarState();

@@ -4,7 +4,7 @@ import {WindowTopLevelView} from "./views/WindowTopLevelView";
 import { ErrorHandler } from "./views/ErrorHandler";
 import { ErrorState } from "./views/ErrorState";
 import { DiceKeyMemoryStore } from "./state";
-import { isElectron } from "./utilities/is-electron";
+import { RUNNING_IN_ELECTRON } from "./utilities/is-electron";
 import { QueuedUrlApiRequest } from "./api-handler";
 import { ApiCalls } from "@dicekeys/dicekeys-api-js";
 import { ApiRequestsReceivedState } from "./state/ApiRequestsReceivedState";
@@ -14,7 +14,7 @@ const ApplicationErrorState = new ErrorState();
 /**
  * For web-based apps, scan the URL on page load
  */
-if (!isElectron()) {
+if (RUNNING_IN_ELECTRON) {
   try {
     const url = new URL(window.location.href);
     if (url.searchParams.has(ApiCalls.RequestMetadataParameterNames.command)) {

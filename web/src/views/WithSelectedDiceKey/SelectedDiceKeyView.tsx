@@ -5,16 +5,16 @@ import { DiceKeyView } from "../SVG/DiceKeyView";
 import { DerivationView } from "../Recipes/DerivationView";
 import { Navigation } from "../../state";
 import { SeedHardwareKeyView } from "../Recipes/SeedHardwareKeyView";
-import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 import { BackupView } from "../BackupView/BackupView";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { addPreview } from "../basics/Previews";
 import { PageAsFlexColumn } from "../../css/Page";
+import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 import {
   SelectedDiceKeyBottomIconBarView,
-  SelectedDiceKeyViewProps,
 } from "./SelectedDiceKeyBottomIconBarView";
 import { SelectedDiceKeyContentRegionWithoutSideMargins, HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh } from "./SelectedDiceKeyLayout";
+import { SelectedDiceKeyNavigationBar } from "./SelectedDiceKeyNavigationBar";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 const IdealMinimumContentMargin = `2rem`
@@ -48,11 +48,10 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
 
 export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) => {
   const diceKey = props.state.foregroundDiceKeyState.diceKey;
-  const {goBack} = props;
   if (!diceKey) return null;
   return (
     <PageAsFlexColumn>
-      <SimpleTopNavBar title={diceKey.nickname} goBack={goBack} />
+      <SelectedDiceKeyNavigationBar {...props} />
       <SelectedDiceKeyContentRegionWithoutSideMargins>
         <SelectedDiceKeySubViewSwitch {...{...props}} />
       </SelectedDiceKeyContentRegionWithoutSideMargins>

@@ -6,8 +6,8 @@ import { resolve } from "path";
 export default defineConfig({
   plugins: [react()],
   root: "./src/",
-  // This option forces the generation of relative paths, which electron needs. 
   base: "./",
+  define: {VITE_SET_APP_RUNNING_IN_ELECTRON: "true"},
   build: {
     // Do not minify for Electron
     minify: false,
