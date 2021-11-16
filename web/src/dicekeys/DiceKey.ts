@@ -477,6 +477,26 @@ export interface PublicDiceKeyDescriptor {
   readonly keyId: string;
 };
 
+/**
+ * Given a public descriptor of a DiceKey containing the center letter and digit,
+ * generate a full set of 25 faces to feed to render a DiceKey, replacing the
+ * faces we can't obtain from the public descriptor with the center face
+ * (oriented upright).
+ * @param descriptor A PublicDiceKeyDescriptor containing the letter and digit of the
+ * (public) center face of the key.
+ * @returns A tuple of 25 faces that aren't the true faces of the DiceKey, but instead 25
+ * copies of the center face that can be passed to code that renders DiceKeys.
+ */
+export const facesFromPublicKeyDescriptor = (descriptor: PublicDiceKeyDescriptor): DiceKeyFaces => {
+  const letter = descriptor.centerFaceLetter;
+  const digit = descriptor.centerFaceDigit;
+  const orientationAsLowercaseLetterTrbl = 't';
+  const face: Face = {letter, digit, orientationAsLowercaseLetterTrbl};
+  return DiceKeyFaces(
+    Array.from({ length: NumberOfFacesInKey }, ()=> face)
+  );
+}
+
 abstract class DiceKeyBase {
   constructor(public readonly faces: DiceKeyFaces) {}
 

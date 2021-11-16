@@ -1,7 +1,7 @@
 import { action, makeAutoObservable } from "mobx";
 import { autoSave } from "../core/AutoSave";
 import type {IElectronBridge} from "../../../../common/IElectronBridge";
-import {DiceKey, DiceKeyInHumanReadableForm, DiceKeyWithKeyId, PublicDiceKeyDescriptor} from "../../dicekeys/DiceKey";
+import {DiceKeyInHumanReadableForm, DiceKeyWithKeyId, PublicDiceKeyDescriptor} from "../../dicekeys/DiceKey";
 
 const electronBridge = (window as unknown as  {ElectronBridge: IElectronBridge}).ElectronBridge;
 

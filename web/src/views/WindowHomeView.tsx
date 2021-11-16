@@ -12,6 +12,9 @@ import styled from "styled-components";
 import { SimpleTopNavBar } from "./Navigation/SimpleTopNavBar";
 import {RUNNING_IN_ELECTRON} from "../utilities/is-electron";
 import { EncryptedDiceKeyStore } from "../state/stores/EncryptedDiceKeyStore";
+import { DiceKeyView } from "./SVG/DiceKeyView";
+import { cssCalcTyped, cssCalcInputExpr } from "../utilities";
+import { facesFromPublicKeyDescriptor } from "../dicekeys/DiceKey";
 
 const SubViewButton = styled.button`
   display: flex;
@@ -65,7 +68,13 @@ export const WindowHomeView = observer ( (props: WindowHomeViewProps) => {
               }
             }}
           >
-          <SubViewButtonCaption>{`Open DiceKey with ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit} at center`}</SubViewButtonCaption>{
+          <DiceKeyView
+            size={`${cssCalcTyped(`min(${cssCalcInputExpr(`50vw`)},${cssCalcInputExpr(`20vh`)})`)}`}
+            faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
+            obscureAllButCenterDie={true}
+            showLidTab={true}
+          />
+          <SubViewButtonCaption>{`Open Key ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit}`}</SubViewButtonCaption>{
           }</SubViewButton>
         )) }
         {/* 
