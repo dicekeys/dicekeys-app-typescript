@@ -111,7 +111,7 @@ export const getRecipeJson = (spec: AddableRecipeFields, templateRecipeJson?: st
   // IMPORTANT -- changes must be applied in the correct order for JSON
   // fields to be ordered correctly and to be consistent between platforms.
 
-  // Apply addition of hosts
+  // Apply addition of allow
   recipeJson = addHostsToRecipeJson(recipeJson, hosts);
   // Apply addition of purpose
   recipeJson = addPurposeToRecipeJson(recipeJson, purpose);
