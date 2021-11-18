@@ -9,12 +9,12 @@ import AssemblyImage3 from "../images/Seal Box.svg";
 import { PrimaryView } from "../css/Page";
 import { ColumnCentered } from "./basics";
 import styled from "styled-components";
-import { SimpleTopNavBar } from "./Navigation/SimpleTopNavBar";
 import {RUNNING_IN_ELECTRON} from "../utilities/is-electron";
 import { EncryptedDiceKeyStore } from "../state/stores/EncryptedDiceKeyStore";
 import { DiceKeyView } from "./SVG/DiceKeyView";
 import { cssCalcTyped, cssCalcInputExpr } from "../utilities";
 import { facesFromPublicKeyDescriptor } from "../dicekeys/DiceKey";
+import { WindowHomeNavigationBar } from "./WindowHomeNavigationBar";
 
 const SubViewButton = styled.button`
   display: flex;
@@ -55,7 +55,7 @@ export const WindowHomeView = observer ( (props: WindowHomeViewProps) => {
     EncryptedDiceKeyStore.storedDiceKeys : [];
   return (
     <PrimaryView>
-      <SimpleTopNavBar title="DiceKeys App" />
+      <WindowHomeNavigationBar state={windowNavigationState} />
       <ColumnCentered>
         { (!RUNNING_IN_ELECTRON) ? null : storedDiceKeys.map( storedDiceKeyDescriptor => (
           <SubViewButton
