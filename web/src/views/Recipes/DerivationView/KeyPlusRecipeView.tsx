@@ -73,7 +73,7 @@ const RecipeView = observer( ({recipeBuilderState, editButtonsHoverState}: {
       { !recipeBuilderState.recipeIsNotEmpty ? (
         <InteriorLabelForRecipe>Recipe</InteriorLabelForRecipe>
       ) : (<>
-          <MultilineRecipeJsonView recipeJson={ recipeBuilderState.recipeJson  }/>
+          <MultilineRecipeJsonView recipeJson={ recipeBuilderState.canonicalRecipeJson  }/>
           <RecipeSeparator/>
           <div>
             <RecipeDescriptionContentView state={recipeBuilderState} />

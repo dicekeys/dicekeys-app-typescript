@@ -201,13 +201,13 @@ export const RawJsonFieldView = observer( ({state}: {
       <BuilderFieldLabel htmlFor={field}>raw json:</BuilderFieldLabel>
       <FormattedRecipeBox>
         <FormattedRecipeUnderlayJson>
-          <EnhancedRecipeView recipeJson={state.recipeJson} />
+          <EnhancedRecipeView recipeJson={state.rawRecipeJson} />
         </FormattedRecipeUnderlayJson>
         <FormattedRecipeTextAreaJson
           ref={textAreaComponentRef}
-          value={state.recipeJson ?? ""}
+          value={state.rawRecipeJson ?? ""}
           onFocus={fieldFocusState.focus}
-          onInput={ e => {state.setRecipeJson(e.currentTarget.value); fieldFocusState.focus(); }} 
+          onInput={ e => {state.setAllFromRecipeJson(e.currentTarget.value); fieldFocusState.focus(); }} 
         />
       </FormattedRecipeBox>
     </BuilderFieldContainer>

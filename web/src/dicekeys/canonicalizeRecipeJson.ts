@@ -22,15 +22,18 @@ const toCanonicalizeRecipeJson = ( parsedJson: ParsedJsonElement ): string => {
           .sort( (a, b) => compareObjectFieldNames(a.name.value, b.name.value)  )
           .map( field => `"${field.name.value}":${toCanonicalizeRecipeJson(field.value)}`)
           .join(",")
-      }`;
+      }}`;
   }
 }
 
-export const canonicalizeRecipeJson = (recipeJson: string): string => {
+export const canonicalizeRecipeJson = (recipeJson: string | undefined): string | undefined => {
+  if (recipeJson == null) return undefined;
   try {
     const recipeJsonObj = parseAnnotatedJson(recipeJson);
     if (recipeJsonObj.type != "object") throw new Error("recipe must be object");
     return toCanonicalizeRecipeJson(recipeJsonObj);
-  } catch {}
-  return "";
+  } catch (e) {
+    console.log(e);
+    return undefined;;
+  }
 }

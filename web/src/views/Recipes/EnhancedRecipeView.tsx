@@ -78,10 +78,10 @@ export const LabeledEnhancedRecipeView = observer( ( {state}: {state: RecipeBuil
   <RawRecipeViewContainer>
     <RawRecipeLabelDiv>Recipe:</RawRecipeLabelDiv>
     <RawRecipeValueDiv>
-      {state.recipeJson == null ? (
+      {state.canonicalRecipeJson == null ? (
         <EmptyRawRecipeSpan>{"{}"}</EmptyRawRecipeSpan>
       ) : (
-        <EnhancedRecipeView recipeJson={ state.recipeJson  }/>
+        <EnhancedRecipeView recipeJson={ state.canonicalRecipeJson  }/>
       )}
     </RawRecipeValueDiv>
   </RawRecipeViewContainer>
