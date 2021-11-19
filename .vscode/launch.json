@@ -19,13 +19,14 @@
       {
         "name": "Prescribed Debug Jest Tests",
         "type": "node",
+        "cwd": "${workspaceFolder}/web",
         "request": "launch",
         "runtimeArgs": [
           "--inspect-brk",
-          "${workspaceRoot}/node_modules/jest/bin/jest.js",
+          "${workspaceRoot}/web/node_modules/jest/bin/jest.js",
           "--runInBand",
           // optionally add test file name below
-          // "ConstructRecipe",
+          // "recipe-canonicalization",
         ],
         "console": "integratedTerminal",
         "internalConsoleOptions": "neverOpen",

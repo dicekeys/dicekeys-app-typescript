@@ -44,11 +44,12 @@ export interface ParsedJsonBaseType<TYPENAME extends string, T> extends ParsedJs
   type: TYPENAME
   value: T;
 }
-export type ParsedJsonNumber = ParsedJsonBaseType<"number", number>
+export type ParsedJsonNumber = ParsedJsonBaseType<"number", number> & {numberAsString: string}
 export type ParsedJsonBoolean = ParsedJsonBaseType<"boolean", boolean>
 export interface ParsedJsonString extends ParsedJsonBaseType<"string", string> {
   indexOfOpeningQuote: number;
   indexOfClosingQuote: number;
+  originalQuotedString: string;
 }
 export interface ParsedJsonNull extends ParsedJsonBaseType<"null", null> {}
 
@@ -60,7 +61,7 @@ export interface ParsedJsonObject extends ParsedJsonElementCommon {
   fieldsByName: {[key: string]: ParsedJsonObjectField}
 }
 
-type ParsedJsonElement = (
+export type ParsedJsonElement = (
   ParsedJsonObject |
   ParsedJsonArray |
   ParsedJsonBoolean |
@@ -153,11 +154,13 @@ class JsonAnnotationParser {
     }
     const indexOfClosingQuote = this.indexIntoSourceJson;
     this.verifyCharAndAdvance(`"`);
-    const value: string = JSON.parse(this.sourceJson.substr(indexOfOpeningQuote, indexOfClosingQuote + 1 - (indexOfOpeningQuote))) as string;
+    const originalQuotedString = this.sourceJson.substr(indexOfOpeningQuote, indexOfClosingQuote + 1 - (indexOfOpeningQuote));
+    const value: string = JSON.parse(originalQuotedString) as string;
     return {
       type: "string",
       indexOfOpeningQuote,
       indexOfClosingQuote,
+      originalQuotedString,
       value
     }
   } 
@@ -188,10 +191,12 @@ class JsonAnnotationParser {
       this.verifyCharAndAdvance(isDigit)
       while (this.atDigit) { this.advance() }
     }
-    const indexOfEnd = this.indexIntoSourceJson
-    const value = JSON.parse(this.sourceJson.substr(indexOfStart, indexOfEnd - indexOfStart)) as number;
+    const indexOfEnd = this.indexIntoSourceJson;
+    const numberAsString = this.sourceJson.substr(indexOfStart, indexOfEnd - indexOfStart);
+    const value = JSON.parse(numberAsString) as number;
     return {
       type: "number",
+      numberAsString,
       value
     }
   }
