@@ -28,6 +28,7 @@ import { RecipeStore } from "../../state/stores/RecipeStore";
 import { describeRecipeType } from "./DescribeRecipeType";
 import React from "react";
 import { getWildcardOfRegisteredDomainFromCandidateWebUrl, isValidDomainOrWildcardDomain, removeWildcardPrefixIfPresent } from "../../utilities/domains";
+import { canonicalizeRecipeJson } from "../../dicekeys/canonicalizeRecipeJson";
 
 
 export enum RecipeEditingMode {
@@ -206,7 +207,7 @@ export class RecipeBuilderState {
   // SequenceNumber field ("#")
   /////////////////////////////////
   sequenceNumberState = new NumericTextFieldState({minValue: 2, onChanged: (sequenceNumber) => {
-    this.recipeJson = addSequenceNumberToRecipeJson(this.recipeJson, sequenceNumber);
+    this.rawRecipeJson = addSequenceNumberToRecipeJson(this.rawRecipeJson, sequenceNumber);
   }});
   get sequenceNumber(): number | undefined { return this.sequenceNumberState.numericValue } 
 
@@ -218,7 +219,7 @@ export class RecipeBuilderState {
   }
   get mayEditLengthInChars(): boolean { return this.type === "Password" }
   lengthInCharsState = new NumericTextFieldState({minValue: 16, incrementBy: 4, defaultValue: 64, onChanged: action( (lengthInChars) => {
-    this.recipeJson = addLengthInCharsToRecipeJson(this.recipeJson, lengthInChars);
+    this.rawRecipeJson = addLengthInCharsToRecipeJson(this.rawRecipeJson, lengthInChars);
   })});
   get lengthInChars(): number | undefined { return this.lengthInCharsState.numericValue }
 
@@ -230,7 +231,7 @@ export class RecipeBuilderState {
   }
   get mayEditLengthInBytes(): boolean { return this.type === "Secret" }
   lengthInBytesState = new NumericTextFieldState({minValue: 4, incrementBy: 16, defaultValue: 32, onChanged: action((lengthInBytes) => {
-    this.recipeJson = addLengthInBytesToRecipeJson(this.recipeJson, lengthInBytes);
+    this.rawRecipeJson = addLengthInBytesToRecipeJson(this.rawRecipeJson, lengthInBytes);
   })});
   get lengthInBytes(): number | undefined { return this.lengthInBytesState.numericValue }
 
@@ -247,15 +248,15 @@ export class RecipeBuilderState {
   siteTextField?: string = undefined;
   setSiteTextField  = action ( (newValue?: string) => {
     this.siteTextField = newValue;
-    const {recipeJson, hosts} = this;
-    this.recipeJson = addHostsToRecipeJson(
-      recipeJson,
+    const {rawRecipeJson, hosts} = this;
+    this.rawRecipeJson = canonicalizeRecipeJson(addHostsToRecipeJson(
+      rawRecipeJson,
       (hosts.length > 0) ?
         // this will construct an allow clause with the set of hosts.
         hosts :
         // This will remove the allow clause from the recipe
         undefined
-      );
+      ))
   });
 
   pasteIntoSiteTextField = action( (e: React.ClipboardEvent<HTMLInputElement>) => {
@@ -295,7 +296,7 @@ export class RecipeBuilderState {
   get purpose(): string | undefined { return this.purposeField?.length === 0 ? undefined : this.purposeField; }
   setPurposeField = action ( (newPurposeFieldValue?: string) => {
     this.purposeField = newPurposeFieldValue;
-    this.recipeJson = addPurposeToRecipeJson(this.recipeJson, this.purpose);
+    this.rawRecipeJson = canonicalizeRecipeJson(addPurposeToRecipeJson(this.rawRecipeJson, this.purpose));
   });
 
 
@@ -314,29 +315,30 @@ export class RecipeBuilderState {
   /**
    * The JSON of the recipe after all user adjustment have been applied
    */
-  setRecipeJson = action ( (recipeJson: string | undefined) => {
+  setAllFromRecipeJson = action ( (recipeJson: string | undefined) => {
     if (recipeJson != null) {
       this.setFieldsFromRecipeJson(recipeJson);
     } else {
       this.emptyAllRecipeFields();
     }
-    this.recipeJson = recipeJson;
+    this.rawRecipeJson = recipeJson;
   });
 
-  recipeJson: string | undefined;
+  rawRecipeJson: string | undefined;
+  get canonicalRecipeJson(): string | undefined { return canonicalizeRecipeJson(this.rawRecipeJson) };
 
   get recipe(): Recipe | undefined {
     try {
-      const {type, recipeJson} = this;
-      if (type != null && recipeJson != null) {
-        return JSON.parse(recipeJson) as Recipe;
+      const {type, canonicalRecipeJson} = this;
+      if (type != null && canonicalRecipeJson != null) {
+        return JSON.parse(canonicalRecipeJson) as Recipe;
       }
     } catch {}
     return;
   }
 
   get recipeIsNotEmpty(): boolean {
-    return this.recipeJson != null && this.recipeJson.length > 2 && this.recipe != null;
+    return this.rawRecipeJson != null && this.rawRecipeJson.length > 2 && this.recipe != null;
   }
 
   get recipeIsValid(): boolean {
@@ -348,11 +350,11 @@ export class RecipeBuilderState {
   }
 
   get asStoredRecipe(): StoredRecipe | undefined {
-    const {type, nameField, recipeJson} = this;
-    if (type == null || recipeJson == null) return;
+    const {type, nameField, canonicalRecipeJson} = this;
+    if (type == null || canonicalRecipeJson == null) return;
     return {
       type,
-      recipeJson,
+      recipeJson: canonicalRecipeJson,
       // only include name: if the nameField is set.
       ...(nameField != null && nameField.length > 0 ?
           {name: nameField} :
@@ -416,9 +418,9 @@ export class RecipeBuilderState {
 
 
   get builtInRecipeIdentifier(): BuiltInRecipeIdentifier | undefined {
-    const {type, recipeJson} = this;
-    if (type == null || recipeJson == null) return;
-    const storedRecipe: StoredRecipeUniqueIdentifier = {type, recipeJson};
+    const {type, canonicalRecipeJson} = this;
+    if (type == null || canonicalRecipeJson == null) return;
+    const storedRecipe: StoredRecipeUniqueIdentifier = {type, recipeJson: canonicalRecipeJson};
     if (isRecipeBuiltIn(storedRecipe)) {
       return builtInRecipeIdentifier(storedRecipe);
     }
@@ -439,7 +441,7 @@ export class RecipeBuilderState {
 
   emptyAllRecipeFields = action (() => {
     this.type = undefined;
-    this.recipeJson = undefined;
+    this.rawRecipeJson = undefined;
     this.nameField = undefined;
     this.purposeField = undefined;
     this.siteTextField = undefined;
@@ -483,9 +485,10 @@ export class RecipeBuilderState {
     this.origin = loadedRecipe.origin;
     this.nameField = loadedRecipe.name ?? "";
     this.type = loadedRecipe.type;
-    this.recipeJson = loadedRecipe.recipeJson;
-    if (this.recipeJson != null) {
-      this.setFieldsFromRecipeJson(this.recipeJson)
+    const recipeJson = canonicalizeRecipeJson(loadedRecipe.recipeJson);
+    this.rawRecipeJson = recipeJson;
+    if (recipeJson != null) {
+      this.setFieldsFromRecipeJson(recipeJson)
     }
     this.editingMode = loadedRecipe.origin === "Saved" || loadedRecipe.origin === "BuiltIn" ?
       RecipeEditingMode.NoEdit :
