@@ -8,6 +8,8 @@ import { RUNNING_IN_ELECTRON } from "./utilities/is-electron";
 import { QueuedUrlApiRequest } from "./api-handler";
 import { ApiCalls } from "@dicekeys/dicekeys-api-js";
 import { ApiRequestsReceivedState } from "./state/ApiRequestsReceivedState";
+import { ThemeProvider } from "styled-components";
+import { lightTheme } from "./css/lightTheme";
 
 const ApplicationErrorState = new ErrorState();
 
@@ -41,9 +43,11 @@ window.addEventListener('load', () => {
   document.body.style.setProperty("margin", "0px");
   DiceKeyMemoryStore.onReady( () => {
     ReactDOM.render((
-      <ErrorHandler errorState={ApplicationErrorState}>
-        <WindowTopLevelView />
-      </ErrorHandler>
+      <ThemeProvider theme={lightTheme}>
+        <ErrorHandler errorState={ApplicationErrorState}>
+          <WindowTopLevelView />
+        </ErrorHandler>
+      </ThemeProvider>
     ), document.getElementById("app_container"));
   });
 });

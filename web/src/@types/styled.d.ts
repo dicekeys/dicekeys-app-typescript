@@ -9,6 +9,8 @@ declare module "styled-components" {
     colors: {
       foreground: string;
       background: string;
+      navigationBar: string;
+      navigationBarForeground: string;
     };
   }
 }

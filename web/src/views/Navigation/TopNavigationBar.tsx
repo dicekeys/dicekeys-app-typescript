@@ -2,6 +2,8 @@ import styled from "styled-components";
 
 export const TopNavigationBarHeightInVh = 7;
 
+// export const NavBarBackgroundColor = "#5576C5";
+
 export const NavigationBar = styled.div`
   width: 100vw;
   display: flex;
@@ -9,12 +11,14 @@ export const NavigationBar = styled.div`
   flex: 0 0 auto;
   text-align: center;
   font-size: 3.75vh;
+  overflow: hidden;
 `;
 
 export const TopNavigationBar = styled(NavigationBar)`
   height: ${TopNavigationBarHeightInVh}vh;
   align-items: center;
-  background-color: #5576C5;
+  background-color: ${ props => props.theme.colors.navigationBar };
+  color: ${ props => props.theme.colors.navigationBarForeground };
 `;
 
 export const BelowTopNavigationBarWithNoBottomBar = styled.div`
@@ -38,6 +42,7 @@ const TopNavRegion = styled.div`
   margin-bottom: 0.5rem;
   user-select: none;
   font-size: 3.75vh;
+  overflow: hidden;
 `;
 
 const TopEdgeNavRegion = styled(TopNavRegion)`
@@ -65,4 +70,30 @@ export const TopNavCenter = styled(TopNavRegion)`
 
 export const TopNavRightSide = styled(TopEdgeNavRegion)`
   justify-content: end;
+`;
+
+export const TopNavPopUpMenu = styled.div<{isOpen: boolean}>`
+  display: flex;
+  position: absolute;
+  top: ${TopNavigationBarHeightInVh}vh;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 10%;
+  width: fit-content;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  background-color: ${ props => props.theme.colors.navigationBar };
+  ${ ({isOpen}) => isOpen ? `` : `visibility: hidden` }
+`;
+
+export const Clickable = styled.span`
+  cursor: grab;
+  :hover {
+    color: ${ props => props.theme.colors.background} // invert(${ (props) => props.theme.colors.foreground });
+  }
+`;
+
+export const TopNavRightPopUpMenu = styled(TopNavPopUpMenu)`
+  right: 0;
+  z-index: 255;
 `;
