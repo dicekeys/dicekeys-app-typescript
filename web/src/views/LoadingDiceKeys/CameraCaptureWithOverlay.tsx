@@ -1,7 +1,7 @@
 import React from "react";
 
 import { observer } from "mobx-react";
-import { OverlayCanvas } from "../basics/overlay-canvas";
+import { OverlayCanvas } from "../basics/OverlayCanvas";
 import { createReactObservableBounds, ObservableBounds } from "../basics/bounds";
 import { MediaStreamState } from "./MediaStreamState";
 import { FrameGrabberUsingImageCapture } from "./FrameGrabberUsingImageCapture";
