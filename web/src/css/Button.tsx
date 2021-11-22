@@ -17,6 +17,7 @@ export const BaseButton = styled.button<{invisible?: boolean}>`
   user-select: none;
   width: fit-content;
   align-self: center;
+  user-select: none;
   &:hover {
     background: rgba(128,128,128,0.3);
   }

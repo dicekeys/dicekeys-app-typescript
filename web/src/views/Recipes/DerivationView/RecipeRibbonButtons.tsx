@@ -9,7 +9,7 @@ import styled from "styled-components";
 export type RecipeRibbonButtons = "SaveOrDelete" | "Increment" | "Decrement" | "EditFields" | "EditRawJson" | "RemoveRecipe";
 
 const RecipeEditStateButton = styled.button<{$selected?: boolean; invisible?: boolean}>`
-  border: none;;
+  border: none;
   margin-top: 0px;
   padding-top: 0px;
   margin-right: 0.2rem;
@@ -37,11 +37,13 @@ const RecipeEditStateButton = styled.button<{$selected?: boolean; invisible?: bo
 const EditButtonHoverTextOuterContainer = styled.div`
   display: block;
   position: relative;
+  user-select: none;
   width: ${Dimensions.ContentWidthInVw}vw;
 `;
 
 const EditButtonHoverTextInnerContainer = styled.div`
   position: absolute;
+  user-select: none;
   bottom: 0;
   right: 0;
   width: ${Dimensions.ContentWidthInVw}vw;
@@ -92,6 +94,7 @@ const RecipeButtonRibbon = styled.div`
   // Absolute positioned touching the top
   position: absolute;
   z-index: 1;
+  user-select: none;
   margin-right: 0.5rem;
   // offset close to the right edge
   align-self: flex-end;
