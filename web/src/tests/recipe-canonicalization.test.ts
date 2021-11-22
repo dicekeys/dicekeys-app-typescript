@@ -24,6 +24,16 @@ const customTestCases: TestCase[] = [
 	),
 	// Remove white space correctly
 	TestCase(` {  "allow" : [  {"host"${"\n"}:"*.example.com"}${"\t"} ]    }${"\n\n"}`,`{"allow":[{"host":"*.example.com"}]}`),
+	// Lots of fields to order correctly, including an empty object with all-caps field name
+	TestCase(
+		`{"allow":[{"paths":["lo", "yo"],"host":"*.example.com"}],"#":3, "purpose":"Don't know", "lengthInChars":3, "lengthInBytes": 15, "UNANTICIPATED_CAPITALIZED_FIELD":{}}`,
+		`{"purpose":"Don't know","UNANTICIPATED_CAPITALIZED_FIELD":{},"allow":[{"host":"*.example.com","paths":["lo","yo"]}],"lengthInBytes":15,"lengthInChars":3,"#":3}`,
+	),
+	// Lots of fields to order correctly, including an empty array with all-caps field name
+	TestCase(
+		`{"allow":[{"paths":["lo", "yo"],"host":"*.example.com"}],"#":3, "purpose":"Don't know", "lengthInChars":3, "lengthInBytes": 15, "UNANTICIPATED_CAPITALIZED_FIELD":[ ] }`,
+		`{"purpose":"Don't know","UNANTICIPATED_CAPITALIZED_FIELD":[],"allow":[{"host":"*.example.com","paths":["lo","yo"]}],"lengthInBytes":15,"lengthInChars":3,"#":3}`,
+	),
 ]
 
 describe("canonicalizeRecipeJson", () => {
