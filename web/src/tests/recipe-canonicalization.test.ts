@@ -14,7 +14,7 @@ const customTestCases: TestCase[] = [
 	TestCase(`{"#":3,"allow":[{"host":"*.example.com"}]}`,`{"allow":[{"host":"*.example.com"}],"#":3}`),
 	// Order fields correctly
 	TestCase(
-		`{"#":3,"allow":[{"host":"*.example.com"}],"purpose":"Life? Don't talk to me about life!" },`,
+		`{"#":3,"allow":[{"host":"*.example.com"}],"purpose":"Life? Don't talk to me about life!" }`,
 		`{"purpose":"Life? Don't talk to me about life!","allow":[{"host":"*.example.com"}],"#":3}`
 	),
 	// Order fields in sub-object (allow) correctly
