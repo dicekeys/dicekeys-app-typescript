@@ -25,7 +25,7 @@ const BuilderFieldLabel = styled.label`
 `;
 
 const OptionalFieldLabel = styled.span`
-  color: rgba(128,128,128,1);
+  color: ${ props => props.theme.colors.foregroundDeemphasized }
 `
 const OptionalFieldActivationButton = styled.button`
   margin-left: 1rem;

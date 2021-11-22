@@ -8,9 +8,12 @@ declare module "styled-components" {
 
     colors: {
       foreground: string;
+      foregroundReducedEmphasis: string;
+      foregroundDeemphasized: string;
       background: string;
       navigationBar: string;
       navigationBarForeground: string;
+      bottomButtonBarBackground: string;
     };
   }
 }

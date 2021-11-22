@@ -34,9 +34,7 @@ export const MiddleOverlaySquare = observer ( ({bounds}: {bounds: ObservableBoun
       style={{left: adjustedLeft, top: adjustedTop}}
     />
   );
-}
-);
-
+});
 export const CameraCaptureVideoAndOverlayContainer = styled.div`
   display: flex;
   align-self: center;
