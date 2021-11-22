@@ -8,7 +8,9 @@ const compareObjectFieldNames = (a: string, b: string) =>
   a === "purpose" ? - 1 :
   b === "purpose" ? 1 :
   // Otherwise, sort in alphabetical order
-  a.localeCompare(b);
+  a < b ? -1 :
+  b < a ? 1 :
+  0;
 
 const toCanonicalizeRecipeJson = ( parsedJson: ParsedJsonElement ): string => {
   switch(parsedJson.type) {
