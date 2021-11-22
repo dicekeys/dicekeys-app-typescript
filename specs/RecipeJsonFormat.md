@@ -7,7 +7,7 @@ A single-character change to a recipe will change the derived values, and so if 
 To reduce the risk, the app will canonicalize Recipes before feeding them to the seeded cryptography engine.  It must remove all formatting whitespace (whitespace that is not contained within string values, such that  `{ "purpose" : "Encrypting Stuff" }` becomes `{"purpose":"Encrypting Stuff"}`)
 (NOTE: may update this if adding a flag to the cryptography library to remove whitespace).
 
-The order of object fields in recipes should be in UTF8 sort order of field name, with two exceptions of:
+The order of object fields in recipes should be in UTF8 (case-sensitive) sort order of field name, with two exceptions of:
   - `"#"` (the sequence number field), if present, should appear last.
   - `"purpose"`, if present, should appear first
 
