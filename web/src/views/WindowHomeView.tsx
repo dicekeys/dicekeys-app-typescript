@@ -15,6 +15,7 @@ import { DiceKeyView } from "./SVG/DiceKeyView";
 import { cssCalcTyped, cssCalcInputExpr } from "../utilities";
 import { facesFromPublicKeyDescriptor } from "../dicekeys/DiceKey";
 import { WindowHomeNavigationBar } from "./WindowHomeNavigationBar";
+import { BUILD_VERSION, BUILD_DATE } from "../vite-build-constants";
 
 const SubViewButton = styled.button`
   display: flex;
@@ -30,9 +31,8 @@ const SubViewButton = styled.button`
   }
 `;
 
-
 const SubViewButtonImage = styled.img`
-  height: 13vh;
+  height: 14vh;
 `;
 
 const SubViewButtonCaption = styled.div`
@@ -56,6 +56,22 @@ const StoredDiceKeysRow = styled.div`
   overflow-x: auto;
 `
 
+const VersionInformationBar = styled.div`
+  position: absolute;
+  z-index: 0;
+  left: 0px;
+  bottom: 0px;
+  /* background color that is equally offset from black or white background */
+  background-color: rgba(128,128,128,0.1);
+  color: ${ props => props.theme.colors.foregroundDeemphasized};
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-top: 4px;
+  padding-right: 4px;
+  border-top-right-radius: 4px;
+  font-size: min(0.8rem,3vh,3vw);
+`
+
 interface WindowHomeViewProps {
   windowNavigationState: WindowTopLevelNavigationState;
 }
@@ -65,6 +81,7 @@ export const WindowHomeView = observer ( (props: WindowHomeViewProps) => {
     EncryptedDiceKeyStore.storedDiceKeys : [];
   return (
     <PrimaryView>
+      <VersionInformationBar>Version { BUILD_VERSION}, { BUILD_DATE }</VersionInformationBar>
       <WindowHomeNavigationBar state={windowNavigationState} />
       <ColumnCentered>
         { (!RUNNING_IN_ELECTRON || storedDiceKeys.length === 0) ? null : (
