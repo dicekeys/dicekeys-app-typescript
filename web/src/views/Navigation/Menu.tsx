@@ -1,6 +1,7 @@
 import { observer } from "mobx-react";
 import React, { PropsWithChildren } from "react";
 import {
+  Clickable,
   TopNavRightPopUpMenu} from "./TopNavigationBar";
 // import { BUILD_VERSION, BUILD_DATE } from "../../vite-build-constants";
 import { BooleanState } from "../../state/reusable/BooleanState";
@@ -40,6 +41,14 @@ export const ExpandableMenu = observer ( ({children, booleanStateTrueIfMenuExpan
   <TopNavRightPopUpMenu isOpen={booleanStateTrueIfMenuExpanded.value} {...props}>{children}</TopNavRightPopUpMenu>
 ));
 
+export const HamburgerMenuButton = ({booleanStateTrueIfMenuExpanded}: ExpandableMenuProps) => (
+  <Clickable
+    style={{fontSize: `6vh`, cursor: `grab`}}
+    onClick={ booleanStateTrueIfMenuExpanded.toggle }
+  >
+  &#8801;
+</Clickable>
+)
 
 export const DiceKeysNavHamburgerMenu = ({children, ...props}: PropsWithChildren<ExpandableMenuProps>) => (
   <ExpandableMenu {...props}>

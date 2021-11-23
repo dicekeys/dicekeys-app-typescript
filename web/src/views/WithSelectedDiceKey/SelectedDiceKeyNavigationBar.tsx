@@ -9,6 +9,8 @@ import {
 import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 import { EncryptedDiceKeyStore } from "../../state/stores/EncryptedDiceKeyStore";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { DiceKeysNavHamburgerMenu, ExpandableMenuProps, HamburgerMenuButton, MenuItem } from "../Navigation/Menu";
+import { BooleanState } from "../../state/reusable/BooleanState";
 
 type ElectronOnlyValues = {
   onBackButtonClicked: () => any;
@@ -20,6 +22,25 @@ const handleOnSaveDeleteButtonClicked = (isSaved: boolean, diceKey: DiceKeyWithK
   isSaved ?
     (() => EncryptedDiceKeyStore.delete(diceKey)) :
     (() => EncryptedDiceKeyStore.add(diceKey));
+
+
+const SelectedDiceKeyExpandableHamburgerMenu = observer( ( {
+  state,
+  booleanStateTrueIfMenuExpanded
+//  goBack
+}: SelectedDiceKeyViewProps & ExpandableMenuProps) => {
+  const diceKey = state.foregroundDiceKeyState.diceKey;
+  if (diceKey == null) return null;
+
+  const isSaved = EncryptedDiceKeyStore.has(diceKey);
+  const onSaveDeleteButtonClicked = handleOnSaveDeleteButtonClicked(isSaved, diceKey)
+
+  return (
+    <DiceKeysNavHamburgerMenu {...{booleanStateTrueIfMenuExpanded}}>
+      <MenuItem onClick={onSaveDeleteButtonClicked}>{ isSaved ? `Delete` : `Save`}</MenuItem>
+    </DiceKeysNavHamburgerMenu>
+  );
+});
 
 export const SelectedDiceKeyNavigationBar = observer( ( {
   state,
@@ -39,13 +60,18 @@ export const SelectedDiceKeyNavigationBar = observer( ( {
       isSaved,
     };
   };
+  const booleanStateTrueIfMenuExpanded = new BooleanState();
+
   const {
     onBackButtonClicked,
     onSaveDeleteButtonClicked,
     isSaved,
   } = (RUNNING_IN_ELECTRON ? getElectronOnlyValues() : {}) as ValuesDefinedOnlyWhenRunningElectron<ElectronOnlyValues>;
 
-  return (
+  return (<>
+    {
+        RUNNING_IN_ELECTRON ? (<SelectedDiceKeyExpandableHamburgerMenu {...{booleanStateTrueIfMenuExpanded, state, goBack}} />) : null 
+    }
     <TopNavigationBar>
       <TopNavLeftSide onClick={ onBackButtonClicked } >{
         RUNNING_IN_ELECTRON ?
@@ -55,19 +81,9 @@ export const SelectedDiceKeyNavigationBar = observer( ( {
           (<></>)
         }</TopNavLeftSide>
       <TopNavCenter>{diceKey?.nickname ?? ""}</TopNavCenter>
-      <TopNavRightSide onClick={ onSaveDeleteButtonClicked } >{
-        RUNNING_IN_ELECTRON ?
-          // In an electron app, show a save/delete button
-          isSaved ? (
-            // Show delete button when already saved
-            <>DELETE</>
-          ) : (
-            // Show save button when not yet saved
-            <>SAVE</>
-          ) :
-          // Show no save/delete button in browser-only app
-          (<></>)
-        }</TopNavRightSide>
+      <TopNavRightSide >{
+        RUNNING_IN_ELECTRON ? (<HamburgerMenuButton {...{booleanStateTrueIfMenuExpanded}}></HamburgerMenuButton>) : null 
+      }</TopNavRightSide>
     </TopNavigationBar>
-  )
+  </>)
 });

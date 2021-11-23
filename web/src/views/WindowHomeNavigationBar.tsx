@@ -2,15 +2,15 @@ import { observer } from "mobx-react";
 import React from "react";
 import {
   TopNavigationBar,
-  TopNavLeftSide, TopNavCenter, TopNavRightSide, Clickable
+  TopNavLeftSide, TopNavCenter, TopNavRightSide
 } from "./Navigation/TopNavigationBar";
 import { WindowTopLevelNavigationState } from "../state/Window";
 import { BooleanState } from "../state/reusable/BooleanState";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
-import { DiceKeysNavHamburgerMenu, MenuItem } from "./Navigation/Menu";
+import { DiceKeysNavHamburgerMenu, ExpandableMenuProps, HamburgerMenuButton, MenuItem } from "./Navigation/Menu";
 
 
-const WindowHomeMenu = observer ( ({state, ...props}: {state: WindowTopLevelNavigationState, booleanStateTrueIfMenuExpanded: BooleanState}) => (
+const WindowHomeMenu = observer ( ({state, ...props}: {state: WindowTopLevelNavigationState} & ExpandableMenuProps) => (
   <DiceKeysNavHamburgerMenu {...props}>
     <MenuItem onClick={async () => {
       state.navigateToSelectedDiceKeyView(await DiceKeyWithKeyId.fromRandom());
@@ -28,12 +28,7 @@ export const WindowHomeNavigationBar = observer( ( {
       <TopNavLeftSide style={{fontSize: `min(1.25vh, 1.25vw)`, alignSelf: `flex-end`}}></TopNavLeftSide>
       <TopNavCenter>DiceKeys App</TopNavCenter>
       <TopNavRightSide>
-        <Clickable
-          style={{fontSize: `6vh`, cursor: `grab`}}
-          onClick={ booleanStateTrueIfMenuExpanded.toggle }
-        >
-          &#8801;
-        </Clickable>
+        <HamburgerMenuButton {...{booleanStateTrueIfMenuExpanded}} />
       </TopNavRightSide>
       <WindowHomeMenu {...{state, booleanStateTrueIfMenuExpanded}} />
     </TopNavigationBar>
