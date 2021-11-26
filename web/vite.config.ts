@@ -7,10 +7,10 @@ export default defineConfig({
   root: "./src/",
   base: "./",
   define: {
-    VITE_BUILD_VERSION: process.env.npm_package_version,
-    VITE_BUILD_DATE: new Date().toLocaleString('en-us', { year: 'numeric', month: 'short', day: 'numeric' }),
+    VITE_BUILD_VERSION: `"${process.env.npm_package_version}"`,
+    VITE_BUILD_DATE: `"${new Date().toLocaleString('en-us', { year: 'numeric', month: 'short', day: 'numeric' })}"`,
 //    VITE_BUILD_DATE: new Date().toLocaleString('en-us', { year: 'numeric', month: 'short', day: 'numeric', hour: `2-digit`, hour12: false, minute: `2-digit` }),
-    VITE_SET_APP_RUNNING_IN_ELECTRON: "false"
+    VITE_SET_APP_RUNNING_IN_ELECTRON: false
   },
   build: {
     // for debugging

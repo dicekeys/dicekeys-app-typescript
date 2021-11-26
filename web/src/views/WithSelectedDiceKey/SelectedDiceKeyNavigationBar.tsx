@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import React from "react";
-import { RUNNING_IN_ELECTRON, ValuesDefinedOnlyWhenRunningElectron } from "../../utilities/is-electron";
+import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { addressBarState } from "../../state/core/AddressBarState";
 import {
   TopNavigationBar,
@@ -12,12 +12,6 @@ import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { DiceKeysNavHamburgerMenu, ExpandableMenuProps, HamburgerMenuButton, MenuItem } from "../Navigation/Menu";
 import { BooleanState } from "../../state/reusable/BooleanState";
 
-type ElectronOnlyValues = {
-  onBackButtonClicked: () => any;
-  onSaveDeleteButtonClicked: () => any;
-  isSaved: boolean;
-};
-
 const handleOnSaveDeleteButtonClicked = (isSaved: boolean, diceKey: DiceKeyWithKeyId): (() => Promise<void>) =>
   isSaved ?
     (() => EncryptedDiceKeyStore.delete(diceKey)) :
@@ -27,7 +21,6 @@ const handleOnSaveDeleteButtonClicked = (isSaved: boolean, diceKey: DiceKeyWithK
 const SelectedDiceKeyExpandableHamburgerMenu = observer( ( {
   state,
   booleanStateTrueIfMenuExpanded
-//  goBack
 }: SelectedDiceKeyViewProps & ExpandableMenuProps) => {
   const diceKey = state.foregroundDiceKeyState.diceKey;
   if (diceKey == null) return null;
@@ -52,28 +45,14 @@ export const SelectedDiceKeyNavigationBar = observer( ( {
   const diceKey = state.foregroundDiceKeyState.diceKey;
   if (diceKey == null) return null;
 
-  const getElectronOnlyValues: () => ElectronOnlyValues = () => {
-    const isSaved = EncryptedDiceKeyStore.has(diceKey);
-    return {
-      onBackButtonClicked: goBack ?? addressBarState.back,
-      onSaveDeleteButtonClicked: handleOnSaveDeleteButtonClicked(isSaved, diceKey),
-      isSaved,
-    };
-  };
   const booleanStateTrueIfMenuExpanded = new BooleanState();
-
-  const {
-    onBackButtonClicked,
-    onSaveDeleteButtonClicked,
-    isSaved,
-  } = (RUNNING_IN_ELECTRON ? getElectronOnlyValues() : {}) as ValuesDefinedOnlyWhenRunningElectron<ElectronOnlyValues>;
 
   return (<>
     {
         RUNNING_IN_ELECTRON ? (<SelectedDiceKeyExpandableHamburgerMenu {...{booleanStateTrueIfMenuExpanded, state, goBack}} />) : null 
     }
     <TopNavigationBar>
-      <TopNavLeftSide onClick={ onBackButtonClicked } >{
+      <TopNavLeftSide onClick={ goBack ?? addressBarState.back } >{
         RUNNING_IN_ELECTRON ?
           // Show a back button in Electron
           (<>&#8592;</>) :
