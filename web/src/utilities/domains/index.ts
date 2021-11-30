@@ -2,7 +2,7 @@
 
 import {PublicSuffixDataList} from "./public_suffix_list";
 
-const domainRegexp = new RegExp("(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]");
+const domainRegexp = new RegExp("^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$");
 
 export const isValidDomainSyntax = (candidate: string): boolean => domainRegexp.test(candidate);
 
