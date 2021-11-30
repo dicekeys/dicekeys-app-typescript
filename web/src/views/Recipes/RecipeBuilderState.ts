@@ -206,7 +206,7 @@ export class RecipeBuilderState {
   /////////////////////////////////
   // SequenceNumber field ("#")
   /////////////////////////////////
-  sequenceNumberState = new NumericTextFieldState({minValue: 2, onChanged: (sequenceNumber) => {
+  sequenceNumberState = new NumericTextFieldState({minValue: 1, incrementBy: 1, defaultValue: 2, onChanged: (sequenceNumber) => {
     this.rawRecipeJson = addSequenceNumberToRecipeJson(this.rawRecipeJson, sequenceNumber);
   }});
   get sequenceNumber(): number | undefined { return this.sequenceNumberState.numericValue } 
@@ -218,7 +218,7 @@ export class RecipeBuilderState {
     return false;// this.origin !== "Template";
   }
   get mayEditLengthInChars(): boolean { return this.type === "Password" }
-  lengthInCharsState = new NumericTextFieldState({minValue: 16, incrementBy: 4, defaultValue: 64, onChanged: action( (lengthInChars) => {
+  lengthInCharsState = new NumericTextFieldState({minValue: 6, incrementBy: 4, defaultValue: 64, onChanged: action( (lengthInChars) => {
     this.rawRecipeJson = addLengthInCharsToRecipeJson(this.rawRecipeJson, lengthInChars);
   })});
   get lengthInChars(): number | undefined { return this.lengthInCharsState.numericValue }
@@ -473,9 +473,24 @@ export class RecipeBuilderState {
     } else {
       this.siteTextField = undefined;
     }
-    this.sequenceNumberState.textValue = sequenceNumber != null ? `${sequenceNumber}` : ""
-    this.lengthInBytesState.textValue = lengthInBytes != null ? `${lengthInBytes}` : "";
-    this.lengthInCharsState.textValue = lengthInChars != null ? `${lengthInChars}` : ""
+    this.sequenceNumberState.setDefaultValue(sequenceNumber ?? 2);
+    if (sequenceNumber != null) {
+      this.sequenceNumberState.setValue(sequenceNumber);
+    } else {
+      this.sequenceNumberState.clear();
+    }
+    this.lengthInBytesState.setDefaultValue(lengthInBytes ?? 32);
+    if (lengthInBytes != null) {
+      this.lengthInBytesState.setValue(lengthInBytes);
+    } else {
+      this.lengthInBytesState.clear();
+    }
+    this.lengthInCharsState.setDefaultValue(lengthInChars ?? 64);
+    if (lengthInChars != null) {
+      this.lengthInCharsState.setValue(lengthInChars);
+    } else {
+      this.lengthInCharsState.clear();
+    }
   });
 
 
