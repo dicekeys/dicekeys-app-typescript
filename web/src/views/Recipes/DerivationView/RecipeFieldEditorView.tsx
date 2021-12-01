@@ -1,7 +1,7 @@
 import React from "react";
 import { observer  } from "mobx-react";
 import { RecipeFieldFocusState, RecipeBuilderState, RecipeEditingMode } from "../RecipeBuilderState";
-import { NumberPlusMinusView } from "../../basics/NumericTextFieldView";
+import { NumberPlusMinusView, NumericTextFieldState } from "../../basics/NumericTextFieldView";
 import { describeRecipeType } from "../DescribeRecipeType";
 import { EnhancedRecipeView } from "../EnhancedRecipeView";
 import { BuilderLabelValueMarginVw,
@@ -25,13 +25,13 @@ const BuilderFieldLabel = styled.label`
 `;
 
 const OptionalFieldLabel = styled.span`
-  color: rgba(128,128,128,1);
+  color: ${ props => props.theme.colors.foregroundDeemphasized }
 `
 const OptionalFieldActivationButton = styled.button`
   margin-left: 1rem;
 `;
 
-const ContainerForOptionalFieldValue = observer ( ({
+/* const ContainerForOptionalFieldValue = observer ( ({
   value, children, ...optProps
 }: React.PropsWithChildren<(
   {
@@ -53,13 +53,44 @@ const ContainerForOptionalFieldValue = observer ( ({
     ) : children
   }
   </>
+)); */
+
+
+const ContainerForOptionalNumericFieldValue = observer ( ({
+  numericTextFieldState, children, ...optProps
+}: React.PropsWithChildren<(
+  {
+    numericTextFieldState: NumericTextFieldState
+    defaultValueText: string,
+    setDefaultValueButtonLabel: string,
+//    setDefaultValue: () => void,
+})>) => (
+  <>{
+    (numericTextFieldState.editingModeOn === false) ? (
+      <>
+        <OptionalFieldLabel>{optProps.defaultValueText}</OptionalFieldLabel>
+        <OptionalFieldActivationButton
+          onClick={numericTextFieldState.setToDefaultValue}
+        >{
+          optProps.setDefaultValueButtonLabel
+        }</OptionalFieldActivationButton>
+      </>
+    ) : (
+      <>
+        {children}
+        <OptionalFieldActivationButton
+          onClick={numericTextFieldState.clear}
+        >Remove</OptionalFieldActivationButton>
+      </>)
+  }
+  </>
 ));
 
 const BuilderFieldContainer = styled.div`
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: baseline;
+    align-items: center;
     margin-top: 0.25vh;
 `;
 
@@ -97,7 +128,6 @@ export const PurposeFieldView = observer( ({state}: {
         value={state.purposeField ?? ""}
         placeholder=""
         ref={ e => { if (e != null) { e?.focus(); fieldFocusState.focus() } } }
-        onPaste={ state.pasteIntoSiteTextField }
         onInput={ e => {state.setPurposeField(e.currentTarget.value); fieldFocusState.focus(); }} 
         onFocus={ fieldFocusState.focus } />
     </BuilderFieldContainer>
@@ -110,23 +140,22 @@ export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBui
   return (
     <BuilderFieldContainer>
       <BuilderFieldLabel htmlFor={field}>sequence #</BuilderFieldLabel>
-      <ContainerForOptionalFieldValue
-        value={state.sequenceNumberState.numericValue}
+      <ContainerForOptionalNumericFieldValue
+        numericTextFieldState={state.sequenceNumberState}
         defaultValueText={"none"}
-        setDefaultValue={state.sequenceNumberState.increment }
         setDefaultValueButtonLabel={"add"}
       >
         <NumberPlusMinusView
-          id={field}
+          key={field}
           state={state.sequenceNumberState}
         >
           <SequenceNumberInputField
             value={state.sequenceNumberState.textValue}
             onFocus={fieldFocusState.focus}
-            onChange={fieldFocusState.focus}
+            onChange={state.sequenceNumberState.onChangeInTextField}
           />
         </NumberPlusMinusView>
-      </ContainerForOptionalFieldValue>
+      </ContainerForOptionalNumericFieldValue>
     </BuilderFieldContainer>    
   )});
 
@@ -137,25 +166,24 @@ export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBui
     return (
       <BuilderFieldContainer >
         <BuilderFieldLabel htmlFor={field}>max length</BuilderFieldLabel>
-        <ContainerForOptionalFieldValue
-          value={state.lengthInCharsState.numericValue}
+        <ContainerForOptionalNumericFieldValue
+          numericTextFieldState={state.lengthInCharsState}
           defaultValueText={"no limit"}
-          setDefaultValue={() => state.lengthInCharsState.setValue(64)}
           setDefaultValueButtonLabel={"add"}
         >
         <NumberPlusMinusView
-          id={field}
+          key={field}
           state={state.lengthInCharsState}
         >
           <LengthInputField
             value={state.lengthInCharsState.textValue}
             placeholder={"none"}
             onFocus={fieldFocusState.focus}
-            onChange={fieldFocusState.focus}
+            onChange={state.lengthInCharsState.onChangeInTextField}
           />
         </NumberPlusMinusView>  
         <i>characters</i>
-        </ContainerForOptionalFieldValue>
+        </ContainerForOptionalNumericFieldValue>
       </BuilderFieldContainer>
     );
   });
@@ -167,25 +195,24 @@ export const LengthInBytesFormFieldView = observer( ({state}: {state: RecipeBuil
   return (
     <BuilderFieldContainer >
       <BuilderFieldLabel htmlFor={field}>length</BuilderFieldLabel>
-      <ContainerForOptionalFieldValue
-        value={state.lengthInBytesState.numericValue}
+      <ContainerForOptionalNumericFieldValue
+        numericTextFieldState={state.lengthInBytesState}
         defaultValueText={"default (32 bytes)"}
-        setDefaultValue={() => state.lengthInBytesState.setValue(64)}
         setDefaultValueButtonLabel={"modify"}
       >
         <NumberPlusMinusView
-          id={field}
+          key={field}
           state={state.lengthInBytesState}
         >
           <LengthInputField
             value={state.lengthInBytesState.textValue}
             placeholder={"32"}
             onFocus={fieldFocusState.focus}
-            onChange={fieldFocusState.focus}
+            onChange={state.lengthInBytesState.onChangeInTextField}
           />
         </NumberPlusMinusView>  
         <i>bytes</i>
-      </ContainerForOptionalFieldValue>
+      </ContainerForOptionalNumericFieldValue>
     </BuilderFieldContainer>
   );
 });

@@ -27,7 +27,7 @@ const BigCaptionOrLabel = styled.span`
   font-family: sans-serif;
   font-size: 3vh;
   flex-direction: row;
-  color: rgba(0, 0, 0, 0.5)
+  color: ${props => props.theme.colors.foregroundDeemphasized }
 `;
 
 const RecipeViewContainer = styled.div`
@@ -44,12 +44,12 @@ const RecipeViewRoundedRect = styled.div`
   flex-direction: column;
   justify-content: space-around;
   align-items: flex-start;
-  background-color: rgba(128,128,196,0.10);
   padding: ${RecipeRoundedRectRadiusAndPadding};
   width: calc(${RecipeColumnWidthWithinPaddingFormula});
   min-height: calc(${Dimensions.DiceKeyBoxSize} - 2 * (${RecipeRoundedRectRadiusAndPadding}));
   border-radius: ${RecipeRoundedRectRadiusAndPadding};
-  color: rgba(0, 0, 0, 1);
+  background-color: rgba(128,128,196,0.10);
+  color: ${ props => props.theme.colors.foreground }
 `;
 
 const InteriorLabelForRecipe = styled(BigCaptionOrLabel)`

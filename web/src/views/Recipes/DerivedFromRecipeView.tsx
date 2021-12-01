@@ -92,7 +92,7 @@ const SelectDerivedOutputType = observer( ({type, state}: {type?: DerivationReci
 const PlaceholderDerivedValueContainer = styled.div`
   font-family: sans-serif;
   font-style: italic;
-  color: rgba(0,0,0,0.5);
+  color: ${ props => props.theme.colors.foregroundDeemphasized };
 `;
 
 const DerivedValueHeaderFormula = `((${Dimensions.DiceKeyBoxSize}) - 1.5rem)`;

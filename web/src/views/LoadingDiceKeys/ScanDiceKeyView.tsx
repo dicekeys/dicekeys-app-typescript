@@ -10,6 +10,7 @@ import { MediaStreamState } from "./MediaStreamState";
 import { CameraSelectionView } from "./CameraSelectionView";
 import styled from "styled-components";
 import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
+import { TopNavigationBarHeight } from "../../views/Navigation/TopNavigationBar";
 // import { CamerasBeingInspected } from "./CamerasBeingInspected";
 
 const minCameraWidth = 1024;
@@ -17,13 +18,14 @@ const minCameraHeight = 720;
 
 
 const NotificationDiv = styled.div`
+  min-height: ${TopNavigationBarHeight};
+  flex-direction: column;
+  justify-content: flex-start;
   position: fixed;
   left: 0;
   top: 0;
   width: 100%;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
   align-items: center;
   align-content: center;
   padding-left: 2vw;

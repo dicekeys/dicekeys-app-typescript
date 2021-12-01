@@ -3,27 +3,14 @@ import { observer } from "mobx-react";
 import styled from "styled-components";
 import { RecipeBuilderState } from "../RecipeBuilderState";
 import { ButtonRow, OptionButton } from "../../../css/Button";
-
-const WarningContainer = styled.div`
-  width: 80vw;
-  height: 100%;
-  justify-self: stretch;
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background-color: yellow;
-  padding-left: 10vw;
-  padding-right: 10vw;
-`;
+import { ModalOverlayForWarningDialog } from "../../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 
 const WarningDiv = styled.div``;
 
 export const RawJsonWarning = observer ( ({state}: {
   state: RecipeBuilderState
-  }) => (
-  <WarningContainer>
+  }) => !state.showRawJsonWarning ? null : (
+  <ModalOverlayForWarningDialog>
     <WarningDiv>
       <div>
         <h3>
@@ -42,5 +29,5 @@ export const RawJsonWarning = observer ( ({state}: {
         <OptionButton onClick={state.dismissRawJsonWarning}>I accept the risk</OptionButton>
       </ButtonRow>
     </WarningDiv>
-  </WarningContainer>
+  </ModalOverlayForWarningDialog>
 ));

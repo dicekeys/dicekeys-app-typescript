@@ -1,30 +1,36 @@
 import { observer } from "mobx-react";
 import React from "react";
-// import { RUNNING_IN_ELECTRON, ValuesDefinedOnlyWhenRunningElectron } from "../utilities/is-electron";
-// import { addressBarState } from "../state/core/AddressBarState";
 import {
   TopNavigationBar,
   TopNavLeftSide, TopNavCenter, TopNavRightSide
 } from "./Navigation/TopNavigationBar";
 import { WindowTopLevelNavigationState } from "../state/Window";
-import { BUILD_VERSION, BUILD_DATE } from "../vite-build-constants";
+import { BooleanState } from "../state/reusable/BooleanState";
+import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
+import { DiceKeysNavHamburgerMenu, ExpandableMenuProps, HamburgerMenuButton, MenuItem } from "./Navigation/Menu";
 
-// &#8801; is hamburger menu?
+
+const WindowHomeMenu = observer ( ({state, ...props}: {state: WindowTopLevelNavigationState} & ExpandableMenuProps) => (
+  <DiceKeysNavHamburgerMenu {...props}>
+    <MenuItem onClick={async () => {
+      state.navigateToSelectedDiceKeyView(await DiceKeyWithKeyId.fromRandom());
+    }}>Load random DiceKey</MenuItem>
+  </DiceKeysNavHamburgerMenu>
+) );
 
 export const WindowHomeNavigationBar = observer( ( {
-//  state,
+  state,
 //   goBack
 }: {state: WindowTopLevelNavigationState}) => {
+  const booleanStateTrueIfMenuExpanded = new BooleanState();
   return (
     <TopNavigationBar>
-      <TopNavLeftSide style={{fontSize: `min(1.25vh, 1.25vw)`, alignSelf: `flex-end`}}>v{BUILD_VERSION}, {BUILD_DATE}</TopNavLeftSide>
+      <TopNavLeftSide style={{fontSize: `min(1.25vh, 1.25vw)`, alignSelf: `flex-end`}}></TopNavLeftSide>
       <TopNavCenter>DiceKeys App</TopNavCenter>
-      <TopNavRightSide
-      style={{fontSize: `6vh`}}
-        onClick={ () => {} }
-      >
-        &#8801;
+      <TopNavRightSide>
+        <HamburgerMenuButton {...{booleanStateTrueIfMenuExpanded}} />
       </TopNavRightSide>
+      <WindowHomeMenu {...{state, booleanStateTrueIfMenuExpanded}} />
     </TopNavigationBar>
   )
 });

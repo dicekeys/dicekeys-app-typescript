@@ -1,11 +1,13 @@
-import {
-  BottomIconBarHeightInVh,
-} from "./SelectedDiceKeyBottomIconBarView";
-import { TopNavigationBarHeightInVh } from "../../views/Navigation/TopNavigationBar";
+import { HeightBelowTopNavigationBar, ModalOverlayOfWindowBelowTopLevelNavigationBar, TopNavigationBarHeightInVh } from "../../views/Navigation/TopNavigationBar";
 import styled from "styled-components";
+import { cssCalcTyped, cssCalcInputExpr } from "../../utilities";
 
 const RecommendedSideMarginAsVw = 5;
 export const WidthBetweenSideMarginsAsVw = 100 - 2 * RecommendedSideMarginAsVw;
+
+export const BottomIconBarHeightInVh = 11;
+export const BottomIconBarHeight = `${BottomIconBarHeightInVh}vh` as const;
+
 
 export const HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh = 100 - (
   TopNavigationBarHeightInVh + BottomIconBarHeightInVh
@@ -24,4 +26,17 @@ export const SelectedDiceKeyContentRegionInsideSideMargins = styled(SelectedDice
   padding-left: ${RecommendedSideMarginAsVw}vw;
   padding-right: ${RecommendedSideMarginAsVw}vw;
   width: calc(100vw - (2 * (${RecommendedSideMarginAsVw}vw)));
+`;
+
+
+export const HeightBetweenTopAndBottomBars = cssCalcTyped(`${cssCalcInputExpr(HeightBelowTopNavigationBar)} - ${cssCalcInputExpr(BottomIconBarHeight)}`)
+export const ModalOverlayBetweenTopNavigationBarAndBottomIconBar = styled(ModalOverlayOfWindowBelowTopLevelNavigationBar)`
+  height: ${HeightBetweenTopAndBottomBars};
+`;
+
+export const ModalOverlayForWarningDialog = styled(ModalOverlayBetweenTopNavigationBarAndBottomIconBar)`
+  background-color: yellow;
+  width: 80vw;
+  padding-left: 10vw;
+  padding-right: 10vw;
 `;

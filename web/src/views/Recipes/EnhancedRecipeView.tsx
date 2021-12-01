@@ -67,7 +67,7 @@ const RawRecipeLabelDiv = styled.div`
 const RawRecipeValueDiv = styled.div`
   overflow-wrap: break-word;
   font-family: monospace;
-  color: rgba(0, 0, 0, 0.75);
+  color: ${props => props.theme.colors.foregroundDeemphasized }
 `;
 
 const EmptyRawRecipeSpan = styled.span`

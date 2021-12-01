@@ -7,16 +7,12 @@ import imageOfBackup from /*url:*/"../../images/Backup to DiceKey.svg";
 import { Navigation } from "../../state";
 import { EventHandlerOverridesDefault } from "../../utilities/EventHandlerOverridesDefault";
 import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
-const SubViews = Navigation.SelectedDiceKeySubViews
-
 import styled from "styled-components";
-import { NavigationBar } from "../Navigation/TopNavigationBar";
-
-export const BottomIconBarHeightInVh = 11;
+import { NavigationBar } from "../../views/Navigation/TopNavigationBar";
 
 export const BottomIconNavigationBar = styled(NavigationBar)`
-  height: ${BottomIconBarHeightInVh}vh;
-  background-color: gray;
+  height: BottomIconBarHeightBottomIconBarHeight;
+  background-color: ${props=>props.theme.colors.bottomButtonBarBackground};
   align-items: baseline;
 `;
 
@@ -58,10 +54,10 @@ export const SelectedDiceKeyBottomIconBarView = observer( ( props: SelectedDiceK
   const navState = props.state;
   return (
     <BottomIconNavigationBar>
-      <FooterButtonView {...props} labelStr={`DiceKey`} subView={SubViews.DisplayDiceKey} imageSrc={imageOfDiceKeyIcon} onClick={navState.navigateToDisplayDiceKey} />
-      <FooterButtonView {...props} labelStr={`Seed`} subView={SubViews.SeedHardwareKey} imageSrc={imageOfUsbKey} onClick={navState.navigateToSeedHardwareKey} />
-      <FooterButtonView {...props} labelStr={`Secret`} subView={SubViews.DeriveSecrets} imageSrc={imageOfSecretWithArrow} onClick={navState.navigateToDeriveSecrets} />
-      <FooterButtonView {...props} labelStr={`Backup`} subView={SubViews.Backup} imageSrc={imageOfBackup} onClick={navState.navigateToBackup} />
+      <FooterButtonView {...props} labelStr={`DiceKey`} subView={Navigation.SelectedDiceKeySubViews.DisplayDiceKey} imageSrc={imageOfDiceKeyIcon} onClick={navState.navigateToDisplayDiceKey} />
+      <FooterButtonView {...props} labelStr={`Seed`} subView={Navigation.SelectedDiceKeySubViews.SeedHardwareKey} imageSrc={imageOfUsbKey} onClick={navState.navigateToSeedHardwareKey} />
+      <FooterButtonView {...props} labelStr={`Secret`} subView={Navigation.SelectedDiceKeySubViews.DeriveSecrets} imageSrc={imageOfSecretWithArrow} onClick={navState.navigateToDeriveSecrets} />
+      <FooterButtonView {...props} labelStr={`Backup`} subView={Navigation.SelectedDiceKeySubViews.Backup} imageSrc={imageOfBackup} onClick={navState.navigateToBackup} />
     </BottomIconNavigationBar>
   );
 });

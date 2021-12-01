@@ -1,7 +1,7 @@
 import React from "react";
 
 import { observer } from "mobx-react";
-import { OverlayCanvas } from "../basics/overlay-canvas";
+import { OverlayCanvas } from "../basics/OverlayCanvas";
 import { createReactObservableBounds, ObservableBounds } from "../basics/bounds";
 import { MediaStreamState } from "./MediaStreamState";
 import { FrameGrabberUsingImageCapture } from "./FrameGrabberUsingImageCapture";
@@ -34,9 +34,7 @@ export const MiddleOverlaySquare = observer ( ({bounds}: {bounds: ObservableBoun
       style={{left: adjustedLeft, top: adjustedTop}}
     />
   );
-}
-);
-
+});
 export const CameraCaptureVideoAndOverlayContainer = styled.div`
   display: flex;
   align-self: center;
