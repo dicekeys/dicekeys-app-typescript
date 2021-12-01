@@ -2,10 +2,10 @@ import { DiceKey, DiceKeyComparisonResult, FaceComparisonErrorTypes } from "../.
 import { action, makeAutoObservable } from "mobx";
 import { SettableDiceKeyState } from "../../state/Window/DiceKeyState";
 
-export class FaceErrorDescriptor {
+export class FaceErrorDescriptor<T extends DiceKey = DiceKey> {
   constructor(
     private readonly diceKey: DiceKey,
-    private readonly diceKeyComparisonResult: DiceKeyComparisonResult,
+    private readonly diceKeyComparisonResult: DiceKeyComparisonResult<T>,
     private readonly errorIndex: number,
   ) {
     makeAutoObservable(this)

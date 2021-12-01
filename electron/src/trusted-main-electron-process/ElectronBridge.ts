@@ -5,8 +5,7 @@ import type {
   IElectronBridgeAsync,
   IElectronBridgeListener,
   IElectronBridge,
-  RemoveListener,
-  WriteSeedToFIDOKeyException,
+  RemoveListener
 } from "../../../common/IElectronBridge"
 export type {
   Device,
@@ -15,8 +14,7 @@ export type {
   IElectronBridgeAsync,
   IElectronBridgeListener,
   IElectronBridge,
-  RemoveListener,
-  WriteSeedToFIDOKeyException,
+  RemoveListener
 }
 
 export const responseChannelNameFor = <T extends string> (channelName: T) => `${channelName}-response` as const;

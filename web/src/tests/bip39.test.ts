@@ -1,4 +1,4 @@
-import { DiceKey } from "../dicekeys/DiceKey";
+import { DiceKeyWithoutKeyId } from "../dicekeys/DiceKey";
 import { toBip39, bip39ToByteArray, diceKeyToBip39String, bip39StringToDiceKey as bip39ToDiceKey } from "../formats/bip39/bip39";
 
 import { Crypto } from "@peculiar/webcrypto"
@@ -53,7 +53,7 @@ describe("Formats: Bip39", () => {
   });
 
   test("Bip39 DiceKey example", async () => {
-    const diceKey = DiceKey.testExample;
+    const diceKey = DiceKeyWithoutKeyId.testExample;
     const bip39Generated = await diceKeyToBip39String(diceKey)
     const diceKeyRestored = await bip39ToDiceKey(bip39Generated);
     expect(diceKey.inHumanReadableForm).toStrictEqual(diceKeyRestored.inHumanReadableForm);

@@ -13,7 +13,7 @@ import { DiceKeyState, SettableDiceKeyState } from "../../state/Window/DiceKeySt
 import { ScanDiceKeyView } from "../../views/LoadingDiceKeys/ScanDiceKeyView";
 import { addPreview } from "../../views/basics/Previews";
 import { QueuedUrlApiRequest } from "../../api-handler";
-import { DiceKey } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
 import { uint8ArrayToHexString } from "../../utilities/convert";
 import { DiceKeyView } from "../../views/SVG/DiceKeyView";
 import { PushButton } from "../../css/Button";
@@ -319,4 +319,4 @@ const msftAccountGetSecretRequestUrl = `https://dicekeys.app/?${""
   }&respondTo=${ encodeURIComponent(`https://account.microsoft.com/--derived-secret-api--/`)
   }${""}`
 createPreview("Approve Api Request (no key)", msftAccountGetSecretRequestUrl);
-createPreview("Approve Api Request (key loaded)", msftAccountGetSecretRequestUrl, DiceKey.testExample);
+createPreview("Approve Api Request (key loaded)", msftAccountGetSecretRequestUrl, DiceKeyWithoutKeyId.testExample);

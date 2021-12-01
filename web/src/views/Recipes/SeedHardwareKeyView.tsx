@@ -11,7 +11,7 @@ import { writeSeedToFIDOKey, WriteSeedToFIDOKeyException } from "../../usb/SeedH
 const seedSecurityKeyPurpose = "seedSecurityKey";
 
 import { action, makeAutoObservable } from "mobx";
-import { isElectron } from "../../utilities/is-electron";
+import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { LoadedRecipe } from "../../dicekeys/StoredRecipe";
 import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 import { KeyPlusRecipeView } from "./DerivationView/KeyPlusRecipeView";
@@ -164,7 +164,7 @@ export const SeedHardwareKeyViewWithState = observer( ( {diceKey, seedHardwareKe
           <KeyPlusRecipeView {...{diceKey, recipeBuilderState: seedHardwareKeyViewState.recipeBuilderState}} />
       </div>
       <DerivedFromRecipeView state={seedHardwareKeyViewState.derivedFromRecipeState} showPlaceholder={false} />
-      { isElectron() ? (
+      { RUNNING_IN_ELECTRON ? (
           <HardwareSecurityKeysView {...{seedableDiceKeys, seedHardwareKeyViewState}}/>
         ) : (
           <CannotSeedSecurityKeysView/>

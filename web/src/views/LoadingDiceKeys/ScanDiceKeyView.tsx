@@ -5,11 +5,11 @@ import { CameraCaptureWithOverlay } from "./CameraCaptureWithOverlay";
 import { DiceKeyFrameProcessorState } from "./DiceKeyFrameProcessorState";
 import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
 import { Camera, CamerasOnThisDevice } from "./CamerasOnThisDevice";
-import { DiceKey, TupleOf25Items } from "../../dicekeys/DiceKey";
+import { TupleOf25Items, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { MediaStreamState } from "./MediaStreamState";
 import { CameraSelectionView } from "./CameraSelectionView";
 import styled from "styled-components";
-import { isElectron } from "../../utilities/is-electron";
+import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 // import { CamerasBeingInspected } from "./CamerasBeingInspected";
 
 const minCameraWidth = 1024;
@@ -62,7 +62,7 @@ const defaultMediaTrackConstraints: MediaTrackConstraints = {
 
 type ScanDiceKeyViewProps = React.PropsWithoutRef<{
   onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
-  onDiceKeyRead?: (diceKey: DiceKey) => any,
+  onDiceKeyRead?: (diceKey: DiceKeyWithKeyId) => any,
   showBoxOverlay?: boolean;
   maxWidth?: string;
   maxHeight?: string;
@@ -99,8 +99,7 @@ const NoCameraAvailableView = ({minCameraWidth, minCameraHeight}: {
 
 export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Component<ScanDiceKeyViewProps>  {
   frameProcessorState: DiceKeyFrameProcessorState;
-  #camerasOnThisDevice = CamerasOnThisDevice.instance(minCameraWidth, minCameraHeight);
-  mediaStreamState = new MediaStreamState(this.#camerasOnThisDevice, defaultMediaTrackConstraints);
+  mediaStreamState = new MediaStreamState(this.camerasOnThisDevice, defaultMediaTrackConstraints);
   onFrameCaptured = async (framesImageData: ImageData, canvasRenderingContext: CanvasRenderingContext2D): Promise<void> => {
     this.frameProcessorState.handleProcessedCameraFrame(await processDiceKeyImageFrame(framesImageData), canvasRenderingContext);
   }
@@ -111,12 +110,14 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
     this.frameProcessorState = new DiceKeyFrameProcessorState(props);
   }
 
+  get camerasOnThisDevice(): CamerasOnThisDevice { return  CamerasOnThisDevice.instance(minCameraWidth, minCameraHeight); }
+
   componentWillUnmount() {
     this.mediaStreamState.clear();
   }
 
   get cameras() {
-    return this.#camerasOnThisDevice.cameras.filter( (camera) => {
+    return this.camerasOnThisDevice.cameras.filter( (camera) => {
       const width = camera.capabilities?.width?.max;
       const height = camera.capabilities?.height?.max;
       return (!height || !minCameraHeight || height >= minCameraHeight) &&
@@ -127,7 +128,7 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
   get defaultCamera(): Camera | undefined { return this.cameras[0] }
 
   render() {
-    const camerasOnThisDevice = this.#camerasOnThisDevice;
+    const camerasOnThisDevice = this.camerasOnThisDevice;
     const {maxWidth, maxHeight, showBoxOverlay} = this.props;
 
     // Uncomment if we want to provide transparency into the
@@ -135,7 +136,7 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
     /* if (!camerasOnThisDevice.ready) {
       return (<CamerasBeingInspected {...{camerasOnThisDevice}} />)
     } */
-    if (!camerasOnThisDevice.readyAndNonEmpty && !isElectron()) {
+    if (!camerasOnThisDevice.readyAndNonEmpty && !RUNNING_IN_ELECTRON) {
       return ( <PermissionRequiredView/> );
     }
     const cameras = this.cameras;

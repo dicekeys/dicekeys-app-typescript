@@ -1,7 +1,7 @@
 import React from "react";
 import { observer, Observer  } from "mobx-react";
 import { RecipeBuilderState, RecipeEditingMode } from "./RecipeBuilderState";
-import { DiceKey } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
 import { RecipeWizardView } from "./DerivationView/RecipeWizardView";
@@ -55,5 +55,5 @@ export const DerivationView = ( ({diceKey}: {
 });
 
 export const Preview_DerivationView = () => (
-  <DerivationView diceKey={DiceKey.testExample} />
+  <DerivationView diceKey={DiceKeyWithoutKeyId.testExample} />
 )

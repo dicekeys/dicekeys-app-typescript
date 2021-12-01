@@ -1,7 +1,7 @@
 import { BackupViewState } from "../BackupView/BackupViewState";
 import { HasSubViews } from "../../state/core";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
-import { isElectron } from "../../utilities/is-electron";
+import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { addressBarState } from "../../state/core/AddressBarState";
 
 export enum SelectedDiceKeySubViews {
@@ -26,7 +26,7 @@ const getSelectedDiceKeySubViewFromPath = (
   }
 }
 
-const basePath = isElectron() ? `/` : `${window.location.protocol}//${window.location.host}`;
+const basePath = RUNNING_IN_ELECTRON? `/` : `${window.location.protocol}//${window.location.host}`;
 
 const replacePathElement = (indexOfPathElementToReplace: number, newPathElement: string) => {
   const pathElements = (addressBarState.path || "/").split('/');

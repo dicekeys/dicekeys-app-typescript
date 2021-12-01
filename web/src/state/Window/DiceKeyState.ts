@@ -1,5 +1,5 @@
 import { action, computed, makeAutoObservable } from "mobx";
-import { DiceKey } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../stores/DiceKeyMemoryStore";
 
 export interface SettableDiceKeyState {
@@ -9,7 +9,7 @@ export interface SettableDiceKeyState {
 
 export class DiceKeyState implements SettableDiceKeyState {
   keyId?: string = undefined;
-  public get diceKey(): DiceKey | undefined {
+  public get diceKey(): DiceKeyWithKeyId | undefined {
     const {keyId} = this;
     return keyId ? DiceKeyMemoryStore.diceKeyForKeyId(keyId) : undefined;
   };
@@ -34,10 +34,15 @@ export class DiceKeyState implements SettableDiceKeyState {
     this.keyId = keyId
   });
 
-  setKeyIdAndDiceKey = action ( (keyId: string, diceKey:DiceKey) => {
-    DiceKeyMemoryStore.addDiceKeyForKeyId(keyId, diceKey.rotateToTurnCenterFaceUpright());
-    this.keyId = keyId;
+  private setKeyIdAndDiceKeyForDiceKeyWithCenterFaceUpright = action ( (diceKey: DiceKeyWithKeyId) => {
+    DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
+    this.keyId = diceKey.keyId;
   });
+
+  private setKeyIdAndDiceKey = async (diceKey: DiceKeyWithKeyId) => {
+    const diceKeyWithCenterFaceUpright = await diceKey.rotateToTurnCenterFaceUpright();
+    this.setKeyIdAndDiceKeyForDiceKeyWithCenterFaceUpright(diceKeyWithCenterFaceUpright);
+  };
 
   clear = action ( () => this.keyId = undefined );
 
@@ -45,7 +50,7 @@ export class DiceKeyState implements SettableDiceKeyState {
     if (diceKey == null) {
       this.setKeyId(undefined);
     } else {
-      this.setKeyIdAndDiceKey(await diceKey.keyId(), diceKey);
+      this.setKeyIdAndDiceKey(await diceKey.withKeyId);
     }
   }
 }

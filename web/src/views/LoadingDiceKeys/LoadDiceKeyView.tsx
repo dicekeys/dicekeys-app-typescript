@@ -5,7 +5,7 @@ import {
 import {
   EnterDiceKeyView, EnterDiceKeyState
 } from "./EnterDiceKeyView"
-import { DiceKey, DiceKeyFaces } from "../../dicekeys/DiceKey";
+import { DiceKey } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import { CenteredControls, CenterColumn, Instruction, Spacer } from "../basics";
@@ -13,7 +13,6 @@ import { PushButton } from "../../css/Button";
 import { PrimaryView } from "../../css/Page";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { BelowTopNavigationBarWithSideMarginsButNoBottomBar } from "../../views/Navigation/TopNavigationBar";
-
 
 type Mode = "camera" | "manual";
 
@@ -45,7 +44,7 @@ const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
           <ScanDiceKeyView
             maxHeight="70vh"
             showBoxOverlay={true}
-            onFacesRead={ (diceKey) => props.onDiceKeyRead( new DiceKey(diceKey.map( faceRead => faceRead.toFace()) as DiceKeyFaces), "camera") }
+            onDiceKeyRead={ (diceKey) => props.onDiceKeyRead( diceKey, "camera") }
           />
         </CenterColumn>
     );

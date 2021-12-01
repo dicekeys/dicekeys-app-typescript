@@ -1,20 +1,20 @@
 import React from "react";
 import { observer  } from "mobx-react";
-import { DiceKey } from "../../dicekeys/DiceKey";
+import { DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
 import { DiceKeyView } from "../SVG/DiceKeyView";
 import { DerivationView } from "../Recipes/DerivationView";
 import { Navigation } from "../../state";
 import { SeedHardwareKeyView } from "../Recipes/SeedHardwareKeyView";
-import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 import { BackupView } from "../BackupView/BackupView";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { addPreview } from "../basics/Previews";
 import { PageAsFlexColumn } from "../../css/Page";
+import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 import {
   SelectedDiceKeyBottomIconBarView,
-  SelectedDiceKeyViewProps,
 } from "./SelectedDiceKeyBottomIconBarView";
 import { SelectedDiceKeyContentRegionWithoutSideMargins, HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh } from "./SelectedDiceKeyLayout";
+import { SelectedDiceKeyNavigationBar } from "./SelectedDiceKeyNavigationBar";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 const IdealMinimumContentMargin = `2rem`
@@ -48,11 +48,10 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
 
 export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) => {
   const diceKey = props.state.foregroundDiceKeyState.diceKey;
-  const {goBack} = props;
   if (!diceKey) return null;
   return (
     <PageAsFlexColumn>
-      <SimpleTopNavBar title={diceKey.nickname} goBack={goBack} />
+      <SelectedDiceKeyNavigationBar {...props} />
       <SelectedDiceKeyContentRegionWithoutSideMargins>
         <SelectedDiceKeySubViewSwitch {...{...props}} />
       </SelectedDiceKeyContentRegionWithoutSideMargins>
@@ -66,15 +65,15 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
 addPreview("SelectedDiceKey", () => (
   <SelectedDiceKeyView
     goBack={() => alert("Back off man, I'm a scientist!")}
-    state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample), SubViews.DisplayDiceKey)}
+    state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKeyWithoutKeyId.testExample), SubViews.DisplayDiceKey)}
 />));
 
 addPreview("Recipes", () => (<SelectedDiceKeyView
-      state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample), SubViews.DeriveSecrets)}
+      state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKeyWithoutKeyId.testExample), SubViews.DeriveSecrets)}
   />)
 );
 
 addPreview("SeedHardwareKey", () => (<SelectedDiceKeyView
-  state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKey.testExample), SubViews.SeedHardwareKey)}
+  state={new Navigation.SelectedDiceKeyViewState(new DiceKeyState(DiceKeyWithoutKeyId.testExample), SubViews.SeedHardwareKey)}
 />)
 );

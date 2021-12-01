@@ -35,6 +35,7 @@ export const CharButtonToolTip = styled.span`
   ${CharButton}:hover & {
     visibility: visible;
   }
+  user-select: none;
   cursor: grab;
   position: absolute;
   text-align: center;

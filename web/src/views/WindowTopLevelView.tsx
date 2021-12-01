@@ -25,9 +25,9 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
       windowNavigationState.navigateToWindowHomeView()
     }
   }
-  const onDiceKeyLoaded = (diceKey?: DiceKey) => {
+  const onDiceKeyLoaded = async (diceKey?: DiceKey) => {
     if (diceKey != null) {
-      windowNavigationState.navigateToSelectedDiceKeyView(diceKey);
+      windowNavigationState.navigateToSelectedDiceKeyView(await diceKey.withKeyId);
     }
   }
 

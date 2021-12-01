@@ -4,10 +4,10 @@ import { observer } from "mobx-react";
 
 import {
   Face,
-  DiceKey,
   DiceKeyFaces,
-  ReadOnlyTupleOf25Items,
   validateDiceKey,
+  PartialDiceKey,
+  DiceKeyWithoutKeyId,
 } from "../../dicekeys/DiceKey";
 import { FaceDigit, FaceLetter, FaceOrientationLetterTrbl, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
 import { DiceKeyView } from "../SVG/DiceKeyView";
@@ -26,12 +26,12 @@ export class EnterDiceKeyState {
     return validateDiceKey(this.partialDiceKey)!!
   }
 
-  get diceKey(): DiceKey | undefined {
-    return validateDiceKey(this.partialDiceKey) ? new DiceKey(this.partialDiceKey as DiceKeyFaces) : undefined;
+  get diceKey(): DiceKeyWithoutKeyId | undefined {
+    return validateDiceKey(this.partialDiceKey) ? new DiceKeyWithoutKeyId(this.partialDiceKey as DiceKeyFaces) : undefined;
   }
 
-  readonly partialDiceKey: ReadOnlyTupleOf25Items<Partial<Face>> = Array.from({length: 25}, () => 
-    ({orientationAsLowercaseLetterTrbl: 't'} as Partial<Face>)) as ReadOnlyTupleOf25Items<Partial<Face>>;
+  readonly partialDiceKey: PartialDiceKey = PartialDiceKey(Array.from({length: 25}, () => 
+    ({orientationAsLowercaseLetterTrbl: 't'} as Partial<Face>)))
 
     constructor() {
     makeAutoObservable(this);

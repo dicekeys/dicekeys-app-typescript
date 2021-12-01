@@ -14,7 +14,7 @@ class ApiRequestsReceivedStateClass {
     this.apiRequestsReceived.shift();
   });
   get foregroundApiRequest(): QueuedApiRequest | undefined {
-    return this.apiRequestsReceived[0];
+    return this.apiRequestsReceived?.length > 0 ? this.apiRequestsReceived[0] : undefined;
   }
 
   constructor() {

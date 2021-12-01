@@ -1,11 +1,11 @@
 import {
-  DiceKey, DiceKeyInHumanReadableForm
+  DiceKey, diceKeyFacesFromHumanReadableForm, DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId
 } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable, runInAction } from "mobx";
 import { autoSaveEncrypted } from "../core/AutoSave";
 import { AllAppWindowsAndTabsAreClosingEvent } from "../core/AllAppWindowsAndTabsAreClosingEvent";
 import { CustomEvent } from "../../utilities/event";
-import { isElectron } from "../../utilities/is-electron";
+import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 
 const readyEvent = new CustomEvent(this);
 let isReady = false;
@@ -22,26 +22,27 @@ class DiceKeyMemoryStoreClass {
     }
   }
 
-  addDiceKeyForKeyId = action ( (keyId: string, diceKey: DiceKey) => {
-    if (!(keyId in this.diceKeyForKeyId)) {
-      this.keyIdToDiceKeyInHumanReadableForm[keyId] = diceKey.rotateToTurnCenterFaceUpright().inHumanReadableForm;
+  addDiceKeyWithKeyId = action ( (diceKey: DiceKeyWithKeyId) => {
+    if (!(diceKey.keyId in this.diceKeyForKeyId)) {
+      this.keyIdToDiceKeyInHumanReadableForm[diceKey.keyId] = diceKey.rotateToTurnCenterFaceUpright().inHumanReadableForm;
       // Append the letter/digit to the end of the array (or start a new array)
       if (!(diceKey.centerLetterAndDigit in this.centerLetterAndDigitToKeyId)) {
-        this.centerLetterAndDigitToKeyId[diceKey.centerLetterAndDigit] = keyId;        
+        this.centerLetterAndDigitToKeyId[diceKey.centerLetterAndDigit] = diceKey.keyId;        
       }
     }
   });
 
-  addDiceKey = async (diceKey: DiceKey) =>
-    this.addDiceKeyForKeyId(await diceKey.keyId(), diceKey);
+  addDiceKey = async (diceKey: DiceKey) => {
+    this.addDiceKeyWithKeyId(await diceKey.withKeyId);
+  }
 
   removeDiceKeyForKeyId = action ( (keyId: string) => {
     // console.log(`removeDiceKeyForKeyId(${keyId})`);
     delete this.keyIdToDiceKeyInHumanReadableForm[keyId];
   });
 
-  removeDiceKey = async (diceKeyOrKeyId: DiceKey | string) => {
-    const keyId = typeof(diceKeyOrKeyId) === "string" ? diceKeyOrKeyId : await diceKeyOrKeyId.keyId();
+  removeDiceKey = async (diceKeyOrKeyId: DiceKeyWithKeyId | string) => {
+    const keyId = typeof(diceKeyOrKeyId) === "string" ? diceKeyOrKeyId : diceKeyOrKeyId.keyId;
     this.removeDiceKeyForKeyId(keyId);
   };
 
@@ -56,16 +57,16 @@ class DiceKeyMemoryStoreClass {
   get keysIdsAndNicknames() {
     return Object.entries(this.keyIdToDiceKeyInHumanReadableForm)
       .map( ([keyId, diceKeyInHumanReadableForm]) =>
-        ({keyId, nickname: DiceKey.fromHumanReadableForm(diceKeyInHumanReadableForm).nickname })
+        ({keyId, nickname: DiceKeyWithoutKeyId.fromHumanReadableForm(diceKeyInHumanReadableForm).nickname })
       );
   }
  
-  diceKeyForKeyId = (keyId: string | undefined): DiceKey | undefined => {
+  diceKeyForKeyId = (keyId: string | undefined): DiceKeyWithKeyId | undefined => {
     if (keyId == null) return;
     const result = this.keyIdToDiceKeyInHumanReadableForm[keyId];
     // console.log(`${keyId} ${result} from ${JSON.stringify(toJS(this.diceKeysByKeyId))} `);
     if (typeof result === "string") {
-      return DiceKey.fromHumanReadableForm(result);
+      return new DiceKeyWithKeyId(keyId, diceKeyFacesFromHumanReadableForm(result));
     }
     return;
   }
@@ -77,7 +78,7 @@ class DiceKeyMemoryStoreClass {
     this.keyIdToDiceKeyInHumanReadableForm = {};
     this.centerLetterAndDigitToKeyId = {}
     makeAutoObservable(this);
-    if (isElectron()) {
+    if (RUNNING_IN_ELECTRON) {
       // We don't need to save the DiceKeyStore in electron because there is only one window right now
       // and there's no chance of a refresh.
       isReady = true; readyEvent.send();

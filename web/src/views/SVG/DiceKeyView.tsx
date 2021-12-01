@@ -38,7 +38,8 @@ export const DiceKeySizeModel = (linearSizeOfFace: number = 1, includeSpaceForTa
   const height = linearSizeOfBox * (1 / (1 - tabFraction));
   const bounds = {width, height};
 
-  const top = -linearSizeOfBox / 2;
+  const top = -linearSizeOfBox / 2 - (linearSizeOfBox * tabFraction) / 2;
+  const vCenter = top + (linearSizeOfBox/2);
   const left = -linearSizeOfBox / 2;
   const radius = linearSizeOfBox / 50;
 
@@ -46,7 +47,7 @@ export const DiceKeySizeModel = (linearSizeOfFace: number = 1, includeSpaceForTa
     linearSizeOfFace, includeSpaceForTab,
     tabFraction, linearSizeOfBox,
     distanceBetweenDieCenters, linearSizeOfBoxWithTab,
-    width, height, bounds, top, left, radius
+    width, height, bounds, top, vCenter, left, radius
   }
 }
 export type DiceKeySizeModel = ReturnType<typeof DiceKeySizeModel>;
@@ -106,7 +107,7 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
               <rect 
                 key={index}
                 x={sizeModel.distanceBetweenDieCenters * (-2 + (index % 5)) -sizeModel.linearSizeOfFace/2}
-                y={sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5)) -sizeModel.linearSizeOfFace/2}
+                y={sizeModel.vCenter + sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5)) -sizeModel.linearSizeOfFace/2}
                 width={sizeModel.linearSizeOfFace} height={sizeModel.linearSizeOfFace}
                 rx={sizeModel.linearSizeOfFace/12} ry={sizeModel.linearSizeOfFace/12}
                 fill={ "rgba(96,123,202,.15)"
@@ -122,7 +123,7 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
                 linearSizeOfFace={sizeModel.linearSizeOfFace}
                 center={{
                   x: sizeModel.distanceBetweenDieCenters * (-2 + (index % 5)),
-                  y: sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5))}
+                  y: sizeModel.vCenter + sizeModel.distanceBetweenDieCenters * (-2 + Math.floor(index / 5))}
                 }
                 highlightThisFace={highlightFaceAtIndex == index}
               />)

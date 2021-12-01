@@ -15,6 +15,14 @@ if (Object.keys(TrustedMainElectronProcess).length === 0) {
   console.log(`TrustedMainElectronProcess has no keys`)
 };
 
+app.setAboutPanelOptions({
+  applicationName: "DiceKeys",
+  applicationVersion: process.env.npm_package_version,
+  version:  process.env.npm_package_version,
+  // version: process.env.npm_package_version,
+  website: "https://dicekeys.com"
+})
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (squirrelCheck()) {
     app.quit();

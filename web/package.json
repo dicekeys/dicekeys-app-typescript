@@ -20,10 +20,9 @@
   },
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --detectOpenHandles",
-    "start": "vite",
-    "build": "tsc --noEmit; vite build",
+    "start": "vite --config ./vite.config.ts",
+    "build": "rimraf dist/web ; tsc --noEmit; vite build --config ./vite.config.ts",
     "clean": "rimraf dist/",
-    "build-app": "rimraf dist/web & vite build src/web/index.html --no-minify --out-dir dist/web/",
     "build-electron-html": "rimraf ../electron/electron-html && vite build --config ./vite.config.electron.ts",
     "watch-electron-html": "rimraf ../electron/electron-html && vite build --watch --config ./vite.config.electron.ts",
     "upload-production": "gsutil -m cp dist/web/* gs://dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/*.js",

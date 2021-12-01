@@ -31,13 +31,41 @@ export type TupleOf25Items<T> = [
   T, T, T, T, T
 ];
 
-export type ReadOnlyTupleOf25Items<T> = /* readonly */ [
+export type ReadOnlyTupleOf25Items<T> = readonly [
   T, T, T, T, T,
   T, T, T, T, T,
   T, T, T, T, T,
   T, T, T, T, T,
   T, T, T, T, T
 ];
+export const ReadOnlyTupleOf25Items = <T>(fromArray: T[] | ReadOnlyTupleOf25Items<T>): ReadOnlyTupleOf25Items<T> => {
+  if (fromArray.length !== 25) {
+    throw new Error("Expected tuple of 25 items");
+  }
+  // Hack to make TypeScript happy that lengths match,
+  // making a copy since the source might not have been read-only.
+  return [...fromArray] as unknown as ReadOnlyTupleOf25Items<T>;
+}
+
+/**
+ * A DiceKey is an array of 25 dice in a 5x5 grid, ordered from left to right and then top down.
+ * To canonicalize which element in the grid is the top-left (element #1, or item 0 in the array),
+ * we choose the one with the lowest unicode string (the one with the letter with the lowest
+ * charCode.) 
+ */
+ export type DiceKeyFaces<F extends Face = Face> = ReadOnlyTupleOf25Items<F>;
+ export const DiceKeyFaces = <F extends Face = Face>(faces: F[] | DiceKeyFaces<F>, validate: boolean = true) => {
+  if (validate) {
+    validateDiceKey(faces, {throwOnFailures: validate});
+  }
+
+   return ReadOnlyTupleOf25Items<F>(faces);
+ }
+
+export type PartialDiceKey = DiceKeyFaces | TupleOf25Items<Partial<Face>>
+export const PartialDiceKey = <F extends Face = Face>(faces: Partial<F>[] | DiceKeyFaces<F>): TupleOf25Items<Partial<F>> => {
+   return faces as unknown as TupleOf25Items<Partial<F>>;
+ } 
 
 /**
  * Reduce the set of possible digits to 0..24 for precise index of 25 faces.
@@ -135,22 +163,23 @@ export const validateDiceKey = (diceKey: readonly Partial<Face>[], {
 
 
 
-const getRandomDiceKey = (numberOfFaces: number = 6): DiceKeyFaces => {
+const getRandomDiceKey = (numberOfFacesPerDie: number = 6): DiceKeyFaces => {
   const remainingLetters = [...FaceLetters];
-  return Array.from({ length: NumberOfFacesInKey }, (): Face => {
-    // Pull out a letter at random from the remainingLetters array
-    const letterIndex = getRandomUInt32() % remainingLetters.length;
-    const letter = remainingLetters.splice(letterIndex, 1)[0] as FaceLetter;
-    // Generate a digit at random
-    const digit = ((getRandomUInt32() % numberOfFaces) + 1).toString() as FaceDigit;
-    const clockwiseOrientationsFromUpright = getRandomUInt32() % 4;
-    const orientationAsLowercaseLetterTrbl =
-      FaceOrientationLettersTrbl[Clockwise90DegreeRotationsFromUpright(clockwiseOrientationsFromUpright % 4)];
-    const faceAndOrientation: Face = {
-      digit, letter, orientationAsLowercaseLetterTrbl
-    };
-    return faceAndOrientation;
-  }) as DiceKeyFaces;
+  return DiceKeyFaces(
+    Array.from({ length: NumberOfFacesInKey }, (): Face => {
+      // Pull out a letter at random from the remainingLetters array
+      const letterIndex = getRandomUInt32() % remainingLetters.length;
+      const letter = remainingLetters.splice(letterIndex, 1)[0] as FaceLetter;
+      // Generate a digit at random
+      const digit = ((getRandomUInt32() % numberOfFacesPerDie) + 1).toString() as FaceDigit;
+      const clockwiseOrientationsFromUpright = getRandomUInt32() % 4;
+      const orientationAsLowercaseLetterTrbl =
+        FaceOrientationLettersTrbl[Clockwise90DegreeRotationsFromUpright(clockwiseOrientationsFromUpright % 4)];
+      const faceAndOrientation: Face = {
+        digit, letter, orientationAsLowercaseLetterTrbl
+      };
+      return faceAndOrientation;
+  }));
 }
 
 /**
@@ -164,10 +193,8 @@ const getRandomDiceKey = (numberOfFaces: number = 6): DiceKeyFaces => {
 enum DiceKeyInHumanReadableFormType { _ = "" };
 export type DiceKeyInHumanReadableForm = DiceKeyInHumanReadableFormType & string;
 
-export const FaceInHumanReadableForm = (face: Face, includeOrientations: boolean = true): string => 
-  (face.letter ?? "?") +
-  (face.digit ?? "?") +
-  ( includeOrientations ? ( face.orientationAsLowercaseLetterTrbl ?? "?") : "" );
+export const FaceInHumanReadableForm = ({letter, digit, orientationAsLowercaseLetterTrbl}: Face): string =>
+  `${letter}${digit}${orientationAsLowercaseLetterTrbl}`;
 
 export const FaceFromHumanReadableForm = (hrf: string, options?: {position?: number}): Face => ({
   letter: FaceLetter(hrf[0], options),
@@ -175,10 +202,10 @@ export const FaceFromHumanReadableForm = (hrf: string, options?: {position?: num
   orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl(hrf[2], options)
 })
 
-export const DiceKeyInHumanReadableForm = (diceKey: DiceKeyFaces, includeOrientations: boolean): DiceKeyInHumanReadableForm =>
-  diceKey.map( face => FaceInHumanReadableForm(face, includeOrientations) ).join("") as DiceKeyInHumanReadableForm
+export const DiceKeyInHumanReadableForm = (diceKey: DiceKeyFaces): DiceKeyInHumanReadableForm =>
+  diceKey.map( face => FaceInHumanReadableForm(face) ).join("") as DiceKeyInHumanReadableForm
 
-const diceKeyFromHumanReadableForm = (
+export const diceKeyFacesFromHumanReadableForm = (
   humanReadableForm: DiceKeyInHumanReadableForm,
   validationOptions: DiceKeyValidationOptions = {}
 ): DiceKeyFaces<Face> => {
@@ -208,40 +235,7 @@ const diceKeyFromHumanReadableForm = (
   return diceKey;
 }
 
-/**
- * A DiceKey is an array of 25 dice in a 5x5 grid, ordered from left to right and then top down.
- * To canonicalize which element in the grid is the top-left (element #1, or item 0 in the array),
- * we choose the one with the lowest unicode string (the one with the letter with the lowest
- * charCode.) 
- */
-export type DiceKeyFaces<F extends Face = Face> = ReadOnlyTupleOf25Items<F>;
-export type PartialDiceKey = ReadOnlyTupleOf25Items<Partial<Face>>
-
 export const EmptyPartialDiceKey = Array.from(Array(25).keys()).map( () => ({}) );
-/**
- * Construct a dice key either from a tuple of 25 ElementFace objects,
- * 25 indexes (which represent a element, face, and rotation), or from the
- * 75-character representation used by the OCR algorithm.
- * @param diceKeyOr25FaceIndexesOr29WordsOrOcrResultString 
- */
-// export function DiceKey(
-//   diceKeyAsFacesOrHumanReadableForm: string
-// ) : DiceKeyFaces<Face>;
-// export function DiceKey<F extends Face = Face>(
-//   diceKeyAsFacesOrHumanReadableForm : ReadonlyArray<F>
-// ): DiceKeyFaces<F>;
-// export function DiceKey<F extends Face = Face>(
-//   diceKeyAsFacesOrHumanReadableForm: string | ReadonlyArray<F>
-// ) {
-//   if (typeof(diceKeyAsFacesOrHumanReadableForm) === "string") {
-//     return diceKeyFromHumanReadableForm(diceKeyAsFacesOrHumanReadableForm as DiceKeyInHumanReadableForm);
-//   }
-//   if (validateDiceKey(diceKeyAsFacesOrHumanReadableForm)) {
-//     return diceKeyAsFacesOrHumanReadableForm as DiceKeyFaces<F>;
-//   }
-//   throw new InvalidDiceKeyException("Invalid key format.");
-// }
-
 
 const rotationIndexes5x5: {[rotation in Clockwise90DegreeRotationsFromUpright]: ReadOnlyTupleOf25Items<number>} = {
   0: [
@@ -293,7 +287,7 @@ const compareFaces = (a: Face, b: Face, index: number): FaceComparisonError | un
   return Object.keys(errors).length > 0 ? {...errors, index} : undefined;
 }
 
-const compareDiceKeysAtFixedRotation = (a: DiceKey, b: DiceKey): FaceComparisonError[] =>
+const compareDiceKeysAtFixedRotation = (a: DiceKeyBase, b: DiceKeyBase): FaceComparisonError[] =>
   a.faces
     .map( (aFace, index) => compareFaces(aFace, b.faces[index], index) )
     .filter( e => e != null ) as FaceComparisonError[];
@@ -334,34 +328,33 @@ export function rotateDiceKey<F extends Face = Face>(
   clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright,
   rotateFaceFn: RotateFaceFn<F> = defaultRotateFaceFn
 ) : DiceKeyFaces<F> {
-  return rotationIndexes5x5[clockwise90DegreeRotationsFromUpright]
+  return ReadOnlyTupleOf25Items(
+    rotationIndexes5x5[clockwise90DegreeRotationsFromUpright]
       .map( i => diceKey[i] )
-      .map( faceAndRotation => rotateFaceFn(faceAndRotation, clockwise90DegreeRotationsFromUpright) ) as DiceKeyFaces<F>;
+      .map( faceAndRotation => rotateFaceFn(faceAndRotation, clockwise90DegreeRotationsFromUpright) )
+   );//  as DiceKeyFaces<F>;
 }
 
 const FaceRotationsNonStationary = [1, 2, 3] as const;
 export function rotateToRotationIndependentForm<F extends Face = Face>(
   diceKey: DiceKeyFaces<Face>,
-  includeOrientations: boolean,
   rotateFaceFn: RotateFaceFn<F>
 ): DiceKeyFaces;
 export function rotateToRotationIndependentForm(
-  diceKey: DiceKeyFaces<Face>,
-  includeOrientations: boolean,
+  diceKey: DiceKeyFaces<Face>
 ): DiceKeyFaces;
 export function rotateToRotationIndependentForm<F extends Face = Face>(
   diceKey: DiceKeyFaces<F>,
-  includeOrientations: boolean,
   rotateFaceFn: RotateFaceFn<F> = defaultRotateFaceFn
 ): DiceKeyFaces<F> {
   let rotationIndependentDiceKey: DiceKeyFaces<F> = diceKey;
-  let earliestHumanReadableForm: DiceKeyInHumanReadableForm = DiceKeyInHumanReadableForm(diceKey, includeOrientations);
+  let earliestHumanReadableForm: DiceKeyInHumanReadableForm = DiceKeyInHumanReadableForm(diceKey);
   for (const candidateRotation of FaceRotationsNonStationary) {
     // If the candidate rotation would result in the square having a top-left letter
     // that is earlier in sort order (lower unicode character) than the current rotation,
     // replace the current rotation with the candidate rotation.
     const rotatedDiceKey = rotateDiceKey<F>(diceKey, candidateRotation, rotateFaceFn)
-    const humanReadableForm  = DiceKeyInHumanReadableForm(rotatedDiceKey, includeOrientations);
+    const humanReadableForm  = DiceKeyInHumanReadableForm(rotatedDiceKey);
     if (humanReadableForm < earliestHumanReadableForm) {
       earliestHumanReadableForm = humanReadableForm;
       rotationIndependentDiceKey = rotatedDiceKey;
@@ -385,20 +378,32 @@ export function rotateToRotationIndependentForm<F extends Face = Face>(
  * via the [toHumanReadableForm] function.
  * 
  * 
- * @param diceKey 
+ * @param diceKeyFaces 
  * @param recipeObject 
  */
-const toSeedString = (
-  diceKey: DiceKeyFaces,
-  includeOrientations: boolean
+const diceKeyFacesToSeedString = (
+  diceKeyFaces: DiceKeyFaces
 ): DiceKeyInHumanReadableForm => {
-  const canonicalDiceKey = rotateToRotationIndependentForm(diceKey, includeOrientations); 
-  const humanReadableForm = DiceKeyInHumanReadableForm(canonicalDiceKey, includeOrientations);
+  const canonicalDiceKey = rotateToRotationIndependentForm(diceKeyFaces); 
+  const humanReadableForm = DiceKeyInHumanReadableForm(canonicalDiceKey);
   return humanReadableForm;
 }
 
-
-
+/**
+ * A DiceKey's keyId is the first 64 bits of the SHA256 hash of the DiceKey's seed string
+ * in hex format
+ * @param DiceKeyFaces 
+ * @returns 16 characters representing a 64 bit (8 byte) prefix of the 256 hash of the seed string.
+ */
+const diceKeyFacesToKeyId = async (
+  diceKeyFaces: DiceKeyFaces
+): Promise<string> => {
+  const keysSeedString = diceKeyFacesToSeedString(diceKeyFaces);
+  const sha256HashOfSeed = await crypto.subtle.digest("SHA-256",  new TextEncoder().encode(keysSeedString));
+  const first64BitsOfHashAsByteArray = sha256HashOfSeed.slice(0, 8)
+  const first64BitsOfHashAsHexString = uint8ClampedArrayToHexString(new Uint8ClampedArray(first64BitsOfHashAsByteArray));
+  return first64BitsOfHashAsHexString;
+}
 
 const factorialConstants0to25: bigint[] = Array.from(Array(26).keys()).reduce( (factorials) => {
   if (factorials.length === 0) factorials.push(BigInt(0));
@@ -411,68 +416,92 @@ const digitEncodingSize = BigInt(6) ** BigInt(24);
 const uniqueOrientationEncodingSize = BigInt(4) ** BigInt(24);
 export const SizeOfNumericEncodingForUniqueLetters = uniqueLetterEncodingSize * digitEncodingSize * uniqueOrientationEncodingSize;
 
-export class DiceKey {
-  public readonly faces: ReadOnlyTupleOf25Items<Face>;
-  constructor(faces: Face[], validate: boolean = true) {
-    if (validate) {
-      validateDiceKey(faces, {throwOnFailures: validate});
+const facesFromNumericForm = (numericForm: bigint): DiceKeyFaces => {
+  const orientationsAsBigInt = numericForm % uniqueOrientationEncodingSize;
+  let withoutOrientations = numericForm / uniqueOrientationEncodingSize;
+  const digitsAsBigInt = withoutOrientations % digitEncodingSize;
+  const withoutDigits = withoutOrientations / digitEncodingSize;
+  const lettersAsBigInt = withoutDigits % uniqueLetterEncodingSize;
+
+  const {orientations} = [...Array(24).keys()].reduce( (r, _, index) => {
+    // Build right to left by reading the number from its least significant 2 bits to most-significant two bits
+    // and appending orientations onto the start of the array.
+    let {orientations, orientationsAsBigInt} = r;
+    if (index == 12) {
+      // the center face is always upright, so index 12 actually refers to the 13th face.
+      r.orientations.unshift("t")
     }
-    this.faces = faces as ReadOnlyTupleOf25Items<Face>;
-  }
+    orientations.unshift(FaceOrientationLettersTrbl[Number(orientationsAsBigInt % 4n) as Clockwise90DegreeRotationsFromUpright]);
+    orientationsAsBigInt /= 4n;
+    return {orientations, orientationsAsBigInt};
+  }, {orientations: [] as FaceOrientationLetterTrbl[], orientationsAsBigInt});
 
-  static fromNumericForm = (numericForm: bigint): DiceKey => {
-    const orientationsAsBigInt = numericForm % uniqueOrientationEncodingSize;
-    let withoutOrientations = numericForm / uniqueOrientationEncodingSize;
-    const digitsAsBigInt = withoutOrientations % digitEncodingSize;
-    const withoutDigits = withoutOrientations / digitEncodingSize;
-    const lettersAsBigInt = withoutDigits % uniqueLetterEncodingSize;
+  const {digits} = [...Array(25).keys()].reduce( (r) => {
+    // Build right to left by reading the number 0-5 from digitsAsBigInt % 6, then dividing by 6
+    // for the next most significant value (the digit to the left) 
+    let {digits, digitsAsBigInt} = r;
+    digits.unshift(FaceDigits[Number(digitsAsBigInt % 6n) as Clockwise90DegreeRotationsFromUpright]);
+    digitsAsBigInt /= 6n;
+    return {digits, digitsAsBigInt};
+  }, {digits: [] as FaceDigit[], digitsAsBigInt});
 
-    const {orientations} = [...Array(24).keys()].reduce( (r, _, index) => {
-      // Build right to left by reading the number from its least significant 2 bits to most-significant two bits
-      // and appending orientations onto the start of the array.
-      let {orientations, orientationsAsBigInt} = r;
-      if (index == 12) {
-        // the center face is always upright, so index 12 actually refers to the 13th face.
-        r.orientations.unshift("t")
-      }
-      orientations.unshift(FaceOrientationLettersTrbl[Number(orientationsAsBigInt % 4n) as Clockwise90DegreeRotationsFromUpright]);
-      orientationsAsBigInt /= 4n;
-      return {orientations, orientationsAsBigInt};
-    }, {orientations: [] as FaceOrientationLetterTrbl[], orientationsAsBigInt});
+  const {letterIndexes} = [...Array(25).keys()].reduce( (r, _, index) => {
+    // Build right to left by reading the number 0-5 from digitsAsBigInt % 6, then dividing by 6
+    // for the next most significant value (the digit to the left) 
+    let {letterIndexes, lettersAsBigInt} = r;
+    letterIndexes.unshift(Number(lettersAsBigInt % BigInt(index + 1)));
+    lettersAsBigInt /= BigInt(index + 1);
+    return {letterIndexes, lettersAsBigInt};
+  }, {letterIndexes: [] as number[], lettersAsBigInt});
 
-    const {digits} = [...Array(25).keys()].reduce( (r) => {
-      // Build right to left by reading the number 0-5 from digitsAsBigInt % 6, then dividing by 6
-      // for the next most significant value (the digit to the left) 
-      let {digits, digitsAsBigInt} = r;
-      digits.unshift(FaceDigits[Number(digitsAsBigInt % 6n) as Clockwise90DegreeRotationsFromUpright]);
-      digitsAsBigInt /= 6n;
-      return {digits, digitsAsBigInt};
-    }, {digits: [] as FaceDigit[], digitsAsBigInt});
+  const {letters} = letterIndexes.reduce( (r, letterIndex) => {
+    let {letters, lettersRemaining} = r;
+    letters.push(lettersRemaining[letterIndex]);
+    lettersRemaining.splice(letterIndex, 1);
+    return {letters, lettersRemaining};
+  }, {letters: [] as FaceLetter[], lettersRemaining: [...FaceLetters]});
 
-    const {letterIndexes} = [...Array(25).keys()].reduce( (r, _, index) => {
-      // Build right to left by reading the number 0-5 from digitsAsBigInt % 6, then dividing by 6
-      // for the next most significant value (the digit to the left) 
-      let {letterIndexes, lettersAsBigInt} = r;
-      letterIndexes.unshift(Number(lettersAsBigInt % BigInt(index + 1)));
-      lettersAsBigInt /= BigInt(index + 1);
-      return {letterIndexes, lettersAsBigInt};
-    }, {letterIndexes: [] as number[], lettersAsBigInt});
+  const faces = DiceKeyFaces([...Array(25).keys()].map( index => ({
+    letter: letters[index],
+    digit: digits[index],
+    orientationAsLowercaseLetterTrbl: orientations[index]
+  })));
 
-    const {letters} = letterIndexes.reduce( (r, letterIndex) => {
-      let {letters, lettersRemaining} = r;
-      letters.push(lettersRemaining[letterIndex]);
-      lettersRemaining.splice(letterIndex, 1);
-      return {letters, lettersRemaining};
-    }, {letters: [] as FaceLetter[], lettersRemaining: [...FaceLetters]});
+  return faces;
+}
 
-    const faces = [...Array(25).keys()].map( index => ({
-      letter: letters[index],
-      digit: digits[index],
-      orientationAsLowercaseLetterTrbl: orientations[index]
-    } as Face));
 
-    return new DiceKey(faces as DiceKeyFaces)
-  }
+export interface PublicDiceKeyDescriptor {
+  readonly centerFaceLetter: FaceLetter;
+  readonly centerFaceDigit: FaceDigit;
+  readonly keyId: string;
+};
+
+/**
+ * Given a public descriptor of a DiceKey containing the center letter and digit,
+ * generate a full set of 25 faces to feed to render a DiceKey, replacing the
+ * faces we can't obtain from the public descriptor with the center face
+ * (oriented upright).
+ * @param descriptor A PublicDiceKeyDescriptor containing the letter and digit of the
+ * (public) center face of the key.
+ * @returns A tuple of 25 faces that aren't the true faces of the DiceKey, but instead 25
+ * copies of the center face that can be passed to code that renders DiceKeys.
+ */
+export const facesFromPublicKeyDescriptor = (descriptor: PublicDiceKeyDescriptor): DiceKeyFaces => {
+  const letter = descriptor.centerFaceLetter;
+  const digit = descriptor.centerFaceDigit;
+  const orientationAsLowercaseLetterTrbl = 't';
+  const face: Face = {letter, digit, orientationAsLowercaseLetterTrbl};
+  return DiceKeyFaces(
+    Array.from({ length: NumberOfFacesInKey }, ()=> face)
+  );
+}
+
+abstract class DiceKeyBase {
+  constructor(public readonly faces: DiceKeyFaces) {}
+
+  // public abstract withKeyId: Promise<DiceKeyWithKeyId>;
+  public abstract rotate: (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright) => DiceKeyBase;
 
   get inNumericForm(): bigint | undefined {
     // rotate so that center faces is upright
@@ -510,21 +539,47 @@ export class DiceKey {
         * uniqueOrientationEncodingSize ) + orientationsAsBigInt;
   }
 
-  static fromRandom = () => new DiceKey(getRandomDiceKey());
-  static fromHumanReadableForm = (
-    humanReadableForm: DiceKeyInHumanReadableForm,
-    validationOptions: DiceKeyValidationOptions = {}
-  ) => new DiceKey(diceKeyFromHumanReadableForm(humanReadableForm, validationOptions));
-
-  get inHumanReadableForm(): DiceKeyInHumanReadableForm { return DiceKeyInHumanReadableForm(this.faces, true) }
-  rotate = (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright) => new DiceKey(rotateDiceKey(this.faces, clockwise90DegreeRotationsFromUpright));
-  get inRotationIndependentForm(): DiceKey { return new DiceKey(rotateToRotationIndependentForm(this.faces, true)) };
-  toSeedString = () => toSeedString(this.faces, true);
+  get inHumanReadableForm(): DiceKeyInHumanReadableForm { return DiceKeyInHumanReadableForm(this.faces) }
   get centerFace(): Face { return this.faces[12]; }
   get centerLetterAndDigit(): string { return this.centerFace.letter + this.centerFace.digit }
   get nickname(): string { return`DiceKey with ${this.centerLetterAndDigit} in center`; }
 
-  rotateToTurnCenterFaceUpright = (): DiceKey => {
+  compareTo = <T extends DiceKey>(other: T): DiceKeyComparisonResult<T> =>
+  // Compare DiceKey a against the four possible rotations of B to get the list of errors
+  ([0, 1, 2, 3] as const)
+    .map( clockwiseTurnsFromUpright => {
+      const otherDiceKeyRotated = other.rotate(clockwiseTurnsFromUpright) as T;
+      const errors = compareDiceKeysAtFixedRotation(this, otherDiceKeyRotated );
+      return {clockwiseTurnsFromUpright, errors, otherDiceKeyRotated}
+  })
+  // Get the shortest list of errors by sorting by the length of the error list
+  // (the number of faces with errors) and taking the first element
+    .sort( (a, b) => a.errors.length <= b.errors.length ? -1 : 1 )[0];
+
+}
+
+export class DiceKeyWithoutKeyId extends DiceKeyBase {
+
+  private _withKeyId: Promise<DiceKeyWithKeyId> | undefined;
+  public get withKeyId(): Promise<DiceKeyWithKeyId> {
+    if (this._withKeyId == null) {
+      this._withKeyId = ( async () => {return new DiceKeyWithKeyId(await diceKeyFacesToKeyId(this.faces) , this.faces);} )();
+    }
+    return this._withKeyId;
+  }
+
+  static fromRandom = (): DiceKeyWithoutKeyId => new DiceKeyWithoutKeyId(getRandomDiceKey());
+  static fromHumanReadableForm = (
+    humanReadableForm: DiceKeyInHumanReadableForm,
+    validationOptions: DiceKeyValidationOptions = {}
+  ): DiceKeyWithoutKeyId => new DiceKeyWithoutKeyId(diceKeyFacesFromHumanReadableForm(humanReadableForm, validationOptions));
+  static fromNumericForm = (numericForm: bigint): DiceKeyWithoutKeyId =>
+    new DiceKeyWithoutKeyId(facesFromNumericForm(numericForm));
+
+  rotate = (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright): DiceKeyWithoutKeyId => new DiceKeyWithoutKeyId(rotateDiceKey(this.faces, clockwise90DegreeRotationsFromUpright));
+  get inRotationIndependentForm(): DiceKeyWithoutKeyId { return new DiceKeyWithoutKeyId(rotateToRotationIndependentForm(this.faces)) };
+  toSeedString = () => diceKeyFacesToSeedString(this.faces);
+  rotateToTurnCenterFaceUpright = async (): Promise<DiceKeyWithoutKeyId> => {
     const centerFacesOrientationTrbl = this.faces[12].orientationAsLowercaseLetterTrbl;
     switch (centerFacesOrientationTrbl) {
       case "t": return this;
@@ -533,34 +588,72 @@ export class DiceKey {
       case "r": return this.rotate(3);
     }
   }
-
-  compareTo = (other: DiceKey): DiceKeyComparisonResult =>
-  // Compare DiceKey a against the four possible rotations of B to get the list of errors
-  ([0, 1, 2, 3] as const)
-    .map( clockwiseTurnsFromUpright => {
-      const otherDiceKeyRotated = other.rotate(clockwiseTurnsFromUpright);
-      const errors = compareDiceKeysAtFixedRotation(this, otherDiceKeyRotated );
-      return {clockwiseTurnsFromUpright, errors, otherDiceKeyRotated}
-  })
-  // Get the shortest list of errors by sorting by the length of the error list
-  // (the number of faces with errors) and taking the first element
-    .sort( (a, b) => a.errors.length <= b.errors.length ? -1 : 1 )[0]
-
-  keyId = (): Promise<string> =>
-    crypto.subtle.digest("SHA-256",  new TextEncoder().encode(this.toSeedString())).then( hash =>
-      uint8ClampedArrayToHexString(new Uint8ClampedArray(hash.slice(0, 8)))).catch( e => { throw e } );
-
-  static testExample = new DiceKey(
+  
+  static testExample = new DiceKeyWithoutKeyId(DiceKeyFaces(
     [...Array(25).keys()].map( (i)  => ({
       letter: FaceLetters[i],
       digit: FaceDigits[i % 6],
       orientationAsLowercaseLetterTrbl: "trbl"[i % 4]
-    } as Face ) ) as ReadOnlyTupleOf25Items<Face>
-  )
+    } as Face ) )
+  ));
 }
 
-export interface DiceKeyComparisonResult {
+export class DiceKeyWithKeyId extends DiceKeyBase {
+  constructor(public readonly keyId: string, faces: DiceKeyFaces) {
+    super(faces);
+  }
+
+  get withKeyId() { return this }
+
+  // public get withKeyId(): Promise<DiceKeyWithKeyId> {
+  //   // wrap this in promise.
+  //   return ( async () => {return this} )();
+  // }
+
+  static create = async (faces: DiceKeyFaces): Promise<DiceKeyWithKeyId> => {
+    const keyId = await diceKeyFacesToKeyId(faces);
+    return new DiceKeyWithKeyId(keyId, faces);
+  }
+
+  static fromRandom = (): Promise<DiceKeyWithKeyId> => DiceKeyWithKeyId.create(getRandomDiceKey());
+
+  static fromHumanReadableForm = (
+    humanReadableForm: DiceKeyInHumanReadableForm,
+    validationOptions: DiceKeyValidationOptions = {}
+  ): Promise<DiceKeyWithKeyId> => DiceKeyWithKeyId.create(diceKeyFacesFromHumanReadableForm(humanReadableForm, validationOptions));
+
+  static fromNumericForm = (numericForm: bigint): Promise<DiceKeyWithKeyId> =>
+    DiceKeyWithKeyId.create(facesFromNumericForm(numericForm));
+  
+  rotate = (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright): DiceKeyWithKeyId => new DiceKeyWithKeyId(this.keyId, rotateDiceKey(this.faces, clockwise90DegreeRotationsFromUpright));
+  
+  get inRotationIndependentForm(): DiceKeyWithKeyId { return new DiceKeyWithKeyId(this.keyId, rotateToRotationIndependentForm(this.faces)) };
+
+  toSeedString = () => diceKeyFacesToSeedString(this.faces);
+
+  rotateToTurnCenterFaceUpright = (): DiceKeyWithKeyId => {
+    const centerFacesOrientationTrbl = this.faces[12].orientationAsLowercaseLetterTrbl;
+    switch (centerFacesOrientationTrbl) {
+      case "t": return this;
+      case "l": return this.rotate(1);
+      case "b": return this.rotate(2);
+      case "r": return this.rotate(3);
+    }
+  }
+  
+  publicDescriptor = async (): Promise<PublicDiceKeyDescriptor> => ({
+    keyId: this.keyId,
+    centerFaceDigit: this.centerFace.digit,
+    centerFaceLetter: this.centerFace.letter,
+  })
+
+}
+
+export type DiceKey = DiceKeyWithKeyId | DiceKeyWithoutKeyId;
+
+export interface DiceKeyComparisonResult<T extends DiceKey> {
   clockwiseTurnsFromUpright: 0 | 1 | 2 | 3;
   errors: FaceComparisonError[];
-  otherDiceKeyRotated: DiceKey;
+  otherDiceKeyRotated: T;
 }
+
