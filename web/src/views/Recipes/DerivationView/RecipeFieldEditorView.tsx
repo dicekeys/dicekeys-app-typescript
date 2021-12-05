@@ -16,6 +16,14 @@ import { BuilderLabelValueMarginVw,
 import styled from "styled-components";
 import { DerivationViewSection } from "./DerivationViewLayout";
 
+const BuilderFieldContainer = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 0.25vh;
+`;
+
 const BuilderFieldLabel = styled.label`
   width: ${BuilderLabelWidthVw}vw;
   text-align: right;
@@ -86,13 +94,6 @@ const ContainerForOptionalNumericFieldValue = observer ( ({
   </>
 ));
 
-const BuilderFieldContainer = styled.div`
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    margin-top: 0.25vh;
-`;
 
 export const SiteFieldView = observer( ({state}: {
   state: RecipeBuilderState,

@@ -286,6 +286,8 @@ export class RecipeBuilderState {
     const connector = trimmedField.length === 0 ? "" :
       trimmedField[trimmedField.length-1] === "," ? " " : ", ";
     this.setSiteTextField(trimmedField + connector + domain);
+    this.setWizardPrimaryFieldEntered(true);
+    this.setEditingMode(RecipeEditingMode.EditWithTemplateOnly);
   });
 
   //////////////////////////////////////////
@@ -492,6 +494,10 @@ export class RecipeBuilderState {
       this.lengthInCharsState.clear();
     }
   });
+
+  get recipeJson(): string | undefined {
+    return canonicalizeRecipeJson (this.rawRecipeJson);
+  }
 
 
   loadRecipe = action ((loadedRecipe?: LoadedRecipe) => {

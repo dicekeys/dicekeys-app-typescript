@@ -34,9 +34,12 @@ export const ModalOverlayBetweenTopNavigationBarAndBottomIconBar = styled(ModalO
   height: ${HeightBetweenTopAndBottomBars};
 `;
 
-export const ModalOverlayForWarningDialog = styled(ModalOverlayBetweenTopNavigationBarAndBottomIconBar)`
-  background-color: yellow;
+export const ModalOverlayForDialogOrMessage = styled(ModalOverlayBetweenTopNavigationBarAndBottomIconBar)`
   width: 80vw;
   padding-left: 10vw;
   padding-right: 10vw;
+`;
+
+export const ModalOverlayForWarningDialog = styled(ModalOverlayForDialogOrMessage)`
+  background-color: yellow;
 `;

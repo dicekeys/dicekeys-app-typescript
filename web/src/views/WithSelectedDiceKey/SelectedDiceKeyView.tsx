@@ -31,10 +31,10 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
       />
     );
     case Navigation.SelectedDiceKeySubViews.DeriveSecrets: return (
-      <DerivationView diceKey={diceKey} />
+      <DerivationView diceKeyState={foregroundDiceKeyState} />
     );
     case Navigation.SelectedDiceKeySubViews.SeedHardwareKey: return (
-      <SeedHardwareKeyView diceKey={diceKey} />
+      <SeedHardwareKeyView diceKeyState={foregroundDiceKeyState} />
     );
     case Navigation.SelectedDiceKeySubViews.Backup: return (
       <BackupView state={state.backupState} nextStepAfterEnd={() => {

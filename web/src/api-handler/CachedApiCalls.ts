@@ -198,4 +198,14 @@ export class CachedApiCalls {
   constructor(private seedString: string) {
     makeAutoObservable(this);
   }
+
+  static #seedStringForLastInstanceCreated: string | undefined;
+  static #lastInstanceCreated: CachedApiCalls | undefined;
+  static readonly instanceFor = (seedString: string): CachedApiCalls => {
+    if (CachedApiCalls.#lastInstanceCreated == null || CachedApiCalls.#seedStringForLastInstanceCreated !== seedString) {
+      CachedApiCalls.#seedStringForLastInstanceCreated = seedString;
+      CachedApiCalls.#lastInstanceCreated = new CachedApiCalls(seedString);
+    }
+    return CachedApiCalls.#lastInstanceCreated;
+  }
 }

@@ -127,16 +127,16 @@ const HeaderButtonBar = styled.div`
   margin-left: 2rem;
 `;
 
-export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
-    state: DerivedFromRecipeState
-    showPlaceholder: boolean
+export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputType}: {
+    state: DerivedFromRecipeState,
+    allowUserToChangeOutputType: boolean
   }) => {
-  const {recipeState: recipe, derivedValue} = state;
-  const {type} = recipe;
+  const {recipeState, derivedValue} = state;
+  const {type} = recipeState;
   return (
     <>
       <DerivedValueHeaderDiv>
-        <SelectDerivedOutputType type={type} state={state} />
+        { allowUserToChangeOutputType ? (<SelectDerivedOutputType type={type} state={state} />) : null }
         { type == null || derivedValue == null ? null : (
           <HeaderButtonBar>
             <CharButton
@@ -152,9 +152,9 @@ export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
         (<Bip39OutputView bip39String={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />)
         : (
         <DerivedValueContentDiv>
-          { showPlaceholder ? (
+          { !recipeState.recipeIsValid ? (
             <PlaceholderDerivedValueContainer>
-              A {describeRecipeType(recipe.type)} to be created by applying a recipe to your DiceKey
+              A {describeRecipeType(recipeState.type)} to be created by applying a recipe to your DiceKey
             </PlaceholderDerivedValueContainer>
           ) : (
             <OptionallyObscuredTextView value={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />
