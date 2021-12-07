@@ -18,6 +18,10 @@ import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { hexStringToUint8ClampedArray, uint8ArrayToHexString } from "../../utilities";
 import { cssCalcTyped, cssCalcInputExpr } from "../../utilities/cssCalc";
 import { ObscureSecretFields } from "../../state/ToggleState";
+import { WindowTopLevelNavigationState } from "../../views/WindowTopLevelNavigationState";
+import { PrimaryView } from "../../css";
+import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
+import { BelowTopNavigationBarWithNoBottomBar } from "../../views/Navigation/TopNavigationBar";
 //import { ModalOverlayForDialogOrMessage } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 
 const seedSecurityKeyPurpose = "seedSecurityKey";
@@ -424,6 +428,14 @@ const ObscureTextInputFor64HexChars = styled.input.attrs<{cursorPosition: number
   border-color: transparent;
 `;
 
+const isHexChar = (c: string) =>
+  ((c >= "a" && c <="f") || (c >= "A" && c <="F") || (c >= "0" && c <= "9"));
+
+// const removeNonHexCharactersAndForceToLowerCase = (value: string) =>
+//   value.toLowerCase().split("").map(
+//     c => ((c >= "a" && c <="f") || (c >= "0" && c <= "9")) ? c : ""
+//   ).join("");
+
 const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
   seedHardwareKeyViewState: SeedHardwareKeyViewState,
 }) => {
@@ -468,6 +480,11 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
           }}
           onMouseUp={seedHardwareKeyViewState.updateCursorPositionForEvent}
           onKeyDown={seedHardwareKeyViewState.updateCursorPositionForEvent}
+          onKeyPress={e => {
+            if (!isHexChar(e.key)) {
+              e.preventDefault();
+            }
+          }}
           onKeyUp={seedHardwareKeyViewState.updateCursorPositionForEvent}
           onBlur={() => seedHardwareKeyViewState.setSeedInEditableHexFormatFieldCursorPosition(null)}
           onFocus={seedHardwareKeyViewState.updateCursorPositionForEvent}
@@ -477,7 +494,6 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
     </FieldRow>
   </>)
 });
-
 
 
 export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState}: {
@@ -509,3 +525,24 @@ export const SeedHardwareKeyView = observer ( ({diceKeyState}: {diceKeyState: Di
     <SeedHardwareKeySimpleView {...{seedHardwareKeyViewState}}/>
   )
 });
+
+export const SeedHardwareKeyPrimaryView = observer( ({windowNavigationState}: {windowNavigationState: WindowTopLevelNavigationState}) => {
+
+  // const onDonePressedWithinEnterDiceKey = () => {
+  //   const diceKey = state.enterDiceKeyState.diceKey;
+  //   if (state.mode === "manual" &&  diceKey) {
+  //     props.onDiceKeyRead(diceKey, "manual");
+  //   }
+  // }
+
+  return (
+    <PrimaryView>
+      <SimpleTopNavBar title={"Seed a USB FIDO Security Key"} />
+      <BelowTopNavigationBarWithNoBottomBar>
+        // <a onClick={e => {
+        //   windowNavigationState.navigateToLoadDiceKey()
+        // }}>Load DiceKey</a>
+        <SeedHardwareKeyView diceKeyState={windowNavigationState.foregroundDiceKeyState} />
+      </BelowTopNavigationBarWithNoBottomBar>
+    </PrimaryView>
+  )});

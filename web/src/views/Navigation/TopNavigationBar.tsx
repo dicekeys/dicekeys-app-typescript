@@ -34,6 +34,7 @@ export const BelowTopNavigationBarWithNoBottomBar = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  justify-content: space-around;
 `;
 
 export const ModalOverlayOfWindowBelowTopLevelNavigationBar = styled(BelowTopNavigationBarWithNoBottomBar)`
@@ -52,7 +53,6 @@ export const BelowTopNavigationBarWithSideMarginsButNoBottomBar = styled(BelowTo
   margin-left: 5vw;
   margin-right: 5vw;
   width: 90vw;
-  justify-content: space-around;
 `
 
 const TopNavRegion = styled.div`

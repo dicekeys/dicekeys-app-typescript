@@ -13,6 +13,9 @@ import { DiceKeysNavHamburgerMenu, ExpandableMenuProps, HamburgerMenuButton, Men
 const WindowHomeMenu = observer ( ({state, ...props}: {state: WindowTopLevelNavigationState} & ExpandableMenuProps) => (
   <DiceKeysNavHamburgerMenu {...props}>
     <MenuItem onClick={async () => {
+      state.navigateToSeedFidoKey();
+    }}>Seed a FIDO Hardware Security Key</MenuItem>
+    <MenuItem onClick={async () => {
       state.navigateToSelectedDiceKeyView(await DiceKeyWithKeyId.fromRandom());
     }}>Load random DiceKey</MenuItem>
   </DiceKeysNavHamburgerMenu>

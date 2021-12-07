@@ -10,6 +10,7 @@ export enum SubViewsOfTopLevel {
   AssemblyInstructions = "assemble",
   LoadDiceKeyView = "load",
   DiceKeyView = "key",
+  SeedFidoKey = "seed"
 };
 
 type SubViews = SubViewsOfTopLevel;
@@ -29,6 +30,7 @@ const getTopLevelNavStateFromPath = (path: string):
     case SubViewsOfTopLevel.AppHomeView:
     case SubViewsOfTopLevel.AssemblyInstructions:
     case SubViewsOfTopLevel.LoadDiceKeyView:
+    case SubViewsOfTopLevel.SeedFidoKey:
       return {subView: pathRoot};
     default:
       const {diceKey, keyId} = getDiceKeyFromPathRoot(pathRoot) ?? {};
@@ -47,6 +49,7 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
   });
   navigateToAssemblyInstructions = this.navigateToSubView(SubViews.AssemblyInstructions)
   navigateToLoadDiceKey = this.navigateToSubView(SubViews.LoadDiceKeyView)
+  navigateToSeedFidoKey = this.navigateToSubView(SubViews.SeedFidoKey)
 
   private navigateToSelectedDiceKeyViewForKeyId = action ( (keyId: string) => {
     this.foregroundDiceKeyState.setKeyId(keyId);

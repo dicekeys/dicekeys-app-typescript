@@ -32,7 +32,6 @@ const AssemblyInstructionsContainer = styled(BelowTopNavigationBarWithNoBottomBa
   margin-right: 5vw;
   width: 90vw;
   height: calc(100vh - ${TopNavigationBarHeightInVh}vh - ${WarningFooterTotalHeightFormula});
-  justify-content: space-around;
 `
 
 const WarningFooterDiv = styled.div<{invisible?: boolean}>`

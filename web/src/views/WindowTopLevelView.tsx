@@ -11,6 +11,7 @@ import { addressBarState } from "../state/core/AddressBarState";
 import {ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
 import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
 import { PrimaryView } from "../css";
+import { SeedHardwareKeyPrimaryView } from "./Recipes/SeedHardwareKeyView";
 
 interface WindowTopLevelNavigationProps {
   windowNavigationState: WindowTopLevelNavigationState;
@@ -56,6 +57,9 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
         new AssemblyInstructionsState(windowNavigationState.foregroundDiceKeyState)
       } />
     )
+    case SubViewsOfTopLevel.SeedFidoKey: return (
+      <SeedHardwareKeyPrimaryView windowNavigationState={windowNavigationState} />
+    );
     case SubViewsOfTopLevel.DiceKeyView: return (
       <SelectedDiceKeyView state={new SelectedDiceKeyViewState( windowNavigationState.foregroundDiceKeyState)} />
     );
