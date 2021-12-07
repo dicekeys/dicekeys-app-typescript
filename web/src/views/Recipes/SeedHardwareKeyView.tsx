@@ -7,7 +7,7 @@ import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
 import * as Dimensions from "./DerivationView/DerivationViewLayout";
 import { writeSeedToFIDOKey, WriteSeedToFIDOKeyException } from "../../state/hardware/usb/SeedHardwareKey";
 import { action, makeAutoObservable } from "mobx";
-import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
+import { RUNNING_IN_ELECTRON, RUNNING_IN_BROWSER } from "../../utilities/is-electron";
 import { LoadedRecipe } from "../../dicekeys/StoredRecipe";
 import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
 import { KeyPlusRecipeView } from "./DerivationView/KeyPlusRecipeView";
@@ -357,7 +357,7 @@ const FieldValue = styled.div`
 export const SoloKeyValue = observer( ( {seedHardwareKeyViewState}: {
   seedHardwareKeyViewState: SeedHardwareKeyViewState,
 }) => {
-  if (!RUNNING_IN_ELECTRON) {
+  if (RUNNING_IN_BROWSER) {
     return (<CannotSeedSecurityKeysView/>);
   }
   const {seedableFidoKeys} = seedHardwareKeyViewState;
@@ -539,11 +539,11 @@ export const SeedHardwareKeyPrimaryView = observer( ({windowNavigationState}: {w
     <PrimaryView>
       <SimpleTopNavBar title={"Seed a USB FIDO Security Key"} />
       <BelowTopNavigationBarWithNoBottomBar>
-      /*
+      {/*
         <a onClick={() => {
           windowNavigationState.navigateToLoadDiceKey()
         }}>Load DiceKey</a>
-        */
+      */}
         <SeedHardwareKeyView diceKeyState={windowNavigationState.foregroundDiceKeyState} />
       </BelowTopNavigationBarWithNoBottomBar>
     </PrimaryView>

@@ -8,13 +8,16 @@ import { WindowTopLevelNavigationState } from "../state/Window";
 import { BooleanState } from "../state/reusable/BooleanState";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { DiceKeysNavHamburgerMenu, ExpandableMenuProps, HamburgerMenuButton, MenuItem } from "./Navigation/Menu";
+import { RUNNING_IN_BROWSER } from "../utilities/is-electron";
 
 
 const WindowHomeMenu = observer ( ({state, ...props}: {state: WindowTopLevelNavigationState} & ExpandableMenuProps) => (
   <DiceKeysNavHamburgerMenu {...props}>
-    <MenuItem onClick={async () => {
-      state.navigateToSeedFidoKey();
-    }}>Seed a FIDO Hardware Security Key</MenuItem>
+    { RUNNING_IN_BROWSER ? null : (
+      <MenuItem onClick={async () => {
+        state.navigateToSeedFidoKey();
+      }}>Seed a FIDO Hardware Security Key</MenuItem>
+    )}
     <MenuItem onClick={async () => {
       state.navigateToSelectedDiceKeyView(await DiceKeyWithKeyId.fromRandom());
     }}>Load random DiceKey</MenuItem>
