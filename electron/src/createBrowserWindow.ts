@@ -22,12 +22,17 @@ export const createBrowserWindow = () => {
   });
 
   window.webContents.session.setPermissionCheckHandler((_webContents, permission, requestingOrigin, _details) => {
+    const codeIsFromFileSystem = requestingOrigin.startsWith("file://");
+//    console.log(`Request for permission ${permission} from ${requestingOrigin}`)
     switch (permission) {
+      case "clipboard-sanitized-write":
+        // undocumented permission needed to allow clipboard writes via our button
+        return codeIsFromFileSystem;
       case "media":
-        return requestingOrigin.startsWith("file://");
+        return codeIsFromFileSystem;
       // Allow access to WebHID so we can interact with seedable FIDO keys
       case "hid":
-        return requestingOrigin.startsWith("file://");
+        return codeIsFromFileSystem;
       // Deny other access
       case "serial":
       default:
