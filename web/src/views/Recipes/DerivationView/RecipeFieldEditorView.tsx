@@ -135,30 +135,34 @@ export const PurposeFieldView = observer( ({state}: {
   );
 });
 
-export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
+export const SequenceNumberFormFieldValueView = observer( ({state}: {state: RecipeBuilderState}) => {
   const field = "#"
   const fieldFocusState = new RecipeFieldFocusState(state, field);
   return (
+      <NumberPlusMinusView
+        key={field}
+        state={state.sequenceNumberState}
+      >
+        <SequenceNumberInputField
+          value={state.sequenceNumberState.textValue}
+          onFocus={fieldFocusState.focus}
+          onChange={state.sequenceNumberState.onChangeInTextField}
+        />
+      </NumberPlusMinusView>
+ )});
+
+export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => (
     <BuilderFieldContainer>
-      <BuilderFieldLabel htmlFor={field}>sequence #</BuilderFieldLabel>
+      <BuilderFieldLabel htmlFor={"#"}>sequence #</BuilderFieldLabel>
       <ContainerForOptionalNumericFieldValue
         numericTextFieldState={state.sequenceNumberState}
         defaultValueText={"none"}
         setDefaultValueButtonLabel={"add"}
       >
-        <NumberPlusMinusView
-          key={field}
-          state={state.sequenceNumberState}
-        >
-          <SequenceNumberInputField
-            value={state.sequenceNumberState.textValue}
-            onFocus={fieldFocusState.focus}
-            onChange={state.sequenceNumberState.onChangeInTextField}
-          />
-        </NumberPlusMinusView>
+        <SequenceNumberFormFieldValueView state={state} />
       </ContainerForOptionalNumericFieldValue>
     </BuilderFieldContainer>    
-  )});
+));
 
   export const LengthInCharsFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
     if (state.type !== "Password" || state.lengthInCharsFieldHide || !state.mayEditLengthInChars) return null;

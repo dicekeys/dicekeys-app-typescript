@@ -58,8 +58,10 @@ export const SequenceNumberValueUnderline = css`
 export const InputNumericText = styled.input.attrs((props) => ({
   type: "text",
   placeholder: props.placeholder ?? "none",
+  
   size: props.size ?? 4
 }))`
+  text-align: right;
   ${(props) => (typeof parseInt(`${props.value ?? "1"}`.trim())) !== "number" ?
     `color: red` :
     ``}
@@ -70,8 +72,8 @@ export const PurposeSpan = styled(EdgelessSpan)`${PurposeUnderline}`;
 export const LengthFieldValueSpan = styled(EdgelessSpan)`${LengthFieldUnderline}`;
 export const SequenceNumberValueSpan = styled(EdgelessSpan)`${SequenceNumberValueUnderline}`;
 export const SequenceNumberInputField = styled(InputNumericText).attrs(()=>({
-  size: 3,
-  placeholder: "1",
+  size: 4,
+  placeholder: "none",
 }))`
   ${SequenceNumberValueUnderline}
 `;

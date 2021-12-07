@@ -1,42 +1,73 @@
 import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
 import { CenteredControls, Instruction, PaddedContentBox, Spacer, SecretFieldsCommonObscureButton } from "../basics";
-import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
-import { RecipeBuilderState } from "./RecipeBuilderState";
-import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
-import * as Dimensions from "./DerivationView/DerivationViewLayout";
-import { writeSeedToFIDOKey, WriteSeedToFIDOKeyException } from "../../state/hardware/usb/SeedHardwareKey";
-import { action, makeAutoObservable } from "mobx";
-import { RUNNING_IN_ELECTRON, RUNNING_IN_BROWSER } from "../../utilities/is-electron";
-import { LoadedRecipe } from "../../dicekeys/StoredRecipe";
-import { RecipeFieldEditorView } from "./DerivationView/RecipeFieldEditorView";
-import { KeyPlusRecipeView } from "./DerivationView/KeyPlusRecipeView";
+import { RUNNING_IN_BROWSER } from "../../utilities/is-electron";
+import { SequenceNumberFormFieldValueView } from "./DerivationView/RecipeFieldEditorView";
 import { DiceKey } from "../../dicekeys/DiceKey";
 import styled, { css } from "styled-components";
 import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
-import { hexStringToUint8ClampedArray, uint8ArrayToHexString } from "../../utilities";
 import { cssCalcTyped, cssCalcInputExpr } from "../../utilities/cssCalc";
 import { ObscureSecretFields } from "../../state/ToggleState";
 import { WindowTopLevelNavigationState } from "../../views/WindowTopLevelNavigationState";
 import { PrimaryView } from "../../css";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { BelowTopNavigationBarWithNoBottomBar } from "../../views/Navigation/TopNavigationBar";
+import { SeedHardwareKeyViewState, SeedSource } from "./SeedHardwareKeyVIewState";
 //import { ModalOverlayForDialogOrMessage } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 
-const seedSecurityKeyPurpose = "seedSecurityKey";
 
-export const isUsbDeviceASeedableFIDOKey = ({vendorId, productId}: HIDDevice): boolean =>
-  (vendorId == 0x10c4 && productId == 0x8acf) ||
-  (vendorId == 0x0483 && productId == 0xa2ca);
 
-export const FiltersForUsbDeviceASeedableFIDOKey: HIDDeviceFilter[] = [
-  {vendorId: 0x10c4, productId: 0x8acf},
-  {vendorId: 0x0483, productId: 0xa2ca},
-];
+const SeedingContentBlockDiv = styled.div`
+  background-color: rgba(147, 140, 47, 0.2);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-content: flex-start;
+  overflow-wrap: anywhere;
+`;
 
-// const NoSoloKeysAttachedDiv = styled(ModalOverlayForDialogOrMessage)`
-// `
+const FieldRow = styled.div<{invisible?: boolean}>`
+    ${ props => props.invisible ? css`visibility: hidden;` : ``}
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 0.25vh;
+`;
+
+const FieldLabelWidth = `max(10rem, 10vw)`;
+const FieldValueMargin = `0.5vw`;
+
+const ValueColumnOnly = styled.div<{invisible?: boolean}>`
+  ${ props => props.invisible ? css`visibility: hidden;` : ``}
+  margin-left: ${cssCalcTyped(`${cssCalcInputExpr(FieldLabelWidth)} + 2 * ${cssCalcInputExpr(FieldValueMargin)}`)};
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+`;
+const ValueColumnOnlyContinued = styled(ValueColumnOnly)`
+  margin-top: 0;
+`;
+
+const FieldLabel = styled.label`
+  min-width: ${FieldLabelWidth};
+  text-align: right;
+  padding-right: ${FieldValueMargin};
+  margin-right: ${FieldValueMargin};
+  border-right: 1px rgba(128,128,128, 0.5) solid;
+`;
+
+const FieldValue = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+`;
+
 
 
 export const CannotSeedSecurityKeysView = () => (
@@ -58,301 +89,66 @@ export const NoSecurityKeysView = () => (
 
 
 
-const SeedingContentBlockDiv = styled.div`
-  background-color: rgba(147, 140, 47, 0.2);
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  min-width: 60vw;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-content: flex-start;
-  overflow-wrap: anywhere;
-`;
-
-export const HardwareSecurityKeysView = observer ( ({seedableFidoKeys, seedHardwareKeyViewState}: {
-  seedableFidoKeys: SeedableFIDOKeys,
-  seedHardwareKeyViewState: SeedHardwareKeyViewState
-}) => {
-  const {devices} = seedableFidoKeys;
-  if (devices == null) return null;
-  if (devices.length === 0) return (<NoSecurityKeysView/>);
-  return (
-    <SeedingContentBlockDiv>
-      { devices.map( device => (
-        <button
-          key={device.productName}
-          onClick={ () => seedHardwareKeyViewState.write(device) }
-        >Seed {device.productName}
-        </button>
-      ))}
-    </SeedingContentBlockDiv>
-  );
-});
-export const PressCountdownSecondsView = observer( ({whenStarted}: {whenStarted: number}) => {
+export const CountdownSecondsView = observer( ({startingSeconds, whenStarted}: {startingSeconds: number, whenStarted: number}) => {
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
     const interval = setInterval( () => setNow(Date.now()), 1000);
     return () => { clearInterval(interval)}
   });
   const secondsPassed = Math.floor((now - whenStarted) / 1000)
-  return (<>{ Math.max(0, 8 - secondsPassed) }</>);
+  return (<>{ Math.max(0, startingSeconds - secondsPassed) }</>);
 })
 
-export const SeedHardwareKeyViewWithState = observer( ( {diceKey, seedHardwareKeyViewState, seedableFidoKeys}: {
-  seedHardwareKeyViewState: SeedHardwareKeyViewState,
-  seedableFidoKeys: SeedableFIDOKeys,
-  diceKey: DiceKey
+const ModalContent = styled.div`
+  padding-left: 10vw;
+  padding-right: 10vw;
+`
+
+const WriteInProgressView = () => (
+  <ModalContent>
+    <Spacer/>
+    <Instruction>Press the button on your hardware key three times to complete the seeding process.</Instruction>
+    <Instruction>You have <CountdownSecondsView startingSeconds={8} whenStarted={ Date.now() }/> seconds to do so.</Instruction>
+    <Spacer/>
+  </ModalContent>
+);
+
+const WriteErrorView = observer( ( {seedHardwareKeyViewState}: {
+  seedHardwareKeyViewState: SeedHardwareKeyViewState
 }) => {
-  const {derivedFromRecipeState} = seedHardwareKeyViewState;
-  if (derivedFromRecipeState == null) return null;
-  if (seedHardwareKeyViewState.writeInProgress) {
-    return (
-      <PaddedContentBox>
-        <Spacer/>
-        <Instruction>Press the button on your hardware key three times to complete the seeding process.</Instruction>
-        <Instruction>You have <PressCountdownSecondsView whenStarted={ Date.now() }/> seconds to do so.</Instruction>
-        <Spacer/>
-      </PaddedContentBox>
-    )  
-  } else if (seedHardwareKeyViewState.writeError != null) {
-    return (
-      <PaddedContentBox>
-        <Spacer/>
-        <Instruction>{( () => {
-          switch(seedHardwareKeyViewState.writeError) {
-            case "UserDidNotAuthorizeSeeding": return `Your hardware key reported that you did not triple-click the button in time. `
-            case "KeyDoesNotSupportCommand": return "Your hardware key's firmware does not support seeding."
-            case "KeyDoesNotSupportSeedingVersion": return `Your hardware key's firmware does not support this seeding command version.`
-            case "KeyReportedInvalidLength": return `Your hardware key reported that the seed length was incorrect.`;
-            default: return `Internal error ${seedHardwareKeyViewState.writeError}`;
-          }
-        })()}          
-        </Instruction>
-        <Spacer/>
-        <CenteredControls><button onClick={seedHardwareKeyViewState.resetWriteState } >Dismiss</button></CenteredControls>
-      </PaddedContentBox>
-    )  
-  } else if (seedHardwareKeyViewState.writeSucceeded) {
-    return (
-      <PaddedContentBox>
-        <Spacer/>
-        <Instruction>Your key has been written.</Instruction>
-        { JSON.stringify( seedHardwareKeyViewState.writeError) }        
-        <Spacer/>
-        <CenteredControls><button onClick={seedHardwareKeyViewState.resetWriteState } >Okay</button></CenteredControls>
-      </PaddedContentBox>
-    )  
-  } else return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      alignItems: "center",
-      justifySelf: "center",
-    }}> 
-      { RUNNING_IN_ELECTRON ? (
-        <HardwareSecurityKeysView {...{seedableFidoKeys
-      , seedHardwareKeyViewState}}/>
-      ) : (
-        <CannotSeedSecurityKeysView/>
-      )}
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignContent: "flex-start",
-        height: `${Dimensions.WizardOrFieldsMaxHeight}vh`,
-      }}>
-        <RecipeFieldEditorView state={seedHardwareKeyViewState.recipeBuilderState} />
-      </div>
-      <div style={{display: "flex",
-        flexDirection: "column", 
-        alignItems: "center", justifyContent: "flex-end"
-      }}>
-          <KeyPlusRecipeView {...{diceKey, recipeBuilderState: seedHardwareKeyViewState.recipeBuilderState}} />
-      </div>
-      <DerivedFromRecipeView allowUserToChangeOutputType={false} state={derivedFromRecipeState} />
-    </div>
-  )
+  const {writeError} = seedHardwareKeyViewState;
+  if (writeError == null) return null;
+  return (
+    <ModalContent>
+      <Spacer/>
+      <Instruction>{( () => {
+        switch(seedHardwareKeyViewState.writeError) {
+          case "UserDidNotAuthorizeSeeding": return `Your hardware key reported that you did not triple-click the button in time. `
+          case "KeyDoesNotSupportCommand": return "Your hardware key's firmware does not support seeding."
+          case "KeyDoesNotSupportSeedingVersion": return `Your hardware key's firmware does not support this seeding command version.`
+          case "KeyReportedInvalidLength": return `Your hardware key reported that the seed length was incorrect.`;
+          default: return `Internal error ${seedHardwareKeyViewState.writeError}`;
+        }
+      })()}          
+      </Instruction>
+      <CenteredControls><button onClick={seedHardwareKeyViewState.resetWriteState } >Dismiss</button></CenteredControls>
+    </ModalContent>
+  )  
 });
 
-
-enum SeedSource {
-  GeneratedFromDefaultRecipe = "GeneratedFromDefaultRecipe",
-  GeneratedFromCustomRecipe = "GeneratedFromCustomRecipe",
-  EnteredManually = "EnteredManually"
-}
-// const SeedSources = [
-//   SeedSource.EnteredManually,
-//   SeedSource.GeneratedFromDefaultRecipe,
-//   SeedSource.GeneratedFromCustomRecipe,
-// ] as const;
-
-class SeedHardwareKeyViewState {
-  recipeBuilderState: RecipeBuilderState;
-  diceKeyState: DiceKeyState;
-  derivedFromRecipeState: DerivedFromRecipeState | undefined;
-
-  _seedInEditableHexFormatFieldValue: string | undefined = undefined;
-  get seedInEditableHexFormatFieldValue() {return this._seedInEditableHexFormatFieldValue}
-  readonly setSeedInHexFormatFieldValue = action((newValue: string | undefined)=>{this._seedInEditableHexFormatFieldValue = newValue;});
-
-  _seedInEditableHexFormatFieldCursorPosition: number | undefined | null;
-  get seedInEditableHexFormatFieldCursorPosition() {return this._seedInEditableHexFormatFieldCursorPosition}
-  readonly setSeedInEditableHexFormatFieldCursorPosition = action((newValue: number | undefined | null)=>{this._seedInEditableHexFormatFieldCursorPosition = newValue;});
-  readonly updateCursorPositionForEvent = (e:  {currentTarget: HTMLInputElement}) => // React.ChangeEvent<HTMLInputElement> | React.MouseEvent<HTMLInputElement> | React.KeyboardEvent<HTMLInputElement>) =>
-    this.setSeedInEditableHexFormatFieldCursorPosition(e.currentTarget.selectionStart)
-
-  _seedSourceSelected: SeedSource | undefined = undefined;
-  get seedSourceSelected(): SeedSource {
-    return this.diceKeyState.diceKey == null ? SeedSource.EnteredManually :
-      (this._seedSourceSelected ?? SeedSource.GeneratedFromDefaultRecipe);
-  }
-  readonly setSeedSourceSelected = action( (newValue: SeedSource | undefined)=>{
-    if (newValue === SeedSource.EnteredManually) {
-      const {seedInHexFormat} = this;
-      if (seedInHexFormat.length > 0) {
-        // Before we start editing, copy the current seed into the editable field
-        this.setSeedInHexFormatFieldValue(seedInHexFormat);
-      }
-    }
-    this._seedSourceSelected = newValue;
-  });
-
-  get seedInHexFormat(): string {
-    const {seedSourceSelected} = this;
-    if (seedSourceSelected === SeedSource.GeneratedFromDefaultRecipe || seedSourceSelected === SeedSource.GeneratedFromCustomRecipe) {
-      return this.derivedFromRecipeState?.derivedValue ?? "";
-    } else {
-      return this.seedInEditableHexFormatFieldValue ?? "";
-    }
-  }
-
-  get seed() {
-    return hexStringToUint8ClampedArray(this.seedInHexFormat);
-  }
-
-  get seedIsValid() {
-    return this.seed.length == 32 &&
-    // Valid if re-encoded hex equal original hex
-    uint8ArrayToHexString(Uint8Array.from(this.seed)).toLowerCase() === this.seedInHexFormat.toLowerCase();
-  }
-  
-  private _selectedFidoKeysProductName: string | undefined;
-  get selectedFidoKeysProductName() { return this._selectedFidoKeysProductName; }
-  setSelectedFidoKeysProductName = action( (newSelectedFidoKeysProductName: string | undefined) => {
-    this._selectedFidoKeysProductName = newSelectedFidoKeysProductName;
-  });
-
-  get seedableFidoKeys() {
-    return this.seedableFidoKeysObserverClass.devices;
-  }
-
-  get seedableFidoKeySelected(): HIDDevice | undefined {
-    const {selectedFidoKeysProductName, seedableFidoKeys} = this;
-    return seedableFidoKeys.find( (device) => device.productName === selectedFidoKeysProductName ) ??
-      seedableFidoKeys.at(0);
-  }
-
-  writeInProgress: boolean = false;
-  writeSucceeded?: boolean;
-  writeError?: WriteSeedToFIDOKeyException | undefined;
-  resetWriteState = action ( () => {
-    this.writeInProgress = false;
-    this.writeError = undefined;
-    this.writeSucceeded = undefined;
-  });
-  setWriteStarted = action ( () => {
-    this.writeInProgress = true;
-    this.writeError = undefined;
-    this.writeSucceeded = undefined;
-  });
-  setWriteError = action ( (error: any) => {
-    this.writeInProgress = false
-    this.writeError = error;
-    this.writeSucceeded = false;;
-  });
-  setWriteSucceeded = action ( () => {
-    this.writeInProgress = false;
-    this.writeError = undefined;
-    this.writeSucceeded = true;
-  });
-
-  write = (device: HIDDevice) => {
-    const seed = this.derivedFromRecipeState?.derivedSeedBytesHex;
-    if (!seed) return;
-    this.setWriteStarted();
-    writeSeedToFIDOKey(device, seed)
-      .then( () => this.setWriteSucceeded() )
-      .catch ( this.setWriteError );
-  }
-
-  constructor(private readonly seedableFidoKeysObserverClass: SeedableFIDOKeys, diceKeyState: DiceKeyState) {
-    const recipeBuilderState = new RecipeBuilderState({
-      origin: "BuiltIn",
-      type: "Secret",
-      recipeJson: `{"purpose":"${seedSecurityKeyPurpose}"}`,
-    } as LoadedRecipe<"BuiltIn">);
-    this.recipeBuilderState = recipeBuilderState;
-    this.diceKeyState = diceKeyState;
-    this.derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, diceKeyState });
-    makeAutoObservable(this);
-  }
-
-}
-
-
-
-// Add to menu bar: load new DiceKey
-// Add to menu bar: Seed SoloKey
-
-// SoloKey seeding screens
-// Step 1: Seed/SoloKey
-// SoloKey selector
-// Sequence number field, validated to confirm it is 64 hex characters (32 bytes)
-// Seed field: default seed if loaded (with sequence number)
-// Edit/customize recipe button
-
-// Step 2: Generate seed
-// Step 3: Write/copy seed
-
-
-const FieldRow = styled.div<{invisible?: boolean}>`
-    ${ props => props.invisible ? css`visibility: hidden;` : ``}
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    margin-top: 0.25vh;
-`;
-
-const FieldLabelWidth = `max(10rem, 10vw)`;
-const FieldValueMargin = `0.5vw`;
-
-const ValueColumnOnly = styled.div<{invisible?: boolean}>`
-  ${ props => props.invisible ? css`visibility: hidden;` : ``}
-  margin-left: ${cssCalcTyped(`${cssCalcInputExpr(FieldLabelWidth)} + 2 * ${cssCalcInputExpr(FieldValueMargin)}`)};
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-`;
-
-const FieldLabel = styled.label`
-  min-width: ${FieldLabelWidth};
-  text-align: right;
-  padding-right: ${FieldValueMargin};
-  margin-right: ${FieldValueMargin};
-  border-right: 1px rgba(128,128,128, 0.5) solid;
-`;
-
-const FieldValue = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-`;
+const WriteSucceededView = observer( ( {seedHardwareKeyViewState}: {
+  seedHardwareKeyViewState: SeedHardwareKeyViewState
+}) => (
+      <ModalContent>
+        <Spacer/>
+        <Instruction>Your USB FIDO key reports that the seed was successfully written.</Instruction>
+        { JSON.stringify( seedHardwareKeyViewState.writeError) }        
+        <Spacer/>
+        <CenteredControls><button onClick={seedHardwareKeyViewState.resetWriteState } >Done</button></CenteredControls>
+        <Spacer/>
+      </ModalContent>
+    )  
+);
 
 export const SoloKeyValue = observer( ( {seedHardwareKeyViewState}: {
   seedHardwareKeyViewState: SeedHardwareKeyViewState,
@@ -440,35 +236,26 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
   seedHardwareKeyViewState: SeedHardwareKeyViewState,
 }) => {
   const value = seedHardwareKeyViewState.seedInHexFormat;
+  const diceKeyNickname = seedHardwareKeyViewState.diceKeyState?.diceKey?.nickname ?? "DiceKey";
   return (<>
     <ValueColumnOnly>
       {(seedHardwareKeyViewState.diceKeyState.diceKey == null) ? (<>
           Enter or Paste a Seed in Hex Format (or&nbsp;<a onClick={() => {}}>load a DiceKey to generate a seed</a>)
         </>) : (
         <select value={seedHardwareKeyViewState.seedSourceSelected} onChange={(e)=>seedHardwareKeyViewState.setSeedSourceSelected(e.target.value as SeedSource)}>
-          <option value={SeedSource.EnteredManually}>Enter or Paste a Seed</option>
-          <option value={SeedSource.GeneratedFromDefaultRecipe}>Derive Seed from DiceKey Using Standard Recipe</option>
-          <option value={SeedSource.GeneratedFromCustomRecipe}>Derive Seed from DiceKey Using Custom Recipe</option>
+          <option value={SeedSource.EnteredManually}>Enter or paste a seed</option>
+          <option value={SeedSource.GeneratedFromDefaultRecipe}>Derive seed from {diceKeyNickname} using the standard recipe</option>
+          <option value={SeedSource.GeneratedFromCustomRecipe}>Derive seed from {diceKeyNickname} Using Custom Recipe</option>
         </select>
     )}
     </ValueColumnOnly>
+    { seedHardwareKeyViewState.seedSourceSelected != SeedSource.GeneratedFromDefaultRecipe ? null : (
+        <ValueColumnOnlyContinued>
+        Sequence number <SequenceNumberFormFieldValueView state={seedHardwareKeyViewState.recipeBuilderState} />
+      </ValueColumnOnlyContinued>)
+    }
     <FieldRow>
       <FieldLabel>Seed</FieldLabel>
-      {/* (derived from your DiceKey with sequence number 1)
-        If DiceKey loaded, NOT EDITABLE TO START
-            Default seed generated from your DiceKey with no sequence number
-              (add a sequence number to change the seed)
-              (manually edit the recipe used to generate the seed (not recommended))
-              (enter a seed manually)
-              [obscure button needed, obscures all but the last two characters]
-        
-        If no DiceKey loaded, EDITABLE TO START
-            Paste a seed, or load your DiceKey to generate the seed
-
-        1. Make this field editable so I can paste or enter a seed
-        1. Edit recipe to generate seed from your DiceKey
-        2. Edit/paste seed
-      */}
       <FieldValue>
         { ObscureSecretFields.value ? (<ObscureTextInputFor64HexChars value={value} cursorPosition={seedHardwareKeyViewState.seedInEditableHexFormatFieldCursorPosition} />) : null }
         <TextInputFor64HexChars
@@ -499,7 +286,13 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
 export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState}: {
   seedHardwareKeyViewState: SeedHardwareKeyViewState
 }) => {
-
+  if (seedHardwareKeyViewState.writeInProgress) {
+    return (<WriteInProgressView/>)
+  } else if (seedHardwareKeyViewState.writeError != null) {
+    return (<WriteErrorView {...{seedHardwareKeyViewState}} />)
+  } else if (seedHardwareKeyViewState.writeSucceeded) {
+    return (<WriteSucceededView {...{seedHardwareKeyViewState}} />)
+  }
   return (
     <div>
       <FieldRow>
@@ -507,8 +300,8 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState}:
         <SoloKeyValue {...{seedHardwareKeyViewState}} />
       </FieldRow>
       <SeedFieldView {...{seedHardwareKeyViewState}} />
-      <ValueColumnOnly invisible={!seedHardwareKeyViewState.seedIsValid || seedHardwareKeyViewState.seedableFidoKeySelected == null}>
-        <button>Write</button>
+      <ValueColumnOnly>
+        <button disabled={!seedHardwareKeyViewState.readyToWrite} onClick={seedHardwareKeyViewState.write}>Write</button>
       </ValueColumnOnly>
     </div>
   )
@@ -519,7 +312,6 @@ export const SeedHardwareKeyView = observer ( ({diceKeyState}: {diceKeyState: Di
   const seedableFidoKeys = new SeedableFIDOKeys();
   const seedHardwareKeyViewState = new SeedHardwareKeyViewState(seedableFidoKeys, diceKeyState);
   useEffect( () => () => seedableFidoKeys.destroy() );  
-
   return (
 //    <SeedHardwareKeyViewWithState {...{diceKey, seedHardwareKeyViewState, seedableFidoKeys}}/>
     <SeedHardwareKeySimpleView {...{seedHardwareKeyViewState}}/>

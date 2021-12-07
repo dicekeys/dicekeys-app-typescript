@@ -11,7 +11,7 @@ export const CharButton = styled.button.attrs(() =>({
 }))<CharButtonExtraProps>`
   display: flex;
   justify-content: center;
-  align-items: baseline;
+  align-items: center;
   background: none;
   border: none;
   margin-left: 0.1rem;

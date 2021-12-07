@@ -6,7 +6,7 @@ export const ButtonRow = styled.div`
   flex-direction: row;
   margin-top: 0.5rem;
   justify-content: center;
-  align-items: baseline;
+  align-items: center;
 `;
 
 export const BaseButton = styled.button<{invisible?: boolean}>`

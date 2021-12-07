@@ -81,7 +81,9 @@ export class RecipeFieldFocusState {
   constructor(
     private state: {fieldInFocus?: RecipeFieldType, setFieldInFocus: (field?: RecipeFieldType) => void},
     private field: RecipeFieldType
-  ) {}
+  ) {
+    makeAutoObservable(this);
+  }
 
   get isFieldInFocus(): boolean { return this.field === this.state.fieldInFocus};
   focus = () => this.state.setFieldInFocus(this.field);
@@ -206,7 +208,7 @@ export class RecipeBuilderState {
   /////////////////////////////////
   // SequenceNumber field ("#")
   /////////////////////////////////
-  sequenceNumberState = new NumericTextFieldState({minValue: 1, incrementBy: 1, defaultValue: 2, onChanged: (sequenceNumber) => {
+  sequenceNumberState = new NumericTextFieldState({minValue: 2, incrementBy: 1, defaultValue: 2, onChanged: (sequenceNumber) => {
     this.rawRecipeJson = addSequenceNumberToRecipeJson(this.rawRecipeJson, sequenceNumber);
   }});
   get sequenceNumber(): number | undefined { return this.sequenceNumberState.numericValue } 
