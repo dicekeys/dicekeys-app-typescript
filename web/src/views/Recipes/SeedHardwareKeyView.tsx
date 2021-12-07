@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
-import { CenteredControls, Instruction, Spacer, SecretFieldsCommonObscureButton } from "../basics";
-import { RUNNING_IN_BROWSER } from "../../utilities/is-electron";
-import { SequenceNumberFormFieldValueView } from "./DerivationView/RecipeFieldEditorView";
+import { CenteredControls, Instruction, Spacer, SecretFieldsCommonObscureButton, CopyButton } from "../basics";
+import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
+import { RecipeFieldEditorView, SequenceNumberFormFieldValueView } from "./DerivationView/RecipeFieldEditorView";
 import styled, { css } from "styled-components";
 import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
@@ -13,19 +13,9 @@ import { PrimaryView } from "../../css";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { BelowTopNavigationBarWithNoBottomBar } from "../../views/Navigation/TopNavigationBar";
 import { SeedHardwareKeyViewState, SeedSource } from "./SeedHardwareKeyVIewState";
+import { RecipeEditingMode } from "./RecipeBuilderState";
 //import { ModalOverlayForDialogOrMessage } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 
-
-
-const SeedingContentBlockDiv = styled.div`
-  background-color: rgba(147, 140, 47, 0.2);
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-content: flex-start;
-  overflow-wrap: anywhere;
-`;
 
 const FieldRow = styled.div<{invisible?: boolean}>`
     ${ props => props.invisible ? css`visibility: hidden;` : ``}
@@ -51,6 +41,12 @@ const ValueColumnOnly = styled.div<{invisible?: boolean}>`
 const ValueColumnOnlyContinued = styled(ValueColumnOnly)`
   margin-top: 0;
 `;
+const InlineWarning = styled.div`
+  background-color: rgba(147, 140, 47, 0.2);
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  margin-right: 5vw;
+`;
 
 const FieldLabel = styled.label`
   min-width: ${FieldLabelWidth};
@@ -65,27 +61,41 @@ const FieldValue = styled.div`
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
+  padding-left: 0.25rem;
 `;
 
-
-
-export const CannotSeedSecurityKeysView = () => (
-  <SeedingContentBlockDiv>
-    Web browsers currently prevent web-based applications from using USB to seed hardware security keys.
-    <br/>
-    To seed a security key, you'll need to use the DiceKeys app on Android, Windows, Linux, or MacOS.
-  </SeedingContentBlockDiv>
+const TextInputFor64HexCharsFontSize = cssCalcTyped(
+  `min( 1rem, 2 * ( ( 70vw - ${cssCalcInputExpr(FieldLabelWidth)}) / 64 ) )`
 );
 
+const TextInputFor64HexCharsBase = css`
+  font-family: monospace;
+  font-size: ${TextInputFor64HexCharsFontSize};
+`
 
-export const NoSecurityKeysView = () => (
-  <SeedingContentBlockDiv>
-    Insert the SoloKey you wish to seed into a USB port. (None are currently attached.)
-    <br/>
-    Alternatively, you can generate a seed below and copy it to another device.
-  </SeedingContentBlockDiv>
-)
+const TextInputFor64HexChars = styled.input.attrs( (_props) => ({
+  type: "text",
+  size: 64,
+}))`
+  ${ TextInputFor64HexCharsBase }
+  ${ (props) => props.disabled === false ? css`user-select: all` : ``}
+`
 
+
+const ModalContent = styled.div`
+  padding-left: 10vw;
+  padding-right: 10vw;
+`
+
+export const CannotSeedSecurityKeysView = () => (
+  <ValueColumnOnly>
+    <InlineWarning>
+      Web browsers currently prevent web-based applications from using USB to seed hardware security keys.
+      <br/>
+      To seed a security key, you'll need to use the DiceKeys app on Android, Windows, Linux, or MacOS.
+    </InlineWarning>
+  </ValueColumnOnly>
+);
 
 
 export const CountdownSecondsView = observer( ({startingSeconds, whenStarted}: {startingSeconds: number, whenStarted: number}) => {
@@ -96,12 +106,7 @@ export const CountdownSecondsView = observer( ({startingSeconds, whenStarted}: {
   });
   const secondsPassed = Math.floor((now - whenStarted) / 1000)
   return (<>{ Math.max(0, startingSeconds - secondsPassed) }</>);
-})
-
-const ModalContent = styled.div`
-  padding-left: 10vw;
-  padding-right: 10vw;
-`
+});
 
 const WriteInProgressView = () => (
   <ModalContent>
@@ -153,41 +158,25 @@ export const SoloKeyValue = observer( ( {seedHardwareKeyViewState}: {
   seedHardwareKeyViewState: SeedHardwareKeyViewState,
 }) => {
   if (RUNNING_IN_BROWSER) {
-    return (<CannotSeedSecurityKeysView/>);
+    return (<FieldValue>Cannot connect to USB FIDO keys</FieldValue>)
   }
   const {seedableFidoKeys} = seedHardwareKeyViewState;
   const numberOfKeys = seedableFidoKeys.length;
   if (numberOfKeys === 0) {
-    return (<>Insert key</>)
+    return (<FieldValue>Insert FIDO key into USB slot</FieldValue>)
   }
   // if (numberOfKeys === 1) {
   //   return (<>{ seedableFidoKeys[0].productName }</>)
   // }
-  return (<>
+  return (<FieldValue>
     <select onChange={(e) => seedHardwareKeyViewState.setSelectedFidoKeysProductName(e.target.value)} value={seedHardwareKeyViewState.seedableFidoKeySelected?.productName }>{
       seedableFidoKeys.map( seedableFidoKey => (
         <option key={seedableFidoKey.productName} value={seedableFidoKey.productName}>{seedableFidoKey.productName}</option>
       ))
     }</select>
-  </>);
+  </FieldValue>);
 });
 
-const TextInputFor64HexCharsFontSize = cssCalcTyped(
-  `min( 1rem, 2 * ( ( 80vw - ${cssCalcInputExpr(FieldLabelWidth)}) / 64 ) )`
-);
-
-const TextInputFor64HexCharsBase = css`
-  font-family: monospace;
-  font-size: ${TextInputFor64HexCharsFontSize};
-`
-
-const TextInputFor64HexChars = styled.input.attrs( (_props) => ({
-  type: "text",
-  size: 64,
-}))`
-  ${ TextInputFor64HexCharsBase }
-  ${ (props) => props.disabled === false ? css`user-select: all` : ``}
-`
 
 // const opaqueCursorRectangleHtmlEntity = "&#x2588;";
 const opaqueBlockCharacter = "█";
@@ -276,6 +265,7 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
           onFocus={seedHardwareKeyViewState.updateCursorPositionForEvent}
         />
         <SecretFieldsCommonObscureButton />
+        <CopyButton valueToCopy={seedHardwareKeyViewState.seedInHexFormat} />
       </FieldValue>
     </FieldRow>
   </>)
@@ -294,6 +284,10 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState}:
   }
   return (
     <div>
+      { seedHardwareKeyViewState.seedSourceSelected != SeedSource.GeneratedFromCustomRecipe ? null : (
+        (<RecipeFieldEditorView state={seedHardwareKeyViewState.recipeBuilderState} />)
+      )}
+      { RUNNING_IN_ELECTRON ? null : (<CannotSeedSecurityKeysView/>) }
       <FieldRow>
         <FieldLabel>USB FIDO Key</FieldLabel>
         <SoloKeyValue {...{seedHardwareKeyViewState}} />
@@ -310,6 +304,8 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState}:
 export const SeedHardwareKeyView = observer ( ({diceKeyState}: {diceKeyState: DiceKeyState}) => {
   const seedableFidoKeys = new SeedableFIDOKeys();
   const seedHardwareKeyViewState = new SeedHardwareKeyViewState(seedableFidoKeys, diceKeyState);
+  // FIXME
+  seedHardwareKeyViewState.recipeBuilderState.setEditingMode(RecipeEditingMode.EditIncludingRawJson);
   useEffect( () => () => seedableFidoKeys.destroy() );  
   return (
 //    <SeedHardwareKeyViewWithState {...{diceKey, seedHardwareKeyViewState, seedableFidoKeys}}/>

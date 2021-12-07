@@ -201,9 +201,10 @@ const FormattedRecipeStyle = css`
 const FormattedRecipeUnderlay = styled.div`
   ${FormattedRecipeStyle}
   position: absolute;
-  z-index: -1;
-  border-color: rgba(0,0,0,0);
-  color: rgba(0,0,0,0);
+  z-index: 1;
+  pointer-events: none;
+  border-color: transparent;
+  color: transparent;
 `;
 
 const FormattedRecipeTextArea = styled.textarea.attrs(() => ({
@@ -218,7 +219,7 @@ const FormattedRecipeTextArea = styled.textarea.attrs(() => ({
   justify-content: flex-end;
   align-content: flex-start;
   z-index: 2;
-  background-color: rgba(0, 0, 0, 0);
+  background-color: transparent;
 `;
 
 export const FormattedRecipeUnderlayJson = styled(FormattedRecipeUnderlay)`

@@ -114,16 +114,17 @@ export const RawJsonFieldView = observer( ({state, focusOnCreate}: {
   </FormattedJsonContainer>
 )});
 
-export const PurposeFieldView = observer( ({state}: {
+export const PurposeFieldView = observer( ({state, focusOnCreate}: {
   state: RecipeBuilderState,
-} ) => (
+  focusOnCreate?: boolean
+}) => (
     <PurposeInputField
       id={"purpose"}
       size={40}
       value={state.purposeField ?? ""}
       placeholder=""
       // Focus input when it's created
-      ref={ e => e?.focus() }
+      ref={ focusOnCreate ? (e => e?.focus()) : undefined }
       onInput={ e => {state.setPurposeField(e.currentTarget.value); }}
       onKeyUp={ e => {if (e.key === "Enter" && e.currentTarget.value.length > 0) { 
         state.setWizardPrimaryFieldEntered(true);
@@ -225,7 +226,7 @@ export const WizardStepEnterPurposeView = observer ( ({state}: {
         {/* <WizardStepInstructionNote>Changing even one letter or space of the purpose changes the {state.typeNameLc}.</WizardStepInstructionNote> */}
         <WizardFieldRow>
           {/* <WizardFieldLabel>Purpose:</WizardFieldLabel> */}
-          <PurposeFieldView {...{state}} />
+          <PurposeFieldView {...{state}} focusOnCreate={true} />
           <TextCompletionButton
             disabled={(state.purpose?.length ?? 0) === 0}
             onClick={state.setWizardPrimaryFieldEnteredFn(true)}
