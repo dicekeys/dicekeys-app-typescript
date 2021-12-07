@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
-import { CenteredControls, Instruction, PaddedContentBox, Spacer, SecretFieldsCommonObscureButton } from "../basics";
+import { CenteredControls, Instruction, Spacer, SecretFieldsCommonObscureButton } from "../basics";
 import { RUNNING_IN_BROWSER } from "../../utilities/is-electron";
 import { SequenceNumberFormFieldValueView } from "./DerivationView/RecipeFieldEditorView";
-import { DiceKey } from "../../dicekeys/DiceKey";
 import styled, { css } from "styled-components";
 import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
