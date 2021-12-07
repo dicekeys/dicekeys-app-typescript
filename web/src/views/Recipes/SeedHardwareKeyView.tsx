@@ -539,9 +539,11 @@ export const SeedHardwareKeyPrimaryView = observer( ({windowNavigationState}: {w
     <PrimaryView>
       <SimpleTopNavBar title={"Seed a USB FIDO Security Key"} />
       <BelowTopNavigationBarWithNoBottomBar>
-        // <a onClick={e => {
-        //   windowNavigationState.navigateToLoadDiceKey()
-        // }}>Load DiceKey</a>
+      /*
+        <a onClick={() => {
+          windowNavigationState.navigateToLoadDiceKey()
+        }}>Load DiceKey</a>
+        */
         <SeedHardwareKeyView diceKeyState={windowNavigationState.foregroundDiceKeyState} />
       </BelowTopNavigationBarWithNoBottomBar>
     </PrimaryView>
