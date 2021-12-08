@@ -103,14 +103,16 @@ const DerivedValueHeaderDiv = styled.div`
   align-content: baseline;
   align-self: flex-start;
   padding-left: calc(${DerivedValueHeaderFormula});
-  width: calc(${Dimensions.ContentWidthInVw}vw - (${DerivedValueHeaderFormula}));
+  width: calc(${Dimensions.ContentWidth} - (${DerivedValueHeaderFormula}));
 `
 
 const DerivedValueContentDivLeftRightPadding = `0.5rem`;
 
+const DerivedValueContentDivBorderWidth = `1px`
+
 const DerivedValueContentDiv = styled.div`
-  width: calc(${Dimensions.ContentWidthInVw}vw - 2 * (${DerivedValueContentDivLeftRightPadding}));
-  border-width: 1px;
+  width: calc(${Dimensions.ContentWidth} - 2 * (${DerivedValueContentDivLeftRightPadding} + ${DerivedValueContentDivBorderWidth}));
+  border-width: ${DerivedValueContentDivBorderWidth};
   border-color: rgba(128,128,128,0.5);
   border-style: solid;
   padding-left: ${DerivedValueContentDivLeftRightPadding};

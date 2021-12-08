@@ -4,8 +4,8 @@ import { RecipeFieldFocusState, RecipeBuilderState, RecipeEditingMode } from "..
 import { NumberPlusMinusView, NumericTextFieldState } from "../../basics/NumericTextFieldView";
 import { describeRecipeType } from "../DescribeRecipeType";
 import { EnhancedRecipeView } from "../EnhancedRecipeView";
-import { BuilderLabelValueMarginVw,
-  BuilderLabelWidthVw,
+import { BuilderLabelValueMargin,
+  BuilderLabelWidth,
   HostNameInputField,
   FormattedRecipeTextAreaJson,
   FormattedRecipeUnderlayJson,
@@ -25,10 +25,10 @@ const BuilderFieldContainer = styled.div`
 `;
 
 const BuilderFieldLabel = styled.label`
-  width: ${BuilderLabelWidthVw}vw;
+  width: ${BuilderLabelWidth};
   text-align: right;
-  padding-right: ${BuilderLabelValueMarginVw}vw;
-  margin-right: ${BuilderLabelValueMarginVw}vw;
+  padding-right: ${BuilderLabelValueMargin};
+  margin-right: ${BuilderLabelValueMargin};
   border-right: 1px rgba(128,128,128, 0.5) solid;
 `;
 
@@ -123,7 +123,7 @@ export const PurposeFieldView = observer( ({state}: {
   const fieldFocusState = new RecipeFieldFocusState(state, field);
   return (
     <BuilderFieldContainer>
-      <BuilderFieldLabel htmlFor={field}>Purpose:</BuilderFieldLabel>
+      <BuilderFieldLabel htmlFor={field}>Purpose</BuilderFieldLabel>
       <HostNameInputField id={field}
         size={40}
         value={state.purposeField ?? ""}
@@ -230,7 +230,7 @@ export const RawJsonFieldView = observer( ({state}: {
   const textAreaComponentRef = React.useRef<HTMLTextAreaElement>(null);
   return (
     <BuilderFieldContainer>
-      <BuilderFieldLabel htmlFor={field}>raw json:</BuilderFieldLabel>
+      <BuilderFieldLabel htmlFor={field}>raw json</BuilderFieldLabel>
       <FormattedRecipeBox>
         <FormattedRecipeUnderlayJson>
           <EnhancedRecipeView recipeJson={state.rawRecipeJson} />

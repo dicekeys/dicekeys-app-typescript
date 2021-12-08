@@ -5,6 +5,7 @@ import { HoverState } from "../../../state/reusable/HoverState";
 import { RecipePurposeContentView } from "../RecipeDescriptionView";
 import * as Dimensions from "./DerivationViewLayout";
 import styled from "styled-components";
+import { cssCalcTyped } from "../../../utilities";
 
 export type RecipeRibbonButtons = "SaveOrDelete" | "Increment" | "Decrement" | "EditFields" | "EditRawJson" | "RemoveRecipe";
 
@@ -38,7 +39,7 @@ const EditButtonHoverTextOuterContainer = styled.div`
   display: block;
   position: relative;
   user-select: none;
-  width: ${Dimensions.ContentWidthInVw}vw;
+  width: ${cssCalcTyped(Dimensions.ContentWidth)};
 `;
 
 const EditButtonHoverTextInnerContainer = styled.div`
@@ -46,7 +47,7 @@ const EditButtonHoverTextInnerContainer = styled.div`
   user-select: none;
   bottom: 0;
   right: 0;
-  width: ${Dimensions.ContentWidthInVw}vw;
+  width: ${cssCalcTyped(Dimensions.ContentWidth)};
   text-align: right;
   font-size:0.9rem
 `;

@@ -18,10 +18,10 @@ import {
 } from "./DerivationViewLayout";
 import * as Dimensions from "./DerivationViewLayout";
 import styled from "styled-components";
+import { cssExprWithoutCalc } from "../../../utilities";
 
-export const PlusSignWidthPercent = 5;
-export const PlusSignViewWidth = `${PlusSignWidthPercent}vw` as const;
-export const RecipeColumnWidthFormula = `(${Dimensions.ContentWidthInVw}vw - (${Dimensions.DiceKeyBoxSize} + ${PlusSignWidthPercent}vw))` as const;
+export const PlusSignViewWidth = `5vw` as const;
+export const RecipeColumnWidthFormula = cssExprWithoutCalc(`(${Dimensions.ContentWidth} - (${Dimensions.DiceKeyBoxSize} + ${PlusSignViewWidth}))`);
 
 const BigCaptionOrLabel = styled.span`
   font-family: sans-serif;
@@ -37,7 +37,7 @@ const RecipeViewContainer = styled.div`
 
 
 const RecipeRoundedRectRadiusAndPadding = `0.35rem`;
-const RecipeColumnWidthWithinPaddingFormula = `(${RecipeColumnWidthFormula} - (2  * (${RecipeRoundedRectRadiusAndPadding})))` as const;
+const RecipeColumnWidthWithinPaddingFormula = cssExprWithoutCalc(`${RecipeColumnWidthFormula} - (2  * (${RecipeRoundedRectRadiusAndPadding}))`);
 
 const RecipeViewRoundedRect = styled.div`
   display: flex;
@@ -106,7 +106,7 @@ const ElementInDiceKeyColumn = styled(RowElement)`
 
 const ElementInPlusSignColumn = styled(RowElement)`
   width: calc(${PlusSignViewWidth});
-  font-size: ${Dimensions.DownArrowAndPlusSignViewHeight}vh;
+  font-size: ${Dimensions.DownArrowAndPlusSignViewHeightInVh};
 `;
 
 const ElementInRecipeColumn = styled(RowElement)`
@@ -146,7 +146,7 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
       <ElementInPlusSignColumn>
         <span style={{
           /* Adjust arrow placement so that it doesn't overflow bottom */
-          marginTop: `-${0.15 * Dimensions.DownArrowAndPlusSignViewHeight}vh`,
+          marginTop: `-${0.15 * Dimensions.DownArrowAndPlusSignViewHeightInVh}vh`,
         }}>&#8659;
         </span>
       </ElementInPlusSignColumn>

@@ -3,7 +3,7 @@ import React from "react";
 import {
   TopNavigationBar,
   TopNavLeftSide, TopNavCenter, TopNavRightSide
-} from "./Navigation/TopNavigationBar";
+} from "./Navigation/NavigationLayout";
 import { WindowTopLevelNavigationState } from "../state/Window";
 import { BooleanState } from "../state/reusable/BooleanState";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";

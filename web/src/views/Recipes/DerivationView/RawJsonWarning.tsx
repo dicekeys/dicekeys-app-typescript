@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import styled from "styled-components";
 import { RecipeBuilderState } from "../RecipeBuilderState";
 import { ButtonRow, OptionButton } from "../../../css/Button";
-import { ModalOverlayForWarningDialog } from "../../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
+import { ModalOverlayForWarningDialog } from "../../../views/Navigation/NavigationLayout";
 
 const WarningDiv = styled.div``;
 

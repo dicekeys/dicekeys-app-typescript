@@ -8,7 +8,7 @@ import { Navigation } from "../../state";
 import { EventHandlerOverridesDefault } from "../../utilities/EventHandlerOverridesDefault";
 import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 import styled from "styled-components";
-import { NavigationBar } from "../../views/Navigation/TopNavigationBar";
+import { NavigationBar } from "../Navigation/NavigationLayout";
 
 export const BottomIconNavigationBar = styled(NavigationBar)`
   height: BottomIconBarHeightBottomIconBarHeight;

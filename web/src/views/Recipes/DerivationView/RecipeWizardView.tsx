@@ -14,11 +14,15 @@ import {
   HostNameInputField,
   PurposeInputField
 } from "./RecipeStyles";
+import { cssCalcTyped, cssExprWithoutCalc } from "../../../utilities";
 
 const WizardBorderWidth = "3px";
 const WizardPaddingH = `1.5rem`;
 const WizardPaddingV = `0.5rem`;
 
+const WizardStepContainerWidth = cssCalcTyped(
+  `${cssExprWithoutCalc(Dimensions.ContentWidth)} - (2 * (${WizardPaddingH} + ${WizardBorderWidth})))`
+);
 const WizardStepContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -28,7 +32,7 @@ const WizardStepContainer = styled.div`
   font-size: 1.3rem;
   align-content: center;
   border-radius: 0.5rem;
-  width: calc(${Dimensions.ContentWidthInVw}vw - (2 * (${WizardPaddingH} + ${WizardBorderWidth})));
+  width: ${WizardStepContainerWidth};
   padding-left: ${WizardPaddingH};
   padding-right: ${WizardPaddingH};
   padding-top: ${WizardPaddingV};

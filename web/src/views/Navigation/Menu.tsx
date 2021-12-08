@@ -2,7 +2,7 @@ import { observer } from "mobx-react";
 import React, { PropsWithChildren } from "react";
 import {
   Clickable,
-  TopNavRightPopUpMenu} from "./TopNavigationBar";
+  TopNavRightPopUpMenu} from "./NavigationLayout";
 // import { BUILD_VERSION, BUILD_DATE } from "../../vite-build-constants";
 import { BooleanState } from "../../state/reusable/BooleanState";
 import styled from "styled-components";

@@ -28,7 +28,9 @@ export abstract class HasSubViews<SUB_VIEW> {
     this.navigateTo(destinationSubView);
   }
 
-  get subView(): SUB_VIEW { return this._subView; }
+  get subView(): SUB_VIEW {
+    return this._subView;
+  }
   get previousSubView(): SUB_VIEW | undefined { return this._previousSubView; }
 
   constructor(defaultSubView: SUB_VIEW, private onNavigateTo?: (subView: SUB_VIEW, previousSubView: SUB_VIEW | undefined) => any) {

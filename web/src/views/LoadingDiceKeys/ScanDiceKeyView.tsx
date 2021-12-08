@@ -10,7 +10,7 @@ import { MediaStreamState } from "./MediaStreamState";
 import { CameraSelectionView } from "./CameraSelectionView";
 import styled from "styled-components";
 import { RUNNING_IN_BROWSER } from "../../utilities/is-electron";
-import { TopNavigationBarHeight } from "../../views/Navigation/TopNavigationBar";
+import { TopNavigationBarHeight } from "../Navigation/NavigationLayout";
 // import { CamerasBeingInspected } from "./CamerasBeingInspected";
 
 const minCameraWidth = 1024;

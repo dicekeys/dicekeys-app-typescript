@@ -41,7 +41,7 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
       />
     )
   }
-
+  console.log(`Displaying subview ${windowNavigationState.subView}`)
   switch (windowNavigationState.subView) {
     case SubViewsOfTopLevel.AppHomeView: return (
       <WindowHomeView {...{windowNavigationState}}/>
@@ -51,7 +51,7 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
         onDiceKeyRead={ onDiceKeyLoaded }
         onCancelled={ addressBarState.back }
         state={new LoadDiceKeyState("camera")} />
-    )
+    );
     case SubViewsOfTopLevel.AssemblyInstructions: return (
       <AssemblyInstructionsView onComplete={ onReturnFromAssemblyInstructions } state={
         new AssemblyInstructionsState(windowNavigationState.foregroundDiceKeyState)

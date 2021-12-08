@@ -1,11 +1,14 @@
 import React from "react";
 import styled, {css} from "styled-components";
 import * as Dimensions from "./DerivationViewLayout";
+import {cssCalcTyped, cssExprWithoutCalc} from "../../../utilities/cssCalc"
 
-export const FieldEditorWidth = Math.min(80, Dimensions.ContentWidthInVw)
-export const BuilderLabelWidthVw = 10;
-export const BuilderLabelValueMarginVw = 0.5;
-export const ValueElementWidthVw = FieldEditorWidth - (BuilderLabelWidthVw + BuilderLabelValueMarginVw);
+export const FieldEditorWidth = cssCalcTyped(`min(80vw, ${cssExprWithoutCalc(Dimensions.ContentWidth)}`);
+export const BuilderLabelWidth = `8rem`;
+export const BuilderLabelValueMargin = `0.5vw`;
+export const ValueElementWidth = cssCalcTyped(
+  `${cssExprWithoutCalc(FieldEditorWidth)} - (${cssExprWithoutCalc(BuilderLabelWidth)} + ${cssExprWithoutCalc(BuilderLabelValueMargin)})`
+);
 
 const EdgelessSpan = styled.span`
   border-width: 0;
@@ -21,7 +24,7 @@ const TextInputWithoutSpellCheck = styled.input.attrs(() => ({
   type: "text",
   spellCheck: false,
 }))`
-  width: ${ValueElementWidthVw}vw;
+  width: ${ValueElementWidth};
 `;
 
 export const RecipeTextInputField = styled(TextInputWithoutSpellCheck)`
