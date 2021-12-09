@@ -36,6 +36,9 @@ const getTopLevelNavStateFromPath = (path: string):
       const {diceKey, keyId} = getDiceKeyFromPathRoot(pathRoot) ?? {};
       if (diceKey != null && keyId != null) {
         return {subView: SubViewsOfTopLevel.DiceKeyView, diceKey, keyId} as const;
+      } else {
+        // The state in the address bar is bogus and needs to be replaced.
+        addressBarState.replaceState("/");
       }
   }
   return {subView: undefined}
