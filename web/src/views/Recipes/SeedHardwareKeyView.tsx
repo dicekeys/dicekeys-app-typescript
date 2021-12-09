@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
-import { CenteredControls, Instruction, Spacer, SecretFieldsCommonObscureButton, CopyButton } from "../basics";
+import { CenteredControls, Instruction, Instruction2, Spacer, SecretFieldsCommonObscureButton, CopyButton } from "../basics";
 import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { RecipeFieldEditorView, SequenceNumberFormFieldValueView } from "./DerivationView/RecipeFieldEditorView";
 import styled, { css } from "styled-components";
@@ -9,7 +9,7 @@ import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities/cssCalc";
 import { ObscureSecretFields } from "../../state/ToggleState";
 import { WindowTopLevelNavigationState } from "../../views/WindowTopLevelNavigationState";
-import { PageAsFlexColumn } from "../../css";
+import { DivSupportingInvisible, PageAsFlexColumn } from "../../css";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins, StandardWidthBetweenSideMargins } from "../Navigation/NavigationLayout";
 import { SeedHardwareKeyViewState, SeedSource } from "./SeedHardwareKeyVIewState";
@@ -98,6 +98,7 @@ export const CannotSeedSecurityKeysView = () => (
   </ValueColumnOnly>
 );
 
+const SecondsToTripleClick = 8;
 
 export const CountdownSecondsView = observer( ({startingSeconds, whenStarted}: {startingSeconds: number, whenStarted: number}) => {
   const [now, setNow] = useState(Date.now())
@@ -112,8 +113,8 @@ export const CountdownSecondsView = observer( ({startingSeconds, whenStarted}: {
 const WriteInProgressView = () => (
   <ModalContent>
     <Spacer/>
-    <Instruction>Press the button on your hardware key three times to complete the seeding process.</Instruction>
-    <Instruction>You have <CountdownSecondsView startingSeconds={8} whenStarted={ Date.now() }/> seconds to do so.</Instruction>
+    <Instruction2>Press the button on your hardware key three times to complete the seeding process.</Instruction2>
+    <Instruction2>You have <CountdownSecondsView startingSeconds={SecondsToTripleClick} whenStarted={ Date.now() }/> seconds to do so.</Instruction2>
     <Spacer/>
   </ModalContent>
 );
@@ -126,7 +127,7 @@ const WriteErrorView = observer( ( {seedHardwareKeyViewState}: {
   return (
     <ModalContent>
       <Spacer/>
-      <Instruction>{( () => {
+      <Instruction2>{( () => {
         switch(seedHardwareKeyViewState.writeError) {
           case "UserDidNotAuthorizeSeeding": return `Your hardware key reported that you did not triple-click the button in time. `
           case "KeyDoesNotSupportCommand": return "Your hardware key's firmware does not support seeding."
@@ -135,7 +136,7 @@ const WriteErrorView = observer( ( {seedHardwareKeyViewState}: {
           default: return `Internal error ${seedHardwareKeyViewState.writeError}`;
         }
       })()}          
-      </Instruction>
+      </Instruction2>
       <CenteredControls><button onClick={seedHardwareKeyViewState.resetWriteState } >Dismiss</button></CenteredControls>
     </ModalContent>
   )  
@@ -146,7 +147,7 @@ const WriteSucceededView = observer( ( {seedHardwareKeyViewState}: {
 }) => (
       <ModalContent>
         <Spacer/>
-        <Instruction>Your USB FIDO key reports that the seed was successfully written.</Instruction>
+        <Instruction2>Your USB FIDO key reports that the seed was successfully written.</Instruction2>
         { JSON.stringify( seedHardwareKeyViewState.writeError) }        
         <Spacer/>
         <CenteredControls><button onClick={seedHardwareKeyViewState.resetWriteState } >Done</button></CenteredControls>
@@ -279,6 +280,10 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState, loadDiceKeyFn}: {
   </>)
 });
 
+const SmallNote = styled(DivSupportingInvisible)`
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+`
 
 export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, loadDiceKeyFn}: {
   seedHardwareKeyViewState: SeedHardwareKeyViewState,
@@ -294,12 +299,17 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, 
   return (
     <WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins>
       <div>
-        { seedHardwareKeyViewState.seedSourceSelected != SeedSource.GeneratedFromCustomRecipe ? null : (
+        { seedHardwareKeyViewState.seedSourceSelected === SeedSource.GeneratedFromCustomRecipe ? (
           <>
             <RecipeFieldEditorView state={seedHardwareKeyViewState.recipeBuilderState} />
-            <div style={{minHeight: '5vh'}}></div>
           </>
-        )}
+        ): (<>
+          <Instruction2>
+            Seed a FIDO security key with a secret key and, if you lose or break it,
+            you can create a replica by writing the same seed into a replacement key.  
+          </Instruction2>
+        </>)}
+        <div style={{minHeight: '3vh'}}></div>
         { RUNNING_IN_ELECTRON ? null : (<CannotSeedSecurityKeysView/>) }
         <FieldRow>
           <FieldLabel>USB Key</FieldLabel>
@@ -307,7 +317,13 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, 
         </FieldRow>
         <SeedFieldView {...{seedHardwareKeyViewState, loadDiceKeyFn}} />
         <ValueColumnOnly>
-          <button disabled={!seedHardwareKeyViewState.readyToWrite} onClick={seedHardwareKeyViewState.write}>Write</button>
+          <div>
+            <button disabled={!seedHardwareKeyViewState.readyToWrite} onClick={seedHardwareKeyViewState.write}>Write</button>
+            <SmallNote invisible={!seedHardwareKeyViewState.readyToWrite}>
+              Note the location of the button on your USB Key.  Once you press <i>write</i>, you will have {SecondsToTripleClick.toString()} seconds to press the button on your key three times.
+            </SmallNote>
+            <SmallNote>Not all FIDO security keys support seeding. Seeding is currently supported by <a href="https://www.crowdsupply.com/dicekeys/dicekeys">these SoloKeys</a>.</SmallNote>
+          </div>
         </ValueColumnOnly>
       </div>
     </WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins>

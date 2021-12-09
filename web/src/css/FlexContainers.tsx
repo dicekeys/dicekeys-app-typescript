@@ -1,6 +1,7 @@
 import styled from "styled-components";
+import {DivSupportingInvisible} from "./DivSupportingInvisible";
 
-const FlexColumn = styled.div`
+const FlexColumn = styled(DivSupportingInvisible)`
   display: flex;
   flex-direction: column;
 `;
