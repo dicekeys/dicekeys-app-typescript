@@ -14,12 +14,13 @@ export const KeyPlusRecipeViewMaxHeightInVh = 30;
 export const WizardOrFieldsMaxHeightInVh = 24;
 export const WizardMinHeightInVh = 14;
 export const MinimumVerticalMarginAtTopBottomNavBarsVh = 2;
-export const DerivedValueBoxMaxHeight = cssCalcTyped(`${cssExprWithoutCalc(MaxContentViewHeight)} - ${cssExprWithoutCalc(`${(
+export const DerivedValueBoxMaxHeight = cssExprWithoutCalc(`${MaxContentViewHeight} - ${(
   KeyPlusRecipeViewMaxHeightInVh +
   DownArrowAndPlusSignViewHeightInVh +
   WizardOrFieldsMaxHeightInVh +
   2 * MinimumVerticalMarginAtTopBottomNavBarsVh
-)}vh`)}`);
+)}vh`);
+export const CalcDerivedValueBoxMaxHeight = cssCalcTyped(DerivedValueBoxMaxHeight);
 export const DiceKeyBoxMaxHeight = `${KeyPlusRecipeViewMaxHeightInVh}vh` as const;
 
 export const DiceKeyBoxMaxWidth = DiceKeyMaxWidth;
@@ -45,7 +46,7 @@ export const RecipeWizardOrFieldsContainer = styled(DerivationViewSection)`
 
 export const DerivedContentContainer = styled(DerivationViewSection)`
   justify-content: flex-start;
-  height: ${DerivedValueBoxMaxHeight}vh;
+  height: ${CalcDerivedValueBoxMaxHeight};
 `;
 
 export const KeyPlusRecipeColumn = styled(DerivationViewSection)`
