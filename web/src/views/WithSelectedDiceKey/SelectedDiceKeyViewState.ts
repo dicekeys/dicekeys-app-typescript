@@ -3,6 +3,8 @@ import { HasSubViews } from "../../state/core";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { addressBarState } from "../../state/core/AddressBarState";
+import { EncryptedDiceKeyStore } from "../../state/stores/EncryptedDiceKeyStore";
+import { action, makeAutoObservable } from "mobx";
 
 export enum SelectedDiceKeySubViews {
   DisplayDiceKey = "", // primary view
@@ -34,12 +36,41 @@ const replacePathElement = (indexOfPathElementToReplace: number, newPathElement:
   return `${basePath}${pathElements.join('/')}`;
 }
 
+class SaveAndDeleteUIState {
+  _showSaveDeleteModal: boolean = false;
+  get showSaveDeleteModal() { return this._showSaveDeleteModal }
+  readonly setShowSaveDeleteModal = action( (newValue: boolean) => this._showSaveDeleteModal = newValue);
+  readonly setShowSaveDeleteModalFn = (newValue: boolean) => () => this.setShowSaveDeleteModal(newValue);
+  readonly toggleShowSaveDeleteModal = () => this.setShowSaveDeleteModal(!this.showSaveDeleteModal);
+
+  get isSaved(): boolean {return this.diceKeyState.diceKey != null && EncryptedDiceKeyStore.has(this.diceKeyState.diceKey); }
+
+  handleOnSaveDeleteButtonClicked = () => {
+    const {diceKey} = this.diceKeyState;
+    if (diceKey == null) return;
+    if (this.isSaved) {
+      EncryptedDiceKeyStore.delete(diceKey);
+    } else {
+      EncryptedDiceKeyStore.add(diceKey);
+    }
+  }
+
+  constructor(private diceKeyState: DiceKeyState) {
+    makeAutoObservable(this);
+  }
+
+}
+
 export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubViews> {
+  readonly saveAndDeleteUIState: SaveAndDeleteUIState;
+  readonly backupState: BackupViewState;
+
   constructor(
     public readonly foregroundDiceKeyState: DiceKeyState,
     initialSubView: SelectedDiceKeySubViews = getSelectedDiceKeySubViewFromPath(addressBarState.path)
   ) {
     super(initialSubView, () => this.updateAddressBar());
+    this.saveAndDeleteUIState = new SaveAndDeleteUIState(foregroundDiceKeyState);
     this.backupState = new BackupViewState(this.foregroundDiceKeyState);
 
     addressBarState.onPopState( path => 
@@ -64,8 +95,6 @@ export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubView
       addressBarState.replaceState(newPath);
     }
   }
-
-  backupState: BackupViewState;
 
   navigateToDisplayDiceKey = this.navigateToSubView(SelectedDiceKeySubViews.DisplayDiceKey);
   navigateToBackup = this.navigateToSubView(SelectedDiceKeySubViews.Backup);
