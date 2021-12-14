@@ -126,20 +126,7 @@ Testing with `jest` introduces other dependencies, but those should not be compi
 
 ## Build notes
 
-Using parcel v2 to build.  Ran into problems with CSS that required using the nightly build.
-
-
-Currently must use the TypeScript compiler and avoiding babel per [mobx](https://mobx.js.org/installation.html) requirement to set `"useDefineForClassFields": true`
-
-At some point we may want to add this to the .parcelrc, but for now we're typechecking in vscode
-and with tsc, and this isn't working well in the beta of parcel 2.
-
-
-```
-  "validators": {
-    "*.{ts,tsx}": ["@parcel/validator-typescript"]
-  }
-```
+Using `vite` bundler.
 
 ## Electron notes
 
