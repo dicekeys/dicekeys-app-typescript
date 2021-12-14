@@ -53,6 +53,7 @@ class SaveAndDeleteUIState {
     } else {
       EncryptedDiceKeyStore.add(diceKey);
     }
+    this.setShowSaveDeleteModal(false);
   }
 
   constructor(private diceKeyState: DiceKeyState) {
