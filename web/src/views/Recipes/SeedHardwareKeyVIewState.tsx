@@ -86,13 +86,13 @@ export class SeedHardwareKeyViewState {
   });
 
   get seedableFidoKeys() {
-    return this.seedableFidoKeysObserverClass.devices;
+    return this.seedableFidoKeysObserverClass?.devices ?? [];
   }
 
   get seedableFidoKeySelected(): HIDDevice | undefined {
     const {selectedFidoKeysProductName, seedableFidoKeys} = this;
     return seedableFidoKeys.find( (device) => device.productName === selectedFidoKeysProductName ) ??
-      seedableFidoKeys.at(0);
+      (seedableFidoKeys.length > 0 ? seedableFidoKeys[0] : undefined);
   }
 
   get allFieldsValid(): boolean {
@@ -137,7 +137,7 @@ export class SeedHardwareKeyViewState {
       .catch ( this.setWriteError );
   }
 
-  constructor(private readonly seedableFidoKeysObserverClass: SeedableFIDOKeys, diceKeyState: DiceKeyState) {
+  constructor(private readonly seedableFidoKeysObserverClass: SeedableFIDOKeys | undefined, diceKeyState: DiceKeyState) {
     const recipeBuilderState = new RecipeBuilderState({
       origin: "BuiltIn",
       type: "Secret",
