@@ -113,11 +113,10 @@ const RecipeButtonRibbon = styled.div`
   align-items: flex-start;
 `;
 
-export const RecipeRibbonButtonsView = observer( ({recipeBuilderState}: {
+export const RecipeRibbonButtonsView = observer( ({recipeBuilderState, editButtonsHoverState}: {
   recipeBuilderState: RecipeBuilderState,
   editButtonsHoverState: HoverState<RecipeRibbonButtons>,
 }) => {
-  const editButtonsHoverState = new HoverState<RecipeRibbonButtons>();
   return (
     <RecipeButtonRibbon>
       <RecipeEditStateButton
