@@ -335,11 +335,11 @@ export const SeedHardwareKeyView = observer (({diceKeyState, loadDiceKeyFn}: {
   diceKeyState: DiceKeyState,
   loadDiceKeyFn?: () => void
 }) => {
-  const seedableFidoKeys = new SeedableFIDOKeys();
+  const seedableFidoKeys = RUNNING_IN_ELECTRON ? new SeedableFIDOKeys() : undefined;
   const seedHardwareKeyViewState = new SeedHardwareKeyViewState(seedableFidoKeys, diceKeyState);
   // FIXME
   seedHardwareKeyViewState.recipeBuilderState.setEditingMode(RecipeEditingMode.EditIncludingRawJson);
-  useEffect( () => () => seedableFidoKeys.destroy() );  
+  useEffect( () => () => seedableFidoKeys?.destroy() );  
   return (
 //    <SeedHardwareKeyViewWithState {...{diceKey, seedHardwareKeyViewState, seedableFidoKeys}}/>
     <SeedHardwareKeySimpleView {...{seedHardwareKeyViewState, loadDiceKeyFn}}/>

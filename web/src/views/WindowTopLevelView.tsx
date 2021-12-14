@@ -41,7 +41,7 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
       />
     )
   }
-  console.log(`Displaying subview ${windowNavigationState.subView}`)
+  // console.log(`Displaying subview ${windowNavigationState.subView}`)
   switch (windowNavigationState.subView) {
     case SubViewsOfTopLevel.AppHomeView: return (
       <WindowHomeView {...{windowNavigationState}}/>
