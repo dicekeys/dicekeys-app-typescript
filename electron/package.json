@@ -25,7 +25,7 @@
     "@types/w3c-web-hid": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
-    "electron": "^16.0.0-beta.8",
+    "electron": "^16.0.2",
     "electron-builder": "^22.11.11",
     "electron-builder-squirrel-windows": "^22.11.11",
     "electron-reloader": "^1.2.1",
