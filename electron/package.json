@@ -5,6 +5,7 @@
   "description": "DiceKeys App",
   "version": "0.0.1",
   "main": "electron-js/electron.js",
+  "homepage": "https://dicekeys.com",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
     "watch": "rimraf ./electron-js && tsc --watch",
