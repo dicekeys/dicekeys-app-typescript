@@ -1,5 +1,5 @@
 import styled, {css} from "styled-components";
-import { cssCalc, cssCalcTyped, cssExprWithoutCalc } from "../../utilities";
+import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities";
 
 export const InstructionTextHeight = `1.65rem`;
 export const InstructionLineHeight = cssExprWithoutCalc(`1.2 * ${InstructionTextHeight}`);

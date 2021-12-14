@@ -6,22 +6,26 @@ export interface HoverStateActions {
   onMouseLeave: () => void;
 }
 export class HoverState<T extends string> {
-  state?: T;
+  private _state?: T;
+  get state() { return this._state }
+  readonly setState  = action( (newState: T | undefined): void => { this._state = newState; } );
+  readonly setStateFn = (newState: T | undefined) => (): void => this.setState(newState);
 
-  onMouseEnter = (of: T) => action( () => {
-    this.state = of;
-  });
-  onMouseLeave = (of: T) => action ( () => {
+  onMouseEnter = (of: T) => () => {
+    this.setState(of);
+  }
+  onMouseLeave = (of: T) => () => {
     if (this.state === of) {
-      this.state = undefined;
+      this.setState(undefined);
     }
-  })
+  }
   hoverStateActions = (of: T): HoverStateActions => ({
     onMouseEnter: this.onMouseEnter(of),
     onMouseLeave: this.onMouseLeave(of)
   });
 
-  constructor() {
+  constructor(initialState?: T | undefined) {
+    this._state = initialState;
     makeAutoObservable(this);
   }
 }

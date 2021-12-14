@@ -1,6 +1,6 @@
 import React from "react";
 import { observer  } from "mobx-react";
-import { RecipeFieldFocusState, RecipeBuilderState, RecipeEditingMode } from "../RecipeBuilderState";
+import { RecipeBuilderState, RecipeEditingMode } from "../RecipeBuilderState";
 import { NumberPlusMinusView, NumericTextFieldState } from "../../basics/NumericTextFieldView";
 import { describeRecipeType } from "../DescribeRecipeType";
 import { EnhancedRecipeView } from "../EnhancedRecipeView";
@@ -100,7 +100,7 @@ export const SiteFieldView = observer( ({state}: {
 } ) => {
   if (state.siteTextField == null) return null;
   const field = "sites"
-  const fieldFocusState = new RecipeFieldFocusState(state, field);
+  const fieldFocusState = state.focusState.focusStateForField(field);
   return (
     <BuilderFieldContainer>
       <BuilderFieldLabel htmlFor={field}>sites</BuilderFieldLabel>
@@ -120,7 +120,7 @@ export const PurposeFieldView = observer( ({state}: {
 } ) => {
   if (state.purposeField == null) return null;
   const field = "purpose"
-  const fieldFocusState = new RecipeFieldFocusState(state, field);
+  const fieldFocusState = state.focusState.focusStateForField(field);
   return (
     <BuilderFieldContainer>
       <BuilderFieldLabel htmlFor={field}>Purpose</BuilderFieldLabel>
@@ -137,7 +137,7 @@ export const PurposeFieldView = observer( ({state}: {
 
 export const SequenceNumberFormFieldValueView = observer( ({state}: {state: RecipeBuilderState}) => {
   const field = "#"
-  const fieldFocusState = new RecipeFieldFocusState(state, field);
+  const fieldFocusState = state.focusState.focusStateForField(field);
   return (
       <NumberPlusMinusView
         key={field}
@@ -167,7 +167,7 @@ export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBui
   export const LengthInCharsFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
     if (state.type !== "Password" || state.lengthInCharsFieldHide || !state.mayEditLengthInChars) return null;
     const field = "lengthInChars";
-    const fieldFocusState = new RecipeFieldFocusState(state, field);
+    const fieldFocusState = state.focusState.focusStateForField(field);
     return (
       <BuilderFieldContainer >
         <BuilderFieldLabel htmlFor={field}>max length</BuilderFieldLabel>
@@ -196,7 +196,7 @@ export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBui
 export const LengthInBytesFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
   if (state.type !== "Secret" || state.lengthInBytesFieldHide || !state.mayEditLengthInBytes) return null;
   const field = "lengthInBytes";
-  const fieldFocusState = new RecipeFieldFocusState(state, field);
+  const fieldFocusState = state.focusState.focusStateForField(field);
   return (
     <BuilderFieldContainer >
       <BuilderFieldLabel htmlFor={field}>length</BuilderFieldLabel>
@@ -226,7 +226,7 @@ export const RawJsonFieldView = observer( ({state}: {
   state: RecipeBuilderState,
 } ) => {
   const field = "rawJson";
-  const fieldFocusState = new RecipeFieldFocusState(state, field);
+  const fieldFocusState = state.focusState.focusStateForField(field);
   const textAreaComponentRef = React.useRef<HTMLTextAreaElement>(null);
   return (
     <BuilderFieldContainer>

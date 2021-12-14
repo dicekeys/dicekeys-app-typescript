@@ -4,19 +4,14 @@ import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { addressBarState } from "../../state/core/AddressBarState";
 import {
   TopNavigationBar,
-  TopNavLeftSide, TopNavCenter, TopNavRightSide
+  TopNavLeftSide, TopNavCenter, TopNavRightSide, ModalOverlayForDialogOrMessage
 } from "../Navigation/NavigationLayout";
 import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 import { EncryptedDiceKeyStore } from "../../state/stores/EncryptedDiceKeyStore";
-import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { DiceKeysNavHamburgerMenu, ExpandableMenuProps, HamburgerMenuButton, MenuItem } from "../Navigation/Menu";
 import { BooleanState } from "../../state/reusable/BooleanState";
-
-const handleOnSaveDeleteButtonClicked = (isSaved: boolean, diceKey: DiceKeyWithKeyId): (() => Promise<void>) =>
-  isSaved ?
-    (() => EncryptedDiceKeyStore.delete(diceKey)) :
-    (() => EncryptedDiceKeyStore.add(diceKey));
-
+import { CenteredControls, DiceKeyNickname, Instruction, Spacer } from "../../views/basics";
+import { OptionButton } from "../../css/Button";
 
 const SelectedDiceKeyExpandableHamburgerMenu = observer( ( {
   state,
@@ -26,13 +21,12 @@ const SelectedDiceKeyExpandableHamburgerMenu = observer( ( {
   if (diceKey == null) return null;
 
   const isSaved = EncryptedDiceKeyStore.has(diceKey);
-  const onSaveDeleteButtonClicked = handleOnSaveDeleteButtonClicked(isSaved, diceKey)
 
-  return (
+  return (<>
     <DiceKeysNavHamburgerMenu {...{booleanStateTrueIfMenuExpanded}}>
-      <MenuItem onClick={onSaveDeleteButtonClicked}>{ isSaved ? `Delete` : `Save`}</MenuItem>
+      <MenuItem onClick={state.saveAndDeleteUIState.toggleShowSaveDeleteModal}>{ isSaved ? `Delete` : `Save`}</MenuItem>
     </DiceKeysNavHamburgerMenu>
-  );
+  </>);
 });
 
 export const SelectedDiceKeyNavigationBar = observer( ( {
@@ -42,14 +36,40 @@ export const SelectedDiceKeyNavigationBar = observer( ( {
   // Make the top left nav bar a button iff we're running in electron,
   // otherwise we're in the browser and this should be a no-op (undefined onClick handler)
   // as the web-based app relies on the back button within the browser.
-  const diceKey = state.foregroundDiceKeyState.diceKey;
+  const {saveAndDeleteUIState, foregroundDiceKeyState} = state;
+  const diceKey = foregroundDiceKeyState.diceKey;
   if (diceKey == null) return null;
 
   const booleanStateTrueIfMenuExpanded = new BooleanState();
 
   return (<>
     {
-        RUNNING_IN_ELECTRON ? (<SelectedDiceKeyExpandableHamburgerMenu {...{booleanStateTrueIfMenuExpanded, state, goBack}} />) : null 
+        RUNNING_IN_ELECTRON ? (<>
+          <SelectedDiceKeyExpandableHamburgerMenu {...{booleanStateTrueIfMenuExpanded, state, goBack}} />        
+          <ModalOverlayForDialogOrMessage invisible={!saveAndDeleteUIState.showSaveDeleteModal || !saveAndDeleteUIState.isSaved}>
+            <Spacer />
+            <Instruction>
+             Are you sure you want to remove <DiceKeyNickname {...{diceKey}}/> from this device?
+            </Instruction>
+            <CenteredControls>
+              <OptionButton onClick={saveAndDeleteUIState.setShowSaveDeleteModalFn(false)}>Cancel</OptionButton>
+              <OptionButton onClick={saveAndDeleteUIState.handleOnSaveDeleteButtonClicked}>{ saveAndDeleteUIState.isSaved ? `Delete` : `Save`}</OptionButton>  
+            </CenteredControls>
+            <Spacer/>
+          </ModalOverlayForDialogOrMessage>
+          <ModalOverlayForDialogOrMessage invisible={!saveAndDeleteUIState.showSaveDeleteModal || saveAndDeleteUIState.isSaved}>
+            <Spacer/>
+            <Instruction>
+              If you save <DiceKeyNickname {...{diceKey}}/> on this device, anyone able to access your account on this device, or any
+              app that can run on this device, may be able to access the DiceKey. 
+            </Instruction>
+            <CenteredControls>
+              <OptionButton onClick={saveAndDeleteUIState.setShowSaveDeleteModalFn(false)}>Cancel</OptionButton>
+              <OptionButton onClick={saveAndDeleteUIState.handleOnSaveDeleteButtonClicked}>{ saveAndDeleteUIState.isSaved ? `Delete` : `Save`}</OptionButton>  
+            </CenteredControls>
+            <Spacer/>
+          </ModalOverlayForDialogOrMessage>
+              </>) : null 
     }
     <TopNavigationBar>
       <TopNavLeftSide onClick={ goBack ?? addressBarState.back } >{

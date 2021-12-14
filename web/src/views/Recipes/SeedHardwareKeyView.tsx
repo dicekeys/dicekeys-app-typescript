@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
-import { CenteredControls, Instruction, Instruction2, Spacer, SecretFieldsCommonObscureButton, CopyButton } from "../basics";
+import { CenteredControls, Instruction2, Spacer, SecretFieldsCommonObscureButton, CopyButton } from "../basics";
 import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { RecipeFieldEditorView, SequenceNumberFormFieldValueView } from "./DerivationView/RecipeFieldEditorView";
 import styled, { css } from "styled-components";

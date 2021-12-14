@@ -1,3 +1,4 @@
+import { DivSupportingInvisible } from "../../css";
 import styled, {css} from "styled-components";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities";
 
@@ -12,11 +13,12 @@ export const StandardBottomBarHeight = `11vh`;
 
 const TopLevelNavigationBarFontSize = cssCalcTyped(`min(${`3.75vh`},${`8.5vw`})`);
 
-export const HeightBetweenTopNavigationBarAndStandardBottomBar = cssCalcTyped(`100vh - (${cssExprWithoutCalc(TopNavigationBarHeight)} + ${cssExprWithoutCalc(StandardBottomBarHeight)})`);
+export const HeightBetweenTopNavigationBarAndStandardBottomBar = cssExprWithoutCalc(`100vh - (${cssExprWithoutCalc(TopNavigationBarHeight)} + ${cssExprWithoutCalc(StandardBottomBarHeight)})`)
+export const CalcHeightBetweenTopNavigationBarAndStandardBottomBar = cssCalcTyped(HeightBetweenTopNavigationBarAndStandardBottomBar);
 
 const ZIndexForModalOverlays = 128;
 
-export const WindowRegionColumnContainer= styled.div`
+export const WindowRegionColumnContainer= styled(DivSupportingInvisible)`
   height: 100vh;
   width: 100vw;
   display: flex;
@@ -30,7 +32,7 @@ export const WindowRegionBelowTopNavigationBar = styled(WindowRegionColumnContai
 `;
 
 export const WindowRegionBelowTopNavigationBarAndAboveStandardBottomBar = styled(WindowRegionColumnContainer)`
-  height: ${HeightBetweenTopNavigationBarAndStandardBottomBar};
+  height: ${CalcHeightBetweenTopNavigationBarAndStandardBottomBar};
 `;
 
 const ImposeStandardSideMargins = css`
@@ -63,7 +65,8 @@ export const ModalOverlayOfWindowBelowTopLevelNavigationBar = styled(WindowRegio
 `;
 
 
-export const ModalOverlayBetweenTopNavigationBarAndBottomIconBar = styled(WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins)`
+export const ModalOverlayBetweenTopNavigationBarAndBottomIconBar = styled(ModalOverlayOfWindowBelowTopLevelNavigationBar)`
+  height: ${CalcHeightBetweenTopNavigationBarAndStandardBottomBar}
 `;
 
 export const ModalOverlayForDialogOrMessage = styled(ModalOverlayBetweenTopNavigationBarAndBottomIconBar)`

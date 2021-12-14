@@ -11,7 +11,7 @@ export const ButtonRow = styled.div`
 
 export const BaseButton = styled.button<{invisible?: boolean}>`
   display: block;
-  visibility: ${props => props.invisible ? "hidden" : "visible"};
+  ${props => props.invisible ? `visibility: hidden` : ``};
   cursor: grab;
   font-size: 1rem;
   user-select: none;
