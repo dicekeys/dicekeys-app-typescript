@@ -77,6 +77,7 @@ cd electron
 docker run --rm -v $PWD:/dicekeys dicekeys_build
 ```
 
+Note, use `docker builder prune` if you run into problems, as it will clear the cache.
 
 ## Run tests
 ```
