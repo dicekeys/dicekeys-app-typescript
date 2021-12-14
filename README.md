@@ -102,9 +102,9 @@ We borrow from environments like SwiftUI, which allow you to run and inspect ind
 creating preview HTML files for key components that operate only on the subset of the application state that required for those views.
 
 ```
-parcel src/preview.html
+vite src/preview.html
 ```
-Then load [http://localhost:1234/](http://localhost:1234/)
+Then load [http://localhost:3000/](http://localhost:3000/)
 
 
 ### Windows USB device handling
