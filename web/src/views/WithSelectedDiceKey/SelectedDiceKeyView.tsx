@@ -13,11 +13,15 @@ import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 import {
   SelectedDiceKeyBottomIconBarView,
 } from "./SelectedDiceKeyBottomIconBarView";
-import { SelectedDiceKeyContentRegionWithoutSideMargins, HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh } from "./SelectedDiceKeyLayout";
+import { SelectedDiceKeyContentRegionWithoutSideMargins} from "./SelectedDiceKeyLayout";
 import { SelectedDiceKeyNavigationBar } from "./SelectedDiceKeyNavigationBar";
+import { HeightBetweenTopNavigationBarAndStandardBottomBar } from "../../views/Navigation/NavigationLayout";
+import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities";
 const SubViews = Navigation.SelectedDiceKeySubViews
 
 const IdealMinimumContentMargin = `2rem`
+
+const selectedDiceKeySize = cssCalcTyped(`min(100vw - ${cssExprWithoutCalc(IdealMinimumContentMargin)}, ${cssExprWithoutCalc(HeightBetweenTopNavigationBarAndStandardBottomBar)} - 2 * ${cssExprWithoutCalc(IdealMinimumContentMargin)})`);
 
 const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewProps) => {
   const {foregroundDiceKeyState } = state;
@@ -26,15 +30,15 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
   switch(state.subView) {
     case Navigation.SelectedDiceKeySubViews.DisplayDiceKey: return (
       <DiceKeyView
-        size={`calc(min(100vw - (${IdealMinimumContentMargin}), ${HeightOfContentRegionBetweenTopAndBottomNavigationBarsInVh}vh - 2 * (${IdealMinimumContentMargin})))`}
+        size={selectedDiceKeySize}
         faces={diceKey.faces}
       />
     );
     case Navigation.SelectedDiceKeySubViews.DeriveSecrets: return (
-      <DerivationView diceKey={diceKey} />
+      <DerivationView diceKeyState={foregroundDiceKeyState} />
     );
     case Navigation.SelectedDiceKeySubViews.SeedHardwareKey: return (
-      <SeedHardwareKeyView diceKey={diceKey} />
+      <SeedHardwareKeyView diceKeyState={foregroundDiceKeyState} />
     );
     case Navigation.SelectedDiceKeySubViews.Backup: return (
       <BackupView state={state.backupState} nextStepAfterEnd={() => {

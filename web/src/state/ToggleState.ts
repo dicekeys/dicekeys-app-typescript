@@ -6,12 +6,26 @@ export interface ToggleState {
   toggle: () => void;
 }
 
+type ToggleStateChangeListener = (newValue: boolean) => any;
+
 export class GlobalSharedToggleState implements ToggleState {
   value: boolean;
 
-  toggle = action ( () => {
-    this.value = !this.value;
-  })
+  #changeListeners: Set<ToggleStateChangeListener> = new Set();
+
+  onChange = (changeListener: ToggleStateChangeListener) => {
+    this.#changeListeners.add(changeListener);
+    return (() => {this.#changeListeners.delete(changeListener)});
+  }
+
+  set = action ( (newValue: boolean) => {
+    if (this.value !== newValue) {
+      this.value = newValue;
+      [...this.#changeListeners].forEach( listener => { try { listener(newValue); } catch {} });
+    }
+  });
+
+  toggle = () => this.set(!this.value);
 
   constructor(name: string, defaultValue: boolean = false) {
     this.value = defaultValue
@@ -22,3 +36,11 @@ export class GlobalSharedToggleState implements ToggleState {
 
 export const ObscureDiceKey = new GlobalSharedToggleState("SecretFieldsCommonObscureState", true);
 export const ObscureSecretFields = new GlobalSharedToggleState("SecretFieldsCommonObscureState", true);
+
+// The decision to hide a DiceKey should also hide all values derived from it
+// until a user decides to override that choice.
+ObscureDiceKey.onChange( newValue => {
+  if (newValue) {
+    ObscureSecretFields.set(true);
+  }
+} );

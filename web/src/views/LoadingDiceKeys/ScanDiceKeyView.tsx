@@ -9,8 +9,8 @@ import { TupleOf25Items, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { MediaStreamState } from "./MediaStreamState";
 import { CameraSelectionView } from "./CameraSelectionView";
 import styled from "styled-components";
-import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
-import { TopNavigationBarHeight } from "../../views/Navigation/TopNavigationBar";
+import { RUNNING_IN_BROWSER } from "../../utilities/is-electron";
+import { TopNavigationBarHeight } from "../Navigation/NavigationLayout";
 // import { CamerasBeingInspected } from "./CamerasBeingInspected";
 
 const minCameraWidth = 1024;
@@ -138,7 +138,7 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
     /* if (!camerasOnThisDevice.ready) {
       return (<CamerasBeingInspected {...{camerasOnThisDevice}} />)
     } */
-    if (!camerasOnThisDevice.readyAndNonEmpty && !RUNNING_IN_ELECTRON) {
+    if (!camerasOnThisDevice.readyAndNonEmpty && RUNNING_IN_BROWSER) {
       return ( <PermissionRequiredView/> );
     }
     const cameras = this.cameras;

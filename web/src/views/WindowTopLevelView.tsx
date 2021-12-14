@@ -11,6 +11,7 @@ import { addressBarState } from "../state/core/AddressBarState";
 import {ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
 import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
 import { PrimaryView } from "../css";
+import { SeedHardwareKeyPrimaryView } from "./Recipes/SeedHardwareKeyView";
 
 interface WindowTopLevelNavigationProps {
   windowNavigationState: WindowTopLevelNavigationState;
@@ -40,7 +41,7 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
       />
     )
   }
-
+  console.log(`Displaying subview ${windowNavigationState.subView}`)
   switch (windowNavigationState.subView) {
     case SubViewsOfTopLevel.AppHomeView: return (
       <WindowHomeView {...{windowNavigationState}}/>
@@ -50,12 +51,15 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
         onDiceKeyRead={ onDiceKeyLoaded }
         onCancelled={ addressBarState.back }
         state={new LoadDiceKeyState("camera")} />
-    )
+    );
     case SubViewsOfTopLevel.AssemblyInstructions: return (
       <AssemblyInstructionsView onComplete={ onReturnFromAssemblyInstructions } state={
         new AssemblyInstructionsState(windowNavigationState.foregroundDiceKeyState)
       } />
     )
+    case SubViewsOfTopLevel.SeedFidoKey: return (
+      <SeedHardwareKeyPrimaryView windowNavigationState={windowNavigationState} />
+    );
     case SubViewsOfTopLevel.DiceKeyView: return (
       <SelectedDiceKeyView state={new SelectedDiceKeyViewState( windowNavigationState.foregroundDiceKeyState)} />
     );

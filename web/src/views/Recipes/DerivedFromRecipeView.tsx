@@ -103,14 +103,16 @@ const DerivedValueHeaderDiv = styled.div`
   align-content: baseline;
   align-self: flex-start;
   padding-left: calc(${DerivedValueHeaderFormula});
-  width: calc(${Dimensions.ContentWidthInVw}vw - (${DerivedValueHeaderFormula}));
+  width: calc(${Dimensions.ContentWidth} - (${DerivedValueHeaderFormula}));
 `
 
 const DerivedValueContentDivLeftRightPadding = `0.5rem`;
 
+const DerivedValueContentDivBorderWidth = `1px`
+
 const DerivedValueContentDiv = styled.div`
-  width: calc(${Dimensions.ContentWidthInVw}vw - 2 * (${DerivedValueContentDivLeftRightPadding}));
-  border-width: 1px;
+  width: calc(${Dimensions.ContentWidth} - 2 * (${DerivedValueContentDivLeftRightPadding} + ${DerivedValueContentDivBorderWidth}));
+  border-width: ${DerivedValueContentDivBorderWidth};
   border-color: rgba(128,128,128,0.5);
   border-style: solid;
   padding-left: ${DerivedValueContentDivLeftRightPadding};
@@ -127,16 +129,16 @@ const HeaderButtonBar = styled.div`
   margin-left: 2rem;
 `;
 
-export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
-    state: DerivedFromRecipeState
-    showPlaceholder: boolean
+export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputType}: {
+    state: DerivedFromRecipeState,
+    allowUserToChangeOutputType: boolean
   }) => {
-  const {recipeState: recipe, derivedValue} = state;
-  const {type} = recipe;
+  const {recipeState, derivedValue} = state;
+  const {type} = recipeState;
   return (
     <>
       <DerivedValueHeaderDiv>
-        <SelectDerivedOutputType type={type} state={state} />
+        { allowUserToChangeOutputType ? (<SelectDerivedOutputType type={type} state={state} />) : null }
         { type == null || derivedValue == null ? null : (
           <HeaderButtonBar>
             <CharButton
@@ -152,9 +154,9 @@ export const DerivedFromRecipeView = observer( ({state, showPlaceholder}: {
         (<Bip39OutputView bip39String={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />)
         : (
         <DerivedValueContentDiv>
-          { showPlaceholder ? (
+          { !recipeState.recipeIsValid ? (
             <PlaceholderDerivedValueContainer>
-              A {describeRecipeType(recipe.type)} to be created by applying a recipe to your DiceKey
+              A {describeRecipeType(recipeState.type)} to be created by applying a recipe to your DiceKey
             </PlaceholderDerivedValueContainer>
           ) : (
             <OptionallyObscuredTextView value={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />

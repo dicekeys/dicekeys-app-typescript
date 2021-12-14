@@ -9,10 +9,10 @@ import AssemblyImage3 from "../images/Seal Box.svg";
 import { PrimaryView } from "../css/Page";
 import { ColumnCentered } from "./basics";
 import styled from "styled-components";
-import {RUNNING_IN_ELECTRON} from "../utilities/is-electron";
+import {RUNNING_IN_ELECTRON, RUNNING_IN_BROWSER} from "../utilities/is-electron";
 import { EncryptedDiceKeyStore } from "../state/stores/EncryptedDiceKeyStore";
 import { DiceKeyView } from "./SVG/DiceKeyView";
-import { cssCalcTyped, cssCalcInputExpr } from "../utilities";
+import { cssCalcTyped, cssExprWithoutCalc } from "../utilities";
 import { facesFromPublicKeyDescriptor } from "../dicekeys/DiceKey";
 import { WindowHomeNavigationBar } from "./WindowHomeNavigationBar";
 import { BUILD_VERSION, BUILD_DATE } from "../vite-build-constants";
@@ -84,7 +84,7 @@ export const WindowHomeView = observer ( (props: WindowHomeViewProps) => {
       <VersionInformationBar>Version { BUILD_VERSION}, { BUILD_DATE }</VersionInformationBar>
       <WindowHomeNavigationBar state={windowNavigationState} />
       <ColumnCentered>
-        { (!RUNNING_IN_ELECTRON || storedDiceKeys.length === 0) ? null : (
+        { (RUNNING_IN_BROWSER || storedDiceKeys.length === 0) ? null : (
           <StoredDiceKeysRow>{
             storedDiceKeys.map( storedDiceKeyDescriptor => (
               <SubViewButton
@@ -98,7 +98,7 @@ export const WindowHomeView = observer ( (props: WindowHomeViewProps) => {
                 }}
               >
                 <DiceKeyView
-                  size={`${cssCalcTyped(`min(${cssCalcInputExpr(`50vw`)},${cssCalcInputExpr(`20vh`)})`)}`}
+                  size={`${cssCalcTyped(`min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})`)}`}
                   faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
                   obscureAllButCenterDie={true}
                   showLidTab={true}

@@ -10,6 +10,7 @@ export enum SubViewsOfTopLevel {
   AssemblyInstructions = "assemble",
   LoadDiceKeyView = "load",
   DiceKeyView = "key",
+  SeedFidoKey = "seed"
 };
 
 type SubViews = SubViewsOfTopLevel;
@@ -29,11 +30,15 @@ const getTopLevelNavStateFromPath = (path: string):
     case SubViewsOfTopLevel.AppHomeView:
     case SubViewsOfTopLevel.AssemblyInstructions:
     case SubViewsOfTopLevel.LoadDiceKeyView:
+    case SubViewsOfTopLevel.SeedFidoKey:
       return {subView: pathRoot};
     default:
       const {diceKey, keyId} = getDiceKeyFromPathRoot(pathRoot) ?? {};
       if (diceKey != null && keyId != null) {
         return {subView: SubViewsOfTopLevel.DiceKeyView, diceKey, keyId} as const;
+      } else {
+        // The state in the address bar is bogus and needs to be replaced.
+        addressBarState.replaceState("/");
       }
   }
   return {subView: undefined}
@@ -47,6 +52,7 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
   });
   navigateToAssemblyInstructions = this.navigateToSubView(SubViews.AssemblyInstructions)
   navigateToLoadDiceKey = this.navigateToSubView(SubViews.LoadDiceKeyView)
+  navigateToSeedFidoKey = this.navigateToSubView(SubViews.SeedFidoKey)
 
   private navigateToSelectedDiceKeyViewForKeyId = action ( (keyId: string) => {
     this.foregroundDiceKeyState.setKeyId(keyId);

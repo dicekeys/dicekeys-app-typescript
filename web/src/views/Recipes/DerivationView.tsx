@@ -1,7 +1,7 @@
 import React from "react";
-import { observer  } from "mobx-react";
+import { Observer  } from "mobx-react";
 import { RecipeBuilderState, RecipeEditingMode } from "./RecipeBuilderState";
-import { DiceKey, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
+import { DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
 import { RecipeWizardView } from "./DerivationView/RecipeWizardView";
@@ -14,9 +14,11 @@ import {
   RecipeWizardOrFieldsContainer
 } from "./DerivationView/DerivationViewLayout";
 import { RawJsonWarning } from "./DerivationView/RawJsonWarning";
+import { observer } from "mobx-react-lite";
+import { DiceKeyState } from "../../state/Window/DiceKeyState";
 
 
-export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
+export const RecipeWizardOrFieldsView = observer ( ({recipeBuilderState}: {
   recipeBuilderState: RecipeBuilderState,
 }) => (
   <RecipeWizardOrFieldsContainer>{
@@ -31,25 +33,29 @@ export const RecipeWizardOrFieldsView = observer( ({recipeBuilderState}: {
 ));
 
 
-export const DerivationView = ({diceKey}: {
-  diceKey: DiceKey;
+export const DerivationView = ({diceKeyState}: {
+  diceKeyState: DiceKeyState;
 }) => {
-  const seedString = diceKey.toSeedString();
   const recipeBuilderState =  new RecipeBuilderState();
-  const derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, seedString});
+  const derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, diceKeyState});
+  const {diceKey} = diceKeyState;
+  if (diceKey == null) return null;
 
   return (
-    <DerivationViewContainer>
-      <RawJsonWarning state={recipeBuilderState} />
-      <RecipeWizardOrFieldsView {...{recipeBuilderState}} />
-      <KeyPlusRecipeView {...{diceKey, recipeBuilderState}} />
-      <DerivedContentContainer>
-        <DerivedFromRecipeView {...{showPlaceholder: !recipeBuilderState.recipeIsNotEmpty, state: derivedFromRecipeState}} />
-      </DerivedContentContainer>
-    </DerivationViewContainer>
+    <Observer>{ () => (
+      <DerivationViewContainer>
+        <RawJsonWarning state={recipeBuilderState} />
+        <RecipeWizardOrFieldsView {...{recipeBuilderState}} />
+        <KeyPlusRecipeView {...{diceKey, recipeBuilderState}} />
+        <DerivedContentContainer>
+          <DerivedFromRecipeView allowUserToChangeOutputType={true} {...{state: derivedFromRecipeState}} />
+        </DerivedContentContainer>
+      </DerivationViewContainer>
+    )}
+    </Observer>
   );
 }
 
 export const Preview_DerivationView = () => (
-  <DerivationView diceKey={DiceKeyWithoutKeyId.testExample} />
+  <DerivationView diceKeyState={new DiceKeyState(DiceKeyWithoutKeyId.testExample)} />
 )

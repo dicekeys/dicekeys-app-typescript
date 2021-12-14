@@ -4,6 +4,7 @@ import { CachedApiCalls } from "../../api-handler/CachedApiCalls";
 import { isValidJson } from "../../utilities/json";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { AsyncCalculation } from "../../utilities/AsyncCalculation";
+import { DiceKeyState } from "../../state/Window/DiceKeyState";
 
 const spaceJson = (spaces: number = 2) => (json: string | undefined): string | undefined => {
   return (json == null) ? json : JSON.stringify(JSON.parse(json), undefined, spaces);
@@ -33,7 +34,7 @@ export type OutputFormatForType<T extends DerivationRecipeType = DerivationRecip
 })
 const DefaultOutputFormat: OutputFormatForType =  {
   "Password": "Password",
-  "Secret": "JSON",
+  "Secret": "Hex",
   "SigningKey": "JSON",
   "SymmetricKey": "JSON",
   "UnsealingKey": "JSON",
@@ -48,8 +49,15 @@ interface RecipeState {
 
 export class DerivedFromRecipeState {
   readonly recipeState: RecipeState;
-  readonly api: CachedApiCalls;
+  readonly diceKeyState: DiceKeyState;
+//  readonly api: CachedApiCalls;
   SigningCalculations = new AsyncCalculation<string | undefined>();
+
+  get api(): CachedApiCalls | undefined {
+    const {diceKey} = this.diceKeyState;
+    if (diceKey == null) return;
+    return CachedApiCalls.instanceFor(diceKey.toSeedString())
+  }
 
   //////////////////////////////////////////
   // outputField to derive from recipe
@@ -64,9 +72,10 @@ export class DerivedFromRecipeState {
   });
   setOutputFieldTo = (value: OutputFormat<DerivationRecipeType>) => () => this.setOutputField(value);
 
-  constructor({recipeState, seedString}: {recipeState: RecipeState, seedString: string} ) {
+  constructor({recipeState, diceKeyState}: {recipeState: RecipeState, diceKeyState: DiceKeyState} ) {
     this.recipeState = recipeState;
-    this.api = new CachedApiCalls(seedString);
+    this.diceKeyState = diceKeyState;
+//    this.api = new CachedApiCalls(seedString);
 
     makeAutoObservable(this);
   }
@@ -75,7 +84,7 @@ export class DerivedFromRecipeState {
     const {recipeState, api} = this;
     const {type, recipeJson, recipeIsValid} = recipeState;
     if (type !== "Secret" || recipeIsValid !== true || recipeJson == null) return;
-    return api.getSecretHexForRecipe(recipeJson);
+    return api?.getSecretHexForRecipe(recipeJson);
   };
 
   get derivedValue(): string | undefined {
@@ -87,41 +96,41 @@ export class DerivedFromRecipeState {
       case "Password":
         switch (this.outputFieldFor("Password")) {
           case "Password":
-            return api.getPasswordForRecipe(recipeJson);
+            return api?.getPasswordForRecipe(recipeJson);
           case "JSON":
-            return doubleSpaceJson(api.getPasswordJsonForRecipe(recipeJson))
+            return doubleSpaceJson(api?.getPasswordJsonForRecipe(recipeJson))
         }
       case "Secret":
         switch (this.outputFieldFor("Secret")) {
           case "BIP39":
-            return api.getSecretBip39ForRecipe(recipeJson);
+            return api?.getSecretBip39ForRecipe(recipeJson);
           case "Hex":
-            return api.getSecretHexForRecipe(recipeJson);
+            return api?.getSecretHexForRecipe(recipeJson);
           case "JSON":
-            return doubleSpaceJson(api.getSecretJsonForRecipe(recipeJson));
+            return doubleSpaceJson(api?.getSecretJsonForRecipe(recipeJson));
         }
       case "SymmetricKey":
         switch (this.outputFieldFor("SymmetricKey")) {
           case "Hex":
-            return api.getSymmetricKeyHexForRecipe(recipeJson);
+            return api?.getSymmetricKeyHexForRecipe(recipeJson);
           case "JSON":
-            return doubleSpaceJson(api.getSymmetricKeyJsonForRecipe(recipeJson));
+            return doubleSpaceJson(api?.getSymmetricKeyJsonForRecipe(recipeJson));
         }
       case "UnsealingKey":
         switch (this.outputFieldFor("UnsealingKey")) {
           case "Hex (Unsealing Key)":
-            return api.getUnsealingKeyHexForRecipe(recipeJson);
+            return api?.getUnsealingKeyHexForRecipe(recipeJson);
           case "Hex (Sealing Key)":
-            return api.getSealingKeyHexForRecipe(recipeJson);
+            return api?.getSealingKeyHexForRecipe(recipeJson);
           case "JSON":
-            return doubleSpaceJson(api.getUnsealingKeyJsonForRecipe(recipeJson));
+            return doubleSpaceJson(api?.getUnsealingKeyJsonForRecipe(recipeJson));
         }
       case "SigningKey":
         switch (this.outputFieldFor("SigningKey")) {
           case "Hex (Signing Key)":
-            return api.getSigningKeyHexForRecipe(recipeJson);
+            return api?.getSigningKeyHexForRecipe(recipeJson);
           case "OpenPGP Private Key": {
-            const signingKeyJson = api.getSigningKeyJsonForRecipe(recipeJson);
+            const signingKeyJson = api?.getSigningKeyJsonForRecipe(recipeJson);
             if (signingKeyJson == null) return undefined;
             return this.SigningCalculations.get(`${this.outputFieldFor("SigningKey")}:${recipeJson}}`, async () => {
               const signingKey = (await SeededCryptoModulePromise)?.SigningKey.fromJson(signingKeyJson);
@@ -133,7 +142,7 @@ export class DerivedFromRecipeState {
             })
           }
           case "OpenSSH Private Key": {
-            const signingKeyJson = api.getSigningKeyJsonForRecipe(recipeJson);
+            const signingKeyJson = api?.getSigningKeyJsonForRecipe(recipeJson);
             if (signingKeyJson == null) return undefined;
             return this.SigningCalculations.get(`${this.outputFieldFor("SigningKey")}:${recipeJson}}`, async () => {
               const signingKey = (await SeededCryptoModulePromise)?.SigningKey.fromJson(signingKeyJson);
@@ -145,7 +154,7 @@ export class DerivedFromRecipeState {
             })
           }
           case "OpenSSH Public Key": {
-            const signingKeyJson = api.getSigningKeyJsonForRecipe(recipeJson);
+            const signingKeyJson = api?.getSigningKeyJsonForRecipe(recipeJson);
             if (signingKeyJson == null) return undefined;
             return this.SigningCalculations.get(`${this.outputFieldFor("SigningKey")}:${recipeJson}}`, async () => {
               const signingKey = (await SeededCryptoModulePromise)?.SigningKey.fromJson(signingKeyJson);
@@ -157,7 +166,7 @@ export class DerivedFromRecipeState {
             })
           }
           case "JSON":
-            return doubleSpaceJson(api.getSigningKeyJsonForRecipe(recipeJson));
+            return doubleSpaceJson(api?.getSigningKeyJsonForRecipe(recipeJson));
         }
     }
   };

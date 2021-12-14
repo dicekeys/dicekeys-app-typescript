@@ -1,11 +1,14 @@
 import React from "react";
 import styled, {css} from "styled-components";
 import * as Dimensions from "./DerivationViewLayout";
+import {cssCalcTyped, cssExprWithoutCalc} from "../../../utilities/cssCalc"
 
-export const FieldEditorWidth = Math.min(80, Dimensions.ContentWidthInVw)
-export const BuilderLabelWidthVw = 10;
-export const BuilderLabelValueMarginVw = 0.5;
-export const ValueElementWidthVw = FieldEditorWidth - (BuilderLabelWidthVw + BuilderLabelValueMarginVw);
+export const FieldEditorWidth = cssCalcTyped(`min(80vw, ${cssExprWithoutCalc(Dimensions.ContentWidth)}`);
+export const BuilderLabelWidth = `8rem`;
+export const BuilderLabelValueMargin = `0.5vw`;
+export const ValueElementWidth = cssCalcTyped(
+  `${cssExprWithoutCalc(FieldEditorWidth)} - (${cssExprWithoutCalc(BuilderLabelWidth)} + ${cssExprWithoutCalc(BuilderLabelValueMargin)})`
+);
 
 const EdgelessSpan = styled.span`
   border-width: 0;
@@ -21,7 +24,7 @@ const TextInputWithoutSpellCheck = styled.input.attrs(() => ({
   type: "text",
   spellCheck: false,
 }))`
-  width: ${ValueElementWidthVw}vw;
+  width: ${ValueElementWidth};
 `;
 
 export const RecipeTextInputField = styled(TextInputWithoutSpellCheck)`
@@ -58,8 +61,10 @@ export const SequenceNumberValueUnderline = css`
 export const InputNumericText = styled.input.attrs((props) => ({
   type: "text",
   placeholder: props.placeholder ?? "none",
+  
   size: props.size ?? 4
 }))`
+  text-align: right;
   ${(props) => (typeof parseInt(`${props.value ?? "1"}`.trim())) !== "number" ?
     `color: red` :
     ``}
@@ -70,8 +75,8 @@ export const PurposeSpan = styled(EdgelessSpan)`${PurposeUnderline}`;
 export const LengthFieldValueSpan = styled(EdgelessSpan)`${LengthFieldUnderline}`;
 export const SequenceNumberValueSpan = styled(EdgelessSpan)`${SequenceNumberValueUnderline}`;
 export const SequenceNumberInputField = styled(InputNumericText).attrs(()=>({
-  size: 3,
-  placeholder: "1",
+  size: 4,
+  placeholder: "none",
 }))`
   ${SequenceNumberValueUnderline}
 `;
@@ -199,9 +204,10 @@ const FormattedRecipeStyle = css`
 const FormattedRecipeUnderlay = styled.div`
   ${FormattedRecipeStyle}
   position: absolute;
-  z-index: -1;
-  border-color: rgba(0,0,0,0);
-  color: rgba(0,0,0,0);
+  z-index: 1;
+  pointer-events: none;
+  border-color: transparent;
+  color: transparent;
 `;
 
 const FormattedRecipeTextArea = styled.textarea.attrs(() => ({
@@ -216,7 +222,7 @@ const FormattedRecipeTextArea = styled.textarea.attrs(() => ({
   justify-content: flex-end;
   align-content: flex-start;
   z-index: 2;
-  background-color: rgba(0, 0, 0, 0);
+  background-color: transparent;
 `;
 
 export const FormattedRecipeUnderlayJson = styled(FormattedRecipeUnderlay)`

@@ -124,8 +124,8 @@ export const NumberPlusMinusView = observer( (props: React.PropsWithChildren<Com
   } = commonProps;
   return (
     <>
-      <CharButton invisible={state.numericValue == null} onClick={ state.decrement  }
-        >-<CharButtonToolTip>- 1 = {state.decrementedValue ?? ( <i>none</i>) }</CharButtonToolTip></CharButton>
+      <CharButton disabled={state.numericValue == null} onClick={ state.decrement  }
+        >-{ state.numericValue == null ? null : (<CharButtonToolTip>- 1 = {state.decrementedValue ?? ( <i>none</i>) }</CharButtonToolTip>)}</CharButton>
       {children}
       <CharButton onClick={ state.increment }
       >+<CharButtonToolTip>+ 1 = { state.incrementedValue }</CharButtonToolTip></CharButton>

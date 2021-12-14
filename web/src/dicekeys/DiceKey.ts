@@ -11,6 +11,7 @@ import {
   FaceOrientationLetterTrbl,
   FaceIdentifiers
 } from "@dicekeys/read-dicekey-js";
+import { computeLazilyAtMostOnce } from "../utilities/computeLazilyAtMostOnce";
 
 export type Face = FaceIdentifiers & {
   orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl
@@ -539,6 +540,8 @@ abstract class DiceKeyBase {
         * uniqueOrientationEncodingSize ) + orientationsAsBigInt;
   }
 
+  toSeedString = computeLazilyAtMostOnce( () => diceKeyFacesToSeedString(this.faces));
+
   get inHumanReadableForm(): DiceKeyInHumanReadableForm { return DiceKeyInHumanReadableForm(this.faces) }
   get centerFace(): Face { return this.faces[12]; }
   get centerLetterAndDigit(): string { return this.centerFace.letter + this.centerFace.digit }
@@ -578,7 +581,6 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
 
   rotate = (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright): DiceKeyWithoutKeyId => new DiceKeyWithoutKeyId(rotateDiceKey(this.faces, clockwise90DegreeRotationsFromUpright));
   get inRotationIndependentForm(): DiceKeyWithoutKeyId { return new DiceKeyWithoutKeyId(rotateToRotationIndependentForm(this.faces)) };
-  toSeedString = () => diceKeyFacesToSeedString(this.faces);
   rotateToTurnCenterFaceUpright = async (): Promise<DiceKeyWithoutKeyId> => {
     const centerFacesOrientationTrbl = this.faces[12].orientationAsLowercaseLetterTrbl;
     switch (centerFacesOrientationTrbl) {

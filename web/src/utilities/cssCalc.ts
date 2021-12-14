@@ -11,10 +11,10 @@ const expressionContainsOperator = (expression: string) =>
         return false;
   }});
 
-export function cssCalcInputExpr<EXPRESSION_WITHIN_CALC extends string>(expression: `calc(${EXPRESSION_WITHIN_CALC})`): `(${EXPRESSION_WITHIN_CALC})`;
-export function cssCalcInputExpr<EXPRESSION_IN_PARES extends string>(expression: `(${EXPRESSION_IN_PARES})`): `(${EXPRESSION_IN_PARES})`;
-export function cssCalcInputExpr<EXPRESSION_OUTSIDE_CALC extends string>(expression: EXPRESSION_OUTSIDE_CALC): `(${EXPRESSION_OUTSIDE_CALC})`;
-export function cssCalcInputExpr(expression: string) {
+export function cssExprWithoutCalc<EXPRESSION_WITHIN_CALC extends string>(expression: `calc(${EXPRESSION_WITHIN_CALC})`): `(${EXPRESSION_WITHIN_CALC})`;
+export function cssExprWithoutCalc<EXPRESSION_IN_PARES extends string>(expression: `(${EXPRESSION_IN_PARES})`): `(${EXPRESSION_IN_PARES})`;
+export function cssExprWithoutCalc<EXPRESSION_OUTSIDE_CALC extends string>(expression: EXPRESSION_OUTSIDE_CALC): `(${EXPRESSION_OUTSIDE_CALC})`;
+export function cssExprWithoutCalc(expression: string) {
   return (expression.startsWith("calc(") && expression.endsWith(")")) ?
     // remove calc but keep the parens
       expression.substr(4) :
@@ -48,7 +48,7 @@ export const cssCalc = <TEXTS extends TemplateStringsArray, EXPRESSIONS extends 
     }
     const e = expressions.shift();
     if (e != null) {
-      result += cssCalcInputExpr(e.toString());
+      result += cssExprWithoutCalc(e.toString());
     }
   }
   return cssCalcTyped(result);

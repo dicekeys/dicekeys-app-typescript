@@ -4,8 +4,8 @@ import { RecipeFieldFocusState, RecipeBuilderState, RecipeEditingMode } from "..
 import { NumberPlusMinusView, NumericTextFieldState } from "../../basics/NumericTextFieldView";
 import { describeRecipeType } from "../DescribeRecipeType";
 import { EnhancedRecipeView } from "../EnhancedRecipeView";
-import { BuilderLabelValueMarginVw,
-  BuilderLabelWidthVw,
+import { BuilderLabelValueMargin,
+  BuilderLabelWidth,
   HostNameInputField,
   FormattedRecipeTextAreaJson,
   FormattedRecipeUnderlayJson,
@@ -16,11 +16,19 @@ import { BuilderLabelValueMarginVw,
 import styled from "styled-components";
 import { DerivationViewSection } from "./DerivationViewLayout";
 
+const BuilderFieldContainer = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 0.25vh;
+`;
+
 const BuilderFieldLabel = styled.label`
-  width: ${BuilderLabelWidthVw}vw;
+  width: ${BuilderLabelWidth};
   text-align: right;
-  padding-right: ${BuilderLabelValueMarginVw}vw;
-  margin-right: ${BuilderLabelValueMarginVw}vw;
+  padding-right: ${BuilderLabelValueMargin};
+  margin-right: ${BuilderLabelValueMargin};
   border-right: 1px rgba(128,128,128, 0.5) solid;
 `;
 
@@ -86,13 +94,6 @@ const ContainerForOptionalNumericFieldValue = observer ( ({
   </>
 ));
 
-const BuilderFieldContainer = styled.div`
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    margin-top: 0.25vh;
-`;
 
 export const SiteFieldView = observer( ({state}: {
   state: RecipeBuilderState,
@@ -106,7 +107,7 @@ export const SiteFieldView = observer( ({state}: {
       <HostNameInputField id={field}
         value={state.siteTextField ?? ""}
         placeholder=""
-        ref={ e => { if (e != null) { e?.focus(); fieldFocusState.focus() } } }
+        ref={ e => { if (e != null) { fieldFocusState.focus() } } }
         onPaste={ state.pasteIntoSiteTextField }
         onInput={ e => {state.setSiteTextField(e.currentTarget.value); fieldFocusState.focus(); }} 
         onFocus={ fieldFocusState.focus } />
@@ -122,42 +123,46 @@ export const PurposeFieldView = observer( ({state}: {
   const fieldFocusState = new RecipeFieldFocusState(state, field);
   return (
     <BuilderFieldContainer>
-      <BuilderFieldLabel htmlFor={field}>Purpose:</BuilderFieldLabel>
+      <BuilderFieldLabel htmlFor={field}>Purpose</BuilderFieldLabel>
       <HostNameInputField id={field}
         size={40}
         value={state.purposeField ?? ""}
         placeholder=""
-        ref={ e => { if (e != null) { e?.focus(); fieldFocusState.focus() } } }
+        ref={ e => { if (e != null) { fieldFocusState.focus() } } }
         onInput={ e => {state.setPurposeField(e.currentTarget.value); fieldFocusState.focus(); }} 
         onFocus={ fieldFocusState.focus } />
     </BuilderFieldContainer>
   );
 });
 
-export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
+export const SequenceNumberFormFieldValueView = observer( ({state}: {state: RecipeBuilderState}) => {
   const field = "#"
   const fieldFocusState = new RecipeFieldFocusState(state, field);
   return (
+      <NumberPlusMinusView
+        key={field}
+        state={state.sequenceNumberState}
+      >
+        <SequenceNumberInputField
+          value={state.sequenceNumberState.textValue}
+          onFocus={fieldFocusState.focus}
+          onChange={state.sequenceNumberState.onChangeInTextField}
+        />
+      </NumberPlusMinusView>
+ )});
+
+export const SequenceNumberFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => (
     <BuilderFieldContainer>
-      <BuilderFieldLabel htmlFor={field}>sequence #</BuilderFieldLabel>
+      <BuilderFieldLabel htmlFor={"#"}>sequence #</BuilderFieldLabel>
       <ContainerForOptionalNumericFieldValue
         numericTextFieldState={state.sequenceNumberState}
         defaultValueText={"none"}
         setDefaultValueButtonLabel={"add"}
       >
-        <NumberPlusMinusView
-          key={field}
-          state={state.sequenceNumberState}
-        >
-          <SequenceNumberInputField
-            value={state.sequenceNumberState.textValue}
-            onFocus={fieldFocusState.focus}
-            onChange={state.sequenceNumberState.onChangeInTextField}
-          />
-        </NumberPlusMinusView>
+        <SequenceNumberFormFieldValueView state={state} />
       </ContainerForOptionalNumericFieldValue>
     </BuilderFieldContainer>    
-  )});
+));
 
   export const LengthInCharsFormFieldView = observer( ({state}: {state: RecipeBuilderState}) => {
     if (state.type !== "Password" || state.lengthInCharsFieldHide || !state.mayEditLengthInChars) return null;
@@ -225,7 +230,7 @@ export const RawJsonFieldView = observer( ({state}: {
   const textAreaComponentRef = React.useRef<HTMLTextAreaElement>(null);
   return (
     <BuilderFieldContainer>
-      <BuilderFieldLabel htmlFor={field}>raw json:</BuilderFieldLabel>
+      <BuilderFieldLabel htmlFor={field}>raw json</BuilderFieldLabel>
       <FormattedRecipeBox>
         <FormattedRecipeUnderlayJson>
           <EnhancedRecipeView recipeJson={state.rawRecipeJson} />

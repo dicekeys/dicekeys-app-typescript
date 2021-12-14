@@ -5,7 +5,7 @@ import { addressBarState } from "../../state/core/AddressBarState";
 import {
   TopNavigationBar,
   TopNavLeftSide, TopNavCenter, TopNavRightSide
-} from "../Navigation/TopNavigationBar";
+} from "../Navigation/NavigationLayout";
 import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 import { EncryptedDiceKeyStore } from "../../state/stores/EncryptedDiceKeyStore";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";

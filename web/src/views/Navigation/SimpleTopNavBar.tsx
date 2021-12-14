@@ -5,7 +5,7 @@ import { addressBarState } from "../../state/core/AddressBarState";
 import {
   TopNavigationBar,
   TopNavLeftSide, TopNavCenter, TopNavRightSide
-} from "./TopNavigationBar";
+} from "./NavigationLayout";
 
 export const SimpleTopNavBar = observer( ( props: {
   title?: string,

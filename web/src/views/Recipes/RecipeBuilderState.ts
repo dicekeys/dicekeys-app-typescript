@@ -81,7 +81,9 @@ export class RecipeFieldFocusState {
   constructor(
     private state: {fieldInFocus?: RecipeFieldType, setFieldInFocus: (field?: RecipeFieldType) => void},
     private field: RecipeFieldType
-  ) {}
+  ) {
+    makeAutoObservable(this);
+  }
 
   get isFieldInFocus(): boolean { return this.field === this.state.fieldInFocus};
   focus = () => this.state.setFieldInFocus(this.field);
@@ -206,7 +208,7 @@ export class RecipeBuilderState {
   /////////////////////////////////
   // SequenceNumber field ("#")
   /////////////////////////////////
-  sequenceNumberState = new NumericTextFieldState({minValue: 1, incrementBy: 1, defaultValue: 2, onChanged: (sequenceNumber) => {
+  sequenceNumberState = new NumericTextFieldState({minValue: 2, incrementBy: 1, defaultValue: 2, onChanged: (sequenceNumber) => {
     this.rawRecipeJson = addSequenceNumberToRecipeJson(this.rawRecipeJson, sequenceNumber);
   }});
   get sequenceNumber(): number | undefined { return this.sequenceNumberState.numericValue } 
@@ -286,6 +288,8 @@ export class RecipeBuilderState {
     const connector = trimmedField.length === 0 ? "" :
       trimmedField[trimmedField.length-1] === "," ? " " : ", ";
     this.setSiteTextField(trimmedField + connector + domain);
+    this.setWizardPrimaryFieldEntered(true);
+    this.setEditingMode(RecipeEditingMode.EditWithTemplateOnly);
   });
 
   //////////////////////////////////////////
@@ -492,6 +496,10 @@ export class RecipeBuilderState {
       this.lengthInCharsState.clear();
     }
   });
+
+  get recipeJson(): string | undefined {
+    return canonicalizeRecipeJson (this.rawRecipeJson);
+  }
 
 
   loadRecipe = action ((loadedRecipe?: LoadedRecipe) => {
