@@ -10,7 +10,7 @@ import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 import { EncryptedDiceKeyStore } from "../../state/stores/EncryptedDiceKeyStore";
 import { DiceKeysNavHamburgerMenu, ExpandableMenuProps, HamburgerMenuButton, MenuItem } from "../Navigation/Menu";
 import { BooleanState } from "../../state/reusable/BooleanState";
-import { CenteredControls, DiceKeyNickname, Instruction, Nickname, Spacer } from "../../views/basics";
+import { CenteredControls, DiceKeyNickname, Instruction, Spacer } from "../../views/basics";
 import { OptionButton } from "../../css/Button";
 
 const SelectedDiceKeyExpandableHamburgerMenu = observer( ( {

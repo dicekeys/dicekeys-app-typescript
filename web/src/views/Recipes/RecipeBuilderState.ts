@@ -29,6 +29,7 @@ import { describeRecipeType } from "./DescribeRecipeType";
 import React from "react";
 import { getWildcardOfRegisteredDomainFromCandidateWebUrl, isValidDomainOrWildcardDomain, removeWildcardPrefixIfPresent } from "../../utilities/domains";
 import { canonicalizeRecipeJson } from "../../dicekeys/canonicalizeRecipeJson";
+import { FormFocusState } from "../../state/reusable";
 
 
 export enum RecipeEditingMode {
@@ -77,20 +78,6 @@ export enum WizardStep {
   Save = 4,
 }
 
-export class RecipeFieldFocusState {
-  constructor(
-    private state: {fieldInFocus?: RecipeFieldType, setFieldInFocus: (field?: RecipeFieldType) => void},
-    private field: RecipeFieldType
-  ) {
-    makeAutoObservable(this);
-  }
-
-  get isFieldInFocus(): boolean { return this.field === this.state.fieldInFocus};
-  focus = () => this.state.setFieldInFocus(this.field);
-  toggleFocus = () => this.state.setFieldInFocus(this.isFieldInFocus ? undefined : this.field);
-};
-
-
 /**
  * State for building and displaying recipes
  */
@@ -101,6 +88,8 @@ export class RecipeBuilderState {
       this.loadRecipe(loadedRecipe);
     }
   }
+
+  public readonly focusState = new FormFocusState()
 
   origin: LoadedRecipeOrigin | undefined;
   setOrigin = action( (origin: LoadedRecipeOrigin | undefined) => {
