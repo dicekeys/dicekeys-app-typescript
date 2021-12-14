@@ -107,11 +107,7 @@ Then load [http://localhost:1234/](http://localhost:1234/)
 
 
 ### Windows USB device handling
-Windows require the app to have admin rights in order to list usb devices and write to them.
-When the app runs on windows it creates an IPC (named pipes) and executes a script (`usb-writer.js`) with elevated priviledges (UAC)
-that listens to the parent IPC.
-
-For easier development `alwaysSpawnClient` can be set to `true` for all OS's to spawn an IPC server even if is not required.
+Windows requires the app to have admin rights in order to list FIDO usb devices and write to them.
 
 ## Security notes
 
@@ -123,7 +119,7 @@ Due to our strict security requirements, we try to minimize dependencies.  The o
   - `emscripten`, the WebAssembly compiler used to build the above two libraries and marshall data
   - `React`, the highly-popular UI library with a great security track record.
   - `MobX`, not quite as popular as React, but a small code base with a great security track record.
-  - `parcel` generates code during the build process and relies on other dependencies.
+  - `vite` generates code during the build process and relies on other dependencies.
   
 Testing with `jest` introduces other dependencies, but those should not be compiled into the production applications.
 
@@ -146,9 +142,6 @@ and with tsc, and this isn't working well in the beta of parcel 2.
 ```
 
 ## Electron notes
-
-### Electron Version locking
-Electron version has a dependency on `node-hid` and as a result Electron version must first be supported by `node-hid`.
 
 ### macOS - Supporting Associated Domains
 Associated Domains ([see Apple's developer documentation](https://developer.apple.com/documentation/xcode/supporting-associated-domains)) establish a secure association between the domain(s) associated with the DiceKeys app (dicekeys.app) and this application package.
