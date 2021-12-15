@@ -60,7 +60,7 @@ npm run build
 npm run pack
 
 # or dmg distribution files
-npm run dist 
+npm run dist-macos
 ```
 
 ## Build electron app for Windows/Linux
@@ -71,7 +71,7 @@ cd electron
 docker build -f Dockerfile . --tag dicekeys_build
 ```
 
-Create **deb**, **rpm** and **zip**. Output files resides in `out` folder.
+Create **deb**, **rpm** and **zip** for Linux and **setup** for Windows. Output files resides in `out` folder.
 ```
 cd electron
 docker run --rm -v $PWD:/dicekeys dicekeys_build

@@ -47,7 +47,6 @@ module.exports = {
         "category": 'Utility',
         "executableName": "dicekeys",
         "target" : ["AppImage", "snap", "deb", "rpm", "zip"]
-
     },
     "deb": {
         "depends": ['libsecret-1-dev']
@@ -56,7 +55,7 @@ module.exports = {
         "depends": ['libsecret-devel']
     },
     "win": {
-        "target" : ["nsis", "portable"],
+        "target" : ["nsis"],
         "icon": "./packaging/icon.ico",
     },
     "nsis":{
