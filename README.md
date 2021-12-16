@@ -74,10 +74,10 @@ Using docker to create distributions written under `/electron/out`
 cd electron
 
 # Create a docker container with everything needed to build the electron app
-docker build -f Dockerfile . --tag dicekeys_build
+docker buildx build --platform linux/amd64 -f Dockerfile . --tag dicekeys_build
 
 # Run the electron build process within the docker container:
-docker run --rm -v $PWD:/dicekeys dicekeys_build 
+docker run --platform linux/amd64 --name dicekeys_build --rm -v $PWD:/dicekeys dicekeys_build 
 ```
 
 If you run into problems, it may be helpful to clear docker's cache, via:
