@@ -68,13 +68,13 @@ npm run dist-macos
 Create the build image
 ```
 cd electron
-docker build -f Dockerfile . --tag dicekeys_build
+docker buildx build --platform linux/amd64 -f Dockerfile . --tag dicekeys_build
 ```
 
 Create **deb**, **rpm** and **zip** for Linux and **setup** for Windows. Output files resides in `out` folder.
 ```
 cd electron
-docker run --rm -v $PWD:/dicekeys dicekeys_build
+docker run --platform linux/amd64 --name dicekeys_build --rm -v $PWD:/dicekeys dicekeys_build
 ```
 
 Note, use `docker builder prune` if you run into problems, as it will clear the cache.
