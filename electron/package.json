@@ -15,8 +15,8 @@
     "lint": "eslint --ext .ts .",
     "pack": "electron-builder --dir --config=electron-builder.js",
     "dist": "electron-builder --config=electron-builder.js -mwl",
-    "dist-macos": "electron-builder --config=electron-builder.js --macos",
-    "dist-win-linux": "electron-builder --config=electron-builder.js --linux -- win"
+    "dist-macos": "electron-builder --config=electron-builder.js --macos --x64",
+    "dist-win-linux": "electron-builder --config=electron-builder.js --linux --x64"
   },
   "keywords": [],
   "license": "MIT",
