@@ -15,7 +15,7 @@ export {
 export interface DeviceUniqueIdentifier {
   vendorId: number;
   productId: number;
-  serialNumber: string;  
+  serialNumber: string;
 }
 
 export interface Device extends DeviceUniqueIdentifier {
@@ -26,9 +26,10 @@ export interface Device extends DeviceUniqueIdentifier {
 }
 
 export interface IElectronBridgeSync {
+  openExternal(url: string): void;
   writeResultToStdOutAndExit(result: string): void;
   getCommandLineArguments(): string[];
-  getAppLink(): string[];
+  getAppLink(): string;
 }
 
 export interface IElectronBridgeDialogsAsync{
@@ -45,7 +46,7 @@ export interface IElectronBridgeDiceKeysStoreAsync {
 
 export type RemoveListener = () => void;
 export interface IElectronBridgeListener {
-  listenForAppLinks(callback: (appLink: string[]) => any, errorCallback: (error: any) => any): RemoveListener;
+  listenForAppLinks(callback: (appLink: string) => any, errorCallback: (error: any) => any): RemoveListener;
 // for testing typings only  fix(sc: (a: string, b: number) => any, ec: (error: any) => any): RemoveListener;
 }
 

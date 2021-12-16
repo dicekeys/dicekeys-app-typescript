@@ -1,3 +1,7 @@
+/**
+ * @type {import('electron-builder').Configuration}
+ * @see https://www.electron.build/configuration/configuration
+ */
 module.exports = {
     "appId": "com.dicekeys.electron",
     "files": [
@@ -35,6 +39,12 @@ module.exports = {
         "output": "out"
     },
     "asar": true,
+    "protocols": [
+        {
+            "name": "dicekeys",
+            "schemes": ["dicekeys"]
+        }
+    ],
     "dmg": {
         "format": "ULFO",
         "icon": "./packaging/icon.icns",
@@ -47,12 +57,6 @@ module.exports = {
         "category": 'Utility',
         "executableName": "dicekeys",
         "target" : ["AppImage", "snap", "deb", "rpm", "zip"]
-    },
-    "deb": {
-        "depends": ['libsecret-1-dev']
-    },
-    "rpm": {
-        "depends": ['libsecret-devel']
     },
     "win": {
         "target" : ["nsis"],

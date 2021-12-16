@@ -5,11 +5,12 @@ WORKDIR /dicekeys
 
 VOLUME /dicekeys
 
-RUN apt-get update \
+RUN dpkg --add-architecture i386 \
+    && apt-get update \
     && DEBIAN_FRONTEND="noninteractive" apt-get install -y curl rpm zip build-essential git software-properties-common wget mono-complete  \
     && curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
     && apt-get update \
-    && apt-get install -y nodejs wine64 \
+    && apt-get install -y nodejs wine32 wine64 \
     && npm install -g npm
 
 CMD npm install && npm run dist-win-linux
