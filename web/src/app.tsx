@@ -10,34 +10,51 @@ import { ApiCalls } from "@dicekeys/dicekeys-api-js";
 import { ApiRequestsReceivedState } from "./state/ApiRequestsReceivedState";
 import { ThemeProvider } from "styled-components";
 import { lightTheme } from "./css/lightTheme";
+import {IElectronBridge} from "../../common/IElectronBridge";
 
+const electronBridge = (window as unknown as  {ElectronBridge: IElectronBridge}).ElectronBridge;
 const ApplicationErrorState = new ErrorState();
 
 /**
  * For web-based apps, scan the URL on page load
  */
-if (RUNNING_IN_ELECTRON) {
-  try {
-    const url = new URL(window.location.href);
-    if (url.searchParams.has(ApiCalls.RequestMetadataParameterNames.command)) {
-      const request = new QueuedUrlApiRequest(new URL(window.location.href));
-      // If we've reached this point, there is a valid API request that needs to be handled.
-      // Add it to the queue.
+try {
+  const url = new URL(window.location.href);
+  if (url.searchParams.has(ApiCalls.RequestMetadataParameterNames.command)) {
+    const request = new QueuedUrlApiRequest(new URL(window.location.href));
+    // If we've reached this point, there is a valid API request that needs to be handled.
+    // Add it to the queue.
+    if (RUNNING_IN_ELECTRON) {
       ApiRequestsReceivedState.enqueueApiRequestReceived(request);
+    }else{
+      // Open DiceKeys app, or better create a new UI view.
+      const schemeBasedApiRequest = "dicekeys://" + url.search;
+      window.location.href = schemeBasedApiRequest
     }
-  } catch {
-    // Not a valid request.  Carry on.
-
-    // FUTURE -- throw error if search param had command but it was an invalid command.
   }
+} catch {
+  // Not a valid request.  Carry on.
+
+  // FUTURE -- throw error if search param had command but it was an invalid command.
 }
 
-// On macOS, listen for deep links via https://www.electronjs.org/docs/api/app#event-open-url-macos
-// See https://shipshape.io/blog/launch-electron-app-from-browser-custom-protocol/
-// app.on('open-url', function (event, url) {
-//   event.preventDefault();
-//   deeplinkingUrl = url;
-// });
+if (RUNNING_IN_ELECTRON) {
+
+  // Handle app links
+  electronBridge.listenForAppLinks(appLink => {
+    try{
+      const url = new URL(appLink);
+      if (url.searchParams.has(ApiCalls.RequestMetadataParameterNames.command)) {
+        const request = new QueuedUrlApiRequest(url);
+        ApiRequestsReceivedState.enqueueApiRequestReceived(request);
+      }
+    }catch (e) {
+      console.log(e)
+    }
+  }, err => {
+    console.log(err)
+  });
+}
 
 window.addEventListener('load', () => {
   document.body.style.setProperty("margin", "0px");
