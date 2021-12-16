@@ -45,12 +45,20 @@ module.exports = {
     "linux": {
         "maintainer": "DiceKeys LLC",
         "category": 'Utility',
-        "executableName": "dicekeys"
+        "executableName": "dicekeys",
+        "target" : ["AppImage", "snap", "deb", "rpm", "zip"]
     },
     "deb": {
         "depends": ['libsecret-1-dev']
     },
     "rpm": {
         "depends": ['libsecret-devel']
+    },
+    "win": {
+        "target" : ["nsis"],
+        "icon": "./packaging/icon.ico",
+    },
+    "nsis":{
+        "oneClick": false
     }
 }

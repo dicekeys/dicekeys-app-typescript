@@ -60,7 +60,7 @@ npm run build
 npm run pack
 
 # or dmg distribution files
-npm run dist 
+npm run dist-macos
 ```
 
 ## Build electron app for Windows/Linux
@@ -71,12 +71,13 @@ cd electron
 docker build -f Dockerfile . --tag dicekeys_build
 ```
 
-Create **deb**, **rpm** and **zip**. Output files resides in `out` folder.
+Create **deb**, **rpm** and **zip** for Linux and **setup** for Windows. Output files resides in `out` folder.
 ```
 cd electron
 docker run --rm -v $PWD:/dicekeys dicekeys_build
 ```
 
+Note, use `docker builder prune` if you run into problems, as it will clear the cache.
 
 ## Run tests
 ```
@@ -101,17 +102,13 @@ We borrow from environments like SwiftUI, which allow you to run and inspect ind
 creating preview HTML files for key components that operate only on the subset of the application state that required for those views.
 
 ```
-parcel src/preview.html
+vite src/preview.html
 ```
-Then load [http://localhost:1234/](http://localhost:1234/)
+Then load [http://localhost:3000/](http://localhost:3000/)
 
 
 ### Windows USB device handling
-Windows require the app to have admin rights in order to list usb devices and write to them.
-When the app runs on windows it creates an IPC (named pipes) and executes a script (`usb-writer.js`) with elevated priviledges (UAC)
-that listens to the parent IPC.
-
-For easier development `alwaysSpawnClient` can be set to `true` for all OS's to spawn an IPC server even if is not required.
+Windows requires the app to have admin rights in order to list FIDO usb devices and write to them.
 
 ## Security notes
 
@@ -123,32 +120,16 @@ Due to our strict security requirements, we try to minimize dependencies.  The o
   - `emscripten`, the WebAssembly compiler used to build the above two libraries and marshall data
   - `React`, the highly-popular UI library with a great security track record.
   - `MobX`, not quite as popular as React, but a small code base with a great security track record.
-  - `parcel` generates code during the build process and relies on other dependencies.
+  - `vite` generates code during the build process and relies on other dependencies.
   
 Testing with `jest` introduces other dependencies, but those should not be compiled into the production applications.
 
 
 ## Build notes
 
-Using parcel v2 to build.  Ran into problems with CSS that required using the nightly build.
-
-
-Currently must use the TypeScript compiler and avoiding babel per [mobx](https://mobx.js.org/installation.html) requirement to set `"useDefineForClassFields": true`
-
-At some point we may want to add this to the .parcelrc, but for now we're typechecking in vscode
-and with tsc, and this isn't working well in the beta of parcel 2.
-
-
-```
-  "validators": {
-    "*.{ts,tsx}": ["@parcel/validator-typescript"]
-  }
-```
+Using `vite` bundler.
 
 ## Electron notes
-
-### Electron Version locking
-Electron version has a dependency on `node-hid` and as a result Electron version must first be supported by `node-hid`.
 
 ### macOS - Supporting Associated Domains
 Associated Domains ([see Apple's developer documentation](https://developer.apple.com/documentation/xcode/supporting-associated-domains)) establish a secure association between the domain(s) associated with the DiceKeys app (dicekeys.app) and this application package.

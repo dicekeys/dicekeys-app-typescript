@@ -23,6 +23,7 @@ web/.npmrc
 # electron build dirs
 electron/electron-js/
 electron/electron-html/
+electron/out/
 
 # buildinfo files
 *.tsbuildinfo
