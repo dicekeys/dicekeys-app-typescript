@@ -2,7 +2,7 @@ import * as IpcApiFactory from "./IpcApiFactory";
 import {app, BrowserWindow, ipcRenderer} from "electron";
 import type {RemoveListener} from "../../../common/IElectronBridge";
 
-let appLinkUrl: string[]
+let appLinkUrl: string
 
 export function registerAppLinkProtocol(){
     app.setAsDefaultProtocolClient('dicekeys')
@@ -10,11 +10,11 @@ export function registerAppLinkProtocol(){
     // Protocol handler for win32
     if (process.platform == 'win32') {
         // Keep only command line / deep linked arguments
-        appLinkUrl = process.argv.slice(1)
+        appLinkUrl = process.argv[1]
     }
 }
 
-export function sendAppLink(appLink: string[], window: BrowserWindow){
+export function sendAppLink(appLink: string, window: BrowserWindow){
     appLinkUrl = appLink
     if (window && window.webContents) {
         window.webContents.send('applink', appLinkUrl)
@@ -24,8 +24,8 @@ export function sendAppLink(appLink: string[], window: BrowserWindow){
 IpcApiFactory.implementSyncApi( "getAppLink", () => {
     return appLinkUrl
 });
-IpcApiFactory.implementListenerApi("listenForAppLinks", (callback : (applink: string[]) => any, _ ?: (error: any) => any) : RemoveListener => {
-    const listener = (_: any, args: string[]) => callback(args)
+IpcApiFactory.implementListenerApi("listenForAppLinks", (callback : (applink: string) => any, _ ?: (error: any) => any) : RemoveListener => {
+    const listener = (_: any, args: string) => callback(args)
     ipcRenderer.on('applink', listener);
     return () => {
         ipcRenderer.removeListener('applink', listener)

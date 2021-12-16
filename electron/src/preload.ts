@@ -95,6 +95,7 @@ const createIpcListenerRequestClientFunction =
 
 // Create the API to expose, using TypeScript to verify that we created everything correctly
 const electronBridgeTypeChecked: IElectronBridge = {
+  openExternal: createIpcSyncRequestClientFunction("openExternal"),
   writeResultToStdOutAndExit: createIpcSyncRequestClientFunction("writeResultToStdOutAndExit"),
   getCommandLineArguments: createIpcSyncRequestClientFunction("getCommandLineArguments"),
 

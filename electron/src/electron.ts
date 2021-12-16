@@ -64,7 +64,7 @@ app.on('second-instance', (_event, commandLine, _workingDirectory) => {
     // argv: An array of the second instance’s (command line / deep linked) arguments
     if (process.platform == 'win32') {
         // Keep only command line / deep linked arguments
-        sendAppLink(commandLine.slice(1), mainWindow)
+        sendAppLink(commandLine.slice(1)[0], mainWindow)
     }
 
     // Someone tried to run a second instance, we should focus our window.
@@ -102,7 +102,7 @@ app.on('will-finish-launching', function() {
     // Protocol handler for osx
     app.on('open-url', function(event, url) {
         event.preventDefault()
-        sendAppLink([url], mainWindow)
+        sendAppLink(url, mainWindow)
     })
 })
 
