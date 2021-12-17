@@ -28,15 +28,15 @@ const getSessionEncryptionSymmetricKey = async (
     return value;
   }
 
-  const getSessionKeySeedCookie = (): string => {
+  const getSessionKeySeedCookie = (): string | undefined => {
     const cookiePrefix = keySeedCookieName + "=";
-    const cookieRead = (document.cookie || "")
+    const cookieRead = (document.cookie ?? "")
       .split(';')
       .map(c => c.trim())
       .filter(cookie => {
         return cookie.startsWith(cookiePrefix);
       })
-      .map( cookie => cookie.substr(cookiePrefix.length).trim())
+      .map( cookie => cookie.substring(cookiePrefix.length).trim())
       [0];
     if (cookieRead) {
       // Write the cookie back, in order to reset the expiration clock]

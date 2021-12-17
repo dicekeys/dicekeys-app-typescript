@@ -59,7 +59,7 @@ const toBip39Array = async (data32Bytes: Uint8ClampedArray): Promise<string[]> =
 	}
 	const checksum = new Uint8ClampedArray((await crypto.subtle.digest('SHA-256', data32Bytes)).slice(0, 1) );
 	const wordIndexes = convertArrayOf8BitNumbersTo11BitNumbers([...data32Bytes, ...checksum]);
-	const bip39Array = wordIndexes.map( i => english[i] );
+	const bip39Array = wordIndexes.map( i => english[i]! );
 	return bip39Array;
 }
 export const toBip39 = async (data32Bytes: Uint8ClampedArray): Promise<string> =>

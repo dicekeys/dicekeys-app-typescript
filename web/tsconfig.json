@@ -13,6 +13,10 @@
         ],
     // Required for MOBX, see https://mobx.js.org/installation.html
     "useDefineForClassFields": true,
+    // Because the DiceKeys team likes things really strict,
+    // we never assume that indexing into an array won't return undefined
+    // unless it's a sized tuple.
+    "noUncheckedIndexedAccess": true,
       /* Visit https://aka.ms/tsconfig.json to read more about this file */
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */

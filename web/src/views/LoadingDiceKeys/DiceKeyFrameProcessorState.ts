@@ -20,7 +20,7 @@ import {  DiceKeyFaces, DiceKeyWithKeyId, Face, TupleOf25Items } from "../../dic
 
 const validateFaceRead = (faceRead: FaceRead): Face => {
   const {letter, digit, orientationAsLowercaseLetterTrbl} = faceRead;
-  if (letter == null || digit == null || orientationAsLowercaseLetterTrbl === "?") {
+  if (letter == null || digit == null) {
     throw new Error("Invalid face read");
   }
   return {letter, digit, orientationAsLowercaseLetterTrbl}
@@ -158,8 +158,8 @@ export class DiceKeyFrameProcessorState {
     this.frameProcessedTimesMs.push(Date.now());
     if (this.frameProcessedTimesMs.length > 1) {
       const msPerFrame = (
-        this.frameProcessedTimesMs[this.frameProcessedTimesMs.length-1] -
-        this.frameProcessedTimesMs[0]
+        this.frameProcessedTimesMs.at(-1)! -
+        this.frameProcessedTimesMs[0]!
       ) / (this.frameProcessedTimesMs.length - 1);
       this.framesPerSecond = Math.round( 10000 / msPerFrame) / 10;
       if (this.frameProcessedTimesMs.length === 4) {
