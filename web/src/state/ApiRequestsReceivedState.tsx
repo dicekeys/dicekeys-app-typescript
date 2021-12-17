@@ -6,15 +6,21 @@ import {
 
 class ApiRequestsReceivedStateClass {
 
-  apiRequestsReceived: QueuedApiRequest[] = [];
+  private _apiRequestsReceived: QueuedApiRequest[] = [];
+  get apiRequestsReceived() { return [...this._apiRequestsReceived] }
+  readonly setApiRequestsReceived = action( (newValue: QueuedApiRequest[]) => {
+    this._apiRequestsReceived = newValue;
+  });
+  
   enqueueApiRequestReceived = action ( (apiRequestReceived: QueuedApiRequest) => {
-    this.apiRequestsReceived.push(apiRequestReceived);
+    this.setApiRequestsReceived([...this._apiRequestsReceived, apiRequestReceived]);
   });
   dequeueApiRequestReceived = action ( () => {
-    this.apiRequestsReceived.shift();
+    const [_dequeued, ...remaining] = this._apiRequestsReceived;
+    this.setApiRequestsReceived(remaining);
   });
   get foregroundApiRequest(): QueuedApiRequest | undefined {
-    return this.apiRequestsReceived?.length > 0 ? this.apiRequestsReceived[0] : undefined;
+    return this._apiRequestsReceived?.length > 0 ? this._apiRequestsReceived[0] : undefined;
   }
 
   constructor() {
