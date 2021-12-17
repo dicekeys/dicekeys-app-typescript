@@ -6,8 +6,9 @@ export function isMessageUTF8PrintableString(message: Uint8Array): boolean {
   // https://en.wikipedia.org/wiki/UTF-8, see table in section "Description"
   for (var i=0; i < message.length;) {
     const byte = message[i++];
+    if (byte == null) continue;
     if (byte < 32 && !validControlCodes.has(byte)) {
-      // The only control chracters allowed are tabs, carriage returns, and line feeds. (space is byte 32)
+      // The only control characters allowed are tabs, carriage returns, and line feeds. (space is byte 32)
       return false;
     }
     if (byte == 127) {
@@ -35,7 +36,7 @@ export function isMessageUTF8PrintableString(message: Uint8Array): boolean {
     }
     for (var j = 0; j < additionalBytes; j++) {
       // All additional bytes for this character must be of the form 10xxxxxx
-      const extensionByte = message[i++];
+      const extensionByte = message[i++]!;
       if ((extensionByte & 0xc0) != 0x80) {
         return false;
       }

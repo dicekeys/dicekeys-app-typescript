@@ -4,9 +4,10 @@ export const findIndexAndLength = (original: string, searchFor: string | RegExp)
     const index = original.indexOf(searchFor);
     return (index < 0) ? undefined : {index, length: searchFor.length};
   } else {
+//    const [matchResult] = original.match(searchFor); 
     const matchResult = original.match(searchFor);
     if (matchResult == null || matchResult.index == null) return undefined;
-    return {index: matchResult.index, length: matchResult[0].length};
+    return {index: matchResult.index, length: matchResult[0]!.length};
   }
 }
 
