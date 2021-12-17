@@ -173,7 +173,7 @@ export const BackupStepSwitchView = observer ( ({state}: BackupViewProps) => {
            maxWidth="80vw" maxHeight="45vh"
         />
         { diceKey == null ? null : (
-          <CopyFaceInstructionView medium={backupMedium} face={diceKey.faces[faceIndex]} index={faceIndex} />
+          <CopyFaceInstructionView medium={backupMedium} face={diceKey.faces[faceIndex]!} index={faceIndex} />
         )}
       </>
     );
@@ -288,7 +288,7 @@ addPreviewWithMargins("Backup1Error", () => {
   state.setBackupMedium(BackupMedium.DiceKey);
   const diceKeyWithErrors = new DiceKeyWithoutKeyId(DiceKeyFaces(diceKeyState.diceKey.rotate(1).faces.map( (face, index) => {
       switch(index) {
-        case 3: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 5) % FaceLetters.length]};
+        case 3: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 5) % FaceLetters.length]!};
         default: return face;
       }
     }
@@ -305,14 +305,14 @@ addPreviewWithMargins("BackupShowErrors", () => {
   state.setBackupMedium(BackupMedium.DiceKey);
   const diceKeyWithErrors = new DiceKeyWithoutKeyId(DiceKeyFaces(diceKeyState.diceKey.rotate(1).faces.map( (face, index) => {
       switch(index) {
-        case 3: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 5) % FaceLetters.length]};
-        case 8: return {...face, digit: FaceDigits[(FaceDigits.indexOf(face.digit) + 3) % FaceDigits.length]};
-        case 13: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 3) % FaceLetters.length]};
-        case 20: return {...face, orientationAsLowercaseLetterTrbl: FaceOrientationLettersTrbl[(FaceOrientationLettersTrbl.indexOf(face.orientationAsLowercaseLetterTrbl) + 1) % FaceOrientationLettersTrbl.length]};
+        case 3: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 5) % FaceLetters.length]!};
+        case 8: return {...face, digit: FaceDigits[(FaceDigits.indexOf(face.digit) + 3) % FaceDigits.length]!};
+        case 13: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 3) % FaceLetters.length]!};
+        case 20: return {...face, orientationAsLowercaseLetterTrbl: FaceOrientationLettersTrbl[(FaceOrientationLettersTrbl.indexOf(face.orientationAsLowercaseLetterTrbl) + 1) % FaceOrientationLettersTrbl.length]!};
         case 22: return {
-          letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 12) % FaceLetters.length],
-          digit: FaceDigits[(FaceDigits.indexOf(face.digit) + 1) % FaceDigits.length],
-          orientationAsLowercaseLetterTrbl: FaceOrientationLettersTrbl[(FaceOrientationLettersTrbl.indexOf(face.orientationAsLowercaseLetterTrbl) + 3) % FaceOrientationLettersTrbl.length]};
+          letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 12) % FaceLetters.length]!,
+          digit: FaceDigits[(FaceDigits.indexOf(face.digit) + 1) % FaceDigits.length]!,
+          orientationAsLowercaseLetterTrbl: FaceOrientationLettersTrbl[(FaceOrientationLettersTrbl.indexOf(face.orientationAsLowercaseLetterTrbl) + 3) % FaceOrientationLettersTrbl.length]!};
         default: return face;
       }
     }

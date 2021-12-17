@@ -66,7 +66,7 @@ PublicSuffixDataList.split("\n").forEach( rawLine => {
     if (!(label in labelMap)) {{
       labelMap[label] = {};
     }}
-    labelMap = labelMap[label];
+    labelMap = labelMap[label]!;
   }
   // Mark the end of this suffix as a valid terminal node.
   // So, if we have a public suffix of e.d.c.b.a, we will know
@@ -90,7 +90,7 @@ export const getDepthOfPublicSuffix = (domain: string): number => {
     if (labelMap.isTerminalNode) {
       depthOfPublicSuffix = depth;
     }
-    labelMap = labelMap[labelsFromTopToBottom[depth++]];
+    labelMap = labelMap[labelsFromTopToBottom[depth++]!];
   }
   return depthOfPublicSuffix;
 }

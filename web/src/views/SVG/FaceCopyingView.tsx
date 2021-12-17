@@ -26,8 +26,8 @@ const widthsInUnitsOf1KeyWidth = [
   1, // source sticker sheet
   0.4, // space between sticker sheets
   1, // target sheet on right
-];
-const fractionalWidths = weightsToFractionalProportions(...widthsInUnitsOf1KeyWidth);
+] as const;
+const fractionalWidths = weightsToFractionalProportions<3>(...widthsInUnitsOf1KeyWidth);
 const totalWidthInUnitsOf1KeyWidth = sum(widthsInUnitsOf1KeyWidth);
 
 const sticKeyFaceCopyingImageWidthOverHeight = portraitSheetWidthOverHeight * totalWidthInUnitsOf1KeyWidth;

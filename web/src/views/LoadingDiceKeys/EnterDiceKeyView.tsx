@@ -37,10 +37,10 @@ export class EnterDiceKeyState {
     makeAutoObservable(this);
   }
 
-  private get currentFace(): Partial<Face> { return this.partialDiceKey![this.currentFaceIndex!]; }
+  private get currentFace(): Partial<Face> { return this.partialDiceKey![this.currentFaceIndex]!; }
   private get previousFaceIndex(): number { return (this.currentFaceIndex! + 24) % 25; }
   private get nextFaceIndex(): number { return (this.currentFaceIndex! + 1) % 25; }
-  private get nextFace(): Partial<Face> { return this.partialDiceKey[this.nextFaceIndex]; }
+  private get nextFace(): Partial<Face> { return this.partialDiceKey[this.nextFaceIndex]!; }
 
   setCurrentFaceIndex = action ( (index: number) => {
     this.currentFaceIndex = index;

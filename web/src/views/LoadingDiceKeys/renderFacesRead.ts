@@ -64,7 +64,7 @@ export const renderFaceRead = (ctx: CanvasRenderingContext2D, faceRead: FaceRead
   ctx.fillStyle = ctx.strokeStyle =
     (!hasErrors) ?
       colorIndicatingCorrectness :
-    (errors.length == 1 && errors[0].type === "undoverline-bit-mismatch" && errors[0].hammingDistance <= 2) ?
+    (errors.length == 1 && errors[0] != null && errors[0].type === "undoverline-bit-mismatch" && errors[0].hammingDistance <= 2) ?
       colorIndicatingSmallError :
       colorIndicatingLargeError;
 
