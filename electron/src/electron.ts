@@ -106,7 +106,6 @@ app.on('will-finish-launching', function() {
     })
 })
 
-
 // We're not currently using the dialog APIs.  If we were to, and we support multiple windows, we would
 // want to keep a WindowID that let us associate the dialogs with the correct window ID?
 // import {dialog} from 'electron';

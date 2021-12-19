@@ -39,27 +39,19 @@ try {
 }
 
 if (RUNNING_IN_ELECTRON) {
-  function handleApiRequest(href: string){
+
+  // Handle app links
+  electronBridge.listenForAppLinks(appLink => {
+    console.log(appLink)
     try{
-      const url = new URL(href);
+      const url = new URL(appLink);
       if (url.searchParams.has(ApiCalls.RequestMetadataParameterNames.command)) {
-        const request = new QueuedUrlApiRequest(new URL(href));
+        const request = new QueuedUrlApiRequest(url);
         ApiRequestsReceivedState.enqueueApiRequestReceived(request);
       }
     }catch (e) {
       console.log(e)
     }
-  }
-
-  const appLink = electronBridge.getAppLink()
-  // handle the initial request that opened the app
-  if(appLink){
-    handleApiRequest(appLink)
-  }
-
-  // handle any subsequent requests that were sent to the app
-  electronBridge.listenForAppLinks(appLink => {
-    handleApiRequest(appLink)
   }, err => {
     console.log(err)
   });
