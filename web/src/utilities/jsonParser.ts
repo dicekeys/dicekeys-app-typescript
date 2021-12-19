@@ -257,7 +257,7 @@ class JsonAnnotationParser {
           break;
         }
         // The trailing comma for the previous field is at this location
-        fields[fields.length-1].indexOfTrailingComma = this.indexIntoSourceJson;
+        fields.at(-1)!.indexOfTrailingComma = this.indexIntoSourceJson;
         // The leading comma for the next field is at this location
         indexOfLeadingComma = this.indexIntoSourceJson;
         this.advance();
@@ -307,7 +307,7 @@ class JsonAnnotationParser {
           break;
         }
         // The trailing comma for the previous field is at this location
-        fields[fields.length-1].indexOfTrailingComma = this.indexIntoSourceJson;
+        fields.at(-1)!.indexOfTrailingComma = this.indexIntoSourceJson;
         // The leading comma for the next field is at this location
         indexOfLeadingComma = this.indexIntoSourceJson;
         this.advance();

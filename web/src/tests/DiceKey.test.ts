@@ -13,9 +13,9 @@ describe("Formats: Bip39", () => {
       test(`${inHumanReadableForm} (${testIndex})`, () => {
         const replica = DiceKeyWithoutKeyId.fromHumanReadableForm(inHumanReadableForm, {requireOneOfEachLetter: true, throwOnFailures: true});
         const equal = Array.from(Array(25).keys()).every( index => 
-          replica.faces[index].digit === diceKey.faces[index].digit &&
-          replica.faces[index].letter === diceKey.faces[index].letter &&
-          replica.faces[index].orientationAsLowercaseLetterTrbl === diceKey.faces[index].orientationAsLowercaseLetterTrbl
+          replica.faces[index]!.digit === diceKey.faces[index]!.digit &&
+          replica.faces[index]!.letter === diceKey.faces[index]!.letter &&
+          replica.faces[index]!.orientationAsLowercaseLetterTrbl === diceKey.faces[index]!.orientationAsLowercaseLetterTrbl
         );
         expect(equal).toStrictEqual(true);
       });

@@ -123,7 +123,7 @@ export const validateDiceKey = (diceKey: readonly Partial<Face>[], {
   const absentLetters = new Set<FaceLetter>(FaceLetters);
   const repeatedLetters = new Set<FaceLetter>();
   for (var position = 0; position < NumberOfFacesInKey; position++) {
-    const {letter, digit, orientationAsLowercaseLetterTrbl} = diceKey[position];
+    const {letter, digit, orientationAsLowercaseLetterTrbl} = diceKey[position]!;
     if (!FaceLetter.isValid(letter)) {
       if (!throwOnFailures) { return false; }
       throw new InvalidFaceLetterException(letter, {position});
@@ -198,9 +198,9 @@ export const FaceInHumanReadableForm = ({letter, digit, orientationAsLowercaseLe
   `${letter}${digit}${orientationAsLowercaseLetterTrbl}`;
 
 export const FaceFromHumanReadableForm = (hrf: string, options?: {position?: number}): Face => ({
-  letter: FaceLetter(hrf[0], options),
-  digit: FaceDigit(hrf[1], options),
-  orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl(hrf[2], options)
+  letter: FaceLetter(hrf[0]!, options),
+  digit: FaceDigit(hrf[1]!, options),
+  orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl(hrf[2]!, options)
 })
 
 export const DiceKeyInHumanReadableForm = (diceKey: DiceKeyFaces): DiceKeyInHumanReadableForm =>
@@ -213,17 +213,16 @@ export const diceKeyFacesFromHumanReadableForm = (
   if (typeof(humanReadableForm) !== "string") {
     throw new InvalidDiceKeyException("DiceKey in human-readable-form must be a string");
   }
-  const charsPerFace =
-    humanReadableForm.length === 75 ? 3 :
-    humanReadableForm.length === 50 ? 2 :
-    ( () => { throw new InvalidDiceKeyException("Invalid human-readable-form string length"); })();
-
+  if (humanReadableForm.length !== 75) {
+    throw new InvalidDiceKeyException("Invalid human-readable-form string length");
+  }
+  const charsPerFace = 3;
   const diceKey: DiceKeyFaces = FacePositions.map( position => {
     const [
       letter,
       digitString,
-      orientationAsLowercaseLetterTrbl = "?"
-    ] = humanReadableForm.substr(charsPerFace * position, charsPerFace).split("");
+      orientationAsLowercaseLetterTrbl
+    ] = humanReadableForm.substring(charsPerFace * position, charsPerFace * (position + 1)).split("") as [string, string, string];
     const positionObj = {position: position as FacePosition};
     const faceAndOrientation: Face = {
       letter: FaceLetter(letter, positionObj),
@@ -290,7 +289,7 @@ const compareFaces = (a: Face, b: Face, index: number): FaceComparisonError | un
 
 const compareDiceKeysAtFixedRotation = (a: DiceKeyBase, b: DiceKeyBase): FaceComparisonError[] =>
   a.faces
-    .map( (aFace, index) => compareFaces(aFace, b.faces[index], index) )
+    .map( (aFace, index) => compareFaces(aFace, b.faces[index]!, index) )
     .filter( e => e != null ) as FaceComparisonError[];
 
 
@@ -331,7 +330,7 @@ export function rotateDiceKey<F extends Face = Face>(
 ) : DiceKeyFaces<F> {
   return ReadOnlyTupleOf25Items(
     rotationIndexes5x5[clockwise90DegreeRotationsFromUpright]
-      .map( i => diceKey[i] )
+      .map( i => diceKey[i]! )
       .map( faceAndRotation => rotateFaceFn(faceAndRotation, clockwise90DegreeRotationsFromUpright) )
    );//  as DiceKeyFaces<F>;
 }
@@ -409,10 +408,10 @@ const diceKeyFacesToKeyId = async (
 const factorialConstants0to25: bigint[] = Array.from(Array(26).keys()).reduce( (factorials) => {
   if (factorials.length === 0) factorials.push(BigInt(0));
   else if (factorials.length === 1) factorials.push(BigInt(1));
-  else factorials.push(factorials[factorials.length - 1] * BigInt(factorials.length))
+  else factorials.push(factorials[factorials.length - 1]! * BigInt(factorials.length))
   return factorials;
 }, [] as bigint[] );
-const uniqueLetterEncodingSize = factorialConstants0to25[25];
+const uniqueLetterEncodingSize = factorialConstants0to25[25]!;
 const digitEncodingSize = BigInt(6) ** BigInt(24);
 const uniqueOrientationEncodingSize = BigInt(4) ** BigInt(24);
 export const SizeOfNumericEncodingForUniqueLetters = uniqueLetterEncodingSize * digitEncodingSize * uniqueOrientationEncodingSize;
@@ -457,15 +456,15 @@ const facesFromNumericForm = (numericForm: bigint): DiceKeyFaces => {
 
   const {letters} = letterIndexes.reduce( (r, letterIndex) => {
     let {letters, lettersRemaining} = r;
-    letters.push(lettersRemaining[letterIndex]);
+    letters.push(lettersRemaining[letterIndex]!);
     lettersRemaining.splice(letterIndex, 1);
     return {letters, lettersRemaining};
   }, {letters: [] as FaceLetter[], lettersRemaining: [...FaceLetters]});
 
   const faces = DiceKeyFaces([...Array(25).keys()].map( index => ({
-    letter: letters[index],
-    digit: digits[index],
-    orientationAsLowercaseLetterTrbl: orientations[index]
+    letter: letters[index]!,
+    digit: digits[index]!,
+    orientationAsLowercaseLetterTrbl: orientations[index]!
   })));
 
   return faces;
@@ -518,7 +517,7 @@ abstract class DiceKeyBase {
       .reduce( (r, letter, index) => {
         const letterIndex = r.lettersRemaining.indexOf(letter);
         if (letterIndex >= 0 && r.lettersAsBigInt != null) {
-          r.lettersAsBigInt += BigInt(letterIndex) * factorialConstants0to25[24 - index]
+          r.lettersAsBigInt += BigInt(letterIndex) * factorialConstants0to25[24 - index]!
           r.lettersRemaining.splice(letterIndex, 1);
         }
         return r;
@@ -553,11 +552,11 @@ abstract class DiceKeyBase {
     .map( clockwiseTurnsFromUpright => {
       const otherDiceKeyRotated = other.rotate(clockwiseTurnsFromUpright) as T;
       const errors = compareDiceKeysAtFixedRotation(this, otherDiceKeyRotated );
-      return {clockwiseTurnsFromUpright, errors, otherDiceKeyRotated}
+      return {clockwiseTurnsFromUpright, errors, otherDiceKeyRotated};
   })
   // Get the shortest list of errors by sorting by the length of the error list
   // (the number of faces with errors) and taking the first element
-    .sort( (a, b) => a.errors.length <= b.errors.length ? -1 : 1 )[0];
+    .sort( (a, b) => a.errors.length <= b.errors.length ? -1 : 1 )[0]!;
 
 }
 

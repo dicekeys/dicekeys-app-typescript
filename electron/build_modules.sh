@@ -10,3 +10,4 @@ npm install
 npm run build-electron-html
 cd ../electron
 npm install
+npm run build

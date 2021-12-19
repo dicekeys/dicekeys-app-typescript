@@ -19,8 +19,7 @@ import {
   responseChannelNameFor,
   terminateChannelNameFor,
   ElectronBridgeListenerApiErrorCallback,
-  ElectronBridgeListenerApiCallbackParameters,
-  ElectronBridgeListenerApiErrorCallbackParameters
+  ElectronBridgeListenerApiCallbackParameters, ElectronBridgeListenerApiErrorCallbackParameters,
 } from "./trusted-main-electron-process/ElectronBridge";
 
 const createIpcSyncRequestClientFunction = <CHANNEL extends ElectronIpcSyncRequestChannelName>(channel: CHANNEL) =>
@@ -53,6 +52,7 @@ const createIpcAsyncRequestClientFunction = <CHANNEL extends ElectronIpcAsyncReq
     ipcRenderer.send(channel, codeToMatch, ...args);
   }) as ElectronBridgeAsyncApiResponse<CHANNEL>;
 
+
 const createIpcListenerRequestClientFunction =
   <CHANNEL extends ElectronIpcListenerRequestChannelName>(channel: CHANNEL) =>
     (
@@ -67,11 +67,11 @@ const createIpcListenerRequestClientFunction =
   // Create a listener function that will resolve the promise and stop listening when
   // the event code matches
   const responseListener = (_event: Electron.IpcRendererEvent, eventCode: string, ...response: any[]) => {
-    if (eventCode === exceptionCodeFor(codeToMatch) ) {
+    if (eventCode === exceptionCodeFor(codeToMatch)) {
       // The value is actually an exception and we should reject the promise.
       const errorResponseArgs = response as ElectronBridgeListenerApiErrorCallbackParameters<CHANNEL>;
       // Below line is hack for what seems like it must be a TypeScript bug, but maybe I'm just typing it wrong - Stuart 2021-06-3
-      (errorCallback as (...params: ElectronBridgeListenerApiErrorCallbackParameters<CHANNEL>) => any) (...errorResponseArgs);
+      (errorCallback as (...params: ElectronBridgeListenerApiErrorCallbackParameters<CHANNEL>) => any)(...errorResponseArgs);
     } else if (eventCode === codeToMatch) {
       // The response code matches the request and so we should resolve the request
       const responseArgs = response as ElectronBridgeListenerApiCallbackParameters<CHANNEL>;
@@ -95,6 +95,7 @@ const createIpcListenerRequestClientFunction =
 
 // Create the API to expose, using TypeScript to verify that we created everything correctly
 const electronBridgeTypeChecked: IElectronBridge = {
+  openExternal: createIpcSyncRequestClientFunction("openExternal"),
   writeResultToStdOutAndExit: createIpcSyncRequestClientFunction("writeResultToStdOutAndExit"),
   getCommandLineArguments: createIpcSyncRequestClientFunction("getCommandLineArguments"),
 

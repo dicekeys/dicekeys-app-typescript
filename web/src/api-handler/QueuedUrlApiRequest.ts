@@ -33,6 +33,8 @@ import {
   SeededCryptoObjectResponseParameterNames
 } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import { addAuthenticationToken, getUrlForAuthenticationToken } from "../state/stores/AuthenticationTokens";
+import {RUNNING_IN_ELECTRON} from "../utilities/is-electron";
+import {IElectronBridge} from "../../../common/IElectronBridge";
 
 
 const getApiRequestFromSearchParams = (
@@ -244,8 +246,13 @@ export class QueuedUrlApiRequest extends QueuedApiRequest {
   readonly hostValidatedViaAuthToken: boolean;
   readonly respondTo: string;
 
-  // FIXME -- will not work for electron
-  transmitResponseUrl: (responseURL: URL) => any = (url: URL) => window.location.replace(url.toString());
+  transmitResponseUrl: (responseURL: URL) => any = (url: URL) => {
+    if(RUNNING_IN_ELECTRON){
+      (window as unknown as  {ElectronBridge: IElectronBridge}).ElectronBridge.openExternal(url.toString());
+    }else{
+      window.location.replace(url.toString());
+    }
+  }
 
   throwIfClientNotPermitted: () => void = () => throwIfUrlNotPermitted(this.host, this.pathname, this.hostValidatedViaAuthToken)(this.request);
 

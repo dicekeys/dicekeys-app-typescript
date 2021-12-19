@@ -22,7 +22,7 @@ class BrowserAddressBarState implements AddressBarState {
 class ElectronMockAddressBarState implements AddressBarState {
   private pathStack: string[] = ["/"];
   private popStateCallbacks = new Set<(path: string) => void>();
-  get path(): string {return this.pathStack[0]}
+  get path(): string {return this.pathStack[0] ?? "/"}
   back = () => {
     if (this.pathStack.length > 1) {
       this.pathStack.shift();
@@ -33,7 +33,13 @@ class ElectronMockAddressBarState implements AddressBarState {
   }
   onPopState = (callback: (path: string) => any) => this.popStateCallbacks.add(callback);
   pushState = (path: string) => this.pathStack.unshift(path);
-  replaceState = (path: string) => this.pathStack[0] = path;
+  replaceState = (path: string) => {
+    if (this.pathStack.length === 0) {
+      this.pathStack.unshift(path);
+    } else {
+      this.pathStack[0] = path;
+    }
+  }
 }
 
 export const addressBarState: AddressBarState = RUNNING_IN_ELECTRON ?

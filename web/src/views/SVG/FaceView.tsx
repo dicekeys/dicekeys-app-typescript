@@ -22,8 +22,11 @@ export function addUndoverlineCodes<T extends Partial<Face>>(face: T): T & (Undo
     return face;
   }
   const letterIndexTimesSixPlusDigitIndex = (FaceLetters.indexOf(face.letter) * 6) + (parseInt(face.digit) -1);
-  const {underlineCode, overlineCode} = 
-    letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes[letterIndexTimesSixPlusDigitIndex];
+  const faceWithOverlineCodes = letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes[letterIndexTimesSixPlusDigitIndex];
+  if (faceWithOverlineCodes == null) {
+    return face;
+  }
+  const {underlineCode, overlineCode} = faceWithOverlineCodes;
   return Object.assign(face, {underlineCode, overlineCode});
 }
 
