@@ -6,12 +6,12 @@
 Tested to work with Node.js LTS v14.
 
 Install [TypeScript](https://www.typescriptlang.org/download) in your system.
-```
+```bash
 npm install -g typescript
 ```
 
 Install [vite](https://vitejs.dev/) in your system.
-```
+```bash
 npm install -g vite
 ```
 
@@ -19,25 +19,25 @@ Make sure you have access to [GitHub Packages](https://docs.github.com/en/packag
 (add you personal token to ~/.npmrc)
 
 Install modules
-```
+```bash
 cd web
 npm install
 ```
 _If `npm` fails, check **GitHub Packages** instructions._
 
-```
+```bash
 npm run start
 ```
 
 ## Running electron app
 
-```
+```bash
 cd electron
 sh build_modules.sh
 npm run start
 ```
 or manually
-```
+```bash
 cd common
 npm install
 npm run build
@@ -52,7 +52,7 @@ npm run start
 ## Build electron app for macOS
 
 First do all the steps of the previous section and then:
-```
+```bash
 cd electron
 npm run build
 
@@ -65,22 +65,29 @@ npm run dist-macos
 
 ## Build electron app for Windows/Linux
 
-Create the build image
-```
+Using docker to create distributions written under `/electron/out`
+  - Linux **deb**, **rpm**, and **zip**
+  - Windows: **setup**
+
+```bash
+# Build steps need to be executed from within the `electron` subdirectory.
 cd electron
-docker build -f Dockerfile . --tag dicekeys_build
+
+# Create a docker container with everything needed to build the electron app
+docker buildx build --platform linux/amd64 -f Dockerfile . --tag dicekeys_build
+
+# Run the electron build process within the docker container:
+docker run --platform linux/amd64 --name dicekeys_build --rm -v $PWD:/dicekeys dicekeys_build
 ```
 
-Create **deb**, **rpm** and **zip** for Linux and **setup** for Windows. Output files resides in `out` folder.
+If you run into problems, it may be helpful to clear docker's cache, via:
+```bash
+# DO NOT RUN unless you run into problems.
+docker builder prune
 ```
-cd electron
-docker run --rm -v $PWD:/dicekeys dicekeys_build
-```
-
-Note, use `docker builder prune` if you run into problems, as it will clear the cache.
 
 ## Run tests
-```
+```bash
 jest
 ```
 
@@ -101,7 +108,7 @@ We inject state into these components through their React props (React's name fo
 We borrow from environments like SwiftUI, which allow you to run and inspect individual components by rendering previews, by manually
 creating preview HTML files for key components that operate only on the subset of the application state that required for those views.
 
-```
+```bash
 vite src/preview.html
 ```
 Then load [http://localhost:3000/](http://localhost:3000/)
