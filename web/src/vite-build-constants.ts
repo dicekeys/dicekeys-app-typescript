@@ -1,5 +1,5 @@
-// @ts-expect-error
-export const RUNNING_IN_ELECTRON = !! VITE_SET_APP_RUNNING_IN_ELECTRON;
+declare var VITE_SET_APP_RUNNING_IN_ELECTRON: boolean | undefined;
+export const RUNNING_IN_ELECTRON: boolean = (typeof VITE_SET_APP_RUNNING_IN_ELECTRON !== "undefined") ? !!VITE_SET_APP_RUNNING_IN_ELECTRON : false;
 export type RUNNING_IN_ELECTRON = typeof RUNNING_IN_ELECTRON;
 
 declare var VITE_BUILD_DATE: string;
