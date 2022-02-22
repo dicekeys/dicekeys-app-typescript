@@ -61,6 +61,7 @@ module.exports = {
     "win": {
         "target" : ["nsis"],
         "icon": "./packaging/icon.ico",
+        "certificateSubjectName": "DiceKeys, LLC"
     },
     "nsis":{
         "oneClick": false
