@@ -7,15 +7,15 @@
   "main": "electron-js/electron.js",
   "homepage": "https://dicekeys.com",
   "scripts": {
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "node ./node_modules/electron-builder/cli.js install-app-deps",
     "watch": "rimraf ./electron-js && tsc --watch",
     "build": "rimraf ./electron-js tsconfig.tsbuildinfo && tsc",
     "start": "rimraf ./electron-js tsconfig.tsbuildinfo && tsc && electron --version && electron .",
     "start-electron": "electron .",
     "lint": "eslint --ext .ts .",
-    "pack": "electron-builder --dir --config=electron-builder.js",
-    "dist-macos": "electron-builder --config=electron-builder.js --macos --arm64 --x64",
-    "dist-win-linux": "electron-builder --config=electron-builder.js --linux --win --x64"
+    "pack": "node ./node_modules/electron-builder/cli.js --dir --config=electron-builder.js",
+    "dist-macos": "node ./node_modules/electron-builder/cli.js --config=electron-builder.js --macos --arm64 --x64",
+    "dist-win-linux": "node ./node_modules/electron-builder/cli.js --config=electron-builder.js --linux --win --x64"
   },
   "keywords": [],
   "license": "MIT",
