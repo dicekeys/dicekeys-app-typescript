@@ -7,14 +7,16 @@
   "main": "electron-js/electron.js",
   "homepage": "https://dicekeys.com",
   "scripts": {
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "node ./node_modules/electron-builder/cli.js install-app-deps",
     "watch": "rimraf ./electron-js && tsc --watch",
     "build": "rimraf ./electron-js tsconfig.tsbuildinfo && tsc",
     "start": "rimraf ./electron-js tsconfig.tsbuildinfo && tsc && electron --version && electron .",
     "start-electron": "electron .",
     "lint": "eslint --ext .ts .",
-    "pack": "electron-builder --dir --config=electron-builder.js",
-    "dist": "electron-builder --config=electron-builder.js -mwl"
+    "pack": "node ./node_modules/electron-builder/cli.js --dir --config=electron-builder.js",
+    "dist-macos": "node ./node_modules/electron-builder/cli.js --config=electron-builder.js --macos --arm64 --x64",
+    "dist-win": "node ./node_modules/electron-builder/cli.js --config=electron-builder.js --win --x64",
+    "dist-win-linux": "node ./node_modules/electron-builder/cli.js --config=electron-builder.js --linux --win --x64"
   },
   "keywords": [],
   "license": "MIT",
@@ -29,13 +31,13 @@
     "electron": "^16.0.2",
     "electron-builder": "^22.14.5",
     "electron-builder-squirrel-windows": "^22.14.5",
-    "electron-reloader": "^1.2.1",
-    "eslint": "^8.0.1",
-    "eslint-plugin-import": "^2.25.2",
+    "electron-reloader": "^1.2.3",
+    "eslint": "^8.9.0",
+    "eslint-plugin-import": "^2.25.4",
     "rimraf": "^3.0.2",
-    "typescript": "^4.4.4"
+    "typescript": "^4.5.5"
   },
   "dependencies": {
-    "keytar": "^7.7.0"
+    "keytar": "^7.9.0"
   }
 }

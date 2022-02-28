@@ -1,3 +1,7 @@
+/**
+ * @type {import('electron-builder').Configuration}
+ * @see https://www.electron.build/configuration/configuration
+ */
 module.exports = {
     "appId": "com.dicekeys.electron",
     "files": [
@@ -29,18 +33,24 @@ module.exports = {
         "entitlements": "./packaging/entitlements.mac.plist",
         "entitlementsInherit": "./packaging/entitlements.mac.plist",
         "provisioningProfile": "./DiceKeys_Electron.provisionprofile",
-        "gatekeeperAssess": false,
+        "gatekeeperAssess": false
     },
     "directories": {
         "output": "out"
     },
     "asar": true,
+    "protocols": [
+        {
+            "name": "dicekeys",
+            "schemes": ["dicekeys"]
+        }
+    ],
     "dmg": {
         "format": "ULFO",
         "icon": "./packaging/icon.icns",
         "iconSize": 80,
         "background": "./packaging/dmg/background.tiff",
-        "sign": true,
+        "sign": true
     },
     "linux": {
         "maintainer": "DiceKeys LLC",
@@ -48,15 +58,11 @@ module.exports = {
         "executableName": "dicekeys",
         "target" : ["AppImage", "snap", "deb", "rpm", "zip"]
     },
-    "deb": {
-        "depends": ['libsecret-1-dev']
-    },
-    "rpm": {
-        "depends": ['libsecret-devel']
-    },
     "win": {
         "target" : ["nsis"],
         "icon": "./packaging/icon.ico",
+        "certificateSha1": "7ADE682BA7E91845B88494377341851B426FFD5C", 
+        "certificateSubjectName": "DiceKeys, LLC"
     },
     "nsis":{
         "oneClick": false
