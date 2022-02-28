@@ -21,14 +21,14 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --detectOpenHandles",
     "start": "vite --config ./vite.config.ts",
-    "build": "rimraf dist/web ; tsc --noEmit; vite build --config ./vite.config.ts",
-    "clean": "rimraf dist/",
+    "build": "rimraf ../dist/web ; tsc --noEmit; vite build --config ./vite.config.ts",
+    "clean": "rimraf ../dist/web",
     "build-electron-html": "rimraf ../electron/electron-html && vite build --config ./vite.config.electron.ts",
     "watch-electron-html": "rimraf ../electron/electron-html && vite build --watch --config ./vite.config.electron.ts",
-    "upload-production": "gsutil -m cp dist/web/* gs://dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/*.js",
+    "upload-production": "gsutil -m cp -r ../dist/web/* gs://dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/assets/*.js",
     "update-production": "npm run -s build-app & npm run -s upload-production",
-    "upload-staging": "gsutil -m cp dist/web/* gs://staging.dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://staging.dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://staging.dicekeys.app/*.js",
-    "update-staging": "npm run -s build-app & npm run -s upload-staging",
+    "upload-staging": "gsutil -m cp -r ../dist/web/* gs://staging.dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://staging.dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://staging.dicekeys.app/assets/*.js",
+    "update-staging": "npm run -s build & npm run -s upload-staging",
     "upload-site-association": "gsutil -o \"GSUtil:parallel_process_count=1\" -m cp .well-known/* gs://dicekeys.app/.well-known/ & gsutil -o \"GSUtil:parallel_process_count=1\" -m setmeta -h \"content-type: application/json\" gs://dicekeys.app/.well-known/apple-app-site-association"
   },
   "keywords": [],
@@ -69,6 +69,6 @@
     "ts-jest": "^27.0.5",
     "ts-node": "^10.3.0",
     "typescript": "^4.4.4",
-    "vite": "^2.6.7"
+    "vite": "^2.8.5"
   }
 }
