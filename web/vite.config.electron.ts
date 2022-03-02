@@ -10,7 +10,6 @@ export default defineConfig({
   define: {
     VITE_BUILD_VERSION: `"${process.env.npm_package_version}"`,
     VITE_BUILD_DATE: `"${new Date().toLocaleString('en-us', { year: 'numeric', month: 'short', day: 'numeric' })}"`,
-//    VITE_BUILD_DATE: new Date().toLocaleString('en-us', { year: 'numeric', month: 'short', day: 'numeric', hour: `2-digit`, hour12: false, minute: `2-digit` }),
     VITE_SET_APP_RUNNING_IN_ELECTRON: true
   },
   build: {
@@ -18,7 +17,7 @@ export default defineConfig({
     minify: false,
     // Required for dependency on BigInt and number literals ending in n (1n)
     target: "es2020",
-    // Write output into electron subdirectory of repository's /dist directory
+    // Write directly into the electron subdirectory
     outDir: "../../electron/electron-html/",
     // We love source maps for debugging, and since we're open source, there's no reason to hide 'em.
     sourcemap: true,
