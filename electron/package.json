@@ -14,6 +14,7 @@
     "start-electron": "electron .",
     "lint": "eslint --ext .ts .",
     "pack": "node ./node_modules/electron-builder/cli.js --dir --config=electron-builder.js",
+    "dist-linux": "node ./node_modules/electron-builder/cli.js --config=electron-builder.js --linux --x64",
     "dist-macos": "node ./node_modules/electron-builder/cli.js --config=electron-builder.js --macos --arm64 --x64",
     "dist-win": "node ./node_modules/electron-builder/cli.js --config=electron-builder.js --win --x64",
     "dist-win-linux": "node ./node_modules/electron-builder/cli.js --config=electron-builder.js --linux --win --x64"
