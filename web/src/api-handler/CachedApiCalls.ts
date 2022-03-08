@@ -17,7 +17,12 @@ interface DeferredApiCalculationRequest {
 const deferCalculation = <T>(fn: () => Promise<T>) => {
   let trigger: () => Promise<void>;
   const promise = new Promise<T>( (resolve, reject) => {
-    trigger = () => fn().then( r => resolve(r) ).catch( e => reject(e) );
+    trigger = () => fn()
+      .then( 
+        r => resolve(r)
+      ).catch(
+        e => reject(e)
+      );
   });
   return {promise, trigger: trigger!};
 }
@@ -53,9 +58,8 @@ export class CachedApiCalls {
       // another thread is already running pending calculations
       return
     }
-    let calculationInProgress: DeferredApiCalculationRequest | undefined;
-    while (calculationInProgress = this.popPendingCalculation()) {
-      try { await calculationInProgress.trigger(); } catch {}
+    while (this.calculationInProgress = this.popPendingCalculation()) {
+      try { await this.calculationInProgress.trigger(); } catch {}
     }
   }
 
