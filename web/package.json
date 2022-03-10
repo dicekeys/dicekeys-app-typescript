@@ -18,9 +18,10 @@
     "build-all": "npm run build-web && npm run build-electron-html",
     "watch-electron-html": "npm run clean-electron && vite build --watch --config ./vite.config.electron.ts",
     "upload-production": "gsutil -m cp -r ../dist/web/* gs://dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/assets/*.js",
-    "update-production": "npm run -s build-app & npm run -s upload-production",
-    "upload-staging": "gsutil -m cp -r ../dist/web/* gs://staging.dicekeys.app/ & gsutil setmeta -h cache-control:no-store gs://staging.dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://staging.dicekeys.app/assets/*.js",
-    "update-staging": "npm run -s build-web && npm run -s upload-staging",
+    "update-production": "npm run build-app & npm run upload-production",
+    "delete-staging": "gsutil rm -r gs://staging.dicekeys.app/assets",
+    "upload-staging": "gsutil -m cp -r ../dist/web/* gs://staging.dicekeys.app/ && gsutil setmeta -h cache-control:no-store gs://staging.dicekeys.app/index.html && gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://staging.dicekeys.app/assets/*.js",
+    "update-staging": "npm run build-web && npm run upload-staging",
     "upload-site-association": "gsutil -o \"GSUtil:parallel_process_count=1\" -m cp .well-known/* gs://dicekeys.app/.well-known/ & gsutil -o \"GSUtil:parallel_process_count=1\" -m setmeta -h \"content-type: application/json\" gs://dicekeys.app/.well-known/apple-app-site-association"
   },
   "keywords": [],
