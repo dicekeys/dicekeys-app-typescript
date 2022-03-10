@@ -6,7 +6,12 @@ import { resolve } from "path";
 export default defineConfig({
   plugins: [react()],
   root: "./src/",
-  base: "./",
+  // IMPORTANT: base must not be set to a relative path, or when we call; window.history.pushState
+  // to update the path, the paths used to import images, workers, and other assets will
+  // all break.  This MUST BE hard coded for the web app.
+  // Since we deploy the web app off the base URL (https://[staging.]dicekeys.app/) the
+  // base path of "/" is used.
+  base: "/",
   define: {
     VITE_BUILD_VERSION: `"${process.env.npm_package_version}"`,
     VITE_BUILD_DATE: `"${new Date().toLocaleString('en-us', { year: 'numeric', month: 'short', day: 'numeric' })}"`,
