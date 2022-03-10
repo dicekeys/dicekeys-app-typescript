@@ -50,7 +50,6 @@ interface RecipeState {
 export class DerivedFromRecipeState {
   readonly recipeState: RecipeState;
   readonly diceKeyState: DiceKeyState;
-//  readonly api: CachedApiCalls;
   SigningCalculations = new AsyncCalculation<string | undefined>();
 
   get api(): CachedApiCalls | undefined {

@@ -7,7 +7,7 @@ import {
   ExecuteApiResponse,
 } from "./api-command-worker";
 import { WorkerRequest } from "./worker-request";
-import ApiCommandWorker from "./api-command-worker?worker"
+import ApiCommandWorker from "../workers/api-command-worker?worker"
 
 export const ApiRequestWithSeedParameterNames = toFieldNameMap<ApiRequestWithSeed<ApiCalls.ApiRequestObject>>(
   "seedString",
@@ -20,7 +20,10 @@ REQUEST extends ApiCalls.ApiRequestObject = ApiCalls.ApiRequestObject
   constructor() {
     super(
 //      () => new Worker(new URL('./api-command-worker.ts'), {type: 'module'}),
-      () => new ApiCommandWorker(),
+      () => {
+        const worker = new ApiCommandWorker()
+        return worker;
+      },
       (request) => request
     )
   }

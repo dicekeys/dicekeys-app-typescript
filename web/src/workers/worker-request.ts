@@ -26,18 +26,23 @@ export class WorkerRequest<REQUEST, RESULT, REQUEST_MESSAGE extends REQUEST = RE
    */
   public calculate = (
     request: REQUEST
-  ) => {
+  ): Promise<RESULT> => {
     if (this._resultPromise && jsonStringifyWithSortedFieldOrder(this._request) === jsonStringifyWithSortedFieldOrder(request)) {
       // The request hasn't changed.
       return this._resultPromise;
     }
     this._result = undefined;
+    this._cancel = undefined;
     this._request = request;
     this._resultPromise = new Promise<RESULT>( (resolve, reject) => {
-      try {
-        this.worker?.terminate();
-      } catch (_) {
-        // Do nothing if terminate fails on old worker.
+      const oldWorker = this.worker;
+      this.worker = undefined;
+      if (oldWorker != null) {
+        try {
+          oldWorker?.terminate();
+        } catch (_) {
+          // Do nothing if terminate fails on old worker.
+        }
       }
       try {
         this.worker = this.workerFactory();
@@ -45,8 +50,11 @@ export class WorkerRequest<REQUEST, RESULT, REQUEST_MESSAGE extends REQUEST = RE
         reject(e);
         return;
       }  
-      const cancel = this._cancel = (e: any = new WorkerAborted()) => {
-        if (this.terminate()) { reject(e); }
+      const cancel = this._cancel = (e?: any) => {
+        this._resultPromise = undefined;
+        this._request = undefined;
+        this._cancel = undefined;
+        if (this.terminate()) { reject(e ?? new WorkerAborted()); }
       };
   
       const handleMessageEvent = (messageEvent: MessageEvent) => {
@@ -56,14 +64,19 @@ export class WorkerRequest<REQUEST, RESULT, REQUEST_MESSAGE extends REQUEST = RE
   
       this.worker.addEventListener("message", handleMessageEvent);
       this.worker.addEventListener("messageerror", cancel );
-      this.worker.postMessage(this.requestToRequestMessage(request));
+      const message = this.requestToRequestMessage(request);
+      try {
+        this.worker.postMessage(message);
+      } catch (e) {
+        console.log(`Exception in worker request`, e);
+      }
     });
     return this.resultPromise!;
   }
 
   private terminate = () => {
     const worker = this.worker;
-    if (!worker)  return false;
+    if (worker == null)  return false;
     worker.terminate();
     this.worker = undefined;
     return true;

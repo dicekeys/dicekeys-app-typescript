@@ -2,7 +2,7 @@
   "author": "DiceKeys, LLC",
   "description": "DiceKeys App Common files",
   "scripts": {
-    "build": "tsc -p ."
+    "build": "tsc"
   },
   "devDependencies": {
     "electron": "^15.3.0",
