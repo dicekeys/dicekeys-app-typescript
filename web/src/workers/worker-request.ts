@@ -50,11 +50,11 @@ export class WorkerRequest<REQUEST, RESULT, REQUEST_MESSAGE extends REQUEST = RE
         reject(e);
         return;
       }  
-      const cancel = this._cancel = (e: any = new WorkerAborted()) => {
+      const cancel = this._cancel = (e?: any) => {
         this._resultPromise = undefined;
         this._request = undefined;
         this._cancel = undefined;
-        if (this.terminate()) { reject(e); }
+        if (this.terminate()) { reject(e ?? new WorkerAborted()); }
       };
   
       const handleMessageEvent = (messageEvent: MessageEvent) => {
@@ -64,7 +64,12 @@ export class WorkerRequest<REQUEST, RESULT, REQUEST_MESSAGE extends REQUEST = RE
   
       this.worker.addEventListener("message", handleMessageEvent);
       this.worker.addEventListener("messageerror", cancel );
-      this.worker.postMessage(this.requestToRequestMessage(request));
+      const message = this.requestToRequestMessage(request);
+      try {
+        this.worker.postMessage(message);
+      } catch (e) {
+        console.log(`Exception in worker request`, e);
+      }
     });
     return this.resultPromise!;
   }
