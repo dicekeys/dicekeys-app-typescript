@@ -12,9 +12,9 @@ import { DivSupportingInvisible, PageAsFlexColumn } from "../../css";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins, StandardWidthBetweenSideMargins } from "../Navigation/NavigationLayout";
 import { SeedHardwareKeyViewState, SeedSource } from "./SeedHardwareKeyVIewState";
-import { RecipeEditingMode } from "./RecipeBuilderState";
 import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { electronBridge } from "../../state/core/ElectronBridge";
+// import { RecipeEditingMode } from "./RecipeBuilderState";
 //import { ModalOverlayForDialogOrMessage } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 
 const platformDisallowsFidoAccess: boolean = RUNNING_IN_BROWSER;
@@ -102,14 +102,27 @@ export const CannotSeedSecurityKeysView = () => (
 );
 
 
-export const RunAsAdministratorRequiredView = () => (
+export const CannotSeedSecurityKeysWithoutAdminView = () => (
   <ValueColumnOnly>
     <InlineWarning>
       Windows applications can only seed hardware security keys when running as administrator.
       <br/>
-      To seed a security key, you'll need to restart this application with a right-click and the <i>run as administrator</i> option.
+      To seed a security key, you will need to restart this application with a right-click and the <i>run as administrator</i> option.
     </InlineWarning>
   </ValueColumnOnly>
+);
+
+export const RunAsAdministratorRequiredView = ({dismiss}: {dismiss: () => void}) => (
+  <ModalContent>
+      <Spacer/>
+      <Instruction2>
+        Windows applications can only seed hardware security keys when running as administrator.
+      </Instruction2>
+      <Instruction2>
+        To seed a security key, you will need to restart this application with a right-click and the <i>run as administrator</i> option.
+      </Instruction2>
+      <CenteredControls><button onClick={dismiss} >Dismiss</button></CenteredControls>
+    </ModalContent>
 );
 
 const SecondsToTripleClick = 8;
@@ -303,7 +316,9 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, 
   seedHardwareKeyViewState: SeedHardwareKeyViewState,
   loadDiceKeyFn?: () => void
 }) => {
-  if (seedHardwareKeyViewState.writeInProgress) {
+  if (RUNNING_IN_ELECTRON && electronBridge.requiresWindowsAdmin && !seedHardwareKeyViewState.dismissAdminWarning) {
+    return (<RunAsAdministratorRequiredView dismiss={seedHardwareKeyViewState.setDismissAdminWarning} />)
+  } else if (seedHardwareKeyViewState.writeInProgress) {
     return (<WriteInProgressView/>)
   } else if (seedHardwareKeyViewState.writeError != null) {
     return (<WriteErrorView {...{seedHardwareKeyViewState}} />)
@@ -325,7 +340,7 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, 
         </>)}
         <div style={{minHeight: '3vh'}}></div>
         {platformDisallowsFidoAccess ? (<CannotSeedSecurityKeysView/>) :
-         (RUNNING_IN_ELECTRON && electronBridge.requiresWindowsAdmin) ? (<RunAsAdministratorRequiredView/>) :
+         (RUNNING_IN_ELECTRON && electronBridge.requiresWindowsAdmin) ? (<CannotSeedSecurityKeysWithoutAdminView/>) :
           null
         }
         <FieldRow>
@@ -355,8 +370,10 @@ export const SeedHardwareKeyView = observer (({diceKeyState, loadDiceKeyFn}: {
   const seedableFidoKeys = RUNNING_IN_ELECTRON ? new SeedableFIDOKeys() : undefined;
   const seedHardwareKeyViewState = new SeedHardwareKeyViewState(seedableFidoKeys, diceKeyState);
   // FIXME
-  seedHardwareKeyViewState.recipeBuilderState.setEditingMode(RecipeEditingMode.EditIncludingRawJson);
-  useEffect( () => () => seedableFidoKeys?.destroy() );  
+  // seedHardwareKeyViewState.recipeBuilderState.setEditingMode(RecipeEditingMode.EditIncludingRawJson);
+  // Ensure FIDO keys list gets destroyed when the view is destroyed.
+  useEffect( () => () => seedableFidoKeys?.destroy() );
+
   return (
 //    <SeedHardwareKeyViewWithState {...{diceKey, seedHardwareKeyViewState, seedableFidoKeys}}/>
     <SeedHardwareKeySimpleView {...{seedHardwareKeyViewState, loadDiceKeyFn}}/>

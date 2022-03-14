@@ -103,6 +103,9 @@ export class SeedHardwareKeyViewState {
     return this.allFieldsValid && !this.writeInProgress;
   }
 
+  dismissAdminWarning = false;
+  setDismissAdminWarning = action( () => {this.dismissAdminWarning=true;} )
+
   writeInProgress: boolean = false;
   writeSucceeded?: boolean;
   writeError?: WriteSeedToFIDOKeyException | undefined;
