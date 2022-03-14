@@ -55,7 +55,7 @@ export const createBrowserWindow = () => {
   // and load the index.html of the app.
   window.loadFile(path.resolve(__dirname, '..', 'electron-html', 'electron.html'));
 
-  if(!app.isPackaged){
+  if (!app.isPackaged){
     // Open the DevTools.
     window.webContents.openDevTools();
   }

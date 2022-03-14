@@ -4,7 +4,7 @@ import {contextBridge, ipcRenderer} from "electron";
 import type {
   IElectronBridge,
   RemoveListener
-} from "../../common/IElectronBridge"
+} from "../../common/IElectronBridge";
 import {
   ElectronBridgeListenerApiCallback,
   ElectronIpcListenerRequestChannelName,
@@ -93,7 +93,27 @@ const createIpcListenerRequestClientFunction =
   return terminateListener;
 };
 
-// Create the API to expose, using TypeScript to verify that we created everything correctly
+
+import {platform} from "os";
+import {execFileSync} from "child_process";
+
+
+const osPlatform = platform();
+const isWindows = osPlatform === "win32";
+
+
+const isWindowsAdmin = !isWindows ? false : (() => {
+  try {
+    execFileSync( "net", ["session"], { "stdio": "ignore" } );
+    return true;
+  }
+  catch {
+    return false
+  }    
+})();
+const requiresWindowsAdmin = isWindows && !isWindowsAdmin;
+
+  // Create the API to expose, using TypeScript to verify that we created everything correctly
 const electronBridgeTypeChecked: IElectronBridge = {
   openExternal: createIpcSyncRequestClientFunction("openExternal"),
   writeResultToStdOutAndExit: createIpcSyncRequestClientFunction("writeResultToStdOutAndExit"),
@@ -108,6 +128,10 @@ const electronBridgeTypeChecked: IElectronBridge = {
   getDiceKeyFromCredentialStore: createIpcAsyncRequestClientFunction("getDiceKeyFromCredentialStore"),
   storeDiceKeyInCredentialStore: createIpcAsyncRequestClientFunction("storeDiceKeyInCredentialStore"),
   deleteDiceKeyFromCredentialStore: createIpcAsyncRequestClientFunction("deleteDiceKeyFromCredentialStore"),
+
+  osPlatform,
+  requiresWindowsAdmin
+
 //  fix: {} as IElectronBridge["fix"]
 };
 

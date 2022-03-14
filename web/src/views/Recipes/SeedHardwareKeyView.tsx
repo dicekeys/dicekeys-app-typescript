@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
 import { CenteredControls, Instruction2, Spacer, SecretFieldsCommonObscureButton, CopyButton } from "../basics";
-import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { RecipeFieldEditorView, SequenceNumberFormFieldValueView } from "./DerivationView/RecipeFieldEditorView";
 import styled, { css } from "styled-components";
 import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
@@ -14,7 +13,11 @@ import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins, StandardWidthBetweenSideMargins } from "../Navigation/NavigationLayout";
 import { SeedHardwareKeyViewState, SeedSource } from "./SeedHardwareKeyVIewState";
 import { RecipeEditingMode } from "./RecipeBuilderState";
+import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
+import { electronBridge } from "../../state/core/ElectronBridge";
 //import { ModalOverlayForDialogOrMessage } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
+
+const platformDisallowsFidoAccess: boolean = RUNNING_IN_BROWSER;
 
 const FieldRow = styled.div<{invisible?: boolean}>`
     ${ props => props.invisible ? css`visibility: hidden;` : ``}
@@ -98,6 +101,17 @@ export const CannotSeedSecurityKeysView = () => (
   </ValueColumnOnly>
 );
 
+
+export const RunAsAdministratorRequiredView = () => (
+  <ValueColumnOnly>
+    <InlineWarning>
+      Windows applications can only seed hardware security keys when running as administrator.
+      <br/>
+      To seed a security key, you'll need to restart this application with a right-click and the <i>run as administrator</i> option.
+    </InlineWarning>
+  </ValueColumnOnly>
+);
+
 const SecondsToTripleClick = 8;
 
 export const CountdownSecondsView = observer( ({startingSeconds, whenStarted}: {startingSeconds: number, whenStarted: number}) => {
@@ -159,7 +173,7 @@ const WriteSucceededView = observer( ( {seedHardwareKeyViewState}: {
 export const SoloKeyValue = observer( ( {seedHardwareKeyViewState}: {
   seedHardwareKeyViewState: SeedHardwareKeyViewState,
 }) => {
-  if (RUNNING_IN_BROWSER) {
+  if (platformDisallowsFidoAccess || (RUNNING_IN_ELECTRON && electronBridge.requiresWindowsAdmin)) {
     return (<FieldValue>Cannot connect to USB FIDO keys</FieldValue>)
   }
   const {seedableFidoKeys} = seedHardwareKeyViewState;
@@ -310,7 +324,10 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, 
           </Instruction2>
         </>)}
         <div style={{minHeight: '3vh'}}></div>
-        { RUNNING_IN_ELECTRON ? null : (<CannotSeedSecurityKeysView/>) }
+        {platformDisallowsFidoAccess ? (<CannotSeedSecurityKeysView/>) :
+         (RUNNING_IN_ELECTRON && electronBridge.requiresWindowsAdmin) ? (<RunAsAdministratorRequiredView/>) :
+          null
+        }
         <FieldRow>
           <FieldLabel>USB Key</FieldLabel>
           <SoloKeyValue {...{seedHardwareKeyViewState}} />
