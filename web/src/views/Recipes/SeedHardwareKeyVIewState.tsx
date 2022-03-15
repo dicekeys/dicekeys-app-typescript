@@ -6,6 +6,8 @@ import { LoadedRecipe } from "../../dicekeys/StoredRecipe";
 import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { hexStringToUint8ClampedArray, uint8ArrayToHexString } from "../../utilities";
+import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
+import { electronBridge } from "../../state/core/ElectronBridge";
 
 const seedSecurityKeyPurpose = "seedSecurityKey";
 
@@ -23,11 +25,11 @@ export enum SeedSource {
   GeneratedFromCustomRecipe = "GeneratedFromCustomRecipe",
   EnteredManually = "EnteredManually"
 }
-// const SeedSources = [
-//   SeedSource.EnteredManually,
-//   SeedSource.GeneratedFromDefaultRecipe,
-//   SeedSource.GeneratedFromCustomRecipe,
-// ] as const;
+
+/** Set if running on a Windows platform without admin privileges */
+export const fidoAccessRequiresWindowsAdmin: boolean = RUNNING_IN_ELECTRON && electronBridge.requiresWindowsAdmin;
+/** Set if running on a platform that forbids access to seedable FIDO keys (windows without admin or browser) */
+export const fidoAccessDeniedByPlatform: boolean = fidoAccessRequiresWindowsAdmin || RUNNING_IN_BROWSER;
 
 export class SeedHardwareKeyViewState {
   recipeBuilderState: RecipeBuilderState;
@@ -103,8 +105,12 @@ export class SeedHardwareKeyViewState {
     return this.allFieldsValid && !this.writeInProgress;
   }
 
-  dismissAdminWarning = false;
-  setDismissAdminWarning = action( () => {this.dismissAdminWarning=true;} )
+  /** Set to dismiss the admin modal */
+  userDismissedAdminModal = false;
+  dismissAdminModal = action( () => {this.userDismissedAdminModal=true;} )
+  get displayFidoAccessRequiresAdminModal() {
+    return fidoAccessRequiresWindowsAdmin && !this.userDismissedAdminModal
+  }
 
   writeInProgress: boolean = false;
   writeSucceeded?: boolean;
