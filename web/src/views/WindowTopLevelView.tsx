@@ -12,15 +12,17 @@ import {ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestVie
 import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
 import { PrimaryView } from "../css";
 import { SeedHardwareKeyPrimaryView } from "./Recipes/SeedHardwareKeyView";
+import { DiceKeyMemoryStore } from "../state";
 
 interface WindowTopLevelNavigationProps {
   windowNavigationState: WindowTopLevelNavigationState;
 }
 export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopLevelNavigationProps) => {
 
-  const onReturnFromAssemblyInstructions = () => {
+  const onReturnFromAssemblyInstructions = async () => {
     const diceKey = windowNavigationState.foregroundDiceKeyState.diceKey;
     if (diceKey) {
+      await DiceKeyMemoryStore.addDiceKeyAsync(diceKey);
       windowNavigationState.navigateToSelectedDiceKeyView(diceKey);
     } else {
       windowNavigationState.navigateToWindowHomeView()
@@ -28,6 +30,7 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
   }
   const onDiceKeyLoaded = async (diceKey?: DiceKey) => {
     if (diceKey != null) {
+      await DiceKeyMemoryStore.addDiceKeyAsync(diceKey);
       windowNavigationState.navigateToSelectedDiceKeyView(await diceKey.withKeyId);
     }
   }

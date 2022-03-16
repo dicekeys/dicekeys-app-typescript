@@ -9,11 +9,9 @@ import AssemblyImage3 from "../images/Seal Box.svg";
 import { PrimaryView } from "../css/Page";
 import { ColumnCentered } from "./basics";
 import styled from "styled-components";
-import {RUNNING_IN_ELECTRON, RUNNING_IN_BROWSER} from "../utilities/is-electron";
-import { EncryptedDiceKeyStore } from "../state/stores/EncryptedDiceKeyStore";
 import { DiceKeyView } from "./SVG/DiceKeyView";
 import { cssCalcTyped, cssExprWithoutCalc } from "../utilities";
-import { facesFromPublicKeyDescriptor } from "../dicekeys/DiceKey";
+import { facesFromPublicKeyDescriptor, PublicDiceKeyDescriptor } from "../dicekeys/DiceKey";
 import { WindowHomeNavigationBar } from "./WindowHomeNavigationBar";
 import { BUILD_VERSION, BUILD_DATE } from "../vite-build-constants";
 
@@ -72,44 +70,38 @@ const VersionInformationBar = styled.div`
   font-size: min(0.8rem,3vh,3vw);
 `
 
-interface WindowHomeViewProps {
+const StoredDiceKeyView = ({storedDiceKeyDescriptor, windowNavigationState}: {
+  storedDiceKeyDescriptor: PublicDiceKeyDescriptor;
   windowNavigationState: WindowTopLevelNavigationState;
-}
-export const WindowHomeView = observer ( (props: WindowHomeViewProps) => {
+}) => (
+  <SubViewButton
+    onClick={() => windowNavigationState.loadStoredDiceKey(storedDiceKeyDescriptor)}
+  >
+    <DiceKeyView
+      size={`${cssCalcTyped(`min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})`)}`}
+      faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
+      obscureAllButCenterDie={true}
+      showLidTab={true}
+    />
+    <SubViewButtonCaption>{
+      `Open Key ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit}`
+    }</SubViewButtonCaption>
+  </SubViewButton>
+)
+
+export const WindowHomeView = observer ( (props: {windowNavigationState: WindowTopLevelNavigationState}) => {
   const {windowNavigationState} = props;
-  const storedDiceKeys = RUNNING_IN_ELECTRON ?
-    EncryptedDiceKeyStore.storedDiceKeys : [];
+  
   return (
     <PrimaryView>
       <VersionInformationBar>Version { BUILD_VERSION}, { BUILD_DATE }</VersionInformationBar>
       <WindowHomeNavigationBar state={windowNavigationState} />
       <ColumnCentered>
-        { (RUNNING_IN_BROWSER || storedDiceKeys.length === 0) ? null : (
-          <StoredDiceKeysRow>{
-            storedDiceKeys.map( storedDiceKeyDescriptor => (
-              <SubViewButton
-                onClick={async () => {
-                  const diceKey = await EncryptedDiceKeyStore.load(storedDiceKeyDescriptor);
-                  if (diceKey != null) {
-                    windowNavigationState.navigateToSelectedDiceKeyView(diceKey);
-                  } else {
-                    console.log(`EncryptedDiceKeyStore.load returned null`)
-                  }
-                }}
-              >
-                <DiceKeyView
-                  size={`${cssCalcTyped(`min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})`)}`}
-                  faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
-                  obscureAllButCenterDie={true}
-                  showLidTab={true}
-                />
-                <SubViewButtonCaption>{
-                  `Open Key ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit}`
-                }</SubViewButtonCaption>
-              </SubViewButton>
-            ))
-          }</StoredDiceKeysRow>
-        )}
+        <StoredDiceKeysRow>{
+          windowNavigationState.loadableDiceKeys.map( storedDiceKeyDescriptor => (
+            <StoredDiceKeyView {...{windowNavigationState, storedDiceKeyDescriptor}} />
+          ))
+        }</StoredDiceKeysRow>
         {/* 
           Load DiceKey button
           */}

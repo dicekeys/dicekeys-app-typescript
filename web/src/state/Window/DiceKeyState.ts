@@ -27,9 +27,14 @@ export class DiceKeyState implements SettableDiceKeyState {
 
   setKeyId = action( (keyId?: string) => {
     const oldKeyId = this.keyId;
-    if (keyId != oldKeyId && oldKeyId != null) {
+    if (oldKeyId === keyId) {
+      // This is a no-op as the value hasn't changed.
+      return;
+    }
+    if (oldKeyId != null) {
       // Pull the DiceKey we're no longer using out of the memory store.
-      DiceKeyMemoryStore.removeDiceKey(oldKeyId);
+      // DiceKeyMemoryStore.removeDiceKey(oldKeyId);
+      // FIXME -- we'll make this explicit later.
     }
     this.keyId = keyId
   });

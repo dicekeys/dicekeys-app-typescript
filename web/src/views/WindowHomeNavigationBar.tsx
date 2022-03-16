@@ -9,6 +9,7 @@ import { BooleanState } from "../state/reusable/BooleanState";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { DiceKeysNavHamburgerMenu, ExpandableMenuProps, HamburgerMenuButton, MenuItem } from "./Navigation/Menu";
 import { RUNNING_IN_BROWSER } from "../utilities/is-electron";
+import { DiceKeyMemoryStore } from "../state";
 
 
 const WindowHomeMenu = observer ( ({state, ...props}: {state: WindowTopLevelNavigationState} & ExpandableMenuProps) => (
@@ -19,7 +20,9 @@ const WindowHomeMenu = observer ( ({state, ...props}: {state: WindowTopLevelNavi
       }}>Seed a FIDO Hardware Security Key</MenuItem>
     )}
     <MenuItem onClick={async () => {
-      state.navigateToSelectedDiceKeyView(await DiceKeyWithKeyId.fromRandom());
+      const diceKey = await DiceKeyWithKeyId.fromRandom();
+      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
+      state.navigateToSelectedDiceKeyView(diceKey);
     }}>Load random DiceKey</MenuItem>
   </DiceKeysNavHamburgerMenu>
 ) );
@@ -32,7 +35,7 @@ export const WindowHomeNavigationBar = observer( ( {
   return (
     <TopNavigationBar>
       <TopNavLeftSide style={{fontSize: `min(1.25vh, 1.25vw)`, alignSelf: `flex-end`}}></TopNavLeftSide>
-      <TopNavCenter>DiceKeys App</TopNavCenter>
+      <TopNavCenter>DiceKeys</TopNavCenter>
       <TopNavRightSide>
         <HamburgerMenuButton {...{booleanStateTrueIfMenuExpanded}} />
       </TopNavRightSide>

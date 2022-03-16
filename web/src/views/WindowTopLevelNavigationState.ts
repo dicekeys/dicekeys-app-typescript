@@ -1,6 +1,6 @@
 import { action, makeObservable, override, runInAction } from "mobx";
 import { addressBarState } from "../state/core/AddressBarState";
-import { DiceKey, DiceKeyWithKeyId } from "../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithKeyId, PublicDiceKeyDescriptor } from "../dicekeys/DiceKey";
 import { HasSubViews } from "../state/core";
 import { DiceKeyMemoryStore } from "../state/stores/DiceKeyMemoryStore";
 import { DiceKeyState } from "../state/Window/DiceKeyState";
@@ -15,6 +15,7 @@ export enum SubViewsOfTopLevel {
 
 type SubViews = SubViewsOfTopLevel;
 const SubViews = SubViewsOfTopLevel;
+
 
 const getDiceKeyFromPathRoot = (pathRoot: string | undefined) => {
   if (!pathRoot) return;
@@ -45,6 +46,10 @@ const getTopLevelNavStateFromPath = (path: string):
 }
 
 export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
+  get loadableDiceKeys() {
+    return DiceKeyMemoryStore.keysInMemoryOrSavedToDevice;
+  }
+  
   foregroundDiceKeyState: DiceKeyState;
   navigateToWindowHomeView = action ( () => {
     this.foregroundDiceKeyState.clear();
@@ -60,9 +65,17 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
   });
 
   navigateToSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
-    DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
     this.navigateToSelectedDiceKeyViewForKeyId(diceKey.keyId);
   });
+
+  loadStoredDiceKey = async (storedDiceKeyDescriptor: PublicDiceKeyDescriptor) => {
+    const diceKey = await DiceKeyMemoryStore.loadFromDeviceStorage(storedDiceKeyDescriptor);
+    if (diceKey != null) {
+      this.navigateToSelectedDiceKeyView(diceKey);
+    } else {
+      console.log(`Could not load DiceKey from stable store`)
+    }
+  }
 
   get subView(): SubViews {
     switch(this._subView) {

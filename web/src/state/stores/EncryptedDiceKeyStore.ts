@@ -10,7 +10,7 @@ const electronBridge = (window as unknown as  {ElectronBridge: IElectronBridge})
  * @param descriptors
  * @returns 
  */
-const sortPublicDiceKeyDescriptors = (descriptors: PublicDiceKeyDescriptor[]): PublicDiceKeyDescriptor[] =>
+export const sortPublicDiceKeyDescriptors = <T extends PublicDiceKeyDescriptor>(descriptors: T[]): T[] =>
   descriptors.sort( (a, b) =>
     `${a.centerFaceLetter}${a.centerFaceDigit}${a.keyId}`.localeCompare(`${b.centerFaceLetter}${b.centerFaceDigit}${b.keyId}`)
 );
