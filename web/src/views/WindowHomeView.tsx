@@ -11,9 +11,10 @@ import { ColumnCentered } from "./basics";
 import styled from "styled-components";
 import { DiceKeyView } from "./SVG/DiceKeyView";
 import { cssCalcTyped, cssExprWithoutCalc } from "../utilities";
-import { facesFromPublicKeyDescriptor, PublicDiceKeyDescriptor } from "../dicekeys/DiceKey";
+import { facesFromPublicKeyDescriptor } from "../dicekeys/DiceKey";
 import { WindowHomeNavigationBar } from "./WindowHomeNavigationBar";
 import { BUILD_VERSION, BUILD_DATE } from "../vite-build-constants";
+import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "../state";
 
 const SubViewButton = styled.button`
   display: flex;
@@ -70,41 +71,49 @@ const VersionInformationBar = styled.div`
   font-size: min(0.8rem,3vh,3vw);
 `
 
-const StoredDiceKeyView = ({storedDiceKeyDescriptor, windowNavigationState}: {
-  storedDiceKeyDescriptor: PublicDiceKeyDescriptor;
+const StoredDiceKeyView = observer ( ({storedDiceKeyDescriptor, windowNavigationState}: {
+  storedDiceKeyDescriptor: PublicDiceKeyDescriptorWithSavedOnDevice;
   windowNavigationState: WindowTopLevelNavigationState;
 }) => (
-  <SubViewButton
-    onClick={() => windowNavigationState.loadStoredDiceKey(storedDiceKeyDescriptor)}
-  >
-    <DiceKeyView
-      size={`${cssCalcTyped(`min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})`)}`}
-      faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
-      obscureAllButCenterDie={true}
-      showLidTab={true}
-    />
-    <SubViewButtonCaption>{
-      `Open Key ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit}`
-    }</SubViewButtonCaption>
-  </SubViewButton>
-)
+  <div>
+    <SubViewButton
+      onClick={() => windowNavigationState.loadStoredDiceKey(storedDiceKeyDescriptor)}
+    >
+      <DiceKeyView
+        size={`${cssCalcTyped(`min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})`)}`}
+        faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
+        obscureAllButCenterDie={true}
+        showLidTab={true}
+      />
+      <SubViewButtonCaption>{
+        `Key ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit}`
+      }</SubViewButtonCaption>
+    </SubViewButton>
+      { storedDiceKeyDescriptor.savedOnDevice ? null : (<div>
+        <div><button>save to device</button> <button>erase from memory</button></div>
+        <div><button>erase from device</button></div>
+        <div>(erases automaticaly in {windowNavigationState.autoEraseCountdownTimer?.secondsRemaining}s)</div>
+      </div>)}
+  </div>
+));
 
-export const WindowHomeView = observer ( (props: {windowNavigationState: WindowTopLevelNavigationState}) => {
-  const {windowNavigationState} = props;
-  
+export const WindowHomeView = observer ( ({windowNavigationState}: {windowNavigationState: WindowTopLevelNavigationState}) => {
   return (
     <PrimaryView>
       <VersionInformationBar>Version { BUILD_VERSION}, { BUILD_DATE }</VersionInformationBar>
       <WindowHomeNavigationBar state={windowNavigationState} />
       <ColumnCentered>
+        {/*
+          Row of stored DiceKeys
+        */}
         <StoredDiceKeysRow>{
-          windowNavigationState.loadableDiceKeys.map( storedDiceKeyDescriptor => (
+          DiceKeyMemoryStore.keysInMemoryOrSavedToDevice.map( storedDiceKeyDescriptor => (
             <StoredDiceKeyView {...{windowNavigationState, storedDiceKeyDescriptor}} />
           ))
         }</StoredDiceKeysRow>
         {/* 
           Load DiceKey button
-          */}
+        */}
         <SubViewButton
           onClick={ windowNavigationState.navigateToLoadDiceKey }
         >
@@ -113,7 +122,7 @@ export const WindowHomeView = observer ( (props: {windowNavigationState: WindowT
         </SubViewButton>
         {/* 
           Assembly instructions button
-          */}
+        */}
         <SubViewButton
           onClick={ windowNavigationState.navigateToAssemblyInstructions }
         >

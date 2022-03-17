@@ -1,9 +1,10 @@
-import { action, makeObservable, override, runInAction } from "mobx";
+import { action, makeObservable, override } from "mobx";
 import { addressBarState } from "../state/core/AddressBarState";
-import { DiceKey, DiceKeyWithKeyId, PublicDiceKeyDescriptor } from "../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { HasSubViews } from "../state/core";
-import { DiceKeyMemoryStore } from "../state/stores/DiceKeyMemoryStore";
+import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "../state/stores/DiceKeyMemoryStore";
 import { DiceKeyState } from "../state/Window/DiceKeyState";
+import { CountdownTimer } from "../utilities/CountdownTimer";
 
 export enum SubViewsOfTopLevel {
   AppHomeView = "",
@@ -46,13 +47,23 @@ const getTopLevelNavStateFromPath = (path: string):
 }
 
 export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
-  get loadableDiceKeys() {
-    return DiceKeyMemoryStore.keysInMemoryOrSavedToDevice;
-  }
+  autoEraseCountdownTimer?: CountdownTimer | undefined;
+  setAutoEraseCountdownTimer = action( (msRemaining: number= 60*1000) => {
+    return this.autoEraseCountdownTimer = new CountdownTimer(msRemaining, 1000);
+  })
   
   foregroundDiceKeyState: DiceKeyState;
   navigateToWindowHomeView = action ( () => {
     this.foregroundDiceKeyState.clear();
+    const timer = this.setAutoEraseCountdownTimer();
+    this.autoEraseCountdownTimer?.onReachesZero.on( () => {
+      console.log("Countdown timer reaches 0");
+      if (timer === this.autoEraseCountdownTimer && this.subView === SubViews.AppHomeView) {
+        // the subview hasn't changed since the start of the countdown timer.  Erease the memory store
+        console.log("Calling removeAll");
+        DiceKeyMemoryStore.removeAll();
+      }
+    })
     this.navigateTo(SubViews.AppHomeView);
   });
   navigateToAssemblyInstructions = this.navigateToSubView(SubViews.AssemblyInstructions)
@@ -68,8 +79,8 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
     this.navigateToSelectedDiceKeyViewForKeyId(diceKey.keyId);
   });
 
-  loadStoredDiceKey = async (storedDiceKeyDescriptor: PublicDiceKeyDescriptor) => {
-    const diceKey = await DiceKeyMemoryStore.loadFromDeviceStorage(storedDiceKeyDescriptor);
+  loadStoredDiceKey = async (storedDiceKeyDescriptor: PublicDiceKeyDescriptorWithSavedOnDevice) => {
+    const diceKey = await DiceKeyMemoryStore.load(storedDiceKeyDescriptor);
     if (diceKey != null) {
       this.navigateToSelectedDiceKeyView(diceKey);
     } else {
@@ -119,10 +130,13 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
     addressBarState.onPopState( (path) => {
       const newState = getTopLevelNavStateFromPath(path);
       if (newState.subView != this.subView) {
-        runInAction(() => {
-          this.rawSetSubView(newState.subView ?? SubViews.AppHomeView);
-          this.foregroundDiceKeyState.setDiceKey(newState.diceKey);
-        });
+        const {subView, diceKey} = newState;
+        if (subView == null || subView === SubViews.AppHomeView) {
+          this.navigateToWindowHomeView();
+        } else {
+          this.foregroundDiceKeyState.setDiceKey(diceKey);
+          this.rawSetSubView(subView);
+        }
       }
     });
 
