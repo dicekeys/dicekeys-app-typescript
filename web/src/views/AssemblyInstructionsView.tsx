@@ -19,7 +19,7 @@ import { PushButton, StepButton } from "../css/Button";
 import { CenterColumn, ColumnVerticallyCentered } from "./basics/Layout";
 import { PrimaryView } from "../css/Page";
 import styled from "styled-components";
-import { WindowRegionBelowTopNavigationBarWithSideMargins, HeightBelowTopNavigationBar } from "./Navigation/NavigationLayout";
+import { WindowRegionBelowTopNavigationBarWithSideMargins, calcHeightBelowTopNavigationBar } from "./Navigation/NavigationLayout";
 import { cssCalcTyped,  cssExprWithoutCalc } from "../utilities";
 
 
@@ -29,7 +29,7 @@ const WarningFooterTotalHeightFormula = cssCalcTyped(`${WarningFooterDivHeight} 
 
 
 const AssemblyInstructionsContainer = styled(WindowRegionBelowTopNavigationBarWithSideMargins)`
-  height: ${cssCalcTyped(`${cssExprWithoutCalc(HeightBelowTopNavigationBar)} - ${cssExprWithoutCalc(WarningFooterTotalHeightFormula)}`)};
+  height: ${cssCalcTyped(`${cssExprWithoutCalc(calcHeightBelowTopNavigationBar)} - ${cssExprWithoutCalc(WarningFooterTotalHeightFormula)}`)};
 `
 
 const WarningFooterDiv = styled.div<{invisible?: boolean}>`

@@ -89,9 +89,12 @@ const StoredDiceKeyView = observer ( ({storedDiceKeyDescriptor, windowNavigation
         `Key ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit}`
       }</SubViewButtonCaption>
     </SubViewButton>
-      { storedDiceKeyDescriptor.savedOnDevice ? null : (<div>
-        <div><button>save to device</button> <button>erase from memory</button></div>
-        <div><button>erase from device</button></div>
+      { storedDiceKeyDescriptor.savedOnDevice ? 
+        /* if stored on device, the options should be erase from device */
+        (<div><button>erase from device</button></div>) :
+        /* if stored only in memory, give the option to save or erase from memory */ 
+        (<div>
+        <div><button>save</button> <button>erase</button></div>
         <div>(erases automaticaly in {windowNavigationState.autoEraseCountdownTimer?.secondsRemaining}s)</div>
       </div>)}
   </div>

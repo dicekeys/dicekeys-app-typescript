@@ -1,7 +1,10 @@
 import { action, computed, makeObservable, observable } from "mobx";
 
-export abstract class HasSubViews<SUB_VIEW> {
+export interface ViewState<VIEW_NAMES extends string> {
+  viewName: VIEW_NAMES;
+}
 
+export abstract class HasSubViews<SUB_VIEW> {
   protected _previousSubView: SUB_VIEW | undefined;
   protected _subView: SUB_VIEW;
 

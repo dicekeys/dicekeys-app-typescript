@@ -5,6 +5,7 @@ import { FaceGroupView } from "./FaceView";
 import { fitRectangleWithAspectRatioIntoABoundingBox, viewBox, Bounds } from "../../utilities/bounding-rects";
 import { ToggleState } from "../../state";
 import styled from "styled-components";
+import { cssCalcTyped } from "../../utilities";
 
 export interface DiceKeyRenderOptions {
   faces?: PartialDiceKey;
@@ -158,6 +159,7 @@ export const DiceKeyView = ({
   ...svgProps
 }: {size?: string} & DiceKeyRenderOptions & React.SVGAttributes<SVGElement>) => {
   const sizeModel = (showLidTab || leaveSpaceForTab) ? sizeModelWithTab : sizeModelWithoutTab;
+  const cssCalcSize = size != null ? cssCalcTyped(size) : undefined;
   return (
     <DiceKeySvgElement
       {...svgProps}
@@ -165,7 +167,7 @@ export const DiceKeyView = ({
       // width={size}
       // height={size}
       preserveAspectRatio="xMidYMid meet"
-      style={(size != null ? {...style, width: size, height: size, minHeight: size, minWidth: size} : {...style}) }
+      style={(size != null ? {...style, width: cssCalcSize, height: cssCalcSize, minHeight: cssCalcSize, minWidth: cssCalcSize} : {...style}) }
     >
       <DiceKeySvgGroup {...{faces,sizeModel,highlightFaceAtIndex,obscureAllButCenterDie,diceBoxColor,showLidTab,leaveSpaceForTab,onFaceClicked,}} />
     </DiceKeySvgElement>

@@ -76,6 +76,12 @@ class DiceKeyMemoryStoreClass {
     this.addDiceKeyWithKeyId(await diceKey.withKeyId);
   }
 
+  saveToDeviceStorage = async (diceKey: DiceKeyWithKeyId) => {
+    if (RUNNING_IN_ELECTRON) {
+      await EncryptedDiceKeyStore.add(diceKey)
+    }
+  }
+
   removeDiceKeyForKeyId = action ( (keyId: string) => {
     // console.log(`removeDiceKeyForKeyId(${keyId})`);
     this.keyIdToDiceKeyInHumanReadableForm.delete(keyId);
@@ -85,6 +91,11 @@ class DiceKeyMemoryStoreClass {
     const keyId = typeof(diceKeyOrKeyId) === "string" ? diceKeyOrKeyId : diceKeyOrKeyId.keyId;
     this.removeDiceKeyForKeyId(keyId);
   };
+
+  deleteKeyIdFromDeviceStorageAndMemory = (keyId: string) => {
+    this.removeDiceKeyForKeyId(keyId)
+    EncryptedDiceKeyStore.delete({keyId})
+  }
 
   removeAll = action ( () => {
     // console.log(`Remove all`);

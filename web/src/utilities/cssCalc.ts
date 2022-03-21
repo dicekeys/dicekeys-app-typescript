@@ -28,13 +28,26 @@ export function cssExprWithoutCalc(expression: string) {
       expression
       ;
 }
-
+/**
+ * Ensure an expression is wrapped in calc() so that css will calculate its value
+ *
+ * @param expression 
+ * @returns 
+ */
 export const cssCalcTyped = <EXPRESSION extends string>(expression: EXPRESSION) =>
   (
     (expression.startsWith("calc(") && expression.endsWith(")")) ? expression : `calc(${expression})`
   ) as EXPRESSION extends `calc(${string})` ? EXPRESSION : `calc(${EXPRESSION})`
 ;
 
+/**
+ * Ensure an expression is wrapped in calc() so that css will calculate its value
+ * and that any template parameters have calc() removed.
+ * 
+ * @param strings 
+ * @param expressions 
+ * @returns 
+ */
 export const cssCalc = <TEXTS extends TemplateStringsArray, EXPRESSIONS extends (string|number)[]>(
   strings: TEXTS,
   ...expressions: EXPRESSIONS

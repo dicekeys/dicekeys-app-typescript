@@ -7,7 +7,8 @@ export const StandardSideMargin = `5vw`;
 export const StandardWidthBetweenSideMargins = cssExprWithoutCalc(`100vw - 2 * ${StandardSideMargin}`);
 export const TopNavigationBarHeight = `7vh`;
 
-export const HeightBelowTopNavigationBar = cssCalcTyped(`100vh - ${cssExprWithoutCalc(TopNavigationBarHeight)}`)
+export const HeightBelowTopNavigationBar = `(100vh - ${cssExprWithoutCalc(TopNavigationBarHeight)})` as const;
+export const calcHeightBelowTopNavigationBar = cssCalcTyped(HeightBelowTopNavigationBar);
 
 export const StandardBottomBarHeight = `11vh`;
 
@@ -28,7 +29,7 @@ export const WindowRegionColumnContainer= styled(DivSupportingInvisible)`
 `;
 
 export const WindowRegionBelowTopNavigationBar = styled(WindowRegionColumnContainer)`
-  height: ${HeightBelowTopNavigationBar};
+  height: ${calcHeightBelowTopNavigationBar};
 `;
 
 export const WindowRegionBelowTopNavigationBarAndAboveStandardBottomBar = styled(WindowRegionColumnContainer)`

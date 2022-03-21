@@ -12,6 +12,7 @@ import { DiceKeysNavHamburgerMenu, ExpandableMenuProps, HamburgerMenuButton, Men
 import { BooleanState } from "../../state/reusable/BooleanState";
 import { CenteredControls, DiceKeyNickname, Instruction, Spacer } from "../../views/basics";
 import { OptionButton } from "../../css/Button";
+import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 
 const SelectedDiceKeyExpandableHamburgerMenu = observer( ( {
   state,
@@ -85,4 +86,24 @@ export const SelectedDiceKeyNavigationBar = observer( ( {
       }</TopNavRightSide>
     </TopNavigationBar>
   </>)
+});
+
+export const NavigationBarForDiceKey = observer( ( {
+  diceKey,
+  goBack
+}: {diceKey: DiceKeyWithKeyId, goBack: () => any}) => {
+ 
+  return (
+    <TopNavigationBar>
+      <TopNavLeftSide onClick={ goBack } >{
+        RUNNING_IN_ELECTRON ?
+          // Show a back button in Electron
+          (<>&#8592;</>) :
+          // Don't show a back button for the web app, as the browser back button will work.
+          (<></>)
+        }</TopNavLeftSide>
+      <TopNavCenter>{diceKey?.nickname ?? ""}</TopNavCenter>
+      <TopNavRightSide></TopNavRightSide>
+    </TopNavigationBar>
+  )
 });
