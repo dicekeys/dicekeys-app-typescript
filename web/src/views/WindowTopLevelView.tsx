@@ -4,7 +4,7 @@ import { DiceKey } from "../dicekeys/DiceKey";
 import {WindowTopLevelNavigationState as WindowTopLevelNavigationState, SubViewsOfTopLevel, SelectedDiceKeyViewState} from "../state/Window";
 import { SelectedDiceKeyView } from "./WithSelectedDiceKey/SelectedDiceKeyView";
 import { WindowHomeView } from "./WindowHomeView";
-import { LoadDiceKeyView, LoadDiceKeyState } from "./LoadingDiceKeys/LoadDiceKeyView";
+import { LoadDiceKeyView, LoadDiceKeyViewState } from "./LoadingDiceKeys/LoadDiceKeyView";
 import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
 import { AssemblyInstructionsState } from "./AssemblyInstructionsState";
 import { addressBarState } from "../state/core/AddressBarState";
@@ -14,24 +14,21 @@ import { PrimaryView } from "../css";
 import { SeedHardwareKeyPrimaryView } from "./Recipes/SeedHardwareKeyView";
 import { DiceKeyMemoryStore } from "../state";
 
-interface WindowTopLevelNavigationProps {
-  windowNavigationState: WindowTopLevelNavigationState;
-}
-export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopLevelNavigationProps) => {
+export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {windowTopLevelNavigationState: WindowTopLevelNavigationState}) => {
 
   const onReturnFromAssemblyInstructions = async () => {
-    const diceKey = windowNavigationState.foregroundDiceKeyState.diceKey;
+    const diceKey = windowTopLevelNavigationState.foregroundDiceKeyState.diceKey;
     if (diceKey) {
       await DiceKeyMemoryStore.addDiceKeyAsync(diceKey);
-      windowNavigationState.navigateToSelectedDiceKeyView(diceKey);
+      windowTopLevelNavigationState.navigateToSelectedDiceKeyView(diceKey);
     } else {
-      windowNavigationState.navigateToWindowHomeView()
+      windowTopLevelNavigationState.navigateToWindowHomeView()
     }
   }
   const onDiceKeyLoaded = async (diceKey?: DiceKey) => {
     if (diceKey != null) {
       await DiceKeyMemoryStore.addDiceKeyAsync(diceKey);
-      windowNavigationState.navigateToSelectedDiceKeyView(await diceKey.withKeyId);
+      windowTopLevelNavigationState.navigateToSelectedDiceKeyView(await diceKey.withKeyId);
     }
   }
 
@@ -39,42 +36,47 @@ export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopL
   if (foregroundApiRequest != null) {
     return (
       <ApproveApiRequestView queuedApiRequest={foregroundApiRequest}
-        settableDiceKeyState={windowNavigationState.foregroundDiceKeyState}
+        settableDiceKeyState={windowTopLevelNavigationState.foregroundDiceKeyState}
         onApiRequestResolved={ApiRequestsReceivedState.dequeueApiRequestReceived}
       />
     )
   }
-  // console.log(`Displaying subview ${windowNavigationState.subView}`)
-  switch (windowNavigationState.subView) {
-    case SubViewsOfTopLevel.AppHomeView: return (
-      <WindowHomeView {...{windowNavigationState}}/>
-    );
-    case SubViewsOfTopLevel.LoadDiceKeyView: return (
-      <LoadDiceKeyView
-        onDiceKeyRead={ onDiceKeyLoaded }
-        onCancelled={ addressBarState.back }
-        state={new LoadDiceKeyState("camera")} />
-    );
-    case SubViewsOfTopLevel.AssemblyInstructions: return (
-      <AssemblyInstructionsView onComplete={ onReturnFromAssemblyInstructions } state={
-        new AssemblyInstructionsState(windowNavigationState.foregroundDiceKeyState)
-      } />
+  // console.log(`Displaying subview ${windowTopLevelNavigationState.subView}`)
+  const {subViewState} = windowTopLevelNavigationState;
+  switch (subViewState?.viewName) {
+    case "LoadDiceKey":
+      return (
+        <LoadDiceKeyView
+          onDiceKeyRead={ onDiceKeyLoaded }
+          onCancelled={ addressBarState.back }
+          state={ subViewState }
+          // state={new LoadDiceKeyState("camera")}
+        />
+      );
+    case "AssemblyInstructions":
+      return (
+        <AssemblyInstructionsView onComplete={ onReturnFromAssemblyInstructions } state={subViewState}
+//          new AssemblyInstructionsState(windowTopLevelNavigationState.foregroundDiceKeyState)
+         />
     )
     case SubViewsOfTopLevel.SeedFidoKey: return (
-      <SeedHardwareKeyPrimaryView windowNavigationState={windowNavigationState} />
+      <SeedHardwareKeyPrimaryView windowTopLevelNavigationState={windowTopLevelNavigationState} />
     );
     case SubViewsOfTopLevel.DiceKeyView: return (
-      <SelectedDiceKeyView state={new SelectedDiceKeyViewState( windowNavigationState.foregroundDiceKeyState)} />
+      <SelectedDiceKeyView state={new SelectedDiceKeyViewState( windowTopLevelNavigationState.foregroundDiceKeyState)} />
+    );
+    default: return (
+      <WindowHomeView windowNavigationState={windowTopLevelNavigationState} />
     );
   }
 });
 
 export const WindowTopLevelView = observer ( (props: Partial<WindowTopLevelNavigationProps>) => {
   const {
-    windowNavigationState = new WindowTopLevelNavigationState(),
+    windowTopLevelNavigationState = new WindowTopLevelNavigationState(),
   } = props;
   return (
   <PrimaryView>
-    <WindowRoutingView {...{windowNavigationState}} />
+    <WindowRoutingView {...{windowTopLevelNavigationState}} />
   </PrimaryView>
 )});
