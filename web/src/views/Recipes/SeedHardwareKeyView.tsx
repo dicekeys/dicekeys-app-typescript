@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { observer  } from "mobx-react";
 import { CenteredControls, Instruction2, Spacer, SecretFieldsCommonObscureButton, CopyButton } from "../basics";
-import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { RecipeFieldEditorView, SequenceNumberFormFieldValueView } from "./DerivationView/RecipeFieldEditorView";
 import styled, { css } from "styled-components";
 import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
@@ -12,9 +11,8 @@ import { WindowTopLevelNavigationState } from "../../views/WindowTopLevelNavigat
 import { DivSupportingInvisible, PageAsFlexColumn } from "../../css";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins, StandardWidthBetweenSideMargins } from "../Navigation/NavigationLayout";
-import { SeedHardwareKeyViewState, SeedSource } from "./SeedHardwareKeyVIewState";
-import { RecipeEditingMode } from "./RecipeBuilderState";
-//import { ModalOverlayForDialogOrMessage } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
+import { SeedHardwareKeyViewState, SeedSource, fidoAccessDeniedByPlatform, fidoAccessRequiresWindowsAdmin } from "./SeedHardwareKeyViewState";
+import { SelectedDiceKeyContentRegionWithoutSideMargins } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 
 const FieldRow = styled.div<{invisible?: boolean}>`
     ${ props => props.invisible ? css`visibility: hidden;` : ``}
@@ -98,6 +96,30 @@ export const CannotSeedSecurityKeysView = () => (
   </ValueColumnOnly>
 );
 
+
+export const CannotSeedSecurityKeysWithoutAdminView = () => (
+  <ValueColumnOnly>
+    <InlineWarning>
+      Windows applications can only seed hardware security keys when running as administrator.
+      <br/>
+      To seed a security key, you will need to run this application as administrator by right clicking on its icon and choosing the <i>run as administrator</i> option.
+    </InlineWarning>
+  </ValueColumnOnly>
+);
+
+export const RunAsAdministratorRequiredView = ({dismiss}: {dismiss: () => void}) => (
+  <ModalContent>
+      <Spacer/>
+      <Instruction2>
+        Windows applications can only seed hardware security keys when running as administrator.
+      </Instruction2>
+      <Instruction2>
+        To seed a security key, you will need to run this application as administrator by right clicking on its icon and choosing the <i>run as administrator</i> option.
+      </Instruction2>
+      <CenteredControls><button onClick={dismiss} >Dismiss</button></CenteredControls>
+    </ModalContent>
+);
+
 const SecondsToTripleClick = 8;
 
 export const CountdownSecondsView = observer( ({startingSeconds, whenStarted}: {startingSeconds: number, whenStarted: number}) => {
@@ -159,7 +181,7 @@ const WriteSucceededView = observer( ( {seedHardwareKeyViewState}: {
 export const SoloKeyValue = observer( ( {seedHardwareKeyViewState}: {
   seedHardwareKeyViewState: SeedHardwareKeyViewState,
 }) => {
-  if (RUNNING_IN_BROWSER) {
+  if (fidoAccessDeniedByPlatform) {
     return (<FieldValue>Cannot connect to USB FIDO keys</FieldValue>)
   }
   const {seedableFidoKeys} = seedHardwareKeyViewState;
@@ -289,7 +311,9 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, 
   seedHardwareKeyViewState: SeedHardwareKeyViewState,
   loadDiceKeyFn?: () => void
 }) => {
-  if (seedHardwareKeyViewState.writeInProgress) {
+  if (seedHardwareKeyViewState.displayFidoAccessRequiresAdminModal) {
+    return (<RunAsAdministratorRequiredView dismiss={seedHardwareKeyViewState.dismissAdminModal} />)
+  } else if (seedHardwareKeyViewState.writeInProgress) {
     return (<WriteInProgressView/>)
   } else if (seedHardwareKeyViewState.writeError != null) {
     return (<WriteErrorView {...{seedHardwareKeyViewState}} />)
@@ -310,7 +334,10 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, 
           </Instruction2>
         </>)}
         <div style={{minHeight: '3vh'}}></div>
-        { RUNNING_IN_ELECTRON ? null : (<CannotSeedSecurityKeysView/>) }
+        {fidoAccessRequiresWindowsAdmin ? (<CannotSeedSecurityKeysWithoutAdminView/>) :
+         fidoAccessDeniedByPlatform ? (<CannotSeedSecurityKeysView/>) :
+         null
+        }
         <FieldRow>
           <FieldLabel>USB Key</FieldLabel>
           <SoloKeyValue {...{seedHardwareKeyViewState}} />
@@ -335,11 +362,11 @@ export const SeedHardwareKeyView = observer (({diceKeyState, loadDiceKeyFn}: {
   diceKeyState: DiceKeyState,
   loadDiceKeyFn?: () => void
 }) => {
-  const seedableFidoKeys = RUNNING_IN_ELECTRON ? new SeedableFIDOKeys() : undefined;
+  const seedableFidoKeys = fidoAccessDeniedByPlatform ? undefined : new SeedableFIDOKeys();
   const seedHardwareKeyViewState = new SeedHardwareKeyViewState(seedableFidoKeys, diceKeyState);
-  // FIXME
-  seedHardwareKeyViewState.recipeBuilderState.setEditingMode(RecipeEditingMode.EditIncludingRawJson);
-  useEffect( () => () => seedableFidoKeys?.destroy() );  
+  // Ensure FIDO keys list gets destroyed when the view is destroyed.
+  useEffect( () => () => seedableFidoKeys?.destroy() );
+
   return (
 //    <SeedHardwareKeyViewWithState {...{diceKey, seedHardwareKeyViewState, seedableFidoKeys}}/>
     <SeedHardwareKeySimpleView {...{seedHardwareKeyViewState, loadDiceKeyFn}}/>
@@ -351,8 +378,10 @@ export const SeedHardwareKeyPrimaryView = observer( ({windowNavigationState}: {w
   return (
     <PageAsFlexColumn>
       <SimpleTopNavBar title={"Seed a USB FIDO Security Key"} />
-      <SeedHardwareKeyView diceKeyState={windowNavigationState.foregroundDiceKeyState} 
-        // loadDiceKeyFn={undefined}
-      />
+      <SelectedDiceKeyContentRegionWithoutSideMargins>
+        <SeedHardwareKeyView diceKeyState={windowNavigationState.foregroundDiceKeyState} 
+          // loadDiceKeyFn={undefined}
+        />
+      </SelectedDiceKeyContentRegionWithoutSideMargins>
     </PageAsFlexColumn>
   )});

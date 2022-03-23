@@ -44,6 +44,11 @@ export interface IElectronBridgeDiceKeysStoreAsync {
   // getDiceKeyIdsAndCenterFaces(): Promise<{id: string, letter: string, digit: string}[]>;
 }
 
+interface IElectronBridgeConstants {
+  osPlatform: NodeJS.Platform;
+  requiresWindowsAdmin: boolean;
+}
+
 export type RemoveListener = () => void;
 export interface IElectronBridgeListener {
   listenForAppLinks(callback: (appLink: string) => any, errorCallback: (error: any) => any): RemoveListener;
@@ -55,6 +60,6 @@ export interface IElectronBridgeAsync extends
   IElectronBridgeDiceKeysStoreAsync
 {}
 
-export interface IElectronBridge extends IElectronBridgeSync, IElectronBridgeAsync, IElectronBridgeListener {
+export interface IElectronBridge extends IElectronBridgeSync, IElectronBridgeAsync, IElectronBridgeListener, IElectronBridgeConstants {
 }
 
