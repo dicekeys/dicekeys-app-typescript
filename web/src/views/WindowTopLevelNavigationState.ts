@@ -1,21 +1,31 @@
 import { action, makeObservable, override } from "mobx";
+import { ViewState } from "../state/core/ViewState";
 import { addressBarState } from "../state/core/AddressBarState";
 import { DiceKey, DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { HasSubViews } from "../state/core";
 import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "../state/stores/DiceKeyMemoryStore";
 import { DiceKeyState } from "../state/Window/DiceKeyState";
 import { CountdownTimer } from "../utilities/CountdownTimer";
+import { LoadDiceKeyViewState } from "./LoadingDiceKeys/LoadDiceKeyView";
+import { AssemblyInstructionsState } from "./AssemblyInstructionsState";
+import { SelectedDiceKeyViewState } from "./WithSelectedDiceKey/SelectedDiceKeyViewState";
+import { fidoAccessDeniedByPlatform, SeedHardwareKeyViewState } from "./Recipes/SeedHardwareKeyViewState";
+import { SeedableFIDOKeys } from "../state/hardware/usb/SeedableFIDOKeys";
+import { PathStrings } from "./Navigation/PathStrings";
 
-export enum SubViewsOfTopLevel {
-  AppHomeView = "",
-  AssemblyInstructions = "assemble",
-  LoadDiceKeyView = "load",
-  DiceKeyView = "key",
-  SeedFidoKey = "seed"
-};
+// export enum SubViewsOfTopLevel {
+//   AppHomeView = "",
+//   AssemblyInstructions = "assemble",
+//   LoadDiceKeyView = "load",
+//   DiceKeyView = "key",
+//   SeedFidoKey = "seed"
+// };
 
-type SubViews = SubViewsOfTopLevel;
-const SubViews = SubViewsOfTopLevel;
+type TopLevelSubViewStates = LoadDiceKeyViewState | AssemblyInstructionsState | SelectedDiceKeyViewState | SeedHardwareKeyViewState;
+type TopLevelSubViewNames = TopLevelSubViewStates["viewName"];
+
+// type SubViews = SubViewsOfTopLevel;
+// const SubViews = SubViewsOfTopLevel;
 
 
 const getDiceKeyFromPathRoot = (pathRoot: string | undefined) => {
@@ -26,14 +36,17 @@ const getDiceKeyFromPathRoot = (pathRoot: string | undefined) => {
 };
 
 const getTopLevelNavStateFromPath = (path: string):
-  {subView?: SubViewsOfTopLevel, keyId?: string, diceKey?: DiceKey}  => {
+  {subViewState?: TopLevelSubViewStates, keyId?: string, diceKey?: DiceKey}  => {
   const pathRoot = path.split("/")[1];
   switch(pathRoot) {
-    case SubViewsOfTopLevel.AppHomeView:
-    case SubViewsOfTopLevel.AssemblyInstructions:
-    case SubViewsOfTopLevel.LoadDiceKeyView:
-    case SubViewsOfTopLevel.SeedFidoKey:
-      return {subView: pathRoot};
+    case PathStrings.LoadDiceKey:
+      return new WindowTopLevelNavigationState(new LoadDiceKeyViewState());
+    case PathStrings.AssemblyInstructions:
+      return new WindowTopLevelNavigationState(new AssemblyInstructionsState());
+    // Only web uses paths, and /seed should not exist in web-only since we can't seed from browser
+    // case PathStrings.SeedFidoKey:
+    //   return new SeedHardwareKeyViewState();
+    //  return {subView: pathRoot};
     default:
       const {diceKey, keyId} = getDiceKeyFromPathRoot(pathRoot) ?? {};
       if (diceKey != null && keyId != null) {
@@ -41,42 +54,39 @@ const getTopLevelNavStateFromPath = (path: string):
       } else {
         // The state in the address bar is bogus and needs to be replaced.
         addressBarState.replaceState("/");
+        return new WindowTopLevelNavigationState();
       }
   }
   return {subView: undefined}
 }
 
-export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
+export class WindowTopLevelNavigationState extends HasSubViews<TopLevelSubViewNames, TopLevelSubViewStates> implements ViewState<"TopLevel"> {
+  readonly viewName = "TopLevel";
+
   autoEraseCountdownTimer?: CountdownTimer | undefined;
   setAutoEraseCountdownTimer = action( (msRemaining: number= 60*1000) => {
     return this.autoEraseCountdownTimer = new CountdownTimer(msRemaining, 1000);
   })
   
-  foregroundDiceKeyState: DiceKeyState;
   navigateToWindowHomeView = action ( () => {
-    this.foregroundDiceKeyState.clear();
     const timer = this.setAutoEraseCountdownTimer();
     this.autoEraseCountdownTimer?.onReachesZero.on( () => {
-      console.log("Countdown timer reaches 0");
-      if (timer === this.autoEraseCountdownTimer && this.subView === SubViews.AppHomeView) {
-        // the subview hasn't changed since the start of the countdown timer.  Erease the memory store
+      console.log("Countdown timer reached 0");
+      if (timer === this.autoEraseCountdownTimer && this.subView == null) {
+        // the subview hasn't changed since the start of the countdown timer.  Erase the memory store
         console.log("Calling removeAll");
         DiceKeyMemoryStore.removeAll();
       }
     })
-    this.navigateTo(SubViews.AppHomeView);
+    // this.navigateTo(SubViews.AppHomeView);
+    this.navigateTo();
   });
-  navigateToAssemblyInstructions = this.navigateToSubView(SubViews.AssemblyInstructions)
-  navigateToLoadDiceKey = this.navigateToSubView(SubViews.LoadDiceKeyView)
-  navigateToSeedFidoKey = this.navigateToSubView(SubViews.SeedFidoKey)
-
-  private navigateToSelectedDiceKeyViewForKeyId = action ( (keyId: string) => {
-    this.foregroundDiceKeyState.setKeyId(keyId);
-    this.navigateTo(SubViews.DiceKeyView);
-  });
+  navigateToAssemblyInstructions = () => this.navigateTo(new AssemblyInstructionsState(this.foregroundDiceKeyState));
+  navigateToLoadDiceKey = () => this.navigateTo(new LoadDiceKeyViewState("camera"));
+  navigateToSeedFidoKey = () => this.navigateTo(new SeedHardwareKeyViewState(fidoAccessDeniedByPlatform ? undefined : new SeedableFIDOKeys(), this.foregroundDiceKeyState));
 
   navigateToSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
-    this.navigateToSelectedDiceKeyViewForKeyId(diceKey.keyId);
+    this.navigateToSelectedDiceKeyView(new SelectedDiceKeyViewState(diceKey));
   });
 
   loadStoredDiceKey = async (storedDiceKeyDescriptor: PublicDiceKeyDescriptorWithSavedOnDevice) => {
@@ -119,13 +129,8 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
     }
   })
 
-  constructor({
-      subView = SubViews.AppHomeView,
-      diceKey,
-    }: Partial<ReturnType<typeof getTopLevelNavStateFromPath>> = getTopLevelNavStateFromPath(addressBarState.path)
-  ) {
-    super(subView, () => this.updateAddressBar() );
-    this.foregroundDiceKeyState = new DiceKeyState(diceKey);
+  constructor(_subViewState?: TopLevelSubViewStates) {
+    super(_subViewState, () => this.updateAddressBar() );
 
     addressBarState.onPopState( (path) => {
       const newState = getTopLevelNavStateFromPath(path);
@@ -141,7 +146,7 @@ export class WindowTopLevelNavigationState extends HasSubViews<SubViews> {
     });
 
     makeObservable(this, {
-      subView: override,
+//      subView: override,
     });
   }
 }

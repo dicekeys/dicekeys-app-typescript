@@ -13,10 +13,14 @@ import { PushButton } from "../../css/Button";
 import { PrimaryView } from "../../css/Page";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarWithSideMargins } from "../Navigation/NavigationLayout";
+import { ViewState } from "../../state/core/ViewState";
+import { PathStrings } from "../../views/Navigation/PathStrings";
 
 type Mode = "camera" | "manual";
 
-export class LoadDiceKeyState {
+export class LoadDiceKeyViewState implements ViewState<typeof PathStrings["LoadDiceKey"]> {
+  readonly viewName = PathStrings.LoadDiceKey;
+
   mode: Mode;
   enterDiceKeyState = new EnterDiceKeyState()
 
@@ -33,7 +37,7 @@ export class LoadDiceKeyState {
 type LoadDiceKeyProps = {
   onDiceKeyRead: (diceKey: DiceKey, howRead: Mode) => any,
   onCancelled?: () => any,
-  state: LoadDiceKeyState
+  state: LoadDiceKeyViewState
 };
 
 const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {

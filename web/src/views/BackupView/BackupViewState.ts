@@ -1,4 +1,4 @@
-import { DiceKey } from "../../dicekeys/DiceKey";
+import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupViewState } from "./ValidateBackupViewState";
@@ -17,17 +17,17 @@ export enum BackupStep {
 const validStepOrUndefined = (step: number): BackupStep | undefined =>
   (step >= BackupStep.START_INCLUSIVE && step < BackupStep.END_EXCLUSIVE) ? step : undefined;
 
-interface SettableDiceKeyState {
-  diceKey?: DiceKey,
-  setDiceKey: (diceKey?: DiceKey) => any;
-}
+// interface SettableDiceKeyState {
+//   diceKey?: DiceKey,
+//   setDiceKey: (diceKey?: DiceKey) => any;
+// }
 
 export class BackupViewState {
   constructor(
-    public readonly diceKeyState: SettableDiceKeyState,
+    public readonly diceKey: DiceKeyWithKeyId,
     public step: BackupStep = BackupStep.START_INCLUSIVE
   ) {
-    this.validationStepViewState = new ValidateBackupViewState(this.diceKeyState, this.diceKeyScannedFromBackup);
+    this.validationStepViewState = new ValidateBackupViewState(this.diceKey, this.diceKeyScannedFromBackup);
     makeAutoObservable(this);
   }
   validationStepViewState: ValidateBackupViewState;

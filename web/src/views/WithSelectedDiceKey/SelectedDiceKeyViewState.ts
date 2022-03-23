@@ -1,17 +1,17 @@
 import { BackupViewState } from "../BackupView/BackupViewState";
 import { HasSubViews } from "../../state/core";
-import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { addressBarState } from "../../state/core/AddressBarState";
-import { EncryptedDiceKeyStore } from "../../state/stores/EncryptedDiceKeyStore";
 import { action, makeAutoObservable } from "mobx";
+import { ViewState } from "../../state/core/ViewState";
+import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 
-export enum SelectedDiceKeySubViews {
-  DisplayDiceKey = "", // primary view
-  Backup = "backup",
-  SeedHardwareKey = "seed",
-  DeriveSecrets = "secret",
-}
+// export enum SelectedDiceKeySubViews {
+//   DisplayDiceKey = "", // primary view
+//   Backup = "backup",
+//   SeedHardwareKey = "seed",
+//   DeriveSecrets = "secret",
+// }
 
 const getSelectedDiceKeySubViewFromPath = (
   path: string
@@ -36,43 +36,41 @@ const replacePathElement = (indexOfPathElementToReplace: number, newPathElement:
   return `${basePath}${pathElements.join('/')}`;
 }
 
-class SaveAndDeleteUIState {
-  _showSaveDeleteModal: boolean = false;
-  get showSaveDeleteModal() { return this._showSaveDeleteModal }
-  readonly setShowSaveDeleteModal = action( (newValue: boolean) => this._showSaveDeleteModal = newValue);
-  readonly setShowSaveDeleteModalFn = (newValue: boolean) => () => this.setShowSaveDeleteModal(newValue);
-  readonly toggleShowSaveDeleteModal = () => this.setShowSaveDeleteModal(!this.showSaveDeleteModal);
+// class SaveAndDeleteUIState {
+//   _showSaveDeleteModal: boolean = false;
+//   get showSaveDeleteModal() { return this._showSaveDeleteModal }
+//   readonly setShowSaveDeleteModal = action( (newValue: boolean) => this._showSaveDeleteModal = newValue);
+//   readonly setShowSaveDeleteModalFn = (newValue: boolean) => () => this.setShowSaveDeleteModal(newValue);
+//   readonly toggleShowSaveDeleteModal = () => this.setShowSaveDeleteModal(!this.showSaveDeleteModal);
 
-  get isSaved(): boolean {return this.diceKeyState.diceKey != null && EncryptedDiceKeyStore.has(this.diceKeyState.diceKey); }
+//   get isSaved(): boolean {return this.diceKeyState.diceKey != null && EncryptedDiceKeyStore.has(this.diceKeyState.diceKey); }
 
-  handleOnSaveDeleteButtonClicked = () => {
-    const {diceKey} = this.diceKeyState;
-    if (diceKey == null) return;
-    if (this.isSaved) {
-      EncryptedDiceKeyStore.delete(diceKey);
-    } else {
-      EncryptedDiceKeyStore.add(diceKey);
-    }
-    this.setShowSaveDeleteModal(false);
-  }
+//   handleOnSaveDeleteButtonClicked = () => {
+//     const {diceKey} = this.diceKeyState;
+//     if (diceKey == null) return;
+//     if (this.isSaved) {
+//       EncryptedDiceKeyStore.delete(diceKey);
+//     } else {
+//       EncryptedDiceKeyStore.add(diceKey);
+//     }
+//     this.setShowSaveDeleteModal(false);
+//   }
 
-  constructor(private diceKeyState: DiceKeyState) {
-    makeAutoObservable(this);
-  }
+//   constructor(private diceKeyState: DiceKeyState) {
+//     makeAutoObservable(this);
+//   }
+// }
 
-}
-
-export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubViews> {
-  readonly saveAndDeleteUIState: SaveAndDeleteUIState;
+export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubViews> implements ViewState<"SelectedDiceKey"> {
+  readonly viewName = "SelectedDiceKey";
   readonly backupState: BackupViewState;
 
   constructor(
-    public readonly foregroundDiceKeyState: DiceKeyState,
+    public readonly diceKey: DiceKeyWithKeyId,
     initialSubView: SelectedDiceKeySubViews = getSelectedDiceKeySubViewFromPath(addressBarState.path)
   ) {
     super(initialSubView, () => this.updateAddressBar());
-    this.saveAndDeleteUIState = new SaveAndDeleteUIState(foregroundDiceKeyState);
-    this.backupState = new BackupViewState(this.foregroundDiceKeyState);
+    this.backupState = new BackupViewState(diceKey);
 
     addressBarState.onPopState( path => 
       this.rawSetSubView(getSelectedDiceKeySubViewFromPath(path))

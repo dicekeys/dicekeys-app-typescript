@@ -4,7 +4,7 @@ import { CachedApiCalls } from "../../api-handler/CachedApiCalls";
 import { isValidJson } from "../../utilities/json";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { AsyncCalculation } from "../../utilities/AsyncCalculation";
-import { DiceKeyState } from "../../state/Window/DiceKeyState";
+import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 
 const spaceJson = (spaces: number = 2) => (json: string | undefined): string | undefined => {
   return (json == null) ? json : JSON.stringify(JSON.parse(json), undefined, spaces);
@@ -49,11 +49,11 @@ interface RecipeState {
 
 export class DerivedFromRecipeState {
   readonly recipeState: RecipeState;
-  readonly diceKeyState: DiceKeyState;
+  readonly diceKey: DiceKeyWithKeyId | undefined;
   SigningCalculations = new AsyncCalculation<string | undefined>();
 
   get api(): CachedApiCalls | undefined {
-    const {diceKey} = this.diceKeyState;
+    const {diceKey} = this;
     if (diceKey == null) return;
     return CachedApiCalls.instanceFor(diceKey.toSeedString())
   }
@@ -71,9 +71,9 @@ export class DerivedFromRecipeState {
   });
   setOutputFieldTo = (value: OutputFormat<DerivationRecipeType>) => () => this.setOutputField(value);
 
-  constructor({recipeState, diceKeyState}: {recipeState: RecipeState, diceKeyState: DiceKeyState} ) {
+  constructor({recipeState, diceKey}: {recipeState: RecipeState, diceKey: DiceKeyWithKeyId | undefined} ) {
     this.recipeState = recipeState;
-    this.diceKeyState = diceKeyState;
+    this.diceKey = diceKey;
 //    this.api = new CachedApiCalls(seedString);
 
     makeAutoObservable(this);

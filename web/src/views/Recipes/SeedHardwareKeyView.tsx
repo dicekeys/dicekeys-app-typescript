@@ -4,15 +4,14 @@ import { CenteredControls, Instruction2, Spacer, SecretFieldsCommonObscureButton
 import { RecipeFieldEditorView, SequenceNumberFormFieldValueView } from "./DerivationView/RecipeFieldEditorView";
 import styled, { css } from "styled-components";
 import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
-import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities/cssCalc";
 import { ObscureSecretFields } from "../../state/ToggleState";
-import { WindowTopLevelNavigationState } from "../../views/WindowTopLevelNavigationState";
 import { DivSupportingInvisible, PageAsFlexColumn } from "../../css";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins, StandardWidthBetweenSideMargins } from "../Navigation/NavigationLayout";
 import { SeedHardwareKeyViewState, SeedSource, fidoAccessDeniedByPlatform, fidoAccessRequiresWindowsAdmin } from "./SeedHardwareKeyViewState";
 import { SelectedDiceKeyContentRegionWithoutSideMargins } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
+import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 
 const FieldRow = styled.div<{invisible?: boolean}>`
     ${ props => props.invisible ? css`visibility: hidden;` : ``}
@@ -249,11 +248,11 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState, loadDiceKeyFn}: {
   loadDiceKeyFn?: () => void,
 }) => {
   const value = seedHardwareKeyViewState.seedInHexFormat;
-  const diceKeyNickname = seedHardwareKeyViewState.diceKeyState?.diceKey?.nickname ?? "DiceKey";
+  const diceKeyNickname = seedHardwareKeyViewState.diceKey?.nickname ?? "DiceKey";
   return (<>
     <ValueColumnOnly>
       <FieldValueMeta>
-      {(seedHardwareKeyViewState.diceKeyState.diceKey == null) ? (<>
+      {(seedHardwareKeyViewState.diceKey == null) ? (<>
           Enter or paste a seed in hex format{
             loadDiceKeyFn ?
               (<>&nbsp;or&nbsp; <a href="" onClick={loadDiceKeyFn}>load a DiceKey to generate a seed</a> </>) : null
@@ -358,12 +357,12 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, 
 });
 
 
-export const SeedHardwareKeyView = observer (({diceKeyState, loadDiceKeyFn}: {
-  diceKeyState: DiceKeyState,
+export const SeedHardwareKeyView = observer (({diceKey, loadDiceKeyFn}: {
+  diceKey: DiceKeyWithKeyId,
   loadDiceKeyFn?: () => void
 }) => {
   const seedableFidoKeys = fidoAccessDeniedByPlatform ? undefined : new SeedableFIDOKeys();
-  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(seedableFidoKeys, diceKeyState);
+  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(seedableFidoKeys, diceKey);
   // Ensure FIDO keys list gets destroyed when the view is destroyed.
   useEffect( () => () => seedableFidoKeys?.destroy() );
 
@@ -374,12 +373,12 @@ export const SeedHardwareKeyView = observer (({diceKeyState, loadDiceKeyFn}: {
 });
 
 
-export const SeedHardwareKeyPrimaryView = observer( ({windowNavigationState}: {windowNavigationState: WindowTopLevelNavigationState}) => {
+export const SeedHardwareKeyPrimaryView = observer( ({diceKey}: {diceKey: DiceKeyWithKeyId}) => {
   return (
     <PageAsFlexColumn>
       <SimpleTopNavBar title={"Seed a USB FIDO Security Key"} />
       <SelectedDiceKeyContentRegionWithoutSideMargins>
-        <SeedHardwareKeyView diceKeyState={windowNavigationState.foregroundDiceKeyState} 
+        <SeedHardwareKeyView diceKey={diceKey}
           // loadDiceKeyFn={undefined}
         />
       </SelectedDiceKeyContentRegionWithoutSideMargins>

@@ -1,4 +1,4 @@
-import { DiceKey, DiceKeyComparisonResult, FaceComparisonErrorTypes } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyComparisonResult, DiceKeyWithKeyId, FaceComparisonErrorTypes } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { SettableDiceKeyState } from "../../state/Window/DiceKeyState";
 
@@ -33,7 +33,7 @@ export class FaceErrorDescriptor<T extends DiceKey = DiceKey> {
 
 export class ValidateBackupViewState {
   constructor(
-    public readonly diceKeyState: SettableDiceKeyState,
+    public readonly diceKey: DiceKeyWithKeyId,
     public readonly diceKeyScannedFromBackupState: SettableDiceKeyState
   ) {
     makeAutoObservable(this);
@@ -56,7 +56,7 @@ export class ValidateBackupViewState {
   get diceKeyComparisonResult() { 
     const diceKeyScannedFromBackup = this.diceKeyScannedFromBackupState.diceKey;
     if (diceKeyScannedFromBackup == null) return;
-    return this.diceKeyState.diceKey?.compareTo(diceKeyScannedFromBackup);
+    return this.diceKey?.compareTo(diceKeyScannedFromBackup);
   }
   get backupScannedSuccessfully() { return this.diceKeyComparisonResult?.errors.length === 0 }
 
@@ -70,7 +70,7 @@ export class ValidateBackupViewState {
   }
 
   get errorDescriptor() {
-    const {diceKey} = this.diceKeyState;
+    const {diceKey} = this;
     const {errorIndex = 0} = this; 
     if (diceKey == null || this.diceKeyComparisonResult == null ||
       errorIndex < 0 || errorIndex >= this.diceKeyComparisonResult.errors.length

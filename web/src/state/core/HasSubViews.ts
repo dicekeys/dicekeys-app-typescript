@@ -1,46 +1,42 @@
 import { action, computed, makeObservable, observable } from "mobx";
+import { ViewState } from "./ViewState";
 
-export interface ViewState<VIEW_NAMES extends string> {
-  viewName: VIEW_NAMES;
-}
+export abstract class HasSubViews<VIEW_NAME extends string, VIEW_STATE extends ViewState<VIEW_NAME>> {
+//  protected _previousSubView: SUB_VIEW | undefined;
+  protected _subViewState: VIEW_STATE | undefined;
 
-export abstract class HasSubViews<SUB_VIEW> {
-  protected _previousSubView: SUB_VIEW | undefined;
-  protected _subView: SUB_VIEW;
+  get subViewState() { return this._subViewState; }
+  get subViewName(): VIEW_NAME | undefined { return this.subViewState?.viewName; }
 
   /***
    * Set the sub view without triggering onNavigateTo event
    */
-  protected rawSetSubView = action( (destinationSubView: SUB_VIEW) => {
-    this._previousSubView = this._subView;
-    this._subView = destinationSubView;
+  protected rawSetSubView = action( (destinationSubView?: VIEW_STATE) => {
+    this._subViewState = destinationSubView;
   });
 
   /***
    * Navigate to a different subview
    */
-  protected navigateTo = action( (destinationSubView: SUB_VIEW) => {
-    this.rawSetSubView(destinationSubView);
-    this.onNavigateTo?.(this.subView, this.previousSubView);
+  protected navigateTo = action( (destinationSubViewState?: VIEW_STATE) => {
+    const previousSubViewState = this.subViewState
+    this.rawSetSubView(destinationSubViewState);
+    this.onNavigateTo?.(destinationSubViewState, previousSubViewState);
   });
 
   /***
    * Create a function to navigate to a specific subview
    */
-  protected navigateToSubView = (destinationSubView: SUB_VIEW) => () => {
+  protected navigateToSubView = (destinationSubView: VIEW_STATE) => () => {
     this.navigateTo(destinationSubView);
   }
 
-  get subView(): SUB_VIEW {
-    return this._subView;
-  }
-  get previousSubView(): SUB_VIEW | undefined { return this._previousSubView; }
-
-  constructor(defaultSubView: SUB_VIEW, private onNavigateTo?: (subView: SUB_VIEW, previousSubView: SUB_VIEW | undefined) => any) {
-    this._subView = defaultSubView;
-    makeObservable<HasSubViews<SUB_VIEW>, "_subView">(this, {      
-      "_subView": observable,
-      subView: computed,
+  constructor(defaultSubView: VIEW_STATE | undefined, private onNavigateTo?: (subViewState: VIEW_STATE | undefined, previousSubViewState: VIEW_STATE | undefined) => any) {
+    this._subViewState = defaultSubView;
+    makeObservable<HasSubViews<VIEW_NAME, VIEW_STATE>, "_subViewState">(this, {      
+      "_subViewState": observable,
+      subViewState: computed,
+      subViewName: computed,
     })
   }
 }

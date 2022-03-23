@@ -1,4 +1,4 @@
-import { DiceKey, DiceKeyWithoutKeyId } from "../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { observer } from "mobx-react";
 import React from "react";
 import { SimpleTopNavBar } from "./Navigation/SimpleTopNavBar";
@@ -14,7 +14,6 @@ import { Spacer, ResizableImage, Instruction, CenteredControls, CenterRow, Padde
 import { BackupStepFooterView, BackupStepSwitchView } from "./BackupView";
 import { addPreview } from "./basics/Previews";
 import {AssemblyInstructionsStep, AssemblyInstructionsState} from "./AssemblyInstructionsState";
-import { DiceKeyState } from "../state/Window/DiceKeyState";
 import { PushButton, StepButton } from "../css/Button";
 import { CenterColumn, ColumnVerticallyCentered } from "./basics/Layout";
 import { PrimaryView } from "../css/Page";
@@ -91,11 +90,11 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
   const [scanning, setScanning] = React.useState<boolean>(false);
   const startScanning = () => setScanning(true);
   const stopScanning = () => setScanning(false);
-  const onDiceKeyRead = (diceKey: DiceKey) => {
-    state.foregroundDiceKeyState.setDiceKey(diceKey);
+  const onDiceKeyRead = (diceKey: DiceKeyWithKeyId) => {
+    state.setDiceKey(diceKey);
     stopScanning();
   }
-  const {diceKey} = state.foregroundDiceKeyState;
+  const {diceKey} = state;
   return (<PaddedContentBox>
     {/* <Spacer/> */}
     <Instruction>Scan the dice in the bottom of the box (without sealing the box top into place.)</Instruction>
@@ -134,8 +133,8 @@ const StepSealBox = () => (
 );
 
 const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsState}) => {
-  const createdDiceKey = state.foregroundDiceKeyState.diceKey != null;
-  const backedUpSuccessfully = state.backupState.validationStepViewState.backupScannedSuccessfully;
+  const createdDiceKey = state.diceKey != null;
+  const backedUpSuccessfully = !!state.backupState?.validationStepViewState.backupScannedSuccessfully;
   return (
     <ColumnVerticallyCentered>
         <div style={{display: "block"}}>
@@ -177,7 +176,7 @@ interface AssemblyInstructionsViewProps {
 
 const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  AssemblyInstructionsViewProps) => (
   <StepFooterView               
-    aboveFooter={(state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.foregroundDiceKeyState.diceKey == null) ? (
+    aboveFooter={(state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.diceKey == null) ? (
         <StepButton invisible={state.userChoseToSkipScanningStep == null}
           onClick={ state.setUserChoseToSkipScanningStep }
           style={{marginBottom: "0.5rem"}}
@@ -198,10 +197,10 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
     <PrimaryView>
       <SimpleTopNavBar title={"Assembly Instructions"} goBack={ onComplete } />
       <AssemblyInstructionsContainer>{
-          state.step === AssemblyInstructionsStep.CreateBackup ? (
+          state.step === AssemblyInstructionsStep.CreateBackup && (state.backupState != null) ? (
             // Specialized content for backups.
             <>
-              <BackupStepSwitchView state={props.state.backupState} />
+              <BackupStepSwitchView state={state.backupState} />
               <Spacer/>
               <BackupStepFooterView state={state.backupState}
                 /* when final backup step is done we'll go to the next step of assembly */
@@ -232,6 +231,6 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
 });
 
 addPreview("AssemblyInstructions", () => ( 
-  <AssemblyInstructionsView state={new AssemblyInstructionsState(new DiceKeyState(DiceKeyWithoutKeyId.testExample), AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
+  <AssemblyInstructionsView state={new AssemblyInstructionsState(AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
 ));
 

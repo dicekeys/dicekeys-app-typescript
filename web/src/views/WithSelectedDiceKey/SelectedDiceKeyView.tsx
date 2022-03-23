@@ -27,7 +27,8 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
   const {foregroundDiceKeyState } = state;
   const diceKey = foregroundDiceKeyState.diceKey;
   if (!diceKey) return null;
-  switch(state.subView) {
+  const {subViewState} = state;
+  switch(subViewState.name) {
     case Navigation.SelectedDiceKeySubViews.DisplayDiceKey: return (
       <DiceKeyView
         size={selectedDiceKeySize}
