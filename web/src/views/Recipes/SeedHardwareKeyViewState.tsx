@@ -32,8 +32,11 @@ export const fidoAccessRequiresWindowsAdmin: boolean = RUNNING_IN_ELECTRON && el
 /** Set if running on a platform that forbids access to seedable FIDO keys (windows without admin or browser) */
 export const fidoAccessDeniedByPlatform: boolean = fidoAccessRequiresWindowsAdmin || RUNNING_IN_BROWSER;
 
-export class SeedHardwareKeyViewState implements ViewState<"seed"> {
-  readonly viewName = "seed";
+export const SeedHardwareKeyViewStateName = "seed";
+export type SeedHardwareKeyViewStateName = typeof SeedHardwareKeyViewStateName;
+export class SeedHardwareKeyViewState implements ViewState<SeedHardwareKeyViewStateName> {
+  readonly viewName = SeedHardwareKeyViewStateName;
+  toPath = () => `/${this.viewName}`;
 
   recipeBuilderState: RecipeBuilderState;
   diceKey: DiceKeyWithKeyId | undefined;
@@ -91,7 +94,7 @@ export class SeedHardwareKeyViewState implements ViewState<"seed"> {
   });
 
   get seedableFidoKeys() {
-    return this.seedableFidoKeysObserverClass?.devices ?? [];
+    return this.seedableFidoKeysObserverClass.devices ?? [];
   }
 
   get seedableFidoKeySelected(): HIDDevice | undefined {
@@ -149,7 +152,12 @@ export class SeedHardwareKeyViewState implements ViewState<"seed"> {
       .catch ( this.setWriteError );
   }
 
-  constructor(private readonly seedableFidoKeysObserverClass?: SeedableFIDOKeys | undefined, diceKey?: DiceKeyWithKeyId | undefined) {
+  static #seedableFidoKeysObserverClass?: SeedableFIDOKeys | undefined;
+  get seedableFidoKeysObserverClass() {
+    return SeedHardwareKeyViewState.#seedableFidoKeysObserverClass ||= new SeedableFIDOKeys();
+  }
+
+  constructor(diceKey?: DiceKeyWithKeyId | undefined) {
     const recipeBuilderState = new RecipeBuilderState({
       origin: "BuiltIn",
       type: "Secret",

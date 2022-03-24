@@ -27,38 +27,12 @@ type TopLevelSubViewNames = TopLevelSubViewStates["viewName"];
 // type SubViews = SubViewsOfTopLevel;
 // const SubViews = SubViewsOfTopLevel;
 
-
-const getDiceKeyFromPathRoot = (pathRoot: string | undefined) => {
+const diceKeyFromPathRoot = (pathRoot: string | undefined): DiceKeyWithKeyId | undefined => {
   if (!pathRoot) return;
-  const keyId = DiceKeyMemoryStore.keyIdForCenterLetterAndDigit((pathRoot)) ?? pathRoot;
-  const diceKey = DiceKeyMemoryStore.diceKeyForKeyId(keyId);
-  return {keyId, diceKey}
+  const keyId = DiceKeyMemoryStore.keyIdForCenterLetterAndDigit(pathRoot) ?? pathRoot;
+  return DiceKeyMemoryStore.diceKeyForKeyId(keyId);
 };
 
-const getTopLevelNavStateFromPath = (path: string):
-  {subViewState?: TopLevelSubViewStates, keyId?: string, diceKey?: DiceKey}  => {
-  const pathRoot = path.split("/")[1];
-  switch(pathRoot) {
-    case PathStrings.LoadDiceKey:
-      return new WindowTopLevelNavigationState(new LoadDiceKeyViewState());
-    case PathStrings.AssemblyInstructions:
-      return new WindowTopLevelNavigationState(new AssemblyInstructionsState());
-    // Only web uses paths, and /seed should not exist in web-only since we can't seed from browser
-    // case PathStrings.SeedFidoKey:
-    //   return new SeedHardwareKeyViewState();
-    //  return {subView: pathRoot};
-    default:
-      const {diceKey, keyId} = getDiceKeyFromPathRoot(pathRoot) ?? {};
-      if (diceKey != null && keyId != null) {
-        return {subView: SubViewsOfTopLevel.DiceKeyView, diceKey, keyId} as const;
-      } else {
-        // The state in the address bar is bogus and needs to be replaced.
-        addressBarState.replaceState("/");
-        return new WindowTopLevelNavigationState();
-      }
-  }
-  return {subView: undefined}
-}
 
 export class WindowTopLevelNavigationState extends HasSubViews<TopLevelSubViewNames, TopLevelSubViewStates> implements ViewState<"TopLevel"> {
   readonly viewName = "TopLevel";
@@ -81,12 +55,12 @@ export class WindowTopLevelNavigationState extends HasSubViews<TopLevelSubViewNa
     // this.navigateTo(SubViews.AppHomeView);
     this.navigateTo();
   });
-  navigateToAssemblyInstructions = () => this.navigateTo(new AssemblyInstructionsState(this.foregroundDiceKeyState));
+  navigateToAssemblyInstructions = () => this.navigateTo(new AssemblyInstructionsState());
   navigateToLoadDiceKey = () => this.navigateTo(new LoadDiceKeyViewState("camera"));
-  navigateToSeedFidoKey = () => this.navigateTo(new SeedHardwareKeyViewState(fidoAccessDeniedByPlatform ? undefined : new SeedableFIDOKeys(), this.foregroundDiceKeyState));
+  navigateToSeedFidoKey = () => this.navigateTo(new SeedHardwareKeyViewState());
 
   navigateToSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
-    this.navigateToSelectedDiceKeyView(new SelectedDiceKeyViewState(diceKey));
+    this.navigateTo(new SelectedDiceKeyViewState(diceKey));
   });
 
   loadStoredDiceKey = async (storedDiceKeyDescriptor: PublicDiceKeyDescriptorWithSavedOnDevice) => {
@@ -95,15 +69,6 @@ export class WindowTopLevelNavigationState extends HasSubViews<TopLevelSubViewNa
       this.navigateToSelectedDiceKeyView(diceKey);
     } else {
       console.log(`Could not load DiceKey from stable store`)
-    }
-  }
-
-  get subView(): SubViews {
-    switch(this._subView) {
-      case SubViews.DiceKeyView:
-        return (this.foregroundDiceKeyState.diceKey != null) ? this._subView : SubViews.AppHomeView
-      default:
-        return this._subView
     }
   }
 
@@ -148,5 +113,31 @@ export class WindowTopLevelNavigationState extends HasSubViews<TopLevelSubViewNa
     makeObservable(this, {
 //      subView: override,
     });
+  }
+
+
+  static fromPath = (path: string = window.location.pathname): WindowTopLevelNavigationState  => {
+    const pathElements = path.split("/");
+    const pathRoot = pathElements[1];
+    switch(pathRoot) {
+      case PathStrings.LoadDiceKey:
+        return new WindowTopLevelNavigationState(new LoadDiceKeyViewState());
+      case PathStrings.AssemblyInstructions:
+        return new WindowTopLevelNavigationState(new AssemblyInstructionsState());
+      // Only web uses paths, and /seed should not exist in web-only since we can't seed from browser
+      // case PathStrings.SeedFidoKey:
+      //   return new SeedHardwareKeyViewState();
+      //  return {subView: pathRoot};
+    }
+    const diceKey = diceKeyFromPathRoot(pathRoot);
+    if (diceKey != null) {
+      // The first element in the path identifies a DiceKey, and so the rest of the path
+      // is for that selected DiceKey
+      return new WindowTopLevelNavigationState(SelectedDiceKeyViewState.fromPath(diceKey, pathElements.slice(2)));
+    } else {
+      // The state in the address bar is bogus and needs to be replaced.
+      addressBarState.replaceState("/");
+      return new WindowTopLevelNavigationState();
+    }
   }
 }

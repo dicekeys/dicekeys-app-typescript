@@ -3,6 +3,7 @@ import { action, makeAutoObservable } from "mobx";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupViewState } from "./ValidateBackupViewState";
 import { DiceKeyState } from "../../state/Window/DiceKeyState";
+import { ViewState } from "../../state/core/ViewState";
 
 export enum BackupStep {
   SelectBackupMedium = 1,
@@ -22,7 +23,8 @@ const validStepOrUndefined = (step: number): BackupStep | undefined =>
 //   setDiceKey: (diceKey?: DiceKey) => any;
 // }
 
-export class BackupViewState {
+export const BackupViewStateName = "backup";
+export class BackupViewState implements ViewState<typeof BackupViewStateName> {
   constructor(
     public readonly diceKey: DiceKeyWithKeyId,
     public step: BackupStep = BackupStep.START_INCLUSIVE
@@ -30,6 +32,23 @@ export class BackupViewState {
     this.validationStepViewState = new ValidateBackupViewState(this.diceKey, this.diceKeyScannedFromBackup);
     makeAutoObservable(this);
   }
+  readonly viewName = BackupViewStateName;
+
+  toPath = () => `/${this.viewName}/${this.step != BackupStep.START_INCLUSIVE ? this.step : ""}`;
+
+  /**
+   * 
+   * @param diceKey The DiceKey of the selected state
+   * @param subPathElements The elements of the address bar split by forward slashes, with the elements
+   * for the parent views removed, such that
+   * the path `/M1/backup/3` would result in the `fromPathElements` array of `["backup", "3"]`.
+   */
+  static fromPath = (diceKey: DiceKeyWithKeyId, subPathElements: string[] = []): BackupViewState => {
+    const pathStep = subPathElements.length < 2 ? BackupStep.START_INCLUSIVE : parseInt(subPathElements[1] ?? "${BackupStep.START_INCLUSIVE}");
+    const step = pathStep >= BackupStep.START_INCLUSIVE && pathStep < BackupStep.END_EXCLUSIVE ? pathStep : BackupStep.START_INCLUSIVE;
+    return new BackupViewState(diceKey, step);
+  }
+
   validationStepViewState: ValidateBackupViewState;
   backupMedium?: BackupMedium;
   diceKeyScannedFromBackup = new DiceKeyState();

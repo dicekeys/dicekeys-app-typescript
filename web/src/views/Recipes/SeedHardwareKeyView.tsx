@@ -3,7 +3,6 @@ import { observer  } from "mobx-react";
 import { CenteredControls, Instruction2, Spacer, SecretFieldsCommonObscureButton, CopyButton } from "../basics";
 import { RecipeFieldEditorView, SequenceNumberFormFieldValueView } from "./DerivationView/RecipeFieldEditorView";
 import styled, { css } from "styled-components";
-import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities/cssCalc";
 import { ObscureSecretFields } from "../../state/ToggleState";
 import { DivSupportingInvisible, PageAsFlexColumn } from "../../css";
@@ -361,10 +360,7 @@ export const SeedHardwareKeyView = observer (({diceKey, loadDiceKeyFn}: {
   diceKey: DiceKeyWithKeyId,
   loadDiceKeyFn?: () => void
 }) => {
-  const seedableFidoKeys = fidoAccessDeniedByPlatform ? undefined : new SeedableFIDOKeys();
-  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(seedableFidoKeys, diceKey);
-  // Ensure FIDO keys list gets destroyed when the view is destroyed.
-  useEffect( () => () => seedableFidoKeys?.destroy() );
+  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(diceKey);
 
   return (
 //    <SeedHardwareKeyViewWithState {...{diceKey, seedHardwareKeyViewState, seedableFidoKeys}}/>

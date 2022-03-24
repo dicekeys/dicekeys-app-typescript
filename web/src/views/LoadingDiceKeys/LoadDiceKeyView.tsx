@@ -18,8 +18,12 @@ import { PathStrings } from "../../views/Navigation/PathStrings";
 
 type Mode = "camera" | "manual";
 
-export class LoadDiceKeyViewState implements ViewState<typeof PathStrings["LoadDiceKey"]> {
-  readonly viewName = PathStrings.LoadDiceKey;
+export const LoadDiceKeyViewStateName = PathStrings["LoadDiceKey"];
+export type LoadDiceKeyViewStateName = typeof LoadDiceKeyViewStateName;
+export class LoadDiceKeyViewState implements ViewState<LoadDiceKeyViewStateName> {
+  readonly viewName = LoadDiceKeyViewStateName;
+
+  toPath = () => `/${this.viewName}`;
 
   mode: Mode;
   enterDiceKeyState = new EnterDiceKeyState()

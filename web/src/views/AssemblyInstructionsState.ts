@@ -20,8 +20,12 @@ export enum AssemblyInstructionsStep {
 const validStepOrUndefined = (step: number): AssemblyInstructionsStep | undefined =>
   (step >= AssemblyInstructionsStep.START_INCLUSIVE && step < AssemblyInstructionsStep.END_EXCLUSIVE) ? step : undefined;
 
-export class AssemblyInstructionsState implements ViewState<"assemble"> {
-  readonly viewName = "assemble";
+export const AssemblyInstructionsStateName = "assemble";
+export type AssemblyInstructionsStateName = typeof AssemblyInstructionsStateName;
+export class AssemblyInstructionsState implements ViewState<AssemblyInstructionsStateName> {
+  readonly viewName = AssemblyInstructionsStateName;
+
+  toPath = () => `/${this.viewName}`;
 
   diceKey: DiceKeyWithKeyId | undefined;
   setDiceKey = action( (diceKey: DiceKeyWithKeyId) => {

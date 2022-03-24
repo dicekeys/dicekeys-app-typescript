@@ -13,15 +13,17 @@ export abstract class HasSubViews<VIEW_NAME extends string, VIEW_STATE extends V
    */
   protected rawSetSubView = action( (destinationSubView?: VIEW_STATE) => {
     this._subViewState = destinationSubView;
+    return this;
   });
 
   /***
    * Navigate to a different subview
    */
   protected navigateTo = action( (destinationSubViewState?: VIEW_STATE) => {
-    const previousSubViewState = this.subViewState
-    this.rawSetSubView(destinationSubViewState);
-    this.onNavigateTo?.(destinationSubViewState, previousSubViewState);
+    if (this.subViewState != destinationSubViewState) {
+      this.rawSetSubView(destinationSubViewState);
+    }
+    return this;
   });
 
   /***
@@ -31,7 +33,7 @@ export abstract class HasSubViews<VIEW_NAME extends string, VIEW_STATE extends V
     this.navigateTo(destinationSubView);
   }
 
-  constructor(defaultSubView: VIEW_STATE | undefined, private onNavigateTo?: (subViewState: VIEW_STATE | undefined, previousSubViewState: VIEW_STATE | undefined) => any) {
+  constructor(defaultSubView?: VIEW_STATE) {
     this._subViewState = defaultSubView;
     makeObservable<HasSubViews<VIEW_NAME, VIEW_STATE>, "_subViewState">(this, {      
       "_subViewState": observable,

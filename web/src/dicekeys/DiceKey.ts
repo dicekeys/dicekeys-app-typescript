@@ -590,7 +590,7 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
     }
   }
   
-  static testExample = new DiceKeyWithoutKeyId(DiceKeyFaces(
+  static readonly testExample = new DiceKeyWithoutKeyId(DiceKeyFaces(
     [...Array(25).keys()].map( (i)  => ({
       letter: FaceLetters[i],
       digit: FaceDigits[i % 6],
@@ -605,6 +605,8 @@ export class DiceKeyWithKeyId extends DiceKeyBase {
   }
 
   get withKeyId() { return this }
+
+  static readonly testExample = new DiceKeyWithKeyId("bogusTestKeyId", DiceKeyWithoutKeyId.testExample.faces);
 
   // public get withKeyId(): Promise<DiceKeyWithKeyId> {
   //   // wrap this in promise.
