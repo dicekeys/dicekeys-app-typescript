@@ -9,7 +9,7 @@ import {
 } from "../../phrasing/api";
 import { observer } from "mobx-react";
 import { CenterColumn, CenteredControls, ContentBox, Spacer, Instruction } from "../../views/basics";
-import { DiceKeyState, SettableDiceKeyState } from "../../state/Window/DiceKeyState";
+// import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { ScanDiceKeyView } from "../../views/LoadingDiceKeys/ScanDiceKeyView";
 import { addPreview } from "../../views/basics/Previews";
 import { QueuedUrlApiRequest } from "../../api-handler";
@@ -79,7 +79,6 @@ const KnownApplicationNameSpan = styled.span`
 
 export interface ApproveApiRequestViewProps {
   queuedApiRequest: QueuedApiRequest;
-  settableDiceKeyState: SettableDiceKeyState
   onApiRequestResolved: () => any;
 }
 

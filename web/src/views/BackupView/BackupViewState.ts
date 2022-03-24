@@ -1,9 +1,8 @@
-import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { DiceKeyWithKeyId, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupViewState } from "./ValidateBackupViewState";
-import { DiceKeyState } from "../../state/Window/DiceKeyState";
-import { ViewState } from "../../state/core/ViewState";
+import { BaseViewState } from "../../state/core/ViewState";
 
 export enum BackupStep {
   SelectBackupMedium = 1,
@@ -24,17 +23,18 @@ const validStepOrUndefined = (step: number): BackupStep | undefined =>
 // }
 
 export const BackupViewStateName = "backup";
-export class BackupViewState implements ViewState<typeof BackupViewStateName> {
+export class BackupViewState extends BaseViewState<typeof BackupViewStateName> {
   constructor(
     public readonly diceKey: DiceKeyWithKeyId,
+    basePath: string,
     public step: BackupStep = BackupStep.START_INCLUSIVE
   ) {
+    super(BackupViewStateName, basePath);
     this.validationStepViewState = new ValidateBackupViewState(this.diceKey, this.diceKeyScannedFromBackup);
     makeAutoObservable(this);
   }
-  readonly viewName = BackupViewStateName;
 
-  toPath = () => `/${this.viewName}/${this.step != BackupStep.START_INCLUSIVE ? this.step : ""}`;
+  get path(): string { return `${this.basePath}/${this.viewName}/${this.step != BackupStep.START_INCLUSIVE ? this.step : ""}` };
 
   /**
    * 
@@ -43,15 +43,15 @@ export class BackupViewState implements ViewState<typeof BackupViewStateName> {
    * for the parent views removed, such that
    * the path `/M1/backup/3` would result in the `fromPathElements` array of `["backup", "3"]`.
    */
-  static fromPath = (diceKey: DiceKeyWithKeyId, subPathElements: string[] = []): BackupViewState => {
+  static fromPath = (diceKey: DiceKeyWithKeyId, basePath: string, subPathElements: string[] = []): BackupViewState => {
     const pathStep = subPathElements.length < 2 ? BackupStep.START_INCLUSIVE : parseInt(subPathElements[1] ?? "${BackupStep.START_INCLUSIVE}");
     const step = pathStep >= BackupStep.START_INCLUSIVE && pathStep < BackupStep.END_EXCLUSIVE ? pathStep : BackupStep.START_INCLUSIVE;
-    return new BackupViewState(diceKey, step);
+    return new BackupViewState(diceKey, basePath, step);
   }
 
   validationStepViewState: ValidateBackupViewState;
   backupMedium?: BackupMedium;
-  diceKeyScannedFromBackup = new DiceKeyState();
+  diceKeyScannedFromBackup = DiceKeyWithoutKeyId;
 
   setBackupMedium = (newMedium: BackupMedium) => action ( () => {
     this.backupMedium = newMedium;

@@ -5,7 +5,7 @@ import {
 import {
   EnterDiceKeyView, EnterDiceKeyState
 } from "./EnterDiceKeyView"
-import { DiceKey } from "../../dicekeys/DiceKey";
+import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import { CenteredControls, CenterColumn, Instruction, Spacer } from "../basics";
@@ -13,17 +13,15 @@ import { PushButton } from "../../css/Button";
 import { PrimaryView } from "../../css/Page";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarWithSideMargins } from "../Navigation/NavigationLayout";
-import { ViewState } from "../../state/core/ViewState";
+import { BaseViewState } from "../../state/core/ViewState";
 import { PathStrings } from "../../views/Navigation/PathStrings";
 
 type Mode = "camera" | "manual";
 
 export const LoadDiceKeyViewStateName = PathStrings["LoadDiceKey"];
 export type LoadDiceKeyViewStateName = typeof LoadDiceKeyViewStateName;
-export class LoadDiceKeyViewState implements ViewState<LoadDiceKeyViewStateName> {
+export class LoadDiceKeyViewState extends BaseViewState<LoadDiceKeyViewStateName> {
   readonly viewName = LoadDiceKeyViewStateName;
-
-  toPath = () => `/${this.viewName}`;
 
   mode: Mode;
   enterDiceKeyState = new EnterDiceKeyState()
@@ -32,14 +30,15 @@ export class LoadDiceKeyViewState implements ViewState<LoadDiceKeyViewStateName>
     this.mode = mode;
   });
 
-  constructor(mode: Mode = "camera") {
+  constructor(basePath: string = "", mode: Mode = "camera") {
+    super(LoadDiceKeyViewStateName, basePath);
     this.mode = mode;
     makeAutoObservable(this);
   }
 }
 
 type LoadDiceKeyProps = {
-  onDiceKeyRead: (diceKey: DiceKey, howRead: Mode) => any,
+  onDiceKeyRead: (diceKey: DiceKeyWithKeyId, howRead: Mode) => any,
   onCancelled?: () => any,
   state: LoadDiceKeyViewState
 };
@@ -70,7 +69,7 @@ export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
   const onDonePressedWithinEnterDiceKey = () => {
     const diceKey = state.enterDiceKeyState.diceKey;
     if (state.mode === "manual" &&  diceKey) {
-      props.onDiceKeyRead(diceKey, "manual");
+      diceKey.withKeyId.then( diceKey => props.onDiceKeyRead(diceKey, "manual") );
     }
   }
 

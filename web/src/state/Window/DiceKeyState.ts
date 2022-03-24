@@ -1,61 +1,62 @@
-import { action, computed, makeAutoObservable } from "mobx";
-import { DiceKey, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
-import { DiceKeyMemoryStore } from "../stores/DiceKeyMemoryStore";
+//
+// import { action, computed, makeAutoObservable } from "mobx";
+// import { DiceKey, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+// import { DiceKeyMemoryStore } from "../stores/DiceKeyMemoryStore";
 
-export interface SettableDiceKeyState {
-  diceKey?: DiceKey;
-  setDiceKey: (diceKey?: DiceKey) => any;
-}
+// export interface SettableDiceKeyState {
+//   diceKey?: DiceKey;
+//   setDiceKey: (diceKey?: DiceKey) => any;
+// }
 
-export class DiceKeyState implements SettableDiceKeyState {
-  keyId?: string = undefined;
-  public get diceKey(): DiceKeyWithKeyId | undefined {
-    const {keyId} = this;
-    return keyId ? DiceKeyMemoryStore.diceKeyForKeyId(keyId) : undefined;
-  };
+// export class DiceKeyState implements SettableDiceKeyState {
+//   keyId?: string = undefined;
+//   public get diceKey(): DiceKeyWithKeyId | undefined {
+//     const {keyId} = this;
+//     return keyId ? DiceKeyMemoryStore.diceKeyForKeyId(keyId) : undefined;
+//   };
 
-  constructor(
-    diceKey?: DiceKey,
-  ) {
-    makeAutoObservable(this, {
-      diceKey: computed
-    });
-    if (diceKey != null) {
-      this.setDiceKey(diceKey);
-    }
-  }
+//   constructor(
+//     diceKey?: DiceKey,
+//   ) {
+//     makeAutoObservable(this, {
+//       diceKey: computed
+//     });
+//     if (diceKey != null) {
+//       this.setDiceKey(diceKey);
+//     }
+//   }
 
-  setKeyId = action( (keyId?: string) => {
-    const oldKeyId = this.keyId;
-    if (oldKeyId === keyId) {
-      // This is a no-op as the value hasn't changed.
-      return;
-    }
-    if (oldKeyId != null) {
-      // Pull the DiceKey we're no longer using out of the memory store.
-      // DiceKeyMemoryStore.removeDiceKey(oldKeyId);
-      // FIXME -- we'll make this explicit later.
-    }
-    this.keyId = keyId
-  });
+//   setKeyId = action( (keyId?: string) => {
+//     const oldKeyId = this.keyId;
+//     if (oldKeyId === keyId) {
+//       // This is a no-op as the value hasn't changed.
+//       return;
+//     }
+//     if (oldKeyId != null) {
+//       // Pull the DiceKey we're no longer using out of the memory store.
+//       // DiceKeyMemoryStore.removeDiceKey(oldKeyId);
+//       // FIXME -- we'll make this explicit later.
+//     }
+//     this.keyId = keyId
+//   });
 
-  private setKeyIdAndDiceKeyForDiceKeyWithCenterFaceUpright = action ( (diceKey: DiceKeyWithKeyId) => {
-    DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
-    this.keyId = diceKey.keyId;
-  });
+//   private setKeyIdAndDiceKeyForDiceKeyWithCenterFaceUpright = action ( (diceKey: DiceKeyWithKeyId) => {
+//     DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
+//     this.keyId = diceKey.keyId;
+//   });
 
-  private setKeyIdAndDiceKey = async (diceKey: DiceKeyWithKeyId) => {
-    const diceKeyWithCenterFaceUpright = await diceKey.rotateToTurnCenterFaceUpright();
-    this.setKeyIdAndDiceKeyForDiceKeyWithCenterFaceUpright(diceKeyWithCenterFaceUpright);
-  };
+//   private setKeyIdAndDiceKey = async (diceKey: DiceKeyWithKeyId) => {
+//     const diceKeyWithCenterFaceUpright = await diceKey.rotateToTurnCenterFaceUpright();
+//     this.setKeyIdAndDiceKeyForDiceKeyWithCenterFaceUpright(diceKeyWithCenterFaceUpright);
+//   };
 
-  clear = action ( () => this.keyId = undefined );
+//   clear = action ( () => this.keyId = undefined );
 
-  public setDiceKey = async (diceKey?: DiceKey) => {
-    if (diceKey == null) {
-      this.setKeyId(undefined);
-    } else {
-      this.setKeyIdAndDiceKey(await diceKey.withKeyId);
-    }
-  }
-}
+//   public setDiceKey = async (diceKey?: DiceKey) => {
+//     if (diceKey == null) {
+//       this.setKeyId(undefined);
+//     } else {
+//       this.setKeyIdAndDiceKey(await diceKey.withKeyId);
+//     }
+//   }
+// }

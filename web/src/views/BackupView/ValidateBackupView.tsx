@@ -1,5 +1,5 @@
 import React from "react";
-import { DiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
+import { DiceKeyWithKeyId, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { observer } from "mobx-react";
 import { ScanDiceKeyView } from "../LoadingDiceKeys/ScanDiceKeyView";
 import { DiceKeyView } from "../SVG/DiceKeyView";
@@ -9,6 +9,7 @@ import { visibility } from "../../utilities/visibility";
 import { PushButton } from "../../css/Button";
 import styled from "styled-components";
 import { ComparisonBox } from ".";
+import { DiceKeyMemoryStore } from "../../state";
 
 const ErrorStepViewBox = styled.div`
   display: flex;
@@ -36,11 +37,12 @@ const MinWidthButtonContainer = styled.div<{invisible?: boolean}>`
 `;
 
 export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateBackupViewState}) => {
-  const onDiceKeyRead = (diceKey: DiceKey) => {
+  const onDiceKeyRead = (diceKey: DiceKeyWithKeyId) => {
     if (viewState.scanning === "backup") {
       viewState.diceKeyScannedFromBackupState.setDiceKey(diceKey);
     } else if (viewState.scanning === "original") {
-      viewState.diceKeyState.setDiceKey(diceKey)
+      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
+      viewState.setDiceKey(diceKey);
     }
     viewState.stopScanning();
   };
@@ -58,7 +60,7 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
     return (<>
       <ContentRow>
         <ComparisonBox>
-          <DiceKeyView faces={viewState.diceKeyState.diceKey?.faces}
+          <DiceKeyView faces={viewState.diceKey.faces}
             size={`min(25vw,40vh)`}
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />

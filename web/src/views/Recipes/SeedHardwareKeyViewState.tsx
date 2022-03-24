@@ -7,7 +7,7 @@ import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
 import { hexStringToUint8ClampedArray, uint8ArrayToHexString } from "../../utilities";
 import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { electronBridge } from "../../state/core/ElectronBridge";
-import { ViewState } from "../../state/core/ViewState";
+import { BaseViewState } from "../../state/core/ViewState";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 
 const seedSecurityKeyPurpose = "seedSecurityKey";
@@ -34,10 +34,7 @@ export const fidoAccessDeniedByPlatform: boolean = fidoAccessRequiresWindowsAdmi
 
 export const SeedHardwareKeyViewStateName = "seed";
 export type SeedHardwareKeyViewStateName = typeof SeedHardwareKeyViewStateName;
-export class SeedHardwareKeyViewState implements ViewState<SeedHardwareKeyViewStateName> {
-  readonly viewName = SeedHardwareKeyViewStateName;
-  toPath = () => `/${this.viewName}`;
-
+export class SeedHardwareKeyViewState extends BaseViewState<SeedHardwareKeyViewStateName> {
   recipeBuilderState: RecipeBuilderState;
   diceKey: DiceKeyWithKeyId | undefined;
   derivedFromRecipeState: DerivedFromRecipeState | undefined;
@@ -157,7 +154,8 @@ export class SeedHardwareKeyViewState implements ViewState<SeedHardwareKeyViewSt
     return SeedHardwareKeyViewState.#seedableFidoKeysObserverClass ||= new SeedableFIDOKeys();
   }
 
-  constructor(diceKey?: DiceKeyWithKeyId | undefined) {
+  constructor(diceKey: DiceKeyWithKeyId | undefined, basePath: string) {
+    super(SeedHardwareKeyViewStateName, basePath);
     const recipeBuilderState = new RecipeBuilderState({
       origin: "BuiltIn",
       type: "Secret",

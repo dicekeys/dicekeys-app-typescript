@@ -1,7 +1,7 @@
 
 import { action, makeAutoObservable } from "mobx";
 import { BackupViewState } from "./BackupView/BackupViewState";
-import { ViewState } from "../state/core/ViewState";
+import { BaseViewState } from "../state/core/ViewState";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../state";
 
@@ -22,10 +22,8 @@ const validStepOrUndefined = (step: number): AssemblyInstructionsStep | undefine
 
 export const AssemblyInstructionsStateName = "assemble";
 export type AssemblyInstructionsStateName = typeof AssemblyInstructionsStateName;
-export class AssemblyInstructionsState implements ViewState<AssemblyInstructionsStateName> {
+export class AssemblyInstructionsState extends BaseViewState<AssemblyInstructionsStateName> {
   readonly viewName = AssemblyInstructionsStateName;
-
-  toPath = () => `/${this.viewName}`;
 
   diceKey: DiceKeyWithKeyId | undefined;
   setDiceKey = action( (diceKey: DiceKeyWithKeyId) => {
@@ -41,7 +39,7 @@ export class AssemblyInstructionsState implements ViewState<AssemblyInstructions
         console.error(`Attempt to go to backup step without a DiceKey to backup.`)
         return;
       }
-      this.backupState = new BackupViewState(diceKey)
+      this.backupState = new BackupViewState(diceKey, this.basePath)
     }
     this.step = step;
   } } );
@@ -68,8 +66,10 @@ export class AssemblyInstructionsState implements ViewState<AssemblyInstructions
   backupState: BackupViewState | undefined;
 
   constructor(
+    basePath: string = "",
     public step: AssemblyInstructionsStep = AssemblyInstructionsStep.START_INCLUSIVE,
   ) {
+    super(AssemblyInstructionsStateName, basePath);
     makeAutoObservable(this);
   }
 }
