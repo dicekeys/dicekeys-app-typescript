@@ -18,12 +18,12 @@ export class DisplayDiceKeyViewState extends BaseViewState<DisplayDiceKeyViewSta
   // toPath = () => ``;
 }
 
-type SelectedDiceKeySubViewStates =
+export type SelectedDiceKeySubViewStates =
   DisplayDiceKeyViewState |
   BackupViewState |
   SeedHardwareKeyViewState |
   SecretDerivationViewState;
-
+export type SelectedDiceKeySubViewStateNames = SelectedDiceKeySubViewStates["viewName"];
 
 // const basePath = RUNNING_IN_ELECTRON? `/` : `${window.location.protocol}//${window.location.host}`;
 
@@ -68,7 +68,7 @@ export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeyViewSta
   _displayDiceKeyViewState?: DisplayDiceKeyViewState;
   get displayDiceKeyViewState() { return this._displayDiceKeyViewState ||= new DisplayDiceKeyViewState(this.diceKey, this.pathExclusiveOfSubViews) }
   _backupViewState?: BackupViewState;
-  get backupViewState() { return this._backupViewState ||= new BackupViewState(this.diceKey, this.pathExclusiveOfSubViews) }
+  get backupViewState() { return this._backupViewState ||= new BackupViewState(this.pathExclusiveOfSubViews, {diceKey: this.diceKey}) }
   _seedHardwareKeyViewState?: SeedHardwareKeyViewState;
   get seedHardwareKeyViewState() { return this._seedHardwareKeyViewState ||= new SeedHardwareKeyViewState(this.diceKey, this.pathExclusiveOfSubViews) }
   _secretDerivationViewState?: SecretDerivationViewState;

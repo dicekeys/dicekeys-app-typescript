@@ -1,5 +1,5 @@
 import {
-  DiceKey, diceKeyFacesFromHumanReadableForm, DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId, PublicDiceKeyDescriptor
+  diceKeyFacesFromHumanReadableForm, DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId, PublicDiceKeyDescriptor
 } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable, ObservableMap } from "mobx";
 import { autoSaveEncrypted } from "../core/AutoSave";
@@ -34,14 +34,20 @@ class DiceKeyMemoryStoreClass {
     }
   }
 
-  addDiceKeyWithKeyId = action ( (diceKey: DiceKeyWithKeyId) => {
-    if (!(diceKey.keyId in this.diceKeyForKeyId)) {
-      this.keyIdToDiceKeyInHumanReadableForm.set(diceKey.keyId, diceKey.rotateToTurnCenterFaceUpright().inHumanReadableForm);
+  /**
+   * Adds a DiceKey to the memory store, ensuring that it is rotated so that the middle face is upright.
+   * It returns the DiceKey with the middle face upright.
+   */
+  addDiceKeyWithKeyId = action ( (diceKey: DiceKeyWithKeyId): DiceKeyWithKeyId => {
+    const diceKeyWithCenterFaceUpright = diceKey.rotateToTurnCenterFaceUpright();
+    if (!(diceKeyWithCenterFaceUpright.keyId in this.diceKeyForKeyId)) {
+      this.keyIdToDiceKeyInHumanReadableForm.set(diceKeyWithCenterFaceUpright.keyId, diceKeyWithCenterFaceUpright.rotateToTurnCenterFaceUpright().inHumanReadableForm);
       // Append the letter/digit to the end of the array (or start a new array)
-      if (!(diceKey.centerLetterAndDigit in this.#centerLetterAndDigitToKeyId)) {
-        this.#centerLetterAndDigitToKeyId[diceKey.centerLetterAndDigit] = diceKey.keyId;        
+      if (!(diceKeyWithCenterFaceUpright.centerLetterAndDigit in this.#centerLetterAndDigitToKeyId)) {
+        this.#centerLetterAndDigitToKeyId[diceKeyWithCenterFaceUpright.centerLetterAndDigit] = diceKeyWithCenterFaceUpright.keyId;        
       }
     }
+    return diceKeyWithCenterFaceUpright;
   });
 
   private loadFromDeviceStorage = async (...params: Parameters<typeof EncryptedDiceKeyStore.load>) : Promise<DiceKeyWithKeyId | undefined> => {
@@ -72,8 +78,8 @@ class DiceKeyMemoryStoreClass {
     return;
   }
 
-  addDiceKeyAsync = async (diceKey: DiceKey) => {
-    this.addDiceKeyWithKeyId(await diceKey.withKeyId);
+  addDiceKeyAsync = async (diceKey: DiceKeyWithoutKeyId): Promise<DiceKeyWithKeyId> => {
+    return this.addDiceKeyWithKeyId(await diceKey.withKeyId);
   }
 
   saveToDeviceStorage = async (diceKey: DiceKeyWithKeyId) => {

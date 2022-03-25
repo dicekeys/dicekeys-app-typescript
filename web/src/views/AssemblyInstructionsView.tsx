@@ -1,4 +1,4 @@
-import { DiceKey, DiceKeyWithKeyId } from "../dicekeys/DiceKey";
+import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { observer } from "mobx-react";
 import React from "react";
 import { SimpleTopNavBar } from "./Navigation/SimpleTopNavBar";

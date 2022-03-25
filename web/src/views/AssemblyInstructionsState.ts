@@ -4,6 +4,7 @@ import { BackupViewState } from "./BackupView/BackupViewState";
 import { BaseViewState } from "../state/core/ViewState";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../state";
+import { SettableOptionalDiceKeyIndirect } from "../state/Window/DiceKeyState";
 
 export enum AssemblyInstructionsStep {
   Randomize = 1,
@@ -26,20 +27,23 @@ export class AssemblyInstructionsState extends BaseViewState<AssemblyInstruction
   readonly viewName = AssemblyInstructionsStateName;
 
   diceKey: DiceKeyWithKeyId | undefined;
-  setDiceKey = action( (diceKey: DiceKeyWithKeyId) => {
-    DiceKeyMemoryStore.addDiceKeyAsync(diceKey);
-    this.diceKey = diceKey;
-  } );
+  setDiceKey = action( (diceKey: DiceKeyWithKeyId | undefined) => {
+    if (diceKey == null) {
+      this.diceKey = diceKey;
+    } else {
+      this.diceKey = DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
+    }
+  });
 
   setStep = action ( (step?: AssemblyInstructionsStep) => { if (step != null && step !=this.step) {
-    if (step === AssemblyInstructionsStep.CreateBackup && (this.backupState == null || this.backupState.diceKey != this.diceKey)) {
+    if (step === AssemblyInstructionsStep.CreateBackup && (this.backupState == null || this.backupState.withDiceKey.diceKey != this.diceKey)) {
       // Need to create a backup state based on the currently-loaded DiceKey
       const {diceKey} = this;
       if (diceKey == null) {
         console.error(`Attempt to go to backup step without a DiceKey to backup.`)
         return;
       }
-      this.backupState = new BackupViewState(diceKey, this.basePath)
+      this.backupState = new BackupViewState(this.basePath, new SettableOptionalDiceKeyIndirect(this, this.setDiceKey))
     }
     this.step = step;
   } } );

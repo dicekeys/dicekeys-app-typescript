@@ -635,8 +635,7 @@ export class DiceKeyWithKeyId extends DiceKeyBase {
   toSeedString = () => diceKeyFacesToSeedString(this.faces);
 
   rotateToTurnCenterFaceUpright = (): DiceKeyWithKeyId => {
-    const centerFacesOrientationTrbl = this.faces[12].orientationAsLowercaseLetterTrbl;
-    switch (centerFacesOrientationTrbl) {
+    switch (this.centerFace.orientationAsLowercaseLetterTrbl) {
       case "t": return this;
       case "l": return this.rotate(1);
       case "b": return this.rotate(2);

@@ -143,7 +143,7 @@ const StepSelectBackupMedium = observer (({state, prevStepBeforeStart}: BackupVi
         <FeatureCardButton key={medium}
           onClick={state.setBackupMedium(medium)}
         >
-          <FaceCopyingView medium={medium} diceKey={state.diceKey} showArrow={true} indexOfLastFacePlaced={12} 
+          <FaceCopyingView medium={medium} diceKey={state.withDiceKey.diceKey!} showArrow={true} indexOfLastFacePlaced={12} 
             maxWidth="60vw"
             maxHeight={prevStepBeforeStart != null ? 
               // Leave space for a footer with a previous step button
@@ -159,7 +159,8 @@ const StepSelectBackupMedium = observer (({state, prevStepBeforeStart}: BackupVi
   ));
 
 export const BackupStepSwitchView = observer ( ({state}: BackupViewProps) => {
-  const {step, backupMedium, diceKey, validationStepViewState} = state;
+  const {step, backupMedium, withDiceKey, validationStepViewState} = state;
+  const {diceKey} = withDiceKey;
   const faceIndex = step - BackupStep.FirstFace;
   switch (step) {
     case BackupStep.SelectBackupMedium: return (<StepSelectBackupMedium state={state} />);
@@ -256,20 +257,20 @@ export const BackupView = observer ( (props: BackupViewProps) => (
   </BackViewContentContainer>));
 
 addPreviewWithMargins("Backup", () => ( 
-  <BackupView state={new BackupViewState(DiceKeyWithKeyId.testExample, "", BackupStep.SelectBackupMedium)} />
+  <BackupView state={new BackupViewState("", {diceKey: DiceKeyWithKeyId.testExample}, BackupStep.SelectBackupMedium)} />
 ));
 
 addPreviewWithMargins("BackupNoErrors", () => {
-  const state = new BackupViewState(DiceKeyWithKeyId.testExample, "");
+  const state = new BackupViewState("", {diceKey: DiceKeyWithKeyId.testExample});
   state.setBackupMedium(BackupMedium.DiceKey);
   state.setStep(BackupStep.Validate);
-  state.diceKeyScannedFromBackup.setDiceKey(DiceKeyWithKeyId.testExample)
+  state.validationStepViewState.setDiceKeyScannedForValidation(DiceKeyWithKeyId.testExample)
   return (<BackupView state={state} />
 )});
 
 addPreviewWithMargins("Backup1Error", () => {
   const diceKey = DiceKeyWithKeyId.testExample;
-  const state = new BackupViewState(diceKey, "", BackupStep.Validate);
+  const state = new BackupViewState("", {diceKey}, BackupStep.Validate);
   state.setBackupMedium(BackupMedium.DiceKey);
   const diceKeyWithErrors = new DiceKeyWithoutKeyId(DiceKeyFaces(diceKey.rotate(1).faces.map( (face, index) => {
       switch(index) {
@@ -278,14 +279,14 @@ addPreviewWithMargins("Backup1Error", () => {
       }
     }
   )));
-  state.diceKeyScannedFromBackup.setDiceKey(diceKeyWithErrors)
+  diceKeyWithErrors.withKeyId.then( diceKey => state.validationStepViewState.setDiceKeyScannedForValidation(diceKey) );
   return ( 
   <BackupView state={state} />
 )});
 
 addPreviewWithMargins("BackupShowErrors", () => {
   const diceKey = DiceKeyWithKeyId.testExample;
-  const state = new BackupViewState(diceKey, "", BackupStep.Validate);
+  const state = new BackupViewState("", {diceKey}, BackupStep.Validate);
   state.setBackupMedium(BackupMedium.DiceKey);
   const diceKeyWithErrors = new DiceKeyWithoutKeyId(DiceKeyFaces(diceKey.rotate(1).faces.map( (face, index) => {
       switch(index) {
@@ -301,7 +302,7 @@ addPreviewWithMargins("BackupShowErrors", () => {
       }
     }
   )));
-  state.diceKeyScannedFromBackup.setDiceKey(diceKeyWithErrors)
+  diceKeyWithErrors.withKeyId.then( diceKey => state.validationStepViewState.setDiceKeyScannedForValidation(diceKey) );
   return ( 
   <BackupView state={state} />
 )});

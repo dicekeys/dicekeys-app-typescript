@@ -1,8 +1,9 @@
-import { DiceKeyWithKeyId, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
+import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupViewState } from "./ValidateBackupViewState";
 import { BaseViewState } from "../../state/core/ViewState";
+import { SettableOptionalDiceKey, WithDiceKey } from "../../state/Window/DiceKeyState";
 
 export enum BackupStep {
   SelectBackupMedium = 1,
@@ -25,12 +26,12 @@ const validStepOrUndefined = (step: number): BackupStep | undefined =>
 export const BackupViewStateName = "backup";
 export class BackupViewState extends BaseViewState<typeof BackupViewStateName> {
   constructor(
-    public readonly diceKey: DiceKeyWithKeyId,
     basePath: string,
+    readonly withDiceKey: SettableOptionalDiceKey | WithDiceKey,
     public step: BackupStep = BackupStep.START_INCLUSIVE
   ) {
     super(BackupViewStateName, basePath);
-    this.validationStepViewState = new ValidateBackupViewState(this.diceKey, this.diceKeyScannedFromBackup);
+    this.validationStepViewState = new ValidateBackupViewState(this.withDiceKey);
     makeAutoObservable(this);
   }
 
@@ -46,12 +47,12 @@ export class BackupViewState extends BaseViewState<typeof BackupViewStateName> {
   static fromPath = (diceKey: DiceKeyWithKeyId, basePath: string, subPathElements: string[] = []): BackupViewState => {
     const pathStep = subPathElements.length < 2 ? BackupStep.START_INCLUSIVE : parseInt(subPathElements[1] ?? "${BackupStep.START_INCLUSIVE}");
     const step = pathStep >= BackupStep.START_INCLUSIVE && pathStep < BackupStep.END_EXCLUSIVE ? pathStep : BackupStep.START_INCLUSIVE;
-    return new BackupViewState(diceKey, basePath, step);
+    return new BackupViewState( basePath, {diceKey}, step);
   }
 
   validationStepViewState: ValidateBackupViewState;
   backupMedium?: BackupMedium;
-  diceKeyScannedFromBackup = DiceKeyWithoutKeyId;
+//  diceKeyScannedFromBackup = DiceKeyWithoutKeyId;
 
   setBackupMedium = (newMedium: BackupMedium) => action ( () => {
     this.backupMedium = newMedium;
@@ -61,7 +62,7 @@ export class BackupViewState extends BaseViewState<typeof BackupViewStateName> {
     if (step === BackupStep.Validate) {
       // If moving to the validation step, and if we had tried scanning a key to validate before,
       // clear what we scanned
-      this.diceKeyScannedFromBackup.clear();
+//      this.diceKeyScannedFromBackup.clear();
       this.validationStepViewState.clear();
     }
     this.step = step;
@@ -77,7 +78,6 @@ export class BackupViewState extends BaseViewState<typeof BackupViewStateName> {
 
   clear = action ( () => {
     this.backupMedium = undefined;
-    this.diceKeyScannedFromBackup.clear();
     this.step = BackupStep.START_INCLUSIVE;
   })
 

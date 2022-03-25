@@ -9,7 +9,6 @@ import { visibility } from "../../utilities/visibility";
 import { PushButton } from "../../css/Button";
 import styled from "styled-components";
 import { ComparisonBox } from ".";
-import { DiceKeyMemoryStore } from "../../state";
 
 const ErrorStepViewBox = styled.div`
   display: flex;
@@ -36,13 +35,19 @@ const MinWidthButtonContainer = styled.div<{invisible?: boolean}>`
   visibility: ${props=>props.invisible ? "hidden" : "visible"}
 `;
 
-export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateBackupViewState}) => {
+export const ValidateBackupView = observer ( ({
+  viewState
+}: {
+  viewState: ValidateBackupViewState
+}) => {
+  const {withDiceKey, originalDiceKey} = viewState;
   const onDiceKeyRead = (diceKey: DiceKeyWithKeyId) => {
     if (viewState.scanning === "backup") {
-      viewState.diceKeyScannedFromBackupState.setDiceKey(diceKey);
-    } else if (viewState.scanning === "original") {
-      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
-      viewState.setDiceKey(diceKey);
+      viewState.setDiceKeyScannedForValidation(diceKey);
+    } else if (viewState.scanning === "original" && "setDiceKey" in withDiceKey) {
+      withDiceKey.setDiceKey(diceKey);
+      // DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
+      // viewState.setDiceKey(diceKey);
     }
     viewState.stopScanning();
   };
@@ -56,11 +61,11 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
           <PushButton onClick={viewState.stopScanning} >Stop scanning</PushButton>
       </CenteredControls>
     </CenterColumn>)
-  } else {
+  } else if (originalDiceKey != null) {
     return (<>
       <ContentRow>
         <ComparisonBox>
-          <DiceKeyView faces={viewState.diceKey.faces}
+          <DiceKeyView faces={originalDiceKey.faces}
             size={`min(25vw,40vh)`}
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />
@@ -75,7 +80,7 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
           />
           <CenteredControls>
             <PushButton  onClick={viewState.startScanningBackup} >{
-              viewState.diceKeyScannedFromBackupState.diceKey == null ? (<>Scan backup to verify</>) : (<>Re-scan Backup</>)
+              viewState.diceKeyScannedForValidation == null ? (<>Scan backup to verify</>) : (<>Re-scan Backup</>)
             }</PushButton>  
           </CenteredControls>
 
@@ -106,6 +111,7 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
       <Spacer/>
     </>)
   }
+  return null;
 });
 
 const ErrorItemView = ({errorDescriptor}: {errorDescriptor: FaceErrorDescriptor}) => {
