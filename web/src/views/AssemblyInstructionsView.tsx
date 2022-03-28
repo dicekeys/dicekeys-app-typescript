@@ -20,6 +20,7 @@ import { PrimaryView } from "../css/Page";
 import styled from "styled-components";
 import { WindowRegionBelowTopNavigationBarWithSideMargins, calcHeightBelowTopNavigationBar } from "./Navigation/NavigationLayout";
 import { cssCalcTyped,  cssExprWithoutCalc } from "../utilities";
+import { NavState } from "../state/core/ViewState";
 
 
 const WarningFooterDivHeight = `1.5rem`;
@@ -231,6 +232,6 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
 });
 
 addPreview("AssemblyInstructions", () => ( 
-  <AssemblyInstructionsView state={new AssemblyInstructionsState("", AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
+  <AssemblyInstructionsView state={new AssemblyInstructionsState(NavState.root, AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
 ));
 

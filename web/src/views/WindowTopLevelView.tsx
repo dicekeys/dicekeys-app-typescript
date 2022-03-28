@@ -27,7 +27,7 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
     )
   }
   // console.log(`Displaying subview ${windowTopLevelNavigationState.subView}`)
-  const {subViewState} = windowTopLevelNavigationState;
+  const {subViewState} = windowTopLevelNavigationState.subView;
   switch (subViewState?.viewName) {
     case LoadDiceKeyViewStateName:
       return (

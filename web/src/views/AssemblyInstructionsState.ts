@@ -1,7 +1,7 @@
 
 import { action, makeAutoObservable } from "mobx";
 import { BackupViewState } from "./BackupView/BackupViewState";
-import { BaseViewState } from "../state/core/ViewState";
+import { NavState, ViewState } from "../state/core/ViewState";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../state";
 import { SettableOptionalDiceKeyIndirect } from "../state/Window/DiceKeyState";
@@ -23,7 +23,7 @@ const validStepOrUndefined = (step: number): AssemblyInstructionsStep | undefine
 
 export const AssemblyInstructionsStateName = "assemble";
 export type AssemblyInstructionsStateName = typeof AssemblyInstructionsStateName;
-export class AssemblyInstructionsState extends BaseViewState<AssemblyInstructionsStateName> {
+export class AssemblyInstructionsState implements ViewState {
   readonly viewName = AssemblyInstructionsStateName;
 
   diceKey: DiceKeyWithKeyId | undefined;
@@ -43,7 +43,7 @@ export class AssemblyInstructionsState extends BaseViewState<AssemblyInstruction
         console.error(`Attempt to go to backup step without a DiceKey to backup.`)
         return;
       }
-      this.backupState = new BackupViewState(this.basePath, new SettableOptionalDiceKeyIndirect(this, this.setDiceKey))
+      this.backupState = new BackupViewState(this.navState, new SettableOptionalDiceKeyIndirect(this, this.setDiceKey))
     }
     this.step = step;
   } } );
@@ -69,11 +69,12 @@ export class AssemblyInstructionsState extends BaseViewState<AssemblyInstruction
 
   backupState: BackupViewState | undefined;
 
+  navState: NavState;
   constructor(
-    basePath: string = "",
+    parentNavState: NavState,
     public step: AssemblyInstructionsStep = AssemblyInstructionsStep.START_INCLUSIVE,
   ) {
-    super(AssemblyInstructionsStateName, basePath);
+    this.navState = new NavState(parentNavState, AssemblyInstructionsStateName /*, () => this.step.toString()*/ )
     makeAutoObservable(this);
   }
 }

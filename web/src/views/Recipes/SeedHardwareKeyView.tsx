@@ -12,6 +12,7 @@ import { SeedHardwareKeyViewState, SeedSource, fidoAccessDeniedByPlatform, fidoA
 import { SelectedDiceKeyContentRegionWithoutSideMargins } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { LoadDiceKeyView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
+import { NavState } from "../../state/core/ViewState";
 
 const FieldRow = styled.div<{invisible?: boolean}>`
     ${ props => props.invisible ? css`visibility: hidden;` : ``}
@@ -363,10 +364,11 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState}:
 });
 
 
-export const SeedHardwareKeyView = observer (({diceKey}: {
-  diceKey: DiceKeyWithKeyId
+export const SeedHardwareKeyView = observer (({parentNavState, diceKey}: {
+  parentNavState: NavState;
+  diceKey: DiceKeyWithKeyId;
 }) => {
-  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(diceKey, "");
+  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(parentNavState, diceKey);
 
   return (
 //    <SeedHardwareKeyViewWithState {...{diceKey, seedHardwareKeyViewState, seedableFidoKeys}}/>
@@ -375,13 +377,15 @@ export const SeedHardwareKeyView = observer (({diceKey}: {
 });
 
 
-export const SeedHardwareKeyPrimaryView = observer( ({diceKey}: {diceKey: DiceKeyWithKeyId}) => {
+export const SeedHardwareKeyPrimaryView = observer( ({parentNavState, diceKey}: {
+  parentNavState: NavState;
+  diceKey: DiceKeyWithKeyId;
+}) => {
   return (
     <PageAsFlexColumn>
       <SimpleTopNavBar title={"Seed a USB FIDO Security Key"} />
       <SelectedDiceKeyContentRegionWithoutSideMargins>
-        <SeedHardwareKeyView diceKey={diceKey}
-          // loadDiceKeyFn={undefined}
+        <SeedHardwareKeyView parentNavState={parentNavState} diceKey={diceKey}
         />
       </SelectedDiceKeyContentRegionWithoutSideMargins>
     </PageAsFlexColumn>

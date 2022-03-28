@@ -7,7 +7,7 @@ import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
 import { hexStringToUint8ClampedArray, uint8ArrayToHexString } from "../../utilities";
 import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { electronBridge } from "../../state/core/ElectronBridge";
-import { BaseViewState } from "../../state/core/ViewState";
+import { NavState, ViewState } from "../../state/core/ViewState";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
 
@@ -35,14 +35,15 @@ export const fidoAccessDeniedByPlatform: boolean = fidoAccessRequiresWindowsAdmi
 
 export const SeedHardwareKeyViewStateName = "seed";
 export type SeedHardwareKeyViewStateName = typeof SeedHardwareKeyViewStateName;
-export class SeedHardwareKeyViewState extends BaseViewState<SeedHardwareKeyViewStateName> {
+export class SeedHardwareKeyViewState implements ViewState {
+  readonly viewName = SeedHardwareKeyViewStateName;
   recipeBuilderState: RecipeBuilderState;
   diceKey: DiceKeyWithKeyId | undefined;
   derivedFromRecipeState: DerivedFromRecipeState | undefined;
 
   loadDiceKeyState: LoadDiceKeyViewState | undefined;
   startLoadDiceKey = action( () => {
-    this.loadDiceKeyState = new LoadDiceKeyViewState( this.path, "camera")
+    this.loadDiceKeyState = new LoadDiceKeyViewState( this.navState, "camera")
   })
   onDiceKeyLoaded = action ((diceKey: DiceKeyWithKeyId) => {
     this.loadDiceKeyState = undefined;
@@ -165,8 +166,9 @@ export class SeedHardwareKeyViewState extends BaseViewState<SeedHardwareKeyViewS
     return SeedHardwareKeyViewState.#seedableFidoKeysObserverClass ||= new SeedableFIDOKeys();
   }
 
-  constructor(diceKey: DiceKeyWithKeyId | undefined, basePath: string) {
-    super(SeedHardwareKeyViewStateName, basePath);
+  navState: NavState;
+  constructor(parentNavState: NavState, diceKey?: DiceKeyWithKeyId) {
+    this.navState = new NavState(parentNavState, SeedHardwareKeyViewStateName);
     const recipeBuilderState = new RecipeBuilderState({
       origin: "BuiltIn",
       type: "Secret",

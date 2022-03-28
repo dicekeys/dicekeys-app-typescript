@@ -60,3 +60,15 @@ export const decryptJsonStorageField = async (packagedSealedMessageJson: string)
   new TextDecoder().decode(
     (await storageKeyPromise).unsealJsonPackagedSealedMessage( packagedSealedMessageJson)
   );
+
+export const readStringFromEncryptedLocalStorageField = async (fieldName: string) => {
+  const encryptedValue = localStorage.getItem(fieldName);
+  if (encryptedValue != null)
+    return await decryptJsonStorageField(encryptedValue);
+  else
+    return undefined;
+}
+
+export const writeStringToEncryptedLocalStorageField = async (fieldName: string, json: string) => {
+  localStorage.setItem(fieldName, await encryptJsonStorageField(json));
+}

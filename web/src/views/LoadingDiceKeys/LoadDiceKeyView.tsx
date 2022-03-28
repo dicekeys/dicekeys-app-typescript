@@ -13,14 +13,14 @@ import { PushButton } from "../../css/Button";
 import { PrimaryView } from "../../css/Page";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarWithSideMargins } from "../Navigation/NavigationLayout";
-import { BaseViewState } from "../../state/core/ViewState";
+import { NavState, ViewState } from "../../state/core/ViewState";
 import { PathStrings } from "../../views/Navigation/PathStrings";
 
 type Mode = "camera" | "manual";
 
 export const LoadDiceKeyViewStateName = PathStrings["LoadDiceKey"];
 export type LoadDiceKeyViewStateName = typeof LoadDiceKeyViewStateName;
-export class LoadDiceKeyViewState extends BaseViewState<LoadDiceKeyViewStateName> {
+export class LoadDiceKeyViewState implements ViewState {
   readonly viewName = LoadDiceKeyViewStateName;
 
   mode: Mode;
@@ -30,8 +30,9 @@ export class LoadDiceKeyViewState extends BaseViewState<LoadDiceKeyViewStateName
     this.mode = mode;
   });
 
-  constructor(basePath: string = "", mode: Mode = "camera") {
-    super(LoadDiceKeyViewStateName, basePath);
+  navState: NavState;
+  constructor(parentNavState: NavState = NavState.root, mode: Mode = "camera") {
+    this.navState = new NavState(parentNavState, LoadDiceKeyViewStateName)
     this.mode = mode;
     makeAutoObservable(this);
   }
