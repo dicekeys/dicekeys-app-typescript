@@ -111,6 +111,8 @@ class DiceKeyMemoryStoreClass {
 
   get keyIds(): string[] { return Object.keys(this.keyIdToDiceKeyInHumanReadableForm) }
 
+  hasKeyIdInMemory = (keyId: string) => this.keyIdToDiceKeyInHumanReadableForm.has(keyId);
+
   get keysInMemory(): PublicDiceKeyDescriptorWithSavedOnDevice[] {
     return sortPublicDiceKeyDescriptors(Object.entries(this.keyIdToDiceKeyInHumanReadableForm).map( ([keyId, diceKeyInHumanReadableForm]) => {
       const {centerFace} = new DiceKeyWithoutKeyId(diceKeyFacesFromHumanReadableForm(diceKeyInHumanReadableForm));

@@ -11,6 +11,7 @@ import { WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins, 
 import { SeedHardwareKeyViewState, SeedSource, fidoAccessDeniedByPlatform, fidoAccessRequiresWindowsAdmin } from "./SeedHardwareKeyViewState";
 import { SelectedDiceKeyContentRegionWithoutSideMargins } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { LoadDiceKeyView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
 
 const FieldRow = styled.div<{invisible?: boolean}>`
     ${ props => props.invisible ? css`visibility: hidden;` : ``}
@@ -242,9 +243,8 @@ const isHexChar = (c: string) =>
 //     c => ((c >= "a" && c <="f") || (c >= "0" && c <= "9")) ? c : ""
 //   ).join("");
 
-const SeedFieldView = observer( ( {seedHardwareKeyViewState, loadDiceKeyFn}: {
-  seedHardwareKeyViewState: SeedHardwareKeyViewState,
-  loadDiceKeyFn?: () => void,
+const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
+  seedHardwareKeyViewState: SeedHardwareKeyViewState
 }) => {
   const value = seedHardwareKeyViewState.seedInHexFormat;
   const diceKeyNickname = seedHardwareKeyViewState.diceKey?.nickname ?? "DiceKey";
@@ -253,8 +253,7 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState, loadDiceKeyFn}: {
       <FieldValueMeta>
       {(seedHardwareKeyViewState.diceKey == null) ? (<>
           Enter or paste a seed in hex format{
-            loadDiceKeyFn ?
-              (<>&nbsp;or&nbsp; <a href="" onClick={loadDiceKeyFn}>load a DiceKey to generate a seed</a> </>) : null
+              (<>&nbsp;or&nbsp; <a href="" onClick={seedHardwareKeyViewState.startLoadDiceKey}>load a DiceKey to generate a seed</a> </>)
         }</>) : (
         <select value={seedHardwareKeyViewState.seedSourceSelected} onChange={(e)=>seedHardwareKeyViewState.setSeedSourceSelected(e.target.value as SeedSource)}>
           <option value={SeedSource.EnteredManually}>Enter or paste a seed</option>
@@ -305,10 +304,10 @@ const SmallNote = styled(DivSupportingInvisible)`
   font-size: 0.9rem;
 `
 
-export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, loadDiceKeyFn}: {
-  seedHardwareKeyViewState: SeedHardwareKeyViewState,
-  loadDiceKeyFn?: () => void
+export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState}: {
+  seedHardwareKeyViewState: SeedHardwareKeyViewState
 }) => {
+  const {loadDiceKeyState} = seedHardwareKeyViewState;
   if (seedHardwareKeyViewState.displayFidoAccessRequiresAdminModal) {
     return (<RunAsAdministratorRequiredView dismiss={seedHardwareKeyViewState.dismissAdminModal} />)
   } else if (seedHardwareKeyViewState.writeInProgress) {
@@ -317,6 +316,14 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, 
     return (<WriteErrorView {...{seedHardwareKeyViewState}} />)
   } else if (seedHardwareKeyViewState.writeSucceeded) {
     return (<WriteSucceededView {...{seedHardwareKeyViewState}} />)
+  } else if (loadDiceKeyState != null) {
+    return (
+      <LoadDiceKeyView
+       onDiceKeyRead={ seedHardwareKeyViewState.onDiceKeyLoaded }
+        onCancelled={ seedHardwareKeyViewState.onDiceKeyLoadCancelled }
+        state={ loadDiceKeyState }
+      />
+    );
   }
   return (
     <WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins>
@@ -340,7 +347,7 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, 
           <FieldLabel>USB Key</FieldLabel>
           <SoloKeyValue {...{seedHardwareKeyViewState}} />
         </FieldRow>
-        <SeedFieldView {...{seedHardwareKeyViewState, loadDiceKeyFn}} />
+        <SeedFieldView {...{seedHardwareKeyViewState}} />
         <ValueColumnOnly>
           <div>
             <button disabled={!seedHardwareKeyViewState.readyToWrite} onClick={seedHardwareKeyViewState.write}>Write</button>
@@ -356,15 +363,14 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, 
 });
 
 
-export const SeedHardwareKeyView = observer (({diceKey, loadDiceKeyFn}: {
-  diceKey: DiceKeyWithKeyId,
-  loadDiceKeyFn?: () => void
+export const SeedHardwareKeyView = observer (({diceKey}: {
+  diceKey: DiceKeyWithKeyId
 }) => {
-  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(diceKey);
+  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(diceKey, "");
 
   return (
 //    <SeedHardwareKeyViewWithState {...{diceKey, seedHardwareKeyViewState, seedableFidoKeys}}/>
-    <SeedHardwareKeySimpleView {...{seedHardwareKeyViewState, loadDiceKeyFn}}/>
+    <SeedHardwareKeySimpleView {...{seedHardwareKeyViewState}}/>
   )
 });
 

@@ -9,11 +9,10 @@ import {
 } from "../../phrasing/api";
 import { observer } from "mobx-react";
 import { CenterColumn, CenteredControls, ContentBox, Spacer, Instruction } from "../../views/basics";
-// import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { ScanDiceKeyView } from "../../views/LoadingDiceKeys/ScanDiceKeyView";
 import { addPreview } from "../../views/basics/Previews";
 import { QueuedUrlApiRequest } from "../../api-handler";
-import { DiceKey, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
+import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { uint8ArrayToHexString } from "../../utilities/convert";
 import { DiceKeyView } from "../../views/SVG/DiceKeyView";
 import { PushButton } from "../../css/Button";
@@ -21,6 +20,8 @@ import { PushButton } from "../../css/Button";
 import styled from "styled-components";
 import { PrimaryView } from "../../css/Page";
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
+import { action, makeAutoObservable } from "mobx";
+import { DiceKeyMemoryStore } from "../../state";
 
 const HostNameSpan = styled.span`
   font-family: monospace;
@@ -77,10 +78,6 @@ const KnownApplicationNameSpan = styled.span`
 
 
 
-export interface ApproveApiRequestViewProps {
-  queuedApiRequest: QueuedApiRequest;
-  onApiRequestResolved: () => any;
-}
 
 export const HostDescriptorView = ( {host}: {host: string}) => {
   const knownHost = getKnownHost(host);
@@ -229,11 +226,37 @@ const KeyAccessRestrictionsView = observer( ({command, host}: {command: ApiCalls
   )
 );
 
-export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProps) => {
-  const { queuedApiRequest, onApiRequestResolved, settableDiceKeyState } = props;
+export class ApproveApiRequestState {
+  static lastKeyIdUsed: string | undefined;
+
+  private _diceKey: DiceKeyWithKeyId | undefined;
+  get diceKey() {return this._diceKey}
+  setDiceKey = action( (diceKey: DiceKeyWithKeyId | undefined) => {
+    ApproveApiRequestState.lastKeyIdUsed = diceKey?.keyId;
+    this._diceKey = diceKey;
+  });
+
+  constructor(
+    public readonly queuedApiRequest: QueuedApiRequest,
+    diceKey: DiceKeyWithKeyId | undefined = DiceKeyMemoryStore.diceKeyForKeyId(ApproveApiRequestState.lastKeyIdUsed)
+  ) {
+    this._diceKey = diceKey;
+    makeAutoObservable(this);
+  }
+  
+}
+
+
+export interface ApproveApiRequestViewProps {
+  state: ApproveApiRequestState;
+  onApiRequestResolved: () => any;
+}
+
+export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: ApproveApiRequestViewProps) => {
+  const { queuedApiRequest, diceKey } = state;
   const { request, host } = queuedApiRequest;
-  const { diceKey } = settableDiceKeyState;
   const { command } = request;
+
   const handleDeclineRequestButton = () => {
     queuedApiRequest.sendUserDeclined();
     onApiRequestResolved();
@@ -246,8 +269,6 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
     }
     onApiRequestResolved();
   }
-
-
 
   return (
     <PrimaryView>
@@ -268,7 +289,7 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
               To allow this action, you'll first need to load your DiceKey.
             </Instruction>
             <ScanDiceKeyView
-              onDiceKeyRead={settableDiceKeyState.setDiceKey}
+              onDiceKeyRead={state.setDiceKey}
               maxHeight={"60vh"}
             />
           </CenterColumn>
@@ -295,15 +316,14 @@ export const ApproveApiRequestView = observer( (props: ApproveApiRequestViewProp
   )
 })
 
-const createPreview = (name: string, urlString: string, diceKey?: DiceKey) => {
+const createPreview = (name: string, urlString: string, diceKey?: DiceKeyWithKeyId) => {
   addPreview(name, () => {
-    const settableDiceKeyState = new DiceKeyState(diceKey);
-    const request = new QueuedUrlApiRequest(new URL(urlString))
+    const request = new QueuedUrlApiRequest(new URL(urlString));
+    const state = new ApproveApiRequestState(request, diceKey);
     return (
       <ApproveApiRequestView
-        queuedApiRequest={request}
+        state={state}
         onApiRequestResolved={() => alert("request resolved")}
-        settableDiceKeyState={settableDiceKeyState}
       />
     );
   });
@@ -318,4 +338,4 @@ const msftAccountGetSecretRequestUrl = `https://dicekeys.app/?${""
   }&respondTo=${ encodeURIComponent(`https://account.microsoft.com/--derived-secret-api--/`)
   }${""}`
 createPreview("Approve Api Request (no key)", msftAccountGetSecretRequestUrl);
-createPreview("Approve Api Request (key loaded)", msftAccountGetSecretRequestUrl, DiceKeyWithoutKeyId.testExample);
+createPreview("Approve Api Request (key loaded)", msftAccountGetSecretRequestUrl, DiceKeyWithKeyId.testExample);

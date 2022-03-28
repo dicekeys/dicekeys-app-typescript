@@ -9,6 +9,7 @@ import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-elec
 import { electronBridge } from "../../state/core/ElectronBridge";
 import { BaseViewState } from "../../state/core/ViewState";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
 
 const seedSecurityKeyPurpose = "seedSecurityKey";
 
@@ -38,6 +39,16 @@ export class SeedHardwareKeyViewState extends BaseViewState<SeedHardwareKeyViewS
   recipeBuilderState: RecipeBuilderState;
   diceKey: DiceKeyWithKeyId | undefined;
   derivedFromRecipeState: DerivedFromRecipeState | undefined;
+
+  loadDiceKeyState: LoadDiceKeyViewState | undefined;
+  startLoadDiceKey = action( () => {
+    this.loadDiceKeyState = new LoadDiceKeyViewState( this.path, "camera")
+  })
+  onDiceKeyLoaded = action ((diceKey: DiceKeyWithKeyId) => {
+    this.loadDiceKeyState = undefined;
+    this.diceKey = diceKey;
+  });
+  onDiceKeyLoadCancelled = action( () => this.loadDiceKeyState = undefined );
 
   _seedInEditableHexFormatFieldValue: string | undefined = undefined;
   get seedInEditableHexFormatFieldValue() {return this._seedInEditableHexFormatFieldValue}

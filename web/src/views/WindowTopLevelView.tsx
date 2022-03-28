@@ -8,7 +8,7 @@ import { LoadDiceKeyView, LoadDiceKeyViewStateName } from "./LoadingDiceKeys/Loa
 import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
 import { AssemblyInstructionsStateName } from "./AssemblyInstructionsState";
 import { addressBarState } from "../state/core/AddressBarState";
-import {ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
+import {ApproveApiRequestState, ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
 import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
 import { PrimaryView } from "../css";
 import { SeedHardwareKeySimpleView } from "./Recipes/SeedHardwareKeyView";
@@ -20,7 +20,7 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
   const {foregroundApiRequest} = ApiRequestsReceivedState;
   if (foregroundApiRequest != null) {
     return (
-      <ApproveApiRequestView queuedApiRequest={foregroundApiRequest}
+      <ApproveApiRequestView state={new ApproveApiRequestState(foregroundApiRequest)}
 //        settableDiceKeyState={windowTopLevelNavigationState.foregroundDiceKeyState}
         onApiRequestResolved={ApiRequestsReceivedState.dequeueApiRequestReceived}
       />
@@ -35,7 +35,6 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
           onDiceKeyRead={ windowTopLevelNavigationState.loadScannedOrEnteredDiceKey }
           onCancelled={ addressBarState.back }
           state={ subViewState }
-          // state={new LoadDiceKeyState("camera")}
         />
       );
     case AssemblyInstructionsStateName:
@@ -45,7 +44,7 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
          />
     )
     case SeedHardwareKeyViewStateName: return (
-      <SeedHardwareKeySimpleView seedHardwareKeyViewState={subViewState} loadDiceKeyFn={null /*FIXME*/} />
+      <SeedHardwareKeySimpleView seedHardwareKeyViewState={subViewState} />
     );
     case SelectedDiceKeyViewStateName: return (
       <SelectedDiceKeyView state={subViewState} goBack={ addressBarState.back } />
