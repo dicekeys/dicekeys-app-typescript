@@ -75,7 +75,7 @@ const StoredDiceKeyView = observer ( ({storedDiceKeyDescriptor, windowNavigation
   storedDiceKeyDescriptor: PublicDiceKeyDescriptorWithSavedOnDevice;
   windowNavigationState: WindowTopLevelNavigationState;
 }) => (
-  <div>
+  <div key={storedDiceKeyDescriptor.keyId}>
     <SubViewButton
       onClick={() => windowNavigationState.loadStoredDiceKey(storedDiceKeyDescriptor)}
     >

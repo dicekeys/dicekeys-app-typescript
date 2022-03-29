@@ -131,11 +131,8 @@ export class SelectedDiceKeyViewState implements ViewState<SelectedDiceKeyViewSt
   // }
 
   navigateToSubViewAndReplaceState = (state: SelectedDiceKeySubViewStates) => {
-    if (this.subViewState !== state) {
-      this.subView.navigateTo(state);
-      this.subView.navState.replaceAddressBarNavigationState();
-    }
-    return this;
+      this.subView.navigateToReplaceState(state);
+      return this;
   }
 
   navigateToDisplayDiceKey = () => this.navigateToSubViewAndReplaceState(this.displayDiceKeyViewState);

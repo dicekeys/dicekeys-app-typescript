@@ -21,6 +21,7 @@ import styled from "styled-components";
 import { WindowRegionBelowTopNavigationBarWithSideMargins, calcHeightBelowTopNavigationBar } from "./Navigation/NavigationLayout";
 import { cssCalcTyped,  cssExprWithoutCalc } from "../utilities";
 import { NavState } from "../state/core/ViewState";
+import { addressBarState } from "../state/core/AddressBarState";
 
 
 const WarningFooterDivHeight = `1.5rem`;
@@ -106,7 +107,7 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
       </CenteredControls>
     </CenterColumn>) : diceKey != null ? (<>
         <CenterRow>
-          <DiceKeyView size={`min(50vh,70vw)`} faces={diceKey.faces} />
+          <DiceKeyView size={`min(50vh,70vw)`} faces={diceKey.faces} obscureAllButCenterDie={false} />
         </CenterRow>
         <CenteredControls>
           <PushButton onClick={startScanning} >Scan again</PushButton>
@@ -175,8 +176,17 @@ interface AssemblyInstructionsViewProps {
   onComplete: (diceKeyLoaded?: DiceKeyWithKeyId) => any;
 }
 
-const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  AssemblyInstructionsViewProps) => (
-  <StepFooterView               
+const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  AssemblyInstructionsViewProps) => {
+  const onDone = () => { 
+    const {diceKey} = state;
+    if (diceKey == null) {
+      addressBarState.back();
+    } else {
+      onComplete(diceKey);
+    }
+  };
+  return (
+    <StepFooterView               
     aboveFooter={(state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.diceKey == null) ? (
         <StepButton invisible={state.userChoseToSkipScanningStep == null}
           onClick={ state.setUserChoseToSkipScanningStep }
@@ -187,16 +197,16 @@ const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  Ass
     }
     nextIsDone={state.step === (AssemblyInstructionsStep.END_EXCLUSIVE - 1)}
     prev={state.goToPrevStep}
-    next={state.step === (AssemblyInstructionsStep.END_EXCLUSIVE-1) ? onComplete : state.goToNextStep}
-  />
-));
+    next={state.step < (AssemblyInstructionsStep.END_EXCLUSIVE-1) ? state.goToNextStep : onDone}
+  />)
+});
 
 
 export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsViewProps) => {
-  const {state, onComplete} = props;
+  const {state} = props;
   return (
     <PrimaryView>
-      <SimpleTopNavBar title={"Assembly Instructions"} goBack={ onComplete } />
+      <SimpleTopNavBar title={"Assembly Instructions"} goBack={ addressBarState.back } />
       <AssemblyInstructionsContainer>{
           state.step === AssemblyInstructionsStep.CreateBackup && (state.backupState != null) ? (
             // Specialized content for backups.

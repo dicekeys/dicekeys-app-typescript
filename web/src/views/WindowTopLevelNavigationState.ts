@@ -11,19 +11,7 @@ import { SeedHardwareKeyViewState } from "./Recipes/SeedHardwareKeyViewState";
 import { PathStrings } from "./Navigation/PathStrings";
 import { NavState } from "../state/core/ViewState";
 
-// export enum SubViewsOfTopLevel {
-//   AppHomeView = "",
-//   AssemblyInstructions = "assemble",
-//   LoadDiceKeyView = "load",
-//   DiceKeyView = "key",
-//   SeedFidoKey = "seed"
-// };
-
 type TopLevelSubViewStates = LoadDiceKeyViewState | AssemblyInstructionsState | SelectedDiceKeyViewState | SeedHardwareKeyViewState;
-// type TopLevelSubViewNames = TopLevelSubViewStates["viewName"];
-
-// type SubViews = SubViewsOfTopLevel;
-// const SubViews = SubViewsOfTopLevel;
 
 const diceKeyFromPathRoot = (pathRoot: string | undefined): DiceKeyWithKeyId | undefined => {
   if (!pathRoot) return;
@@ -69,25 +57,25 @@ export class WindowTopLevelNavigationState {
     //   this.subView.rawSetSubView(undefined);
     //   this.onRestoreTopLevelState();
     // }
-    this.subView.navigateTo(subViewState, "PushState", this.onRestoreTopLevelState);
+    this.subView.navigateToPushState(subViewState, this.onRestoreTopLevelState);
   }
   navigateToAssemblyInstructions = () => this.navigateDownTo(new AssemblyInstructionsState(this.navState));
   navigateToLoadDiceKey = () => this.navigateDownTo(new LoadDiceKeyViewState(this.navState, "camera"));
   navigateToSeedFidoKey = () => this.navigateDownTo(new SeedHardwareKeyViewState(this.navState));
 
   navigateToSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
-    this.subView.navigateTo(new SelectedDiceKeyViewState(this.navState, diceKey));
+    this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKey), this.onRestoreTopLevelState);
   });
 
   loadScannedOrEnteredDiceKey = (diceKey: DiceKeyWithKeyId) => {
     const diceKeyWithCenterFaceUpright =  DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
-    this.subView.navigateTo(new SelectedDiceKeyViewState(this.navState, diceKeyWithCenterFaceUpright), "ReplaceState");
+    this.subView.navigateToReplaceState(new SelectedDiceKeyViewState(this.navState, diceKeyWithCenterFaceUpright));
   }
 
   onReturnFromAssemblyInstructions = (diceKey?: DiceKeyWithKeyId) => {
     if (diceKey) {    
       const diceKeyWithCenterFaceUpright = DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
-      this.subView.navigateTo(new SelectedDiceKeyViewState(this.navState, diceKeyWithCenterFaceUpright), "ReplaceState");
+      this.subView.navigateToReplaceState(new SelectedDiceKeyViewState(this.navState, diceKeyWithCenterFaceUpright));
     } else {
       addressBarState.back();
     }
@@ -96,7 +84,7 @@ export class WindowTopLevelNavigationState {
   loadStoredDiceKey = async (storedDiceKeyDescriptor: PublicDiceKeyDescriptorWithSavedOnDevice) => {
     const diceKey = await DiceKeyMemoryStore.load(storedDiceKeyDescriptor);
     if (diceKey != null) {
-      this.subView.navigateTo(new SelectedDiceKeyViewState(this.navState, diceKey), "PushState", this.onRestoreTopLevelState);
+      this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKey), this.onRestoreTopLevelState);
     } else {
       console.log(`Could not load DiceKey from stable store`)
     }
@@ -129,7 +117,7 @@ export class WindowTopLevelNavigationState {
   constructor(defaultSubView?: TopLevelSubViewStates, navState: NavState = NavState.root) {
     this.navState = navState;
     this.subView = new SubViewState<TopLevelSubViewStates>(navState, defaultSubView);
-
+    this.onRestoreTopLevelState();
     // addressBarState.onPopState( (path) => {
     //   const newState = getTopLevelNavStateFromPath(path);
     //   if (newState.subView != this.subView) {

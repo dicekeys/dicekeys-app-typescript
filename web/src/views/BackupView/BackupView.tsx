@@ -70,7 +70,7 @@ const IntroToBackingUpToADiceKeyView = () => (
     <Spacer/>
     <CenterRow>
       <ComparisonBox>
-        <DiceKeyView size={`min(35vh,45vw)`} />
+        <DiceKeyView size={`min(35vh,45vw)`} obscureAllButCenterDie={false} />
       </ComparisonBox>
     </CenterRow>
     <Spacer/>
