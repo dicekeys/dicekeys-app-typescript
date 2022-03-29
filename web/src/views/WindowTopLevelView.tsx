@@ -56,7 +56,7 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
 });
 
 export const WindowTopLevelView = observer ( ({
-  windowTopLevelNavigationState = new WindowTopLevelNavigationState()} : {
+  windowTopLevelNavigationState = WindowTopLevelNavigationState.fromPath() } : {
   windowTopLevelNavigationState?: WindowTopLevelNavigationState
 }) => (
   <PrimaryView>

@@ -143,21 +143,25 @@ export class WindowTopLevelNavigationState {
     const windowTopLevelNavigationState = new WindowTopLevelNavigationState();
     switch(pathRoot) {
       case PathStrings.LoadDiceKey:
-        windowTopLevelNavigationState.subView.rawSetSubView(new LoadDiceKeyViewState(windowTopLevelNavigationState.navState, "camera"));
+        window.history.replaceState({depth: 0}, "", "");
+        windowTopLevelNavigationState.subView.navigateToPushState(new LoadDiceKeyViewState(windowTopLevelNavigationState.navState, "camera"));
         return windowTopLevelNavigationState;
       case PathStrings.AssemblyInstructions:
         // FIXME -- get step number from path
-        windowTopLevelNavigationState.subView.rawSetSubView(new AssemblyInstructionsState(windowTopLevelNavigationState.navState));
+        window.history.replaceState({depth: 0}, "", "");
+        windowTopLevelNavigationState.subView.navigateToPushState(new AssemblyInstructionsState(windowTopLevelNavigationState.navState));
+        return windowTopLevelNavigationState;
       // Only web uses paths, and /seed should not exist in web-only since we can't seed from browser
       // case PathStrings.SeedFidoKey:
       //   return new SeedHardwareKeyViewState();
       //  return {subView: pathRoot};
+      default:
     }
     const diceKey = diceKeyFromPathRoot(pathRoot);
     if (diceKey != null) {
       // The first element in the path identifies a DiceKey, and so the rest of the path
       // is for that selected DiceKey
-      windowTopLevelNavigationState.subView.rawSetSubView(SelectedDiceKeyViewState.fromPath(windowTopLevelNavigationState.navState, diceKey, pathElements.slice(2)));
+      windowTopLevelNavigationState.subView.navigateToPushState(SelectedDiceKeyViewState.fromPath(windowTopLevelNavigationState.navState, diceKey, pathElements.slice(2)));
     } else {
       // The state in the address bar is bogus and needs to be replaced.
       addressBarState.replaceState("/");

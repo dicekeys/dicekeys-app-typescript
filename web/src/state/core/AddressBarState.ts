@@ -47,6 +47,7 @@ export class AddressBarState {
   ) {
     if (this.pathStack.length === 0) {
       this.pathStack.unshift(path);
+      this.popStateCallbackStack.unshift(restorePreviousStateOnPopState)
     } else {
       this.pathStack[0] = path;
     }
@@ -65,7 +66,15 @@ class BrowserAddressBarState extends AddressBarState {
 
   override get path(): string { return window.location.pathname }
 
-  override back() { window.history.back(); }
+  override back() {
+    if (this.popStateCallbackStack.length === 0) {
+      // There's nowhere back to go so we need to do a hard navigation to the top.
+      // This can occur if we start by a deep load, e.g. to "/assemble"
+      // FIXME
+    } else {
+      window.history.back();
+    }
+  }
 
   override pushState(
     path: string,
@@ -87,24 +96,25 @@ class BrowserAddressBarState extends AddressBarState {
     super.replaceState(path, restorePreviousStateOnPopState);
   }
 
+  #onBack = (depth: number) => {
+    if (this.popStateCallbackStack.length > depth + 1) {
+      // We're in a browser going back more than one level of depth.  Adjust the
+      // length of the stacks to be one greater than the depth we want to go to so that
+      // when we pop (unshift) we reach the desired spot.
+      this.pathStack = this.pathStack.slice(0, depth + 1);
+      this.popStateCallbackStack = this.popStateCallbackStack.slice(0, depth + 1);
+    }
+    super.back();
+  }
+  #onBackEvent = (ev: PopStateEvent) => {
+    const {state} = ev;
+    const {depth = 0} = ((typeof state === "object" && state != null) ? state as AddressBarDepthState : {depth: undefined});
+    this.#onBack(depth);
+  }
+  
   constructor() {
     super();
-    window.addEventListener('popstate', ( (ev) => {
-      try {
-        const {state} = ev;
-        const {depth = 0} = ((typeof state === "object" && state != null) ? state as AddressBarDepthState : {depth: undefined});
-        if (typeof depth === "number" && this.popStateCallbackStack.length > depth + 1) {
-          // We're in a browser going back more than one level of depth.  Adjust the
-          // length of the stacks to be one greater than the depth we want to go to so that
-          // when we pop (unshift) we reach the desired spot.
-          this.pathStack = this.pathStack.slice(0, depth + 1);
-          this.popStateCallbackStack = this.popStateCallbackStack.slice(0, depth + 1);
-        }
-      } catch {
-        console.error("Depth error");
-      }
-      super.back();
-    }));
+    window.addEventListener('popstate', this.#onBackEvent);
   }
 }
 
