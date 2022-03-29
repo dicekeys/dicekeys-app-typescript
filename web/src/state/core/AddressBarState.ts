@@ -18,33 +18,33 @@ type RestorePreviousStateOnPopStateCallback = () => void;
 //   ) => void;
 // }
 
-export abstract class AddressBarState {
+export class AddressBarState {
   protected popStateCallbackStack: ( RestorePreviousStateOnPopStateCallback | undefined )[] = [];
   protected pathStack: string[] = [];
 
   get path(): string { return this.pathStack[0] ?? "/"};
 
-  back = () => {
+  back() {
     this.pathStack.shift();
     const callback = this.popStateCallbackStack.shift();
     callback?.();
   }
 
-  pushState = (
+  pushState(
     path: string,
     restorePreviousStateOnPopState?: RestorePreviousStateOnPopStateCallback
-  ) => {
-    if (this.path !== path) {
+  ) {
+    if ((this.pathStack[0] ?? "/") !== path) {
       // add the callback to the pathStack
       this.pathStack.unshift(path);
       this.popStateCallbackStack.unshift( restorePreviousStateOnPopState );
     }
   }
 
-  replaceState = (
+  replaceState(
     path: string,
     restorePreviousStateOnPopState?: RestorePreviousStateOnPopStateCallback
-  ) => {
+  ) {
     if (this.pathStack.length === 0) {
       this.pathStack.unshift(path);
     } else {
@@ -63,25 +63,25 @@ interface AddressBarDepthState {
 
 class BrowserAddressBarState extends AddressBarState {
 
-  get path(): string { return window.location.pathname }
+  override get path(): string { return window.location.pathname }
 
-  back = () => window.history.back();
+  override back() { window.history.back(); }
 
-  pushState = (
+  override pushState(
     path: string,
     restorePreviousStateOnPopState?: RestorePreviousStateOnPopStateCallback
-  ) => {
-    if (this.path !== path) {
+  ) {
+    if (window.location.pathname !== path) {
       const depthState: AddressBarDepthState = {depth: this.popStateCallbackStack.length + 1}
       window.history.pushState(depthState, '', path);
       super.pushState(path, restorePreviousStateOnPopState);
     }
   }
 
-  replaceState = (
+  override replaceState(
     path: string,
     restorePreviousStateOnPopState?: RestorePreviousStateOnPopStateCallback
-  ) => {
+  ) {
     const depthState: AddressBarDepthState = {depth: this.popStateCallbackStack.length}
     window.history.replaceState(depthState, '', path);
     super.replaceState(path, restorePreviousStateOnPopState);
@@ -91,13 +91,14 @@ class BrowserAddressBarState extends AddressBarState {
     super();
     window.addEventListener('popstate', ( (ev) => {
       try {
-        const {depth} = ev.state as AddressBarDepthState;
-        if (typeof depth === "number" && this.popStateCallbackStack.length > depth) {
+        const {state} = ev;
+        const {depth = 0} = ((typeof state === "object" && state != null) ? state as AddressBarDepthState : {depth: undefined});
+        if (typeof depth === "number" && this.popStateCallbackStack.length > depth + 1) {
           // We're in a browser going back more than one level of depth.  Adjust the
           // length of the stacks to be one greater than the depth we want to go to so that
-          // when we pop we reach the desired spot.
-          this.pathStack = this.pathStack.slice(0, depth);
-          this.popStateCallbackStack = this.popStateCallbackStack.slice(0, depth);
+          // when we pop (unshift) we reach the desired spot.
+          this.pathStack = this.pathStack.slice(0, depth + 1);
+          this.popStateCallbackStack = this.popStateCallbackStack.slice(0, depth + 1);
         }
       } catch {
         console.error("Depth error");

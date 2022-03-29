@@ -63,9 +63,17 @@ export class WindowTopLevelNavigationState {
   //   // this.subView.navigateTo(SubViews.AppHomeView);
   //   this.subView.navigateTo();
   // });
-  navigateToAssemblyInstructions = () => this.subView.navigateTo(new AssemblyInstructionsState(this.navState), "PushState", this.onRestoreTopLevelState);
-  navigateToLoadDiceKey = () => this.subView.navigateTo(new LoadDiceKeyViewState(this.navState, "camera"), "PushState", this.onRestoreTopLevelState);
-  navigateToSeedFidoKey = () => this.subView.navigateTo(new SeedHardwareKeyViewState(this.navState), "PushState", this.onRestoreTopLevelState);
+
+  navigateDownTo = (subViewState: TopLevelSubViewStates) => {
+    // const back = () => {
+    //   this.subView.rawSetSubView(undefined);
+    //   this.onRestoreTopLevelState();
+    // }
+    this.subView.navigateTo(subViewState, "PushState", this.onRestoreTopLevelState);
+  }
+  navigateToAssemblyInstructions = () => this.navigateDownTo(new AssemblyInstructionsState(this.navState));
+  navigateToLoadDiceKey = () => this.navigateDownTo(new LoadDiceKeyViewState(this.navState, "camera"));
+  navigateToSeedFidoKey = () => this.navigateDownTo(new SeedHardwareKeyViewState(this.navState));
 
   navigateToSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
     this.subView.navigateTo(new SelectedDiceKeyViewState(this.navState, diceKey));
@@ -144,7 +152,7 @@ export class WindowTopLevelNavigationState {
   static fromPath = (path: string = window.location.pathname): WindowTopLevelNavigationState  => {
     const pathElements = path.split("/");
     const pathRoot = pathElements[1];
-    const windowTopLevelNavigationState = new WindowTopLevelNavigationState(new LoadDiceKeyViewState());
+    const windowTopLevelNavigationState = new WindowTopLevelNavigationState();
     switch(pathRoot) {
       case PathStrings.LoadDiceKey:
         windowTopLevelNavigationState.subView.rawSetSubView(new LoadDiceKeyViewState(windowTopLevelNavigationState.navState, "camera"));

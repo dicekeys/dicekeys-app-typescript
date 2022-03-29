@@ -1,6 +1,5 @@
 import { BackupViewState, BackupViewStateName } from "../BackupView/BackupViewState";
 import { SubViewState } from "../../state/core";
-import { addressBarState } from "../../state/core/AddressBarState";
 import { NavState, ViewState } from "../../state/core/ViewState";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { SeedHardwareKeyViewState, SeedHardwareKeyViewStateName } from "../Recipes/SeedHardwareKeyViewState"
@@ -117,9 +116,9 @@ export class SelectedDiceKeyViewState implements ViewState<SelectedDiceKeyViewSt
     return instance;
   }
 
-  pushAddressBarNavigationState = (restoreStateFn: () => void) => {
-    addressBarState.pushState(this.navState.getPath(), restoreStateFn)
-  }
+  // pushAddressBarNavigationState = (restoreStateFn: () => void) => {
+  //   addressBarState.pushState(this.navState.getPath(), restoreStateFn)
+  // }
 
   // navigateToSubViewAndPushState = (state: SelectedDiceKeySubViewStates) => {
   //   if (this.subViewState === state) return this;

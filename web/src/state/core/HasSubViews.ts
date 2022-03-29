@@ -12,7 +12,7 @@ export class SubViewState<VIEW_STATE extends ViewState> {
   /***
    * Navigate to a subview
    */
-  navigateTo = action( (destinationSubViewState?: VIEW_STATE, changeAddressBarState?: "PushState" | "ReplaceState", onRestoreState?: () => void) => {
+  navigateTo = (destinationSubViewState?: VIEW_STATE, changeAddressBarState?: "PushState" | "ReplaceState", onRestoreState?: () => void) => {
     const previousSubViewState = this.subViewState;
     if (destinationSubViewState != previousSubViewState) {
       const restorePreviousSubViewState = () => {
@@ -22,14 +22,14 @@ export class SubViewState<VIEW_STATE extends ViewState> {
       this.rawSetSubView(destinationSubViewState);
       switch (changeAddressBarState) {
         case "PushState":
-          this.navState.pushAddressBarNavigationState( () => restorePreviousSubViewState ); break;
+          (this.subViewState?.navState ?? this.navState).pushAddressBarNavigationState( restorePreviousSubViewState ); break;
         case "ReplaceState":
-          this.navState.replaceAddressBarNavigationState( () => restorePreviousSubViewState ); break;
+          (this.subViewState?.navState ?? this.navState).replaceAddressBarNavigationState( restorePreviousSubViewState ); break;
         default: break;
       }
     }
-    return this;
-  });
+    // return this;
+  };
 
   constructor(readonly navState: NavState, defaultSubView?: VIEW_STATE) {
     this._subViewState = defaultSubView;
