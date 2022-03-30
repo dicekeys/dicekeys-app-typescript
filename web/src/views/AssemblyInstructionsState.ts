@@ -47,6 +47,7 @@ export class AssemblyInstructionsState implements ViewState {
       this.backupState = new BackupViewState(this.navState, new SettableOptionalDiceKeyIndirect(this, this.setDiceKey))
     }
     addressBarState.replaceState(this.navState.getPath, () => {
+      this.ensureVisible();
       this.step = step;
     })
   } } );
@@ -75,6 +76,7 @@ export class AssemblyInstructionsState implements ViewState {
   navState: NavigationPathState;
   constructor(
     parentNavState: NavigationPathState,
+    protected ensureVisible: () => void,
     public step: AssemblyInstructionsStep = AssemblyInstructionsStep.START_INCLUSIVE,
   ) {
     this.navState = new NavigationPathState(parentNavState, () => `${AssemblyInstructionsStateName}/${this.step}` )

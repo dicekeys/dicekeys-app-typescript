@@ -237,6 +237,6 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
 });
 
 addPreview("AssemblyInstructions", () => ( 
-  <AssemblyInstructionsView state={new AssemblyInstructionsState(NavigationPathState.root, AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
+  <AssemblyInstructionsView state={new AssemblyInstructionsState(NavigationPathState.root, () => {}, AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
 ));
 

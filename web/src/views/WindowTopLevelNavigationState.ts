@@ -59,7 +59,10 @@ export class WindowTopLevelNavigationState {
     // }
     this.subView.navigateToPushState(subViewState, this.onRestoreTopLevelState);
   }
-  navigateToAssemblyInstructions = () => this.navigateDownTo(new AssemblyInstructionsState(this.navState));
+  navigateToAssemblyInstructions = () => {
+    const assemblyInstructionsState = new AssemblyInstructionsState(this.navState, () => {this.subView.rawSetSubView(assemblyInstructionsState)});
+    this.navigateDownTo(assemblyInstructionsState);
+  }
   navigateToLoadDiceKey = () => this.navigateDownTo(new LoadDiceKeyViewState(this.navState, "camera"));
   navigateToSeedFidoKey = () => this.navigateDownTo(new SeedHardwareKeyViewState(this.navState));
 
@@ -148,7 +151,7 @@ export class WindowTopLevelNavigationState {
         const maxStep = AssemblyInstructionsStep.ScanFirstTime;
         const step = isNaN(stepNumber) ? AssemblyInstructionsStep.START_INCLUSIVE :
           Math.min(Math.max(stepNumber, AssemblyInstructionsStep.START_INCLUSIVE), maxStep);
-        windowTopLevelNavigationState.subView.navigateToPushState(new AssemblyInstructionsState(windowTopLevelNavigationState.navState, step), windowTopLevelNavigationState.onRestoreTopLevelState);
+        windowTopLevelNavigationState.subView.navigateToPushState(new AssemblyInstructionsState(windowTopLevelNavigationState.navState, () => {}, step), windowTopLevelNavigationState.onRestoreTopLevelState);
         return windowTopLevelNavigationState;
       // Only web uses paths, and /seed should not exist in web-only since we can't seed from browser
       // case PathStrings.SeedFidoKey:
