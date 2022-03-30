@@ -1,5 +1,6 @@
 import { action, computed, makeObservable, observable } from "mobx";
-import { NavState, ViewState } from "./ViewState";
+import { addressBarState } from "./AddressBarState";
+import { NavigationPathState, ViewState } from "./ViewState";
 
 export class SubViewState<VIEW_STATE extends ViewState> {
   protected _subViewState: VIEW_STATE | undefined;
@@ -15,24 +16,28 @@ export class SubViewState<VIEW_STATE extends ViewState> {
   navigateToPushState = (destinationSubViewState: VIEW_STATE, onRestoreState?: () => void) => {
     const previousSubViewState = this.subViewState;
     if (destinationSubViewState != previousSubViewState) {
-      const restorePreviousSubViewState = () => {
+      const doStateChange = () => {
+        this.rawSetSubView(destinationSubViewState);
+      };
+      const undoStateChange = () => {
         this.rawSetSubView(previousSubViewState);
         onRestoreState?.();
       }
-      this.rawSetSubView(destinationSubViewState);
-      (this.subViewState?.navState ?? this.navState).pushAddressBarNavigationState( restorePreviousSubViewState );
+      addressBarState.pushState(this.navState.getPath, doStateChange, undoStateChange);
     }
   };
 
-  navigateToReplaceState = (destinationSubViewState?: VIEW_STATE) => {
-    const previousSubViewState = this.subViewState;
-    if (destinationSubViewState != previousSubViewState) {
+  navigateToReplaceState = (
+    pathStrOrFn: string | (() => string) | undefined = undefined,
+    destinationSubViewState: VIEW_STATE | undefined = undefined
+  ) => {
+    const doStateChange = () => {
       this.rawSetSubView(destinationSubViewState);
-      (this.subViewState?.navState ?? this.navState).replaceAddressBarNavigationState( );
-    }
+    };
+    addressBarState.replaceState(pathStrOrFn ?? this.navState.getPath, doStateChange);
   };
 
-  constructor(readonly navState: NavState, defaultSubView?: VIEW_STATE) {
+  constructor(readonly navState: NavigationPathState, defaultSubView?: VIEW_STATE) {
     this._subViewState = defaultSubView;
     makeObservable<SubViewState<VIEW_STATE>, "_subViewState">(this, {      
       "_subViewState": observable,

@@ -2,7 +2,7 @@ import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupViewState } from "./ValidateBackupViewState";
-import { NavState, ViewState } from "../../state/core/ViewState";
+import { NavigationPathState, ViewState } from "../../state/core/ViewState";
 import { SettableOptionalDiceKey, WithDiceKey } from "../../state/Window/DiceKeyState";
 
 export enum BackupStep {
@@ -26,13 +26,13 @@ const validStepOrUndefined = (step: number): BackupStep | undefined =>
 export const BackupViewStateName = "backup";
 export class BackupViewState implements ViewState {
   readonly viewName = BackupViewStateName;
-  navState: NavState;
+  navState: NavigationPathState;
   constructor(
-    parentNavState: NavState,
+    parentNavState: NavigationPathState,
     readonly withDiceKey: SettableOptionalDiceKey | WithDiceKey,
     public step: BackupStep = BackupStep.START_INCLUSIVE
   ) {
-    this.navState = new NavState(parentNavState, BackupViewStateName, () => this.step != BackupStep.START_INCLUSIVE ? this.step.toString() : "");
+    this.navState = new NavigationPathState(parentNavState, BackupViewStateName, () => this.step != BackupStep.START_INCLUSIVE ? this.step.toString() : "");
     this.validationStepViewState = new ValidateBackupViewState(this.withDiceKey);
     makeAutoObservable(this);
   }
@@ -44,7 +44,7 @@ export class BackupViewState implements ViewState {
    * for the parent views removed, such that
    * the path `/M1/backup/3` would result in the `fromPathElements` array of `["backup", "3"]`.
    */
-  static fromPath = (parentNavState: NavState, diceKey: DiceKeyWithKeyId, subPathElements: string[] = []): BackupViewState => {
+  static fromPath = (parentNavState: NavigationPathState, diceKey: DiceKeyWithKeyId, subPathElements: string[] = []): BackupViewState => {
     const pathStep = subPathElements.length < 2 ? BackupStep.START_INCLUSIVE : parseInt(subPathElements[1] ?? "${BackupStep.START_INCLUSIVE}");
     const step = pathStep >= BackupStep.START_INCLUSIVE && pathStep < BackupStep.END_EXCLUSIVE ? pathStep : BackupStep.START_INCLUSIVE;
     return new BackupViewState( parentNavState, {diceKey}, step);

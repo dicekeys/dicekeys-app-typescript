@@ -7,7 +7,7 @@ import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
 import { hexStringToUint8ClampedArray, uint8ArrayToHexString } from "../../utilities";
 import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { electronBridge } from "../../state/core/ElectronBridge";
-import { NavState, ViewState } from "../../state/core/ViewState";
+import { NavigationPathState, ViewState } from "../../state/core/ViewState";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
 
@@ -45,11 +45,12 @@ export class SeedHardwareKeyViewState implements ViewState {
   startLoadDiceKey = action( () => {
     this.loadDiceKeyState = new LoadDiceKeyViewState( this.navState, "camera")
   })
-  onDiceKeyLoaded = action ((diceKey: DiceKeyWithKeyId) => {
+  onDiceKeyReadOrCancelled = action ((diceKey: DiceKeyWithKeyId | undefined) => {
     this.loadDiceKeyState = undefined;
-    this.diceKey = diceKey;
+    if (diceKey) {
+      this.diceKey = diceKey;
+    }
   });
-  onDiceKeyLoadCancelled = action( () => this.loadDiceKeyState = undefined );
 
   _seedInEditableHexFormatFieldValue: string | undefined = undefined;
   get seedInEditableHexFormatFieldValue() {return this._seedInEditableHexFormatFieldValue}
@@ -166,9 +167,9 @@ export class SeedHardwareKeyViewState implements ViewState {
     return SeedHardwareKeyViewState.#seedableFidoKeysObserverClass ||= new SeedableFIDOKeys();
   }
 
-  navState: NavState;
-  constructor(parentNavState: NavState, diceKey?: DiceKeyWithKeyId) {
-    this.navState = new NavState(parentNavState, SeedHardwareKeyViewStateName);
+  navState: NavigationPathState;
+  constructor(parentNavState: NavigationPathState, diceKey?: DiceKeyWithKeyId) {
+    this.navState = new NavigationPathState(parentNavState, SeedHardwareKeyViewStateName);
     const recipeBuilderState = new RecipeBuilderState({
       origin: "BuiltIn",
       type: "Secret",

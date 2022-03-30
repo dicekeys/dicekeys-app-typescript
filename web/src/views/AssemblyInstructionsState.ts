@@ -1,10 +1,11 @@
 
 import { action, makeAutoObservable } from "mobx";
 import { BackupViewState } from "./BackupView/BackupViewState";
-import { NavState, ViewState } from "../state/core/ViewState";
+import { NavigationPathState, ViewState } from "../state/core/ViewState";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../state";
 import { SettableOptionalDiceKeyIndirect } from "../state/Window/DiceKeyState";
+import { addressBarState } from "../state/core/AddressBarState";
 
 export enum AssemblyInstructionsStep {
   Randomize = 1,
@@ -45,7 +46,9 @@ export class AssemblyInstructionsState implements ViewState {
       }
       this.backupState = new BackupViewState(this.navState, new SettableOptionalDiceKeyIndirect(this, this.setDiceKey))
     }
-    this.step = step;
+    addressBarState.replaceState(this.navState.getPath, () => {
+      this.step = step;
+    })
   } } );
   get goToNextStep(): (() => any) | undefined {
     const {stepPlus1} = this;
@@ -69,12 +72,12 @@ export class AssemblyInstructionsState implements ViewState {
 
   backupState: BackupViewState | undefined;
 
-  navState: NavState;
+  navState: NavigationPathState;
   constructor(
-    parentNavState: NavState,
+    parentNavState: NavigationPathState,
     public step: AssemblyInstructionsStep = AssemblyInstructionsStep.START_INCLUSIVE,
   ) {
-    this.navState = new NavState(parentNavState, AssemblyInstructionsStateName /*, () => this.step.toString()*/ )
+    this.navState = new NavigationPathState(parentNavState, () => `${AssemblyInstructionsStateName}/${this.step}` )
     makeAutoObservable(this);
   }
 }

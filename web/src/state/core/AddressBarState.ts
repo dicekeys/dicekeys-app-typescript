@@ -1,73 +1,98 @@
 import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 
-type RestorePreviousStateOnPopStateCallback = () => void;
+type StateModificationFunction = () => void;
 
-// interface AddressBarState {
-//   path: string;
-//   back: () => void;
-//   // onPopState: (callback: (path: string) => void) => void;
-//   pushState: (
-//     data: STATE_DATA_TYPE,
-//     path: string,
-//     restorePreviousStateOnPopState: RestorePreviousStateOnPopStateCallback
-//   ) => void;
-//   replaceState: (
-//     data: STATE_DATA_TYPE,
-//     path: string,
-//     restorePreviousStateOnPopState?: RestorePreviousStateOnPopStateCallback
-//   ) => void;
-// }
+
+interface StateStackElement {
+  stateChangeFuntion: StateModificationFunction;
+  undoStateChangeFn: StateModificationFunction;
+  path: string;
+}
 
 export class AddressBarState {
-  protected popStateCallbackStack: ( RestorePreviousStateOnPopStateCallback | undefined )[] = [];
-  protected pathStack: string[] = [];
+  protected stateStack: StateStackElement[] = [];
+  historyIndex: number = -1;
 
-  get path(): string { return this.pathStack[0] ?? "/"};
+  get current() { return this.stateStack[this.historyIndex] }
+
+  get path(): string { return this.current?.path ?? ""};
 
   back() {
-    this.pathStack.shift();
-    const callback = this.popStateCallbackStack.shift();
-    callback?.();
+    const newHistoryIndex = this.historyIndex - 1;
+    if (newHistoryIndex > 0) {
+      this.moveToHistoryIndex(this.historyIndex - 1);
+    }
+  }
+
+  moveToHistoryIndex(historyIndex: number) {
+    console.log(`moveToHistoryIndex state initiated at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
+    while (this.historyIndex > historyIndex) {
+      // We need to undo state changes until we're back to the previous state
+      try { this.current?.undoStateChangeFn(); } catch {}
+      this.historyIndex--;
+    }
+    while (this.historyIndex < historyIndex && this.stateStack.length > this.historyIndex + 1) {
+      // We need to redo state changes to move forward in history
+      this.historyIndex++;
+      try {this.current?.stateChangeFuntion()} catch {}
+    }
+    console.log(`moveToHistoryIndex state completed at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
   }
 
   pushState(
-    path: string,
-    restorePreviousStateOnPopState?: RestorePreviousStateOnPopStateCallback
+    pathStrOrFn: string | (() => string),
+    stateChangeFuntion: StateModificationFunction,
+    undoStateChangeFn: StateModificationFunction
   ) {
-    if ((this.pathStack[0] ?? "/") !== path) {
-      // add the callback to the pathStack
-      this.pathStack.unshift(path);
-      this.popStateCallbackStack.unshift( restorePreviousStateOnPopState );
-    }
+//    if ((this.stateStack[0]?.path ?? "") !== path) {
+      // add the callback to the stateStack
+      stateChangeFuntion();
+      const pathStr = typeof pathStrOrFn === "string" ? pathStrOrFn : pathStrOrFn();
+      const path = pathStr.length === 0 ?  "/" : pathStr;
+      this.historyIndex = this.stateStack.length;
+      this.stateStack.push({path, stateChangeFuntion, undoStateChangeFn});
+      return path;
+//    }
   }
 
   replaceState(
-    path: string,
-    restorePreviousStateOnPopState?: RestorePreviousStateOnPopStateCallback
+    pathStrOrFn: string | (() => string),
+    stateChangeFuntion: StateModificationFunction,
+    undoStateChangeFn?: StateModificationFunction
   ) {
-    if (this.pathStack.length === 0) {
-      this.pathStack.unshift(path);
-      this.popStateCallbackStack.unshift(restorePreviousStateOnPopState)
+    stateChangeFuntion();
+    const pathStr = typeof pathStrOrFn === "string" ? pathStrOrFn : pathStrOrFn();
+    const path = pathStr.length === 0 ?  "/" : pathStr;
+    if (this.stateStack.length === 0) {
+      this.pushState(path, stateChangeFuntion, undoStateChangeFn ?? (() => {}));
     } else {
-      this.pathStack[0] = path;
+      this.stateStack[this.historyIndex] = {path, stateChangeFuntion, undoStateChangeFn: undoStateChangeFn ?? this.stateStack[0]!.undoStateChangeFn };
     }
-    if (restorePreviousStateOnPopState != null && this.popStateCallbackStack.length > 0) {
-      this.popStateCallbackStack[0] = restorePreviousStateOnPopState;
+    return path;
+  }
+
+  setInitialState(
+    path: string,
+    restoreFn?: StateModificationFunction
+  ) {
+    if (this.stateStack.length === 0) {
+      this.historyIndex = 0;
+      this.stateStack.unshift({path, stateChangeFuntion: () => {}, undoStateChangeFn: restoreFn ?? ((() => {}))});
     }
   }
 
 }
 
-interface AddressBarDepthState {
-  depth: number;
+interface AddressBarHistoryStateIdentifier {
+  historyIndex: number;
 }
 
 class BrowserAddressBarState extends AddressBarState {
 
-  override get path(): string { return window.location.pathname }
+//  override get path(): string { return window.location.pathname }
 
   override back() {
-    if (this.popStateCallbackStack.length === 0) {
+    if (this.stateStack.length === 0) {
       // There's nowhere back to go so we need to do a hard navigation to the top.
       // This can occur if we start by a deep load, e.g. to "/assemble"
       // FIXME
@@ -77,44 +102,40 @@ class BrowserAddressBarState extends AddressBarState {
   }
 
   override pushState(
-    path: string,
-    restorePreviousStateOnPopState?: RestorePreviousStateOnPopStateCallback
+    pathStrOrFn: string | (() => string),
+    stateChangeFuntion: StateModificationFunction,
+    undoStateChangeFn: StateModificationFunction
   ) {
-    if (window.location.pathname !== path) {
-      const depthState: AddressBarDepthState = {depth: this.popStateCallbackStack.length + 1}
-      window.history.pushState(depthState, '', path);
-      super.pushState(path, restorePreviousStateOnPopState);
-    }
+    console.log(`push state initiated at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"="${window.location.pathname}"`)
+    const path = super.pushState(pathStrOrFn, stateChangeFuntion, undoStateChangeFn);
+    const historyStateIdentifier: AddressBarHistoryStateIdentifier = {historyIndex: this.stateStack.length + 1}
+    window.history.pushState(historyStateIdentifier, '', path);
+    console.log(`push state completed at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`);
+    return path;
   }
 
   override replaceState(
-    path: string,
-    restorePreviousStateOnPopState?: RestorePreviousStateOnPopStateCallback
+    pathStrOrFn: string | (() => string),
+    stateChangeFuntion: StateModificationFunction,
+    undoStateChangeFn?: StateModificationFunction
   ) {
-    const depthState: AddressBarDepthState = {depth: this.popStateCallbackStack.length}
-    window.history.replaceState(depthState, '', path);
-    super.replaceState(path, restorePreviousStateOnPopState);
+    console.log(`replace state initiated at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
+    const historyStateIdentifier: AddressBarHistoryStateIdentifier = {historyIndex: this.historyIndex}
+    const path = super.replaceState(pathStrOrFn, stateChangeFuntion, undoStateChangeFn);
+    window.history.replaceState(historyStateIdentifier, '', path);
+    console.log(`replace state completed at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"="${path}"="${window.location.pathname}"`);
+    return path;
   }
 
-  #onBack = (depth: number) => {
-    if (this.popStateCallbackStack.length > depth + 1) {
-      // We're in a browser going back more than one level of depth.  Adjust the
-      // length of the stacks to be one greater than the depth we want to go to so that
-      // when we pop (unshift) we reach the desired spot.
-      this.pathStack = this.pathStack.slice(0, depth + 1);
-      this.popStateCallbackStack = this.popStateCallbackStack.slice(0, depth + 1);
-    }
-    super.back();
-  }
-  #onBackEvent = (ev: PopStateEvent) => {
+  #onPopStateEvent = (ev: PopStateEvent) => {
     const {state} = ev;
-    const {depth = 0} = ((typeof state === "object" && state != null) ? state as AddressBarDepthState : {depth: undefined});
-    this.#onBack(depth);
+    const {historyIndex = 0} = ((typeof state === "object" && state != null) ? state as AddressBarHistoryStateIdentifier : {historyIndex: undefined});
+    this.moveToHistoryIndex(historyIndex);
   }
   
   constructor() {
     super();
-    window.addEventListener('popstate', this.#onBackEvent);
+    window.addEventListener('popstate', this.#onPopStateEvent);
   }
 }
 

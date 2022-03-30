@@ -20,7 +20,7 @@ import { PrimaryView } from "../css/Page";
 import styled from "styled-components";
 import { WindowRegionBelowTopNavigationBarWithSideMargins, calcHeightBelowTopNavigationBar } from "./Navigation/NavigationLayout";
 import { cssCalcTyped,  cssExprWithoutCalc } from "../utilities";
-import { NavState } from "../state/core/ViewState";
+import { NavigationPathState } from "../state/core/ViewState";
 import { addressBarState } from "../state/core/AddressBarState";
 
 
@@ -178,12 +178,7 @@ interface AssemblyInstructionsViewProps {
 
 const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  AssemblyInstructionsViewProps) => {
   const onDone = () => { 
-    const {diceKey} = state;
-    if (diceKey == null) {
-      addressBarState.back();
-    } else {
-      onComplete(diceKey);
-    }
+    onComplete(state.diceKey);
   };
   return (
     <StepFooterView               
@@ -242,6 +237,6 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
 });
 
 addPreview("AssemblyInstructions", () => ( 
-  <AssemblyInstructionsView state={new AssemblyInstructionsState(NavState.root, AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
+  <AssemblyInstructionsView state={new AssemblyInstructionsState(NavigationPathState.root, AssemblyInstructionsStep.ScanFirstTime)} onComplete={ () => {alert("Called goBack()")} } />
 ));
 

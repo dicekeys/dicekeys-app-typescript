@@ -1,6 +1,6 @@
 import { BackupViewState, BackupViewStateName } from "../BackupView/BackupViewState";
 import { SubViewState } from "../../state/core";
-import { NavState, ViewState } from "../../state/core/ViewState";
+import { NavigationPathState, ViewState } from "../../state/core/ViewState";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { SeedHardwareKeyViewState, SeedHardwareKeyViewStateName } from "../Recipes/SeedHardwareKeyViewState"
 import { SecretDerivationViewState, SecretDerivationViewStateName } from "../../views/Recipes/DerivationView";
@@ -12,9 +12,9 @@ export const DisplayDiceKeyViewStateName = "";
 export type DisplayDiceKeyViewStateName = typeof DisplayDiceKeyViewStateName;
 export class DisplayDiceKeyViewState implements ViewState {
   readonly viewName = DisplayDiceKeyViewStateName;
-  navState: NavState;
-  constructor(parentNavState: NavState, public readonly diceKey: DiceKeyWithKeyId) {
-    this.navState = new NavState(parentNavState, DisplayDiceKeyViewStateName)
+  navState: NavigationPathState;
+  constructor(parentNavState: NavigationPathState, public readonly diceKey: DiceKeyWithKeyId) {
+    this.navState = new NavigationPathState(parentNavState, DisplayDiceKeyViewStateName)
   }
   // toPath = () => ``;
 }
@@ -73,15 +73,15 @@ export class SelectedDiceKeyViewState implements ViewState<SelectedDiceKeyViewSt
   _secretDerivationViewState?: SecretDerivationViewState;
   get secretDerivationViewState() { return this._secretDerivationViewState ||= new SecretDerivationViewState(this.navState, this.diceKey) }
 
-  navState: NavState;
+  navState: NavigationPathState;
   subView: SubViewState<SelectedDiceKeySubViewStates>;
 
   get subViewState() { return this.subView.subViewState ?? this.displayDiceKeyViewState }
   constructor(
-    parentNavState: NavState, 
+    parentNavState: NavigationPathState, 
     public readonly diceKey: DiceKeyWithKeyId,
   ) {
-    this.navState = new NavState(parentNavState, diceKey.centerLetterAndDigit, () => this.subViewState.navState.fromHereToEndOfPathInclusive );
+    this.navState = new NavigationPathState(parentNavState, diceKey.centerLetterAndDigit, () => this.subViewState.navState.fromHereToEndOfPathInclusive );
     this.subView = new SubViewState<SelectedDiceKeySubViewStates>(this.navState, this.displayDiceKeyViewState);
   }
 
@@ -95,7 +95,7 @@ export class SelectedDiceKeyViewState implements ViewState<SelectedDiceKeyViewSt
    * letter and digit used to identify the DiceKey removed, such that
    * the path `/M1/a/b` would result in the `subPathElements` array of `["a", "b"]`.
    */
-  static fromPath = (parentNavState: NavState, diceKey: DiceKeyWithKeyId, subPathElements: string[] = []): SelectedDiceKeyViewState => {
+  static fromPath = (parentNavState: NavigationPathState, diceKey: DiceKeyWithKeyId, subPathElements: string[] = []): SelectedDiceKeyViewState => {
     const instance = new SelectedDiceKeyViewState(parentNavState, diceKey);
     if (subPathElements.length > 0) {
       const subViewName = subPathElements[0];
@@ -131,7 +131,7 @@ export class SelectedDiceKeyViewState implements ViewState<SelectedDiceKeyViewSt
   // }
 
   navigateToSubViewAndReplaceState = (state: SelectedDiceKeySubViewStates) => {
-      this.subView.navigateToReplaceState(state);
+      this.subView.navigateToReplaceState(undefined, state);
       return this;
   }
 

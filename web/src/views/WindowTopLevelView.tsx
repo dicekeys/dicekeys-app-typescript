@@ -32,14 +32,13 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
     case LoadDiceKeyViewStateName:
       return (
         <LoadDiceKeyView
-          onDiceKeyRead={ windowTopLevelNavigationState.loadScannedOrEnteredDiceKey }
-          onCancelled={ addressBarState.back }
+          onDiceKeyReadOrCancelled={ windowTopLevelNavigationState.onReturnFromActionThatMayLoadDiceKey }
           state={ subViewState }
         />
       );
     case AssemblyInstructionsStateName:
       return (
-        <AssemblyInstructionsView onComplete={ windowTopLevelNavigationState.onReturnFromAssemblyInstructions } state={subViewState}
+        <AssemblyInstructionsView onComplete={ windowTopLevelNavigationState.onReturnFromActionThatMayLoadDiceKey } state={subViewState}
 //          new AssemblyInstructionsState(windowTopLevelNavigationState.foregroundDiceKeyState)
          />
     )
@@ -55,8 +54,9 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
   }
 });
 
+const windowTopLevelNavigationStateFromPath = WindowTopLevelNavigationState.fromPath()
 export const WindowTopLevelView = observer ( ({
-  windowTopLevelNavigationState = WindowTopLevelNavigationState.fromPath() } : {
+  windowTopLevelNavigationState = windowTopLevelNavigationStateFromPath } : {
   windowTopLevelNavigationState?: WindowTopLevelNavigationState
 }) => (
   <PrimaryView>

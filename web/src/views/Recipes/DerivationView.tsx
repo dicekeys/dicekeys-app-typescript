@@ -14,7 +14,7 @@ import {
 } from "./DerivationView/DerivationViewLayout";
 import { RawJsonWarning } from "./DerivationView/RawJsonWarning";
 import { observer } from "mobx-react-lite";
-import { NavState, ViewState } from "../../state/core/ViewState";
+import { NavigationPathState, ViewState } from "../../state/core/ViewState";
 
 
 export const RecipeWizardOrFieldsView = observer ( ({recipeBuilderState}: {
@@ -35,11 +35,11 @@ export const SecretDerivationViewStateName = "secret";
 export type SecretDerivationViewStateName = typeof SecretDerivationViewStateName;
 export class SecretDerivationViewState implements ViewState<SecretDerivationViewStateName> {
   readonly viewName = SecretDerivationViewStateName;
-  navState: NavState;
+  navState: NavigationPathState;
   readonly recipeBuilderState: RecipeBuilderState;
   readonly derivedFromRecipeState: DerivedFromRecipeState; 
-  constructor(parentNavState: NavState, public readonly diceKey: DiceKeyWithKeyId) {
-    this.navState = new NavState(parentNavState, SecretDerivationViewStateName);
+  constructor(parentNavState: NavigationPathState, public readonly diceKey: DiceKeyWithKeyId) {
+    this.navState = new NavigationPathState(parentNavState, SecretDerivationViewStateName);
     this.recipeBuilderState = new RecipeBuilderState();
     this.derivedFromRecipeState = new DerivedFromRecipeState({recipeState: this.recipeBuilderState, diceKey});
   }
@@ -57,5 +57,5 @@ export const SecretDerivationView = observer ( ({state}: {state: SecretDerivatio
 ));
 
 export const Preview_DerivationView = () => (
-  <SecretDerivationView state={new SecretDerivationViewState(NavState.root, DiceKeyWithKeyId.testExample)} />
+  <SecretDerivationView state={new SecretDerivationViewState(NavigationPathState.root, DiceKeyWithKeyId.testExample)} />
 )

@@ -15,7 +15,7 @@ import {BackupStep, BackupViewState} from "./BackupViewState";
 import { StepButton } from "../../css/Button";
 import styled from "styled-components";
 import { SelectedDiceKeyContentRegionInsideSideMargins} from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
-import { NavState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/ViewState";
 
 export const ComparisonBox = styled.div`
   display: flex;
@@ -258,11 +258,11 @@ export const BackupView = observer ( (props: BackupViewProps) => (
   </BackViewContentContainer>));
 
 addPreviewWithMargins("Backup", () => ( 
-  <BackupView state={new BackupViewState(NavState.root, {diceKey: DiceKeyWithKeyId.testExample}, BackupStep.SelectBackupMedium)} />
+  <BackupView state={new BackupViewState(NavigationPathState.root, {diceKey: DiceKeyWithKeyId.testExample}, BackupStep.SelectBackupMedium)} />
 ));
 
 addPreviewWithMargins("BackupNoErrors", () => {
-  const state = new BackupViewState(NavState.root, {diceKey: DiceKeyWithKeyId.testExample});
+  const state = new BackupViewState(NavigationPathState.root, {diceKey: DiceKeyWithKeyId.testExample});
   state.setBackupMedium(BackupMedium.DiceKey);
   state.setStep(BackupStep.Validate);
   state.validationStepViewState.setDiceKeyScannedForValidation(DiceKeyWithKeyId.testExample)
@@ -271,7 +271,7 @@ addPreviewWithMargins("BackupNoErrors", () => {
 
 addPreviewWithMargins("Backup1Error", () => {
   const diceKey = DiceKeyWithKeyId.testExample;
-  const state = new BackupViewState(NavState.root, {diceKey}, BackupStep.Validate);
+  const state = new BackupViewState(NavigationPathState.root, {diceKey}, BackupStep.Validate);
   state.setBackupMedium(BackupMedium.DiceKey);
   const diceKeyWithErrors = new DiceKeyWithoutKeyId(DiceKeyFaces(diceKey.rotate(1).faces.map( (face, index) => {
       switch(index) {
@@ -287,7 +287,7 @@ addPreviewWithMargins("Backup1Error", () => {
 
 addPreviewWithMargins("BackupShowErrors", () => {
   const diceKey = DiceKeyWithKeyId.testExample;
-  const state = new BackupViewState(NavState.root, {diceKey}, BackupStep.Validate);
+  const state = new BackupViewState(NavigationPathState.root, {diceKey}, BackupStep.Validate);
   state.setBackupMedium(BackupMedium.DiceKey);
   const diceKeyWithErrors = new DiceKeyWithoutKeyId(DiceKeyFaces(diceKey.rotate(1).faces.map( (face, index) => {
       switch(index) {

@@ -111,7 +111,7 @@ export const WindowHomeView = observer ( ({windowNavigationState}: {windowNaviga
         */}
         <StoredDiceKeysRow>{
           DiceKeyMemoryStore.keysInMemoryOrSavedToDevice.map( storedDiceKeyDescriptor => (
-            <StoredDiceKeyView {...{windowNavigationState, storedDiceKeyDescriptor}} />
+            <StoredDiceKeyView key={storedDiceKeyDescriptor.keyId} {...{windowNavigationState, storedDiceKeyDescriptor}} />
           ))
         }</StoredDiceKeysRow>
         {/* 

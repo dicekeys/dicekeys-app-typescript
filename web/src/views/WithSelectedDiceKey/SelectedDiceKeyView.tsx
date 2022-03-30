@@ -19,7 +19,7 @@ import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities";
 import { DisplayDiceKeyViewState, DisplayDiceKeyViewStateName } from "./SelectedDiceKeyViewState";
 import { SeedHardwareKeyViewStateName } from "../../views/Recipes/SeedHardwareKeyViewState";
 import { BackupViewStateName } from "../../views/BackupView/BackupViewState";
-import { NavState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/ViewState";
 
 const IdealMinimumContentMargin = `2rem`
 
@@ -75,14 +75,14 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
 addPreview("SelectedDiceKey", () => (
   <SelectedDiceKeyView
     goBack={() => alert("Back off man, I'm a scientist!")}
-    state={new Navigation.SelectedDiceKeyViewState(NavState.root, DiceKeyWithKeyId.testExample).navigateToDisplayDiceKey()}
+    state={new Navigation.SelectedDiceKeyViewState(NavigationPathState.root, DiceKeyWithKeyId.testExample).navigateToDisplayDiceKey()}
 />));
 
 addPreview("Recipes", () => (<SelectedDiceKeyView
     goBack={() => alert("Back off man, I'm a scientist!")}
-    state={new Navigation.SelectedDiceKeyViewState(NavState.root, DiceKeyWithKeyId.testExample).navigateToDeriveSecrets()}
+    state={new Navigation.SelectedDiceKeyViewState(NavigationPathState.root, DiceKeyWithKeyId.testExample).navigateToDeriveSecrets()}
 />));
 
 addPreview("SeedHardwareKey", () => (<SelectedDiceKeyView
-  state={new Navigation.SelectedDiceKeyViewState(NavState.root, DiceKeyWithKeyId.testExample).navigateToSeedHardwareKey()}
+  state={new Navigation.SelectedDiceKeyViewState(NavigationPathState.root, DiceKeyWithKeyId.testExample).navigateToSeedHardwareKey()}
 />));

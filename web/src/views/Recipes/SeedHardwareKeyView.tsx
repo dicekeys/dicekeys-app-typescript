@@ -12,7 +12,7 @@ import { SeedHardwareKeyViewState, SeedSource, fidoAccessDeniedByPlatform, fidoA
 import { SelectedDiceKeyContentRegionWithoutSideMargins } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { LoadDiceKeyView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
-import { NavState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/ViewState";
 
 const FieldRow = styled.div<{invisible?: boolean}>`
     ${ props => props.invisible ? css`visibility: hidden;` : ``}
@@ -320,8 +320,7 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState}:
   } else if (loadDiceKeyState != null) {
     return (
       <LoadDiceKeyView
-       onDiceKeyRead={ seedHardwareKeyViewState.onDiceKeyLoaded }
-        onCancelled={ seedHardwareKeyViewState.onDiceKeyLoadCancelled }
+        onDiceKeyReadOrCancelled={ seedHardwareKeyViewState.onDiceKeyReadOrCancelled }
         state={ loadDiceKeyState }
       />
     );
@@ -365,7 +364,7 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState}:
 
 
 export const SeedHardwareKeyView = observer (({parentNavState, diceKey}: {
-  parentNavState: NavState;
+  parentNavState: NavigationPathState;
   diceKey: DiceKeyWithKeyId;
 }) => {
   const seedHardwareKeyViewState = new SeedHardwareKeyViewState(parentNavState, diceKey);
@@ -378,7 +377,7 @@ export const SeedHardwareKeyView = observer (({parentNavState, diceKey}: {
 
 
 export const SeedHardwareKeyPrimaryView = observer( ({parentNavState, diceKey}: {
-  parentNavState: NavState;
+  parentNavState: NavigationPathState;
   diceKey: DiceKeyWithKeyId;
 }) => {
   return (
