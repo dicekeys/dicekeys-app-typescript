@@ -1,7 +1,6 @@
 import ReactDOM from "react-dom";
 import * as React from "react";
 import { ErrorHandler } from "./views/ErrorHandler";
-import { ErrorState } from "./views/ErrorState";
 import { Preview_ScanDiceKeyView } from "./views/LoadingDiceKeys/ScanDiceKeyView";
 import { Preview_EnterDiceKeyView } from "./views/LoadingDiceKeys/EnterDiceKeyView";
 import { Preview_StickerSheetView } from "./views/SVG/StickerSheetView";
@@ -19,8 +18,6 @@ import styled from "styled-components";
 if (!WindowRoutingView) {
   console.log("Failed to load the app top level view.")
 }
-
-const ApplicationErrorState = new ErrorState();
 
 addCenteredPreview("EnterDiceKey", () => ( <Preview_EnterDiceKeyView/> ));
 addCenteredPreview("ScanDiceKey", () => ( <Preview_ScanDiceKeyView/> ));
@@ -69,7 +66,7 @@ const Previews = observer ( () => {
 window.addEventListener('load', () => {
   DiceKeyMemoryStore.onReady( () => {
     ReactDOM.render((
-      <ErrorHandler errorState={ApplicationErrorState}>
+      <ErrorHandler>
           <Previews />
       </ErrorHandler>
     ), document.getElementById("app_container"));
