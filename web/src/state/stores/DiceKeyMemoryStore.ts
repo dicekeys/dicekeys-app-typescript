@@ -12,6 +12,8 @@ export interface PublicDiceKeyDescriptorWithSavedOnDevice extends PublicDiceKeyD
   savedOnDevice: boolean
 };
 
+export const PlatformSupportsSavingToDevice = RUNNING_IN_ELECTRON;
+
 interface StorageFormat {
   keyIdToDiceKeyInHumanReadableForm: [string, DiceKeyInHumanReadableForm][];
   centerLetterAndDigitToKeyId: [string, string][];
@@ -141,6 +143,8 @@ class DiceKeyMemoryStoreClass {
   get keyIds(): string[] { return [...this.keyIdToDiceKeyInHumanReadableForm.keys()] }
 
   hasKeyIdInMemory = (keyId: string) => this.keyIdToDiceKeyInHumanReadableForm.has(keyId);
+
+  hasKeyInEncryptedStore = (keyId: string) => EncryptedDiceKeyStore.has({keyId});
 
   get keysInMemory(): PublicDiceKeyDescriptorWithSavedOnDevice[] {
     return sortPublicDiceKeyDescriptors([...(this.keyIdToDiceKeyInHumanReadableForm.entries())].map( ([keyId, diceKeyInHumanReadableForm]) => {

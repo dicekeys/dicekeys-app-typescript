@@ -15,6 +15,7 @@ import { facesFromPublicKeyDescriptor } from "../dicekeys/DiceKey";
 import { WindowHomeNavigationBar } from "./WindowHomeNavigationBar";
 import { BUILD_VERSION, BUILD_DATE } from "../vite-build-constants";
 import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "../state";
+import { PlatformSupportsSavingToDevice  } from "../state/stores/DiceKeyMemoryStore";
 
 const SubViewButton = styled.button`
   display: flex;
@@ -71,34 +72,57 @@ const VersionInformationBar = styled.div`
   font-size: min(0.8rem,3vh,3vw);
 `
 
-const StoredDiceKeyView = observer ( ({storedDiceKeyDescriptor, windowNavigationState}: {
+interface StoredDiceKeyProps {
   storedDiceKeyDescriptor: PublicDiceKeyDescriptorWithSavedOnDevice;
   windowNavigationState: WindowTopLevelNavigationState;
-}) => (
-  <div key={storedDiceKeyDescriptor.keyId}>
-    <SubViewButton
-      onClick={() => windowNavigationState.loadStoredDiceKey(storedDiceKeyDescriptor)}
-    >
-      <DiceKeyView
-        size={`${cssCalcTyped(`min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})`)}`}
-        faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
-        obscureAllButCenterDie={true}
-        showLidTab={true}
-      />
-      <SubViewButtonCaption>{
-        `Key ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit}`
-      }</SubViewButtonCaption>
-    </SubViewButton>
-      { storedDiceKeyDescriptor.savedOnDevice ? 
-        /* if stored on device, the options should be erase from device */
-        (<div><button>erase from device</button></div>) :
-        /* if stored only in memory, give the option to save or erase from memory */ 
-        (<div>
-        <div><button>save</button> <button>erase</button></div>
-        <div>(erases automaticaly in {windowNavigationState.autoEraseCountdownTimer?.secondsRemaining}s)</div>
-      </div>)}
-  </div>
-));
+}
+
+const StoredDiceKeyButtons  = observer ( ({storedDiceKeyDescriptor, windowNavigationState}: StoredDiceKeyProps) => {
+  const removeFromMemory = () => { DiceKeyMemoryStore.removeDiceKeyForKeyId(storedDiceKeyDescriptor.keyId) };
+  const navigateToDeleteFromDevice = () => { windowNavigationState.navigateToDeleteFromDevice(storedDiceKeyDescriptor) };
+  const navigateToSaveToDevice = () => { windowNavigationState.navigateToSaveToDevice(storedDiceKeyDescriptor) };
+  if (!PlatformSupportsSavingToDevice) {
+    // For platforms that don't support saving DiceKeys to long-term device storage,
+    // we can only allow the DiceKey currrently in memory to be removed.
+    return (
+      <button onClick={removeFromMemory} >remove</button>
+    )
+  }
+  if (storedDiceKeyDescriptor.savedOnDevice) {
+    // As this DiceKey is already saved to the device, we can offer the option to remove it from the device.
+    return (
+      <button onClick={navigateToDeleteFromDevice} >delete</button>
+    )
+  } else {
+    return (
+      <button onClick={navigateToSaveToDevice} >save</button>
+    )
+  }
+})
+
+// FIXME -- move to common timer for all in-memory DiceKeys
+const StoredDiceKeyView = observer ( (props: StoredDiceKeyProps) => {
+  const {storedDiceKeyDescriptor, windowNavigationState} = props;
+  return (
+    <div key={storedDiceKeyDescriptor.keyId}>
+      <SubViewButton
+        onClick={() => windowNavigationState.loadStoredDiceKey(storedDiceKeyDescriptor)}
+      >
+        <DiceKeyView
+          size={`${cssCalcTyped(`min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})`)}`}
+          faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
+          obscureAllButCenterDie={true}
+          showLidTab={true}
+        />
+        <SubViewButtonCaption>{
+          `Key ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit}`
+        }</SubViewButtonCaption>
+      </SubViewButton>
+      <div><StoredDiceKeyButtons {...props} /></div>
+      <div>(erases automaticaly in {windowNavigationState.autoEraseCountdownTimer?.secondsRemaining}s)</div>
+    </div>
+  )
+});
 
 export const WindowHomeView = observer ( ({windowNavigationState}: {windowNavigationState: WindowTopLevelNavigationState}) => {
   return (

@@ -13,7 +13,7 @@ import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
 import { PrimaryView } from "../css";
 import { SeedHardwareKeySimpleView } from "./Recipes/SeedHardwareKeyView";
 import { SeedHardwareKeyViewStateName } from "./Recipes/SeedHardwareKeyViewState";
-
+import { SaveDiceKeyStateName, SaveDiceKeyToDeviceStorageView, DeleteDiceKeyStateName, DeleteDiceKeyFromDeviceStroageView } from "./SaveDiceKeyView";
 
 export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {windowTopLevelNavigationState: WindowTopLevelNavigationState}) => {
 
@@ -29,6 +29,10 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
   // console.log(`Displaying subview ${windowTopLevelNavigationState.subView}`)
   const {subViewState} = windowTopLevelNavigationState.subView;
   switch (subViewState?.viewName) {
+    case SaveDiceKeyStateName:
+      return (<SaveDiceKeyToDeviceStorageView state={subViewState} closeFn={ addressBarState.back } />);
+    case DeleteDiceKeyStateName:
+      return (<DeleteDiceKeyFromDeviceStroageView state={subViewState} closeFn={ addressBarState.back } />);
     case LoadDiceKeyViewStateName:
       return (
         <LoadDiceKeyView

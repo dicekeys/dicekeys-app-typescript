@@ -10,8 +10,14 @@ import { SelectedDiceKeyViewState } from "./WithSelectedDiceKey/SelectedDiceKeyV
 import { SeedHardwareKeyViewState } from "./Recipes/SeedHardwareKeyViewState";
 import { PathStrings } from "./Navigation/PathStrings";
 import { NavigationPathState } from "../state/core/ViewState";
+import { DeleteDiceKeyStateName, SaveDiceKeyStateName, SaveOrDeleteDiceKeyState, SaveOrDeleteDiceKeyStateName } from "./SaveDiceKeyView";
 
-type TopLevelSubViewStates = LoadDiceKeyViewState | AssemblyInstructionsState | SelectedDiceKeyViewState | SeedHardwareKeyViewState;
+export type TopLevelSubViewStates =
+  LoadDiceKeyViewState |
+  AssemblyInstructionsState |
+  SelectedDiceKeyViewState |
+  SeedHardwareKeyViewState |
+  SaveOrDeleteDiceKeyState
 
 const diceKeyFromPathRoot = (pathRoot: string | undefined): DiceKeyWithKeyId | undefined => {
   if (!pathRoot) return;
@@ -24,6 +30,9 @@ export class WindowTopLevelNavigationState {
   autoEraseCountdownTimer?: CountdownTimer | undefined;
   setAutoEraseCountdownTimer = action( (msRemaining: number= 60*1000) => {
     return this.autoEraseCountdownTimer = new CountdownTimer(msRemaining, 1000);
+  });
+  clearAutoEraseCountdownTimer = action( () => {
+    return this.autoEraseCountdownTimer = undefined;
   });
 
   onRestoreTopLevelState = action ( () => {
@@ -65,6 +74,15 @@ export class WindowTopLevelNavigationState {
   }
   navigateToLoadDiceKey = () => this.navigateDownTo(new LoadDiceKeyViewState(this.navState, "camera"));
   navigateToSeedFidoKey = () => this.navigateDownTo(new SeedHardwareKeyViewState(this.navState));
+
+  navigateToSaveOrDeleteFromDevice = (saveOrDelete: SaveOrDeleteDiceKeyStateName) => async (descriptor: PublicDiceKeyDescriptorWithSavedOnDevice) => {
+    const diceKey = await DiceKeyMemoryStore.load(descriptor);
+    if (diceKey) {
+      this.navigateDownTo(new SaveOrDeleteDiceKeyState(saveOrDelete, this.navState, diceKey));
+    }
+  }
+  navigateToDeleteFromDevice = this.navigateToSaveOrDeleteFromDevice(DeleteDiceKeyStateName);
+  navigateToSaveToDevice = this.navigateToSaveOrDeleteFromDevice(SaveDiceKeyStateName);
 
   navigateToSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
     this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKey), this.onRestoreTopLevelState);
