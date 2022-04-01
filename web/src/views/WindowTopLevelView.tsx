@@ -14,6 +14,7 @@ import { PrimaryView } from "../css";
 import { SeedHardwareKeySimpleView } from "./Recipes/SeedHardwareKeyView";
 import { SeedHardwareKeyViewStateName } from "./Recipes/SeedHardwareKeyViewState";
 import { SaveDiceKeyStateName, SaveDiceKeyToDeviceStorageView, DeleteDiceKeyStateName, DeleteDiceKeyFromDeviceStroageView } from "./SaveDiceKeyView";
+import { RUNNING_IN_ELECTRON } from "../utilities/is-electron";
 
 export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {windowTopLevelNavigationState: WindowTopLevelNavigationState}) => {
 
@@ -58,9 +59,17 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
   }
 });
 
-const windowTopLevelNavigationStateFromPath = WindowTopLevelNavigationState.fromPath()
+const defaultWindowNavigationState = ( (): WindowTopLevelNavigationState => {
+  if (RUNNING_IN_ELECTRON) {
+    const state = new WindowTopLevelNavigationState();
+//    addressBarState.setInitialState("", () => {});
+    return state;
+  } else {
+    return WindowTopLevelNavigationState.fromPath()
+  }
+})();
 export const WindowTopLevelView = observer ( ({
-  windowTopLevelNavigationState = windowTopLevelNavigationStateFromPath } : {
+  windowTopLevelNavigationState = defaultWindowNavigationState } : {
   windowTopLevelNavigationState?: WindowTopLevelNavigationState
 }) => (
   <PrimaryView>

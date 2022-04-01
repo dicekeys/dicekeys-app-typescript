@@ -17,10 +17,10 @@ export class AddressBarState {
 
   get path(): string { return this.current?.path ?? ""};
 
-  back() {
+  back = () => {
     const newHistoryIndex = this.historyIndex - 1;
-    if (newHistoryIndex > 0) {
-      this.moveToHistoryIndex(this.historyIndex - 1);
+    if (newHistoryIndex >= -1) {
+      this.moveToHistoryIndex(newHistoryIndex);
     }
   }
 
@@ -44,15 +44,12 @@ export class AddressBarState {
     stateChangeFuntion: StateModificationFunction,
     undoStateChangeFn: StateModificationFunction
   ) {
-//    if ((this.stateStack[0]?.path ?? "") !== path) {
-      // add the callback to the stateStack
-      stateChangeFuntion();
-      const pathStr = typeof pathStrOrFn === "string" ? pathStrOrFn : pathStrOrFn();
-      const path = pathStr.length === 0 ?  "/" : pathStr;
-      this.historyIndex = this.stateStack.length;
-      this.stateStack.push({path, stateChangeFuntion, undoStateChangeFn});
-      return path;
-//    }
+    stateChangeFuntion();
+    const pathStr = typeof pathStrOrFn === "string" ? pathStrOrFn : pathStrOrFn();
+    const path = pathStr.length === 0 ?  "/" : pathStr;
+    this.historyIndex = this.stateStack.length;
+    this.stateStack.push({path, stateChangeFuntion, undoStateChangeFn});
+    return path;
   }
 
   replaceState(
@@ -71,15 +68,15 @@ export class AddressBarState {
     return path;
   }
 
-  setInitialState(
-    path: string,
-    restoreFn?: StateModificationFunction
-  ) {
-    if (this.stateStack.length === 0) {
-      this.historyIndex = 0;
-      this.stateStack.unshift({path, stateChangeFuntion: () => {}, undoStateChangeFn: restoreFn ?? ((() => {}))});
-    }
-  }
+  // setInitialState(
+  //   path: string,
+  //   restoreFn?: StateModificationFunction
+  // ) {
+  //   if (this.stateStack.length === 0) {
+  //     this.historyIndex = 0;
+  //     this.stateStack.push({path, stateChangeFuntion: () => {}, undoStateChangeFn: restoreFn ?? ((() => {}))});
+  //   }
+  // }
 
 }
 
@@ -91,7 +88,7 @@ class BrowserAddressBarState extends AddressBarState {
 
 //  override get path(): string { return window.location.pathname }
 
-  override back() {
+  override back = () => {
     if (this.stateStack.length === 0) {
       // There's nowhere back to go so we need to do a hard navigation to the top.
       // This can occur if we start by a deep load, e.g. to "/assemble"
@@ -129,7 +126,7 @@ class BrowserAddressBarState extends AddressBarState {
 
   #onPopStateEvent = (ev: PopStateEvent) => {
     const {state} = ev;
-    const {historyIndex = 0} = ((typeof state === "object" && state != null) ? state as AddressBarHistoryStateIdentifier : {historyIndex: undefined});
+    const {historyIndex = -1} = ((typeof state === "object" && state != null) ? state as AddressBarHistoryStateIdentifier : {historyIndex: undefined});
     this.moveToHistoryIndex(historyIndex);
   }
   

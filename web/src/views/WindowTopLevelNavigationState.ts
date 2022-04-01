@@ -187,10 +187,10 @@ export class WindowTopLevelNavigationState {
       if (path !== "" && path !== "/") {
         window.history.replaceState({}, "", "/");
       }      
-      addressBarState.setInitialState("/", () => {
-        windowTopLevelNavigationState.subView.rawSetSubView(undefined);
-        windowTopLevelNavigationState.onRestoreTopLevelState();
-      })
+      // addressBarState.setInitialState("/", () => {
+      //   windowTopLevelNavigationState.subView.rawSetSubView(undefined);
+      //   windowTopLevelNavigationState.onRestoreTopLevelState();
+      // })
     }
     return windowTopLevelNavigationState;
   }
