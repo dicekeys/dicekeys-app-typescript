@@ -170,16 +170,7 @@ class DiceKeyMemoryStoreClass {
   }
 
   get keysInMemoryOrSavedToDevice(): PublicDiceKeyDescriptorWithSavedOnDevice[] {
-    return [...(this.keyIdToDiceKeyInHumanReadableForm.entries())].map( ([keyId, diceKeyInHumanReadableForm]) => {
-      const k = new DiceKeyWithKeyId(keyId, diceKeyFacesFromHumanReadableForm(diceKeyInHumanReadableForm));
-      const {centerFace} = k;
-      return {
-        keyId,
-        centerFaceDigit: centerFace.digit,
-        centerFaceLetter: centerFace.letter,
-        savedOnDevice: RUNNING_IN_ELECTRON && EncryptedDiceKeyStore.has({keyId})
-      }
-    })
+    return [...this.keysInMemory, ...this.keysSavedToDeviceButNotInMemory];
   }
 
   get isNonEmpty(): boolean { return this.keyIds.length > 0 }
@@ -204,29 +195,31 @@ class DiceKeyMemoryStoreClass {
   keyIdForCenterLetterAndDigit = (centerLetterAndDigit: string): string | undefined =>
     this.centerLetterAndDigitToKeyId.get(centerLetterAndDigit);
 
+  #initiateReadFromLocalStorage = async () => {
+    try {
+      const json = await readStringFromEncryptedLocalStorageField(DiceKeyMemoryStoreClass.StorageFieldName);
+      if (json == null) {
+        console.log("No DiceKeys in memory store");
+        return;
+      }
+      if (json) {
+        const storageFormat = JSON.parse(json) as StorageFormat;
+        this.onReadFromShortTermEncryptedStorage(storageFormat);
+        
+        console.log(`Read ${storageFormat.keyIdToDiceKeyInHumanReadableForm.length} DiceKey(s) from memory`)
+      }
+    } catch {
+      console.log("Problem reading DiceKeys from memory store")
+    }
+    this.#triggerReadyState();
+  }
+
   constructor() {
     makeAutoObservable(this);
     if (!RUNNING_IN_ELECTRON) {
       // We don't need to save the DiceKeyStore in electron because there is only one window right now
       // and there's no chance of a refresh.
-      ( async () => {
-        try {
-          const json = await readStringFromEncryptedLocalStorageField(DiceKeyMemoryStoreClass.StorageFieldName);
-          if (json == null) {
-            console.log("No DiceKeys in memory store");
-            return;
-          }
-          if (json) {
-            const storageFormat = JSON.parse(json) as StorageFormat;
-            this.onReadFromShortTermEncryptedStorage(storageFormat);
-            
-            console.log(`Read ${storageFormat.keyIdToDiceKeyInHumanReadableForm.length} DiceKey(s) from memory`)
-          }
-        } catch {
-          console.log("Problem reading DiceKeys from memory store")
-        }
-        this.#triggerReadyState();
-      })();
+      this.#initiateReadFromLocalStorage();
     }
     AllAppWindowsAndTabsAreClosingEvent.on( () => {
       // Empty the store if all app windows are closing.
