@@ -13,6 +13,7 @@
     "start": "vite --config ./vite.config.ts",
     "clean-web": "rimraf ../dist/web",
     "clean-electron": "rimraf ../electron/electron-html",
+    "typecheck": "tsc --noEmit",
     "build-web": "npm run clean-web && tsc --noEmit && vite build --config ./vite.config.ts",
     "build-electron-html": "npm run clean-electron && tsc --noEmit &&  vite build --config ./vite.config.electron.ts",
     "build-all": "npm run build-web && npm run build-electron-html",
