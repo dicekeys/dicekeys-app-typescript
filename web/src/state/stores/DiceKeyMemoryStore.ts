@@ -158,6 +158,10 @@ class DiceKeyMemoryStoreClass {
     }));
   }
 
+  get keysOnlyInMemory(): PublicDiceKeyDescriptorWithSavedOnDevice[] {
+    return this.keysInMemory.filter( k => !k.savedOnDevice );
+  }
+
   get keysSavedToDeviceButNotInMemory(): (PublicDiceKeyDescriptorWithSavedOnDevice & {savedOnDevice: true})[] {
     return RUNNING_IN_ELECTRON ? (
       EncryptedDiceKeyStore.storedDiceKeys

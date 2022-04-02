@@ -14,22 +14,61 @@ import {
 } from "./SelectedDiceKeyBottomIconBarView";
 import { SelectedDiceKeyContentRegionWithoutSideMargins} from "./SelectedDiceKeyLayout";
 import { SelectedDiceKeyNavigationBar } from "./SelectedDiceKeyNavigationBar";
-import { HeightBetweenTopNavigationBarAndStandardBottomBar } from "../../views/Navigation/NavigationLayout";
+import { HeightBetweenTopNavigationBarAndStandardBottomBar, TopLevelNavigationBarFontSize, WindowRegionBelowTopNavigationBarAndAboveStandardBottomBar } from "../../views/Navigation/NavigationLayout";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities";
 import { DisplayDiceKeyViewState, DisplayDiceKeyViewStateName } from "./SelectedDiceKeyViewState";
 import { SeedHardwareKeyViewStateName } from "../../views/Recipes/SeedHardwareKeyViewState";
 import { BackupViewStateName } from "../../views/BackupView/BackupViewState";
 import { NavigationPathState } from "../../state/core/ViewState";
+//import { SubViewButton } from "../../css/SubViewButton";
 
+//import LoadDiceKeyImage from "../../images/Scanning a DiceKey.svg";
+import styled from "styled-components";
 const IdealMinimumContentMargin = `2rem`
 
-const selectedDiceKeySize = cssCalcTyped(`min(100vw - ${cssExprWithoutCalc(IdealMinimumContentMargin)}, ${cssExprWithoutCalc(HeightBetweenTopNavigationBarAndStandardBottomBar)} - 2 * ${cssExprWithoutCalc(IdealMinimumContentMargin)})`);
+
+const DiceKeyMainViewColumns = styled(WindowRegionBelowTopNavigationBarAndAboveStandardBottomBar)`
+  flex: 0 0 auto;
+  flex-direction: row;
+`;
+
+// const SubViewButtonImage = styled.img`
+//   width: 14vw;
+// `;
+
+export const SubViewButtonCaption = styled.div`
+  font-size: calc(${TopLevelNavigationBarFontSize}*0.75);
+  margin-top: min(0.75rem, 0.5vh);
+`;
+
+const SideRow = styled.div`
+  height: calc(${HeightBetweenTopNavigationBarAndStandardBottomBar});
+  width: 20vw;
+  margin-left: 2.5vw;
+  margin-right: 2.5vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`
+
+const selectedDiceKeySize = cssCalcTyped(`min(50vw - ${cssExprWithoutCalc(IdealMinimumContentMargin)}, ${cssExprWithoutCalc(HeightBetweenTopNavigationBarAndStandardBottomBar)} - 2 * ${cssExprWithoutCalc(IdealMinimumContentMargin)})`);
 
 export const DislayDiceKeyView = ({state}: {state: DisplayDiceKeyViewState}) => (
-  <DiceKeyView
-  size={selectedDiceKeySize}
-  faces={state.diceKey.faces}
-/>
+  <DiceKeyMainViewColumns>
+    <SideRow>
+      {/* <SubViewButton
+        onClick={ () => {} }
+      >
+        <SubViewButtonImage src={LoadDiceKeyImage} />
+        <SubViewButtonCaption>Load Another DiceKey</SubViewButtonCaption>
+      </SubViewButton> */}
+    </SideRow>
+    <DiceKeyView
+      size={selectedDiceKeySize}
+      faces={state.diceKey.faces}
+    />
+    <SideRow></SideRow>
+  </DiceKeyMainViewColumns>
 );
 
 const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewProps) => {

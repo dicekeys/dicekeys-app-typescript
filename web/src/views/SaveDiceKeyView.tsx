@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import React from "react";
-import { CenteredControls, DiceKeyNickname, Instruction, Spacer } from "./basics";
+import { CenteredControls, ThisDiceKey, Instruction, Spacer } from "./basics";
 import { OptionButton } from "../css/Button";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../state";
@@ -14,11 +14,14 @@ import { ViewState, NavigationPathState } from "../state/core/ViewState";
 
 export const ContentRegion = styled(WindowRegionBelowTopNavigationBar)`
   flex: 0 0 auto;
+  margin-left: 5vw;
+  margin-right: 5vw;
+  width: 90vw;
 `;
 
 const IdealMinimumContentMargin = `2rem`;
-const SelectedDiceKeySize = `min(100vw - 2 * ${IdealMinimumContentMargin}, ( ${HeightBelowTopNavigationBar} - (${IdealMinimumContentMargin}) )/2)` as const;
-const calcSelectedDiceKeySize = cssCalcTyped(SelectedDiceKeySize);
+const diceKeySize = `min(100vw - 2 * ${IdealMinimumContentMargin}, ( ${HeightBelowTopNavigationBar} - (${IdealMinimumContentMargin}) )/3)` as const;
+const calcDiceKeySize = cssCalcTyped(diceKeySize);
 
 export const SaveDiceKeyStateName = "save";
 export const DeleteDiceKeyStateName = "delete";
@@ -50,19 +53,19 @@ export const SaveDiceKeyToDeviceStorageView = observer( ( {state, closeFn}:
       <ContentRegion>
         <Spacer/>
         <DiceKeyView
-        size={calcSelectedDiceKeySize}
+        size={calcDiceKeySize}
         faces={diceKey.faces}
       />
           <Instruction>
-            If you save <DiceKeyNickname {...{diceKey}}/> on this device, anyone able to access your account on this device, or any
-            app that can run on this device, may be able to access the DiceKey. 
+            If you save <ThisDiceKey {...{diceKey}}/> on this computer, anyone able to access your user account, and any
+            app installed with access to your account, may be able to access this DiceKey. 
           </Instruction>
           <CenteredControls>
           <OptionButton onClick={closeFn}>Cancel</OptionButton>
           <OptionButton onClick={saveFn}>Save</OptionButton>  
         </CenteredControls>
         <Spacer/>
-        </ContentRegion>
+      </ContentRegion>
     </PageAsFlexColumn>
   );
 
@@ -82,13 +85,17 @@ export const DeleteDiceKeyFromDeviceStroageView = observer( (
       <NavigationBarForDiceKey diceKey={diceKey} goBack={closeFn} />
       <ContentRegion>
         <Spacer/>
+          <DiceKeyView
+            size={calcDiceKeySize}
+            faces={diceKey.faces}
+          />
           <Instruction>
-            If you save <DiceKeyNickname {...{diceKey}}/> on this device, anyone able to access your account on this device, or any
-            app that can run on this device, may be able to access the DiceKey. 
+            If you delete <ThisDiceKey {...{diceKey}}/> from this computer, you will need to
+            scan or enter the physical DiceKey back in when you next need it.
           </Instruction>
           <CenteredControls>
           <OptionButton onClick={closeFn}>Cancel</OptionButton>
-          <OptionButton onClick={deleteFromDeviceStorageAndMemory}>Save</OptionButton>  
+          <OptionButton onClick={deleteFromDeviceStorageAndMemory}>Delete</OptionButton>  
         </CenteredControls>
         <Spacer/>
       </ContentRegion>

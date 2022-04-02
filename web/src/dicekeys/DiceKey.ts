@@ -615,7 +615,7 @@ export class DiceKeyWithKeyId extends DiceKeyBase {
 
   static create = async (faces: DiceKeyFaces): Promise<DiceKeyWithKeyId> => {
     const keyId = await diceKeyFacesToKeyId(faces);
-    return new DiceKeyWithKeyId(keyId, faces);
+    return new DiceKeyWithKeyId(keyId, faces).rotateToTurnCenterFaceUpright();
   }
 
   static fromRandom = (): Promise<DiceKeyWithKeyId> => DiceKeyWithKeyId.create(getRandomDiceKey());

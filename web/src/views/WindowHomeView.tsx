@@ -16,29 +16,8 @@ import { WindowHomeNavigationBar } from "./WindowHomeNavigationBar";
 import { BUILD_VERSION, BUILD_DATE } from "../vite-build-constants";
 import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "../state";
 import { PlatformSupportsSavingToDevice  } from "../state/stores/DiceKeyMemoryStore";
-
-const SubViewButton = styled.button`
-  display: flex;
-  cursor: grab;
-  flex-direction: column;
-  align-items: center;
-  border: none;
-  padding: 0.5rem;
-  margin: 0.5rem;
-  border-radius: 0.5rem;
-  &:hover {
-    background-color: rgba(128,128,128,.75);
-  }
-`;
-
-const SubViewButtonImage = styled.img`
-  height: 14vh;
-`;
-
-const SubViewButtonCaption = styled.div`
-  font-size: min(1.5rem,3.5vh,2.5vw);
-  margin-top: min(0.75rem, 0.5vh);
-`;
+import { SubViewButton, SubViewButtonCaption, SubViewButtonImage } from "../css/SubViewButton";
+import { ButtonRow, PushButton } from "../css/Button";
 
 const ImageRow = styled.div`
   display: flex;
@@ -77,25 +56,29 @@ interface StoredDiceKeyProps {
   windowNavigationState: WindowTopLevelNavigationState;
 }
 
+
+const storedKeySize = `min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})` as const;
+
+
 const StoredDiceKeyButtons  = observer ( ({storedDiceKeyDescriptor, windowNavigationState}: StoredDiceKeyProps) => {
   const removeFromMemory = () => { DiceKeyMemoryStore.removeDiceKeyForKeyId(storedDiceKeyDescriptor.keyId) };
-  const navigateToDeleteFromDevice = () => { windowNavigationState.navigateToDeleteFromDevice(storedDiceKeyDescriptor) };
-  const navigateToSaveToDevice = () => { windowNavigationState.navigateToSaveToDevice(storedDiceKeyDescriptor) };
   if (!PlatformSupportsSavingToDevice) {
     // For platforms that don't support saving DiceKeys to long-term device storage,
     // we can only allow the DiceKey currrently in memory to be removed.
     return (
-      <button onClick={removeFromMemory} >remove</button>
+      <ButtonRow><PushButton onClick={removeFromMemory} >remove</PushButton></ButtonRow>
     )
   }
   if (storedDiceKeyDescriptor.savedOnDevice) {
     // As this DiceKey is already saved to the device, we can offer the option to remove it from the device.
+    const navigateToDeleteFromDevice = () => { windowNavigationState.navigateToDeleteFromDevice(storedDiceKeyDescriptor) };
     return (
-      <button onClick={navigateToDeleteFromDevice} >delete</button>
+      <ButtonRow><PushButton onClick={navigateToDeleteFromDevice} >delete</PushButton></ButtonRow>
     )
   } else {
+    const navigateToSaveToDevice = () => { windowNavigationState.navigateToSaveToDevice(storedDiceKeyDescriptor) };
     return (
-      <button onClick={navigateToSaveToDevice} >save</button>
+      <ButtonRow><PushButton onClick={navigateToSaveToDevice} ><b>save</b></PushButton><PushButton onClick={removeFromMemory} >remove</PushButton></ButtonRow>
     )
   }
 })
@@ -109,7 +92,7 @@ const StoredDiceKeyView = observer ( (props: StoredDiceKeyProps) => {
         onClick={() => windowNavigationState.loadStoredDiceKey(storedDiceKeyDescriptor)}
       >
         <DiceKeyView
-          size={`${cssCalcTyped(`min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})`)}`}
+          size={`${cssCalcTyped(storedKeySize)}`}
           faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
           obscureAllButCenterDie={true}
           showLidTab={true}
@@ -118,13 +101,13 @@ const StoredDiceKeyView = observer ( (props: StoredDiceKeyProps) => {
           `Key ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit}`
         }</SubViewButtonCaption>
       </SubViewButton>
-      <div><StoredDiceKeyButtons {...props} /></div>
-      <div>(erases automaticaly in {windowNavigationState.autoEraseCountdownTimer?.secondsRemaining}s)</div>
+      <StoredDiceKeyButtons {...props} />
     </div>
   )
 });
 
 export const WindowHomeView = observer ( ({windowNavigationState}: {windowNavigationState: WindowTopLevelNavigationState}) => {
+  const numberOfKeysOnlyInMemory = DiceKeyMemoryStore.keysOnlyInMemory.length;
   return (
     <PrimaryView>
       <VersionInformationBar>Version { BUILD_VERSION}, { BUILD_DATE }</VersionInformationBar>
@@ -137,7 +120,14 @@ export const WindowHomeView = observer ( ({windowNavigationState}: {windowNaviga
           DiceKeyMemoryStore.keysInMemoryOrSavedToDevice.map( storedDiceKeyDescriptor => (
             <StoredDiceKeyView key={storedDiceKeyDescriptor.keyId} {...{windowNavigationState, storedDiceKeyDescriptor}} />
           ))
-        }</StoredDiceKeysRow>
+        }</StoredDiceKeysRow>      
+        <div>{ numberOfKeysOnlyInMemory === 0 ? null : (<>
+          ({ PlatformSupportsSavingToDevice ? 
+            (numberOfKeysOnlyInMemory === 1 ? `The unsaved key` : `All unsaved keys` ) :
+            (numberOfKeysOnlyInMemory === 1 ? `The DiceKey` : `All DiceKeys` )
+          } above will be automatically removed from memory in {windowNavigationState.autoEraseCountdownTimer?.secondsRemaining}s)        
+        </>)
+        }</div>
         {/* 
           Load DiceKey button
         */}

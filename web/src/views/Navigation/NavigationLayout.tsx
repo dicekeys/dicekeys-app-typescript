@@ -12,7 +12,7 @@ export const calcHeightBelowTopNavigationBar = cssCalcTyped(HeightBelowTopNaviga
 
 export const StandardBottomBarHeight = `11vh`;
 
-const TopLevelNavigationBarFontSize = cssCalcTyped(`min(${`3.75vh`},${`8.5vw`})`);
+export const TopLevelNavigationBarFontSize = cssExprWithoutCalc(`min(${`3.75vh`},${`8.5vw`})`);
 
 export const HeightBetweenTopNavigationBarAndStandardBottomBar = cssExprWithoutCalc(`100vh - (${cssExprWithoutCalc(TopNavigationBarHeight)} + ${cssExprWithoutCalc(StandardBottomBarHeight)})`)
 export const CalcHeightBetweenTopNavigationBarAndStandardBottomBar = cssCalcTyped(HeightBetweenTopNavigationBarAndStandardBottomBar);
@@ -92,7 +92,7 @@ export const NavigationBar = styled.div`
   flex-direction: row;
   flex: 0 0 auto;
   text-align: center;
-  font-size: ${TopLevelNavigationBarFontSize};
+  font-size: calc(${TopLevelNavigationBarFontSize});
   overflow: hidden;
 `;
 
@@ -107,7 +107,7 @@ const TopNavRegion = styled.div`
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
   user-select: none;
-  font-size: ${TopLevelNavigationBarFontSize};
+  font-size: calc(${TopLevelNavigationBarFontSize});
   overflow: hidden;
 `;
 

@@ -1,7 +1,6 @@
 import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 
-type StateModificationFunction = () => void;
-
+export type StateModificationFunction = () => void;
 
 interface StateStackElement {
   stateChangeFuntion: StateModificationFunction;
@@ -44,6 +43,9 @@ export class AddressBarState {
     stateChangeFuntion: StateModificationFunction,
     undoStateChangeFn: StateModificationFunction
   ) {
+    if (this.stateStack.length - 1 > this.historyIndex) {
+      this.stateStack = this.stateStack.slice(0, this.historyIndex + 1);
+    }
     stateChangeFuntion();
     const pathStr = typeof pathStrOrFn === "string" ? pathStrOrFn : pathStrOrFn();
     const path = pathStr.length === 0 ?  "/" : pathStr;

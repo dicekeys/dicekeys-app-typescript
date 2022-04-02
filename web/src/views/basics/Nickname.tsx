@@ -13,3 +13,7 @@ export const Nickname = ({nickname}: {nickname: string}) => (
 export const DiceKeyNickname = ({diceKey}: {diceKey: DiceKey}) => (
   <Nickname nickname={diceKey.nickname} />
 )
+
+export const ThisDiceKey = ({diceKey}: {diceKey: DiceKey}) => (
+  <>this DiceKey (with center face {diceKey.centerLetterAndDigit})</>
+)

@@ -25,49 +25,22 @@ const diceKeyFromPathRoot = (pathRoot: string | undefined): DiceKeyWithKeyId | u
   return DiceKeyMemoryStore.diceKeyForKeyId(keyId);
 };
 
+const clearDiceKeyMemoryStore = () => {
+  console.log("Remove all short term keys from the DiceKeyMemoryStore");
+  DiceKeyMemoryStore.removeAll();
+}
+
 export class WindowTopLevelNavigationState {
 
-  autoEraseCountdownTimer?: CountdownTimer | undefined;
-  setAutoEraseCountdownTimer = action( (msRemaining: number= 60*1000) => {
-    return this.autoEraseCountdownTimer = new CountdownTimer(msRemaining, 1000);
-  });
-  clearAutoEraseCountdownTimer = action( () => {
-    return this.autoEraseCountdownTimer = undefined;
-  });
 
-  onRestoreTopLevelState = action ( () => {
-    const timer = this.setAutoEraseCountdownTimer();
-    this.autoEraseCountdownTimer?.onReachesZero.on( () => {
-      console.log("Countdown timer reached 0");
-      if (timer === this.autoEraseCountdownTimer && this.subView.subViewState == null) {
-        // the subview hasn't changed since the start of the countdown timer.  Erase the memory store
-        console.log("Calling removeAll");
-        DiceKeyMemoryStore.removeAll();
-      }
-    });
+  readonly autoEraseCountdownTimer = new CountdownTimer({callbackOnReachesZero: clearDiceKeyMemoryStore});
+
+  setAutoEraseCountdownTimer = action( (startAtMs: number= 60*1000) => {
+    this.autoEraseCountdownTimer.start({startAtMs});
   });
   
-  // navigateToWindowHomeView = action ( () => {
-  //   const timer = this.setAutoEraseCountdownTimer();
-  //   this.autoEraseCountdownTimer?.onReachesZero.on( () => {
-  //     console.log("Countdown timer reached 0");
-  //     if (timer === this.autoEraseCountdownTimer && this.subView == null) {
-  //       // the subview hasn't changed since the start of the countdown timer.  Erase the memory store
-  //       console.log("Calling removeAll");
-  //       DiceKeyMemoryStore.removeAll();
-  //     }
-  //   })
-  //   // this.subView.navigateTo(SubViews.AppHomeView);
-  //   this.subView.navigateTo();
-  // });
+  navigateDownTo = (subViewState: TopLevelSubViewStates) => this.subView.navigateToPushState(subViewState);
 
-  navigateDownTo = (subViewState: TopLevelSubViewStates) => {
-    // const back = () => {
-    //   this.subView.rawSetSubView(undefined);
-    //   this.onRestoreTopLevelState();
-    // }
-    this.subView.navigateToPushState(subViewState, this.onRestoreTopLevelState);
-  }
   navigateToAssemblyInstructions = () => {
     const assemblyInstructionsState = new AssemblyInstructionsState(this.navState, () => {this.subView.rawSetSubView(assemblyInstructionsState)});
     this.navigateDownTo(assemblyInstructionsState);
@@ -85,7 +58,7 @@ export class WindowTopLevelNavigationState {
   navigateToSaveToDevice = this.navigateToSaveOrDeleteFromDevice(SaveDiceKeyStateName);
 
   navigateToSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
-    this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKey), this.onRestoreTopLevelState);
+    this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKey));
   });
 
   onReturnFromActionThatMayLoadDiceKey = (diceKey?: DiceKeyWithKeyId) => {
@@ -94,13 +67,11 @@ export class WindowTopLevelNavigationState {
       if (addressBarState.historyIndex > 0) {
         // We're at least one deep into the history stack, which means AssemblyInstructions was launched from the main screen
         // and should be replaced with the SelectedDiceKey screen
-        this.subView.navigateToReplaceState(undefined, new SelectedDiceKeyViewState(this.navState, diceKeyWithCenterFaceUpright));
+        this.subView.navigateToReplaceState(new SelectedDiceKeyViewState(this.navState, diceKeyWithCenterFaceUpright));
       } else {
         // Navigate to the top screen, then down to the selected DiceKey view
-        this.subView.navigateToReplaceState("");
-        setTimeout( () => {
-          this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKeyWithCenterFaceUpright), this.onRestoreTopLevelState);
-        }, 1000);
+        this.subView.navigateToReplaceState();
+        this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKeyWithCenterFaceUpright));
       }
     } else {
       addressBarState.back();
@@ -110,47 +81,37 @@ export class WindowTopLevelNavigationState {
   loadStoredDiceKey = async (storedDiceKeyDescriptor: PublicDiceKeyDescriptorWithSavedOnDevice) => {
     const diceKey = await DiceKeyMemoryStore.load(storedDiceKeyDescriptor);
     if (diceKey != null) {
-      this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKey), this.onRestoreTopLevelState);
+      this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKey));
     } else {
       console.log(`Could not load DiceKey from stable store`)
     }
   }
 
-  // updateAddressBar = action (() => {
-  //   const {subView: priorSubView} = getTopLevelNavStateFromPath(addressBarState.path);
-  //   const {diceKey, keyId} = this.foregroundDiceKeyState;
-  //   const newPathElements: string[] = ["", this.subView];
-  //   if (keyId != null && diceKey != null) {
-  //     const {centerLetterAndDigit} = diceKey;
-  //     newPathElements[1] = keyId === DiceKeyMemoryStore.keyIdForCenterLetterAndDigit(centerLetterAndDigit) ?
-  //         centerLetterAndDigit :
-  //         keyId;
-  //   }
-  //   const newPath = newPathElements.join("/");
-  //   if (this.subView === SubViewsOfTopLevel.DiceKeyView  &&
-  //        (priorSubView === SubViewsOfTopLevel.LoadDiceKeyView ||
-  //         priorSubView === SubViewsOfTopLevel.AssemblyInstructions
-  //         ) && diceKey != null && keyId != null) {
-  //     // When displaying a DiceKey after loading/assembling, replace the load/assembly state with the display state
-  //     addressBarState.replaceState(newPath);
-  //   } else {
-  //     addressBarState.pushState(newPath);
-  //   }
-  // })
-
   navState: NavigationPathState;
   subView: SubViewState<TopLevelSubViewStates>;
+
+  startOrStopTimerIfNecessary = () => {
+    if (this.subView.subViewState == null && DiceKeyMemoryStore.keysOnlyInMemory.length > 0) {
+      // We're showing the primary view, there's a key only in temporary memory, and should we should start the timer.
+      this.autoEraseCountdownTimer.start();
+    } else {
+      // We're showing a different view and should clear the timer.
+      this.autoEraseCountdownTimer.clear();
+    }
+  }
+
   constructor(defaultSubView?: TopLevelSubViewStates) {
     this.navState = new NavigationPathState("", "", () => {
       return this.subView.subViewState?.navState.fromHereToEndOfPathInclusive ?? "";
     });
     this.subView = new SubViewState<TopLevelSubViewStates>(this.navState, defaultSubView);
+    this.startOrStopTimerIfNecessary();
+    this.subView.subStateChangedEvent.on( this.startOrStopTimerIfNecessary );
 
     makeObservable(this, {
 //      subView: override,
     });
   }
-
 
   static fromPath = (path: string = window.location.pathname): WindowTopLevelNavigationState  => {
     const pathElements = path.split("/");
@@ -159,7 +120,7 @@ export class WindowTopLevelNavigationState {
     switch(pathRoot) {
       case PathStrings.LoadDiceKey:
         window.history.replaceState({depth: 0}, "", "");
-        windowTopLevelNavigationState.subView.navigateToPushState(new LoadDiceKeyViewState(windowTopLevelNavigationState.navState, "camera"), windowTopLevelNavigationState.onRestoreTopLevelState);
+        windowTopLevelNavigationState.subView.navigateToPushState(new LoadDiceKeyViewState(windowTopLevelNavigationState.navState, "camera"));
         return windowTopLevelNavigationState;
       case PathStrings.AssemblyInstructions:
         // FIXME -- get step number from path
@@ -169,7 +130,7 @@ export class WindowTopLevelNavigationState {
         const maxStep = AssemblyInstructionsStep.ScanFirstTime;
         const step = isNaN(stepNumber) ? AssemblyInstructionsStep.START_INCLUSIVE :
           Math.min(Math.max(stepNumber, AssemblyInstructionsStep.START_INCLUSIVE), maxStep);
-        windowTopLevelNavigationState.subView.navigateToPushState(new AssemblyInstructionsState(windowTopLevelNavigationState.navState, () => {}, step), windowTopLevelNavigationState.onRestoreTopLevelState);
+        windowTopLevelNavigationState.subView.navigateToPushState(new AssemblyInstructionsState(windowTopLevelNavigationState.navState, () => {}, step));
         return windowTopLevelNavigationState;
       // Only web uses paths, and /seed should not exist in web-only since we can't seed from browser
       // case PathStrings.SeedFidoKey:
