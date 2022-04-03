@@ -56,11 +56,11 @@ describe("Formats: Bip39", () => {
     const diceKey = DiceKeyWithoutKeyId.testExample;
     const bip39Generated = await diceKeyToBip39String(diceKey)
     const diceKeyRestored = await bip39ToDiceKey(bip39Generated);
-    expect(diceKey.inHumanReadableForm).toStrictEqual(diceKeyRestored.inHumanReadableForm);
+    expect(diceKey.rotateToTurnCenterFaceUpright().inHumanReadableForm).toStrictEqual(diceKeyRestored.rotateToTurnCenterFaceUpright().inHumanReadableForm);
   });
 
 	TestDiceKeys.forEach( (diceKey, index) => {
-		const {inHumanReadableForm} = diceKey;
+		const inHumanReadableForm = diceKey.rotateToTurnCenterFaceUpright().inHumanReadableForm;
     test(`Bip39 DiceKeys: ${inHumanReadableForm}  (${index})`, async () => {
       const bip39Generated = await diceKeyToBip39String(diceKey)
       const diceKeyRestored = await bip39ToDiceKey(bip39Generated);
