@@ -1,4 +1,4 @@
-import { action, makeObservable } from "mobx";
+import { action, makeAutoObservable } from "mobx";
 import { addressBarState } from "../state/core/AddressBarState";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { SubViewState } from "../state/core";
@@ -87,11 +87,20 @@ export class WindowTopLevelNavigationState {
     }
   }
 
-  navState: NavigationPathState;
-  subView: SubViewState<TopLevelSubViewStates>;
+  private _autoEraseDisabled: boolean = false;
+  get autoEraseDisabled() { return this._autoEraseDisabled }
+  private setAutoEraseDisabled = (trueToDisable: boolean) => action( ()  => {
+    if (this.autoEraseDisabled !== trueToDisable) {
+      this._autoEraseDisabled = trueToDisable;
+      this.startOrStopTimerIfNecessary();
+    }
+  });
+  enableAutoErase = this.setAutoEraseDisabled(false);
+  disableAutoErase = this.setAutoEraseDisabled(true);
+
 
   startOrStopTimerIfNecessary = () => {
-    if (this.subView.subViewState == null && DiceKeyMemoryStore.keysOnlyInMemory.length > 0) {
+    if (this.subView.subViewState == null && DiceKeyMemoryStore.keysOnlyInMemory.length > 0 && !this.autoEraseDisabled) {
       // We're showing the primary view, there's a key only in temporary memory, and should we should start the timer.
       this.autoEraseCountdownTimer.start();
     } else {
@@ -99,6 +108,14 @@ export class WindowTopLevelNavigationState {
       this.autoEraseCountdownTimer.clear();
     }
   }
+
+
+
+
+  readonly navState: NavigationPathState = new NavigationPathState("", "", () => {
+    return this.subView.subViewState?.navState.fromHereToEndOfPathInclusive ?? "";
+  });
+  subView: SubViewState<TopLevelSubViewStates>;
 
   constructor(defaultSubView?: TopLevelSubViewStates) {
     this.navState = new NavigationPathState("", "", () => {
@@ -108,9 +125,7 @@ export class WindowTopLevelNavigationState {
     this.startOrStopTimerIfNecessary();
     this.subView.subStateChangedEvent.on( this.startOrStopTimerIfNecessary );
 
-    makeObservable(this, {
-//      subView: override,
-    });
+    makeAutoObservable(this);
   }
 
   static fromPath = (path: string = window.location.pathname): WindowTopLevelNavigationState  => {

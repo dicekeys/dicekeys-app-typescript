@@ -54,7 +54,7 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
       <SelectedDiceKeyView state={subViewState} goBack={ addressBarState.back } />
     );
     default: return (
-      <WindowHomeView windowNavigationState={windowTopLevelNavigationState} />
+      <WindowHomeView state={windowTopLevelNavigationState} />
     );
   }
 });
