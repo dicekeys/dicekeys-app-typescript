@@ -580,7 +580,7 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
 
   rotate = (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright): DiceKeyWithoutKeyId => new DiceKeyWithoutKeyId(rotateDiceKey(this.faces, clockwise90DegreeRotationsFromUpright));
   get inRotationIndependentForm(): DiceKeyWithoutKeyId { return new DiceKeyWithoutKeyId(rotateToRotationIndependentForm(this.faces)) };
-  rotateToTurnCenterFaceUpright = async (): Promise<DiceKeyWithoutKeyId> => {
+  rotateToTurnCenterFaceUpright = (): DiceKeyWithoutKeyId => {
     const centerFacesOrientationTrbl = this.faces[12].orientationAsLowercaseLetterTrbl;
     switch (centerFacesOrientationTrbl) {
       case "t": return this;
