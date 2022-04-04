@@ -45,7 +45,7 @@ export class SaveOrDeleteDiceKeyViewState<SAVE_OR_DELETE extends SaveOrDeleteDic
 export type SaveDiceKeyViewState = SaveOrDeleteDiceKeyViewState<SaveDiceKeyViewStateName>;
 export type DeleteDiceKeyViewState = SaveOrDeleteDiceKeyViewState<DeleteDiceKeyViewStateName>;
 
-export const SaveDiceKeyToDeviceStorageView = observer( ( {
+export const SaveDiceKeyToDeviceStorageContentView = observer( ( {
   state,
   closeFn = addressBarState.back
 }:
@@ -57,31 +57,45 @@ export const SaveDiceKeyToDeviceStorageView = observer( ( {
   }
    
    return (
-    <PageAsFlexColumn>
-      <NavigationBarForDiceKey diceKey={diceKey} goBack={closeFn} />
-      <ContentRegion>
-        <Spacer/>
-        <DiceKeyView
-        size={calcDiceKeySize}
-        faces={diceKey.faces}
-      />
-          <Instruction>
-            If you save <ThisDiceKey {...{diceKey}}/> on this computer, anyone able to access your user account, and any
-            app installed with access to your account, may be able to access this DiceKey. 
-          </Instruction>
-          <CenteredControls>
-          <OptionButton onClick={closeFn}>Cancel</OptionButton>
-          <OptionButton onClick={saveFn}>Save</OptionButton>  
-        </CenteredControls>
-        <Spacer/>
-      </ContentRegion>
-    </PageAsFlexColumn>
+    <>
+      <Spacer/>
+      <DiceKeyView
+      size={calcDiceKeySize}
+      faces={diceKey.faces}
+    />
+        <Instruction>
+          If you save <ThisDiceKey {...{diceKey}}/> on this computer, anyone able to access your user account, and any
+          app installed with access to your account, may be able to access this DiceKey. 
+        </Instruction>
+        <CenteredControls>
+        <OptionButton onClick={closeFn}>Cancel</OptionButton>
+        <OptionButton onClick={saveFn}>Save</OptionButton>  
+      </CenteredControls>
+      <Spacer/>
+    </>
   );
 
  });
 
+export const SaveDiceKeyToDeviceStorageView = observer( ( {
+  state,
+  closeFn = addressBarState.back
+}:
+ {state: SaveDiceKeyViewState, closeFn?: () => void }) => {
+  const {diceKey} = state;
+   
+   return (
+    <PageAsFlexColumn>
+      <NavigationBarForDiceKey diceKey={diceKey} goBack={closeFn} />
+      <ContentRegion>
+        <SaveDiceKeyToDeviceStorageContentView state={state} closeFn={closeFn} />
+      </ContentRegion>
+    </PageAsFlexColumn>
+  );
+ });
+
  
-export const DeleteDiceKeyFromDeviceStroageView = observer( (
+export const DeleteDiceKeyToDeviceStorageContentView = observer( (
   {
     state,
     closeFn = addressBarState.back
@@ -93,25 +107,39 @@ export const DeleteDiceKeyFromDeviceStroageView = observer( (
   }
     
   return (
-    <PageAsFlexColumn>
-      <NavigationBarForDiceKey diceKey={diceKey} goBack={closeFn} />
-      <ContentRegion>
-        <Spacer/>
-          <DiceKeyView
-            size={calcDiceKeySize}
-            faces={diceKey.faces}
-          />
-          <Instruction>
-            If you delete <ThisDiceKey {...{diceKey}}/> from this computer, you will need to
-            scan or enter the physical DiceKey back in when you next need it.
-          </Instruction>
-          <CenteredControls>
-          <OptionButton onClick={closeFn}>Cancel</OptionButton>
-          <OptionButton onClick={deleteFromDeviceStorageAndMemory}>Delete</OptionButton>  
-        </CenteredControls>
-        <Spacer/>
-      </ContentRegion>
-    </PageAsFlexColumn>
+    <>
+      <Spacer/>
+        <DiceKeyView
+          size={calcDiceKeySize}
+          faces={diceKey.faces}
+        />
+        <Instruction>
+          If you delete <ThisDiceKey {...{diceKey}}/> from this computer, you will need to
+          scan or enter the physical DiceKey back in when you next need it.
+        </Instruction>
+        <CenteredControls>
+        <OptionButton onClick={closeFn}>Cancel</OptionButton>
+        <OptionButton onClick={deleteFromDeviceStorageAndMemory}>Delete</OptionButton>  
+      </CenteredControls>
+      <Spacer/>
+    </>
   );
 
 });
+
+export const DeleteDiceKeyToDeviceStorageView = observer( ( {
+  state,
+  closeFn = addressBarState.back
+}:
+ {state: DeleteDiceKeyViewState, closeFn?: () => void }) => {
+  const {diceKey} = state;
+   
+   return (
+    <PageAsFlexColumn>
+      <NavigationBarForDiceKey diceKey={diceKey} goBack={closeFn} />
+      <ContentRegion>
+        <DeleteDiceKeyToDeviceStorageContentView state={state} closeFn={closeFn} />
+      </ContentRegion>
+    </PageAsFlexColumn>
+  );
+ });

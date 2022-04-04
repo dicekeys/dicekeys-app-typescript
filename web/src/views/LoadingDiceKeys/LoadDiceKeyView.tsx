@@ -33,8 +33,8 @@ export class LoadDiceKeyViewState implements ViewState {
 
   navState: NavigationPathState;
   constructor(parentNavState: NavigationPathState = NavigationPathState.root, mode: Mode = "camera") {
-    this.navState = new NavigationPathState(parentNavState, LoadDiceKeyViewStateName)
     this.mode = mode;
+    this.navState = new NavigationPathState(parentNavState, LoadDiceKeyViewStateName)
     makeAutoObservable(this);
   }
 }
@@ -60,12 +60,12 @@ const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
       <EnterDiceKeyView state={props.state.enterDiceKeyState} />
     );
   }
-  return null;
 });
 
 
-export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
+export const LoadDiceKeyContentPaneView = observer( (props: LoadDiceKeyProps) => {
   const {state, onDiceKeyReadOrCancelled} = props;
+  console.log(`FIXME - rendering the LoadDiceKey content pane view`, state);
 
   const onDonePressedWithinEnterDiceKey = () => {
     const diceKey = state.enterDiceKeyState.diceKey;
@@ -75,9 +75,7 @@ export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
   }
 
   return (
-    <PrimaryView>
-      <SimpleTopNavBar title={ state.mode === "manual" ? "Enter your DiceKey" : "Scan your DiceKey"} />
-      <WindowRegionBelowTopNavigationBarWithSideMargins>
+    <>
       <Spacer/>
       <LoadDiceKeySubView {...props} {...{state}} />
       <CenteredControls>
@@ -91,6 +89,18 @@ export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
         >Done</PushButton>          
       </CenteredControls>
       <Spacer/>
+    </>
+  )});
+
+
+export const LoadDiceKeyFullPageView = observer( (props: LoadDiceKeyProps) => {
+  const {state} = props;
+  console.log(`FIXME - rendering the LoadDiceKey full page view`);
+  return (
+    <PrimaryView>
+      <SimpleTopNavBar title={ state.mode === "manual" ? "Enter your DiceKey" : "Scan your DiceKey"} />
+      <WindowRegionBelowTopNavigationBarWithSideMargins>
+        <LoadDiceKeyContentPaneView {...props} />
       </WindowRegionBelowTopNavigationBarWithSideMargins>
     </PrimaryView>
   )});

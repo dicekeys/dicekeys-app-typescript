@@ -4,15 +4,15 @@ import {WindowTopLevelNavigationState as WindowTopLevelNavigationState} from "..
 import { SelectedDiceKeyViewStateName } from "./WithSelectedDiceKey/SelectedDiceKeyViewState";
 import { SelectedDiceKeyView } from "./WithSelectedDiceKey/SelectedDiceKeyView";
 import { WindowHomeView } from "./WindowHomeView";
-import { LoadDiceKeyView, LoadDiceKeyViewStateName } from "./LoadingDiceKeys/LoadDiceKeyView";
+import { LoadDiceKeyFullPageView, LoadDiceKeyViewStateName } from "./LoadingDiceKeys/LoadDiceKeyView";
 import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
 import { AssemblyInstructionsStateName } from "./AssemblyInstructionsState";
 import {ApproveApiRequestState, ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
 import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
 import { PrimaryView } from "../css";
-import { SeedHardwareKeySimpleView } from "./Recipes/SeedHardwareKeyView";
+import { SeedHardwareKeyFullPageView } from "./Recipes/SeedHardwareKeyView";
 import { SeedHardwareKeyViewStateName } from "./Recipes/SeedHardwareKeyViewState";
-import { SaveDiceKeyViewStateName, SaveDiceKeyToDeviceStorageView, DeleteDiceKeyViewStateName, DeleteDiceKeyFromDeviceStroageView } from "./SaveAndDeleteDiceKeyView";
+import { SaveDiceKeyViewStateName, SaveDiceKeyToDeviceStorageView, DeleteDiceKeyViewStateName, DeleteDiceKeyToDeviceStorageView } from "./SaveAndDeleteDiceKeyView";
 import { RUNNING_IN_ELECTRON } from "../utilities/is-electron";
 
 export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {windowTopLevelNavigationState: WindowTopLevelNavigationState}) => {
@@ -21,7 +21,6 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
   if (foregroundApiRequest != null) {
     return (
       <ApproveApiRequestView state={new ApproveApiRequestState(foregroundApiRequest)}
-//        settableDiceKeyState={windowTopLevelNavigationState.foregroundDiceKeyState}
         onApiRequestResolved={ApiRequestsReceivedState.dequeueApiRequestReceived}
       />
     )
@@ -33,10 +32,10 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
     case SaveDiceKeyViewStateName:
       return (<SaveDiceKeyToDeviceStorageView state={subViewState} />);
     case DeleteDiceKeyViewStateName:
-      return (<DeleteDiceKeyFromDeviceStroageView state={subViewState} />);
+      return (<DeleteDiceKeyToDeviceStorageView state={subViewState} />);
     case LoadDiceKeyViewStateName:
       return (
-        <LoadDiceKeyView
+        <LoadDiceKeyFullPageView
           onDiceKeyReadOrCancelled={ windowTopLevelNavigationState.onReturnFromActionThatMayLoadDiceKey }
           state={ subViewState }
         />
@@ -48,7 +47,7 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
          />
     )
     case SeedHardwareKeyViewStateName: return (
-      <SeedHardwareKeySimpleView seedHardwareKeyViewState={subViewState} />
+      <SeedHardwareKeyFullPageView seedHardwareKeyViewState={subViewState} />
     );
     case SelectedDiceKeyViewStateName: return (
       <SelectedDiceKeyView state={subViewState} />
@@ -59,15 +58,9 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
   }
 });
 
-const defaultWindowNavigationState = ( (): WindowTopLevelNavigationState => {
-  if (RUNNING_IN_ELECTRON) {
-    const state = new WindowTopLevelNavigationState();
-//    addressBarState.setInitialState("", () => {});
-    return state;
-  } else {
-    return WindowTopLevelNavigationState.fromPath()
-  }
-})();
+const defaultWindowNavigationState = RUNNING_IN_ELECTRON ?
+      new WindowTopLevelNavigationState() : WindowTopLevelNavigationState.fromPath();
+
 export const WindowTopLevelView = observer ( ({
   windowTopLevelNavigationState = defaultWindowNavigationState } : {
   windowTopLevelNavigationState?: WindowTopLevelNavigationState

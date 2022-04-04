@@ -33,7 +33,9 @@ export const DerivationViewSection = styled.div`
   width: ${ContentWidth};
 `;
 
-export const DerivationViewContainer = styled(SelectedDiceKeyContentRegionInsideSideMargins)`
+export const DerivationViewContainer = styled.div`
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-self: center;
   height: ${HeightBetweenTopNavigationBarAndStandardBottomBar};

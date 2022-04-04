@@ -1,9 +1,9 @@
-import { StandardBottomBarHeight, WindowRegionBelowTopNavigationBarAndAboveStandardBottomBar, WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins } from "../Navigation/NavigationLayout";
+import { StandardBottomBarHeight, WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins } from "../Navigation/NavigationLayout";
 import styled from "styled-components";
 
 export const BottomIconBarHeight = StandardBottomBarHeight;
 
-export const SelectedDiceKeyContentRegionWithoutSideMargins = styled(WindowRegionBelowTopNavigationBarAndAboveStandardBottomBar)`
+export const SelectedDiceKeyContentRegionWithSideMargins = styled(WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins)`
   flex: 0 0 auto;
 `;
 

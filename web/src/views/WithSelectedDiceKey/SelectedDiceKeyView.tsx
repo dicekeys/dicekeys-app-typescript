@@ -4,7 +4,7 @@ import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { DiceKeyView } from "../SVG/DiceKeyView";
 import { SecretDerivationView, SecretDerivationViewStateName } from "../Recipes/DerivationView";
 import { Navigation } from "../../state";
-import { SeedHardwareKeyView } from "../Recipes/SeedHardwareKeyView";
+import { SeedHardwareKeyContentView } from "../Recipes/SeedHardwareKeyView";
 import { BackupView } from "../BackupView/BackupView";
 import { addPreview } from "../basics/Previews";
 import { PageAsFlexColumn } from "../../css/Page";
@@ -12,9 +12,9 @@ import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 import {
   SelectedDiceKeyBottomIconBarView,
 } from "./SelectedDiceKeyBottomIconBarView";
-import { SelectedDiceKeyContentRegionWithoutSideMargins} from "./SelectedDiceKeyLayout";
+import { SelectedDiceKeyContentRegionWithSideMargins} from "./SelectedDiceKeyLayout";
 import { SelectedDiceKeyNavigationBar } from "./SelectedDiceKeyNavigationBar";
-import { HeightBetweenTopNavigationBarAndStandardBottomBar, TopLevelNavigationBarFontSize, WindowRegionBelowTopNavigationBarAndAboveStandardBottomBar } from "../../views/Navigation/NavigationLayout";
+import { HeightBetweenTopNavigationBarAndStandardBottomBar, TopLevelNavigationBarFontSize } from "../../views/Navigation/NavigationLayout";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities";
 import { DisplayDiceKeyViewState, DisplayDiceKeyViewStateName } from "./SelectedDiceKeyViewState";
 import { SeedHardwareKeyViewStateName } from "../../views/Recipes/SeedHardwareKeyViewState";
@@ -24,13 +24,14 @@ import styled from "styled-components";
 import {
   DeleteDiceKeyViewStateName,
   SaveDiceKeyViewStateName,
-  SaveDiceKeyToDeviceStorageView,
-  DeleteDiceKeyFromDeviceStroageView
+  DeleteDiceKeyToDeviceStorageContentView,
+  SaveDiceKeyToDeviceStorageContentView
 } from "../../views/SaveAndDeleteDiceKeyView";
 
 const IdealMinimumContentMargin = `2rem`
 
-const DiceKeyMainViewColumns = styled(WindowRegionBelowTopNavigationBarAndAboveStandardBottomBar)`
+const DiceKeyMainViewColumns = styled.div`
+  display: flex;
   flex: 0 0 auto;
   flex-direction: row;
 `;
@@ -75,10 +76,10 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
   if (diceKey == null) return null;
   switch(subViewState.viewName) {
     case SaveDiceKeyViewStateName: return (
-      <SaveDiceKeyToDeviceStorageView state={subViewState} />
+      <SaveDiceKeyToDeviceStorageContentView state={subViewState} />
     );
     case DeleteDiceKeyViewStateName: return (
-      <DeleteDiceKeyFromDeviceStroageView state={subViewState} />
+      <DeleteDiceKeyToDeviceStorageContentView state={subViewState} />
     );
     case DisplayDiceKeyViewStateName: return (
       <DislayDiceKeyView state={subViewState} />
@@ -87,7 +88,7 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
       <SecretDerivationView state={subViewState} />
     );
     case SeedHardwareKeyViewStateName: return (
-      <SeedHardwareKeyView parentNavState={state.navState} diceKey={diceKey} />
+      <SeedHardwareKeyContentView seedHardwareKeyViewState={subViewState} />
     );
     case BackupViewStateName: return (
       <BackupView state={subViewState} nextStepAfterEnd={() => {
@@ -105,9 +106,9 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
   return (
     <PageAsFlexColumn>
       <SelectedDiceKeyNavigationBar {...props} />
-      <SelectedDiceKeyContentRegionWithoutSideMargins>
+      <SelectedDiceKeyContentRegionWithSideMargins>
         <SelectedDiceKeySubViewSwitch {...{...props}} />
-      </SelectedDiceKeyContentRegionWithoutSideMargins>
+      </SelectedDiceKeyContentRegionWithSideMargins>
       <SelectedDiceKeyBottomIconBarView {...props} />
     </PageAsFlexColumn>
     );

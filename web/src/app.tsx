@@ -24,7 +24,7 @@ try {
     // Add it to the queue.
     if (RUNNING_IN_ELECTRON) {
       ApiRequestsReceivedState.enqueueApiRequestReceived(request);
-    }else{
+    } else{
       // Open DiceKeys app, or better create a new UI view.
       const schemeBasedApiRequest = "dicekeys://" + url.search;
       window.location.href = schemeBasedApiRequest

@@ -11,6 +11,7 @@ import { ViewState } from "../../state/core/ViewState";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
+import { DiceKeyMemoryStore } from "../../state";
 
 const seedSecurityKeyPurpose = "seedSecurityKey";
 
@@ -44,12 +45,14 @@ export class SeedHardwareKeyViewState implements ViewState {
 
   loadDiceKeyState: LoadDiceKeyViewState | undefined;
   startLoadDiceKey = action( () => {
-    this.loadDiceKeyState = new LoadDiceKeyViewState( this.navState, "camera")
+    this.loadDiceKeyState = new LoadDiceKeyViewState(this.navState, "camera")
   })
   onDiceKeyReadOrCancelled = action ((diceKey: DiceKeyWithKeyId | undefined) => {
     this.loadDiceKeyState = undefined;
     if (diceKey) {
+      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
       this.diceKey = diceKey;
+      this.derivedFromRecipeState = new DerivedFromRecipeState({recipeState: this.recipeBuilderState, diceKey });
     }
   });
 
@@ -168,9 +171,12 @@ export class SeedHardwareKeyViewState implements ViewState {
     return SeedHardwareKeyViewState.#seedableFidoKeysObserverClass ||= new SeedableFIDOKeys();
   }
 
-  navState: NavigationPathState;
+  readonly navState: NavigationPathState;
+  readonly mayLoadOrChangeDiceKey: boolean;
   constructor(parentNavState: NavigationPathState, diceKey?: DiceKeyWithKeyId) {
     this.navState = new NavigationPathState(parentNavState, SeedHardwareKeyViewStateName);
+    this.mayLoadOrChangeDiceKey = (diceKey == null);
+    this.loadDiceKeyState = undefined;
     const recipeBuilderState = new RecipeBuilderState({
       origin: "BuiltIn",
       type: "Secret",

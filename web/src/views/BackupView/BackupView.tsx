@@ -14,7 +14,6 @@ import { DiceKeyView } from "../SVG/DiceKeyView";
 import {BackupStep, BackupViewState} from "./BackupViewState";
 import { StepButton } from "../../css/Button";
 import styled from "styled-components";
-import { SelectedDiceKeyContentRegionInsideSideMargins} from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
 
 export const ComparisonBox = styled.div`
@@ -246,16 +245,17 @@ export const BackupStepFooterView = observer ( ({
   />
       )});
 
-const BackViewContentContainer = styled(SelectedDiceKeyContentRegionInsideSideMargins)`
-  // Align to top so content doesn't fly around.
-  justify-content: flex-start;
-`
+// const BackViewContentContainer = styled(SelectedDiceKeyContentRegionInsideSideMargins)`
+//   // Align to top so content doesn't fly around.
+//   justify-content: flex-start;
+// `
 
 export const BackupView = observer ( (props: BackupViewProps) => (
-  <BackViewContentContainer>
+  <>
     <BackupContentView state={props.state} />
     <BackupStepFooterView {...props} />
-  </BackViewContentContainer>));
+  </>)
+);
 
 addPreviewWithMargins("Backup", () => ( 
   <BackupView state={new BackupViewState(NavigationPathState.root, {diceKey: DiceKeyWithKeyId.testExample}, BackupStep.SelectBackupMedium)} />

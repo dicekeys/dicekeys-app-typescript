@@ -18,7 +18,7 @@ import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "..
 import { PlatformSupportsSavingToDevice  } from "../state/stores/DiceKeyMemoryStore";
 import { SubViewButton, SubViewButtonCaption, SubViewButtonImage } from "../css/SubViewButton";
 import { ButtonRow, PushButton } from "../css/Button";
-import { EventHandlerOverridesDefault } from "../utilities/EventHandlerOverridesDefault";
+import { AnchorButton } from "./basics/AnchorButton";
 
 const ImageRow = styled.div`
   display: flex;
@@ -62,30 +62,43 @@ interface StoredDiceKeyProps extends TopLevelNavigationProps {
 
 const storedKeySize = `min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})` as const;
 
+// Top put the buttons for saving/deleting/removing DiceKeys
+// closer to the DiceKeys themselves, remove some margins
+const ButtonRowBelowDiceKeySubViewButton = styled(ButtonRow)`
+  margin-top: 0;
+`
+const DiceKeyActionButton = styled(PushButton)`
+  margin-top: 0;
+`
+
 const StoredDiceKeyButtonsView = observer ( ({storedDiceKeyDescriptor, state}: StoredDiceKeyProps) => {
   const removeFromMemory = () => { DiceKeyMemoryStore.removeDiceKey(storedDiceKeyDescriptor) };
   if (!PlatformSupportsSavingToDevice) {
     // For platforms that don't support saving DiceKeys to long-term device storage,
     // we can only allow the DiceKey currrently in memory to be removed.
     return (
-      <ButtonRow><PushButton onClick={removeFromMemory} >remove</PushButton></ButtonRow>
+      <><DiceKeyActionButton onClick={removeFromMemory} >remove</DiceKeyActionButton></>
     )
   }
   if (storedDiceKeyDescriptor.savedOnDevice) {
     // As this DiceKey is already saved to the device, we can offer the option to remove it from the device.
     const navigateToDeleteFromDevice = () => { state.navigateToDeleteFromDevice(storedDiceKeyDescriptor) };
     return (
-      <ButtonRow><PushButton onClick={navigateToDeleteFromDevice} >delete</PushButton></ButtonRow>
+      <><DiceKeyActionButton onClick={navigateToDeleteFromDevice} >delete</DiceKeyActionButton></>
     )
   } else {
     const navigateToSaveToDevice = () => { state.navigateToSaveToDevice(storedDiceKeyDescriptor) };
     return (
-      <ButtonRow><PushButton onClick={navigateToSaveToDevice} ><b>save</b></PushButton><PushButton onClick={removeFromMemory} >remove</PushButton></ButtonRow>
+      <><DiceKeyActionButton onClick={navigateToSaveToDevice} ><b>save</b></DiceKeyActionButton><DiceKeyActionButton onClick={removeFromMemory} >remove</DiceKeyActionButton></>
     )
   }
 });
 
 const StoredDiceKeyViewContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 `;
 
 const StoredDiceKeyView = observer ( (props: StoredDiceKeyProps) => {
@@ -105,7 +118,9 @@ const StoredDiceKeyView = observer ( (props: StoredDiceKeyProps) => {
           `Key ${storedDiceKeyDescriptor.centerLetterAndDigit}`
         }</SubViewButtonCaption>
       </SubViewButton>
-      <StoredDiceKeyButtonsView {...props} />
+      <ButtonRowBelowDiceKeySubViewButton>
+        <StoredDiceKeyButtonsView {...props} />
+      </ButtonRowBelowDiceKeySubViewButton>
     </StoredDiceKeyViewContainer>
   )
 });
@@ -129,17 +144,21 @@ const CountdownTimerView = observer( ({state}: TopLevelNavigationProps) => {
         { RUNNING_IN_ELECTRON ?
           (<> or the application is closed.</>) :
           (<>, this tab is refreshed, or this tab is closed.</>)}
-        &nbsp;&nbsp;<a href="#" onClick={EventHandlerOverridesDefault(state.enableAutoErase)}>start auto-erase timer</a>
+        &nbsp;&nbsp;<AnchorButton onClick={state.enableAutoErase}>start auto-erase timer</AnchorButton>
       </CountdownTimerLine>
     )
   }
   return (
     <CountdownTimerLine>
       {objectNames} above will be automatically removed from memory in {state.autoEraseCountdownTimer?.secondsRemaining}s.
-      &nbsp;&nbsp;<a href="#" onClick={EventHandlerOverridesDefault(state.disableAutoErase)}>do not erase automatically</a>
+      &nbsp;&nbsp;<AnchorButton onClick={state.disableAutoErase}>do not erase automatically</AnchorButton>
     </CountdownTimerLine>
   )
 })
+
+const StoredDiceKeysRowAndCountdownTimerContainer = styled.div`
+  
+`
 
 export const WindowHomeView = observer ( ({state}: TopLevelNavigationProps) => {
   return (
@@ -150,14 +169,14 @@ export const WindowHomeView = observer ( ({state}: TopLevelNavigationProps) => {
         {/*
           Row of stored DiceKeys
         */}
-        <div>
+        <StoredDiceKeysRowAndCountdownTimerContainer>
           <StoredDiceKeysRow>{
             DiceKeyMemoryStore.keysInMemoryOrSavedToDevice.map( storedDiceKeyDescriptor => (
               <StoredDiceKeyView key={storedDiceKeyDescriptor.keyId} {...{state, storedDiceKeyDescriptor}} />
             ))
           }</StoredDiceKeysRow>
           <CountdownTimerView {...{state}} />
-        </div>
+        </StoredDiceKeysRowAndCountdownTimerContainer>
         {/* 
           Load DiceKey button
         */}

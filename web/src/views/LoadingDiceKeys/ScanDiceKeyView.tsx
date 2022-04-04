@@ -106,7 +106,6 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
     this.frameProcessorState.handleProcessedCameraFrame(await processDiceKeyImageFrame(framesImageData), canvasRenderingContext);
   }
 
-
   constructor(props: ScanDiceKeyView["props"]) {
     super(props);
     this.frameProcessorState = new DiceKeyFrameProcessorState(props);

@@ -7,12 +7,10 @@ import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities/cssCalc";
 import { ObscureSecretFields } from "../../state/ToggleState";
 import { DivSupportingInvisible, PageAsFlexColumn } from "../../css";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
-import { WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins, StandardWidthBetweenSideMargins } from "../Navigation/NavigationLayout";
+import { StandardWidthBetweenSideMargins, WindowRegionBelowTopNavigationBarWithSideMargins } from "../Navigation/NavigationLayout";
 import { SeedHardwareKeyViewState, SeedSource, fidoAccessDeniedByPlatform, fidoAccessRequiresWindowsAdmin } from "./SeedHardwareKeyViewState";
-import { SelectedDiceKeyContentRegionWithoutSideMargins } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
-import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
-import { LoadDiceKeyView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
-import { NavigationPathState } from "../../state/core/NavigationPathState";
+import { LoadDiceKeyContentPaneView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
+import { AnchorButton } from "../../views/basics/AnchorButton";
 
 const FieldRow = styled.div<{invisible?: boolean}>`
     ${ props => props.invisible ? css`visibility: hidden;` : ``}
@@ -254,12 +252,12 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
       <FieldValueMeta>
       {(seedHardwareKeyViewState.diceKey == null) ? (<>
           Enter or paste a seed in hex format{
-              (<>&nbsp;or&nbsp; <a href="" onClick={seedHardwareKeyViewState.startLoadDiceKey}>load a DiceKey to generate a seed</a> </>)
+              (<>&nbsp;or&nbsp; <AnchorButton href="#" onClick={seedHardwareKeyViewState.startLoadDiceKey}>load a DiceKey to generate a seed</AnchorButton></>)
         }</>) : (
         <select value={seedHardwareKeyViewState.seedSourceSelected} onChange={(e)=>seedHardwareKeyViewState.setSeedSourceSelected(e.target.value as SeedSource)}>
           <option value={SeedSource.EnteredManually}>Enter or paste a seed</option>
           <option value={SeedSource.GeneratedFromDefaultRecipe}>Derive seed from {diceKeyNickname} using the standard recipe</option>
-          <option value={SeedSource.GeneratedFromCustomRecipe}>Derive seed from {diceKeyNickname} Using Custom Recipe</option>
+          <option value={SeedSource.GeneratedFromCustomRecipe}>Derive seed from {diceKeyNickname} using custom Recipe</option>
         </select>
     )}
       </FieldValueMeta>
@@ -305,11 +303,18 @@ const SmallNote = styled(DivSupportingInvisible)`
   font-size: 0.9rem;
 `
 
-export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState}: {
+export const SeedHardwareKeyContentView = observer( ( {seedHardwareKeyViewState}: {
   seedHardwareKeyViewState: SeedHardwareKeyViewState
 }) => {
   const {loadDiceKeyState} = seedHardwareKeyViewState;
-  if (seedHardwareKeyViewState.displayFidoAccessRequiresAdminModal) {
+  if (loadDiceKeyState != null) {
+    return (
+      <LoadDiceKeyContentPaneView
+        onDiceKeyReadOrCancelled={ seedHardwareKeyViewState.onDiceKeyReadOrCancelled }
+        state={ loadDiceKeyState }
+      />
+    );
+  } else if (seedHardwareKeyViewState.displayFidoAccessRequiresAdminModal) {
     return (<RunAsAdministratorRequiredView dismiss={seedHardwareKeyViewState.dismissAdminModal} />)
   } else if (seedHardwareKeyViewState.writeInProgress) {
     return (<WriteInProgressView/>)
@@ -317,75 +322,50 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState}:
     return (<WriteErrorView {...{seedHardwareKeyViewState}} />)
   } else if (seedHardwareKeyViewState.writeSucceeded) {
     return (<WriteSucceededView {...{seedHardwareKeyViewState}} />)
-  } else if (loadDiceKeyState != null) {
-    return (
-      <LoadDiceKeyView
-        onDiceKeyReadOrCancelled={ seedHardwareKeyViewState.onDiceKeyReadOrCancelled }
-        state={ loadDiceKeyState }
-      />
-    );
   }
   return (
-    <WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins>
-      <div>
-        { seedHardwareKeyViewState.seedSourceSelected === SeedSource.GeneratedFromCustomRecipe ? (
-          <>
-            <RecipeFieldEditorView state={seedHardwareKeyViewState.recipeBuilderState} />
-          </>
-        ): (<>
-          <Instruction2>
-            Seed a FIDO security key with a secret key and, if you lose or break it,
-            you can create a replica by writing the same seed into a replacement key.  
-          </Instruction2>
-        </>)}
-        <div style={{minHeight: '3vh'}}></div>
-        {fidoAccessRequiresWindowsAdmin ? (<CannotSeedSecurityKeysWithoutAdminView/>) :
-         fidoAccessDeniedByPlatform ? (<CannotSeedSecurityKeysView/>) :
-         null
-        }
-        <FieldRow>
-          <FieldLabel>USB Key</FieldLabel>
-          <SoloKeyValue {...{seedHardwareKeyViewState}} />
-        </FieldRow>
-        <SeedFieldView {...{seedHardwareKeyViewState}} />
-        <ValueColumnOnly>
-          <div>
-            <button disabled={!seedHardwareKeyViewState.readyToWrite} onClick={seedHardwareKeyViewState.write}>Write</button>
-            <SmallNote invisible={!seedHardwareKeyViewState.readyToWrite}>
-              Note the location of the button on your USB Key.  Once you press <i>write</i>, you will have {SecondsToTripleClick.toString()} seconds to press the button on your key three times.
-            </SmallNote>
-            <SmallNote>Not all FIDO security keys support seeding. Seeding is currently supported by <a href="https://www.crowdsupply.com/dicekeys/dicekeys">these SoloKeys</a>.</SmallNote>
-          </div>
-        </ValueColumnOnly>
-      </div>
-    </WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins>
+    <div>
+      { seedHardwareKeyViewState.seedSourceSelected === SeedSource.GeneratedFromCustomRecipe ? (
+        <>
+          <RecipeFieldEditorView state={seedHardwareKeyViewState.recipeBuilderState} />
+        </>
+      ): (<>
+        <Instruction2>
+          Seed a FIDO security key with a secret key and, if you lose or break it,
+          you can create a replica by writing the same seed into a replacement key.  
+        </Instruction2>
+      </>)}
+      <div style={{minHeight: '3vh'}}></div>
+      {fidoAccessRequiresWindowsAdmin ? (<CannotSeedSecurityKeysWithoutAdminView/>) :
+        fidoAccessDeniedByPlatform ? (<CannotSeedSecurityKeysView/>) :
+        null
+      }
+      <FieldRow>
+        <FieldLabel>USB Key</FieldLabel>
+        <SoloKeyValue {...{seedHardwareKeyViewState}} />
+      </FieldRow>
+      <SeedFieldView {...{seedHardwareKeyViewState}} />
+      <ValueColumnOnly>
+        <div>
+          <button disabled={!seedHardwareKeyViewState.readyToWrite} onClick={seedHardwareKeyViewState.write}>Write</button>
+          <SmallNote invisible={!seedHardwareKeyViewState.readyToWrite}>
+            Note the location of the button on your USB Key.  Once you press <i>write</i>, you will have {SecondsToTripleClick.toString()} seconds to press the button on your key three times.
+          </SmallNote>
+          <SmallNote>Not all FIDO security keys support seeding. Seeding is currently supported by <AnchorButton href="https://www.crowdsupply.com/dicekeys/dicekeys">these SoloKeys</AnchorButton>.</SmallNote>
+        </div>
+      </ValueColumnOnly>
+    </div>
   )
 });
 
-
-export const SeedHardwareKeyView = observer (({parentNavState, diceKey}: {
-  parentNavState: NavigationPathState;
-  diceKey: DiceKeyWithKeyId;
-}) => {
-  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(parentNavState, diceKey);
-
-  return (
-//    <SeedHardwareKeyViewWithState {...{diceKey, seedHardwareKeyViewState, seedableFidoKeys}}/>
-    <SeedHardwareKeySimpleView {...{seedHardwareKeyViewState}}/>
-  )
-});
-
-
-export const SeedHardwareKeyPrimaryView = observer( ({parentNavState, diceKey}: {
-  parentNavState: NavigationPathState;
-  diceKey: DiceKeyWithKeyId;
+export const SeedHardwareKeyFullPageView = observer( ({seedHardwareKeyViewState}: {
+  seedHardwareKeyViewState: SeedHardwareKeyViewState
 }) => {
   return (
     <PageAsFlexColumn>
       <SimpleTopNavBar title={"Seed a USB FIDO Security Key"} />
-      <SelectedDiceKeyContentRegionWithoutSideMargins>
-        <SeedHardwareKeyView parentNavState={parentNavState} diceKey={diceKey}
-        />
-      </SelectedDiceKeyContentRegionWithoutSideMargins>
+      <WindowRegionBelowTopNavigationBarWithSideMargins>
+        <SeedHardwareKeyContentView seedHardwareKeyViewState={seedHardwareKeyViewState} />
+      </WindowRegionBelowTopNavigationBarWithSideMargins>
     </PageAsFlexColumn>
   )});
