@@ -10,14 +10,15 @@ import { SelectedDiceKeyViewState } from "./WithSelectedDiceKey/SelectedDiceKeyV
 import { SeedHardwareKeyViewState } from "./Recipes/SeedHardwareKeyViewState";
 import { PathStrings } from "./Navigation/PathStrings";
 import { NavigationPathState } from "../state/core/NavigationPathState";
-import { DeleteDiceKeyStateName, SaveDiceKeyStateName, SaveOrDeleteDiceKeyState, SaveOrDeleteDiceKeyStateName } from "./SaveDiceKeyView";
+import { DeleteDiceKeyViewStateName, SaveDiceKeyViewStateName, SaveOrDeleteDiceKeyViewState, SaveOrDeleteDiceKeyStateName, SaveDiceKeyViewState, DeleteDiceKeyViewState } from "./SaveAndDeleteDiceKeyView";
 
 export type TopLevelSubViewStates =
   LoadDiceKeyViewState |
   AssemblyInstructionsState |
   SelectedDiceKeyViewState |
   SeedHardwareKeyViewState |
-  SaveOrDeleteDiceKeyState
+  SaveDiceKeyViewState |
+  DeleteDiceKeyViewState;
 
 const diceKeyFromPathRoot = (pathRoot: string | undefined): DiceKeyWithKeyId | undefined => {
   if (!pathRoot) return;
@@ -51,11 +52,11 @@ export class WindowTopLevelNavigationState {
   navigateToSaveOrDeleteFromDevice = (saveOrDelete: SaveOrDeleteDiceKeyStateName) => async (descriptor: PublicDiceKeyDescriptorWithSavedOnDevice) => {
     const diceKey = await DiceKeyMemoryStore.load(descriptor);
     if (diceKey) {
-      this.navigateDownTo(new SaveOrDeleteDiceKeyState(saveOrDelete, this.navState, diceKey));
+      this.navigateDownTo(new SaveOrDeleteDiceKeyViewState(saveOrDelete, this.navState, diceKey));
     }
   }
-  navigateToDeleteFromDevice = this.navigateToSaveOrDeleteFromDevice(DeleteDiceKeyStateName);
-  navigateToSaveToDevice = this.navigateToSaveOrDeleteFromDevice(SaveDiceKeyStateName);
+  navigateToDeleteFromDevice = this.navigateToSaveOrDeleteFromDevice(DeleteDiceKeyViewStateName);
+  navigateToSaveToDevice = this.navigateToSaveOrDeleteFromDevice(SaveDiceKeyViewStateName);
 
   navigateToSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
     this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKey));
@@ -81,7 +82,7 @@ export class WindowTopLevelNavigationState {
   loadStoredDiceKey = async (storedDiceKeyDescriptor: PublicDiceKeyDescriptorWithSavedOnDevice) => {
     const diceKey = await DiceKeyMemoryStore.load(storedDiceKeyDescriptor);
     if (diceKey != null) {
-      this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKey));
+      this.navigateToSelectedDiceKeyView(diceKey);
     } else {
       console.log(`Could not load DiceKey from stable store`)
     }
@@ -121,7 +122,7 @@ export class WindowTopLevelNavigationState {
     this.navState = new NavigationPathState("", "", () => {
       return this.subView.subViewState?.navState.fromHereToEndOfPathInclusive ?? "";
     });
-    this.subView = new SubViewState<TopLevelSubViewStates>(this.navState, defaultSubView);
+    this.subView = new SubViewState<TopLevelSubViewStates>("ROOT", this.navState, defaultSubView);
     this.startOrStopTimerIfNecessary();
     this.subView.subStateChangedEvent.on( this.startOrStopTimerIfNecessary );
 

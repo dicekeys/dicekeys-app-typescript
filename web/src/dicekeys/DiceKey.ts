@@ -18,6 +18,7 @@ export type Face = FaceIdentifiers & {
 }
 
 export const NumberOfFacesInKey = 25;
+export type CenterLetterAndDigit = `${FaceLetter}${FaceDigit}`
 
 /**
  * Since DiceKeys have 25 faces, these generic tuple type allows us to
@@ -472,8 +473,7 @@ const facesFromNumericForm = (numericForm: bigint): DiceKeyFaces => {
 
 
 export interface PublicDiceKeyDescriptor {
-  readonly centerFaceLetter: FaceLetter;
-  readonly centerFaceDigit: FaceDigit;
+  readonly centerLetterAndDigit: CenterLetterAndDigit;
   readonly keyId: string;
 };
 
@@ -488,8 +488,8 @@ export interface PublicDiceKeyDescriptor {
  * copies of the center face that can be passed to code that renders DiceKeys.
  */
 export const facesFromPublicKeyDescriptor = (descriptor: PublicDiceKeyDescriptor): DiceKeyFaces => {
-  const letter = descriptor.centerFaceLetter;
-  const digit = descriptor.centerFaceDigit;
+  const letter = descriptor.centerLetterAndDigit.charAt(0) as FaceLetter;
+  const digit = descriptor.centerLetterAndDigit.charAt(1) as FaceDigit;
   const orientationAsLowercaseLetterTrbl = 't';
   const face: Face = {letter, digit, orientationAsLowercaseLetterTrbl};
   return DiceKeyFaces(
@@ -543,7 +543,7 @@ abstract class DiceKeyBase {
 
   get inHumanReadableForm(): DiceKeyInHumanReadableForm { return DiceKeyInHumanReadableForm(this.faces) }
   get centerFace(): Face { return this.faces[12]; }
-  get centerLetterAndDigit(): string { return this.centerFace.letter + this.centerFace.digit }
+  get centerLetterAndDigit(): CenterLetterAndDigit { return `${this.centerFace.letter}${this.centerFace.digit}` }
   get nickname(): string { return`DiceKey with ${this.centerLetterAndDigit} in center`; }
 
   compareTo = <T extends DiceKey>(other: T): DiceKeyComparisonResult<T> =>
@@ -599,7 +599,7 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
   ));
 }
 
-export class DiceKeyWithKeyId extends DiceKeyBase {
+export class DiceKeyWithKeyId extends DiceKeyBase implements PublicDiceKeyDescriptor {
   constructor(public readonly keyId: string, faces: DiceKeyFaces) {
     super(faces);
   }
@@ -645,8 +645,7 @@ export class DiceKeyWithKeyId extends DiceKeyBase {
   
   publicDescriptor = async (): Promise<PublicDiceKeyDescriptor> => ({
     keyId: this.keyId,
-    centerFaceDigit: this.centerFace.digit,
-    centerFaceLetter: this.centerFace.letter,
+    centerLetterAndDigit: this.centerLetterAndDigit
   })
 
 }

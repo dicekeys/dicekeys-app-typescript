@@ -7,13 +7,12 @@ import { WindowHomeView } from "./WindowHomeView";
 import { LoadDiceKeyView, LoadDiceKeyViewStateName } from "./LoadingDiceKeys/LoadDiceKeyView";
 import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
 import { AssemblyInstructionsStateName } from "./AssemblyInstructionsState";
-import { addressBarState } from "../state/core/AddressBarState";
 import {ApproveApiRequestState, ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
 import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
 import { PrimaryView } from "../css";
 import { SeedHardwareKeySimpleView } from "./Recipes/SeedHardwareKeyView";
 import { SeedHardwareKeyViewStateName } from "./Recipes/SeedHardwareKeyViewState";
-import { SaveDiceKeyStateName, SaveDiceKeyToDeviceStorageView, DeleteDiceKeyStateName, DeleteDiceKeyFromDeviceStroageView } from "./SaveDiceKeyView";
+import { SaveDiceKeyViewStateName, SaveDiceKeyToDeviceStorageView, DeleteDiceKeyViewStateName, DeleteDiceKeyFromDeviceStroageView } from "./SaveAndDeleteDiceKeyView";
 import { RUNNING_IN_ELECTRON } from "../utilities/is-electron";
 
 export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {windowTopLevelNavigationState: WindowTopLevelNavigationState}) => {
@@ -29,11 +28,12 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
   }
   // console.log(`Displaying subview ${windowTopLevelNavigationState.subView}`)
   const {subViewState} = windowTopLevelNavigationState.subView;
+  console.log(`Re-rendering top level switch for view name ${subViewState?.viewName}`);
   switch (subViewState?.viewName) {
-    case SaveDiceKeyStateName:
-      return (<SaveDiceKeyToDeviceStorageView state={subViewState} closeFn={ addressBarState.back } />);
-    case DeleteDiceKeyStateName:
-      return (<DeleteDiceKeyFromDeviceStroageView state={subViewState} closeFn={ addressBarState.back } />);
+    case SaveDiceKeyViewStateName:
+      return (<SaveDiceKeyToDeviceStorageView state={subViewState} />);
+    case DeleteDiceKeyViewStateName:
+      return (<DeleteDiceKeyFromDeviceStroageView state={subViewState} />);
     case LoadDiceKeyViewStateName:
       return (
         <LoadDiceKeyView
@@ -51,7 +51,7 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
       <SeedHardwareKeySimpleView seedHardwareKeyViewState={subViewState} />
     );
     case SelectedDiceKeyViewStateName: return (
-      <SelectedDiceKeyView state={subViewState} goBack={ addressBarState.back } />
+      <SelectedDiceKeyView state={subViewState} />
     );
     default: return (
       <WindowHomeView state={windowTopLevelNavigationState} />

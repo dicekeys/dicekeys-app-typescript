@@ -12,6 +12,7 @@ import { cssCalcTyped } from "../utilities";
 import { DiceKeyView } from "./SVG/DiceKeyView";
 import { ViewState } from "../state/core/ViewState";
 import { NavigationPathState } from "../state/core/NavigationPathState";
+import { addressBarState } from "../state/core/AddressBarState";
 
 export const ContentRegion = styled(WindowRegionBelowTopNavigationBar)`
   flex: 0 0 auto;
@@ -24,24 +25,31 @@ const IdealMinimumContentMargin = `2rem`;
 const diceKeySize = `min(100vw - 2 * ${IdealMinimumContentMargin}, ( ${HeightBelowTopNavigationBar} - (${IdealMinimumContentMargin}) )/3)` as const;
 const calcDiceKeySize = cssCalcTyped(diceKeySize);
 
-export const SaveDiceKeyStateName = "save";
-export const DeleteDiceKeyStateName = "delete";
-export type SaveOrDeleteDiceKeyStateName = typeof SaveDiceKeyStateName | typeof DeleteDiceKeyStateName;
-export class SaveOrDeleteDiceKeyState implements ViewState {
+export const SaveDiceKeyViewStateName = "save";
+export const DeleteDiceKeyViewStateName = "delete";
+export type SaveDiceKeyViewStateName = typeof SaveDiceKeyViewStateName;
+export type DeleteDiceKeyViewStateName = typeof DeleteDiceKeyViewStateName;
+export type SaveOrDeleteDiceKeyStateName = SaveDiceKeyViewStateName | DeleteDiceKeyViewStateName;
+export class SaveOrDeleteDiceKeyViewState<SAVE_OR_DELETE extends SaveOrDeleteDiceKeyStateName=SaveOrDeleteDiceKeyStateName> implements ViewState {
   readonly navState: NavigationPathState;
 
   constructor(
-    public readonly viewName: SaveOrDeleteDiceKeyStateName,
+    public readonly viewName: SAVE_OR_DELETE,
     parentNavState: NavigationPathState,
-    public readonly diceKey: DiceKeyWithKeyId
+    public readonly diceKey: DiceKeyWithKeyId,
+    localPath: string | (() => string) = `${viewName}/${diceKey.centerLetterAndDigit}`
   ) {
-    this.navState = new NavigationPathState(parentNavState, `${this.viewName}/${diceKey.centerLetterAndDigit}`);
+    this.navState = new NavigationPathState(parentNavState, localPath);
   }
 }
+export type SaveDiceKeyViewState = SaveOrDeleteDiceKeyViewState<SaveDiceKeyViewStateName>;
+export type DeleteDiceKeyViewState = SaveOrDeleteDiceKeyViewState<DeleteDiceKeyViewStateName>;
 
-
-export const SaveDiceKeyToDeviceStorageView = observer( ( {state, closeFn}:
- {state: SaveOrDeleteDiceKeyState, closeFn: () => void }) => {
+export const SaveDiceKeyToDeviceStorageView = observer( ( {
+  state,
+  closeFn = addressBarState.back
+}:
+ {state: SaveDiceKeyViewState, closeFn?: () => void }) => {
   const {diceKey} = state;
   const saveFn = () => {
     DiceKeyMemoryStore.saveToDeviceStorage(diceKey);
@@ -74,10 +82,13 @@ export const SaveDiceKeyToDeviceStorageView = observer( ( {state, closeFn}:
 
  
 export const DeleteDiceKeyFromDeviceStroageView = observer( (
-  {state, closeFn}: {state: SaveOrDeleteDiceKeyState, closeFn: () => void }) => {
+  {
+    state,
+    closeFn = addressBarState.back
+  }: {state: DeleteDiceKeyViewState, closeFn?: () => void }) => {
   const {diceKey} = state;
   const deleteFromDeviceStorageAndMemory = () => {
-    DiceKeyMemoryStore.deleteKeyIdFromDeviceStorageAndMemory(diceKey.keyId);
+    DiceKeyMemoryStore.deleteFromDeviceStorageAndMemory(diceKey);
     closeFn();
   }
     
@@ -104,12 +115,3 @@ export const DeleteDiceKeyFromDeviceStroageView = observer( (
   );
 
 });
-
-// export const SaveOrDeleteDiceKeyView = observer( (props: {state: SaveOrDeleteDiceKeyState, closeFn: () => void }) => {
-//   const {diceKey} = props.state;
-//   if (DiceKeyMemoryStore.hasKeyInEncryptedStore(diceKey.keyId)) {
-//     return (<DeleteDiceKeyFromDeviceStroageView {...{...props}}/>);
-//   } else {
-//     return (<SaveDiceKeyToDeviceStorageView {...{...props}}/>);
-//   }
-// });

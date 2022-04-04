@@ -19,11 +19,6 @@ export enum BackupStep {
 const validStepOrUndefined = (step: number): BackupStep | undefined =>
   (step >= BackupStep.START_INCLUSIVE && step < BackupStep.END_EXCLUSIVE) ? step : undefined;
 
-// interface SettableDiceKeyState {
-//   diceKey?: DiceKey,
-//   setDiceKey: (diceKey?: DiceKey) => any;
-// }
-
 export const BackupViewStateName = "backup";
 export class BackupViewState implements ViewState {
   readonly viewName = BackupViewStateName;

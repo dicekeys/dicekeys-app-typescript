@@ -33,7 +33,7 @@ class DiceKeyMemoryStoreClass {
   #triggerReadyState = action( () => {
     if (!this.#isReady) {
       this.#isReady = true;
-      this.#readyEvent.send()
+      this.#readyEvent.sendImmediately()
     }
   });
 
@@ -82,7 +82,7 @@ class DiceKeyMemoryStoreClass {
   private loadFromDeviceStorage = async (...params: Parameters<typeof EncryptedDiceKeyStore.load>) : Promise<DiceKeyWithKeyId | undefined> => {
     if (!RUNNING_IN_ELECTRON)  return;
     const diceKeyWithKeyId = await EncryptedDiceKeyStore.load(...params);
-    if (diceKeyWithKeyId != null && this.keyIdToDiceKeyInHumanReadableForm.has(diceKeyWithKeyId.keyId)) {
+    if (diceKeyWithKeyId != null && !this.keyIdToDiceKeyInHumanReadableForm.has(diceKeyWithKeyId.keyId)) {
       // This DiceKey was not in the memory store, and should be added.
       this.addDiceKeyWithKeyId(diceKeyWithKeyId);
     }
@@ -117,20 +117,18 @@ class DiceKeyMemoryStoreClass {
     }
   }
 
-  removeDiceKeyForKeyId = action ( (keyId: string) => {
+  removeDiceKey = action ( ({keyId, centerLetterAndDigit}: PublicDiceKeyDescriptor) => {
     // console.log(`removeDiceKeyForKeyId(${keyId})`);
     this.keyIdToDiceKeyInHumanReadableForm.delete(keyId);
+    if (this.centerLetterAndDigitToKeyId.get(centerLetterAndDigit) === keyId) {
+      this.centerLetterAndDigitToKeyId.delete(centerLetterAndDigit)
+    }
     this.updateStorage();
   });
 
-  removeDiceKey = async (diceKeyOrKeyId: DiceKeyWithKeyId | string) => {
-    const keyId = typeof(diceKeyOrKeyId) === "string" ? diceKeyOrKeyId : diceKeyOrKeyId.keyId;
-    this.removeDiceKeyForKeyId(keyId);
-  };
-
-  deleteKeyIdFromDeviceStorageAndMemory = (keyId: string) => {
-    this.removeDiceKeyForKeyId(keyId)
-    EncryptedDiceKeyStore.delete({keyId})
+  deleteFromDeviceStorageAndMemory = (diceKeyWithKeyId: PublicDiceKeyDescriptor) => {
+    this.removeDiceKey(diceKeyWithKeyId)
+    EncryptedDiceKeyStore.delete(diceKeyWithKeyId)
   }
 
   removeAll = action ( () => {
@@ -148,11 +146,10 @@ class DiceKeyMemoryStoreClass {
 
   get keysInMemory(): PublicDiceKeyDescriptorWithSavedOnDevice[] {
     return sortPublicDiceKeyDescriptors([...(this.keyIdToDiceKeyInHumanReadableForm.entries())].map( ([keyId, diceKeyInHumanReadableForm]) => {
-      const {centerFace} = new DiceKeyWithoutKeyId(diceKeyFacesFromHumanReadableForm(diceKeyInHumanReadableForm));
+      const {centerLetterAndDigit} = new DiceKeyWithoutKeyId(diceKeyFacesFromHumanReadableForm(diceKeyInHumanReadableForm));
       return {
         keyId,
-        centerFaceDigit: centerFace.digit,
-        centerFaceLetter: centerFace.letter,
+        centerLetterAndDigit,
         savedOnDevice: RUNNING_IN_ELECTRON && EncryptedDiceKeyStore.has({keyId})
       }
     }));

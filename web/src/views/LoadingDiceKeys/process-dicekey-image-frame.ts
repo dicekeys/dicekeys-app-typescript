@@ -38,7 +38,7 @@ class DiceKeyFrameWorkerClient {
     //   {type: 'module'}
     // );
     // Attach the message-received event to the worker
-    this.frameWorker.addEventListener( "message", this.workerMessageReceivedEvent.send );
+    this.frameWorker.addEventListener( "message", this.workerMessageReceivedEvent.sendImmediately );
     // Use a promise to track when the worker has sent us its ready message
     this.workerReadyPromise = this.workerMessageReceivedEvent.promiseOfNextOccurrenceMultipleArgs( 
       message => ("action" in message.data && message.data.action === "workerReady" )

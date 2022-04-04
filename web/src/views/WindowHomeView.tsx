@@ -60,12 +60,10 @@ interface StoredDiceKeyProps extends TopLevelNavigationProps {
   storedDiceKeyDescriptor: PublicDiceKeyDescriptorWithSavedOnDevice;
 }
 
-
 const storedKeySize = `min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})` as const;
 
-
 const StoredDiceKeyButtonsView = observer ( ({storedDiceKeyDescriptor, state}: StoredDiceKeyProps) => {
-  const removeFromMemory = () => { DiceKeyMemoryStore.removeDiceKeyForKeyId(storedDiceKeyDescriptor.keyId) };
+  const removeFromMemory = () => { DiceKeyMemoryStore.removeDiceKey(storedDiceKeyDescriptor) };
   if (!PlatformSupportsSavingToDevice) {
     // For platforms that don't support saving DiceKeys to long-term device storage,
     // we can only allow the DiceKey currrently in memory to be removed.
@@ -104,7 +102,7 @@ const StoredDiceKeyView = observer ( (props: StoredDiceKeyProps) => {
           showLidTab={true}
         />
         <SubViewButtonCaption>{
-          `Key ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit}`
+          `Key ${storedDiceKeyDescriptor.centerLetterAndDigit}`
         }</SubViewButtonCaption>
       </SubViewButton>
       <StoredDiceKeyButtonsView {...props} />

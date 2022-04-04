@@ -20,21 +20,20 @@ import { DisplayDiceKeyViewState, DisplayDiceKeyViewStateName } from "./Selected
 import { SeedHardwareKeyViewStateName } from "../../views/Recipes/SeedHardwareKeyViewState";
 import { BackupViewStateName } from "../../views/BackupView/BackupViewState";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
-//import { SubViewButton } from "../../css/SubViewButton";
-
-//import LoadDiceKeyImage from "../../images/Scanning a DiceKey.svg";
 import styled from "styled-components";
-const IdealMinimumContentMargin = `2rem`
+import {
+  DeleteDiceKeyViewStateName,
+  SaveDiceKeyViewStateName,
+  SaveDiceKeyToDeviceStorageView,
+  DeleteDiceKeyFromDeviceStroageView
+} from "../../views/SaveAndDeleteDiceKeyView";
 
+const IdealMinimumContentMargin = `2rem`
 
 const DiceKeyMainViewColumns = styled(WindowRegionBelowTopNavigationBarAndAboveStandardBottomBar)`
   flex: 0 0 auto;
   flex-direction: row;
 `;
-
-// const SubViewButtonImage = styled.img`
-//   width: 14vw;
-// `;
 
 export const SubViewButtonCaption = styled.div`
   font-size: calc(${TopLevelNavigationBarFontSize}*0.75);
@@ -75,6 +74,12 @@ const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewPro
   const {diceKey, subViewState} = state;
   if (diceKey == null) return null;
   switch(subViewState.viewName) {
+    case SaveDiceKeyViewStateName: return (
+      <SaveDiceKeyToDeviceStorageView state={subViewState} />
+    );
+    case DeleteDiceKeyViewStateName: return (
+      <DeleteDiceKeyFromDeviceStroageView state={subViewState} />
+    );
     case DisplayDiceKeyViewStateName: return (
       <DislayDiceKeyView state={subViewState} />
     );
@@ -99,7 +104,6 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
   if (!diceKey) return null;
   return (
     <PageAsFlexColumn>
-      {/* <ModalOverlayOfWindowBelowTopLevelNavigationBar>Modal testing</ModalOverlayOfWindowBelowTopLevelNavigationBar> */}
       <SelectedDiceKeyNavigationBar {...props} />
       <SelectedDiceKeyContentRegionWithoutSideMargins>
         <SelectedDiceKeySubViewSwitch {...{...props}} />

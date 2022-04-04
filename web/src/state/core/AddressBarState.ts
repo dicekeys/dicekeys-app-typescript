@@ -16,6 +16,7 @@ export class AddressBarState {
 
   get path(): string { return this.current?.path ?? ""};
 
+
   back = () => {
     const newHistoryIndex = this.historyIndex - 1;
     if (newHistoryIndex >= -1) {
@@ -23,14 +24,14 @@ export class AddressBarState {
     }
   }
 
-  moveToHistoryIndex(historyIndex: number) {
-    console.log(`moveToHistoryIndex state initiated at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
-    while (this.historyIndex > historyIndex) {
+  moveToHistoryIndex(targetHistoryIndex: number) {
+    console.log(`moveToHistoryIndex for target Index ${targetHistoryIndex} initiated at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
+    while (this.historyIndex > targetHistoryIndex) {
       // We need to undo state changes until we're back to the previous state
       try { this.current?.undoStateChangeFn(); } catch {}
       this.historyIndex--;
     }
-    while (this.historyIndex < historyIndex && this.stateStack.length > this.historyIndex + 1) {
+    while (this.historyIndex < targetHistoryIndex && this.stateStack.length > this.historyIndex + 1) {
       // We need to redo state changes to move forward in history
       this.historyIndex++;
       try {this.current?.stateChangeFuntion()} catch {}
@@ -43,6 +44,7 @@ export class AddressBarState {
     stateChangeFuntion: StateModificationFunction,
     undoStateChangeFn: StateModificationFunction
   ) {
+    console.log(`pushState initiated at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
     if (this.stateStack.length - 1 > this.historyIndex) {
       this.stateStack = this.stateStack.slice(0, this.historyIndex + 1);
     }
@@ -51,6 +53,7 @@ export class AddressBarState {
     const path = pathStr.length === 0 ?  "/" : pathStr;
     this.historyIndex = this.stateStack.length;
     this.stateStack.push({path, stateChangeFuntion, undoStateChangeFn});
+    console.log(`pushState completed at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
     return path;
   }
 
@@ -59,6 +62,7 @@ export class AddressBarState {
     stateChangeFuntion: StateModificationFunction,
     undoStateChangeFn?: StateModificationFunction
   ) {
+    console.log(`replaceState initiated at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
     stateChangeFuntion();
     const pathStr = typeof pathStrOrFn === "string" ? pathStrOrFn : pathStrOrFn();
     const path = pathStr.length === 0 ?  "/" : pathStr;
@@ -67,6 +71,7 @@ export class AddressBarState {
     } else {
       this.stateStack[this.historyIndex] = {path, stateChangeFuntion, undoStateChangeFn: undoStateChangeFn ?? this.stateStack[0]!.undoStateChangeFn };
     }
+    console.log(`replaceState completed at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
     return path;
   }
 }

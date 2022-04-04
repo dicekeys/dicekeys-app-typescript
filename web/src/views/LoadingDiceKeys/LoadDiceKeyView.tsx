@@ -41,7 +41,6 @@ export class LoadDiceKeyViewState implements ViewState {
 
 type LoadDiceKeyProps = {
   onDiceKeyReadOrCancelled: (diceKey: DiceKeyWithKeyId | undefined, howRead: Mode | "cancelled") => any,
-//  onCancelled?: () => any,
   state: LoadDiceKeyViewState
 };
 

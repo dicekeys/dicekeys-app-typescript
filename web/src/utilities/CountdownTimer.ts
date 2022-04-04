@@ -37,7 +37,7 @@ export class CountdownTimer {
     this.setMsRemaining(newMsRemaining);
     if (newMsRemaining <= 0) {
       this.clear();
-      this.#onReachesZero.send();
+      this.#onReachesZero.sendImmediately();
     }
   };
 

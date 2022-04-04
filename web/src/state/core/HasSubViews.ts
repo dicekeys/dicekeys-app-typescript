@@ -12,8 +12,11 @@ export class SubViewState<VIEW_STATE extends ViewState> {
   get subViewState() { return this._subViewState; }
   rawSetSubView = action( (destinationSubViewState?: VIEW_STATE) => {
     const previousSubViewState = this._subViewState;
-    this._subViewState = destinationSubViewState;
-    this.subStateChangedEvent.send(previousSubViewState, destinationSubViewState);
+    console.log(`Setting subview of ${this.name} from ${previousSubViewState?.viewName ?? "undefined"} to ${destinationSubViewState?.viewName ?? "undefined"}`)
+    if (destinationSubViewState !== previousSubViewState) {
+      this._subViewState = destinationSubViewState;
+      this.subStateChangedEvent.sendEventually(previousSubViewState, destinationSubViewState);
+    }
     return this;
   });
 
@@ -22,7 +25,7 @@ export class SubViewState<VIEW_STATE extends ViewState> {
    */
   navigateToPushState = (destinationSubViewState: VIEW_STATE) => {
     const previousSubViewState = this.subViewState;
-    if (destinationSubViewState != previousSubViewState) {
+    if (destinationSubViewState !== previousSubViewState) {
       const doStateChange = () => {
         this.rawSetSubView(destinationSubViewState);
       };
@@ -46,7 +49,7 @@ export class SubViewState<VIEW_STATE extends ViewState> {
     addressBarState.replaceState(this.navState.getPath, doStateChange);
   };
 
-  constructor(public navState: NavigationPathState, defaultSubView?: VIEW_STATE) {
+  constructor(public readonly name: string, public navState: NavigationPathState, defaultSubView?: VIEW_STATE) {
     this._subViewState = defaultSubView;
     makeObservable<SubViewState<VIEW_STATE>, "_subViewState">(this, {      
       "_subViewState": observable,
