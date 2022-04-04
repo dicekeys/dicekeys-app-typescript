@@ -20,7 +20,7 @@ import { PrimaryView } from "../css/Page";
 import styled from "styled-components";
 import { WindowRegionBelowTopNavigationBarWithSideMargins, calcHeightBelowTopNavigationBar } from "./Navigation/NavigationLayout";
 import { cssCalcTyped,  cssExprWithoutCalc } from "../utilities";
-import { NavigationPathState } from "../state/core/ViewState";
+import { NavigationPathState } from "../state/core/NavigationPathState";
 import { addressBarState } from "../state/core/AddressBarState";
 
 

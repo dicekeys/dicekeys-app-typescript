@@ -7,7 +7,8 @@ import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
 import { hexStringToUint8ClampedArray, uint8ArrayToHexString } from "../../utilities";
 import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { electronBridge } from "../../state/core/ElectronBridge";
-import { NavigationPathState, ViewState } from "../../state/core/ViewState";
+import { ViewState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
 

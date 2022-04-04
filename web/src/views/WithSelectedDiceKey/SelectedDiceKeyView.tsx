@@ -19,7 +19,7 @@ import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities";
 import { DisplayDiceKeyViewState, DisplayDiceKeyViewStateName } from "./SelectedDiceKeyViewState";
 import { SeedHardwareKeyViewStateName } from "../../views/Recipes/SeedHardwareKeyViewState";
 import { BackupViewStateName } from "../../views/BackupView/BackupViewState";
-import { NavigationPathState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
 //import { SubViewButton } from "../../css/SubViewButton";
 
 //import LoadDiceKeyImage from "../../images/Scanning a DiceKey.svg";

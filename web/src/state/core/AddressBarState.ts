@@ -69,17 +69,6 @@ export class AddressBarState {
     }
     return path;
   }
-
-  // setInitialState(
-  //   path: string,
-  //   restoreFn?: StateModificationFunction
-  // ) {
-  //   if (this.stateStack.length === 0) {
-  //     this.historyIndex = 0;
-  //     this.stateStack.push({path, stateChangeFuntion: () => {}, undoStateChangeFn: restoreFn ?? ((() => {}))});
-  //   }
-  // }
-
 }
 
 interface AddressBarHistoryStateIdentifier {
@@ -87,8 +76,6 @@ interface AddressBarHistoryStateIdentifier {
 }
 
 class BrowserAddressBarState extends AddressBarState {
-
-//  override get path(): string { return window.location.pathname }
 
   override back = () => {
     if (this.stateStack.length === 0) {

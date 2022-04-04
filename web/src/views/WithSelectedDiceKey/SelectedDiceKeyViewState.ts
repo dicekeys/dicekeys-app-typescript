@@ -1,6 +1,7 @@
 import { BackupViewState, BackupViewStateName } from "../BackupView/BackupViewState";
 import { SubViewState } from "../../state/core";
-import { NavigationPathState, ViewState } from "../../state/core/ViewState";
+import { ViewState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { SeedHardwareKeyViewState, SeedHardwareKeyViewStateName } from "../Recipes/SeedHardwareKeyViewState"
 import { SecretDerivationViewState, SecretDerivationViewStateName } from "../../views/Recipes/DerivationView";

@@ -9,7 +9,7 @@ import { AssemblyInstructionsState, AssemblyInstructionsStep } from "./AssemblyI
 import { SelectedDiceKeyViewState } from "./WithSelectedDiceKey/SelectedDiceKeyViewState";
 import { SeedHardwareKeyViewState } from "./Recipes/SeedHardwareKeyViewState";
 import { PathStrings } from "./Navigation/PathStrings";
-import { NavigationPathState } from "../state/core/ViewState";
+import { NavigationPathState } from "../state/core/NavigationPathState";
 import { DeleteDiceKeyStateName, SaveDiceKeyStateName, SaveOrDeleteDiceKeyState, SaveOrDeleteDiceKeyStateName } from "./SaveDiceKeyView";
 
 export type TopLevelSubViewStates =

@@ -12,7 +12,7 @@ import { SeedHardwareKeyViewState, SeedSource, fidoAccessDeniedByPlatform, fidoA
 import { SelectedDiceKeyContentRegionWithoutSideMargins } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { LoadDiceKeyView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
-import { NavigationPathState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
 
 const FieldRow = styled.div<{invisible?: boolean}>`
     ${ props => props.invisible ? css`visibility: hidden;` : ``}

@@ -2,7 +2,8 @@ import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { BackupMedium } from "./BackupMedium";
 import { ValidateBackupViewState } from "./ValidateBackupViewState";
-import { NavigationPathState, ViewState } from "../../state/core/ViewState";
+import { ViewState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
 import { SettableOptionalDiceKey, WithDiceKey } from "../../state/Window/DiceKeyState";
 
 export enum BackupStep {

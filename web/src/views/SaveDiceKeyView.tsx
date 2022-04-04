@@ -10,7 +10,8 @@ import { HeightBelowTopNavigationBar, WindowRegionBelowTopNavigationBar } from "
 import styled from "styled-components";
 import { cssCalcTyped } from "../utilities";
 import { DiceKeyView } from "./SVG/DiceKeyView";
-import { ViewState, NavigationPathState } from "../state/core/ViewState";
+import { ViewState } from "../state/core/ViewState";
+import { NavigationPathState } from "../state/core/NavigationPathState";
 
 export const ContentRegion = styled(WindowRegionBelowTopNavigationBar)`
   flex: 0 0 auto;

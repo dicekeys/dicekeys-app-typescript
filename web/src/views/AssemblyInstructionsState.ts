@@ -1,7 +1,8 @@
 
 import { action, makeAutoObservable } from "mobx";
 import { BackupViewState } from "./BackupView/BackupViewState";
-import { NavigationPathState, ViewState } from "../state/core/ViewState";
+import { ViewState } from "../state/core/ViewState";
+import { NavigationPathState } from "../state/core/NavigationPathState";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../state";
 import { SettableOptionalDiceKeyIndirect } from "../state/Window/DiceKeyState";

@@ -15,7 +15,7 @@ import {BackupStep, BackupViewState} from "./BackupViewState";
 import { StepButton } from "../../css/Button";
 import styled from "styled-components";
 import { SelectedDiceKeyContentRegionInsideSideMargins} from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
-import { NavigationPathState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
 
 export const ComparisonBox = styled.div`
   display: flex;

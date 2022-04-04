@@ -14,7 +14,8 @@ import {
 } from "./DerivationView/DerivationViewLayout";
 import { RawJsonWarning } from "./DerivationView/RawJsonWarning";
 import { observer } from "mobx-react-lite";
-import { NavigationPathState, ViewState } from "../../state/core/ViewState";
+import { ViewState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
 
 
 export const RecipeWizardOrFieldsView = observer ( ({recipeBuilderState}: {

@@ -1,6 +1,7 @@
 import { action, computed, makeObservable, observable } from "mobx";
 import { addressBarState } from "./AddressBarState";
-import { NavigationPathState, ViewState } from "./ViewState";
+import { ViewState } from "./ViewState";
+import { NavigationPathState } from "./NavigationPathState";
 
 import {CustomEvent} from "../../utilities/event";
 
@@ -17,7 +18,7 @@ export class SubViewState<VIEW_STATE extends ViewState> {
   });
 
   /***
-   * Navigate to a subview
+   * Navigate to a subview supporting back to get back to the current subview
    */
   navigateToPushState = (destinationSubViewState: VIEW_STATE) => {
     const previousSubViewState = this.subViewState;
@@ -32,7 +33,11 @@ export class SubViewState<VIEW_STATE extends ViewState> {
     }
   };
 
-  navigateToReplaceState = (
+  /***
+   * Navigate to a subview, but with back going to wherever we came
+   * from this subview.
+   */
+   navigateToReplaceState = (
     destinationSubViewState: VIEW_STATE | undefined = undefined
   ) => {
     const doStateChange = () => {

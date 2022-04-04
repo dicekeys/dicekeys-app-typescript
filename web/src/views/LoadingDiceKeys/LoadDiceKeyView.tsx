@@ -13,7 +13,8 @@ import { PushButton } from "../../css/Button";
 import { PrimaryView } from "../../css/Page";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarWithSideMargins } from "../Navigation/NavigationLayout";
-import { NavigationPathState, ViewState } from "../../state/core/ViewState";
+import { ViewState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
 import { PathStrings } from "../../views/Navigation/PathStrings";
 
 type Mode = "camera" | "manual";
