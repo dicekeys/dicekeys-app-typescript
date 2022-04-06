@@ -89,7 +89,7 @@ export const CannotSeedSecurityKeysView = () => (
     <InlineWarning>
       Web browsers currently prevent web-based applications from using USB to seed hardware security keys.
       <br/>
-      To seed a security key, you'll need to use the DiceKeys app on Android, Windows, Linux, or MacOS.
+      To write seed into a security key, you will need to use the DiceKeys app on Android, Windows, Linux, or MacOS.
     </InlineWarning>
   </ValueColumnOnly>
 );
@@ -100,7 +100,7 @@ export const CannotSeedSecurityKeysWithoutAdminView = () => (
     <InlineWarning>
       Windows applications can only seed hardware security keys when running as administrator.
       <br/>
-      To seed a security key, you will need to run this application as administrator by right clicking on its icon and choosing the <i>run as administrator</i> option.
+      To write seed into a security key, you will need to run this application as administrator by right clicking on its icon and choosing the <i>run as administrator</i> option.
     </InlineWarning>
   </ValueColumnOnly>
 );
@@ -112,7 +112,7 @@ export const RunAsAdministratorRequiredView = ({dismiss}: {dismiss: () => void})
         Windows applications can only seed hardware security keys when running as administrator.
       </Instruction2>
       <Instruction2>
-        To seed a security key, you will need to run this application as administrator by right clicking on its icon and choosing the <i>run as administrator</i> option.
+        To write seed into a security key, you will need to run this application as administrator by right clicking on its icon and choosing the <i>run as administrator</i> option.
       </Instruction2>
       <CenteredControls><button onClick={dismiss} >Dismiss</button></CenteredControls>
     </ModalContent>
@@ -252,7 +252,7 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
       <FieldValueMeta>
       {(seedHardwareKeyViewState.diceKey == null) ? (<>
           Enter or paste a seed in hex format{
-              (<>&nbsp;or&nbsp; <AnchorButton href="#" onClick={seedHardwareKeyViewState.startLoadDiceKey}>load a DiceKey to generate a seed</AnchorButton></>)
+              (<>&nbsp;or&nbsp; <AnchorButton onClick={seedHardwareKeyViewState.startLoadDiceKey}>load a DiceKey to generate a seed</AnchorButton></>)
         }</>) : (
         <select value={seedHardwareKeyViewState.seedSourceSelected} onChange={(e)=>seedHardwareKeyViewState.setSeedSourceSelected(e.target.value as SeedSource)}>
           <option value={SeedSource.EnteredManually}>Enter or paste a seed</option>
@@ -351,7 +351,7 @@ export const SeedHardwareKeyContentView = observer( ( {seedHardwareKeyViewState}
           <SmallNote invisible={!seedHardwareKeyViewState.readyToWrite}>
             Note the location of the button on your USB Key.  Once you press <i>write</i>, you will have {SecondsToTripleClick.toString()} seconds to press the button on your key three times.
           </SmallNote>
-          <SmallNote>Not all FIDO security keys support seeding. Seeding is currently supported by <AnchorButton href="https://www.crowdsupply.com/dicekeys/dicekeys">these SoloKeys</AnchorButton>.</SmallNote>
+          <SmallNote>Not all FIDO security keys support seeding. Seeding is currently only supported by <a target="_blank" href="https://www.crowdsupply.com/dicekeys/dicekeys">these SoloKeys</a>.</SmallNote>
         </div>
       </ValueColumnOnly>
     </div>

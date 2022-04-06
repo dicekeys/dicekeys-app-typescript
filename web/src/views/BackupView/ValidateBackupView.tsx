@@ -52,7 +52,7 @@ export const ValidateBackupView = observer ( ({
     viewState.stopScanning();
   };
   if (viewState.scanning) {
-    return (<CenterColumn>
+    return (<><Spacer/><CenterColumn>
       <ScanDiceKeyView
         maxHeight="55vh"
         onDiceKeyRead={ onDiceKeyRead }
@@ -60,7 +60,7 @@ export const ValidateBackupView = observer ( ({
       <CenteredControls>
           <PushButton onClick={viewState.stopScanning} >Stop scanning</PushButton>
       </CenteredControls>
-    </CenterColumn>)
+    </CenterColumn></>)
   } else if (originalDiceKey != null) {
     return (<>
       <ContentRow>

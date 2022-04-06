@@ -65,7 +65,7 @@ export class ValidateBackupViewState {
     if (originalDiceKey == null || diceKeyScannedFromBackup == null) return;
     return originalDiceKey.compareTo(diceKeyScannedFromBackup);
   }
-  get backupScannedSuccessfully() { return this.diceKeyComparisonResult?.errors.length === 0 }
+  get backupScannedSuccessfully() { return ((this.diceKeyComparisonResult?.errors.length ?? -1) === 0) }
 
   /** The scanned DiceKey rotated to the orientation that yields the fewest errors */
   get diceKeyScanned() {

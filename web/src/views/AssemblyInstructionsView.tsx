@@ -141,35 +141,28 @@ const StepSealBox = () => (
 
 const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsState}) => {
   const {diceKey} = state;
-  const createdDiceKey = diceKey != null;
-  const {faces} = createdDiceKey ? diceKey : {faces: undefined};
+  const {faces} = diceKey ?? {faces: undefined};
+  const createdDiceKey = faces != null;
   const backedUpSuccessfully = !!state.backupState?.validationStepViewState.backupScannedSuccessfully;
   return (
     <ColumnVerticallyCentered>
-        <div style={{display: "block"}}>
-          <Instruction>{createdDiceKey ? "You did it!" : "That's it!"}</Instruction>
-          { faces ? (
-              <>
-                <Spacer/>
-                <CenterColumn>
-                  <DiceKeyView size={`min(50vh,70vw)`} faces={faces} obscureAllButCenterDie={false} />
-                </CenterColumn>
-                <Spacer/>
-              </>
-            ) : (<Spacer/>)
-          }
-          { createdDiceKey ? (<></>) : (<>
-              <Instruction>There's nothing more to it.</Instruction>
-              <Instruction>Go back to assemble and scan in a real DiceKey.</Instruction>
-            </>)
-          }{ backedUpSuccessfully ? (<></>) :(<>
-              <Instruction>Be sure to make a backup soon!</Instruction>
-            </>)
-          }{ !createdDiceKey ? (<></>) : (<>
-              <Instruction>When you press the "Done" button, we'll take you to the same screen you'll see after scanning your DiceKey from the home screen.</Instruction>
-            </>)
-          }
-        </div>
+      <div style={{display: "block"}}>{
+        createdDiceKey ? (<>
+          <Instruction>You did it!</Instruction>
+          <Spacer/>
+          <CenterColumn>
+            <DiceKeyView size={`min(50vh,70vw)`} faces={faces} />
+          </CenterColumn>
+          <Spacer/>
+          { backedUpSuccessfully ? null : (
+            <Instruction>Be sure to make a backup soon!</Instruction>
+          )}
+          <Instruction>When you press the <i>done</i> button, we'll take you to the same screen you will see after scanning your DiceKey from the home screen.</Instruction>
+        </>) : (<>
+          <Instruction>That's it! There's nothing more to it.</Instruction>
+          <Instruction>Go back to assemble and scan in a real DiceKey.</Instruction>
+        </>)
+      }</div>
     </ColumnVerticallyCentered>
 )});
 
