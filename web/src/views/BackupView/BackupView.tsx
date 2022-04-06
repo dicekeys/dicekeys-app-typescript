@@ -15,6 +15,7 @@ import {BackupStep, BackupViewState} from "./BackupViewState";
 import { StepButton } from "../../css/Button";
 import styled from "styled-components";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
+import { ObscureDiceKey } from "../../state/ToggleState";
 
 export const ComparisonBox = styled.div`
   display: flex;
@@ -143,7 +144,8 @@ const StepSelectBackupMedium = observer (({state, prevStepBeforeStart}: BackupVi
         <FeatureCardButton key={medium}
           onClick={state.setBackupMedium(medium)}
         >
-          <FaceCopyingView medium={medium} diceKey={state.withDiceKey.diceKey!} showArrow={true} indexOfLastFacePlaced={12} 
+          <FaceCopyingView medium={medium} diceKey={state.withDiceKey.diceKey!} showArrow={true} indexOfLastFacePlaced={12}
+          obscureAllButCenterDie={typeof ObscureDiceKey === "boolean" ? ObscureDiceKey : ObscureDiceKey.value }
             maxWidth="60vw"
             maxHeight={prevStepBeforeStart != null ? 
               // Leave space for a footer with a previous step button
@@ -168,7 +170,7 @@ export const BackupStepSwitchView = observer ( ({state}: BackupViewProps) => {
     case BackupStep.Validate: return ( <ValidateBackupView viewState={validationStepViewState} /> )
     default: return (backupMedium == null || step < BackupStep.FirstFace || step > BackupStep.LastFace) ? (<></>) : (
       <>
-        <FaceCopyingView medium={backupMedium} diceKey={diceKey} indexOfLastFacePlaced={faceIndex}
+        <FaceCopyingView obscureAllButCenterDie={false} medium={backupMedium} diceKey={diceKey} indexOfLastFacePlaced={faceIndex}
            maxWidth="80vw" maxHeight="45vh"
         />
         { diceKey == null ? null : (
@@ -257,10 +259,6 @@ export const BackupStepFooterView = observer ( ({
   />
       )});
 
-// const BackViewContentContainer = styled(SelectedDiceKeyContentRegionInsideSideMargins)`
-//   // Align to top so content doesn't fly around.
-//   justify-content: flex-start;
-// `
 
 export const BackupView = observer ( (props: BackupViewProps) => (
   <>

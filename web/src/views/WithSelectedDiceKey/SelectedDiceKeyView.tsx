@@ -14,12 +14,14 @@ import {
 } from "./SelectedDiceKeyBottomIconBarView";
 import { SelectedDiceKeyContentRegionWithSideMargins} from "./SelectedDiceKeyLayout";
 import { SelectedDiceKeyNavigationBar } from "./SelectedDiceKeyNavigationBar";
-import { HeightBetweenTopNavigationBarAndStandardBottomBar, TopLevelNavigationBarFontSize } from "../../views/Navigation/NavigationLayout";
+import { HeightBetweenTopNavigationBarAndStandardBottomBar, StandardSideMargin, StandardWidthBetweenSideMargins, TopLevelNavigationBarFontSize } from "../../views/Navigation/NavigationLayout";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities";
 import { DisplayDiceKeyViewState, DisplayDiceKeyViewStateName } from "./SelectedDiceKeyViewState";
 import { SeedHardwareKeyViewStateName } from "../../views/Recipes/SeedHardwareKeyViewState";
 import { BackupViewStateName } from "../../views/BackupView/BackupViewState";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
+import {DivSupportingInvisible} from "../../css/DivSupportingInvisible"
+import { ToggleState } from "../../state";
 import styled from "styled-components";
 import {
   DeleteDiceKeyViewStateName,
@@ -41,35 +43,61 @@ export const SubViewButtonCaption = styled.div`
   margin-top: min(0.75rem, 0.5vh);
 `;
 
-const SideRow = styled.div`
-  height: calc(${HeightBetweenTopNavigationBarAndStandardBottomBar});
-  width: 20vw;
-  margin-left: 2.5vw;
-  margin-right: 2.5vw;
+const RowHeight = cssExprWithoutCalc(`${HeightBetweenTopNavigationBarAndStandardBottomBar} - 2 * ${StandardSideMargin}`);
+const Row = styled.div`
+  height: calc(${RowHeight});
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+`;
+// IF WE PUT THINGS IN SIDE ROWS, WE'LL USE THIS
+// const CenterRowWidth = cssExprWithoutCalc(`${StandardWidthBetweenSideMargins} / 2`);
+const CenterRowWidth = cssExprWithoutCalc(`${StandardWidthBetweenSideMargins} / 1.25 `);
+
+const SideRowWidth = cssExprWithoutCalc(`(${StandardWidthBetweenSideMargins} - ${CenterRowWidth})/2-${StandardSideMargin}`);
+const CenterRow = styled(Row)`
+  width: calc(${CenterRowWidth});
+`;
+const SideRow = styled(Row)`
+  width: calc(${SideRowWidth});
+`
+const LeftSideRow = styled(SideRow)`
+  margin-right: calc(${StandardSideMargin})
+`
+const RightSideRow = styled(SideRow)`
+  margin-left: calc(${StandardSideMargin})
 `
 
-const selectedDiceKeySize = cssCalcTyped(`min(50vw - ${cssExprWithoutCalc(IdealMinimumContentMargin)}, ${cssExprWithoutCalc(HeightBetweenTopNavigationBarAndStandardBottomBar)} - 2 * ${cssExprWithoutCalc(IdealMinimumContentMargin)})`);
+// Reserve 2rem for note about hiding DiceKey below
+// Reserve content margin
+const selectedDiceKeySize = cssCalcTyped(`min(${CenterRowWidth}, ${HeightBetweenTopNavigationBarAndStandardBottomBar} -10rem - 2 * ${IdealMinimumContentMargin})`);
+const HideInstruction = styled(DivSupportingInvisible)`
+  font-family: sans-serif;
+  font-size: 1.25rem;
+`
 
-export const DislayDiceKeyView = ({state}: {state: DisplayDiceKeyViewState}) => (
+export const DislayDiceKeyView = observer( ({state}: {state: DisplayDiceKeyViewState}) => (
   <DiceKeyMainViewColumns>
-    <SideRow>
+    <LeftSideRow>
       {/* <SubViewButton
         onClick={ () => {} }
       >
         <SubViewButtonImage src={LoadDiceKeyImage} />
         <SubViewButtonCaption>Load Another DiceKey</SubViewButtonCaption>
       </SubViewButton> */}
-    </SideRow>
-    <DiceKeyView
-      size={selectedDiceKeySize}
-      faces={state.diceKey.faces}
-    />
-    <SideRow></SideRow>
+    </LeftSideRow>
+    <CenterRow>
+      <DiceKeyView
+        size={selectedDiceKeySize}
+        faces={state.diceKey.faces}
+        obscureAllButCenterDie={ToggleState.ObscureDiceKey}
+      />
+      <HideInstruction invisible={ToggleState.ObscureDiceKey.value}>Press on DiceKey to hide all but center face</HideInstruction>
+    </CenterRow>
+    <RightSideRow></RightSideRow>
   </DiceKeyMainViewColumns>
-);
+));
 
 const SelectedDiceKeySubViewSwitch = observer( ( {state}: SelectedDiceKeyViewProps) => {
   const {diceKey, subViewState} = state;

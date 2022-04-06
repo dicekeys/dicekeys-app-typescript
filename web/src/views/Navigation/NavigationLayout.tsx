@@ -14,7 +14,7 @@ export const StandardBottomBarHeight = `11vh`;
 
 export const TopLevelNavigationBarFontSize = cssExprWithoutCalc(`min(${`3.75vh`},${`8.5vw`})`);
 
-export const HeightBetweenTopNavigationBarAndStandardBottomBar = cssExprWithoutCalc(`100vh - (${cssExprWithoutCalc(TopNavigationBarHeight)} + ${cssExprWithoutCalc(StandardBottomBarHeight)})`)
+export const HeightBetweenTopNavigationBarAndStandardBottomBar = cssExprWithoutCalc(`100vh - (${TopNavigationBarHeight} + ${StandardBottomBarHeight})`)
 export const CalcHeightBetweenTopNavigationBarAndStandardBottomBar = cssCalcTyped(HeightBetweenTopNavigationBarAndStandardBottomBar);
 
 const ZIndexForModalOverlays = 128;

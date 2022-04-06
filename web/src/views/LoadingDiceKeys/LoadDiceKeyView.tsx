@@ -65,7 +65,6 @@ const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
 
 export const LoadDiceKeyContentPaneView = observer( (props: LoadDiceKeyProps) => {
   const {state, onDiceKeyReadOrCancelled} = props;
-  console.log(`FIXME - rendering the LoadDiceKey content pane view`, state);
 
   const onDonePressedWithinEnterDiceKey = () => {
     const diceKey = state.enterDiceKeyState.diceKey;
@@ -95,7 +94,6 @@ export const LoadDiceKeyContentPaneView = observer( (props: LoadDiceKeyProps) =>
 
 export const LoadDiceKeyFullPageView = observer( (props: LoadDiceKeyProps) => {
   const {state} = props;
-  console.log(`FIXME - rendering the LoadDiceKey full page view`);
   return (
     <PrimaryView>
       <SimpleTopNavBar title={ state.mode === "manual" ? "Enter your DiceKey" : "Scan your DiceKey"} />

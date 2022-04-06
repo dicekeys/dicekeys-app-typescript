@@ -81,6 +81,7 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
     const obscure: boolean = typeof obscureAllButCenterDie === "object" ?
       obscureAllButCenterDie?.value :
       !!obscureAllButCenterDie;
+    const showPressToReveal = (typeof obscureAllButCenterDie === "object") && obscure;
   
     return (
       <g {...svgGroupProps}
@@ -129,16 +130,30 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
                 highlightThisFace={highlightFaceAtIndex == index}
               />)
             )
-        }
+        }{!showPressToReveal ? null : (
+          // Render a "Press to Reveal" instruction over the obscured region of the DiceKey        
+          <text
+            x={sizeModel.left + 0.5 * sizeModel.width}
+            y={sizeModel.top + 0.8 * sizeModel.height}
+            width={sizeModel.width}
+            fontFamily="sans-serif;"
+            fill={"#808080"}
+            style={{userSelect: "none"}}
+            fontSize={sizeModel.height * 0.1}
+            textAnchor={'middle'}
+            fillOpacity={1}
+          ><tspan>Press to Reveal</tspan
+          ></text>
+        )}
       </g>
     );
 });
 
 const DiceKeySvgElement = styled.svg`
   display: flex;
-  flex-basis: 0;
+  /* flex-basis: 0;
   flex-grow: 1;
-  flex-shrink: 5;
+  flex-shrink: 5; */
   align-self: center;
   justify-self: center;
 `;
@@ -155,20 +170,18 @@ export const DiceKeyView = ({
   // Prop specific to this view
   size,
   // Props to pass down to svg element.
-  style,
+  style: parentStyle,
   ...svgProps
 }: {size?: string} & DiceKeyRenderOptions & React.SVGAttributes<SVGElement>) => {
   const sizeModel = (showLidTab || leaveSpaceForTab) ? sizeModelWithTab : sizeModelWithoutTab;
   const cssCalcSize = size != null ? cssCalcTyped(size) : undefined;
+  const style: React.CSSProperties | undefined = (size == null) ? parentStyle : {...parentStyle, width: cssCalcSize, height: cssCalcSize};
   return (
     <DiceKeySvgElement
       {...svgProps}
       viewBox={viewBox((sizeModel.bounds))}
-      // width={size}
-      // height={size}
       preserveAspectRatio="xMidYMid meet"
-      style={(size != null ? {...style, width: cssCalcSize, height: cssCalcSize, minHeight: cssCalcSize, minWidth: cssCalcSize} : {...style}) }
-    >
+      style={style}    >
       <DiceKeySvgGroup {...{faces,sizeModel,highlightFaceAtIndex,obscureAllButCenterDie,diceBoxColor,showLidTab,leaveSpaceForTab,onFaceClicked,}} />
     </DiceKeySvgElement>
   );

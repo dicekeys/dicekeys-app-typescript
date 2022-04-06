@@ -9,6 +9,7 @@ import HandWithSticker from /*url:*/"../../images/Hand with Sticker.svg";
 import { FaceGroupView } from "./FaceView";
 import { weightsToFractionalProportions, sum } from "../../utilities/weights";
 import { OptionalMaxSizeCalcProps, WithBounds } from "../../utilities/WithBounds";
+import { ToggleState } from "../../state/ToggleState";
 
 // Hand with sticker is 219wide x 187 high
 const handImageSVGHeight = 187;
@@ -42,10 +43,12 @@ type FaceCopyingViewProps = {
   matchSticKeyAspectRatio?: boolean,
   showArrow?: boolean,
   indexOfLastFacePlaced?: number,
+  obscureAllButCenterDie: boolean | ToggleState
 }; //  & React.SVGAttributes<SVGGElement>
 const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) => {
   const {
     diceKey, medium, matchSticKeyAspectRatio, indexOfLastFacePlaced, showArrow,
+    obscureAllButCenterDie
   } = props;
   const hideFaces = diceKey?.faces.slice(0, indexOfLastFacePlaced ?? -1);
   const bounds = medium === "SticKey" ?
@@ -82,7 +85,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
             sizeModel={stickerSheetSizeModel}
             indexOfLastFacePlaced={indexOfLastFacePlaced}
             highlightThisFace={indexOfLastFacePlaced}
-          transform={`translate(${xoffsetImageCenterToRightSheetCenter}, 0)`}
+            transform={`translate(${xoffsetImageCenterToRightSheetCenter}, 0)`}
         />        
       </>) : medium === "DiceKey" ? (<>
         <DiceKeySvgGroup
@@ -91,6 +94,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
           {...diceKeySizeModel.bounds}
           highlightFaceAtIndex={indexOfLastFacePlaced}
           transform={`translate(${xoffsetImageCenterToLeftSheetCenter})`}
+          obscureAllButCenterDie={obscureAllButCenterDie}
         />
         <DiceKeySvgGroup
           sizeModel={diceKeySizeModel}
@@ -100,6 +104,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
           {...diceKeySizeModel.bounds}
           highlightFaceAtIndex={indexOfLastFacePlaced}
           transform={`translate(${xoffsetImageCenterToRightSheetCenter}, 0)`}
+          obscureAllButCenterDie={false}
         />              
       </>) : (<></>)}
       { showArrow !== true ? (<></>) : (
@@ -157,7 +162,7 @@ export const SticKeyCopyingView = observer( (props: Omit<FaceCopyingViewProps, "
 
 export const Preview_FaceCopyingView = ({indexOfLastFacePlaced=23}: {indexOfLastFacePlaced?: number}) => (
   <>
-    <DiceKeyCopyingView diceKey={DiceKeyWithoutKeyId.testExample} indexOfLastFacePlaced={indexOfLastFacePlaced} />
-    <SticKeyCopyingView diceKey={DiceKeyWithoutKeyId.testExample} matchSticKeyAspectRatio={true} indexOfLastFacePlaced={indexOfLastFacePlaced} />
+    <DiceKeyCopyingView obscureAllButCenterDie={false} diceKey={DiceKeyWithoutKeyId.testExample} indexOfLastFacePlaced={indexOfLastFacePlaced} />
+    <SticKeyCopyingView obscureAllButCenterDie={false} diceKey={DiceKeyWithoutKeyId.testExample} matchSticKeyAspectRatio={true} indexOfLastFacePlaced={indexOfLastFacePlaced} />
   </>
 )
