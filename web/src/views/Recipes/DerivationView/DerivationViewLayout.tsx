@@ -1,9 +1,6 @@
 import styled from "styled-components";
 import { HeightBetweenTopNavigationBarAndStandardBottomBar, StandardWidthBetweenSideMargins } from "../../../views/Navigation/NavigationLayout";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../../utilities";
-import {
-  SelectedDiceKeyContentRegionInsideSideMargins
-} from "../../WithSelectedDiceKey/SelectedDiceKeyLayout";
 
 export const ContentWidth = StandardWidthBetweenSideMargins;
 export const DiceKeyMaxWidth = cssExprWithoutCalc(`${ContentWidth} * 0.3`);
