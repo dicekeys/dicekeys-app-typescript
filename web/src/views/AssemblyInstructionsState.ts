@@ -72,6 +72,9 @@ export class AssemblyInstructionsState implements ViewState {
   userChoseToSkipScanningStep: boolean = false;
   setUserChoseToSkipScanningStep = action ( () => this.userChoseToSkipScanningStep = true );
 
+  userChoseToSkipBackupStep: boolean = false;
+  setUserChoseToSkipBackupStep = action ( () => this.userChoseToSkipBackupStep = true );
+
   backupState: BackupViewState | undefined;
 
   navState: NavigationPathState;

@@ -209,13 +209,25 @@ const RowAboveFooter = styled.div`
 export const BackupStepFooterView = observer ( ({
     state,
     prevStepBeforeStart,
-    nextStepAfterEnd
-  }: BackupViewProps) => {
+    nextStepAfterEnd,
+    skipBackup
+  }: BackupViewProps & {
+    skipBackup?: () => void
+  }) => {
   if (state.step === BackupStep.SelectBackupMedium && !prevStepBeforeStart) return (<div>&nbsp;</div> );
   return (
   <StepFooterView 
     aboveFooter = {
-      (state.step === BackupStep.Validate) ? (
+      (state.step === BackupStep.SelectBackupMedium && skipBackup) ? (
+        <RowAboveFooter>
+          <StepButton
+            invisible={state.userChoseToSkipValidationStep || state.validationStepViewState.backupScannedSuccessfully}
+            onClick={skipBackup}
+            style={{marginBottom: "0.5rem"}}  
+          >Skip backing up my DiceKey
+          </StepButton>
+        </RowAboveFooter>
+      ) : (state.step === BackupStep.Validate) ? (
         <RowAboveFooter>
           <StepButton
             invisible={state.userChoseToSkipValidationStep || state.validationStepViewState.backupScannedSuccessfully}

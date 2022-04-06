@@ -22,6 +22,7 @@ import { WindowRegionBelowTopNavigationBarWithSideMargins, calcHeightBelowTopNav
 import { cssCalcTyped,  cssExprWithoutCalc } from "../utilities";
 import { NavigationPathState } from "../state/core/NavigationPathState";
 import { addressBarState } from "../state/core/AddressBarState";
+import { BackupStep } from "./BackupView/BackupViewState";
 
 
 const WarningFooterDivHeight = `1.5rem`;
@@ -104,7 +105,7 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
       // Scanning action
       (
         <CenterColumn>
-          <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } height={`50vh`} />
+          <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } height={`65vh`} />
           <CenteredControls>
             <PushButton onClick={stopScanning}>Cancel</PushButton>
           </CenteredControls>
@@ -139,13 +140,24 @@ const StepSealBox = () => (
 );
 
 const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsState}) => {
-  const createdDiceKey = state.diceKey != null;
+  const {diceKey} = state;
+  const createdDiceKey = diceKey != null;
+  const {faces} = createdDiceKey ? diceKey : {faces: undefined};
   const backedUpSuccessfully = !!state.backupState?.validationStepViewState.backupScannedSuccessfully;
   return (
     <ColumnVerticallyCentered>
         <div style={{display: "block"}}>
           <Instruction>{createdDiceKey ? "You did it!" : "That's it!"}</Instruction>
-          <Spacer/>
+          { faces ? (
+              <>
+                <Spacer/>
+                <CenterColumn>
+                  <DiceKeyView size={`min(50vh,70vw)`} faces={faces} obscureAllButCenterDie={false} />
+                </CenterColumn>
+                <Spacer/>
+              </>
+            ) : (<Spacer/>)
+          }
           { createdDiceKey ? (<></>) : (<>
               <Instruction>There's nothing more to it.</Instruction>
               <Instruction>Go back to assemble and scan in a real DiceKey.</Instruction>
@@ -186,11 +198,18 @@ const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  Ass
   };
   return (
     <StepFooterView               
-    aboveFooter={(state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.diceKey == null) ? (
+    aboveFooter={
+      (state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.diceKey == null) ? (
         <StepButton invisible={state.userChoseToSkipScanningStep == null}
           onClick={ state.setUserChoseToSkipScanningStep }
           style={{marginBottom: "0.5rem"}}
         >Let me skip scanning and backing up my DiceKey
+        </StepButton>
+      ) : (state.step === AssemblyInstructionsStep.CreateBackup && state.backupState?.step === BackupStep.SelectBackupMedium && !state.userChoseToSkipScanningStep) ? (
+        <StepButton invisible={state.userChoseToSkipScanningStep == null}
+          onClick={ state.setUserChoseToSkipBackupStep }
+          style={{marginBottom: "0.5rem"}}
+        >Let me skip backing up my DiceKey
         </StepButton>
       ) : undefined
     }
@@ -214,9 +233,10 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
               <Spacer/>
               <BackupStepFooterView state={state.backupState}
                 /* when final backup step is done we'll go to the next step of assembly */
-                nextStepAfterEnd={props.state.goToNextStep}
+                nextStepAfterEnd={state.goToNextStep}
                 /* If stepping back from the first step of backup, move to the previous assembly step */
-                prevStepBeforeStart={props.state.goToPrevStep}
+                prevStepBeforeStart={state.goToPrevStep}
+                skipBackup={state.goToNextStep}
               />
             </>
           ) : (
