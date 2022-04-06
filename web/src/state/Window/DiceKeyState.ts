@@ -75,9 +75,6 @@ export class DiceKeyState implements SettableOptionalDiceKey {
       return;
     }
     if (oldKeyId != null) {
-      // Pull the DiceKey we're no longer using out of the memory store.
-      // DiceKeyMemoryStore.removeDiceKey(oldKeyId);
-      // FIXME -- we'll make this explicit later.
     }
     this.keyId = keyId
   });
@@ -88,13 +85,13 @@ export class DiceKeyState implements SettableOptionalDiceKey {
     return diceKeyWithCenterFaceUpright;
   });
 
-  clear = action ( () => this.keyId = undefined );
+  clear = ( () => this.keyId = undefined );
 
   public setDiceKey = async (diceKey?: DiceKeyWithKeyId) => {
     if (diceKey == null) {
       this.setKeyId(undefined);
     } else {
-      this.setKeyIdAndDiceKey(await diceKey.withKeyId);
+      this.setKeyIdAndDiceKey(diceKey.withKeyId);
     }
   }
 }

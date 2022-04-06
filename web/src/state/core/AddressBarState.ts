@@ -86,7 +86,6 @@ class BrowserAddressBarState extends AddressBarState {
     if (this.stateStack.length === 0) {
       // There's nowhere back to go so we need to do a hard navigation to the top.
       // This can occur if we start by a deep load, e.g. to "/assemble"
-      // FIXME
     } else {
       window.history.back();
     }

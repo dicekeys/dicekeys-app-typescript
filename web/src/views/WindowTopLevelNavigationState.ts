@@ -139,8 +139,8 @@ export class WindowTopLevelNavigationState {
         windowTopLevelNavigationState.subView.navigateToPushState(new LoadDiceKeyViewState(windowTopLevelNavigationState.navState, "camera"));
         return windowTopLevelNavigationState;
       case PathStrings.AssemblyInstructions:
-        // FIXME -- get step number from path
         window.history.replaceState({depth: 0}, "", "");
+        // Get step number from path
         const stepNumber = parseInt(pathElements[2] ?? "0");
         // Can't jump past the scan step on refresh as there will be no key scanned.
         const maxStep = AssemblyInstructionsStep.ScanFirstTime;
