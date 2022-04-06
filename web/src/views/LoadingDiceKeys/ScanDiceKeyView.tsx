@@ -1,7 +1,7 @@
 import { observer } from "mobx-react";
 import React from "react";
 import { FaceRead } from "@dicekeys/read-dicekey-js";
-import { CameraCaptureWithOverlay } from "./CameraCaptureWithOverlay";
+import { CameraCaptureWithOverlay, CameraCaptureWithOverlayProperties } from "./CameraCaptureWithOverlay";
 import { DiceKeyFrameProcessorState } from "./DiceKeyFrameProcessorState";
 import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
 import { Camera, CamerasOnThisDevice } from "./CamerasOnThisDevice";
@@ -62,13 +62,20 @@ const defaultMediaTrackConstraints: MediaTrackConstraints = {
   aspectRatio: {ideal: 1}
 };
 
-type ScanDiceKeyViewProps = React.PropsWithoutRef<{
+export interface ScanDiceKeyViewProps extends Omit<CameraCaptureWithOverlayProperties, "cameras" | "mediaStreamState"> {
+  onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
+  onDiceKeyRead?: (diceKey: DiceKeyWithKeyId) => any,
+  showBoxOverlay?: boolean;
+};
+/* type ScanDiceKeyViewProps =  Exclude<CameraCaptureWithOverlayProperties, "cameras" | "mediaStreamState"> &  React.PropsWithoutRef<{
   onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
   onDiceKeyRead?: (diceKey: DiceKeyWithKeyId) => any,
   showBoxOverlay?: boolean;
   maxWidth?: string;
   maxHeight?: string;
-}>;
+  minHeight?: string;
+  height?: string
+}>; */
 
 const PermissionRequiredView = () => (
   <NotificationDiv>
@@ -130,7 +137,7 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
 
   render() {
     const camerasOnThisDevice = this.camerasOnThisDevice;
-    const {maxWidth, maxHeight, showBoxOverlay} = this.props;
+    const cameraCaptureWithOverlayProps = this.props;
 
     // Uncomment if we want to provide transparency into the
     // camera scanning process rather than just wait for it to complete...
@@ -147,9 +154,10 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
     return (
       <>
         <CameraCaptureWithOverlay
+          {...cameraCaptureWithOverlayProps}
           onFrameCaptured={this.onFrameCaptured}
           mediaStreamState={this.mediaStreamState}
-          {...{maxWidth, maxHeight, showBoxOverlay}} />
+        />
         <CameraSelectionView mediaStreamState={this.mediaStreamState} cameras={cameras} />
       </>
     );

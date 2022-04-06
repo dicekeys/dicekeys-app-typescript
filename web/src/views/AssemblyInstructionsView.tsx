@@ -98,14 +98,18 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
   }
   const {diceKey} = state;
   return (<PaddedContentBox>
-    {/* <Spacer/> */}
+    <Spacer/>
     <Instruction>Scan the dice in the bottom of the box (without sealing the box top into place.)</Instruction>
-    { scanning ? (<CenterColumn>
-      <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } maxHeight={`50vh`} />
-      <CenteredControls>
-        <PushButton onClick={stopScanning}>Cancel</PushButton>
-      </CenteredControls>
-    </CenterColumn>) : diceKey != null ? (<>
+    { scanning ? 
+      // Scanning action
+      (
+        <CenterColumn>
+          <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } height={`50vh`} />
+          <CenteredControls>
+            <PushButton onClick={stopScanning}>Cancel</PushButton>
+          </CenteredControls>
+        </CenterColumn>
+      ) : diceKey != null ? (<>
         <CenterRow>
           <DiceKeyView size={`min(50vh,70vw)`} faces={diceKey.faces} obscureAllButCenterDie={false} />
         </CenterRow>
@@ -118,9 +122,9 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
         <CenteredControls>
           <PushButton onClick={startScanning}>Scan</PushButton>
         </CenteredControls>
-        <Spacer/>
       </>)
     }
+    <Spacer/>
   </PaddedContentBox>);
 });
 

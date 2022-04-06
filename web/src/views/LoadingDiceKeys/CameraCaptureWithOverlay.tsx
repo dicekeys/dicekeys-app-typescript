@@ -16,7 +16,9 @@ export interface CameraCaptureWithOverlayProperties {
   mediaStreamState: MediaStreamState;
   onFrameCaptured?: (frame: ImageData, canvasRenderingContext: CanvasRenderingContext2D) => any;
   showBoxOverlay?: boolean;
-  maxWidth?: string;
+  width?: string;
+  minHeight?: string;
+  height?: string;
   maxHeight?: string;
 }
 
@@ -91,18 +93,20 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
       }
     };
 
-    const {maxWidth, maxHeight} = this.props;  
+    const {width, height, maxHeight, minHeight} = this.props;  
 
     return (
         <>
           <video
             style={
-              (maxWidth != null && maxHeight != null) ?
-                {width: `calc(min(${maxWidth}, ${maxHeight}))`, height: "auto"} :
-              (maxWidth != null) ?
-                {width: `${maxWidth}`, height: "auto"} :
+              (width != null) ?
+                {width, height: "auto", minHeight, maxHeight} :
+              (height != null) ?
+                {width: "auto", height} :
+              (maxHeight != null && minHeight != null) ?
+                {width: "auto", maxHeight, minHeight} :
               (maxHeight != null) ?
-                {width: "auto", maxHeight: `${maxHeight}`} :
+                {width: "auto", maxHeight} :
                 {width: `100%`, height: "auto"}
               }
               autoPlay={true}

@@ -50,7 +50,7 @@ const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
         <CenterColumn>
           <Instruction>Place your DiceKey into the camera's field of view.</Instruction>
           <ScanDiceKeyView
-            maxHeight="70vh"
+            height="70vh"
             showBoxOverlay={true}
             onDiceKeyRead={ (diceKey) => props.onDiceKeyReadOrCancelled( diceKey, "camera") }
           />
