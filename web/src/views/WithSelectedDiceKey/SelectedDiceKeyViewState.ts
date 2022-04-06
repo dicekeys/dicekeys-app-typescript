@@ -1,105 +1,111 @@
-import { BackupViewState } from "../BackupView/BackupViewState";
-import { HasSubViews } from "../../state/core";
-import { DiceKeyState } from "../../state/Window/DiceKeyState";
-import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
+import { BackupViewState, BackupViewStateName } from "../BackupView/BackupViewState";
+import { SubViewState } from "../../state/core";
+import { ViewState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
+import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { SeedHardwareKeyViewState, SeedHardwareKeyViewStateName } from "../Recipes/SeedHardwareKeyViewState"
+import { SecretDerivationViewState, SecretDerivationViewStateName } from "../../views/Recipes/DerivationView";
+import { DiceKeyMemoryStore } from "../../state";
 import { addressBarState } from "../../state/core/AddressBarState";
-import { EncryptedDiceKeyStore } from "../../state/stores/EncryptedDiceKeyStore";
-import { action, makeAutoObservable } from "mobx";
+import {
+  SaveOrDeleteDiceKeyViewState,
+  SaveDiceKeyViewState, SaveDiceKeyViewStateName,
+  DeleteDiceKeyViewState, DeleteDiceKeyViewStateName
+} from "../../views/SaveAndDeleteDiceKeyView";
 
-export enum SelectedDiceKeySubViews {
-  DisplayDiceKey = "", // primary view
-  Backup = "backup",
-  SeedHardwareKey = "seed",
-  DeriveSecrets = "secret",
-}
-
-const getSelectedDiceKeySubViewFromPath = (
-  path: string
-): SelectedDiceKeySubViews => {
-  const subViewPathElement = path.split("/")[2];
-  switch(subViewPathElement) {
-    case SelectedDiceKeySubViews.DisplayDiceKey:
-    case SelectedDiceKeySubViews.Backup:
-    case SelectedDiceKeySubViews.SeedHardwareKey:
-    case SelectedDiceKeySubViews.DeriveSecrets:
-      return subViewPathElement;
-    default:
-      return SelectedDiceKeySubViews.DisplayDiceKey;
+export const DisplayDiceKeyViewStateName = "";
+export type DisplayDiceKeyViewStateName = typeof DisplayDiceKeyViewStateName;
+export class DisplayDiceKeyViewState implements ViewState {
+  readonly viewName = DisplayDiceKeyViewStateName;
+  navState: NavigationPathState;
+  constructor(parentNavState: NavigationPathState, public readonly diceKey: DiceKeyWithKeyId) {
+    this.navState = new NavigationPathState(parentNavState, DisplayDiceKeyViewStateName)
   }
+  // toPath = () => ``;
 }
 
-const basePath = RUNNING_IN_ELECTRON? `/` : `${window.location.protocol}//${window.location.host}`;
+export type SelectedDiceKeySubViewStates =
+  DisplayDiceKeyViewState |
+  BackupViewState |
+  SeedHardwareKeyViewState |
+  SecretDerivationViewState |
+  SaveDiceKeyViewState |
+  DeleteDiceKeyViewState;
+export type SelectedDiceKeySubViewStateNames = SelectedDiceKeySubViewStates["viewName"];
 
-const replacePathElement = (indexOfPathElementToReplace: number, newPathElement: string) => {
-  const pathElements = (addressBarState.path || "/").split('/');
-  pathElements[indexOfPathElementToReplace] = newPathElement
-  return `${basePath}${pathElements.join('/')}`;
-}
+export const SelectedDiceKeyViewStateName = "SelectedDiceKey";
+export type SelectedDiceKeyViewStateName = typeof SelectedDiceKeyViewStateName;
+export class SelectedDiceKeyViewState implements ViewState<SelectedDiceKeyViewStateName> {
+  readonly viewName = SelectedDiceKeyViewStateName;
 
-class SaveAndDeleteUIState {
-  _showSaveDeleteModal: boolean = false;
-  get showSaveDeleteModal() { return this._showSaveDeleteModal }
-  readonly setShowSaveDeleteModal = action( (newValue: boolean) => this._showSaveDeleteModal = newValue);
-  readonly setShowSaveDeleteModalFn = (newValue: boolean) => () => this.setShowSaveDeleteModal(newValue);
-  readonly toggleShowSaveDeleteModal = () => this.setShowSaveDeleteModal(!this.showSaveDeleteModal);
+  _displayDiceKeyViewState?: DisplayDiceKeyViewState;
+  get displayDiceKeyViewState() { return this._displayDiceKeyViewState ||= new DisplayDiceKeyViewState(this.navState, this.diceKey) }
+  _backupViewState?: BackupViewState;
+  get backupViewState() { return this._backupViewState ||= new BackupViewState(this.navState, {diceKey: this.diceKey}) }
+  _seedHardwareKeyViewState?: SeedHardwareKeyViewState;
+  get seedHardwareKeyViewState() { return this._seedHardwareKeyViewState ||= new SeedHardwareKeyViewState(this.navState, this.diceKey) }
+  _secretDerivationViewState?: SecretDerivationViewState;
+  get secretDerivationViewState() { return this._secretDerivationViewState ||= new SecretDerivationViewState(this.navState, this.diceKey) }
 
-  get isSaved(): boolean {return this.diceKeyState.diceKey != null && EncryptedDiceKeyStore.has(this.diceKeyState.diceKey); }
+  navState: NavigationPathState;
+  subView: SubViewState<SelectedDiceKeySubViewStates>;
 
-  handleOnSaveDeleteButtonClicked = () => {
-    const {diceKey} = this.diceKeyState;
-    if (diceKey == null) return;
-    if (this.isSaved) {
-      EncryptedDiceKeyStore.delete(diceKey);
-    } else {
-      EncryptedDiceKeyStore.add(diceKey);
-    }
-    this.setShowSaveDeleteModal(false);
-  }
-
-  constructor(private diceKeyState: DiceKeyState) {
-    makeAutoObservable(this);
-  }
-
-}
-
-export class SelectedDiceKeyViewState extends HasSubViews<SelectedDiceKeySubViews> {
-  readonly saveAndDeleteUIState: SaveAndDeleteUIState;
-  readonly backupState: BackupViewState;
-
+  get subViewState() { return this.subView.subViewState ?? this.displayDiceKeyViewState }
   constructor(
-    public readonly foregroundDiceKeyState: DiceKeyState,
-    initialSubView: SelectedDiceKeySubViews = getSelectedDiceKeySubViewFromPath(addressBarState.path)
+    parentNavState: NavigationPathState, 
+    public readonly diceKey: DiceKeyWithKeyId,
   ) {
-    super(initialSubView, () => this.updateAddressBar());
-    this.saveAndDeleteUIState = new SaveAndDeleteUIState(foregroundDiceKeyState);
-    this.backupState = new BackupViewState(this.foregroundDiceKeyState);
-
-    addressBarState.onPopState( path => 
-      this.rawSetSubView(getSelectedDiceKeySubViewFromPath(path))
-    );
+    this.navState = new NavigationPathState(parentNavState, diceKey.centerLetterAndDigit, () => this.subViewState.navState.fromHereToEndOfPathInclusive );
+    this.subView = new SubViewState<SelectedDiceKeySubViewStates>(this.viewName, this.navState, this.displayDiceKeyViewState);
+    this.subView.subStateChangedEvent.on( (_prevState, _currentState) => {
+      const diceKeyIsInMemory = DiceKeyMemoryStore.hasKeyIdInMemory(diceKey.keyId);
+      console.log(`SelectedDiceKeyView subview state changed from ${_prevState?.viewName ?? "undefined"} to ${_currentState?.viewName ?? "undefined"} and DiceKeyInMemory=${diceKeyIsInMemory ? "true" : "false"}`)
+      if (!diceKeyIsInMemory) {
+        // We've navigated to this view after the key has been deleted from memory.
+        console.log(`Arrived at SelectedDiceKeyView with deleted DiceKey. Must have returned from deleted state`);
+        addressBarState.back();
+      }
+    })
   }
 
-  private updateAddressBar = () => { // (newSubView: SelectedDiceKeySubViews, priorSubView: SelectedDiceKeySubViews | undefined) => {
-    const subViewInAddressBar = getSelectedDiceKeySubViewFromPath(addressBarState.path);
-    const newPath = replacePathElement(2, this.subView ?? "");
-    if (this.subView === SelectedDiceKeySubViews.DisplayDiceKey && subViewInAddressBar !== SelectedDiceKeySubViews.DisplayDiceKey) {
-      // We're popping from a subview to the display dicekey view
-      console.log(`updateAddressBar.back ${JSON.stringify(subViewInAddressBar)} ${JSON.stringify(this.subView)}`);
-      addressBarState.back();
-    } else if (this.subView !== SelectedDiceKeySubViews.DisplayDiceKey && subViewInAddressBar == SelectedDiceKeySubViews.DisplayDiceKey ) { 
-      // We're moving down from the primary view (displaying a dicekey) and pushing a subview
-      console.log(`updateAddressBar.pushState ${JSON.stringify(subViewInAddressBar)} ${JSON.stringify(this.subView)}`);
-      addressBarState.pushState(newPath);
-    } else {
-      // we're moving laterally from one subview to another
-      console.log(`updateAddressBar.replaceState ${JSON.stringify(subViewInAddressBar)} ${JSON.stringify(this.subView)}`);
-      addressBarState.replaceState(newPath);
+  /**
+   * 
+   * @param diceKey The DiceKey of the selected state
+   * @param subPathElements The elements of the address bar split by forward slashes, with the initial
+   * letter and digit used to identify the DiceKey removed, such that
+   * the path `/M1/a/b` would result in the `subPathElements` array of `["a", "b"]`.
+   */
+  static fromPath = (parentNavState: NavigationPathState, diceKey: DiceKeyWithKeyId, subPathElements: string[] = []): SelectedDiceKeyViewState => {
+    const instance = new SelectedDiceKeyViewState(parentNavState, diceKey);
+    if (subPathElements.length > 0) {
+      const subViewName = subPathElements[0];
+      switch (subViewName) {
+        case BackupViewStateName:
+          instance.subView.rawSetSubView(instance._backupViewState = BackupViewState.fromPath(instance.navState, diceKey, subPathElements));
+          break;
+        case SeedHardwareKeyViewStateName:
+          instance.subView.rawSetSubView(instance.seedHardwareKeyViewState);
+          break;
+        case SecretDerivationViewStateName:
+          instance.subView.rawSetSubView(instance.secretDerivationViewState);
+          break;
+        default:
+          break;
+      }
     }
+    return instance;
   }
 
-  navigateToDisplayDiceKey = this.navigateToSubView(SelectedDiceKeySubViews.DisplayDiceKey);
-  navigateToBackup = this.navigateToSubView(SelectedDiceKeySubViews.Backup);
-  navigateToSeedHardwareKey = this.navigateToSubView(SelectedDiceKeySubViews.SeedHardwareKey);
-  navigateToDeriveSecrets = this.navigateToSubView(SelectedDiceKeySubViews.DeriveSecrets);
+  navigateToSubViewAndReplaceState = (state: SelectedDiceKeySubViewStates) => {
+      this.subView.navigateToReplaceState(state);
+      return this;
+  }
 
+  navigateToDisplayDiceKey = () => this.navigateToSubViewAndReplaceState(this.displayDiceKeyViewState);
+  navigateToBackup = () => this.navigateToSubViewAndReplaceState(this.backupViewState);
+  navigateToSeedHardwareKey = () => this.navigateToSubViewAndReplaceState(this.seedHardwareKeyViewState);
+  navigateToDeriveSecrets = () => this.navigateToSubViewAndReplaceState(this.secretDerivationViewState);
+
+  navigateToDeleteView = () => this.subView.navigateToPushState(new SaveOrDeleteDiceKeyViewState(DeleteDiceKeyViewStateName, this.navState, this.diceKey, DeleteDiceKeyViewStateName));
+  navigateToSaveView = () => this.subView.navigateToPushState(new SaveOrDeleteDiceKeyViewState(SaveDiceKeyViewStateName, this.navState, this.diceKey, SaveDiceKeyViewStateName));
 }

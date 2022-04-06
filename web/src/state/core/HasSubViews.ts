@@ -1,43 +1,60 @@
 import { action, computed, makeObservable, observable } from "mobx";
+import { addressBarState } from "./AddressBarState";
+import { ViewState } from "./ViewState";
+import { NavigationPathState } from "./NavigationPathState";
 
-export abstract class HasSubViews<SUB_VIEW> {
+import {CustomEvent} from "../../utilities/event";
 
-  protected _previousSubView: SUB_VIEW | undefined;
-  protected _subView: SUB_VIEW;
+export class SubViewState<VIEW_STATE extends ViewState> {
+  protected _subViewState: VIEW_STATE | undefined;
+  readonly subStateChangedEvent = new CustomEvent<[VIEW_STATE | undefined, VIEW_STATE | undefined], this>(this);
 
-  /***
-   * Set the sub view without triggering onNavigateTo event
-   */
-  protected rawSetSubView = action( (destinationSubView: SUB_VIEW) => {
-    this._previousSubView = this._subView;
-    this._subView = destinationSubView;
+  get subViewState() { return this._subViewState; }
+  rawSetSubView = action( (destinationSubViewState?: VIEW_STATE) => {
+    const previousSubViewState = this._subViewState;
+    console.log(`Setting subview of ${this.name} from ${previousSubViewState?.viewName ?? "undefined"} to ${destinationSubViewState?.viewName ?? "undefined"}`)
+    if (destinationSubViewState !== previousSubViewState) {
+      this._subViewState = destinationSubViewState;
+      this.subStateChangedEvent.sendEventually(previousSubViewState, destinationSubViewState);
+    }
+    return this;
   });
 
   /***
-   * Navigate to a different subview
+   * Navigate to a subview supporting back to get back to the current subview
    */
-  protected navigateTo = action( (destinationSubView: SUB_VIEW) => {
-    this.rawSetSubView(destinationSubView);
-    this.onNavigateTo?.(this.subView, this.previousSubView);
-  });
+  navigateToPushState = (destinationSubViewState: VIEW_STATE) => {
+    const previousSubViewState = this.subViewState;
+    if (destinationSubViewState !== previousSubViewState) {
+      const doStateChange = () => {
+        this.rawSetSubView(destinationSubViewState);
+      };
+      const undoStateChange = () => {
+        this.rawSetSubView(previousSubViewState);
+      }
+      addressBarState.pushState(this.navState.getPath, doStateChange, undoStateChange);
+    }
+  };
 
   /***
-   * Create a function to navigate to a specific subview
+   * Navigate to a subview, but with back going to wherever we came
+   * from this subview.
    */
-  protected navigateToSubView = (destinationSubView: SUB_VIEW) => () => {
-    this.navigateTo(destinationSubView);
-  }
+   navigateToReplaceState = (
+    destinationSubViewState: VIEW_STATE | undefined = undefined
+  ) => {
+    const doStateChange = () => {
+      this.rawSetSubView(destinationSubViewState);
+    };
+    addressBarState.replaceState(this.navState.getPath, doStateChange);
+  };
 
-  get subView(): SUB_VIEW {
-    return this._subView;
-  }
-  get previousSubView(): SUB_VIEW | undefined { return this._previousSubView; }
-
-  constructor(defaultSubView: SUB_VIEW, private onNavigateTo?: (subView: SUB_VIEW, previousSubView: SUB_VIEW | undefined) => any) {
-    this._subView = defaultSubView;
-    makeObservable<HasSubViews<SUB_VIEW>, "_subView">(this, {      
-      "_subView": observable,
-      subView: computed,
+  constructor(public readonly name: string, public navState: NavigationPathState, defaultSubView?: VIEW_STATE) {
+    this._subViewState = defaultSubView;
+    makeObservable<SubViewState<VIEW_STATE>, "_subViewState">(this, {      
+      "_subViewState": observable,
+      subViewState: computed,
+//      subViewName: computed,
     })
   }
 }

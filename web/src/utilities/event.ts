@@ -49,10 +49,29 @@ export class CustomEvent<ARGS extends any[] = [], TARGET_TYPE = any> {
     this.callbacks.clear();
   }
 
-  send = (...args: ARGS) => {
+  /**
+   * Sends an event immediately without waiting for the caller to exit.
+   */
+  sendImmediately = (...args: ARGS) => {
     this.callbacks.forEach( callback => {
       try { callback(...args ) } catch {}
     });
     return this.target;
   }
+
+  /**
+   * Sends an event from outside the caller when the javascript engine
+   * next has a free cycle.
+   */
+   sendEventually = (...args: ARGS) => {
+    const {callbacks} = this;
+    setTimeout( () => {
+      callbacks.forEach( callback => {
+        try { callback(...args ) } catch {}
+      });
+    }, 0);
+    return this.target;
+  }
+
+
 };

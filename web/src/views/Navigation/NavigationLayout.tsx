@@ -7,13 +7,14 @@ export const StandardSideMargin = `5vw`;
 export const StandardWidthBetweenSideMargins = cssExprWithoutCalc(`100vw - 2 * ${StandardSideMargin}`);
 export const TopNavigationBarHeight = `7vh`;
 
-export const HeightBelowTopNavigationBar = cssCalcTyped(`100vh - ${cssExprWithoutCalc(TopNavigationBarHeight)}`)
+export const HeightBelowTopNavigationBar = `(100vh - ${cssExprWithoutCalc(TopNavigationBarHeight)})` as const;
+export const calcHeightBelowTopNavigationBar = cssCalcTyped(HeightBelowTopNavigationBar);
 
 export const StandardBottomBarHeight = `11vh`;
 
-const TopLevelNavigationBarFontSize = cssCalcTyped(`min(${`3.75vh`},${`8.5vw`})`);
+export const TopLevelNavigationBarFontSize = cssExprWithoutCalc(`min(${`3.75vh`},${`8.5vw`})`);
 
-export const HeightBetweenTopNavigationBarAndStandardBottomBar = cssExprWithoutCalc(`100vh - (${cssExprWithoutCalc(TopNavigationBarHeight)} + ${cssExprWithoutCalc(StandardBottomBarHeight)})`)
+export const HeightBetweenTopNavigationBarAndStandardBottomBar = cssExprWithoutCalc(`100vh - (${TopNavigationBarHeight} + ${StandardBottomBarHeight})`)
 export const CalcHeightBetweenTopNavigationBarAndStandardBottomBar = cssCalcTyped(HeightBetweenTopNavigationBarAndStandardBottomBar);
 
 const ZIndexForModalOverlays = 128;
@@ -28,7 +29,7 @@ export const WindowRegionColumnContainer= styled(DivSupportingInvisible)`
 `;
 
 export const WindowRegionBelowTopNavigationBar = styled(WindowRegionColumnContainer)`
-  height: ${HeightBelowTopNavigationBar};
+  height: ${calcHeightBelowTopNavigationBar};
 `;
 
 export const WindowRegionBelowTopNavigationBarAndAboveStandardBottomBar = styled(WindowRegionColumnContainer)`
@@ -91,7 +92,7 @@ export const NavigationBar = styled.div`
   flex-direction: row;
   flex: 0 0 auto;
   text-align: center;
-  font-size: ${TopLevelNavigationBarFontSize};
+  font-size: calc(${TopLevelNavigationBarFontSize});
   overflow: hidden;
 `;
 
@@ -106,7 +107,7 @@ const TopNavRegion = styled.div`
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
   user-select: none;
-  font-size: ${TopLevelNavigationBarFontSize};
+  font-size: calc(${TopLevelNavigationBarFontSize});
   overflow: hidden;
 `;
 

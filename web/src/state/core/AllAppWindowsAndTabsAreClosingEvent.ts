@@ -52,7 +52,7 @@ new (class WindowsOpen {
 		this.openWindowIds = ids; 
 		// delete this.openWindowIds[myWindowId];
 		if (!this.areOtherWindowsOpen) {
-			AllAppWindowsAndTabsAreClosingEvent.send();
+			AllAppWindowsAndTabsAreClosingEvent.sendImmediately();
 		}
 	})
 

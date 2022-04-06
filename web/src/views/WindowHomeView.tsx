@@ -9,36 +9,16 @@ import AssemblyImage3 from "../images/Seal Box.svg";
 import { PrimaryView } from "../css/Page";
 import { ColumnCentered } from "./basics";
 import styled from "styled-components";
-import {RUNNING_IN_ELECTRON, RUNNING_IN_BROWSER} from "../utilities/is-electron";
-import { EncryptedDiceKeyStore } from "../state/stores/EncryptedDiceKeyStore";
 import { DiceKeyView } from "./SVG/DiceKeyView";
 import { cssCalcTyped, cssExprWithoutCalc } from "../utilities";
 import { facesFromPublicKeyDescriptor } from "../dicekeys/DiceKey";
 import { WindowHomeNavigationBar } from "./WindowHomeNavigationBar";
-import { BUILD_VERSION, BUILD_DATE } from "../vite-build-constants";
-
-const SubViewButton = styled.button`
-  display: flex;
-  cursor: grab;
-  flex-direction: column;
-  align-items: center;
-  border: none;
-  padding: 0.5rem;
-  margin: 0.5rem;
-  border-radius: 0.5rem;
-  &:hover {
-    background-color: rgba(128,128,128,.75);
-  }
-`;
-
-const SubViewButtonImage = styled.img`
-  height: 14vh;
-`;
-
-const SubViewButtonCaption = styled.div`
-  font-size: min(1.5rem,3.5vh,2.5vw);
-  margin-top: min(0.75rem, 0.5vh);
-`;
+import { BUILD_VERSION, BUILD_DATE, RUNNING_IN_ELECTRON } from "../vite-build-constants";
+import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "../state";
+import { PlatformSupportsSavingToDevice  } from "../state/stores/DiceKeyMemoryStore";
+import { SubViewButton, SubViewButtonCaption, SubViewButtonImage } from "../css/SubViewButton";
+import { ButtonRow, PushButton } from "../css/Button";
+import { AnchorButton } from "./basics/AnchorButton";
 
 const ImageRow = styled.div`
   display: flex;
@@ -72,58 +52,145 @@ const VersionInformationBar = styled.div`
   font-size: min(0.8rem,3vh,3vw);
 `
 
-interface WindowHomeViewProps {
-  windowNavigationState: WindowTopLevelNavigationState;
+interface TopLevelNavigationProps {
+  state: WindowTopLevelNavigationState;
 }
-export const WindowHomeView = observer ( (props: WindowHomeViewProps) => {
-  const {windowNavigationState} = props;
-  const storedDiceKeys = RUNNING_IN_ELECTRON ?
-    EncryptedDiceKeyStore.storedDiceKeys : [];
+
+interface StoredDiceKeyProps extends TopLevelNavigationProps {
+  storedDiceKeyDescriptor: PublicDiceKeyDescriptorWithSavedOnDevice;
+}
+
+const storedKeySize = `min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})` as const;
+
+// Top put the buttons for saving/deleting/removing DiceKeys
+// closer to the DiceKeys themselves, remove some margins
+const ButtonRowBelowDiceKeySubViewButton = styled(ButtonRow)`
+  margin-top: 0;
+`
+const DiceKeyActionButton = styled(PushButton)`
+  margin-top: 0;
+`
+
+const StoredDiceKeyButtonsView = observer ( ({storedDiceKeyDescriptor, state}: StoredDiceKeyProps) => {
+  const removeFromMemory = () => { DiceKeyMemoryStore.removeDiceKey(storedDiceKeyDescriptor) };
+  if (!PlatformSupportsSavingToDevice) {
+    // For platforms that don't support saving DiceKeys to long-term device storage,
+    // we can only allow the DiceKey currrently in memory to be removed.
+    return (
+      <><DiceKeyActionButton onClick={removeFromMemory} >remove</DiceKeyActionButton></>
+    )
+  }
+  if (storedDiceKeyDescriptor.savedOnDevice) {
+    // As this DiceKey is already saved to the device, we can offer the option to remove it from the device.
+    const navigateToDeleteFromDevice = () => { state.navigateToDeleteFromDevice(storedDiceKeyDescriptor) };
+    return (
+      <><DiceKeyActionButton onClick={navigateToDeleteFromDevice} >delete</DiceKeyActionButton></>
+    )
+  } else {
+    const navigateToSaveToDevice = () => { state.navigateToSaveToDevice(storedDiceKeyDescriptor) };
+    return (
+      <><DiceKeyActionButton onClick={navigateToSaveToDevice} ><b>save</b></DiceKeyActionButton><DiceKeyActionButton onClick={removeFromMemory} >remove</DiceKeyActionButton></>
+    )
+  }
+});
+
+const StoredDiceKeyViewContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+`;
+
+const StoredDiceKeyView = observer ( (props: StoredDiceKeyProps) => {
+  const {storedDiceKeyDescriptor, state} = props;
+  return (
+    <StoredDiceKeyViewContainer key={storedDiceKeyDescriptor.keyId}>
+      <SubViewButton
+        onClick={() => state.loadStoredDiceKey(storedDiceKeyDescriptor)}
+      >
+        <DiceKeyView
+          size={`${cssCalcTyped(storedKeySize)}`}
+          faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
+          obscureAllButCenterDie={true}
+          showLidTab={true}
+        />
+        <SubViewButtonCaption>{
+          `Key ${storedDiceKeyDescriptor.centerLetterAndDigit}`
+        }</SubViewButtonCaption>
+      </SubViewButton>
+      <ButtonRowBelowDiceKeySubViewButton>
+        <StoredDiceKeyButtonsView {...props} />
+      </ButtonRowBelowDiceKeySubViewButton>
+    </StoredDiceKeyViewContainer>
+  )
+});
+
+const unsaved = PlatformSupportsSavingToDevice ? "unsaved " : "";
+const CountdownTimerLine = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+`;
+
+const CountdownTimerView = observer( ({state}: TopLevelNavigationProps) => {
+  const numberOfKeysOnlyInMemory = DiceKeyMemoryStore.keysOnlyInMemory.length;
+  if (numberOfKeysOnlyInMemory === 0) return null;
+  const objectNames = (numberOfKeysOnlyInMemory === 1 ? `The ${unsaved}DiceKey ` : `All ${unsaved}DiceKeys ` );
+  if (state.autoEraseDisabled) {
+    return (
+      <CountdownTimerLine>
+        {objectNames} above will remain in memory until removed
+        { RUNNING_IN_ELECTRON ?
+          (<> or the application is closed.</>) :
+          (<>, this tab is refreshed, or this tab is closed.</>)}
+        &nbsp;&nbsp;<AnchorButton onClick={state.enableAutoErase}>start auto-erase timer</AnchorButton>
+      </CountdownTimerLine>
+    )
+  }
+  return (
+    <CountdownTimerLine>
+      {objectNames} above will be automatically removed from memory in {state.autoEraseCountdownTimer?.secondsRemaining}s.
+      &nbsp;&nbsp;<AnchorButton onClick={state.disableAutoErase}>do not erase automatically</AnchorButton>
+    </CountdownTimerLine>
+  )
+})
+
+const StoredDiceKeysRowAndCountdownTimerContainer = styled.div`
+  
+`
+
+export const WindowHomeView = observer ( ({state}: TopLevelNavigationProps) => {
   return (
     <PrimaryView>
       <VersionInformationBar>Version { BUILD_VERSION}, { BUILD_DATE }</VersionInformationBar>
-      <WindowHomeNavigationBar state={windowNavigationState} />
+      <WindowHomeNavigationBar state={state} />
       <ColumnCentered>
-        { (RUNNING_IN_BROWSER || storedDiceKeys.length === 0) ? null : (
+        {/*
+          Row of stored DiceKeys
+        */}
+        <StoredDiceKeysRowAndCountdownTimerContainer>
           <StoredDiceKeysRow>{
-            storedDiceKeys.map( storedDiceKeyDescriptor => (
-              <SubViewButton
-                onClick={async () => {
-                  const diceKey = await EncryptedDiceKeyStore.load(storedDiceKeyDescriptor);
-                  if (diceKey != null) {
-                    windowNavigationState.navigateToSelectedDiceKeyView(diceKey);
-                  } else {
-                    console.log(`EncryptedDiceKeyStore.load returned null`)
-                  }
-                }}
-              >
-                <DiceKeyView
-                  size={`${cssCalcTyped(`min(${cssExprWithoutCalc(`50vw`)},${cssExprWithoutCalc(`20vh`)})`)}`}
-                  faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
-                  obscureAllButCenterDie={true}
-                  showLidTab={true}
-                />
-                <SubViewButtonCaption>{
-                  `Open Key ${storedDiceKeyDescriptor.centerFaceLetter}${storedDiceKeyDescriptor.centerFaceDigit}`
-                }</SubViewButtonCaption>
-              </SubViewButton>
+            DiceKeyMemoryStore.keysInMemoryOrSavedToDevice.map( storedDiceKeyDescriptor => (
+              <StoredDiceKeyView key={storedDiceKeyDescriptor.keyId} {...{state, storedDiceKeyDescriptor}} />
             ))
           }</StoredDiceKeysRow>
-        )}
+          <CountdownTimerView {...{state}} />
+        </StoredDiceKeysRowAndCountdownTimerContainer>
         {/* 
           Load DiceKey button
-          */}
+        */}
         <SubViewButton
-          onClick={ windowNavigationState.navigateToLoadDiceKey }
+          onClick={ state.navigateToLoadDiceKey }
         >
           <SubViewButtonImage src={LoadDiceKeyImage} />
           <SubViewButtonCaption>Load DiceKey</SubViewButtonCaption>
         </SubViewButton>
         {/* 
           Assembly instructions button
-          */}
+        */}
         <SubViewButton
-          onClick={ windowNavigationState.navigateToAssemblyInstructions }
+          onClick={ state.navigateToAssemblyInstructions }
         >
           <ImageRow>
             <SubViewButtonImage src={AssemblyImage1} />

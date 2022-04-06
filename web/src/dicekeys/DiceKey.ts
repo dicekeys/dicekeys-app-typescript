@@ -18,6 +18,7 @@ export type Face = FaceIdentifiers & {
 }
 
 export const NumberOfFacesInKey = 25;
+export type CenterLetterAndDigit = `${FaceLetter}${FaceDigit}`
 
 /**
  * Since DiceKeys have 25 faces, these generic tuple type allows us to
@@ -472,8 +473,7 @@ const facesFromNumericForm = (numericForm: bigint): DiceKeyFaces => {
 
 
 export interface PublicDiceKeyDescriptor {
-  readonly centerFaceLetter: FaceLetter;
-  readonly centerFaceDigit: FaceDigit;
+  readonly centerLetterAndDigit: CenterLetterAndDigit;
   readonly keyId: string;
 };
 
@@ -488,8 +488,8 @@ export interface PublicDiceKeyDescriptor {
  * copies of the center face that can be passed to code that renders DiceKeys.
  */
 export const facesFromPublicKeyDescriptor = (descriptor: PublicDiceKeyDescriptor): DiceKeyFaces => {
-  const letter = descriptor.centerFaceLetter;
-  const digit = descriptor.centerFaceDigit;
+  const letter = descriptor.centerLetterAndDigit.charAt(0) as FaceLetter;
+  const digit = descriptor.centerLetterAndDigit.charAt(1) as FaceDigit;
   const orientationAsLowercaseLetterTrbl = 't';
   const face: Face = {letter, digit, orientationAsLowercaseLetterTrbl};
   return DiceKeyFaces(
@@ -543,7 +543,7 @@ abstract class DiceKeyBase {
 
   get inHumanReadableForm(): DiceKeyInHumanReadableForm { return DiceKeyInHumanReadableForm(this.faces) }
   get centerFace(): Face { return this.faces[12]; }
-  get centerLetterAndDigit(): string { return this.centerFace.letter + this.centerFace.digit }
+  get centerLetterAndDigit(): CenterLetterAndDigit { return `${this.centerFace.letter}${this.centerFace.digit}` }
   get nickname(): string { return`DiceKey with ${this.centerLetterAndDigit} in center`; }
 
   compareTo = <T extends DiceKey>(other: T): DiceKeyComparisonResult<T> =>
@@ -580,7 +580,7 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
 
   rotate = (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright): DiceKeyWithoutKeyId => new DiceKeyWithoutKeyId(rotateDiceKey(this.faces, clockwise90DegreeRotationsFromUpright));
   get inRotationIndependentForm(): DiceKeyWithoutKeyId { return new DiceKeyWithoutKeyId(rotateToRotationIndependentForm(this.faces)) };
-  rotateToTurnCenterFaceUpright = async (): Promise<DiceKeyWithoutKeyId> => {
+  rotateToTurnCenterFaceUpright = (): DiceKeyWithoutKeyId => {
     const centerFacesOrientationTrbl = this.faces[12].orientationAsLowercaseLetterTrbl;
     switch (centerFacesOrientationTrbl) {
       case "t": return this;
@@ -590,7 +590,7 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
     }
   }
   
-  static testExample = new DiceKeyWithoutKeyId(DiceKeyFaces(
+  static readonly testExample = new DiceKeyWithoutKeyId(DiceKeyFaces(
     [...Array(25).keys()].map( (i)  => ({
       letter: FaceLetters[i],
       digit: FaceDigits[i % 6],
@@ -599,12 +599,14 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
   ));
 }
 
-export class DiceKeyWithKeyId extends DiceKeyBase {
+export class DiceKeyWithKeyId extends DiceKeyBase implements PublicDiceKeyDescriptor {
   constructor(public readonly keyId: string, faces: DiceKeyFaces) {
     super(faces);
   }
 
   get withKeyId() { return this }
+
+  static readonly testExample = new DiceKeyWithKeyId("bogusTestKeyId", DiceKeyWithoutKeyId.testExample.faces);
 
   // public get withKeyId(): Promise<DiceKeyWithKeyId> {
   //   // wrap this in promise.
@@ -613,7 +615,7 @@ export class DiceKeyWithKeyId extends DiceKeyBase {
 
   static create = async (faces: DiceKeyFaces): Promise<DiceKeyWithKeyId> => {
     const keyId = await diceKeyFacesToKeyId(faces);
-    return new DiceKeyWithKeyId(keyId, faces);
+    return new DiceKeyWithKeyId(keyId, faces).rotateToTurnCenterFaceUpright();
   }
 
   static fromRandom = (): Promise<DiceKeyWithKeyId> => DiceKeyWithKeyId.create(getRandomDiceKey());
@@ -633,8 +635,7 @@ export class DiceKeyWithKeyId extends DiceKeyBase {
   toSeedString = () => diceKeyFacesToSeedString(this.faces);
 
   rotateToTurnCenterFaceUpright = (): DiceKeyWithKeyId => {
-    const centerFacesOrientationTrbl = this.faces[12].orientationAsLowercaseLetterTrbl;
-    switch (centerFacesOrientationTrbl) {
+    switch (this.centerFace.orientationAsLowercaseLetterTrbl) {
       case "t": return this;
       case "l": return this.rotate(1);
       case "b": return this.rotate(2);
@@ -644,8 +645,7 @@ export class DiceKeyWithKeyId extends DiceKeyBase {
   
   publicDescriptor = async (): Promise<PublicDiceKeyDescriptor> => ({
     keyId: this.keyId,
-    centerFaceDigit: this.centerFace.digit,
-    centerFaceLetter: this.centerFace.letter,
+    centerLetterAndDigit: this.centerLetterAndDigit
   })
 
 }

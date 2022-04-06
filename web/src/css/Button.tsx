@@ -24,6 +24,7 @@ export const BaseButton = styled.button<{invisible?: boolean}>`
 `;
 
 export const PushButton = styled(BaseButton)`
+  border-width: 1px;
   border-radius: 0.25rem;
   padding: 0.25rem;
   padding-left: 0.75rem;

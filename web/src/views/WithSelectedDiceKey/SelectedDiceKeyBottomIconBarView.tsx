@@ -4,11 +4,14 @@ import imageOfDiceKeyIcon from /*url:*/"../../images/DiceKey Icon.svg";
 import imageOfUsbKey from /*url:*/"../../images/USB Key.svg";
 import imageOfSecretWithArrow from /*url:*/"../../images/Secret with Arrow.svg";
 import imageOfBackup from /*url:*/"../../images/Backup to DiceKey.svg";
-import { Navigation } from "../../state";
 import { EventHandlerOverridesDefault } from "../../utilities/EventHandlerOverridesDefault";
 import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 import styled from "styled-components";
 import { NavigationBar } from "../Navigation/NavigationLayout";
+import { DisplayDiceKeyViewStateName, SelectedDiceKeySubViewStateNames } from "./SelectedDiceKeyViewState";
+import { SeedHardwareKeyViewStateName } from "../../views/Recipes/SeedHardwareKeyViewState";
+import { SecretDerivationViewStateName } from "../../views/Recipes/DerivationView";
+import { BackupViewStateName } from "../../views/BackupView/BackupViewState";
 
 export const BottomIconNavigationBar = styled(NavigationBar)`
   height: BottomIconBarHeightBottomIconBarHeight;
@@ -41,10 +44,10 @@ export const FooterIconImg = styled.img`
   flex-grow: 1;
 `;
 const FooterButtonView = observer( ( props: SelectedDiceKeyViewProps & {
-  subView: Navigation.SelectedDiceKeySubViews, imageSrc: string, labelStr: string
+  subViewName: SelectedDiceKeySubViewStateNames, imageSrc: string, labelStr: string
   onClick: () => void
 } ) => (
-  <FooterButtonDiv selected={props.state.subView === props.subView}
+  <FooterButtonDiv selected={(props.state.subViewState.viewName ?? DisplayDiceKeyViewStateName) === props.subViewName}
     onClick={EventHandlerOverridesDefault(props.onClick)}
   ><FooterIconImg src={props.imageSrc}/><div>{props.labelStr}</div>
   </FooterButtonDiv>
@@ -54,10 +57,10 @@ export const SelectedDiceKeyBottomIconBarView = observer( ( props: SelectedDiceK
   const navState = props.state;
   return (
     <BottomIconNavigationBar>
-      <FooterButtonView {...props} labelStr={`DiceKey`} subView={Navigation.SelectedDiceKeySubViews.DisplayDiceKey} imageSrc={imageOfDiceKeyIcon} onClick={navState.navigateToDisplayDiceKey} />
-      <FooterButtonView {...props} labelStr={`Seed`} subView={Navigation.SelectedDiceKeySubViews.SeedHardwareKey} imageSrc={imageOfUsbKey} onClick={navState.navigateToSeedHardwareKey} />
-      <FooterButtonView {...props} labelStr={`Secret`} subView={Navigation.SelectedDiceKeySubViews.DeriveSecrets} imageSrc={imageOfSecretWithArrow} onClick={navState.navigateToDeriveSecrets} />
-      <FooterButtonView {...props} labelStr={`Backup`} subView={Navigation.SelectedDiceKeySubViews.Backup} imageSrc={imageOfBackup} onClick={navState.navigateToBackup} />
+      <FooterButtonView {...props} labelStr={`DiceKey`} subViewName={DisplayDiceKeyViewStateName} imageSrc={imageOfDiceKeyIcon} onClick={navState.navigateToDisplayDiceKey} />
+      <FooterButtonView {...props} labelStr={`Seed`} subViewName={SeedHardwareKeyViewStateName} imageSrc={imageOfUsbKey} onClick={navState.navigateToSeedHardwareKey} />
+      <FooterButtonView {...props} labelStr={`Secret`} subViewName={SecretDerivationViewStateName} imageSrc={imageOfSecretWithArrow} onClick={navState.navigateToDeriveSecrets} />
+      <FooterButtonView {...props} labelStr={`Backup`} subViewName={BackupViewStateName} imageSrc={imageOfBackup} onClick={navState.navigateToBackup} />
     </BottomIconNavigationBar>
   );
 });

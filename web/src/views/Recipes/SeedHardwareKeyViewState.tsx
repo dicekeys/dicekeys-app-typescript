@@ -4,10 +4,14 @@ import { writeSeedToFIDOKey, WriteSeedToFIDOKeyException } from "../../state/har
 import { action, makeAutoObservable } from "mobx";
 import { LoadedRecipe } from "../../dicekeys/StoredRecipe";
 import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
-import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { hexStringToUint8ClampedArray, uint8ArrayToHexString } from "../../utilities";
 import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { electronBridge } from "../../state/core/ElectronBridge";
+import { ViewState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
+import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
+import { DiceKeyMemoryStore } from "../../state";
 
 const seedSecurityKeyPurpose = "seedSecurityKey";
 
@@ -31,10 +35,26 @@ export const fidoAccessRequiresWindowsAdmin: boolean = RUNNING_IN_ELECTRON && el
 /** Set if running on a platform that forbids access to seedable FIDO keys (windows without admin or browser) */
 export const fidoAccessDeniedByPlatform: boolean = fidoAccessRequiresWindowsAdmin || RUNNING_IN_BROWSER;
 
-export class SeedHardwareKeyViewState {
+export const SeedHardwareKeyViewStateName = "seed";
+export type SeedHardwareKeyViewStateName = typeof SeedHardwareKeyViewStateName;
+export class SeedHardwareKeyViewState implements ViewState {
+  readonly viewName = SeedHardwareKeyViewStateName;
   recipeBuilderState: RecipeBuilderState;
-  diceKeyState: DiceKeyState;
+  diceKey: DiceKeyWithKeyId | undefined;
   derivedFromRecipeState: DerivedFromRecipeState | undefined;
+
+  loadDiceKeyState: LoadDiceKeyViewState | undefined;
+  startLoadDiceKey = action( () => {
+    this.loadDiceKeyState = new LoadDiceKeyViewState(this.navState, "camera")
+  })
+  onDiceKeyReadOrCancelled = action ((diceKey: DiceKeyWithKeyId | undefined) => {
+    this.loadDiceKeyState = undefined;
+    if (diceKey) {
+      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
+      this.diceKey = diceKey;
+      this.derivedFromRecipeState = new DerivedFromRecipeState({recipeState: this.recipeBuilderState, diceKey });
+    }
+  });
 
   _seedInEditableHexFormatFieldValue: string | undefined = undefined;
   get seedInEditableHexFormatFieldValue() {return this._seedInEditableHexFormatFieldValue}
@@ -48,7 +68,7 @@ export class SeedHardwareKeyViewState {
 
   _seedSourceSelected: SeedSource | undefined = undefined;
   get seedSourceSelected(): SeedSource {
-    return this.diceKeyState.diceKey == null ? SeedSource.EnteredManually :
+    return this.diceKey == null ? SeedSource.EnteredManually :
       (this._seedSourceSelected ?? SeedSource.GeneratedFromDefaultRecipe);
   }
   readonly setSeedSourceSelected = action( (newValue: SeedSource | undefined)=>{
@@ -88,7 +108,7 @@ export class SeedHardwareKeyViewState {
   });
 
   get seedableFidoKeys() {
-    return this.seedableFidoKeysObserverClass?.devices ?? [];
+    return this.seedableFidoKeysObserverClass.devices ?? [];
   }
 
   get seedableFidoKeySelected(): HIDDevice | undefined {
@@ -146,15 +166,25 @@ export class SeedHardwareKeyViewState {
       .catch ( this.setWriteError );
   }
 
-  constructor(private readonly seedableFidoKeysObserverClass: SeedableFIDOKeys | undefined, diceKeyState: DiceKeyState) {
+  static #seedableFidoKeysObserverClass?: SeedableFIDOKeys | undefined;
+  get seedableFidoKeysObserverClass() {
+    return SeedHardwareKeyViewState.#seedableFidoKeysObserverClass ||= new SeedableFIDOKeys();
+  }
+
+  readonly navState: NavigationPathState;
+  readonly mayLoadOrChangeDiceKey: boolean;
+  constructor(parentNavState: NavigationPathState, diceKey?: DiceKeyWithKeyId) {
+    this.navState = new NavigationPathState(parentNavState, SeedHardwareKeyViewStateName);
+    this.mayLoadOrChangeDiceKey = (diceKey == null);
+    this.loadDiceKeyState = undefined;
     const recipeBuilderState = new RecipeBuilderState({
       origin: "BuiltIn",
       type: "Secret",
       recipeJson: `{"purpose":"${seedSecurityKeyPurpose}"}`,
     } as LoadedRecipe<"BuiltIn">);
     this.recipeBuilderState = recipeBuilderState;
-    this.diceKeyState = diceKeyState;
-    this.derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, diceKeyState });
+    this.diceKey = diceKey;
+    this.derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, diceKey });
     makeAutoObservable(this);
   }
 

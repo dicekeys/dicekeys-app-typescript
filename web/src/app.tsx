@@ -2,7 +2,6 @@ import ReactDOM from "react-dom";
 import * as React from "react";
 import {WindowTopLevelView} from "./views/WindowTopLevelView";
 import { ErrorHandler } from "./views/ErrorHandler";
-import { ErrorState } from "./views/ErrorState";
 import { DiceKeyMemoryStore } from "./state";
 import { RUNNING_IN_ELECTRON } from "./utilities/is-electron";
 import { QueuedUrlApiRequest } from "./api-handler";
@@ -13,7 +12,6 @@ import { lightTheme } from "./css/lightTheme";
 import {IElectronBridge} from "../../common/IElectronBridge";
 
 const electronBridge = (window as unknown as  {ElectronBridge: IElectronBridge}).ElectronBridge;
-const ApplicationErrorState = new ErrorState();
 
 /**
  * For web-based apps, scan the URL on page load
@@ -26,7 +24,7 @@ try {
     // Add it to the queue.
     if (RUNNING_IN_ELECTRON) {
       ApiRequestsReceivedState.enqueueApiRequestReceived(request);
-    }else{
+    } else{
       // Open DiceKeys app, or better create a new UI view.
       const schemeBasedApiRequest = "dicekeys://" + url.search;
       window.location.href = schemeBasedApiRequest
@@ -61,7 +59,7 @@ window.addEventListener('load', () => {
   DiceKeyMemoryStore.onReady( () => {
     ReactDOM.render((
       <ThemeProvider theme={lightTheme}>
-        <ErrorHandler errorState={ApplicationErrorState}>
+        <ErrorHandler>
           <WindowTopLevelView />
         </ErrorHandler>
       </ThemeProvider>

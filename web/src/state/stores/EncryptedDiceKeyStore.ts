@@ -10,22 +10,33 @@ const electronBridge = (window as unknown as  {ElectronBridge: IElectronBridge})
  * @param descriptors
  * @returns 
  */
-const sortPublicDiceKeyDescriptors = (descriptors: PublicDiceKeyDescriptor[]): PublicDiceKeyDescriptor[] =>
+export const sortPublicDiceKeyDescriptors = <T extends PublicDiceKeyDescriptor>(descriptors: T[]): T[] =>
   descriptors.sort( (a, b) =>
-    `${a.centerFaceLetter}${a.centerFaceDigit}${a.keyId}`.localeCompare(`${b.centerFaceLetter}${b.centerFaceDigit}${b.keyId}`)
+    `${a.centerLetterAndDigit}${a.keyId}`.localeCompare(`${b.centerLetterAndDigit}${b.keyId}`)
 );
 
 const removePublicKeyDescriptor = (descriptors: PublicDiceKeyDescriptor[], toRemove: {keyId: string} | PublicDiceKeyDescriptor) =>
     descriptors.filter( ({keyId}) => keyId != toRemove.keyId );
 
+
+const validatePublicDiceKeyDescriptor = (descriptor: PublicDiceKeyDescriptor): boolean =>
+    // Validate the descriptor to ignore those from previous versions.
+    descriptor != null &&
+    typeof descriptor === "object" &&
+    typeof descriptor.centerLetterAndDigit === "string" &&
+    descriptor.centerLetterAndDigit.length === 2 &&
+    typeof descriptor.keyId === "string";
+
 class EncryptedDiceKeyStoreClass {
   protected _publicDescriptorsOfEncryptedDiceKeys: PublicDiceKeyDescriptor[];
   protected get publicDescriptorsOfEncryptedDiceKeys(): PublicDiceKeyDescriptor[] {
-    return this._publicDescriptorsOfEncryptedDiceKeys;
+    return this._publicDescriptorsOfEncryptedDiceKeys.filter(validatePublicDiceKeyDescriptor);
   }
 
   protected setPublicDescriptorsOfEncryptedDiceKeys = action( (publicDescriptorsOfEncryptedDiceKeys: PublicDiceKeyDescriptor[]) => {
-    this._publicDescriptorsOfEncryptedDiceKeys = sortPublicDiceKeyDescriptors(publicDescriptorsOfEncryptedDiceKeys);
+    this._publicDescriptorsOfEncryptedDiceKeys = sortPublicDiceKeyDescriptors(
+      publicDescriptorsOfEncryptedDiceKeys.filter(validatePublicDiceKeyDescriptor)
+    );
   });
 
   has = ({keyId}: {keyId: string} | PublicDiceKeyDescriptor) => this.publicDescriptorsOfEncryptedDiceKeys.some(
@@ -33,11 +44,11 @@ class EncryptedDiceKeyStoreClass {
   );
 
   add = async (diceKey: DiceKeyWithKeyId) => {
-    const keyId = diceKey.keyId;
-    await electronBridge.storeDiceKeyInCredentialStore(keyId, diceKey.inHumanReadableForm);
+    const {keyId, centerLetterAndDigit, inHumanReadableForm} = diceKey;
+    await electronBridge.storeDiceKeyInCredentialStore(keyId, inHumanReadableForm);
     this.setPublicDescriptorsOfEncryptedDiceKeys([
       ...removePublicKeyDescriptor(this.publicDescriptorsOfEncryptedDiceKeys, {keyId}),
-      {keyId, centerFaceLetter: diceKey.centerFace.letter, centerFaceDigit: diceKey.centerFace.digit}
+      {keyId, centerLetterAndDigit}
     ]);
   };
 

@@ -1,9 +1,6 @@
 import styled from "styled-components";
 import { HeightBetweenTopNavigationBarAndStandardBottomBar, StandardWidthBetweenSideMargins } from "../../../views/Navigation/NavigationLayout";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../../utilities";
-import {
-  SelectedDiceKeyContentRegionInsideSideMargins
-} from "../../WithSelectedDiceKey/SelectedDiceKeyLayout";
 
 export const ContentWidth = StandardWidthBetweenSideMargins;
 export const DiceKeyMaxWidth = cssExprWithoutCalc(`${ContentWidth} * 0.3`);
@@ -33,7 +30,9 @@ export const DerivationViewSection = styled.div`
   width: ${ContentWidth};
 `;
 
-export const DerivationViewContainer = styled(SelectedDiceKeyContentRegionInsideSideMargins)`
+export const DerivationViewContainer = styled.div`
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-self: center;
   height: ${HeightBetweenTopNavigationBarAndStandardBottomBar};

@@ -1,77 +1,71 @@
 import { observer } from "mobx-react";
 import React from "react";
-import { DiceKey } from "../dicekeys/DiceKey";
-import {WindowTopLevelNavigationState as WindowTopLevelNavigationState, SubViewsOfTopLevel, SelectedDiceKeyViewState} from "../state/Window";
+import {WindowTopLevelNavigationState as WindowTopLevelNavigationState} from "../state/Window";
+import { SelectedDiceKeyViewStateName } from "./WithSelectedDiceKey/SelectedDiceKeyViewState";
 import { SelectedDiceKeyView } from "./WithSelectedDiceKey/SelectedDiceKeyView";
 import { WindowHomeView } from "./WindowHomeView";
-import { LoadDiceKeyView, LoadDiceKeyState } from "./LoadingDiceKeys/LoadDiceKeyView";
+import { LoadDiceKeyFullPageView, LoadDiceKeyViewStateName } from "./LoadingDiceKeys/LoadDiceKeyView";
 import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
-import { AssemblyInstructionsState } from "./AssemblyInstructionsState";
-import { addressBarState } from "../state/core/AddressBarState";
-import {ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
+import { AssemblyInstructionsStateName } from "./AssemblyInstructionsState";
+import {ApproveApiRequestState, ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
 import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
 import { PrimaryView } from "../css";
-import { SeedHardwareKeyPrimaryView } from "./Recipes/SeedHardwareKeyView";
+import { SeedHardwareKeyFullPageView } from "./Recipes/SeedHardwareKeyView";
+import { SeedHardwareKeyViewStateName } from "./Recipes/SeedHardwareKeyViewState";
+import { SaveDiceKeyViewStateName, SaveDiceKeyToDeviceStorageView, DeleteDiceKeyViewStateName, DeleteDiceKeyToDeviceStorageView } from "./SaveAndDeleteDiceKeyView";
+import { RUNNING_IN_ELECTRON } from "../utilities/is-electron";
 
-interface WindowTopLevelNavigationProps {
-  windowNavigationState: WindowTopLevelNavigationState;
-}
-export const WindowRoutingView = observer ( ({windowNavigationState}: WindowTopLevelNavigationProps) => {
-
-  const onReturnFromAssemblyInstructions = () => {
-    const diceKey = windowNavigationState.foregroundDiceKeyState.diceKey;
-    if (diceKey) {
-      windowNavigationState.navigateToSelectedDiceKeyView(diceKey);
-    } else {
-      windowNavigationState.navigateToWindowHomeView()
-    }
-  }
-  const onDiceKeyLoaded = async (diceKey?: DiceKey) => {
-    if (diceKey != null) {
-      windowNavigationState.navigateToSelectedDiceKeyView(await diceKey.withKeyId);
-    }
-  }
+export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {windowTopLevelNavigationState: WindowTopLevelNavigationState}) => {
 
   const {foregroundApiRequest} = ApiRequestsReceivedState;
   if (foregroundApiRequest != null) {
     return (
-      <ApproveApiRequestView queuedApiRequest={foregroundApiRequest}
-        settableDiceKeyState={windowNavigationState.foregroundDiceKeyState}
+      <ApproveApiRequestView state={new ApproveApiRequestState(foregroundApiRequest)}
         onApiRequestResolved={ApiRequestsReceivedState.dequeueApiRequestReceived}
       />
     )
   }
-  // console.log(`Displaying subview ${windowNavigationState.subView}`)
-  switch (windowNavigationState.subView) {
-    case SubViewsOfTopLevel.AppHomeView: return (
-      <WindowHomeView {...{windowNavigationState}}/>
-    );
-    case SubViewsOfTopLevel.LoadDiceKeyView: return (
-      <LoadDiceKeyView
-        onDiceKeyRead={ onDiceKeyLoaded }
-        onCancelled={ addressBarState.back }
-        state={new LoadDiceKeyState("camera")} />
-    );
-    case SubViewsOfTopLevel.AssemblyInstructions: return (
-      <AssemblyInstructionsView onComplete={ onReturnFromAssemblyInstructions } state={
-        new AssemblyInstructionsState(windowNavigationState.foregroundDiceKeyState)
-      } />
+  // console.log(`Displaying subview ${windowTopLevelNavigationState.subView}`)
+  const {subViewState} = windowTopLevelNavigationState.subView;
+  console.log(`Re-rendering top level switch for view name ${subViewState?.viewName}`);
+  switch (subViewState?.viewName) {
+    case SaveDiceKeyViewStateName:
+      return (<SaveDiceKeyToDeviceStorageView state={subViewState} />);
+    case DeleteDiceKeyViewStateName:
+      return (<DeleteDiceKeyToDeviceStorageView state={subViewState} />);
+    case LoadDiceKeyViewStateName:
+      return (
+        <LoadDiceKeyFullPageView
+          onDiceKeyReadOrCancelled={ windowTopLevelNavigationState.onReturnFromActionThatMayLoadDiceKey }
+          state={ subViewState }
+        />
+      );
+    case AssemblyInstructionsStateName:
+      return (
+        <AssemblyInstructionsView onComplete={ windowTopLevelNavigationState.onReturnFromActionThatMayLoadDiceKey } state={subViewState}
+//          new AssemblyInstructionsState(windowTopLevelNavigationState.foregroundDiceKeyState)
+         />
     )
-    case SubViewsOfTopLevel.SeedFidoKey: return (
-      <SeedHardwareKeyPrimaryView windowNavigationState={windowNavigationState} />
+    case SeedHardwareKeyViewStateName: return (
+      <SeedHardwareKeyFullPageView seedHardwareKeyViewState={subViewState} />
     );
-    case SubViewsOfTopLevel.DiceKeyView: return (
-      <SelectedDiceKeyView state={new SelectedDiceKeyViewState( windowNavigationState.foregroundDiceKeyState)} />
+    case SelectedDiceKeyViewStateName: return (
+      <SelectedDiceKeyView state={subViewState} />
+    );
+    default: return (
+      <WindowHomeView state={windowTopLevelNavigationState} />
     );
   }
 });
 
-export const WindowTopLevelView = observer ( (props: Partial<WindowTopLevelNavigationProps>) => {
-  const {
-    windowNavigationState = new WindowTopLevelNavigationState(),
-  } = props;
-  return (
+const defaultWindowNavigationState = RUNNING_IN_ELECTRON ?
+      new WindowTopLevelNavigationState() : WindowTopLevelNavigationState.fromPath();
+
+export const WindowTopLevelView = observer ( ({
+  windowTopLevelNavigationState = defaultWindowNavigationState } : {
+  windowTopLevelNavigationState?: WindowTopLevelNavigationState
+}) => (
   <PrimaryView>
-    <WindowRoutingView {...{windowNavigationState}} />
+    <WindowRoutingView {...{windowTopLevelNavigationState}} />
   </PrimaryView>
-)});
+));

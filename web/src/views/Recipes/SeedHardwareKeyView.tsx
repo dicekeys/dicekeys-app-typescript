@@ -3,16 +3,14 @@ import { observer  } from "mobx-react";
 import { CenteredControls, Instruction2, Spacer, SecretFieldsCommonObscureButton, CopyButton } from "../basics";
 import { RecipeFieldEditorView, SequenceNumberFormFieldValueView } from "./DerivationView/RecipeFieldEditorView";
 import styled, { css } from "styled-components";
-import { SeedableFIDOKeys } from "../../state/hardware/usb/SeedableFIDOKeys";
-import { DiceKeyState } from "../../state/Window/DiceKeyState";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities/cssCalc";
 import { ObscureSecretFields } from "../../state/ToggleState";
-import { WindowTopLevelNavigationState } from "../../views/WindowTopLevelNavigationState";
 import { DivSupportingInvisible, PageAsFlexColumn } from "../../css";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
-import { WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins, StandardWidthBetweenSideMargins } from "../Navigation/NavigationLayout";
+import { StandardWidthBetweenSideMargins, WindowRegionBelowTopNavigationBarWithSideMargins } from "../Navigation/NavigationLayout";
 import { SeedHardwareKeyViewState, SeedSource, fidoAccessDeniedByPlatform, fidoAccessRequiresWindowsAdmin } from "./SeedHardwareKeyViewState";
-import { SelectedDiceKeyContentRegionWithoutSideMargins } from "../../views/WithSelectedDiceKey/SelectedDiceKeyLayout";
+import { LoadDiceKeyContentPaneView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
+import { AnchorButton } from "../../views/basics/AnchorButton";
 
 const FieldRow = styled.div<{invisible?: boolean}>`
     ${ props => props.invisible ? css`visibility: hidden;` : ``}
@@ -91,7 +89,7 @@ export const CannotSeedSecurityKeysView = () => (
     <InlineWarning>
       Web browsers currently prevent web-based applications from using USB to seed hardware security keys.
       <br/>
-      To seed a security key, you'll need to use the DiceKeys app on Android, Windows, Linux, or MacOS.
+      To write seed into a security key, you will need to use the DiceKeys app on Android, Windows, Linux, or MacOS.
     </InlineWarning>
   </ValueColumnOnly>
 );
@@ -102,7 +100,7 @@ export const CannotSeedSecurityKeysWithoutAdminView = () => (
     <InlineWarning>
       Windows applications can only seed hardware security keys when running as administrator.
       <br/>
-      To seed a security key, you will need to run this application as administrator by right clicking on its icon and choosing the <i>run as administrator</i> option.
+      To write seed into a security key, you will need to run this application as administrator by right clicking on its icon and choosing the <i>run as administrator</i> option.
     </InlineWarning>
   </ValueColumnOnly>
 );
@@ -114,7 +112,7 @@ export const RunAsAdministratorRequiredView = ({dismiss}: {dismiss: () => void})
         Windows applications can only seed hardware security keys when running as administrator.
       </Instruction2>
       <Instruction2>
-        To seed a security key, you will need to run this application as administrator by right clicking on its icon and choosing the <i>run as administrator</i> option.
+        To write seed into a security key, you will need to run this application as administrator by right clicking on its icon and choosing the <i>run as administrator</i> option.
       </Instruction2>
       <CenteredControls><button onClick={dismiss} >Dismiss</button></CenteredControls>
     </ModalContent>
@@ -244,24 +242,22 @@ const isHexChar = (c: string) =>
 //     c => ((c >= "a" && c <="f") || (c >= "0" && c <= "9")) ? c : ""
 //   ).join("");
 
-const SeedFieldView = observer( ( {seedHardwareKeyViewState, loadDiceKeyFn}: {
-  seedHardwareKeyViewState: SeedHardwareKeyViewState,
-  loadDiceKeyFn?: () => void,
+const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
+  seedHardwareKeyViewState: SeedHardwareKeyViewState
 }) => {
   const value = seedHardwareKeyViewState.seedInHexFormat;
-  const diceKeyNickname = seedHardwareKeyViewState.diceKeyState?.diceKey?.nickname ?? "DiceKey";
+  const diceKeyNickname = seedHardwareKeyViewState.diceKey?.nickname ?? "DiceKey";
   return (<>
     <ValueColumnOnly>
       <FieldValueMeta>
-      {(seedHardwareKeyViewState.diceKeyState.diceKey == null) ? (<>
+      {(seedHardwareKeyViewState.diceKey == null) ? (<>
           Enter or paste a seed in hex format{
-            loadDiceKeyFn ?
-              (<>&nbsp;or&nbsp; <a href="" onClick={loadDiceKeyFn}>load a DiceKey to generate a seed</a> </>) : null
+              (<>&nbsp;or&nbsp; <AnchorButton onClick={seedHardwareKeyViewState.startLoadDiceKey}>load a DiceKey to generate a seed</AnchorButton></>)
         }</>) : (
         <select value={seedHardwareKeyViewState.seedSourceSelected} onChange={(e)=>seedHardwareKeyViewState.setSeedSourceSelected(e.target.value as SeedSource)}>
           <option value={SeedSource.EnteredManually}>Enter or paste a seed</option>
           <option value={SeedSource.GeneratedFromDefaultRecipe}>Derive seed from {diceKeyNickname} using the standard recipe</option>
-          <option value={SeedSource.GeneratedFromCustomRecipe}>Derive seed from {diceKeyNickname} Using Custom Recipe</option>
+          <option value={SeedSource.GeneratedFromCustomRecipe}>Derive seed from {diceKeyNickname} using custom Recipe</option>
         </select>
     )}
       </FieldValueMeta>
@@ -307,11 +303,18 @@ const SmallNote = styled(DivSupportingInvisible)`
   font-size: 0.9rem;
 `
 
-export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, loadDiceKeyFn}: {
-  seedHardwareKeyViewState: SeedHardwareKeyViewState,
-  loadDiceKeyFn?: () => void
+export const SeedHardwareKeyContentView = observer( ( {seedHardwareKeyViewState}: {
+  seedHardwareKeyViewState: SeedHardwareKeyViewState
 }) => {
-  if (seedHardwareKeyViewState.displayFidoAccessRequiresAdminModal) {
+  const {loadDiceKeyState} = seedHardwareKeyViewState;
+  if (loadDiceKeyState != null) {
+    return (
+      <LoadDiceKeyContentPaneView
+        onDiceKeyReadOrCancelled={ seedHardwareKeyViewState.onDiceKeyReadOrCancelled }
+        state={ loadDiceKeyState }
+      />
+    );
+  } else if (seedHardwareKeyViewState.displayFidoAccessRequiresAdminModal) {
     return (<RunAsAdministratorRequiredView dismiss={seedHardwareKeyViewState.dismissAdminModal} />)
   } else if (seedHardwareKeyViewState.writeInProgress) {
     return (<WriteInProgressView/>)
@@ -321,67 +324,48 @@ export const SeedHardwareKeySimpleView = observer( ( {seedHardwareKeyViewState, 
     return (<WriteSucceededView {...{seedHardwareKeyViewState}} />)
   }
   return (
-    <WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins>
-      <div>
-        { seedHardwareKeyViewState.seedSourceSelected === SeedSource.GeneratedFromCustomRecipe ? (
-          <>
-            <RecipeFieldEditorView state={seedHardwareKeyViewState.recipeBuilderState} />
-          </>
-        ): (<>
-          <Instruction2>
-            Seed a FIDO security key with a secret key and, if you lose or break it,
-            you can create a replica by writing the same seed into a replacement key.  
-          </Instruction2>
-        </>)}
-        <div style={{minHeight: '3vh'}}></div>
-        {fidoAccessRequiresWindowsAdmin ? (<CannotSeedSecurityKeysWithoutAdminView/>) :
-         fidoAccessDeniedByPlatform ? (<CannotSeedSecurityKeysView/>) :
-         null
-        }
-        <FieldRow>
-          <FieldLabel>USB Key</FieldLabel>
-          <SoloKeyValue {...{seedHardwareKeyViewState}} />
-        </FieldRow>
-        <SeedFieldView {...{seedHardwareKeyViewState, loadDiceKeyFn}} />
-        <ValueColumnOnly>
-          <div>
-            <button disabled={!seedHardwareKeyViewState.readyToWrite} onClick={seedHardwareKeyViewState.write}>Write</button>
-            <SmallNote invisible={!seedHardwareKeyViewState.readyToWrite}>
-              Note the location of the button on your USB Key.  Once you press <i>write</i>, you will have {SecondsToTripleClick.toString()} seconds to press the button on your key three times.
-            </SmallNote>
-            <SmallNote>Not all FIDO security keys support seeding. Seeding is currently supported by <a href="https://www.crowdsupply.com/dicekeys/dicekeys">these SoloKeys</a>.</SmallNote>
-          </div>
-        </ValueColumnOnly>
-      </div>
-    </WindowRegionBelowTopNavigationBarAndAboveStandardBottomBarWithMargins>
+    <div>
+      { seedHardwareKeyViewState.seedSourceSelected === SeedSource.GeneratedFromCustomRecipe ? (
+        <>
+          <RecipeFieldEditorView state={seedHardwareKeyViewState.recipeBuilderState} />
+        </>
+      ): (<>
+        <Instruction2>
+          Seed a FIDO security key with a secret key and, if you lose or break it,
+          you can create a replica by writing the same seed into a replacement key.  
+        </Instruction2>
+      </>)}
+      <div style={{minHeight: '3vh'}}></div>
+      {fidoAccessRequiresWindowsAdmin ? (<CannotSeedSecurityKeysWithoutAdminView/>) :
+        fidoAccessDeniedByPlatform ? (<CannotSeedSecurityKeysView/>) :
+        null
+      }
+      <FieldRow>
+        <FieldLabel>USB Key</FieldLabel>
+        <SoloKeyValue {...{seedHardwareKeyViewState}} />
+      </FieldRow>
+      <SeedFieldView {...{seedHardwareKeyViewState}} />
+      <ValueColumnOnly>
+        <div>
+          <button disabled={!seedHardwareKeyViewState.readyToWrite} onClick={seedHardwareKeyViewState.write}>Write</button>
+          <SmallNote invisible={!seedHardwareKeyViewState.readyToWrite}>
+            Note the location of the button on your USB Key.  Once you press <i>write</i>, you will have {SecondsToTripleClick.toString()} seconds to press the button on your key three times.
+          </SmallNote>
+          <SmallNote>Not all FIDO security keys support seeding. Seeding is currently only supported by <a target="_blank" href="https://www.crowdsupply.com/dicekeys/dicekeys">these SoloKeys</a>.</SmallNote>
+        </div>
+      </ValueColumnOnly>
+    </div>
   )
 });
 
-
-export const SeedHardwareKeyView = observer (({diceKeyState, loadDiceKeyFn}: {
-  diceKeyState: DiceKeyState,
-  loadDiceKeyFn?: () => void
+export const SeedHardwareKeyFullPageView = observer( ({seedHardwareKeyViewState}: {
+  seedHardwareKeyViewState: SeedHardwareKeyViewState
 }) => {
-  const seedableFidoKeys = fidoAccessDeniedByPlatform ? undefined : new SeedableFIDOKeys();
-  const seedHardwareKeyViewState = new SeedHardwareKeyViewState(seedableFidoKeys, diceKeyState);
-  // Ensure FIDO keys list gets destroyed when the view is destroyed.
-  useEffect( () => () => seedableFidoKeys?.destroy() );
-
-  return (
-//    <SeedHardwareKeyViewWithState {...{diceKey, seedHardwareKeyViewState, seedableFidoKeys}}/>
-    <SeedHardwareKeySimpleView {...{seedHardwareKeyViewState, loadDiceKeyFn}}/>
-  )
-});
-
-
-export const SeedHardwareKeyPrimaryView = observer( ({windowNavigationState}: {windowNavigationState: WindowTopLevelNavigationState}) => {
   return (
     <PageAsFlexColumn>
       <SimpleTopNavBar title={"Seed a USB FIDO Security Key"} />
-      <SelectedDiceKeyContentRegionWithoutSideMargins>
-        <SeedHardwareKeyView diceKeyState={windowNavigationState.foregroundDiceKeyState} 
-          // loadDiceKeyFn={undefined}
-        />
-      </SelectedDiceKeyContentRegionWithoutSideMargins>
+      <WindowRegionBelowTopNavigationBarWithSideMargins>
+        <SeedHardwareKeyContentView seedHardwareKeyViewState={seedHardwareKeyViewState} />
+      </WindowRegionBelowTopNavigationBarWithSideMargins>
     </PageAsFlexColumn>
   )});

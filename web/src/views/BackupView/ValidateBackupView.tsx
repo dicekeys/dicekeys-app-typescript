@@ -1,5 +1,5 @@
 import React from "react";
-import { DiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
+import { DiceKeyWithKeyId, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { observer } from "mobx-react";
 import { ScanDiceKeyView } from "../LoadingDiceKeys/ScanDiceKeyView";
 import { DiceKeyView } from "../SVG/DiceKeyView";
@@ -35,17 +35,24 @@ const MinWidthButtonContainer = styled.div<{invisible?: boolean}>`
   visibility: ${props=>props.invisible ? "hidden" : "visible"}
 `;
 
-export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateBackupViewState}) => {
-  const onDiceKeyRead = (diceKey: DiceKey) => {
+export const ValidateBackupView = observer ( ({
+  viewState
+}: {
+  viewState: ValidateBackupViewState
+}) => {
+  const {withDiceKey, originalDiceKey} = viewState;
+  const onDiceKeyRead = (diceKey: DiceKeyWithKeyId) => {
     if (viewState.scanning === "backup") {
-      viewState.diceKeyScannedFromBackupState.setDiceKey(diceKey);
-    } else if (viewState.scanning === "original") {
-      viewState.diceKeyState.setDiceKey(diceKey)
+      viewState.setDiceKeyScannedForValidation(diceKey);
+    } else if (viewState.scanning === "original" && "setDiceKey" in withDiceKey) {
+      withDiceKey.setDiceKey(diceKey);
+      // DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
+      // viewState.setDiceKey(diceKey);
     }
     viewState.stopScanning();
   };
   if (viewState.scanning) {
-    return (<CenterColumn>
+    return (<><Spacer/><CenterColumn>
       <ScanDiceKeyView
         maxHeight="55vh"
         onDiceKeyRead={ onDiceKeyRead }
@@ -53,12 +60,12 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
       <CenteredControls>
           <PushButton onClick={viewState.stopScanning} >Stop scanning</PushButton>
       </CenteredControls>
-    </CenterColumn>)
-  } else {
+    </CenterColumn></>)
+  } else if (originalDiceKey != null) {
     return (<>
       <ContentRow>
         <ComparisonBox>
-          <DiceKeyView faces={viewState.diceKeyState.diceKey?.faces}
+          <DiceKeyView faces={originalDiceKey.faces}
             size={`min(25vw,40vh)`}
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />
@@ -73,7 +80,7 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
           />
           <CenteredControls>
             <PushButton  onClick={viewState.startScanningBackup} >{
-              viewState.diceKeyScannedFromBackupState.diceKey == null ? (<>Scan backup to verify</>) : (<>Re-scan Backup</>)
+              viewState.diceKeyScannedForValidation == null ? (<>Scan backup to verify</>) : (<>Re-scan Backup</>)
             }</PushButton>  
           </CenteredControls>
 
@@ -104,6 +111,7 @@ export const ValidateBackupView = observer ( ({viewState}: {viewState: ValidateB
       <Spacer/>
     </>)
   }
+  return null;
 });
 
 const ErrorItemView = ({errorDescriptor}: {errorDescriptor: FaceErrorDescriptor}) => {

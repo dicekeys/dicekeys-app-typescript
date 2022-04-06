@@ -5,7 +5,7 @@ import {
 import {
   EnterDiceKeyView, EnterDiceKeyState
 } from "./EnterDiceKeyView"
-import { DiceKey } from "../../dicekeys/DiceKey";
+import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import { CenteredControls, CenterColumn, Instruction, Spacer } from "../basics";
@@ -13,10 +13,17 @@ import { PushButton } from "../../css/Button";
 import { PrimaryView } from "../../css/Page";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarWithSideMargins } from "../Navigation/NavigationLayout";
+import { ViewState } from "../../state/core/ViewState";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
+import { PathStrings } from "../../views/Navigation/PathStrings";
 
 type Mode = "camera" | "manual";
 
-export class LoadDiceKeyState {
+export const LoadDiceKeyViewStateName = PathStrings["LoadDiceKey"];
+export type LoadDiceKeyViewStateName = typeof LoadDiceKeyViewStateName;
+export class LoadDiceKeyViewState implements ViewState {
+  readonly viewName = LoadDiceKeyViewStateName;
+
   mode: Mode;
   enterDiceKeyState = new EnterDiceKeyState()
 
@@ -24,16 +31,17 @@ export class LoadDiceKeyState {
     this.mode = mode;
   });
 
-  constructor(mode: Mode = "camera") {
+  navState: NavigationPathState;
+  constructor(parentNavState: NavigationPathState = NavigationPathState.root, mode: Mode = "camera") {
     this.mode = mode;
+    this.navState = new NavigationPathState(parentNavState, LoadDiceKeyViewStateName)
     makeAutoObservable(this);
   }
 }
 
 type LoadDiceKeyProps = {
-  onDiceKeyRead: (diceKey: DiceKey, howRead: Mode) => any,
-  onCancelled?: () => any,
-  state: LoadDiceKeyState
+  onDiceKeyReadOrCancelled: (diceKey: DiceKeyWithKeyId | undefined, howRead: Mode | "cancelled") => any,
+  state: LoadDiceKeyViewState
 };
 
 const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
@@ -42,9 +50,9 @@ const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
         <CenterColumn>
           <Instruction>Place your DiceKey into the camera's field of view.</Instruction>
           <ScanDiceKeyView
-            maxHeight="70vh"
+            height="70vh"
             showBoxOverlay={true}
-            onDiceKeyRead={ (diceKey) => props.onDiceKeyRead( diceKey, "camera") }
+            onDiceKeyRead={ (diceKey) => props.onDiceKeyReadOrCancelled( diceKey, "camera") }
           />
         </CenterColumn>
     );
@@ -52,29 +60,26 @@ const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
       <EnterDiceKeyView state={props.state.enterDiceKeyState} />
     );
   }
-  return null;
 });
 
 
-export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
-  const {state, onCancelled} = props;
+export const LoadDiceKeyContentPaneView = observer( (props: LoadDiceKeyProps) => {
+  const {state, onDiceKeyReadOrCancelled} = props;
 
   const onDonePressedWithinEnterDiceKey = () => {
     const diceKey = state.enterDiceKeyState.diceKey;
     if (state.mode === "manual" &&  diceKey) {
-      props.onDiceKeyRead(diceKey, "manual");
+      diceKey.withKeyId.then( diceKey => props.onDiceKeyReadOrCancelled(diceKey, "manual") );
     }
   }
 
   return (
-    <PrimaryView>
-      <SimpleTopNavBar title={ state.mode === "manual" ? "Enter your DiceKey" : "Scan your DiceKey"} />
-      <WindowRegionBelowTopNavigationBarWithSideMargins>
+    <>
       <Spacer/>
       <LoadDiceKeySubView {...props} {...{state}} />
       <CenteredControls>
-        { onCancelled ? (
-          <PushButton onClick={ onCancelled } >Cancel</PushButton>          
+        { onDiceKeyReadOrCancelled ? (
+          <PushButton onClick={ () => onDiceKeyReadOrCancelled(undefined, "cancelled") } >Cancel</PushButton>          
         ) : null }
         <PushButton onClick={ () => state.setMode(state.mode === "camera" ? "manual" : "camera") } >{state.mode !== "camera" ? "Use Camera" : "Enter Manually"}</PushButton>        
         <PushButton
@@ -83,6 +88,17 @@ export const LoadDiceKeyView = observer( (props: LoadDiceKeyProps) => {
         >Done</PushButton>          
       </CenteredControls>
       <Spacer/>
+    </>
+  )});
+
+
+export const LoadDiceKeyFullPageView = observer( (props: LoadDiceKeyProps) => {
+  const {state} = props;
+  return (
+    <PrimaryView>
+      <SimpleTopNavBar title={ state.mode === "manual" ? "Enter your DiceKey" : "Scan your DiceKey"} />
+      <WindowRegionBelowTopNavigationBarWithSideMargins>
+        <LoadDiceKeyContentPaneView {...props} />
       </WindowRegionBelowTopNavigationBarWithSideMargins>
     </PrimaryView>
   )});
