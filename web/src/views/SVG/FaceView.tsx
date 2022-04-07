@@ -112,7 +112,6 @@ const UnitFaceGroupView = observer ( ({face, ...svgGroupProps}: {face: Partial<F
   const {underlineCode, overlineCode} = letter && digit ?
     getUndoverlineCodes({letter, digit}) :
     ({} as {underlineCode: undefined, overlineCode: undefined});
-  console.log(`Codes for ${letter}${digit}=${underlineCode},${overlineCode}`);
 
   return (
     <g {...svgGroupProps} >
