@@ -50,6 +50,7 @@ const UndoverlineGroupView = ({lineType, code}: { lineType: "underline" | "overl
     return null;
   }
   const isOverline = lineType == "overline";
+
   const lineTop =  (-FaceDimensionsFractional.undoverlineLength / 2) + (
     isOverline ?
     FaceDimensionsFractional.overlineTop : FaceDimensionsFractional.underlineTop
@@ -57,6 +58,8 @@ const UndoverlineGroupView = ({lineType, code}: { lineType: "underline" | "overl
   const dotTop = lineTop + (FaceDimensionsFractional.undoverlineThickness - FaceDimensionsFractional.undoverlineDotHeight)/2;
   const undoverlineLeft = -FaceDimensionsFractional.undoverlineLength / 2;
   const firstDotLeft = -(FaceDimensionsFractional.undoverlineDotWidth * 11)/2;
+
+  const codeWithPositionSymbols = 1024 | (isOverline ? 512 : 0) | (code << 1);
   
   return (
     <g>
@@ -69,7 +72,7 @@ const UndoverlineGroupView = ({lineType, code}: { lineType: "underline" | "overl
         fill={textShade}
         stroke='none'
       />
-      { positionsSetOf11BitCode(code).map( (pos) => (
+      { positionsSetOf11BitCode(codeWithPositionSymbols).map( (pos) => (
         <rect
           key={`position ${pos}`}
           x={firstDotLeft + FaceDimensionsFractional.undoverlineDotWidth * pos}
