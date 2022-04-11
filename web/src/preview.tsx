@@ -1,5 +1,5 @@
-import ReactDOM from "react-dom";
 import * as React from "react";
+import { createRoot } from "react-dom/client";
 import { ErrorHandler } from "./views/ErrorHandler";
 import { Preview_ScanDiceKeyView } from "./views/LoadingDiceKeys/ScanDiceKeyView";
 import { Preview_EnterDiceKeyView } from "./views/LoadingDiceKeys/EnterDiceKeyView";
@@ -33,6 +33,7 @@ class PreviewState {
     makeAutoObservable(this);
   }
   setName = action( (name: string) => {
+    console.log("call to PreviewState.setName");
     this.name = name;
     window.history.pushState("", "", `?name=${name}`);
   });
@@ -65,11 +66,13 @@ const Previews = observer ( () => {
 
 window.addEventListener('load', () => {
   DiceKeyMemoryStore.onReady( () => {
-    ReactDOM.render((
+    const container = document.getElementById("app_container");
+    const root = createRoot(container!);
+    root.render((
       <ErrorHandler>
           <Previews />
       </ErrorHandler>
-    ), document.getElementById("app_container"));
+    ));
   })
 });
 
