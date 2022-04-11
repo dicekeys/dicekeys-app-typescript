@@ -3,10 +3,10 @@ import styled, {css} from "styled-components";
 import * as Dimensions from "./DerivationViewLayout";
 import {cssCalcTyped, cssExprWithoutCalc} from "../../../utilities/cssCalc"
 
-export const FieldEditorWidth = cssCalcTyped(`min(80vw, ${cssExprWithoutCalc(Dimensions.ContentWidth)}`);
+export const FieldEditorWidth = `min(80vw, ${cssExprWithoutCalc(Dimensions.ContentWidth)})` as const;
 export const BuilderLabelWidth = `8rem`;
 export const BuilderLabelValueMargin = `0.5vw`;
-export const ValueElementWidth = cssCalcTyped(
+export const CalcValueElementWidth = cssCalcTyped(
   `${cssExprWithoutCalc(FieldEditorWidth)} - (${cssExprWithoutCalc(BuilderLabelWidth)} + ${cssExprWithoutCalc(BuilderLabelValueMargin)})`
 );
 
@@ -24,7 +24,7 @@ const TextInputWithoutSpellCheck = styled.input.attrs(() => ({
   type: "text",
   spellCheck: false,
 }))`
-  width: ${ValueElementWidth};
+  width: ${CalcValueElementWidth};
 `;
 
 export const RecipeTextInputField = styled(TextInputWithoutSpellCheck)`
@@ -182,7 +182,7 @@ export const FormattedRecipeBox = styled.div`
 const rawJsonFieldWidth = '60vw';
 
 const FormattedRecipeStyle = css`
-  width: calc(85vw-3rem);
+  width: calc(85vw - 3rem);
   flex-grow: 1;
   overflow-wrap: break-word;
   word-wrap: break-word;

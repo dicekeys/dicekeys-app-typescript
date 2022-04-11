@@ -12,9 +12,10 @@ import { DisplayDiceKeyViewStateName, SelectedDiceKeySubViewStateNames } from ".
 import { SeedHardwareKeyViewStateName } from "../../views/Recipes/SeedHardwareKeyViewState";
 import { SecretDerivationViewStateName } from "../../views/Recipes/DerivationView";
 import { BackupViewStateName } from "../../views/BackupView/BackupViewState";
+import { StandardBottomBarHeight } from "../../views/Navigation/NavigationLayout";
 
 export const BottomIconNavigationBar = styled(NavigationBar)`
-  height: BottomIconBarHeightBottomIconBarHeight;
+  height: ${StandardBottomBarHeight};
   background-color: ${props=>props.theme.colors.bottomButtonBarBackground};
   align-items: baseline;
 `;

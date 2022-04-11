@@ -326,9 +326,7 @@ export const SeedHardwareKeyContentView = observer( ( {seedHardwareKeyViewState}
   return (
     <div>
       { seedHardwareKeyViewState.seedSourceSelected === SeedSource.GeneratedFromCustomRecipe ? (
-        <>
           <RecipeFieldEditorView state={seedHardwareKeyViewState.recipeBuilderState} />
-        </>
       ): (<>
         <Instruction2>
           Seed a FIDO security key with a secret key and, if you lose or break it,

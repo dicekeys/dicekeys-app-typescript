@@ -250,6 +250,7 @@ export class QueuedUrlApiRequest extends QueuedApiRequest {
     if(RUNNING_IN_ELECTRON){
       (window as unknown as  {ElectronBridge: IElectronBridge}).ElectronBridge.openExternal(url.toString());
     }else{
+      console.log(`Transmitting URL`)
       window.location.replace(url.toString());
     }
   }
