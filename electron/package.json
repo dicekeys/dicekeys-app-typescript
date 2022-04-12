@@ -3,7 +3,7 @@
   "author": "DiceKeys, LLC",
   "productName": "DiceKeys",
   "description": "DiceKeys App",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "electron-js/electron.js",
   "homepage": "https://dicekeys.com",
   "scripts": {
