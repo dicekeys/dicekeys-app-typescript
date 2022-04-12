@@ -81,8 +81,8 @@ export interface OptionalAspectRatioProps extends OptionalMaxSizeCalcProps {
 }
 
 type WithBoundsProps = OptionalAspectRatioProps & {
-  weight?: number,
-  children: (bounds: SettableBounds) => JSX.Element,
+  weight?: number;
+  children: (settableBounds: SettableBounds) => React.ReactNode;
 };
 
 const createAspectRatioStyle = (props: OptionalAspectRatioProps): React.CSSProperties => {
@@ -95,9 +95,9 @@ const createAspectRatioStyle = (props: OptionalAspectRatioProps): React.CSSPrope
   }
 }
 
-export const WithSettableBounds = observer( (props: WithBoundsProps &
-  {settableBounds: SettableBounds} & React.HTMLAttributes<HTMLDivElement>
-) => {
+export type WithBoundsElementProps = WithBoundsProps & Omit<React.HTMLAttributes<HTMLDivElement>, "children">;
+export type WithSettableBoundsElementProps = WithBoundsElementProps & {settableBounds: SettableBounds};
+export const WithSettableBounds = observer( (props: WithSettableBoundsElementProps) => {
   const componentRef = React.useRef<HTMLDivElement>(null);
 
   const {
@@ -126,6 +126,6 @@ export const WithSettableBounds = observer( (props: WithBoundsProps &
   )
 });
 
-export const WithBounds = (props: WithBoundsProps & OptionalAspectRatioProps & React.HTMLAttributes<HTMLDivElement>) => (
+export const WithBounds = (props: WithBoundsElementProps) => (
   <WithSettableBounds {...props} settableBounds={new SettableBounds()} /> 
 );

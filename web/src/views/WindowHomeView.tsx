@@ -163,7 +163,7 @@ const StoredDiceKeysRowAndCountdownTimerContainer = styled.div`
 export const WindowHomeView = observer ( ({state}: TopLevelNavigationProps) => {
   return (
     <PrimaryView>
-      <VersionInformationBar>Version { BUILD_VERSION}, { BUILD_DATE }</VersionInformationBar>
+      <VersionInformationBar>Release { BUILD_VERSION}, { BUILD_DATE }</VersionInformationBar>
       <WindowHomeNavigationBar state={state} />
       <ColumnCentered>
         {/*

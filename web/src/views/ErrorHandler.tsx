@@ -17,7 +17,7 @@ const ErrorMessageDiv = styled.div``;
 const ErrorStackDiv = styled.div``;
 // const ErrorInfoDiv = styled.div``;
 
-export const ErrorHandler = observer ( class ErrorHandler extends React.Component<{}> {
+export const ErrorHandler = observer ( class ErrorHandler extends React.Component<React.PropsWithChildren<{}>> {
   state: ErrorState = {error: null};
   constructor(props: ErrorHandlerProps) {
     super(props);
