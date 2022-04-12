@@ -18,7 +18,7 @@ import {
 } from "./DerivationViewLayout";
 import * as Dimensions from "./DerivationViewLayout";
 import styled from "styled-components";
-import { cssExprWithoutCalc } from "../../../utilities";
+import { cssCalcTyped, cssExprWithoutCalc } from "../../../utilities";
 
 export const PlusSignViewWidth = `5vw` as const;
 export const RecipeColumnWidthFormula = cssExprWithoutCalc(`(${Dimensions.ContentWidth} - (${Dimensions.DiceKeyBoxSize} + ${PlusSignViewWidth}))`);
@@ -45,8 +45,8 @@ const RecipeViewRoundedRect = styled.div`
   justify-content: space-around;
   align-items: flex-start;
   padding: ${RecipeRoundedRectRadiusAndPadding};
-  width: calc(${RecipeColumnWidthWithinPaddingFormula});
-  min-height: calc(${Dimensions.DiceKeyBoxSize} - 2 * (${RecipeRoundedRectRadiusAndPadding}));
+  width: ${cssCalcTyped(RecipeColumnWidthWithinPaddingFormula)};
+  min-height: ${cssCalcTyped(`${Dimensions.DiceKeyBoxSize} - 2 * (${RecipeRoundedRectRadiusAndPadding})`)};
   border-radius: ${RecipeRoundedRectRadiusAndPadding};
   background-color: rgba(128,128,196,0.10);
   color: ${ props => props.theme.colors.foreground }
@@ -59,7 +59,7 @@ const InteriorLabelForRecipe = styled(BigCaptionOrLabel)`
 const RecipeSeparator = styled.div`
   margin-top: 0.25vh;
   margin-bottom: 0.25vh;
-  width: calc(${RecipeColumnWidthWithinPaddingFormula} - 0.7rem);
+  width: ${cssCalcTyped(`${RecipeColumnWidthWithinPaddingFormula} - 0.7rem`)};
   border-bottom: 1px solid rgba(0,0,0,0.1);
 `;
 
@@ -100,17 +100,17 @@ const RowElement = styled.div`
 `;
 
 const ElementInDiceKeyColumn = styled(RowElement)`
-  width: calc(${Dimensions.DiceKeyBoxSize});
+  width: ${cssCalcTyped(Dimensions.DiceKeyBoxSize)};
   height: auto;
 `;
 
 const ElementInPlusSignColumn = styled(RowElement)`
-  width: calc(${PlusSignViewWidth});
+  width: ${cssCalcTyped(PlusSignViewWidth)};
   font-size: ${Dimensions.DownArrowAndPlusSignViewHeightInVh};
 `;
 
 const ElementInRecipeColumn = styled(RowElement)`
-  width: calc(${RecipeColumnWidthFormula});
+  width: ${cssCalcTyped(RecipeColumnWidthFormula)};
 `;
 
 export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {

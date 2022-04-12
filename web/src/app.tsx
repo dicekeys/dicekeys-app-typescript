@@ -1,5 +1,5 @@
-import ReactDOM from "react-dom";
 import * as React from "react";
+import { createRoot } from 'react-dom/client';
 import {WindowTopLevelView} from "./views/WindowTopLevelView";
 import { ErrorHandler } from "./views/ErrorHandler";
 import { DiceKeyMemoryStore } from "./state";
@@ -57,13 +57,18 @@ if (RUNNING_IN_ELECTRON) {
 window.addEventListener('load', () => {
   document.body.style.setProperty("margin", "0px");
   DiceKeyMemoryStore.onReady( () => {
-    ReactDOM.render((
+    const container = document.getElementById("app_container");
+    if (container == null) {
+      throw "No container element";
+    }
+    const root = createRoot(container);
+    root.render((
       <ThemeProvider theme={lightTheme}>
         <ErrorHandler>
           <WindowTopLevelView />
         </ErrorHandler>
       </ThemeProvider>
-    ), document.getElementById("app_container"));
+    ));
   });
 });
 

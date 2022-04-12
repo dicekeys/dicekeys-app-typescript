@@ -1,4 +1,4 @@
-import { RecipeBuilderState } from "./RecipeBuilderState";
+import { RecipeBuilderState, RecipeEditingMode } from "./RecipeBuilderState";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
 import { writeSeedToFIDOKey, WriteSeedToFIDOKeyException } from "../../state/hardware/usb/SeedHardwareKey";
 import { action, makeAutoObservable } from "mobx";
@@ -182,6 +182,7 @@ export class SeedHardwareKeyViewState implements ViewState {
       type: "Secret",
       recipeJson: `{"purpose":"${seedSecurityKeyPurpose}"}`,
     } as LoadedRecipe<"BuiltIn">);
+    recipeBuilderState.setEditingMode(RecipeEditingMode.EditIncludingRawJson);
     this.recipeBuilderState = recipeBuilderState;
     this.diceKey = diceKey;
     this.derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, diceKey });

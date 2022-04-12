@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import React from "react";
-import {WindowTopLevelNavigationState as WindowTopLevelNavigationState} from "../state/Window";
+import {WindowTopLevelNavigationState } from "../state/Window";
 import { SelectedDiceKeyViewStateName } from "./WithSelectedDiceKey/SelectedDiceKeyViewState";
 import { SelectedDiceKeyView } from "./WithSelectedDiceKey/SelectedDiceKeyView";
 import { WindowHomeView } from "./WindowHomeView";
@@ -15,7 +15,7 @@ import { SeedHardwareKeyViewStateName } from "./Recipes/SeedHardwareKeyViewState
 import { SaveDiceKeyViewStateName, SaveDiceKeyToDeviceStorageView, DeleteDiceKeyViewStateName, DeleteDiceKeyToDeviceStorageView } from "./SaveAndDeleteDiceKeyView";
 import { RUNNING_IN_ELECTRON } from "../utilities/is-electron";
 
-export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {windowTopLevelNavigationState: WindowTopLevelNavigationState}) => {
+export const WindowRoutingView = observer ( ({state}: {state: WindowTopLevelNavigationState}) => {
 
   const {foregroundApiRequest} = ApiRequestsReceivedState;
   if (foregroundApiRequest != null) {
@@ -25,8 +25,8 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
       />
     )
   }
-  // console.log(`Displaying subview ${windowTopLevelNavigationState.subView}`)
-  const {subViewState} = windowTopLevelNavigationState.subView;
+  // console.log(`Displaying subview ${state.subView}`)
+  const {subViewState} = state.subView;
   console.log(`Re-rendering top level switch for view name ${subViewState?.viewName}`);
   switch (subViewState?.viewName) {
     case SaveDiceKeyViewStateName:
@@ -36,14 +36,14 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
     case LoadDiceKeyViewStateName:
       return (
         <LoadDiceKeyFullPageView
-          onDiceKeyReadOrCancelled={ windowTopLevelNavigationState.onReturnFromActionThatMayLoadDiceKey }
+          onDiceKeyReadOrCancelled={ state.onReturnFromActionThatMayLoadDiceKey }
           state={ subViewState }
         />
       );
     case AssemblyInstructionsStateName:
       return (
-        <AssemblyInstructionsView onComplete={ windowTopLevelNavigationState.onReturnFromActionThatMayLoadDiceKey } state={subViewState}
-//          new AssemblyInstructionsState(windowTopLevelNavigationState.foregroundDiceKeyState)
+        <AssemblyInstructionsView onComplete={ state.onReturnFromActionThatMayLoadDiceKey } state={subViewState}
+//          new AssemblyInstructionsState(state.foregroundDiceKeyState)
          />
     )
     case SeedHardwareKeyViewStateName: return (
@@ -53,7 +53,7 @@ export const WindowRoutingView = observer ( ({windowTopLevelNavigationState}: {w
       <SelectedDiceKeyView state={subViewState} />
     );
     default: return (
-      <WindowHomeView state={windowTopLevelNavigationState} />
+      <WindowHomeView state={state} />
     );
   }
 });
@@ -62,10 +62,10 @@ const defaultWindowNavigationState = RUNNING_IN_ELECTRON ?
       new WindowTopLevelNavigationState() : WindowTopLevelNavigationState.fromPath();
 
 export const WindowTopLevelView = observer ( ({
-  windowTopLevelNavigationState = defaultWindowNavigationState } : {
-  windowTopLevelNavigationState?: WindowTopLevelNavigationState
+  state = defaultWindowNavigationState } : {
+  state?: WindowTopLevelNavigationState
 }) => (
   <PrimaryView>
-    <WindowRoutingView {...{windowTopLevelNavigationState}} />
+    <WindowRoutingView state={state} />
   </PrimaryView>
 ));

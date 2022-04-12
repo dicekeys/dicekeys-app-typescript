@@ -13,7 +13,7 @@ import {
   RecipeWizardOrFieldsContainer
 } from "./DerivationView/DerivationViewLayout";
 import { RawJsonWarning } from "./DerivationView/RawJsonWarning";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { ViewState } from "../../state/core/ViewState";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
 

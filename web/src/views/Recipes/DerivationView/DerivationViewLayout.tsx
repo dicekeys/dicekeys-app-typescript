@@ -27,7 +27,7 @@ export const DerivationViewSection = styled.div`
   display: flex;
   flex-direction: column;  
   justify-content: center;
-  width: ${ContentWidth};
+  width: ${cssCalcTyped(ContentWidth)};
 `;
 
 export const DerivationViewContainer = styled.div`
@@ -35,7 +35,7 @@ export const DerivationViewContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-self: center;
-  height: ${HeightBetweenTopNavigationBarAndStandardBottomBar};
+  height: ${cssCalcTyped(HeightBetweenTopNavigationBarAndStandardBottomBar)};
 `;
 
 export const RecipeWizardOrFieldsContainer = styled(DerivationViewSection)`
@@ -45,7 +45,7 @@ export const RecipeWizardOrFieldsContainer = styled(DerivationViewSection)`
 
 export const DerivedContentContainer = styled(DerivationViewSection)`
   justify-content: flex-start;
-  height: ${CalcDerivedValueBoxMaxHeight};
+  height: ${cssCalcTyped(DerivedValueBoxMaxHeight)};
 `;
 
 export const KeyPlusRecipeColumn = styled(DerivationViewSection)`
