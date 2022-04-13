@@ -201,12 +201,9 @@ class DiceKeyMemoryStoreClass {
       const json = await readStringFromEncryptedLocalStorageField(DiceKeyMemoryStoreClass.StorageFieldName);
       if (json == null) {
         console.log("No DiceKeys in memory store");
-        return;
-      }
-      if (json) {
+      } else if (json) {
         const storageFormat = JSON.parse(json) as StorageFormat;
         this.onReadFromShortTermEncryptedStorage(storageFormat);
-        
         console.log(`Read ${storageFormat.keyIdToDiceKeyInHumanReadableForm.length} DiceKey(s) from memory`)
       }
     } catch {
