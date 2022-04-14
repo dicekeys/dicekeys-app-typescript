@@ -11,6 +11,7 @@ import { SeedHardwareKeyViewState } from "./Recipes/SeedHardwareKeyViewState";
 import { PathStrings } from "./Navigation/PathStrings";
 import { NavigationPathState } from "../state/core/NavigationPathState";
 import { DeleteDiceKeyViewStateName, SaveDiceKeyViewStateName, SaveOrDeleteDiceKeyViewState, SaveOrDeleteDiceKeyStateName, SaveDiceKeyViewState, DeleteDiceKeyViewState } from "./SaveAndDeleteDiceKeyView";
+import { AppStoreInstallNudgeState } from "./AppStoreInstallNudgeState";
 
 export type TopLevelSubViewStates =
   LoadDiceKeyViewState |
@@ -32,7 +33,7 @@ const clearDiceKeyMemoryStore = () => {
 }
 
 export class WindowTopLevelNavigationState {
-
+  readonly appStoreInstallNudgeState = new AppStoreInstallNudgeState();
 
   readonly autoEraseCountdownTimer = new CountdownTimer({callbackOnReachesZero: clearDiceKeyMemoryStore});
 
