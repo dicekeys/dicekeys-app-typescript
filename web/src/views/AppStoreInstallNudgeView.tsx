@@ -4,13 +4,20 @@ import styled from "styled-components";
 import { AppStoreInstallNudgeState } from "./AppStoreInstallNudgeState";
 import { AppStoreName, OperatingSystemName } from "../utilities/OperatingSystemAndAppStoreName";
 import { ButtonRow, PushButton } from "../css/Button";
+import { cssCalcTyped } from "../utilities/cssCalc";
+
+const horizontalMargin = `10vw`;
+const horizontalPaddingFormula = `min(3vw, 3vh)`;
+const calcNotificationBarWidth = cssCalcTyped(
+  `100vw - 2 * (${horizontalMargin} + ${horizontalPaddingFormula})`
+);
 
 export const PageTopNotificationBarContainer = styled.div`
   /* Fix at top of window, centered, with view width of 80vw */
   position: fixed;
   top: 0;
-  left: 10vw;
-  width: 80vw;
+  left: ${horizontalMargin};
+  width: ${calcNotificationBarWidth};
 
   /* Move in front of main content */
   z-index: 1;
@@ -35,7 +42,7 @@ export const PageTopNotificationBarContainer = styled.div`
   /* Pad so that while the background touches the top, the actual notificaiton content
      isn't squished up against the edges
   */
-  padding: calc(min(3vw, 3vh));
+  padding: calc(${horizontalPaddingFormula});
   padding-top: 3vh;
   padding-bottom: 3vh;
 
@@ -50,6 +57,7 @@ export const PageTopNotificationBarContainer = styled.div`
 
 export const PageTopNotificationBarContent = styled.div`
   display: block;
+  font-size: 1.25rem;
 `;
 
 const NudgeTitle = styled.h2`
@@ -118,8 +126,8 @@ export const AppStoreInstallNudgeView = observer( ( {
             checked={state.dontShowAgainCheckboxIsChecked}
             onClick={state.toggleDontShowAgainCheckboxIsChecked}  
           />
-          <PushButton onClick={state.dismissTheInstallNudge}>not now</PushButton>
-          <PushButton onClick={state.install} >{ AppStoreName === "Microsoft" ? (<>download</>) : (<>Install</>)}</PushButton>
+          <PushButton style={{marginLeft: '2vw'}} onClick={state.dismissTheInstallNudge}>not now</PushButton>
+          <PushButton style={{marginLeft: '3vw'}} onClick={state.install} >{ AppStoreName === "Microsoft" ? (<>download</>) : (<>Install</>)}</PushButton>
         </ButtonRow>
         </PageTopNotificationBarContent>
       </PageTopNotificationBarContainer>
