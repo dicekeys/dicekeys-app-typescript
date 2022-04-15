@@ -2,8 +2,9 @@ import { action, makeAutoObservable } from "mobx";
 import { ObservableLocalStorageBoolean } from "../state/core/ObservableLocalStorage";
 import { AppStoreName, OperatingSystemName } from "../utilities/OperatingSystemAndAppStoreName";
 import { RUNNING_IN_BROWSER } from "../utilities/is-electron";
+import { downloadOrNavigateToAppStore } from "../utilities/AppStoreLink";
 
-class AppStoreInstallNudgeStateClass {
+export class AppStoreInstallNudgeStateClass {
   readonly userAskedToPermanentlyDismissTheInstallNudge = new ObservableLocalStorageBoolean("PermanentlyDismissInstallNudge");
 
   private _dontShowAgainCheckboxIsChecked: boolean = false;
@@ -41,8 +42,13 @@ class AppStoreInstallNudgeStateClass {
     }
   };
 
+  install = () => {
+    this.dismissTheInstallNudge();
+    downloadOrNavigateToAppStore();
+  }
+
   constructor() {
-    makeAutoObservable;
+    makeAutoObservable(this);
   }
 }
 

@@ -18,6 +18,7 @@ import { PlatformSupportsSavingToDevice  } from "../state/stores/DiceKeyMemorySt
 import { SubViewButton, SubViewButtonCaption, SubViewButtonImage } from "../css/SubViewButton";
 import { ButtonRow, PushButton } from "../css/Button";
 import { AnchorButton } from "./basics/AnchorButton";
+import { AppStoreInstallNudgeView } from "./AppStoreInstallNudgeView";
 
 const ImageRow = styled.div`
   display: flex;
@@ -161,6 +162,7 @@ const StoredDiceKeysRowAndCountdownTimerContainer = styled.div`
 export const WindowHomeView = observer ( ({state}: TopLevelNavigationProps) => {
   return (
     <>
+      <AppStoreInstallNudgeView/>
       <VersionInformationBar>Release { BUILD_VERSION}, { BUILD_DATE })</VersionInformationBar>
       <WindowHomeNavigationBar state={state} />
       <ColumnCentered>
