@@ -2,7 +2,6 @@ import { autorun, runInAction, set, toJS } from 'mobx'
 import { isRunningInPreviewMode } from '../../utilities/is-preview'
 import { decryptJsonStorageField, encryptJsonStorageField } from './EncryptedStorageFields'
 
-
 export function autoSave<T>(_this: T, name: string, dontLoadOnPreview: boolean = false) {
 	// We don't load or save state in preview mode
 	if (dontLoadOnPreview && isRunningInPreviewMode()) return;

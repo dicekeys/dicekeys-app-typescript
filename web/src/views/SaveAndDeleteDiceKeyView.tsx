@@ -4,7 +4,6 @@ import { CenteredControls, ThisDiceKey, Instruction, Spacer } from "./basics";
 import { OptionButton } from "../css/Button";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../state";
-import { PageAsFlexColumn } from "../css";
 import { NavigationBarForDiceKey } from "./WithSelectedDiceKey/SelectedDiceKeyNavigationBar";
 import { HeightBelowTopNavigationBar, WindowRegionBelowTopNavigationBar } from "./Navigation/NavigationLayout";
 import styled from "styled-components";
@@ -85,12 +84,12 @@ export const SaveDiceKeyToDeviceStorageView = observer( ( {
   const {diceKey} = state;
    
    return (
-    <PageAsFlexColumn>
+    <>
       <NavigationBarForDiceKey diceKey={diceKey} goBack={closeFn} />
       <ContentRegion>
         <SaveDiceKeyToDeviceStorageContentView state={state} closeFn={closeFn} />
       </ContentRegion>
-    </PageAsFlexColumn>
+    </>
   );
  });
 
@@ -135,11 +134,11 @@ export const DeleteDiceKeyToDeviceStorageView = observer( ( {
   const {diceKey} = state;
    
    return (
-    <PageAsFlexColumn>
+    <>
       <NavigationBarForDiceKey diceKey={diceKey} goBack={closeFn} />
       <ContentRegion>
         <DeleteDiceKeyToDeviceStorageContentView state={state} closeFn={closeFn} />
       </ContentRegion>
-    </PageAsFlexColumn>
+    </>
   );
  });

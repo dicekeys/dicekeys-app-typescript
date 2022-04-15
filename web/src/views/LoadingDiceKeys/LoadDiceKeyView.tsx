@@ -10,7 +10,6 @@ import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
 import { CenteredControls, CenterColumn, Instruction, Spacer } from "../basics";
 import { PushButton } from "../../css/Button";
-import { PrimaryView } from "../../css/Page";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarWithSideMargins } from "../Navigation/NavigationLayout";
 import { ViewState } from "../../state/core/ViewState";
@@ -95,10 +94,10 @@ export const LoadDiceKeyContentPaneView = observer( (props: LoadDiceKeyProps) =>
 export const LoadDiceKeyFullPageView = observer( (props: LoadDiceKeyProps) => {
   const {state} = props;
   return (
-    <PrimaryView>
+    <>
       <SimpleTopNavBar title={ state.mode === "manual" ? "Enter your DiceKey" : "Scan your DiceKey"} />
       <WindowRegionBelowTopNavigationBarWithSideMargins>
         <LoadDiceKeyContentPaneView {...props} />
       </WindowRegionBelowTopNavigationBarWithSideMargins>
-    </PrimaryView>
+    </>
   )});

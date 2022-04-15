@@ -18,7 +18,6 @@ import { DiceKeyView } from "../../views/SVG/DiceKeyView";
 import { PushButton } from "../../css/Button";
 
 import styled from "styled-components";
-import { PrimaryView } from "../../css/Page";
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 import { action, makeAutoObservable } from "mobx";
 import { DiceKeyMemoryStore } from "../../state";
@@ -271,7 +270,7 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
   }
 
   return (
-    <PrimaryView>
+    <>
       <SimpleTopNavBar
         title={`${diceKey?.nickname ?? ""}`} //  using ${diceKey?.nickname ?? ""}
         goBack={handleDeclineRequestButton}
@@ -312,7 +311,7 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
         <PushButton invisible={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
       </CenteredControls>
       <Spacer/>
-    </PrimaryView>
+    </>
   )
 })
 

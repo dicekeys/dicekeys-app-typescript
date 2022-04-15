@@ -5,7 +5,7 @@ import { RecipeFieldEditorView, SequenceNumberFormFieldValueView } from "./Deriv
 import styled, { css } from "styled-components";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities/cssCalc";
 import { ObscureSecretFields } from "../../state/ToggleState";
-import { DivSupportingInvisible, PageAsFlexColumn } from "../../css";
+import { DivSupportingInvisible } from "../../css";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { StandardWidthBetweenSideMargins, WindowRegionBelowTopNavigationBarWithSideMargins } from "../Navigation/NavigationLayout";
 import { SeedHardwareKeyViewState, SeedSource, fidoAccessDeniedByPlatform, fidoAccessRequiresWindowsAdmin } from "./SeedHardwareKeyViewState";
@@ -360,10 +360,10 @@ export const SeedHardwareKeyFullPageView = observer( ({seedHardwareKeyViewState}
   seedHardwareKeyViewState: SeedHardwareKeyViewState
 }) => {
   return (
-    <PageAsFlexColumn>
+    <>
       <SimpleTopNavBar title={"Seed a USB FIDO Security Key"} />
       <WindowRegionBelowTopNavigationBarWithSideMargins>
         <SeedHardwareKeyContentView seedHardwareKeyViewState={seedHardwareKeyViewState} />
       </WindowRegionBelowTopNavigationBarWithSideMargins>
-    </PageAsFlexColumn>
+    </>
   )});

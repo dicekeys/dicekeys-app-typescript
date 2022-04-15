@@ -32,8 +32,6 @@ const clearDiceKeyMemoryStore = () => {
 }
 
 export class WindowTopLevelNavigationState {
-
-
   readonly autoEraseCountdownTimer = new CountdownTimer({callbackOnReachesZero: clearDiceKeyMemoryStore});
 
   setAutoEraseCountdownTimer = action( (startAtMs: number= 60*1000) => {

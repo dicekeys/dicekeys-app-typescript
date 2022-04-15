@@ -8,17 +8,22 @@ import { WindowTopLevelNavigationState } from "../state/Window";
 import { BooleanState } from "../state/reusable/BooleanState";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { DiceKeysNavHamburgerMenu, ExpandableMenuProps, HamburgerMenuButton, MenuItem } from "./Navigation/Menu";
-import { RUNNING_IN_BROWSER } from "../utilities/is-electron";
+import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../utilities/is-electron";
 import { DiceKeyMemoryStore } from "../state";
-
+import { AppStoreName, OperatingSystemName } from "../utilities/OperatingSystemAndAppStoreName";
+import { downloadOrNavigateToAppStore } from "../utilities/AppStoreLink";
 
 const WindowHomeMenu = observer ( ({state, ...props}: {state: WindowTopLevelNavigationState} & ExpandableMenuProps) => (
   <DiceKeysNavHamburgerMenu {...props}>
-    { RUNNING_IN_BROWSER ? null : (
+    { RUNNING_IN_ELECTRON ? (
       <MenuItem onClick={async () => {
         state.navigateToSeedFidoKey();
       }}>Seed a FIDO Hardware Security Key</MenuItem>
-    )}
+    ) : null}
+    { (RUNNING_IN_BROWSER && AppStoreName != null && OperatingSystemName != null) ? (
+      <MenuItem onClick={ downloadOrNavigateToAppStore }
+      >Get DiceKeys for {OperatingSystemName}</MenuItem>
+    ) : null}
     <MenuItem onClick={async () => {
       const diceKey = await DiceKeyWithKeyId.fromRandom();
       DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);

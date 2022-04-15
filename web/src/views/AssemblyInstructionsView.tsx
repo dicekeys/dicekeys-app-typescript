@@ -16,7 +16,6 @@ import { addPreview } from "./basics/Previews";
 import {AssemblyInstructionsStep, AssemblyInstructionsState} from "./AssemblyInstructionsState";
 import { PushButton, StepButton } from "../css/Button";
 import { CenterColumn, ColumnVerticallyCentered } from "./basics/Layout";
-import { PrimaryView } from "../css/Page";
 import styled from "styled-components";
 import { WindowRegionBelowTopNavigationBarWithSideMargins, calcHeightBelowTopNavigationBar } from "./Navigation/NavigationLayout";
 import { cssCalcTyped,  cssExprWithoutCalc } from "../utilities";
@@ -216,7 +215,7 @@ const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  Ass
 export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsViewProps) => {
   const {state} = props;
   return (
-    <PrimaryView>
+    <>
       <SimpleTopNavBar title={"Assembly Instructions"} goBack={ addressBarState.back } />
       <AssemblyInstructionsContainer>{
           state.step === AssemblyInstructionsStep.CreateBackup && (state.backupState != null) ? (
@@ -249,7 +248,7 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
     <WarningFooterDiv invisible={state.step >= AssemblyInstructionsStep.SealBox } >
       Do not close the box before the final step.
     </WarningFooterDiv>
-    </PrimaryView>
+    </>
   )
 });
 
