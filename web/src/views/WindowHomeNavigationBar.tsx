@@ -22,7 +22,7 @@ const WindowHomeMenu = observer ( ({state, ...props}: {state: WindowTopLevelNavi
     ) : null}
     { (RUNNING_IN_BROWSER && AppStoreName != null && OperatingSystemName != null) ? (
       <MenuItem onClick={ downloadOrNavigateToAppStore }
-      >Get the native app for {OperatingSystemName}</MenuItem>
+      >Get DiceKeys for {OperatingSystemName}</MenuItem>
     ) : null}
     <MenuItem onClick={async () => {
       const diceKey = await DiceKeyWithKeyId.fromRandom();

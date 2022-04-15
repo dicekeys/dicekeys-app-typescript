@@ -1,7 +1,6 @@
 import { observer } from "mobx-react";
 import React from "react";
 import styled from "styled-components";
-import { PageAsFlexColumn } from "../css";
 import { AppStoreInstallNudgeState } from "./AppStoreInstallNudgeState";
 import { WindowRegionColumnContainer } from "./Navigation/NavigationLayout";
 
@@ -19,7 +18,6 @@ export const AppStoreInstallNudgeView = observer( ( {
    const {appStoreName, osName} = state;
    
    return (
-    <PageAsFlexColumn>
       <ContentRegion>
         { appStoreName }
         <ul>
@@ -33,6 +31,5 @@ export const AppStoreInstallNudgeView = observer( ( {
           ) : null}
         </ul>
       </ContentRegion>
-    </PageAsFlexColumn>
   );
  });

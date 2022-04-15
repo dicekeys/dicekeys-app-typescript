@@ -7,7 +7,7 @@ import { Navigation } from "../../state";
 import { SeedHardwareKeyContentView } from "../Recipes/SeedHardwareKeyView";
 import { BackupView } from "../BackupView/BackupView";
 import { addPreview } from "../basics/Previews";
-import { PageAsFlexColumn } from "../../css/Page";
+import { PrimaryView } from "../../css/Page";
 import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 import {
   SelectedDiceKeyBottomIconBarView,
@@ -132,13 +132,13 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
   const diceKey = props.state.diceKey;
   if (!diceKey) return null;
   return (
-    <PageAsFlexColumn>
+    <PrimaryView>
       <SelectedDiceKeyNavigationBar {...props} />
       <SelectedDiceKeyContentRegionWithSideMargins>
         <SelectedDiceKeySubViewSwitch {...{...props}} />
       </SelectedDiceKeyContentRegionWithSideMargins>
       <SelectedDiceKeyBottomIconBarView {...props} />
-    </PageAsFlexColumn>
+    </PrimaryView>
     );
 });
 

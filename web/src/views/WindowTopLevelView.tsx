@@ -14,14 +14,10 @@ import { SeedHardwareKeyFullPageView } from "./Recipes/SeedHardwareKeyView";
 import { SeedHardwareKeyViewStateName } from "./Recipes/SeedHardwareKeyViewState";
 import { SaveDiceKeyViewStateName, SaveDiceKeyToDeviceStorageView, DeleteDiceKeyViewStateName, DeleteDiceKeyToDeviceStorageView } from "./SaveAndDeleteDiceKeyView";
 import { RUNNING_IN_ELECTRON } from "../utilities/is-electron";
-import { AppStoreInstallNudgeView } from "./AppStoreInstallNudgeView";
 
 export const WindowRoutingView = observer ( ({state}: {state: WindowTopLevelNavigationState}) => {
 
   const {foregroundApiRequest} = ApiRequestsReceivedState;
-  if (false && state.appStoreInstallNudgeState.showInstallNudge) {
-    return <AppStoreInstallNudgeView state={state.appStoreInstallNudgeState} />
-  }
   if (foregroundApiRequest != null) {
     return (
       <ApproveApiRequestView state={new ApproveApiRequestState(foregroundApiRequest)}

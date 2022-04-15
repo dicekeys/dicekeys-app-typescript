@@ -6,7 +6,6 @@ import LoadDiceKeyImage from "../images/Scanning a DiceKey.svg";
 import AssemblyImage1 from "../images/Illustration of shaking bag.svg";
 import AssemblyImage2 from "../images/Box Bottom After Roll.svg";
 import AssemblyImage3 from "../images/Seal Box.svg";
-import { PrimaryView } from "../css/Page";
 import { ColumnCentered } from "./basics";
 import styled from "styled-components";
 import { DiceKeyView } from "./SVG/DiceKeyView";
@@ -157,12 +156,11 @@ const CountdownTimerView = observer( ({state}: TopLevelNavigationProps) => {
 })
 
 const StoredDiceKeysRowAndCountdownTimerContainer = styled.div`
-  
 `
 
 export const WindowHomeView = observer ( ({state}: TopLevelNavigationProps) => {
   return (
-    <PrimaryView>
+    <>
       <VersionInformationBar>Release { BUILD_VERSION}, { BUILD_DATE })</VersionInformationBar>
       <WindowHomeNavigationBar state={state} />
       <ColumnCentered>
@@ -200,6 +198,6 @@ export const WindowHomeView = observer ( ({state}: TopLevelNavigationProps) => {
           <SubViewButtonCaption>Assembly Instructions</SubViewButtonCaption>
         </SubViewButton>
         </ColumnCentered>
-      </PrimaryView>
+      </>
     )
 });

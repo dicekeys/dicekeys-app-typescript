@@ -12,7 +12,6 @@ import {
 import { FaceDigit, FaceLetter, FaceOrientationLetterTrbl, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
 import { DiceKeyView } from "../SVG/DiceKeyView";
 import { Instruction, CenterColumn } from "../../views/basics";
-import { PrimaryView } from "../../css/Page";
 import styled from "styled-components";
 
 const KeyHints = styled(Instruction)`
@@ -159,8 +158,6 @@ export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.C
 export const Preview_EnterDiceKeyView = () => {
   const state = new EnterDiceKeyState();
   return (
-    <PrimaryView>
-      <EnterDiceKeyView state={state}/>
-    </PrimaryView>
+    <EnterDiceKeyView state={state}/>
   )
 }
