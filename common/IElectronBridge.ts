@@ -2,7 +2,8 @@ import type {
   OpenDialogOptions,
   OpenDialogReturnValue,
   MessageBoxOptions,
-  MessageBoxReturnValue
+  MessageBoxReturnValue,
+  SaveDialogOptions
 } from "electron";
 
 export {
@@ -35,6 +36,8 @@ export interface IElectronBridgeSync {
 export interface IElectronBridgeDialogsAsync{
   openFileDialog(options: OpenDialogOptions): Promise<OpenDialogReturnValue>;
   openMessageDialog(options: MessageBoxOptions): Promise<MessageBoxReturnValue>;
+  saveRecipes(recipesJSON: string): Promise<boolean>;
+  loadRecipesJSON(): Promise<string | undefined>;
 }
 export interface IElectronBridgeDiceKeysStoreAsync {
   getDiceKeyFromCredentialStore(id: string): Promise<string | null>
@@ -52,14 +55,22 @@ interface IElectronBridgeConstants {
 export type RemoveListener = () => void;
 export interface IElectronBridgeListener {
   listenForAppLinks(callback: (appLink: string) => any, errorCallback: (error: any) => any): RemoveListener;
+
 // for testing typings only  fix(sc: (a: string, b: number) => any, ec: (error: any) => any): RemoveListener;
 }
+
+export interface IElectronBridgeSimpleListener {
+  onGetRecipesToExportRequested: (callback: () => string) => void;
+  onRecipesToImportProvided: (callback: (jsonRecipesToImport: string) => any) => void;
+// for testing typings only  fix(sc: (a: string, b: number) => any, ec: (error: any) => any): RemoveListener;
+}
+
 
 export interface IElectronBridgeAsync extends
   IElectronBridgeDialogsAsync,
   IElectronBridgeDiceKeysStoreAsync
 {}
 
-export interface IElectronBridge extends IElectronBridgeSync, IElectronBridgeAsync, IElectronBridgeListener, IElectronBridgeConstants {
+export interface IElectronBridge extends IElectronBridgeSync, IElectronBridgeAsync, IElectronBridgeListener, IElectronBridgeSimpleListener, IElectronBridgeConstants {
 }
 

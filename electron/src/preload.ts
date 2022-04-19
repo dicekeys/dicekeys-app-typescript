@@ -19,7 +19,8 @@ import {
   responseChannelNameFor,
   terminateChannelNameFor,
   ElectronBridgeListenerApiErrorCallback,
-  ElectronBridgeListenerApiCallbackParameters, ElectronBridgeListenerApiErrorCallbackParameters,
+  ElectronBridgeListenerApiCallbackParameters, ElectronBridgeListenerApiErrorCallbackParameters, ElectronIpcSimpleListenerRequestChannelName, ElectronBridgeSimpleListenerApiSetupArgs, ElectronBridgeSimpleListenerApiCallback,
+  ElectronBridgeSimpleListenerApiCallbackParameters
 } from "./trusted-main-electron-process/ElectronBridge";
 
 const createIpcSyncRequestClientFunction = <CHANNEL extends ElectronIpcSyncRequestChannelName>(channel: CHANNEL) =>
@@ -52,6 +53,31 @@ const createIpcAsyncRequestClientFunction = <CHANNEL extends ElectronIpcAsyncReq
     ipcRenderer.send(channel, codeToMatch, ...args);
   }) as ElectronBridgeAsyncApiResponse<CHANNEL>;
 
+const createIpcSimpleListenerRequestClientFunction =
+  <CHANNEL extends ElectronIpcSimpleListenerRequestChannelName>(channel: CHANNEL) =>
+    (
+      successCallback: ElectronBridgeSimpleListenerApiCallback<CHANNEL>,
+      ...setupArgs: ElectronBridgeSimpleListenerApiSetupArgs<CHANNEL>
+    ) => {
+  // Create a code that allows us to match requests to responses
+  const codeToMatch = `${Math.random()}:${Math.random()}`;
+  // The response channel name is the name of the request channel type with suffix "-response" added
+  const responseChannel = responseChannelNameFor(channel);
+  // Create a listener function that will resolve the promise and stop listening when
+  // the event code matches
+  const responseListener = (_event: Electron.IpcRendererEvent, eventCode: string, ...response: any[]) => {
+    if (eventCode !== exceptionCodeFor(codeToMatch)) {
+      // The response code matches the request and so we should resolve the request
+      const responseArgs = response as ElectronBridgeSimpleListenerApiCallbackParameters<CHANNEL>;
+      // Below line is hack for what seems like it must be a TypeScript bug, but maybe I'm just typing it wrong - Stuart 2021-06-3
+      (successCallback as (...params: ElectronBridgeSimpleListenerApiCallbackParameters<CHANNEL>) => any)(...responseArgs)
+    }
+  }
+  // Start listening for response just before sending the request
+  ipcRenderer.on(responseChannel, responseListener);
+  // Send the request
+  ipcRenderer.send(channel, codeToMatch, ...setupArgs);
+}
 
 const createIpcListenerRequestClientFunction =
   <CHANNEL extends ElectronIpcListenerRequestChannelName>(channel: CHANNEL) =>
@@ -122,8 +148,14 @@ const electronBridgeTypeChecked: IElectronBridge = {
   getAppLink: createIpcSyncRequestClientFunction("getAppLink"),
   listenForAppLinks: createIpcListenerRequestClientFunction("listenForAppLinks"),
 
+  onGetRecipesToExportRequested: createIpcSimpleListenerRequestClientFunction("onGetRecipesToExportRequested"),
+  onRecipesToImportProvided: createIpcSimpleListenerRequestClientFunction("onRecipesToImportProvided"),
+
   openFileDialog: createIpcAsyncRequestClientFunction("openFileDialog"),
   openMessageDialog: createIpcAsyncRequestClientFunction("openMessageDialog"),
+
+  saveRecipes: createIpcAsyncRequestClientFunction("saveRecipes"),
+  loadRecipesJSON: createIpcAsyncRequestClientFunction("loadRecipesJSON"),
 
   getDiceKeyFromCredentialStore: createIpcAsyncRequestClientFunction("getDiceKeyFromCredentialStore"),
   storeDiceKeyInCredentialStore: createIpcAsyncRequestClientFunction("storeDiceKeyInCredentialStore"),

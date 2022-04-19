@@ -7,12 +7,18 @@ import { autoSave } from "../core/AutoSave";
 import { jsonStringifyWithSortedFieldOrder } from "../../utilities/json";
 import { defaultOnException } from "../../utilities/default-on-exception";
 
+// in local storage as
+// RecipeStore = undefined | JSON.stringify({
+//  recipeJsonArray: JSON.stringify(StoredRecipe)[]
+//})
 class RecipeStoreClass {
   protected recipeJsonArray: string[];
 
-  addRecipe = action ( (storedRecipe: StoredRecipe) => {
-    this.removeRecipe(storedRecipe);
-    this.recipeJsonArray.push(jsonStringifyWithSortedFieldOrder(storedRecipe));
+  addRecipe = action ( (...storedRecipes: StoredRecipe[]) => {
+    for (const storedRecipe of storedRecipes) {
+      this.removeRecipe(storedRecipe);
+      this.recipeJsonArray.push(jsonStringifyWithSortedFieldOrder(storedRecipe));
+    }
   });
 
   removeRecipe = action ( (storedRecipeToRemove: StoredRecipe) => {

@@ -5,7 +5,8 @@ import type {
   IElectronBridgeAsync,
   IElectronBridgeListener,
   IElectronBridge,
-  RemoveListener
+  RemoveListener,
+  IElectronBridgeSimpleListener
 } from "../../../common/IElectronBridge"
 export type {
   Device,
@@ -19,11 +20,12 @@ export type {
 
 export const responseChannelNameFor = <T extends string> (channelName: T) => `${channelName}-response` as const;
 export const terminateChannelNameFor = <T extends string> (channelName: T) => `${channelName}-terminate` as const;
-export const exceptionCodeFor = <T extends string> (code: T) => `exception:${code}` as const;
+export const  exceptionCodeFor = <T extends string> (code: T) => `exception:${code}` as const;
 
 export type ElectronIpcSyncRequestChannelName = keyof IElectronBridgeSync;
 export type ElectronIpcAsyncRequestChannelName = keyof IElectronBridgeAsync;
 export type ElectronIpcListenerRequestChannelName = keyof IElectronBridgeListener;
+export type ElectronIpcSimpleListenerRequestChannelName = keyof IElectronBridgeSimpleListener;
 
 // Async
 export type ElectronBridgeAsyncFn<CHANNEL extends ElectronIpcAsyncRequestChannelName> =
@@ -60,3 +62,15 @@ export type ElectronBridgeListenerApiCallbackParameters<CHANNEL extends Electron
   Parameters<ElectronBridgeListenerApiCallback<CHANNEL>>;
 export type ElectronBridgeListenerApiErrorCallbackParameters<CHANNEL extends ElectronIpcListenerRequestChannelName> =
     Parameters<ElectronBridgeListenerApiErrorCallback<CHANNEL>>;
+
+// Simple listener
+export type ElectronBridgeSimpleListenerFn<CHANNEL extends ElectronIpcSimpleListenerRequestChannelName> =
+    IElectronBridgeSimpleListener[CHANNEL];
+export type ElectronBridgeSimpleListenerParameters<CHANNEL extends ElectronIpcSimpleListenerRequestChannelName> =
+  Parameters<ElectronBridgeSimpleListenerFn<CHANNEL>>;
+export type ElectronBridgeSimpleListenerApiCallback<CHANNEL extends ElectronIpcSimpleListenerRequestChannelName> =
+    ElectronBridgeSimpleListenerParameters<CHANNEL>[0];
+export type ElectronBridgeSimpleListenerApiSetupArgs<CHANNEL extends ElectronIpcSimpleListenerRequestChannelName> =
+  TupleBeyondSecondElement<ElectronBridgeSimpleListenerParameters<CHANNEL>>;
+  export type ElectronBridgeSimpleListenerApiCallbackParameters<CHANNEL extends ElectronIpcSimpleListenerRequestChannelName> =
+Parameters<ElectronBridgeSimpleListenerApiCallback<CHANNEL>>;

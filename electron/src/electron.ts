@@ -4,6 +4,8 @@ import * as TrustedMainElectronProcess from "./trusted-main-electron-process";
 import {squirrelCheck} from './electron-squirrel-startup';
 import {createBrowserWindow} from "./createBrowserWindow";
 import {processArgsForAppLink, registerAppLinkProtocol, sendAppLink} from "./trusted-main-electron-process/AppLinksApi";
+import { LoadRecipesFnFactory, SaveRecipesFnFactory } from './SaveAndLoadRecipes';
+import { createMenu } from './menu';
 
 // Disable the HID Block List so that FIDO devices can be enumerated
 // and seeds can be written to them.
@@ -36,13 +38,43 @@ function bootstrapApplication() {
     startApplication()
 }
 
-let mainWindow: BrowserWindow
 function startApplication() {
     // Create the browser window.
-    mainWindow = createBrowserWindow();
+    const mainWindow = createBrowserWindow();
+
+    
+    IpcApiFactory.implementAsyncApi("saveRecipes", SaveRecipesFnFactory(mainWindow));
+    IpcApiFactory.implementAsyncApi("loadRecipesJSON", LoadRecipesFnFactory(mainWindow));
+
+    // We're not currently using the dialog APIs.  If we were to, and we support multiple windows, we would
+    // want to keep a WindowID that let us associate the dialogs with the correct window ID?
+    // import {dialog} from 'electron';
+    IpcApiFactory.implementAsyncApi( "openFileDialog", (options) => dialog.showOpenDialog(mainWindow, options) );
+    IpcApiFactory.implementAsyncApi( "openMessageDialog", (options) => dialog.showMessageBox(mainWindow, options) );
+
+    createMenu();
 
     // Process the initial app link if it exists
-    processArgsForAppLink(process.argv)
+    processArgsForAppLink(process.argv);
+
+    
+    app.on('second-instance', (_event, commandLine, _workingDirectory, _additionalData) => {
+
+      // Someone tried to run a second instance, we should focus our window.
+      if (mainWindow) {
+
+          // Protocol handler for win32/linux
+          // argv: An array of the second instance’s (command line / deep linked) arguments
+          if (process.platform == 'win32' || process.platform == 'linux') {
+              processArgsForAppLink(commandLine)
+          }
+
+          if (mainWindow.isMinimized()) {
+              mainWindow.restore()
+          }
+          mainWindow.focus()
+      }
+  })
 }
 
 // Don't allow a second instance to open.
@@ -57,24 +89,6 @@ if (app.requestSingleInstanceLock()) {
         });
         // The try/catch is needed so it doesn't throw Cannot find module 'electron-reloader' in production.
     } catch {}
-
-    app.on('second-instance', (_event, commandLine, _workingDirectory, _additionalData) => {
-
-        // Someone tried to run a second instance, we should focus our window.
-        if (mainWindow) {
-
-            // Protocol handler for win32/linux
-            // argv: An array of the second instance’s (command line / deep linked) arguments
-            if (process.platform == 'win32' || process.platform == 'linux') {
-                processArgsForAppLink(commandLine)
-            }
-
-            if (mainWindow.isMinimized()) {
-                mainWindow.restore()
-            }
-            mainWindow.focus()
-        }
-    })
 
     // This method will be called when Electron has finished
     // initialization and is ready to create browser windows.
@@ -104,13 +118,7 @@ if (app.requestSingleInstanceLock()) {
             event.preventDefault()
             sendAppLink(url)
         })
-    })
-
-    // We're not currently using the dialog APIs.  If we were to, and we support multiple windows, we would
-    // want to keep a WindowID that let us associate the dialogs with the correct window ID?
-    // import {dialog} from 'electron';
-    IpcApiFactory.implementAsyncApi( "openFileDialog", (options) => dialog.showOpenDialog(mainWindow, options) );
-    IpcApiFactory.implementAsyncApi( "openMessageDialog", (options) => dialog.showMessageBox(mainWindow, options) );
+    });
 
 }else{
     app.quit();
