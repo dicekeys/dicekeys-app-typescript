@@ -31,7 +31,7 @@ export const SelectRecipeToLoadView = observer( ({
   state: RecipeBuilderState,
   defaultOptionLabel?: string
 }) => {
-  const savedRecipes = RecipeStore.recipes;
+  const savedRecipes = RecipeStore.storedRecipes;
   // Remove any saved recipes from the set of built-in recipes
   const builtInRecipes = BuiltInRecipes.filter(
     builtInRecipe => savedRecipes.every( savedRecipe =>
@@ -104,7 +104,7 @@ export const CreateANewRecipeOfTypeView = observer( ({state}: {
 export const LoadBuiltInRecipeView = observer( ({state}: {
   state: RecipeBuilderState,
 }) => {
-  const savedRecipes = RecipeStore.recipes;
+  const savedRecipes = RecipeStore.storedRecipes;
   // Remove any saved recipes from the set of built-in recipes
   const builtInRecipes = BuiltInRecipes.filter(
     builtInRecipe => savedRecipes.every( savedRecipe =>
@@ -134,7 +134,7 @@ export const LoadBuiltInRecipeView = observer( ({state}: {
 export const LoadSavedRecipeView = observer( ({state}: {
   state: RecipeBuilderState,
 }) => {
-  const savedRecipes = RecipeStore.recipes;
+  const savedRecipes = RecipeStore.storedRecipes;
   if (savedRecipes.length === 0) return null;
   return (
     <div>

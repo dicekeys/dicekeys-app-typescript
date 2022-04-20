@@ -1,8 +1,12 @@
-import {DerivableObjectName, Recipe} from "@dicekeys/dicekeys-api-js"
+import {DerivableObjectName, DerivableObjectNames, Recipe} from "@dicekeys/dicekeys-api-js"
 import { describeRecipeType } from "../views/Recipes/DescribeRecipeType";
 import { jsonStringifyWithSortedFieldOrder } from "../utilities/json";
 
 export type DerivationRecipeType = DerivableObjectName
+
+export const isDerivationRecipeType = (s: unknown): s is DerivationRecipeType => {
+  return (typeof s === "string") && s in DerivableObjectNames;
+}
 
 export interface StoredRecipeUniqueIdentifier {
   readonly type: DerivationRecipeType;
@@ -11,6 +15,17 @@ export interface StoredRecipeUniqueIdentifier {
 
 export interface StoredRecipe extends StoredRecipeUniqueIdentifier {
   readonly name?: string;
+}
+
+export const isStoredRecipe = (candidate: unknown): candidate is StoredRecipe => {
+  if (typeof candidate !== "object") return false;
+  if (candidate == null) return false;
+  if (!("type" in candidate)) return false;
+  if (!isDerivationRecipeType((candidate as StoredRecipe).type)) return false;
+  if (!("recipeJson" in candidate)) return false;
+  if (typeof ((candidate as StoredRecipe).recipeJson) !== "string") return false;
+  if (("name" in candidate) && typeof ((candidate as StoredRecipe).name) !== "string") return false;
+  return true;
 }
 
 export class BuiltInRecipe<NAME extends string = string> implements StoredRecipe {

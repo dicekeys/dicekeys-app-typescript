@@ -10,7 +10,7 @@ import { ApiRequestsReceivedState } from "./state/ApiRequestsReceivedState";
 import { ThemeProvider } from "styled-components";
 import { lightTheme } from "./css/lightTheme";
 import {IElectronBridge} from "../../common/IElectronBridge";
-import { StoredRecipe } from "./dicekeys";
+import { RecipeStore } from "./state/stores/RecipeStore";
 
 const electronBridge = (window as unknown as  {ElectronBridge: IElectronBridge}).ElectronBridge;
 
@@ -38,13 +38,8 @@ try {
 }
 
 if (RUNNING_IN_ELECTRON) {
-  electronBridge.onGetRecipesToExportRequested( () => {
-    return("FIXME with JSON of all recipes")
-  });
-  electronBridge.onRecipesToImportProvided( (jsonOfStoredRecipesToImport: string) => {
-    const storedRecipes = JSON.parse(jsonOfStoredRecipesToImport) as StoredRecipe[];
-    console.log("FIXME by importing these", storedRecipes);
-  });
+  electronBridge.onGetRecipesToExportRequested( RecipeStore.getStoredRecipesJson );
+  electronBridge.onRecipesToImportProvided( RecipeStore.importStoredRecipeAsJsonArrary );
   // Handle app links
   electronBridge.listenForAppLinks(appLink => {
     try{

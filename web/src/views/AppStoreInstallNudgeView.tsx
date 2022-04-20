@@ -124,7 +124,7 @@ export const AppStoreInstallNudgeView = observer( ( {
           <label htmlFor="dontaskagain" style={{userSelect: "none"}}>do not ask again</label>
           <input id="dontaskagain" type="checkbox"
             checked={state.dontShowAgainCheckboxIsChecked}
-            onClick={state.toggleDontShowAgainCheckboxIsChecked}  
+            onChange={state.toggleDontShowAgainCheckboxIsChecked}  
           />
           <PushButton style={{marginLeft: '2vw'}} onClick={state.dismissTheInstallNudge}>not now</PushButton>
           <PushButton style={{marginLeft: '3vw'}} onClick={state.install} >{ AppStoreName === "Microsoft" ? (<>download</>) : (<>Install</>)}</PushButton>
