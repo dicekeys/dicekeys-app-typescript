@@ -26,7 +26,7 @@ export class AppStoreInstallNudgeStateClass {
       // the browser is running on a platform associated with an app store,
       this.appStoreName != null &&
       // the user hasn't dismissed the install nudge yet this session, and
-      !this.userAskedToDismissTheInstallNudgeForThisSession
+      !this.userAskedToDismissTheInstallNudgeForThisSession &&
       // and the user hasn't permanently dismissed this nudge
       !this.userAskedToPermanentlyDismissTheInstallNudge.value
   }
