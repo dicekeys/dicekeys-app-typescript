@@ -42,12 +42,12 @@ const readDeprecatedRecipeFormat = (): StoredRecipe[] => {
 
 const readArrayOfStoredRecipes = (): StoredRecipe[] => {
   const recipeStoreJson = window.localStorage.getItem(RecipeStoreV2Name);
-  if (recipeStoreJson == null) {
-    // We've never used the v2 recipe store.
-    // Read from the deprecated store if it's there, which will return an empty array if it's not.
-    return readDeprecatedRecipeFormat();
-  }
-  return filterArrayOfStoredRecipes(defaultOnException(JSON.parse(recipeStoreJson)));
+  const storedRecipes = (recipeStoreJson != null) ?
+    defaultOnException(() => JSON.parse(recipeStoreJson)) :
+    readDeprecatedRecipeFormat();
+  const validatedStoredRecipes = filterArrayOfStoredRecipes(storedRecipes);
+  // console.log(`Getting stored recipes from local storage`, recipeStoreJson, storedRecipes, validatedStoredRecipes);
+  return (validatedStoredRecipes);
 }
 
 const storedRecipeEqual = (a: StoredRecipe, b: StoredRecipe): boolean =>
@@ -55,14 +55,15 @@ const storedRecipeEqual = (a: StoredRecipe, b: StoredRecipe): boolean =>
 
 const removeDuplicatesFavorEarlierIndexes = (storedRecipes: StoredRecipe[]): StoredRecipe[] => {
   const duplicateFreeStoredRecipes: StoredRecipe[] = [];
-  for (const candidateStoredRecipeToAppend of storedRecipes) {
-    const candidateIsNotDuplicate = duplicateFreeStoredRecipes.find(
+    for (const candidateStoredRecipeToAppend of storedRecipes) {
+    const candidateIsDuplicate = !!duplicateFreeStoredRecipes.find(
         x => storedRecipeEqual(x, candidateStoredRecipeToAppend)
-    ) != null;
-    if (candidateIsNotDuplicate) {
+    );
+    if (!candidateIsDuplicate) {
       duplicateFreeStoredRecipes.push(candidateStoredRecipeToAppend);
     }
   }
+  // console.log(`Removing duplicate recipes`, storedRecipes, duplicateFreeStoredRecipes);
   return duplicateFreeStoredRecipes;
 }
 
@@ -75,8 +76,10 @@ class RecipeStoreClass {
   _storedRecipeCache: StoredRecipe[];
 
   setStoredRecipes = action ( (newValue: StoredRecipe[]) => {
+    const newJson = JSON.stringify(toJS(newValue));
+    // console.log(`Setting stored recipes`, newJson);
+    window.localStorage.setItem(RecipeStoreV2Name, newJson);
     this._storedRecipeCache = newValue;
-    window.localStorage.setItem(RecipeStoreV2Name, JSON.stringify(toJS(newValue)));
   });
 
   /** An observable list of StoredRecipes  */
@@ -85,11 +88,12 @@ class RecipeStoreClass {
     // on write when the cache changes, so we'll read both and compare to force both to
     // always happen
     const storedRecipeCache = this._storedRecipeCache;
-    const storedReipesFromStorage = readArrayOfStoredRecipes();
+    const storedRecipesFromStorage = readArrayOfStoredRecipes();
+    // console.log(`Getting stored recipes`, storedRecipesFromStorage);
     // This equality forces mobx to update if ever the cache is changed.
     return sortStoredRecipes(
-      (jsonStringifyWithSortedFieldOrder(toJS(storedRecipeCache)) === jsonStringifyWithSortedFieldOrder(storedReipesFromStorage)) ?
-        [...storedRecipeCache] : storedReipesFromStorage
+      (jsonStringifyWithSortedFieldOrder(toJS(storedRecipeCache)) === jsonStringifyWithSortedFieldOrder(storedRecipesFromStorage)) ?
+        [...storedRecipeCache] : storedRecipesFromStorage
     );
   }
 

@@ -19,3 +19,12 @@ export const typedArrayFilter = <T>( filter: (candidate: unknown) => candidate i
   (arrayOfCandidates: unknown): T[] => Array.isArray(arrayOfCandidates) ?
     arrayOfCandidates.filter( filter ) as T[] :
     [];
+
+export type StrictTypeEquals<A1, A2> = (<A>() => A extends A2 ? true : false) extends <A>() => A extends A1
+    ? true
+    : false
+    ? true
+    : false;
+export type Unite<T> = T extends Record<string, unknown> ? { [Key in keyof T]: T[Key] } : T;
+export type TypeEquals<A1, A2> = StrictTypeEquals<Unite<A1>, Unite<A2>>;
+export const typeAssert = <T extends true>(_condition?: T): asserts _condition => {};

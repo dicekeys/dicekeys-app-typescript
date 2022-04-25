@@ -34,7 +34,7 @@ import {
 } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import { addAuthenticationToken, getUrlForAuthenticationToken } from "../state/stores/AuthenticationTokens";
 import {RUNNING_IN_ELECTRON} from "../utilities/is-electron";
-import {IElectronBridge} from "../../../common/IElectronBridge";
+import type {ElectronBridgeRendererView} from "../../../common/IElectronBridge";
 
 
 const getApiRequestFromSearchParams = (
@@ -248,7 +248,7 @@ export class QueuedUrlApiRequest extends QueuedApiRequest {
 
   transmitResponseUrl: (responseURL: URL) => any = (url: URL) => {
     if(RUNNING_IN_ELECTRON){
-      (window as unknown as  {ElectronBridge: IElectronBridge}).ElectronBridge.openExternal(url.toString());
+      (window as unknown as  {ElectronBridge: ElectronBridgeRendererView}).ElectronBridge.openExternal(url.toString());
     }else{
       console.log(`Transmitting URL`)
       window.location.replace(url.toString());
