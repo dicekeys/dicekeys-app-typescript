@@ -38,6 +38,11 @@ export const createMenu = (mainToRendererAsyncApi: MainToRendererAsyncApi) => {
 
   const FileMenuItems: Electron.MenuItemConstructorOptions[] = [
     {
+      label: 'Load random DiceKey',
+      click: () => mainToRendererAsyncApi.loadRandomDiceKey(),
+    },
+    { type: 'separator' },
+    {
       label: 'Import recipes',
       click: importRecipes,
     },

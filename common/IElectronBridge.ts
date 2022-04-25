@@ -54,6 +54,7 @@ export type RemoveListener = () => void;
 export interface MainToRendererAsyncApi {
   getRecipesToExport: () => Promise<string>;
   handleAppLink: (appLink: string) => void;
+  loadRandomDiceKey: () => void;
   importRecipes: (jsonRecipesToImport: string) => void;
 }
 

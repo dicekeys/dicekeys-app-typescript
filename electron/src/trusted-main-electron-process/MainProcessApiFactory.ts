@@ -3,7 +3,7 @@ import * as ElectronBridge from "./ElectronBridge";
 import {
   implementIpcSyncApiServerFn,
   implementIpcAsyncApiServerFn,
-  implementIpcAsyncApiClietFn,
+  implementIpcAsyncApiClientFn,
 } from "./IpcApiFactory"
 
 const pretendWeHaveUsedInputToMakeTypeScriptHappy = <T extends unknown[]>(..._args: T) => {}
@@ -11,7 +11,8 @@ const pretendWeHaveUsedInputToMakeTypeScriptHappy = <T extends unknown[]>(..._ar
 const MainToRendererAsyncApiFunctionNames = [
   "getRecipesToExport",
   "handleAppLink",
-  "importRecipes"
+  "importRecipes",
+  "loadRandomDiceKey",
 ] as const;
 type MainToRendererAsyncApiFunctionName = (typeof MainToRendererAsyncApiFunctionNames)[number];
 // Ensure we've enumerated all function names
@@ -38,7 +39,7 @@ export const implementRendererToMainSyncApiServerInMainProcess = (implementation
 //   implementIpcAsyncApiClietFn(webContents, ipcMain);
 
 export const implementMainToRendererAsyncClientInMainProcess = (webContents: WebContents) => {
-  const implementClientFunction = implementIpcAsyncApiClietFn(webContents, ipcMain);
+  const implementClientFunction = implementIpcAsyncApiClientFn(webContents, ipcMain);
   return MainToRendererAsyncApiFunctionNames.reduce( <FN_NAME extends keyof ElectronBridge.MainToRendererAsyncApi>(
     api: Partial<ElectronBridge.MainToRendererAsyncApi>, fnName: FN_NAME) => {
     api[fnName] = implementClientFunction(fnName);

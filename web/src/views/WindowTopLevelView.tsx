@@ -13,7 +13,6 @@ import { PrimaryView } from "../css";
 import { SeedHardwareKeyFullPageView } from "./Recipes/SeedHardwareKeyView";
 import { SeedHardwareKeyViewStateName } from "./Recipes/SeedHardwareKeyViewState";
 import { SaveDiceKeyViewStateName, SaveDiceKeyToDeviceStorageView, DeleteDiceKeyViewStateName, DeleteDiceKeyToDeviceStorageView } from "./SaveAndDeleteDiceKeyView";
-import { RUNNING_IN_ELECTRON } from "../utilities/is-electron";
 
 export const WindowRoutingView = observer ( ({state}: {state: WindowTopLevelNavigationState}) => {
 
@@ -58,11 +57,10 @@ export const WindowRoutingView = observer ( ({state}: {state: WindowTopLevelNavi
   }
 });
 
-const defaultWindowNavigationState = RUNNING_IN_ELECTRON ?
-      new WindowTopLevelNavigationState() : WindowTopLevelNavigationState.fromPath();
+
 
 export const WindowTopLevelView = observer ( ({
-  state = defaultWindowNavigationState } : {
+  state = WindowTopLevelNavigationState.main } : {
   state?: WindowTopLevelNavigationState
 }) => (
   <PrimaryView>

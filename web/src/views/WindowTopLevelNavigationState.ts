@@ -11,6 +11,7 @@ import { SeedHardwareKeyViewState } from "./Recipes/SeedHardwareKeyViewState";
 import { PathStrings } from "./Navigation/PathStrings";
 import { NavigationPathState } from "../state/core/NavigationPathState";
 import { DeleteDiceKeyViewStateName, SaveDiceKeyViewStateName, SaveOrDeleteDiceKeyViewState, SaveOrDeleteDiceKeyStateName, SaveDiceKeyViewState, DeleteDiceKeyViewState } from "./SaveAndDeleteDiceKeyView";
+import { RUNNING_IN_ELECTRON } from "../utilities/is-electron";
 
 export type TopLevelSubViewStates =
   LoadDiceKeyViewState |
@@ -169,4 +170,9 @@ export class WindowTopLevelNavigationState {
     }
     return windowTopLevelNavigationState;
   }
+
+  static #main: WindowTopLevelNavigationState = RUNNING_IN_ELECTRON ?
+    new WindowTopLevelNavigationState() : WindowTopLevelNavigationState.fromPath()
+  static get main() { return WindowTopLevelNavigationState.#main  }
+
 }

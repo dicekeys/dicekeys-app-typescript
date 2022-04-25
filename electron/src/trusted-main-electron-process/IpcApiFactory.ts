@@ -48,7 +48,7 @@ export const implementIpcSyncApiClietFn = (
       ): ReturnType<FN> => 
         client.sendSync(requestChannelNameFor(fnName), ...args) as ReturnType<FN>;
 
-export const implementIpcAsyncApiClietFn = (
+export const implementIpcAsyncApiClientFn = (
   clientSender: WebContents | IpcRenderer = ipcRenderer,
   clientListener: IpcListener = ipcRenderer
 ) =>
@@ -75,7 +75,9 @@ export const implementIpcAsyncApiClietFn = (
       stopListeningForResponsesToThisRequest();
       reject(error);
     })
-    clientSender.send(requestChannelNameFor(fnName), requestSpecificResponseChannelNames, ...args);
+    const channel = requestChannelNameFor(fnName);
+    // console.log(`Call to ${fnName}`, channel, requestSpecificResponseChannelNames, args)
+    clientSender.send(channel, requestSpecificResponseChannelNames, ...args);
   });
 
 }

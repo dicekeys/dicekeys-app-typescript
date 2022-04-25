@@ -11,6 +11,7 @@ import { ThemeProvider } from "styled-components";
 import { lightTheme } from "./css/lightTheme";
 import type { ElectronBridgeRendererView } from "../../common/IElectronBridge";
 import { RecipeStore } from "./state/stores/RecipeStore";
+import { DiceKeyWithKeyId } from "./dicekeys/DiceKey";
 
 const electronBridge = (window as unknown as  {ElectronBridge: ElectronBridgeRendererView}).ElectronBridge;
 
@@ -49,12 +50,19 @@ const handleAppLink = (appLink: string) => {
     }
   }
 
+const loadRandomDiceKey = async () => {
+  const diceKey = await DiceKeyWithKeyId.fromRandom();
+  DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
+  // WindowTopLevelNavigationState.main.navigateToSelectedDiceKeyView(diceKey);
+}
+
 if (RUNNING_IN_ELECTRON) {
   electronBridge.implementMainToRendererAsyncApi({
 //    "getRecipesToExport": () => new Promise<string>( (resolve) => resolve (RecipeStore.getStoredRecipesJson() )),
     "getRecipesToExport": async () => RecipeStore.getStoredRecipesJson(),
-    "handleAppLink": handleAppLink,
+    handleAppLink,
     "importRecipes": async (recipesToImport) => RecipeStore.importStoredRecipeAsJsonArrary(recipesToImport),
+    loadRandomDiceKey
   });
   // electronBridge.onGetRecipesToExportRequested( RecipeStore.getStoredRecipesJson );
   // electronBridge.onRecipesToImportProvided( RecipeStore.importStoredRecipeAsJsonArrary );
