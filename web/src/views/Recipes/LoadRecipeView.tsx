@@ -13,9 +13,7 @@ const SelectRecipe = styled.select<{$nothingChosenYet: boolean}>`
   padding: 0.25rem;
   border-radius: 0.5rem;
   color: rgba(0, 0, 0, 0.5);
-  background-color: rgba(255, 254, 171, 0.1);
-  font-family: sans-serif;
-  background-color: rgba(255, 254, 171, 0.1);
+  background-color: rgba(255, 254, 171, 0.75);
   font-family: sans-serif;
   ${(props) => props.$nothingChosenYet ? css`
     background-color: rgba(255, 254, 171, 1);
