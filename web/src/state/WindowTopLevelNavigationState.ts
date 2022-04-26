@@ -1,16 +1,17 @@
 import { action, makeAutoObservable } from "mobx";
-import { addressBarState } from "../state/core/AddressBarState";
+import { addressBarState } from "./core/AddressBarState";
 import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
-import { SubViewState } from "../state/core";
-import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "../state/stores/DiceKeyMemoryStore";
+import { SubViewState } from "./core/HasSubViews";
+import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "./stores/DiceKeyMemoryStore";
 import { CountdownTimer } from "../utilities/CountdownTimer";
-import { LoadDiceKeyViewState } from "./LoadingDiceKeys/LoadDiceKeyView";
-import { AssemblyInstructionsState, AssemblyInstructionsStep } from "./AssemblyInstructionsState";
-import { SelectedDiceKeyViewState } from "./WithSelectedDiceKey/SelectedDiceKeyViewState";
-import { SeedHardwareKeyViewState } from "./Recipes/SeedHardwareKeyViewState";
-import { PathStrings } from "./Navigation/PathStrings";
-import { NavigationPathState } from "../state/core/NavigationPathState";
-import { DeleteDiceKeyViewStateName, SaveDiceKeyViewStateName, SaveOrDeleteDiceKeyViewState, SaveOrDeleteDiceKeyStateName, SaveDiceKeyViewState, DeleteDiceKeyViewState } from "./SaveAndDeleteDiceKeyView";
+import { LoadDiceKeyViewState } from "../views/LoadingDiceKeys/LoadDiceKeyViewState";
+import { AssemblyInstructionsState, AssemblyInstructionsStep } from "../views/AssemblyInstructionsState";
+import { SelectedDiceKeyViewState } from "../views/WithSelectedDiceKey/SelectedDiceKeyViewState";
+import { SeedHardwareKeyViewState } from "../views/Recipes/SeedHardwareKeyViewState";
+import { PathStrings } from "../views/Navigation/PathStrings";
+import { NavigationPathState } from "./core/NavigationPathState";
+import { DeleteDiceKeyViewStateName, SaveDiceKeyViewStateName, SaveOrDeleteDiceKeyStateName, SaveDiceKeyViewState, DeleteDiceKeyViewState } from "../views/SaveOrDeleteDiceKeyViewState";
+import { SaveOrDeleteDiceKeyViewState } from "../views/SaveOrDeleteDiceKeyViewState";
 import { RUNNING_IN_ELECTRON } from "../utilities/is-electron";
 
 export type TopLevelSubViewStates =
@@ -170,12 +171,9 @@ export class WindowTopLevelNavigationState {
     }
     return windowTopLevelNavigationState;
   }
+}
 
-  static #main: WindowTopLevelNavigationState = RUNNING_IN_ELECTRON ?
+export const createTopLevelNavigationState = () => {
+  return RUNNING_IN_ELECTRON ?
     new WindowTopLevelNavigationState() : WindowTopLevelNavigationState.fromPath()
-  static get main() {
-    const main = WindowTopLevelNavigationState.#main;
-    return main;
-  }
-
 }

@@ -24,11 +24,13 @@ import {DivSupportingInvisible} from "../../css/DivSupportingInvisible"
 import { ToggleState } from "../../state";
 import styled from "styled-components";
 import {
-  DeleteDiceKeyViewStateName,
-  SaveDiceKeyViewStateName,
   DeleteDiceKeyToDeviceStorageContentView,
   SaveDiceKeyToDeviceStorageContentView
 } from "../../views/SaveAndDeleteDiceKeyView";
+import {
+  DeleteDiceKeyViewStateName,
+  SaveDiceKeyViewStateName,
+} from "../../views/SaveOrDeleteDiceKeyViewState";
 
 const IdealMinimumContentMargin = `2rem`
 

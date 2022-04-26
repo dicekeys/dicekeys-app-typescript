@@ -8,10 +8,10 @@ import { SecretDerivationViewState, SecretDerivationViewStateName } from "../../
 import { DiceKeyMemoryStore } from "../../state";
 import { addressBarState } from "../../state/core/AddressBarState";
 import {
-  SaveOrDeleteDiceKeyViewState,
   SaveDiceKeyViewState, SaveDiceKeyViewStateName,
   DeleteDiceKeyViewState, DeleteDiceKeyViewStateName
-} from "../../views/SaveAndDeleteDiceKeyView";
+} from "../../views/SaveOrDeleteDiceKeyViewState";
+import { SaveOrDeleteDiceKeyViewState } from "../../views/SaveOrDeleteDiceKeyViewState";
 
 export const DisplayDiceKeyViewStateName = "";
 export type DisplayDiceKeyViewStateName = typeof DisplayDiceKeyViewStateName;

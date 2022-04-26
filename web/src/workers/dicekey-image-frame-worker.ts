@@ -4,7 +4,7 @@ import {
     DiceKeyImageProcessorModulePromise, FaceRead
 } from "@dicekeys/read-dicekey-js"
 import { TupleOf25Items } from "../dicekeys/DiceKey";
-import { FaceReadJsonObjectWithImageIfErrorFound } from "../dicekeys";
+import { FaceReadJsonObjectWithImageIfErrorFound } from "../dicekeys/FacesRead";
 
 /**
  * A request to process an image frame while scanning dicekeys

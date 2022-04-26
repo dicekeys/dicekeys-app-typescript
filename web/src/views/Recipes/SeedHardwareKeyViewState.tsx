@@ -10,7 +10,7 @@ import { electronBridge } from "../../state/core/ElectronBridge";
 import { ViewState } from "../../state/core/ViewState";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
-import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
+import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyViewState";
 import { DiceKeyMemoryStore } from "../../state";
 
 const seedSecurityKeyPurpose = "seedSecurityKey";
