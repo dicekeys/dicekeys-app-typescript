@@ -286,7 +286,12 @@ export class RecipeBuilderState {
   //////////////////////////////////////////
   purposeField?: string;
   /** The purpose of the recipe from the purpose form field if not a list of 1 or more hosts */
-  get purpose(): string | undefined { return this.purposeField?.length === 0 ? undefined : this.purposeField; }
+  get purpose(): string | undefined { 
+    const {purposeField} = this;
+    if (purposeField == null) return;
+    if (purposeField.length === 0) return;
+    return JSON.stringify(purposeField).slice(1, -1); // stringify, then remove the quotes
+  }
   setPurposeField = action ( (newPurposeFieldValue?: string) => {
     this.purposeField = newPurposeFieldValue;
     this.rawRecipeJson = canonicalizeRecipeJson(addPurposeToRecipeJson(this.rawRecipeJson, this.purpose));

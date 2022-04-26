@@ -133,8 +133,6 @@ const HeaderButtonBar = styled.div`
   margin-left: 2rem;
 `;
 
-
-
 const recipeStateToFileName = (state: DerivedFromRecipeState): string | undefined => {
   const {recipeState, diceKey, outputFieldForType} = state;
   const {type, recipeJson, recipeIsValid} = recipeState;
