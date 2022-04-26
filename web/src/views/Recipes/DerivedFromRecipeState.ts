@@ -41,7 +41,7 @@ const DefaultOutputFormat: OutputFormatForType =  {
 } as const
 export const outputFormats = <T extends DerivationRecipeType>(type: T): OutputFormats[T]  => OutputFormats[type];
 
-interface RecipeState {
+export interface RecipeState {
   type?: DerivationRecipeType;
   recipeJson?: string;
   recipeIsValid: boolean;

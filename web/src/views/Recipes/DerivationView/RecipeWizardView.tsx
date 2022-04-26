@@ -23,15 +23,16 @@ const WizardPaddingV = `0.5rem`;
 const WizardStepContainerWidth = cssCalcTyped(
   `${cssExprWithoutCalc(Dimensions.ContentWidth)} - (2 * (${WizardPaddingH} + ${WizardBorderWidth})))`
 );
+const WizardStepContainerBorderRadius = '0.5rem';
 const WizardStepContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
   background-color: rgb(249, 249, 218);
-  font-size: 1.3rem;
+  font-size: min(1.3rem, 3.5vh);
   align-content: center;
-  border-radius: 0.5rem;
+  border-radius: ${WizardStepContainerBorderRadius};
   width: ${WizardStepContainerWidth};
   padding-left: ${WizardPaddingH};
   padding-right: ${WizardPaddingH};
@@ -42,29 +43,23 @@ const WizardStepContainer = styled.div`
 
 const WizardStepInstruction = styled.div``;
 
-const WizardBackDiv = styled.div`
-  position: relative;
-  align-self: flex-end;
-  justify-self: flex-start;
-`;
-
 const WizardBackAnchor = styled.a`
-  position: "absolute";
-  text-decoration: "none";
+  position: absolute;
+  text-decoration: none;
+  top: 0;
   z-index: 1;
-  right: 0;
+  right: ${WizardStepContainerBorderRadius};
+  width: auto;
 `;
 
 export const WizardBack = ({onBack}: {onBack: () => void}) => (
-  <WizardBackDiv>
     <WizardBackAnchor onClick={e => {e.preventDefault(); onBack() }}>&larr;
     </WizardBackAnchor>
-  </WizardBackDiv>
 );
 
-export const WizardStepInstructionNote = styled.div`
-  font-size: 1rem;
-`;
+// export const WizardStepInstructionNote = styled.div`
+//   font-size: 1rem;
+// `;
 
 export const WizardFieldRow = styled.div`
   align-self: center;
@@ -75,6 +70,33 @@ export const WizardStepAlternatives = styled.div`
   justify-self: flex-end;
   margin-top: 0.5rem;
 `;
+
+export const TextCompletionButtonStyled = styled.button.attrs(() =>({
+  tabIndex: -1 as number // Widening type from -1 to number is hack to fix typing issues in StyledComponents/InferComponentProps
+}))`
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  margin-left: 0.25rem;
+  font-size: calc(min(2.8rem, 2.8vh));
+  user-select: none;
+  &:hover {
+    /* outline:0; */
+    background-color: rgba(0,0,0,0.2);
+  }
+  &:active {
+    /* background: gray; */
+    background-color: rgba(0,0,0,0.4);
+  }
+`;
+
+// FIXME
+export const TextCompletionButton = ( {...attributes}: React.ButtonHTMLAttributes<HTMLButtonElement> = {}) => (
+  <TextCompletionButtonStyled {...attributes}>&#9166;</TextCompletionButtonStyled>
+);
+
 
 export const SiteTextFieldView = observer( ({state}: {
   state: RecipeBuilderState,
@@ -137,10 +159,6 @@ export const PurposeFieldView = observer( ({state, focusOnCreate}: {
   )
 );
 
-export const TextCompletionButton = ( {...attributes}: React.ButtonHTMLAttributes<HTMLButtonElement> = {}) => (
-  <button {...attributes}>&#9166;</button>
-);
-
 export const PurposeOrSiteEnteredButton = ({state}: {
   state: RecipeBuilderState}) => (
   <TextCompletionButton onClick={state.setWizardPrimaryFieldEnteredFn(true)} />
@@ -155,7 +173,7 @@ export const WizardFieldLabel = styled.label`
 const WizardStepAlternativeAnchor = styled.a.attrs(() => ({
   href: ""
 }))`
-  font-size: 0.9rem;
+  font-size: min(0.9rem, 2.7vh);
   &:not(:first-of-type) {
     margin-left: 1rem;
   }

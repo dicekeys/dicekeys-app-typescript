@@ -19,13 +19,14 @@ export const CharButton = styled.button.attrs(() =>({
   height: 1.5rem;
   width: 1.5rem;
   user-select: none;
-  &:focus {
+  &:hover {
     outline:0;
+    background-color: rgba(0,0,0,.1);
   }
   &:active {
-    background: gray;
+    background-color: rgba(0,0,0,.3);
   }
-  visibility: ${p=>p.invisible?"hidden":"visible"};
+  visibility: ${(p)=>p.invisible?"hidden":"visible"};
 `;
 
 type CharButton = typeof CharButton;
