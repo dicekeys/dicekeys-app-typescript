@@ -12,6 +12,7 @@ import { lightTheme } from "./css/lightTheme";
 import type { ElectronBridgeRendererView } from "../../common/IElectronBridge";
 import { RecipeStore } from "./state/stores/RecipeStore";
 import { DiceKeyWithKeyId } from "./dicekeys/DiceKey";
+import { WindowTopLevelNavigationState } from "./views/WindowTopLevelNavigationState";
 
 const electronBridge = (window as unknown as  {ElectronBridge: ElectronBridgeRendererView}).ElectronBridge;
 
@@ -52,8 +53,7 @@ const handleAppLink = (appLink: string) => {
 
 const loadRandomDiceKey = async () => {
   const diceKey = await DiceKeyWithKeyId.fromRandom();
-  DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
-  // WindowTopLevelNavigationState.main.navigateToSelectedDiceKeyView(diceKey);
+  WindowTopLevelNavigationState.main.onReturnFromActionThatMayLoadDiceKey(diceKey);
 }
 
 if (RUNNING_IN_ELECTRON) {

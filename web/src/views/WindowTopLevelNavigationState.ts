@@ -173,6 +173,9 @@ export class WindowTopLevelNavigationState {
 
   static #main: WindowTopLevelNavigationState = RUNNING_IN_ELECTRON ?
     new WindowTopLevelNavigationState() : WindowTopLevelNavigationState.fromPath()
-  static get main() { return WindowTopLevelNavigationState.#main  }
+  static get main() {
+    const main = WindowTopLevelNavigationState.#main;
+    return main;
+  }
 
 }
