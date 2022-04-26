@@ -1,5 +1,5 @@
 import {app, Menu} from 'electron';
-import { exportRecipesToFile, getRecipesToImportFromFile } from "./trusted-main-electron-process/SaveAndLoadRecipes";
+import { exportRecipesToFile, getRecipesToImportFromFile } from "./trusted-main-electron-process/SaveAndLoad";
 import { MainToRendererAsyncApi } from "./trusted-main-electron-process/ElectronBridge";
 const isMac = process.platform === "darwin";
 

@@ -1,18 +1,19 @@
 import {dialog, SaveDialogOptions, app} from "electron";
 import { readFile, writeFile } from "fs";
 import path from "path";
+import { RendererToMainAsyncApi } from "./ElectronBridge";
 
-const filters: Electron.FileFilter[] = [
+const jsonFilters: Electron.FileFilter[] = [
   { name: 'JSON', extensions: ['json'] },
 ];
 
-const commonOptions: Electron.SaveDialogOptions & Electron.OpenDialogOptions = {
-  filters
+const commonJsonOptions: Electron.SaveDialogOptions & Electron.OpenDialogOptions = {
+  filters: jsonFilters
 };
-const defaultSaveOptions: Electron.SaveDialogOptions = {
-  ...commonOptions
+const defaultSaveJsonOptions: Electron.SaveDialogOptions = {
+  ...commonJsonOptions
 };
-const defaultOpenOptions: Electron.OpenDialogOptions = {...commonOptions};
+const defaultOpenJsonOptions: Electron.OpenDialogOptions = {...commonJsonOptions};
 
 const getDefaultDirectoryPath = () => app.getPath("documents");
 
@@ -31,7 +32,7 @@ export const exportRecipesToFile = async (
 ): Promise<boolean> => {
   const {canceled, filePath} = await dialog.showSaveDialog({
     defaultPath: getDefaultFileName(),
-    ...defaultSaveOptions,
+    ...defaultSaveJsonOptions,
     ...saveOptions,
   });
   if (canceled || filePath == null) {
@@ -50,7 +51,7 @@ export const getRecipesToImportFromFile = async (
 ): Promise<string | undefined> => {
   const {canceled, filePaths} = await dialog.showOpenDialog({
     defaultPath: getDefaultDirectoryPath(),
-    ...defaultOpenOptions,
+    ...defaultOpenJsonOptions,
     ...openOptions
   });
   if (canceled || filePaths.length !== 1) {
@@ -61,4 +62,24 @@ export const getRecipesToImportFromFile = async (
       err != null ? reject(err) : resolve(json)
     )
   );
+}
+
+export const saveUtf8File: RendererToMainAsyncApi["saveUtf8File"] = async ({
+  content,
+  requiredExtension,
+  fileName
+}): Promise<boolean> => {
+  const {canceled, filePath} = await dialog.showSaveDialog({
+    defaultPath: path.join(getDefaultDirectoryPath(),`${fileName}`),
+    ...(requiredExtension == null ? {} : {filters: [{name: requiredExtension, extensions: [requiredExtension]}]}),
+  });
+  if (canceled || filePath == null) {
+    return false;
+  }
+  await new Promise<void>( (resolve, reject) =>
+    writeFile(filePath, content, {encoding: "utf-8"}, (err) =>
+      err != null ? reject(err) : resolve()
+    )
+  );
+  return true;
 }

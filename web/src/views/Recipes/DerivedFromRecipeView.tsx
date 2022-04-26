@@ -8,6 +8,8 @@ import { describeRecipeType } from "./DescribeRecipeType";
 import * as Dimensions from "./DerivationView/DerivationViewLayout";
 import styled from "styled-components";
 import { copyToClipboard } from "../../utilities/copyToClipboard";
+import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
+import { electronBridge } from "../../state/core/ElectronBridge";
 
 const Bip39Field = styled.div`
   display: flex;
@@ -135,6 +137,7 @@ export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputT
   }) => {
   const {recipeState, derivedValue} = state;
   const {type} = recipeState;
+  const outputType = type != null ? state.outputFieldForType[type] : undefined;
   return (
     <>
       <DerivedValueHeaderDiv>
@@ -147,6 +150,20 @@ export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputT
               >&#128203;<CharButtonToolTip>Copy {type == null ? "" : state.outputFieldForType[type].toLocaleLowerCase()} to clipboard</CharButtonToolTip>
             </CharButton>
             <SecretFieldsCommonObscureButton />
+            { (RUNNING_IN_ELECTRON && (outputType === "OpenPGP Private Key" || outputType === "OpenSSH Private Key" || outputType === "OpenSSH Public Key")) ? (
+              <CharButton
+                onClick={() => derivedValue && electronBridge.saveUtf8File({
+                  content: derivedValue,
+                  fileName: outputType === "OpenPGP Private Key" ?
+                      `pgp-key-derived-from-die-with-${state.diceKey?.centerLetterAndDigit}-at-center.pem` :
+                    outputType === "OpenSSH Public Key" ?
+                      `ssh-public-key-derived-from-die-with-${state.diceKey?.centerLetterAndDigit}-at-center.txt` :
+                    outputType === "OpenSSH Private Key" ?
+                      `ssh-private-key-derived-from-die-with-${state.diceKey?.centerLetterAndDigit}-at-center.ppk` :
+                    ""
+                })}
+              >&darr;<CharButtonToolTip>save to file</CharButtonToolTip></CharButton>
+            ): null}
           </HeaderButtonBar>
         )}
       </DerivedValueHeaderDiv>

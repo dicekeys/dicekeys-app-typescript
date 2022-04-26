@@ -66,10 +66,18 @@ export type MainToRendererAsyncApiImplementationFunctions = {
 //export type ImplementMainToRendererSyncApi = (implementation: MainToRendererSyncApiImplementationFunctions) => void;
 export type ImplementMainToRendererAsyncApi = (implementation: MainToRendererAsyncApiImplementationFunctions) => void;
 
+export type SaveTextFileParameters = {
+  content: string,
+  fileName: string
+  requiredExtension?: string,
+}
+
 export interface RendererToMainAsyncApi extends
   RendererToMainDeprecatedAsyncApi,
   RendererToMainDiceKeysStoreAsyncApi
-{}
+{
+  saveUtf8File(saveTextFileParameters: SaveTextFileParameters): Promise<boolean>;
+}
 
 export interface ElectronBridgeRendererView extends ElectronBridgeConstants, RendererToMainAsyncApi, RendererToMainSyncApi {
   implementMainToRendererAsyncApi: ImplementMainToRendererAsyncApi;

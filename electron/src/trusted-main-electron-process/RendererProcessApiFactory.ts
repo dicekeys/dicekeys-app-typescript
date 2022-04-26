@@ -35,6 +35,7 @@ export const implementMainToRendererAsyncApiServerInRendererProcess = (implement
   const rendererToMainAsyncFunctionNames = [
     "deleteDiceKeyFromCredentialStore",
     "getDiceKeyFromCredentialStore",
+    "saveUtf8File",
     "storeDiceKeyInCredentialStore",
   ] as const;
   type RendererToMainAsyncFunctionNames = (typeof rendererToMainAsyncFunctionNames)[number];

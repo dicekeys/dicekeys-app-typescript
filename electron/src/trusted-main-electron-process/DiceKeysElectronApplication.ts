@@ -3,7 +3,7 @@ import * as IpcApiFactory from "./MainProcessApiFactory";
 import { createBrowserWindow } from "../createBrowserWindow";
 import { createMenu } from '../menu';
 import {
-  MainToRendererAsyncApi
+  MainToRendererAsyncApi,
 } from './ElectronBridge';
 import {
   deleteDiceKeyFromCredentialStore,
@@ -17,6 +17,7 @@ import {
 import {
   AppLinkHandler
 } from "./AppLinksApi";
+import { saveUtf8File } from './SaveAndLoad';
 
 export class DiceKeysElectronApplication {
   static #instance: DiceKeysElectronApplication | undefined;
@@ -39,6 +40,7 @@ export class DiceKeysElectronApplication {
       deleteDiceKeyFromCredentialStore,
       getDiceKeyFromCredentialStore,
       storeDiceKeyInCredentialStore,
+      saveUtf8File,
     });
 
     IpcApiFactory.implementRendererToMainSyncApiServerInMainProcess({
