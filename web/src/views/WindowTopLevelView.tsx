@@ -4,7 +4,8 @@ import {WindowTopLevelNavigationState } from "../state/Window";
 import { SelectedDiceKeyViewStateName } from "./WithSelectedDiceKey/SelectedDiceKeyViewState";
 import { SelectedDiceKeyView } from "./WithSelectedDiceKey/SelectedDiceKeyView";
 import { WindowHomeView } from "./WindowHomeView";
-import { LoadDiceKeyFullPageView, LoadDiceKeyViewStateName } from "./LoadingDiceKeys/LoadDiceKeyView";
+import { LoadDiceKeyViewStateName } from "./LoadingDiceKeys/LoadDiceKeyViewState";
+import { LoadDiceKeyFullPageView } from "./LoadingDiceKeys/LoadDiceKeyView";
 import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
 import { AssemblyInstructionsStateName } from "./AssemblyInstructionsState";
 import {ApproveApiRequestState, ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
@@ -12,9 +13,11 @@ import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
 import { PrimaryView } from "../css";
 import { SeedHardwareKeyFullPageView } from "./Recipes/SeedHardwareKeyView";
 import { SeedHardwareKeyViewStateName } from "./Recipes/SeedHardwareKeyViewState";
-import { SaveDiceKeyViewStateName, SaveDiceKeyToDeviceStorageView, DeleteDiceKeyViewStateName, DeleteDiceKeyToDeviceStorageView } from "./SaveAndDeleteDiceKeyView";
-import { RUNNING_IN_ELECTRON } from "../utilities/is-electron";
-
+import { SaveDiceKeyToDeviceStorageView, DeleteDiceKeyToDeviceStorageView } from "./SaveAndDeleteDiceKeyView";
+import {
+  SaveDiceKeyViewStateName,
+  DeleteDiceKeyViewStateName,
+} from "./SaveOrDeleteDiceKeyViewState";
 export const WindowRoutingView = observer ( ({state}: {state: WindowTopLevelNavigationState}) => {
 
   const {foregroundApiRequest} = ApiRequestsReceivedState;
@@ -58,12 +61,10 @@ export const WindowRoutingView = observer ( ({state}: {state: WindowTopLevelNavi
   }
 });
 
-const defaultWindowNavigationState = RUNNING_IN_ELECTRON ?
-      new WindowTopLevelNavigationState() : WindowTopLevelNavigationState.fromPath();
 
-export const WindowTopLevelView = observer ( ({
-  state = defaultWindowNavigationState } : {
-  state?: WindowTopLevelNavigationState
+
+export const WindowTopLevelView = observer ( ({state} : {
+  state: WindowTopLevelNavigationState
 }) => (
   <PrimaryView>
     <WindowRoutingView state={state} />

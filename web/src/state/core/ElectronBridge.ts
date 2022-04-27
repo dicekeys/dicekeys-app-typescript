@@ -1,2 +1,2 @@
-import type {IElectronBridge} from "../../../../common/IElectronBridge";
-export const electronBridge = (window as unknown as {ElectronBridge: IElectronBridge}).ElectronBridge;
+import type {ElectronBridgeRendererView} from "../../../../common/IElectronBridge";
+export const electronBridge = (window as unknown as {ElectronBridge: ElectronBridgeRendererView}).ElectronBridge;

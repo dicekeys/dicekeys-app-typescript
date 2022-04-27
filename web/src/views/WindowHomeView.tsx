@@ -131,6 +131,8 @@ const CountdownTimerLine = styled.div`
   justify-content: center;
   align-items: center;
   flex-direction: row;
+  font-size: calc(min(1.2rem, 2vh, 1.9vw));
+  overflow: hidden;
 `;
 
 const CountdownTimerView = observer( ({state}: TopLevelNavigationProps) => {

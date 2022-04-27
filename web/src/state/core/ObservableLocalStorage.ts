@@ -11,10 +11,8 @@ export class ObservableLocalStorageString<STORAGE_KEY extends string = string> {
 
 	get value(): string | undefined {
 		const fromLocalStorage = localStorage.getItem(this.storageKey) ?? undefined;
-		if (fromLocalStorage !== this._cachedValue) {
-			this._cachedValue = fromLocalStorage;
-		}
-		return this._cachedValue;
+		const cachedValue = this._cachedValue;
+		return fromLocalStorage !== cachedValue ? fromLocalStorage : cachedValue;
 	}
 
 	setValue = action( (newValue: string | undefined) => {

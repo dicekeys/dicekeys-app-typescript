@@ -8,6 +8,10 @@ import { describeRecipeType } from "./DescribeRecipeType";
 import * as Dimensions from "./DerivationView/DerivationViewLayout";
 import styled from "styled-components";
 import { copyToClipboard } from "../../utilities/copyToClipboard";
+import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
+import { electronBridge } from "../../state/core/ElectronBridge";
+import { defaultOnException } from "../../utilities/default-on-exception";
+import { Recipe } from "@dicekeys/dicekeys-api-js";
 
 const Bip39Field = styled.div`
   display: flex;
@@ -129,12 +133,38 @@ const HeaderButtonBar = styled.div`
   margin-left: 2rem;
 `;
 
+const recipeStateToFileName = (state: DerivedFromRecipeState): string | undefined => {
+  const {recipeState, diceKey, outputFieldForType} = state;
+  const {type, recipeJson, recipeIsValid} = recipeState;
+  if (!recipeIsValid || recipeJson == null || type == null) return;
+  const recipe = defaultOnException(() => JSON.parse(recipeJson) as Recipe);
+  if (recipe == null) return;
+  const sequenceNumber = recipe["#"];
+  const purpose = recipe.purpose;
+  const outputType = outputFieldForType[type];
+  const commonName = `${ diceKey == null ? "" :
+    `-derived-from-die-with-${diceKey.centerLetterAndDigit}-at-center`
+  }${ (sequenceNumber == null || sequenceNumber <= 1) ? "" :
+    `-with-sequence-number-${sequenceNumber}`
+  }${ (purpose == null) ? "" :
+  `-with-purpose-${ purpose.replace(/\W/g, '') }`
+  }`;
+  return outputType === "OpenPGP Private Key" ?
+    `pgp-key${commonName}.pem` :
+  outputType === "OpenSSH Public Key" ?
+    `ssh-public-key${commonName}.txt` :
+  outputType === "OpenSSH Private Key" ?
+    `ssh-private-key${commonName}.ppk` : undefined;
+}
+
 export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputType}: {
     state: DerivedFromRecipeState,
     allowUserToChangeOutputType: boolean
   }) => {
   const {recipeState, derivedValue} = state;
   const {type} = recipeState;
+  // const outputType = type != null ? state.outputFieldForType[type] : undefined;
+  const fileName = recipeStateToFileName(state);
   return (
     <>
       <DerivedValueHeaderDiv>
@@ -147,6 +177,14 @@ export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputT
               >&#128203;<CharButtonToolTip>Copy {type == null ? "" : state.outputFieldForType[type].toLocaleLowerCase()} to clipboard</CharButtonToolTip>
             </CharButton>
             <SecretFieldsCommonObscureButton />
+            { (RUNNING_IN_ELECTRON && fileName != null) ? (
+              <CharButton
+                onClick={() => derivedValue && electronBridge.saveUtf8File({
+                  content: derivedValue,
+                  fileName
+                })}
+              >&darr;<CharButtonToolTip>save to file</CharButtonToolTip></CharButton>
+            ): null}
           </HeaderButtonBar>
         )}
       </DerivedValueHeaderDiv>

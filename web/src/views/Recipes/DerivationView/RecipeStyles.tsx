@@ -17,7 +17,7 @@ const EdgelessSpan = styled.span`
 `;
 
 const FieldTextFontCss = css`
-  font-size: 1.1rem;
+  font-size: min(1.1rem, 2.9vh);
 `;
 
 const TextInputWithoutSpellCheck = styled.input.attrs(() => ({

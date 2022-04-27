@@ -1,9 +1,7 @@
 import { action, makeAutoObservable } from "mobx";
 import { autoSave } from "../core/AutoSave";
-import type {IElectronBridge} from "../../../../common/IElectronBridge";
 import {DiceKeyInHumanReadableForm, DiceKeyWithKeyId, PublicDiceKeyDescriptor} from "../../dicekeys/DiceKey";
-
-const electronBridge = (window as unknown as  {ElectronBridge: IElectronBridge}).ElectronBridge;
+import { electronBridge } from "../../state/core/ElectronBridge";
 
 /**
  * Sort PublicDiceKeyDescriptors first by letter, then digit, then keyId.

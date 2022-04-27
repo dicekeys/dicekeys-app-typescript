@@ -2,14 +2,16 @@ import type {
   OpenDialogOptions,
   OpenDialogReturnValue,
   MessageBoxOptions,
-  MessageBoxReturnValue
+  MessageBoxReturnValue,
+  SaveDialogOptions
 } from "electron";
 
 export {
   OpenDialogOptions,
   OpenDialogReturnValue,
   MessageBoxOptions,
-  MessageBoxReturnValue
+  MessageBoxReturnValue,
+  SaveDialogOptions
 }
 
 export interface DeviceUniqueIdentifier {
@@ -25,41 +27,59 @@ export interface Device extends DeviceUniqueIdentifier {
   deviceAddress: number;
 }
 
-export interface IElectronBridgeSync {
+export interface RendererToMainSyncApi {
   openExternal(url: string): void;
   writeResultToStdOutAndExit(result: string): void;
   getCommandLineArguments(): string[];
-  getAppLink(): string;
+  getAppLink(): string | undefined;
 }
 
-export interface IElectronBridgeDialogsAsync{
-  openFileDialog(options: OpenDialogOptions): Promise<OpenDialogReturnValue>;
-  openMessageDialog(options: MessageBoxOptions): Promise<MessageBoxReturnValue>;
+export interface RendererToMainDeprecatedAsyncApi{
+  // openFileDialog(options: OpenDialogOptions): Promise<OpenDialogReturnValue>;
+  // openMessageDialog(options: MessageBoxOptions): Promise<MessageBoxReturnValue>;
 }
-export interface IElectronBridgeDiceKeysStoreAsync {
+export interface RendererToMainDiceKeysStoreAsyncApi {
   getDiceKeyFromCredentialStore(id: string): Promise<string | null>
   storeDiceKeyInCredentialStore(id: string, humanReadableForm: string): Promise<void>
   deleteDiceKeyFromCredentialStore(id: string): Promise<boolean>
-  // getDiceKeys(): Promise<{ id: string, humanReadableForm: string}[]>
-  // getDiceKeyIdsAndCenterFaces(): Promise<{id: string, letter: string, digit: string}[]>;
 }
 
-interface IElectronBridgeConstants {
+export interface ElectronBridgeConstants {
   osPlatform: NodeJS.Platform;
   requiresWindowsAdmin: boolean;
 }
 
 export type RemoveListener = () => void;
-export interface IElectronBridgeListener {
-  listenForAppLinks(callback: (appLink: string) => any, errorCallback: (error: any) => any): RemoveListener;
-// for testing typings only  fix(sc: (a: string, b: number) => any, ec: (error: any) => any): RemoveListener;
+
+export interface MainToRendererAsyncApi {
+  getRecipesToExport: () => Promise<string>;
+  handleAppLink: (appLink: string) => void;
+  loadRandomDiceKey: () => void;
+  importRecipes: (jsonRecipesToImport: string) => void;
 }
 
-export interface IElectronBridgeAsync extends
-  IElectronBridgeDialogsAsync,
-  IElectronBridgeDiceKeysStoreAsync
-{}
+export type MainToRendererAsyncApiImplementationFunctions = {
+  [key in keyof MainToRendererAsyncApi]:
+    ((...args: Parameters<MainToRendererAsyncApi[key]>) => ReturnType<MainToRendererAsyncApi[key]>);
+}
 
-export interface IElectronBridge extends IElectronBridgeSync, IElectronBridgeAsync, IElectronBridgeListener, IElectronBridgeConstants {
+//export type ImplementMainToRendererSyncApi = (implementation: MainToRendererSyncApiImplementationFunctions) => void;
+export type ImplementMainToRendererAsyncApi = (implementation: MainToRendererAsyncApiImplementationFunctions) => void;
+
+export type SaveTextFileParameters = {
+  content: string,
+  fileName: string
+  requiredExtension?: string,
+}
+
+export interface RendererToMainAsyncApi extends
+  RendererToMainDeprecatedAsyncApi,
+  RendererToMainDiceKeysStoreAsyncApi
+{
+  saveUtf8File(saveTextFileParameters: SaveTextFileParameters): Promise<boolean>;
+}
+
+export interface ElectronBridgeRendererView extends ElectronBridgeConstants, RendererToMainAsyncApi, RendererToMainSyncApi {
+  implementMainToRendererAsyncApi: ImplementMainToRendererAsyncApi;
 }
 

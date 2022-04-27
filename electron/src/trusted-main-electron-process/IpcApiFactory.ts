@@ -1,59 +1,105 @@
-import {ipcMain} from 'electron';
-import type {
-  RemoveListener
-} from "../../../common/IElectronBridge"
+import {IpcMain, ipcMain, IpcRenderer, ipcRenderer, WebContents} from 'electron';
 
-import * as ElectronBridge from "./ElectronBridge";
+export const requestChannelNameFor = <T extends string> (functionName: T) => `api:${functionName}:request` as const;
+export const successResponseChannelName = <FN_NAME extends string>(
+  fnName: FN_NAME, nonce: Nonce
+) => `api-response-success:${fnName}:${nonce}` as const;
+export const errorResponseChannelName = <FN_NAME extends string>(
+  fnName: FN_NAME, nonce: Nonce
+) => `api-response-error:${fnName}:${nonce}` as const;
 
-export const implementSyncApi = <CHANNEL extends ElectronBridge.ElectronIpcSyncRequestChannelName>(
-  channel: CHANNEL,
-  implementation: (...args: ElectronBridge.ElectronBridgeSyncApiRequest<CHANNEL>) => ElectronBridge.ElectronBridgeSyncApiResponse<CHANNEL>
-) => {
-  ipcMain.on(channel, (event, ...args) => {
-    try {
-      event.returnValue = implementation(...(args as Parameters<typeof implementation>));
-    } catch (e) {
-      event.returnValue = e;
-    }
-  })
+export const getNonce = () => `:${Math.random()}:${Math.random()}:` as const;
+export type Nonce = ReturnType<typeof getNonce>;
+
+export const getRequestSpecificResponseChannelNames = <FN_NAME extends string = string>(fnName: FN_NAME, nonce: Nonce = getNonce()) => ({
+  successResponseChannelName: successResponseChannelName(fnName, nonce),
+  errorResponseChannelName: errorResponseChannelName(fnName, nonce),
+} as const)
+export type RequestSpecificResponseChannelNames = ReturnType<typeof getRequestSpecificResponseChannelNames>;
+
+export interface IpcListener {
+  on(channel: string, listener: (event: Electron.IpcMainEvent | Electron.IpcRendererEvent, ...args: any[]) => void): void;
+  removeAllListeners(channelName: string): void;
 }
 
-export const implementAsyncApi = <CHANNEL extends ElectronBridge.ElectronIpcAsyncRequestChannelName>(
-  channel: CHANNEL,
-  implementation:  (...args: ElectronBridge.ElectronBridgeAsyncApiRequest<CHANNEL>) => ElectronBridge.ElectronBridgeAsyncApiResponse<CHANNEL>
-) => {
-      const responseChannelName = ElectronBridge.responseChannelNameFor(channel);
-      ipcMain.on(channel, (event, code, ...args) => {
-        implementation(...(args as ElectronBridge.ElectronBridgeAsyncApiRequest<CHANNEL>)).then( (response: any) =>
-          event.sender.send(responseChannelName, code, response)
-        ).catch( exception =>
-          event.sender.send(responseChannelName, ElectronBridge.exceptionCodeFor(code), exception)
-        )
-  })
-}
-
-export const implementListenerApi = <CHANNEL extends ElectronBridge.ElectronIpcListenerRequestChannelName>(channel: CHANNEL,
-    implementation: ElectronBridge.ElectronBridgeListenerFn<CHANNEL>
+export const implementIpcSyncApiServerFn = (
+  server: IpcMain = ipcMain
+) =>
+  <FN extends ((...args: any[]) => any)>(
+    fnName: string,
+    implementation:  (...args: Parameters<FN>) => ReturnType<FN>
   ) => {
-  const responseChannelName = ElectronBridge.responseChannelNameFor(channel);
-  const listenerCodeToRemovalFunction = new Map<string, RemoveListener>();
-  ipcMain.on(ElectronBridge.terminateChannelNameFor(channel), (_event: Electron.IpcMainEvent, code) => {
-    // Run the termination function
-    listenerCodeToRemovalFunction.get(code)?.();
+    server.on(requestChannelNameFor(fnName), (event, ...args) => {
+      try {
+        const result: ReturnType<FN> = implementation(...(args as Parameters<FN>));
+        event.returnValue = result;
+      } catch (e) {
+        event.returnValue = e;
+      }
   })
-  ipcMain.on(channel, (event: Electron.IpcMainEvent, ...args: any[]) => {
-    const [code, ...setupArgs] = args as [string, ElectronBridge.ElectronBridgeListenerApiSetupArgs<CHANNEL>];
-    const removeListener = implementation(
-      // ElectronIpcListenerRequestChannelName in below line should be CHANNEL, but appears to be typescript bug here
-      (...callbackArgs: ElectronBridge.ElectronBridgeListenerApiCallbackParameters<ElectronBridge.ElectronIpcListenerRequestChannelName>) => {
-        event.sender.send(responseChannelName, code, ...callbackArgs)
-      },
-      // ElectronIpcListenerRequestChannelName in below line should be CHANNEL, but appears to be typescript bug here
-      (...errorCallbackArgs: ElectronBridge.ElectronBridgeListenerApiErrorCallbackParameters<ElectronBridge.ElectronIpcListenerRequestChannelName>) => {
-        event.sender.send( responseChannelName, ElectronBridge.exceptionCodeFor(code), ...errorCallbackArgs)
-      },
-      ...(setupArgs as unknown as []) // FIXME to make typescript happy
-    )
-    listenerCodeToRemovalFunction.set(code, removeListener)
+}
+
+export const implementIpcSyncApiClietFn = (
+  client: IpcRenderer = ipcRenderer
+ ) =>
+    <FN extends ((...args: any[]) => any)>(fnName: string) =>
+      (
+        ...args: Parameters<FN>
+      ): ReturnType<FN> => 
+        client.sendSync(requestChannelNameFor(fnName), ...args) as ReturnType<FN>;
+
+export const implementIpcAsyncApiClientFn = (
+  clientSender: WebContents | IpcRenderer = ipcRenderer,
+  clientListener: IpcListener = ipcRenderer
+) =>
+//  client: {sendSync(channel: string, ...args: any[]): any;}) =>
+    <FN extends ((...args: any[]) => any)>(fnName: string) =>
+      (
+        ...args: Parameters<FN>
+      ): Promise<Awaited<ReturnType<FN>>> => {
+  return new Promise<Awaited<ReturnType<FN>>>( (resolve, reject) => {
+    // Create a code that allows us to match requests to responses
+    const requestSpecificResponseChannelNames = getRequestSpecificResponseChannelNames(fnName);
+    const {successResponseChannelName, errorResponseChannelName} = requestSpecificResponseChannelNames;
+    const stopListeningForResponsesToThisRequest = () => {
+      // Because these two channels were constrcuted exclusively for the request, and are
+      // identified by a one-time nonce, we can remove all associated with the request.
+      clientListener.removeAllListeners(successResponseChannelName);
+      clientListener.removeAllListeners(errorResponseChannelName);
+    }
+    clientListener.on(successResponseChannelName, (_event, result) => {
+      stopListeningForResponsesToThisRequest();
+      resolve(result as ReturnType<FN>);
+    })
+    clientListener.on(errorResponseChannelName, (_event, error) => {
+      stopListeningForResponsesToThisRequest();
+      reject(error);
+    })
+    const channel = requestChannelNameFor(fnName);
+    // console.log(`Call to ${fnName}`, channel, requestSpecificResponseChannelNames, args)
+    clientSender.send(channel, requestSpecificResponseChannelNames, ...args);
+  });
+
+}
+export const implementIpcAsyncApiServerFn = (
+  server: {
+    on(channel: string, listener: (event: Electron.IpcMainEvent | Electron.IpcRendererEvent, ...args: any[]) => void): void;
+  }
+) =>
+  <FN extends ((...args: any[]) => any)>(
+    fnName: string,
+    implementation:  (...args: Parameters<FN>) => ReturnType<FN>
+  ) => {
+    server.on(requestChannelNameFor(fnName), async (event, responseChannels, ...args) => {
+      // console.log(`API Server Function ${fnName}`, responseChannels, args);
+      const {successResponseChannelName, errorResponseChannelName} = responseChannels as RequestSpecificResponseChannelNames;
+      try {
+        const result: Awaited<ReturnType<FN>> = await implementation(...(args as Parameters<FN>));
+        // console.log(`API Server Function ${fnName} success`, responseChannels, args);
+        event.sender.send(successResponseChannelName, result)
+      } catch (exception) {
+        console.log(`API Server Function ${fnName} failed`, exception);
+        event.sender.send(errorResponseChannelName, exception)
+      }
   })
 }

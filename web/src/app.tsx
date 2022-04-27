@@ -9,9 +9,14 @@ import { ApiCalls } from "@dicekeys/dicekeys-api-js";
 import { ApiRequestsReceivedState } from "./state/ApiRequestsReceivedState";
 import { ThemeProvider } from "styled-components";
 import { lightTheme } from "./css/lightTheme";
-import {IElectronBridge} from "../../common/IElectronBridge";
+import type { ElectronBridgeRendererView } from "../../common/IElectronBridge";
+import { RecipeStore } from "./state/stores/RecipeStore";
+import { DiceKeyWithKeyId } from "./dicekeys/DiceKey";
+import { createTopLevelNavigationState, WindowTopLevelNavigationState } from "./state/WindowTopLevelNavigationState";
 
-const electronBridge = (window as unknown as  {ElectronBridge: IElectronBridge}).ElectronBridge;
+const electronBridge = (window as unknown as  {ElectronBridge: ElectronBridgeRendererView}).ElectronBridge;
+
+var windowTopLevelNavigationState: WindowTopLevelNavigationState | undefined;
 
 /**
  * For web-based apps, scan the URL on page load
@@ -36,21 +41,30 @@ try {
   // FUTURE -- throw error if search param had command but it was an invalid command.
 }
 
-if (RUNNING_IN_ELECTRON) {
 
-  // Handle app links
-  electronBridge.listenForAppLinks(appLink => {
+if (RUNNING_IN_ELECTRON) {  
+  const handleAppLink = (appLink: string) => {
     try{
       const url = new URL(appLink);
-      if (url.searchParams.has(ApiCalls.RequestMetadataParameterNames.command)) {
-        const request = new QueuedUrlApiRequest(url);
-        ApiRequestsReceivedState.enqueueApiRequestReceived(request);
+        if (url.searchParams.has(ApiCalls.RequestMetadataParameterNames.command)) {
+          const request = new QueuedUrlApiRequest(url);
+          ApiRequestsReceivedState.enqueueApiRequestReceived(request);
+        }
+      }catch (e) {
+        console.log(e)
       }
-    }catch (e) {
-      console.log(e)
     }
-  }, err => {
-    console.log(err)
+
+  const loadRandomDiceKey = async () => {
+    const diceKey = await DiceKeyWithKeyId.fromRandom();
+    windowTopLevelNavigationState?.onReturnFromActionThatMayLoadDiceKey(diceKey);
+  }
+
+  electronBridge.implementMainToRendererAsyncApi({
+    "getRecipesToExport": async () => RecipeStore.getStoredRecipesJson(),
+    handleAppLink,
+    "importRecipes": async (recipesToImport) => RecipeStore.importStoredRecipeAsJsonArrary(recipesToImport),
+    loadRandomDiceKey
   });
 }
 
@@ -62,10 +76,11 @@ window.addEventListener('load', () => {
       throw "No container element";
     }
     const root = createRoot(container);
+    windowTopLevelNavigationState = createTopLevelNavigationState();
     root.render((
       <ThemeProvider theme={lightTheme}>
         <ErrorHandler>
-          <WindowTopLevelView />
+          <WindowTopLevelView state={windowTopLevelNavigationState} />
         </ErrorHandler>
       </ThemeProvider>
     ));

@@ -1,40 +1,26 @@
-import * as IpcApiFactory from "./IpcApiFactory";
 import {app} from "electron";
-import type {RemoveListener} from "../../../common/IElectronBridge";
 
-let appLinkUrl: string
-const callbacks: ((applink: string) => any)[] = []
+const findAppLink = (commandLineArgs: string[]) =>
+  commandLineArgs.find((value) =>
+    value.indexOf("dicekeys://") !== -1 && value.indexOf("command=") !== -1
+  );
 
-export function registerAppLinkProtocol(){
-    app.setAsDefaultProtocolClient('dicekeys')
-}
+export class AppLinkHandler {
+  mostRecentAppLinkUrl?: string;
 
-export function processArgsForAppLink(args: string[]){
-    const url = args.find((value) => {
-        return value.indexOf("dicekeys://") !== -1 && value.indexOf("command=") !== -1
-    })
+  constructor(private sendAppLinkToClient: (url: string) => void, commandLineArgs: string[] = process.argv) {
+    // Register this application to receive dicekeys:// application links
+    app.setAsDefaultProtocolClient('dicekeys');
+    this.mostRecentAppLinkUrl = findAppLink(commandLineArgs);
+  }
 
-    if(url){
-        sendAppLink(url)
+  processArgsForAppLink = (commandLineArgV: string[]) => {
+    const url = findAppLink(commandLineArgV);
+    if (url != null) {
+      this.mostRecentAppLinkUrl = url;
+      this.sendAppLinkToClient(url);
     }
-}
+  }
 
-export function sendAppLink(url: string){
-    appLinkUrl = url
-    callbacks.forEach((callback) => {
-        callback(appLinkUrl)
-    })
+  getAppLink = () => this.mostRecentAppLinkUrl;
 }
-
-IpcApiFactory.implementSyncApi( "getAppLink", () => {
-    return appLinkUrl
-});
-IpcApiFactory.implementListenerApi("listenForAppLinks", (callback : (applink: string) => any, _ ?: (error: any) => any) : RemoveListener => {
-    if(appLinkUrl){
-        callback(appLinkUrl)
-    }
-    callbacks.push(callback)
-    return () => {
-        callbacks.splice(callbacks.indexOf(callback), 1)
-    };
-});

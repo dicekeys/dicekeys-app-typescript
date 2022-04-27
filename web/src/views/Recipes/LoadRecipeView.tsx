@@ -13,9 +13,7 @@ const SelectRecipe = styled.select<{$nothingChosenYet: boolean}>`
   padding: 0.25rem;
   border-radius: 0.5rem;
   color: rgba(0, 0, 0, 0.5);
-  background-color: rgba(255, 254, 171, 0.1);
-  font-family: sans-serif;
-  background-color: rgba(255, 254, 171, 0.1);
+  background-color: rgba(255, 254, 171, 0.75);
   font-family: sans-serif;
   ${(props) => props.$nothingChosenYet ? css`
     background-color: rgba(255, 254, 171, 1);
@@ -31,7 +29,7 @@ export const SelectRecipeToLoadView = observer( ({
   state: RecipeBuilderState,
   defaultOptionLabel?: string
 }) => {
-  const savedRecipes = RecipeStore.recipes;
+  const savedRecipes = RecipeStore.storedRecipes;
   // Remove any saved recipes from the set of built-in recipes
   const builtInRecipes = BuiltInRecipes.filter(
     builtInRecipe => savedRecipes.every( savedRecipe =>
@@ -104,7 +102,7 @@ export const CreateANewRecipeOfTypeView = observer( ({state}: {
 export const LoadBuiltInRecipeView = observer( ({state}: {
   state: RecipeBuilderState,
 }) => {
-  const savedRecipes = RecipeStore.recipes;
+  const savedRecipes = RecipeStore.storedRecipes;
   // Remove any saved recipes from the set of built-in recipes
   const builtInRecipes = BuiltInRecipes.filter(
     builtInRecipe => savedRecipes.every( savedRecipe =>
@@ -134,7 +132,7 @@ export const LoadBuiltInRecipeView = observer( ({state}: {
 export const LoadSavedRecipeView = observer( ({state}: {
   state: RecipeBuilderState,
 }) => {
-  const savedRecipes = RecipeStore.recipes;
+  const savedRecipes = RecipeStore.storedRecipes;
   if (savedRecipes.length === 0) return null;
   return (
     <div>
