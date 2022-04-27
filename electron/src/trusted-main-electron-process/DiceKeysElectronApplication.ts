@@ -19,6 +19,10 @@ import {
 } from "./AppLinksApi";
 import { saveUtf8File } from './SaveAndLoad';
 
+const openLinkInBrowser = async (url: string) => {
+  await shell.openExternal(url);
+}
+
 export class DiceKeysElectronApplication {
   static #instance: DiceKeysElectronApplication | undefined;
   static get instance() { return this.#instance; }
@@ -41,6 +45,7 @@ export class DiceKeysElectronApplication {
       getDiceKeyFromCredentialStore,
       storeDiceKeyInCredentialStore,
       saveUtf8File,
+      openLinkInBrowser,
     });
 
     IpcApiFactory.implementRendererToMainSyncApiServerInMainProcess({

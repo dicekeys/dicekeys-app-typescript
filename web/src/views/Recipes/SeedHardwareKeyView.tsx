@@ -11,6 +11,7 @@ import { StandardWidthBetweenSideMargins, WindowRegionBelowTopNavigationBarWithS
 import { SeedHardwareKeyViewState, SeedSource, fidoAccessDeniedByPlatform, fidoAccessRequiresWindowsAdmin } from "./SeedHardwareKeyViewState";
 import { LoadDiceKeyContentPaneView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
 import { AnchorButton } from "../../views/basics/AnchorButton";
+import { ExternalLink } from "../../views/basics/ExternalLink";
 
 const FieldRow = styled.div<{invisible?: boolean}>`
     ${ props => props.invisible ? css`visibility: hidden;` : ``}
@@ -349,7 +350,9 @@ export const SeedHardwareKeyContentView = observer( ( {seedHardwareKeyViewState}
           <SmallNote invisible={!seedHardwareKeyViewState.readyToWrite}>
             Note the location of the button on your USB Key.  Once you press <i>write</i>, you will have {SecondsToTripleClick.toString()} seconds to press the button on your key three times.
           </SmallNote>
-          <SmallNote>Not all FIDO security keys support seeding. Seeding is currently only supported by <a target="_blank" href="https://www.crowdsupply.com/dicekeys/dicekeys">these SoloKeys</a>.</SmallNote>
+          <SmallNote>Not all FIDO security keys support seeding. Seeding is currently only supported by&nbsp;
+            <ExternalLink url="https://www.crowdsupply.com/dicekeys/dicekeys">these SoloKeys</ExternalLink>.
+          </SmallNote>
         </div>
       </ValueColumnOnly>
     </div>

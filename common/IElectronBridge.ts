@@ -77,6 +77,7 @@ export interface RendererToMainAsyncApi extends
   RendererToMainDiceKeysStoreAsyncApi
 {
   saveUtf8File(saveTextFileParameters: SaveTextFileParameters): Promise<boolean>;
+  openLinkInBrowser(url: string): Promise<void>;
 }
 
 export interface ElectronBridgeRendererView extends ElectronBridgeConstants, RendererToMainAsyncApi, RendererToMainSyncApi {
