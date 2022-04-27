@@ -16,6 +16,7 @@ import { StepButton } from "../../css/Button";
 import styled from "styled-components";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
 import { ObscureDiceKey } from "../../state/ToggleState";
+import { ExternalLink } from "../../views/basics/ExternalLink";
 
 export const ComparisonBox = styled.div`
   display: flex;
@@ -76,7 +77,7 @@ const IntroToBackingUpToADiceKeyView = () => (
     <Spacer/>
     <Instruction>Next, you will replicate the first DiceKey by copying the arrangement of dice.</Instruction>
     <Spacer/>
-    <NoteDiv>Need another DiceKey?  You can <a target="_blank" href="https://dicekeys.com/store">order more</a>.</NoteDiv>
+    <NoteDiv>Need another DiceKey?  You can <ExternalLink url="https://dicekeys.com/store">order more</ExternalLink>.</NoteDiv>
   </>
 )
 const IntroToBackingUpToASticKeyView = () => (
@@ -97,7 +98,7 @@ const IntroToBackingUpToASticKeyView = () => (
     <Spacer />
     <Instruction>Next, you will create a copy of your DiceKey on the target sheet by placing stickers.</Instruction>
     <Spacer />
-    <NoteDiv>Out of SticKeys?  You can <a  target="_blank" href="https://dicekeys.com/store">order more</a>.</NoteDiv>
+    <NoteDiv>Out of SticKeys?  You can <ExternalLink url="https://dicekeys.com/store">order more</ExternalLink>.</NoteDiv>
   </>
 );
 
