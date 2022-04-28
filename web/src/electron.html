@@ -8,11 +8,9 @@
       The 'unsave-eval' below, which causes warnings in Electron, is because
       WebAssembly uses raw javascript eval() to communicate between the javascript
       code and assembly code.
-
      -->
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval';" />
     <title>DiceKeys</title>
-    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inconsolata"/> -->
     <script type="module" src="./app.tsx"></script>
   </head>
   <body style="margin: 0px; padding: 0px; overflow: hidden"><div id="app_container" className="AppContainer"></div></body>
