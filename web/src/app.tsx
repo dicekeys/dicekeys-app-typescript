@@ -13,6 +13,20 @@ import type { ElectronBridgeRendererView } from "../../common/IElectronBridge";
 import { RecipeStore } from "./state/stores/RecipeStore";
 import { DiceKeyWithKeyId } from "./dicekeys/DiceKey";
 import { createTopLevelNavigationState, WindowTopLevelNavigationState } from "./state/WindowTopLevelNavigationState";
+import { createGlobalStyle } from 'styled-components';
+
+import InconsolataBoldWoff from "./css/fonts/InconsolataBold.woff";
+import InconsolataBoldWoff2 from "./css/fonts/InconsolataBold.woff2";
+const GlobalFonts = createGlobalStyle`
+  @font-face {
+    font-family: "Inconsolata";
+    src: local('Inconsolata Bold'), local('InconsolataBold'),
+    url(${InconsolataBoldWoff}) format('woff2'),
+    url(${InconsolataBoldWoff2}) format('woff');
+    font-weight: 700;
+    font-style: normal;
+  }
+`
 
 const electronBridge = (window as unknown as  {ElectronBridge: ElectronBridgeRendererView}).ElectronBridge;
 
@@ -80,6 +94,7 @@ window.addEventListener('load', () => {
     root.render((
       <ThemeProvider theme={lightTheme}>
         <ErrorHandler>
+          <GlobalFonts/>
           <WindowTopLevelView state={windowTopLevelNavigationState} />
         </ErrorHandler>
       </ThemeProvider>
