@@ -89,7 +89,7 @@ export const renderFaceRead = (ctx: CanvasRenderingContext2D, faceRead: FaceRead
     ctx.stroke();
   }
 
-  const fontString = `bold ${faceSizeInPixels * FaceDimensionsFractional.fontSize}px Inconsolata,monospace`;
+  const fontString = `bold ${faceSizeInPixels * FaceDimensionsFractional.fontSize}px Inconsolata,monospace` as const;
   ctx.font = fontString;
   const distanceToBaseline = FaceDimensionsFractional.textBaselineY-FaceDimensionsFractional.center;
   if (faceRead.letter) {
