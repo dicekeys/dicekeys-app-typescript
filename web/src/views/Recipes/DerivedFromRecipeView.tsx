@@ -3,7 +3,6 @@ import { observer  } from "mobx-react";
 import { CharButton, CharButtonToolTip, OptionallyObscuredTextView, SecretFieldsCommonObscureButton } from "../basics";
 import { ToggleState } from "../../state";
 import { DerivedFromRecipeState, OutputFormats, OutputFormat } from "./DerivedFromRecipeState";
-import { DerivationRecipeType } from "../../dicekeys/StoredRecipe";
 import { describeRecipeType } from "./DescribeRecipeType";
 import * as Dimensions from "./DerivationView/DerivationViewLayout";
 import styled from "styled-components";
@@ -77,21 +76,24 @@ const SelectOutputType = styled.select`
   min-width: 6rem;
 `;
 
-const SelectDerivedOutputType = observer( ({type, state}: {type?: DerivationRecipeType, state: DerivedFromRecipeState}) => (
-  <SelectOutputType
-    disabled={type==null}
-    value={ (type == null) ? "NullType" : state.outputFieldForType[type]}
-    onChange={ (e) => state.setOutputField(e.currentTarget.value as OutputFormat) }
-  >
-    { type == null ? (
-        <option value="NullType" disabled={true}>format</option>
-      ) : 
-        OutputFormats[type].map( (format: string) => (
-          <option key={format} value={format}>{format}</option>
-        ))  
-    }
-  </SelectOutputType>
-));
+const SelectDerivedOutputType = observer( ({state}: {state: DerivedFromRecipeState}) => {
+  const {type, outputFormat} = state.secretTypeAndOutputType ?? {};
+  return (
+    <SelectOutputType
+      disabled={type==null}
+      value={ outputFormat ?? "NullType"}
+      onChange={ (e) => state.setOutputField(e.currentTarget.value as OutputFormat) }
+    >
+      { type == null ? (
+          <option value="NullType" disabled={true}>format</option>
+        ) : 
+          OutputFormats[type].map( (format: string) => (
+            <option key={format} value={format}>{format}</option>
+          ))  
+      }
+    </SelectOutputType>
+    )}
+);
 
 const PlaceholderDerivedValueContainer = styled.div`
   font-family: sans-serif;
@@ -162,19 +164,19 @@ export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputT
     allowUserToChangeOutputType: boolean
   }) => {
   const {recipeState, derivedValue} = state;
-  const {type} = recipeState;
+  const {type, outputFormat} = state.secretTypeAndOutputType ?? {};
   // const outputType = type != null ? state.outputFieldForType[type] : undefined;
   const fileName = recipeStateToFileName(state);
   return (
     <>
       <DerivedValueHeaderDiv>
-        { allowUserToChangeOutputType ? (<SelectDerivedOutputType type={type} state={state} />) : null }
+        { allowUserToChangeOutputType ? (<SelectDerivedOutputType state={state} />) : null }
         { type == null || derivedValue == null ? null : (
           <HeaderButtonBar>
             <CharButton
                 invisible={derivedValue == null || type == null}
                 onClick={() => copyToClipboard(derivedValue)}
-              >&#128203;<CharButtonToolTip>Copy {type == null ? "" : state.outputFieldForType[type].toLocaleLowerCase()} to clipboard</CharButtonToolTip>
+              >&#128203;<CharButtonToolTip>Copy {(outputFormat ?? "").toLocaleLowerCase()} to clipboard</CharButtonToolTip>
             </CharButton>
             <SecretFieldsCommonObscureButton />
             { (RUNNING_IN_ELECTRON && fileName != null) ? (
@@ -188,7 +190,7 @@ export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputT
           </HeaderButtonBar>
         )}
       </DerivedValueHeaderDiv>
-      { type === "Secret" && state.outputFieldForType[type] === "BIP39" && derivedValue != null ?
+      { type === "Secret" && outputFormat === "BIP39" && derivedValue != null ?
         (<Bip39OutputView bip39String={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />)
         : (
         <DerivedValueContentDiv>
