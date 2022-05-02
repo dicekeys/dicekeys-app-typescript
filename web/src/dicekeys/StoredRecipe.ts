@@ -56,8 +56,8 @@ export const BuiltInRecipes: StoredRecipe[] = [
 	new BuiltInRecipe("Password", "Keeper", `{"allow":[{"host":"*.keepersecurity.com"},{"host":"*.keepersecurity.eu"}]}`),
 	new BuiltInRecipe("Password", "LastPass", `{"allow":[{"host":"*.lastpass.com"}]}`),
 	new BuiltInRecipe("Password", "Microsoft", `{"allow":[{"host":"*.microsoft.com"},{"host":"*.live.com"}]}`),
-	new BuiltInRecipe("SigningKey", "SSH", `{"purpose": "ssh"}`),
-	new BuiltInRecipe("SigningKey", "PGP", `{"purpose": "pgp"}`),
+	new BuiltInRecipe("SigningKey", "SSH", `{"purpose":"ssh"}`),
+	new BuiltInRecipe("SigningKey", "PGP", `{"purpose":"pgp"}`),
 ];
 
 
