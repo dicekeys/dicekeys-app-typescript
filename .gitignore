@@ -10,7 +10,6 @@ coverage/
 .parcel-cache
 
 .idea
-web/.npmrc
 
 ### VisualStudioCode ###
 .vscode/*
