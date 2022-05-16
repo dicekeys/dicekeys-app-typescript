@@ -11,6 +11,7 @@ import { CameraSelectionView } from "./CameraSelectionView";
 import styled from "styled-components";
 import { RUNNING_IN_BROWSER } from "../../utilities/is-electron";
 import { TopNavigationBarHeight } from "../Navigation/NavigationLayout";
+import { action } from "mobx";
 // import { CamerasBeingInspected } from "./CamerasBeingInspected";
 
 const minCameraWidth = 1024;
@@ -135,6 +136,15 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
 
   get defaultCamera(): Camera | undefined { return this.cameras[0] }
 
+  static readonly msToWaitBeforeCameraPermissionWarning = 5000;
+  componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning: boolean = (() => {
+    setTimeout( action ( () => {
+      this.componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning = true;
+    }), ScanDiceKeyView.msToWaitBeforeCameraPermissionWarning)
+    return false;
+  })();
+
+
   render() {
     const camerasOnThisDevice = this.camerasOnThisDevice;
     const cameraCaptureWithOverlayProps = this.props;
@@ -145,7 +155,9 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
       return (<CamerasBeingInspected {...{camerasOnThisDevice}} />)
     } */
     if (!camerasOnThisDevice.readyAndNonEmpty && RUNNING_IN_BROWSER) {
-      return ( <PermissionRequiredView/> );
+      if (this.componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning) {
+        return ( <PermissionRequiredView/> );
+      }
     }
     const cameras = this.cameras;
     if (camerasOnThisDevice.ready && cameras.length === 0) {
