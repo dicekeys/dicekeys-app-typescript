@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import {WindowTopLevelView} from "./views/WindowTopLevelView";
 import { ErrorHandler } from "./views/ErrorHandler";
 import { DiceKeyMemoryStore } from "./state";
-import { RUNNING_IN_ELECTRON } from "./utilities/is-electron";
+import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "./utilities/is-electron";
 import { QueuedUrlApiRequest } from "./api-handler";
 import { ApiCalls } from "@dicekeys/dicekeys-api-js";
 import { ApiRequestsReceivedState } from "./state/ApiRequestsReceivedState";
@@ -39,18 +39,22 @@ try {
   const url = new URL(window.location.href);
   if (url.searchParams.has(ApiCalls.RequestMetadataParameterNames.command)) {
     const request = new QueuedUrlApiRequest(new URL(window.location.href));
+    console.log(`Request received`, request);
     // If we've reached this point, there is a valid API request that needs to be handled.
     // Add it to the queue.
-    if (RUNNING_IN_ELECTRON) {
-      ApiRequestsReceivedState.enqueueApiRequestReceived(request);
-    } else{
+    if (RUNNING_IN_BROWSER) {
       // Open DiceKeys app, or better create a new UI view.
       const schemeBasedApiRequest = "dicekeys://" + url.search;
-      window.location.href = schemeBasedApiRequest
+      setTimeout( () => {
+        window.location.assign(schemeBasedApiRequest);
+      }, 1);
     }
+    ApiRequestsReceivedState.enqueueApiRequestReceived(request);
+    console.log(`Requeest enqueued`)
   }
-} catch {
+} catch (e) {
   // Not a valid request.  Carry on.
+  console.log("Invalid request", window.location.href, e)
 
   // FUTURE -- throw error if search param had command but it was an invalid command.
 }
