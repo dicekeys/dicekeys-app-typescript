@@ -17,6 +17,7 @@ import { createGlobalStyle } from 'styled-components';
 
 import InconsolataBoldWoff from "./css/fonts/InconsolataBold.woff";
 import InconsolataBoldWoff2 from "./css/fonts/InconsolataBold.woff2";
+
 const GlobalFonts = createGlobalStyle`
   @font-face {
     font-family: "Inconsolata";
@@ -45,9 +46,9 @@ try {
     if (RUNNING_IN_BROWSER) {
       // Open DiceKeys app, or better create a new UI view.
       const schemeBasedApiRequest = "dicekeys://" + url.search;
-      setTimeout( () => {
+//      setTimeout( () => {
         window.location.assign(schemeBasedApiRequest);
-      }, 1);
+//      }, 1);
     }
     ApiRequestsReceivedState.enqueueApiRequestReceived(request);
     console.log(`Requeest enqueued`)
@@ -68,7 +69,7 @@ if (RUNNING_IN_ELECTRON) {
           const request = new QueuedUrlApiRequest(url);
           ApiRequestsReceivedState.enqueueApiRequestReceived(request);
         }
-      }catch (e) {
+      } catch (e) {
         console.log(e)
       }
     }
@@ -84,6 +85,15 @@ if (RUNNING_IN_ELECTRON) {
     "importRecipes": async (recipesToImport) => RecipeStore.importStoredRecipeAsJsonArrary(recipesToImport),
     loadRandomDiceKey
   });
+
+  if (electronBridge.osPlatform === "linux" || electronBridge.osPlatform === "win32") {
+    // If the application was just launched and the command line contains an API request
+    // in the form of a dicekeys:/ link, process it here.
+    try {
+      electronBridge.commandLineArgs.filter( (x => x.startsWith("dicekeys:/") && x.indexOf("command") > 0))
+      .forEach( url => handleAppLink(url ));
+    } catch {}
+  }
 }
 
 window.addEventListener('load', () => {

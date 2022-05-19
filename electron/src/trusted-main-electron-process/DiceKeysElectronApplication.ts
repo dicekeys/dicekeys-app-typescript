@@ -1,23 +1,23 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, shell } from "electron";
+//import { dialog } from "electron";
 import * as IpcApiFactory from "./MainProcessApiFactory";
 import { createBrowserWindow } from "../createBrowserWindow";
-import { createMenu } from '../menu';
+import { createMenu } from "../menu";
 import {
   MainToRendererAsyncApi,
-} from './ElectronBridge';
+} from "./ElectronBridge";
 import {
   deleteDiceKeyFromCredentialStore,
   getDiceKeyFromCredentialStore,
   storeDiceKeyInCredentialStore
- } from './SecureDiceKeyStoreApi';
+ } from "./SecureDiceKeyStoreApi";
 import {
-  getCommandLineArguments,
   writeResultToStdOutAndExit
-} from './CommandLineApi';
+} from "./CommandLineApi";
 import {
   AppLinkHandler
 } from "./AppLinksApi";
-import { saveUtf8File } from './SaveAndLoad';
+import { saveUtf8File } from "./SaveAndLoad";
 
 const openLinkInBrowser = async (url: string) => {
   await shell.openExternal(url);
@@ -49,28 +49,33 @@ export class DiceKeysElectronApplication {
     });
 
     IpcApiFactory.implementRendererToMainSyncApiServerInMainProcess({
-      getAppLink: () => this.appLinkHandler?.getAppLink(),
-      getCommandLineArguments,
+//      getAppLink: () => this.appLinkHandler?.getAppLink(),
       writeResultToStdOutAndExit,
       "openExternal": (url: string) => shell.openExternal(url),
     });
 
     createMenu(this.rendererApi);
-
-    this.appLinkHandler.processArgsForAppLink(process.argv);
+    
+    this.mainWindow.webContents.once('dom-ready', () => {
+      this.appLinkHandler.processArgsForAppLink(process.argv);      
+//      dialog.showErrorBox(`process.argv`, JSON.stringify(process.argv, undefined, 2));
+    });
 
     app.on("second-instance", this.onSecondInstance);
     app.on("window-all-closed", this.onWindowsAllClosed);
 
     app.on('will-finish-launching', () => {
       // Protocol handler for osx
-      app.on('open-url', this.onOsXOpenUrl);
+      app.on('open-url', (event, url) => {
+        this.onOsXOpenUrl(event, url);
+//        dialog.showErrorBox(`Received via open-url`, url);
+      });
     });
   }
 
   onOsXOpenUrl(event: Electron.Event, url: string) {
     event.preventDefault();
-    this.appLinkHandler?.processArgsForAppLink([url]);
+    this.appLinkHandler.processArgsForAppLink([url]);
   }
 
   // Quit when all windows are closed, except on macOS. There, it's common
@@ -87,8 +92,9 @@ export class DiceKeysElectronApplication {
 
       // Protocol handler for win32/linux
       // argv: An array of the second instance’s (command line / deep linked) arguments
-      if (process.platform == 'win32' || process.platform == 'linux') {
-        this.appLinkHandler?.processArgsForAppLink(commandLineArgV);
+      if (process.platform == 'win32' || process.platform == 'linux') {        
+//        dialog.showErrorBox(`second instance argv`, JSON.stringify(commandLineArgV, undefined, 2));
+        this.appLinkHandler.processArgsForAppLink(commandLineArgV);
       }
 
       if (this.mainWindow.isMinimized()) {
