@@ -83,7 +83,7 @@ export const HostDescriptorView = ( {host}: {host: string}) => {
   return (knownHost != null) ? (
     <KnownApplicationNameSpan>{ knownHost}</KnownApplicationNameSpan>
   ) : (
-    <div>The website at <HostNameSpan>{ host }</HostNameSpan></div>
+    <>the website at <HostNameSpan>{ host }</HostNameSpan></>
   )
 }
 
@@ -199,11 +199,14 @@ export const ApiResponsePreview = observer ( <COMMAND extends ApiCalls.Command>(
   const [apiResult, setApiResult] = React.useState<ApiCalls.ResponseForCommand<COMMAND> | undefined>(undefined);
   React.useEffect(() => {
     (async () => {
-      console.log("attempt to set result");
-      setApiResult(await resultPromise);
+      // console.log("awaiting result");
+      const result = await resultPromise;
+      // console.log("attempt to set result", result);
+      setApiResult(result);
     })();
   }, []);
   if (apiResult == null) return null;
+  // console.log(`apiResult`, apiResult, command, host);
 
   return (
     <div style={{display: "flex", flexDirection:"column", alignItems:"center", alignContent: "center"}}>

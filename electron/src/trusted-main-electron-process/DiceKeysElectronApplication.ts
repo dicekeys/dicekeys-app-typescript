@@ -32,8 +32,8 @@ export class DiceKeysElectronApplication {
 
 
   mainWindow: BrowserWindow | undefined;
-  rendererApi: MainToRendererAsyncApi;
-  appLinkHandler: AppLinkHandler | undefined;
+  readonly rendererApi: MainToRendererAsyncApi;
+  readonly appLinkHandler: AppLinkHandler;
 
   constructor() {
     this.mainWindow = createBrowserWindow();

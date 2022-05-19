@@ -80,11 +80,15 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
       // We have no choice but to run synchronously in this process
       // (fortunately, that means we're non-interactive and just testing)
       const response = new SeededApiCommands(await SeededCryptoModulePromise, seedString).executeRequest<ApiRequestObject>(request);
-      return {requestId, ...response};
+      const responseWIthRequestId = {...response, requestId};
+      console.log(`getResponse.requestId`, requestId)
+      console.log(`getResponse.responseWIthRequestId`, responseWIthRequestId)
+      return {...response, requestId};
     } else {
       // We're in an environment with web workers. Await a remote execute
       const ComputeApiCommandWorkerModule = await import ("../workers/call-api-command-worker");
-      return await new ComputeApiCommandWorkerModule.ComputeApiCommandWorker().calculate({seedString, request});
+      const result = await new ComputeApiCommandWorkerModule.ComputeApiCommandWorker().calculate({seedString, request});
+      return {...result, requestId};
     }
   }
 
@@ -128,6 +132,7 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
   respond = async (seedString: string) => {
     try {
       const response = await this.getResponse(seedString);
+      console.log(`response.response=`, response);
       this.transmitResponse(response);
     } catch(e) {
       this.sendError(e);
