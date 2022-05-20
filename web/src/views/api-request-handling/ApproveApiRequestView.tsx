@@ -240,9 +240,9 @@ export class ApproveApiRequestState {
 
   constructor(
     public readonly queuedApiRequest: QueuedApiRequest,
-    diceKey: DiceKeyWithKeyId | undefined = DiceKeyMemoryStore.diceKeyForKeyId(ApproveApiRequestState.lastKeyIdUsed)
+    diceKey?: DiceKeyWithKeyId
   ) {
-    this._diceKey = diceKey;
+    this._diceKey = diceKey ?? DiceKeyMemoryStore.diceKeyForKeyId(ApproveApiRequestState.lastKeyIdUsed ??= DiceKeyMemoryStore.keyIds[0])
     makeAutoObservable(this);
   }
   
