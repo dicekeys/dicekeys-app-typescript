@@ -16,7 +16,7 @@ export const PlatformSupportsSavingToDevice = RUNNING_IN_ELECTRON;
 
 interface StorageFormat {
   keyIdToDiceKeyInHumanReadableForm: [string, DiceKeyInHumanReadableForm][];
-  centerLetterAndDigitToKeyId: [string, string][];
+//  centerLetterAndDigitToKeyId: [string, string][];
 }
 
 class DiceKeyMemoryStoreClass {
@@ -47,7 +47,7 @@ class DiceKeyMemoryStoreClass {
 
   toStorageFormat = (): StorageFormat => ({
     keyIdToDiceKeyInHumanReadableForm: [...this.keyIdToDiceKeyInHumanReadableForm.entries()],
-    centerLetterAndDigitToKeyId: [...this.centerLetterAndDigitToKeyId.entries()]
+//    centerLetterAndDigitToKeyId: [...this.centerLetterAndDigitToKeyId.entries()]
   });
   toStorageFormatJson = () => JSON.stringify(this.toStorageFormat())
 
@@ -59,7 +59,10 @@ class DiceKeyMemoryStoreClass {
 
   onReadFromShortTermEncryptedStorage = action ( (s: StorageFormat) => {
     this.keyIdToDiceKeyInHumanReadableForm = new ObservableMap(s.keyIdToDiceKeyInHumanReadableForm);
-    this.centerLetterAndDigitToKeyId = new ObservableMap(s.centerLetterAndDigitToKeyId);
+    this.centerLetterAndDigitToKeyId = new ObservableMap(
+      s.keyIdToDiceKeyInHumanReadableForm.map( ([keyId, diceKeyInHumanReadableForm]) =>
+        ([DiceKeyWithoutKeyId.fromHumanReadableForm(diceKeyInHumanReadableForm).centerLetterAndDigit, keyId])
+    ));
   });
 
   /**
@@ -202,12 +205,13 @@ class DiceKeyMemoryStoreClass {
       if (json == null) {
         console.log("No DiceKeys in memory store");
       } else if (json) {
+        // console.log(`DiceKeysMemoryStore json`, json);
         const storageFormat = JSON.parse(json) as StorageFormat;
         this.onReadFromShortTermEncryptedStorage(storageFormat);
         console.log(`Read ${storageFormat.keyIdToDiceKeyInHumanReadableForm.length} DiceKey(s) from memory`)
       }
     } catch {
-      console.log("Problem reading DiceKeys from memory store")
+      console.log("Problem reading DiceKeys from memory store");
     }
     this.#triggerReadyState();
   }

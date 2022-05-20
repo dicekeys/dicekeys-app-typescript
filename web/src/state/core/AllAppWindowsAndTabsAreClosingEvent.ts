@@ -1,10 +1,9 @@
 import { urlSafeBase64Encode } from "@dicekeys/dicekeys-api-js";
-import { action, makeAutoObservable } from "mobx";
 import { CustomEvent } from "../../utilities/event";
 import { getRandomBytes } from "../../utilities/get-random-bytes";
 
 const myWindowId = urlSafeBase64Encode(getRandomBytes(20));
-const heartbeatFrequencyInMs = 5000;
+const heartbeatFrequencyInMs = 10000;
 let heartbeatInterval: any;
 
 const localStoreName = "DiceKeysOpenWindowIds"
@@ -39,13 +38,12 @@ new (class WindowsOpen {
 		localStorage.setItem(localStoreName, JSON.stringify(windowIds));
 	};
 
-
-	private sendHeartbeat = action( () => {
+	private sendHeartbeat = () => {
 		// this.openWindowIds[myWindowId] = (new Date()).getTime() + (2 * heartbeatFrequencyInMs);
-		this.openWindowIds = {...this.openWindowIds, [myWindowId]: (new Date()).getTime() + (2 * heartbeatFrequencyInMs)};
-	})
+		this.openWindowIds = {...this.openWindowIds, [myWindowId]: Date.now() + (2 * heartbeatFrequencyInMs)};
+	}
 
-	private removeMyself = action( () => {
+	private removeMyself = () => {
 		clearInterval(heartbeatInterval);
 		const ids = this.openWindowIds;
 		delete ids[myWindowId];
@@ -54,17 +52,16 @@ new (class WindowsOpen {
 		if (!this.areOtherWindowsOpen) {
 			AllAppWindowsAndTabsAreClosingEvent.sendImmediately();
 		}
-	})
+	}
 
 	get areOtherWindowsOpen(): boolean {
-		const now = new Date().getTime();
+		const now = Date.now();
 		return Object.entries(this.openWindowIds).filter( ([id, expires]) =>
 			id != myWindowId && expires > now
 		).length > 0;
 	}
 
 	constructor() {
-		makeAutoObservable(this);
 		this.sendHeartbeat();
 		heartbeatInterval = setInterval( this.sendHeartbeat, heartbeatFrequencyInMs );
 		window.addEventListener("unload", () => {

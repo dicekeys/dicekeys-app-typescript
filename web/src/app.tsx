@@ -45,13 +45,20 @@ try {
     // Add it to the queue.
     if (RUNNING_IN_BROWSER) {
       // Open DiceKeys app, or better create a new UI view.
-      const schemeBasedApiRequest = "dicekeys://" + url.search;
-//      setTimeout( () => {
-        window.location.assign(schemeBasedApiRequest);
-//      }, 1);
+      ApiRequestsReceivedState.enqueueApiRequestReceived(request);
+      console.log(`Request enqueued for handling by web app`);
+      // const schemeBasedApiRequest = "dicekeys:/" + url.search;
+      // customProtocolCheck(schemeBasedApiRequest, () => {
+      //   // On failure, handle API request locally...
+      //   ApiRequestsReceivedState.enqueueApiRequestReceived(request);
+      //   console.log(`Request enqueued for handling by web app`);            
+      //   // window.location.assign(schemeBasedApiRequest);
+      // }, () => {
+      //   // On success, we'll do A
+      //   window.location.assign(schemeBasedApiRequest);
+      //   // setTimeout( () => {window.close();}, 2000)
+      // }, 5000 );
     }
-    ApiRequestsReceivedState.enqueueApiRequestReceived(request);
-    console.log(`Requeest enqueued`)
   }
 } catch (e) {
   // Not a valid request.  Carry on.
