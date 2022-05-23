@@ -36,6 +36,7 @@ import { addAuthenticationToken, getUrlForAuthenticationToken } from "../state/s
 import {RUNNING_IN_ELECTRON} from "../utilities/is-electron";
 import type {ElectronBridgeRendererView} from "../../../common/IElectronBridge";
 import { KnownCustomProtocolsToTheirAssociatedDomains } from "./KnownCustomProtocols";
+import { CenterLetterAndDigit } from "../dicekeys/DiceKey";
 
 
 const getApiRequestFromSearchParams = (
@@ -261,9 +262,15 @@ export class QueuedUrlApiRequest extends QueuedApiRequest {
 
   throwIfClientNotPermitted: () => void = () => throwIfUrlNotPermitted(this)(this.request);
 
-  transmitResponse = (response: ApiCalls.Response) => {
+  transmitResponse = (response: ApiCalls.Response, centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number) => {
     // console.log(`Response to be transmitted`, {...response});
     const marshalledResponseUrl = addResponseToUrl( this.request.command, this.respondTo, response);
+    if (centerLetterAndDigit != null) {
+      marshalledResponseUrl.searchParams.set("centerLetterAndDigit", centerLetterAndDigit);
+    }
+    if (sequenceNumber != null) {
+      marshalledResponseUrl.searchParams.set("#", sequenceNumber.toString());
+    }
     this.transmitResponseUrl(marshalledResponseUrl)
   }
 

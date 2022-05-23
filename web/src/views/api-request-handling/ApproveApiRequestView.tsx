@@ -267,7 +267,8 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
 
   const handleApproveRequestButton = () => {
     if (seedString) {
-      queuedApiRequest.respond(seedString);
+      const centerLetterAndDigit = diceKey?.centerLetterAndDigit
+      queuedApiRequest.respond(seedString, centerLetterAndDigit);
     }
     onApiRequestResolved();
   }
