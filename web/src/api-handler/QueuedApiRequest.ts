@@ -82,9 +82,9 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
       // (fortunately, that means we're non-interactive and just testing)
       const response = new SeededApiCommands(await SeededCryptoModulePromise, seedString).executeRequest<ApiRequestObject>(request);
       const responseWIthRequestId = {...response, requestId};
-      console.log(`getResponse.requestId`, requestId)
-      console.log(`getResponse.responseWIthRequestId`, responseWIthRequestId)
-      return {...response, requestId};
+      // console.log(`getResponse.requestId`, requestId)
+      // console.log(`getResponse.responseWIthRequestId`, responseWIthRequestId)
+      return responseWIthRequestId;
     } else {
       // We're in an environment with web workers. Await a remote execute
       const ComputeApiCommandWorkerModule = await import ("../workers/call-api-command-worker");

@@ -13,6 +13,7 @@ import { NavigationPathState } from "./core/NavigationPathState";
 import { DeleteDiceKeyViewStateName, SaveDiceKeyViewStateName, SaveOrDeleteDiceKeyStateName, SaveDiceKeyViewState, DeleteDiceKeyViewState } from "../views/SaveOrDeleteDiceKeyViewState";
 import { SaveOrDeleteDiceKeyViewState } from "../views/SaveOrDeleteDiceKeyViewState";
 import { RUNNING_IN_ELECTRON } from "../utilities/is-electron";
+import { ObservableLocalStorageBoolean } from "../utilities/ObservableLocalStorage";
 
 export type TopLevelSubViewStates =
   LoadDiceKeyViewState |
@@ -33,8 +34,16 @@ const clearDiceKeyMemoryStore = () => {
   DiceKeyMemoryStore.removeAll();
 }
 
+const AutoEraseDisabled = new ObservableLocalStorageBoolean("autoEraseDisabled", false);
+
 export class WindowTopLevelNavigationState {
-  readonly autoEraseCountdownTimer = new CountdownTimer({callbackOnReachesZero: clearDiceKeyMemoryStore});
+  readonly autoEraseCountdownTimer = new CountdownTimer({
+    name: `autoEraseCountdownTimer`,
+    callbackOnReachesZero: () => {
+      if (!this.autoEraseDisabled) {
+        clearDiceKeyMemoryStore();
+      }
+  }});
 
   setAutoEraseCountdownTimer = action( (startAtMs: number= 60*1000) => {
     this.autoEraseCountdownTimer.start({startAtMs});
@@ -88,11 +97,10 @@ export class WindowTopLevelNavigationState {
     }
   }
 
-  private _autoEraseDisabled: boolean = false;
-  get autoEraseDisabled() { return this._autoEraseDisabled }
+  get autoEraseDisabled() { return AutoEraseDisabled.value }
   private setAutoEraseDisabled = (trueToDisable: boolean) => action( ()  => {
     if (this.autoEraseDisabled !== trueToDisable) {
-      this._autoEraseDisabled = trueToDisable;
+      AutoEraseDisabled.setValue(trueToDisable);
       this.startOrStopTimerIfNecessary();
     }
   });
@@ -125,6 +133,7 @@ export class WindowTopLevelNavigationState {
     this.subView = new SubViewState<TopLevelSubViewStates>("ROOT", this.navState, defaultSubView);
     this.startOrStopTimerIfNecessary();
     this.subView.subStateChangedEvent.on( this.startOrStopTimerIfNecessary );
+    AutoEraseDisabled.changed.on( this.startOrStopTimerIfNecessary );
 
     makeAutoObservable(this);
   }

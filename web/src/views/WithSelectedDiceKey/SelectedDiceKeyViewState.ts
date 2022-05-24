@@ -59,10 +59,10 @@ export class SelectedDiceKeyViewState implements ViewState<SelectedDiceKeyViewSt
     this.subView = new SubViewState<SelectedDiceKeySubViewStates>(this.viewName, this.navState, this.displayDiceKeyViewState);
     this.subView.subStateChangedEvent.on( (_prevState, _currentState) => {
       const diceKeyIsInMemory = DiceKeyMemoryStore.hasKeyIdInMemory(diceKey.keyId);
-      console.log(`SelectedDiceKeyView subview state changed from ${_prevState?.viewName ?? "undefined"} to ${_currentState?.viewName ?? "undefined"} and DiceKeyInMemory=${diceKeyIsInMemory ? "true" : "false"}`)
+      // console.log(`SelectedDiceKeyView subview state changed from ${_prevState?.viewName ?? "undefined"} to ${_currentState?.viewName ?? "undefined"} and DiceKeyInMemory=${diceKeyIsInMemory ? "true" : "false"}`)
       if (!diceKeyIsInMemory) {
         // We've navigated to this view after the key has been deleted from memory.
-        console.log(`Arrived at SelectedDiceKeyView with deleted DiceKey. Must have returned from deleted state`);
+        // console.log(`Arrived at SelectedDiceKeyView with deleted DiceKey. Must have returned from deleted state`);
         addressBarState.back();
       }
     })

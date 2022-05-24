@@ -177,6 +177,10 @@ class DiceKeyMemoryStoreClass {
     return [...this.keysInMemory, ...this.keysSavedToDeviceButNotInMemory];
   }
 
+  get keysInMemoryOrSavedToDeviceSortedByCenterDie(): PublicDiceKeyDescriptorWithSavedOnDevice[] {
+    return sortPublicDiceKeyDescriptors(this.keysInMemoryOrSavedToDevice);
+  }
+
   get isNonEmpty(): boolean { return this.keyIds.length > 0 }
 
   get keysIdsAndNicknames() {
@@ -208,7 +212,7 @@ class DiceKeyMemoryStoreClass {
         // console.log(`DiceKeysMemoryStore json`, json);
         const storageFormat = JSON.parse(json) as StorageFormat;
         this.onReadFromShortTermEncryptedStorage(storageFormat);
-        console.log(`Read ${storageFormat.keyIdToDiceKeyInHumanReadableForm.length} DiceKey(s) from memory`)
+        // console.log(`Read ${storageFormat.keyIdToDiceKeyInHumanReadableForm.length} DiceKey(s) from memory`)
       }
     } catch {
       console.log("Problem reading DiceKeys from memory store");
