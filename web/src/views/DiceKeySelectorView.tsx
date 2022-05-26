@@ -23,12 +23,6 @@ interface SpacingInformation {
   numberOfElements: number;
 }
 
-const WidthSpacer = styled.div<{width: string}>`
-  display: block;
-  min-width: ${ p => p.width };
-  min-height: 1px;
-`
-
 const paddingRequiredToCenterOneEdge = (numberOfElementsBetweenItemAndEdge: number) => {
   const paddingRequiredIfNoObjectsToLeft = `( (${keyRowWidth} - (${selectedItemSize} + ${spaceBetweenItems}) ) / 2)` as const;  
   const paddingRequireAccountingForToLeft = `${paddingRequiredIfNoObjectsToLeft} - (${numberOfElementsBetweenItemAndEdge} * ${unselectedItemSizeWithMargins})` as const;
@@ -118,13 +112,8 @@ export const DiceKeySelectorView = observer ( ({selectedDiceKeyId, setSelectedDi
   const selectDiceKey = (keyId: string) => () => {
     setSelectedDiceKeyId(keyId);
   }
-  const numberOfElements = storedDiceKeyDescriptors.length;
-  // const paddingLeft = paddingRequiredToCenterOneEdge(indexSelected);
-  // const paddingRight = paddingRequiredToCenterOneEdge(numberOfElements - (indexSelected + 1));
   return (
-    <StoredDiceKeysRow indexSelected={indexSelected} numberOfElements={storedDiceKeyDescriptors.length}>
-      {/* <WidthSpacer width={paddingLeft}></WidthSpacer> */}
-      {
+    <StoredDiceKeysRow indexSelected={indexSelected} numberOfElements={storedDiceKeyDescriptors.length}>{
       storedDiceKeyDescriptors.map( (storedDiceKeyDescriptor) => {
         const isSelected = storedDiceKeyDescriptor.keyId === selectedDiceKeyId;
         return isSelected ? (
@@ -141,9 +130,7 @@ export const DiceKeySelectorView = observer ( ({selectedDiceKeyId, setSelectedDi
           />
         )
       })
-    }
-    {/* <WidthSpacer width={paddingRight}>&nbsp;</WidthSpacer> */}
-    </StoredDiceKeysRow>
+    }</StoredDiceKeysRow>
   )
 });
 
