@@ -9,6 +9,7 @@ import {
   UndoverlineCodes, getUndoverlineCodes,
   FaceDimensionsFractional
 } from "@dicekeys/read-dicekey-js";
+import {EventHandlerOverridesDefault} from "../../utilities/EventHandlerOverridesDefault"
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
 
@@ -175,10 +176,7 @@ export const FaceGroupView = observer( ({
   } : FaceGroupViewProps ) => { /*  & React.SVGAttributes<SVGGElement> */
   const radius = linearSizeOfFace / 12;
   const clockwiseAngle = faceRotationLetterToClockwiseAngle(face.orientationAsLowercaseLetterTrbl || "?");
-  const optionalOnClickHandler = onFaceClicked ? {onClick: ((e: React.MouseEvent) => {
-    onFaceClicked();
-    e.preventDefault();
-  })} : {};
+  const optionalOnClickHandler = onFaceClicked ? {onClick: EventHandlerOverridesDefault(onFaceClicked)} : {};
   return (
     <g transform={transform != null ? transform : center ? `translate(${center.x}, ${center.y})` : undefined}
         {...svgGroupProps}

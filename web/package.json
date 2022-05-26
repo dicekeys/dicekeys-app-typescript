@@ -11,6 +11,7 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --detectOpenHandles",
     "start": "vite --config ./vite.config.ts",
+    "preview": "vite --config ./vite.config.preview.ts",
     "clean-web": "rimraf ../dist/web",
     "clean-electron": "rimraf ../electron/electron-html",
     "typecheck": "tsc --noEmit",

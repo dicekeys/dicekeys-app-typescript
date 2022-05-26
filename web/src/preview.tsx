@@ -6,6 +6,7 @@ import { Preview_EnterDiceKeyView } from "./views/LoadingDiceKeys/EnterDiceKeyVi
 import { Preview_StickerSheetView } from "./views/SVG/StickerSheetView";
 import { Preview_StickerTargetSheetView } from "./views/SVG/StickerTargetSheetView";
 import { Preview_FaceCopyingView } from "./views/SVG/FaceCopyingView";
+import { PREVIEW_DiceKeySelectorView } from "./views/DiceKeySelectorView"
 import { getPreview, addPreviewWithMargins, addCenteredPreview, getPreviewNames } from "./views/basics/Previews";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
@@ -24,7 +25,7 @@ addCenteredPreview("ScanDiceKey", () => ( <Preview_ScanDiceKeyView/> ));
 addPreviewWithMargins("StickerSheet", () => ( <Preview_StickerSheetView />));
 addPreviewWithMargins("StickerTargetSheet", () => ( <Preview_StickerTargetSheetView />));
 addPreviewWithMargins("FaceCopying", () => ( <Preview_FaceCopyingView />));
-
+addCenteredPreview("DiceKeySelectorView", () => ( <PREVIEW_DiceKeySelectorView/>))
 
 class PreviewState {
   constructor (public name: string | undefined =
