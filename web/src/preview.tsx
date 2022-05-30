@@ -14,6 +14,8 @@ import {WindowRoutingView} from "./views/WindowTopLevelView";
 import { DiceKeyMemoryStore } from "./state";
 import { PushButton } from "./css/Button";
 import styled from "styled-components";
+import { ThemeProvider } from "styled-components";
+import { lightTheme } from "./css/lightTheme";
 
 // To make sure everything is loaded, load the view for the app even if we're not using it.
 if (!WindowRoutingView) {
@@ -71,7 +73,9 @@ window.addEventListener('load', () => {
     const root = createRoot(container!);
     root.render((
       <ErrorHandler>
+        <ThemeProvider theme={lightTheme}>
           <Previews />
+        </ThemeProvider>
       </ErrorHandler>
     ));
   })
