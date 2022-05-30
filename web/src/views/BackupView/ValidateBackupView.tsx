@@ -54,7 +54,7 @@ export const ValidateBackupView = observer ( ({
   if (viewState.scanning) {
     return (<><Spacer/><CenterColumn>
       <ScanDiceKeyView
-        maxHeight="55vh"
+        height="55vh"
         onDiceKeyRead={ onDiceKeyRead }
       />
       <CenteredControls>

@@ -99,12 +99,12 @@ class DiceKeyMemoryStoreClass {
    * @param descriptor A public descriptor storing a DiceKey
    * @returns 
    */
-  load = async (descriptor: PublicDiceKeyDescriptorWithSavedOnDevice): Promise<DiceKeyWithKeyId | undefined> => {
-    const {keyId, savedOnDevice} = descriptor;
+  load = async (descriptor: {keyId: string}): Promise<DiceKeyWithKeyId | undefined> => {
+    const {keyId} = descriptor;
     const diceKeyInHumanReadableForm = this.keyIdToDiceKeyInHumanReadableForm.get(keyId);
     if (diceKeyInHumanReadableForm != null) {
       return new DiceKeyWithKeyId(keyId, diceKeyFacesFromHumanReadableForm(diceKeyInHumanReadableForm));
-    } else if (savedOnDevice) {
+    } else if (RUNNING_IN_ELECTRON /* && savedOnDevice */) {
       return await this.loadFromDeviceStorage(descriptor);
     }
     return;

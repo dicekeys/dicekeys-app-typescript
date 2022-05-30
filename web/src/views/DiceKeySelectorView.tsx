@@ -3,88 +3,149 @@ import React from "react";
 
 import styled, { css } from "styled-components";
 import { DiceKeyView } from "./SVG/DiceKeyView";
-import { cssCalcTyped } from "../utilities";
+import { cssCalcTyped, cssExprWithoutCalc } from "../utilities";
 import { DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId, facesFromPublicKeyDescriptor } from "../dicekeys/DiceKey";
 import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "../state";
-// import { SubViewButton } from "../css/SubViewButton";
-// import { ButtonRow, PushButton } from "../css/Button";
-// import { ObscureDiceKey } from "../state/ToggleState";
+import LoadDiceKeyImage from "../images/Scanning a DiceKey.svg";
+import { ToggleState } from "../state";
+import { DivSupportingInvisible } from "../css";
 
-const keyRowWidth = `90vw` as const;
-const selectedItemSize = `min(40vw, 50vh)` as const;
-const unselectedItemSize = `(${selectedItemSize} / 2)` as const;
-const spaceBetweenItems = `min(2vw, 2vh)` as const;
-const unselectedItemSizeWithMargins = `(${unselectedItemSize} + ${spaceBetweenItems})` as const;
-export const keyMargin = `( (${spaceBetweenItems}) / 2 )` as const;
 
+
+
+const HideInstruction = styled(DivSupportingInvisible)`
+  font-family: sans-serif;
+  font-size: 1.25rem;
+`
+
+interface OptionalSpaceBetweenItems {
+  spaceBetweenItems?: string; // default: min(2vw, 2vh)`
+};
+const defaultSpaceBetweenItems = `min(2vw, 2vh)`;
+interface OptionalSelectedItemWidth {
+  selectedItemWidth?: string; // default: min(40vw, 50vh)
+}
+const defaultSelectedItemWidth = `min(40vw, 50vh)`;
+interface OptionalRatioOfSelectedItemWidthToSelectableItemWidth {
+  ratioOfSelectedItemWidthToSelectableItemWidth?: string; // default: 2
+}
+const defaultRatioOfSelectedItemWidthToSelectableItemWidth = `2`;
+interface OptionalRowWidth {
+  rowWidth?: string; // default `90vw`
+}
+const defaultRowWidth = `90vw`;
+interface SelectorViewSizeModel extends
+  OptionalSpaceBetweenItems,
+  OptionalSelectedItemWidth,
+  OptionalRatioOfSelectedItemWidthToSelectableItemWidth,
+  OptionalRowWidth
+  {};
+
+const itemPadding = ({spaceBetweenItems=defaultSpaceBetweenItems}: OptionalSpaceBetweenItems) => `( (${cssExprWithoutCalc(spaceBetweenItems)}) / 2 )` as const;
+// const keyRowWidth = `90vw` as const;
+
+
+const selectableItemWidth = ({
+  selectedItemWidth=defaultSelectedItemWidth,
+  ratioOfSelectedItemWidthToSelectableItemWidth=defaultRatioOfSelectedItemWidthToSelectableItemWidth,
+}: OptionalSelectedItemWidth & OptionalRatioOfSelectedItemWidthToSelectableItemWidth) => 
+  cssExprWithoutCalc(`${cssExprWithoutCalc(selectedItemWidth)} / ${cssExprWithoutCalc(ratioOfSelectedItemWidthToSelectableItemWidth)}`);
+
+// const selectedItemSize = `min(40vw, 50vh)` as const;
+// const selectableItemSize = `(${cssExprWithoutCalc(selectedItemSize)} / 3)` as const;
+const selectableItemSizeWithMargins = (sizeModel: SelectorViewSizeModel) =>
+  `(${selectableItemWidth(sizeModel)} + ${cssExprWithoutCalc(sizeModel.spaceBetweenItems ?? defaultSpaceBetweenItems)})` as const;
 
 interface SpacingInformation {
   indexSelected: number;
-  numberOfElements: number;
+  numberOfItems: number;
 }
 
-const paddingRequiredToCenterOneEdge = (numberOfElementsBetweenItemAndEdge: number) => {
-  const paddingRequiredIfNoObjectsToLeft = `( (${keyRowWidth} - (${selectedItemSize} + ${spaceBetweenItems}) ) / 2)` as const;  
-  const paddingRequireAccountingForToLeft = `${paddingRequiredIfNoObjectsToLeft} - (${numberOfElementsBetweenItemAndEdge} * ${unselectedItemSizeWithMargins})` as const;
+const paddingRequiredToCenterOneEdge = ({
+  numberOfElementsBetweenItemAndEdge,
+  ...sizeModel
+}: 
+  {numberOfElementsBetweenItemAndEdge: number} & SelectorViewSizeModel
+) => {
+  const {
+    spaceBetweenItems=defaultSpaceBetweenItems,
+    selectedItemWidth=defaultSelectedItemWidth,
+    rowWidth=defaultRowWidth,
+  } = sizeModel;
+  const paddingRequiredIfNoObjectsToLeft = `( (${rowWidth} - (${selectedItemWidth} + ${spaceBetweenItems}) ) / 2)` as const;
+  const paddingRequireAccountingForToLeft = `${paddingRequiredIfNoObjectsToLeft} - (${numberOfElementsBetweenItemAndEdge} * ${selectableItemSizeWithMargins(sizeModel)})` as const;
   const neverLessThanZero = `max(0px,${paddingRequireAccountingForToLeft})` as const;
   const padding = `calc(${neverLessThanZero})` as const;
   return padding;
 }
 
 
-const StoredDiceKeysRow = styled.div<SpacingInformation>`
-  ${ ({indexSelected, numberOfElements}) => (indexSelected < 0) ? css`` : 
+const RowWithSelectedItemScrolledtoCenter = styled.div<SpacingInformation & SelectorViewSizeModel>`
+  box-sizing: border-box;
+  ${ ({indexSelected, numberOfItems, ...sizeModel}) => (indexSelected < 0) ? css`` : 
     css`
-      box-sizing: border-box;
-      padding-right: ${paddingRequiredToCenterOneEdge(numberOfElements - (indexSelected + 1))};
-      padding-left: ${paddingRequiredToCenterOneEdge(indexSelected)};
+      padding-right: ${paddingRequiredToCenterOneEdge({numberOfElementsBetweenItemAndEdge: numberOfItems - (indexSelected + 1), ...sizeModel})};
+      padding-left: ${paddingRequiredToCenterOneEdge({numberOfElementsBetweenItemAndEdge: indexSelected, ...sizeModel})};
   `}
+  max-width: ${ sizeModel => sizeModel.rowWidth ?? defaultRowWidth};
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
-  max-width: ${keyRowWidth};
   overflow-x: auto;
-`
-
-const StoredDiceKeyViewContainer = styled.div`
-  display: block;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  margin-left: calc(${keyMargin});
-  margin-right: calc(${keyMargin});
 `;
 
-interface StoredDiceKeyProps {
+const RowWithSelectedItemScrolledtoCenterItem = styled.div<SelectorViewSizeModel>`
+  display: flex;
+  border: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: calc(${sizeModel => itemPadding(sizeModel)});
+  border-radius: calc(${sizeModel => itemPadding(sizeModel)})
+`
+
+const SelectableItemViewContainer = styled(RowWithSelectedItemScrolledtoCenterItem)<SelectorViewSizeModel>`
+  cursor: grab;
+  width: calc(${ sizeModel => selectableItemWidth(sizeModel)} );
+  :hover {
+    background-color: rgba(0,0,0,0.25);
+  }
+  :active {
+    background-color: rgba(0,0,0,0.50);
+  }
+`;
+
+const SelectedItemViewContainer = styled(RowWithSelectedItemScrolledtoCenterItem)<SelectorViewSizeModel>`
+  width: calc(${ sizeModel => sizeModel.selectedItemWidth ?? defaultSelectedItemWidth });
+`;
+
+const SelectableDiceKeyView = observer ( (props: {
   storedDiceKeyDescriptor: PublicDiceKeyDescriptorWithSavedOnDevice;
   onClick: () => void
-}
-
-const SelectableDiceKeyView = observer ( (props: StoredDiceKeyProps) => {
-  const {storedDiceKeyDescriptor, onClick} = props;
+} & SelectorViewSizeModel) => {
+  const {storedDiceKeyDescriptor, onClick, ...sizeModel} = props;
   return (
-    <StoredDiceKeyViewContainer
+    <SelectableItemViewContainer
       key={storedDiceKeyDescriptor.keyId}
+      {...sizeModel}
     >
       <DiceKeyView
         onClick={onClick}
-        size={`${cssCalcTyped(unselectedItemSize)}`}
+        size={`${cssCalcTyped(selectableItemWidth(sizeModel))}`}
         faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
         obscureAllButCenterDie={true}
         showLidTab={true}
       />
-    </StoredDiceKeyViewContainer>
+    </SelectableItemViewContainer>
   )
 });
 
-
-const SelectedDiceKeyView = observer ( (props: {diceKey?: DiceKeyWithKeyId}) => {
-  const {diceKey} = props;
-  if (diceKey == null) return null;
+const SelectedDiceKeyView = observer ( ({diceKey, ...sizeModel}: {diceKey?: DiceKeyWithKeyId} & SelectorViewSizeModel) => {
   return (
-    <StoredDiceKeyViewContainer
-      key={diceKey.keyId}
+    <SelectedItemViewContainer
+      {...sizeModel}
+      key={diceKey?.keyId}
       // Automatically scroll selected DiceKeys into the center.
       ref={ (e) => {
           if (e == null) return;
@@ -92,56 +153,91 @@ const SelectedDiceKeyView = observer ( (props: {diceKey?: DiceKeyWithKeyId}) => 
        }}
     >
         <DiceKeyView
-          size={`${cssCalcTyped(selectedItemSize)}`}
-          faces={ diceKey.faces }
-          // obscureAllButCenterDie={true}
+          size={`${cssCalcTyped(sizeModel.selectedItemWidth ?? defaultSelectedItemWidth)}`}
+          faces={ diceKey?.faces }
           showLidTab={false}
         />
-    </StoredDiceKeyViewContainer>
+        <HideInstruction invisible={ToggleState.ObscureDiceKey.value}>Press on DiceKey to hide all but center face</HideInstruction>
+    </SelectedItemViewContainer>
   )
 });
 
 
-interface DiceKeySelectorViewProps {
+export const SubViewButtonImage = styled.img<OptionalSelectedItemWidth>`
+  height: calc(${ sizeModel => selectableItemWidth(sizeModel)} * 0.75);
+`;
+
+export const SubViewButtonCaption = styled.div<OptionalSelectedItemWidth>`
+  font-size: calc(${sizeModel => selectableItemWidth(sizeModel)} / 12);
+  margin-top: calc(${sizeModel => selectableItemWidth(sizeModel)} / 10);
+`;
+
+
+interface DiceKeySelectorViewProps extends SelectorViewSizeModel {
   selectedDiceKeyId: string | undefined;
   setSelectedDiceKeyId: (newKeyId: string | undefined) => void;
+  loadRequested: () => void;
 }
-export const DiceKeySelectorView = observer ( ({selectedDiceKeyId, setSelectedDiceKeyId}: DiceKeySelectorViewProps) => {
+
+export const DiceKeySelectorView = observer ( ({
+  loadRequested,
+  selectedDiceKeyId,
+  setSelectedDiceKeyId,
+  ...sizeModel
+}: DiceKeySelectorViewProps) => {
   const storedDiceKeyDescriptors = DiceKeyMemoryStore.keysInMemoryOrSavedToDevice;
   const indexSelected = storedDiceKeyDescriptors.findIndex( descriptor => descriptor.keyId === selectedDiceKeyId );
   const selectDiceKey = (keyId: string) => () => {
     setSelectedDiceKeyId(keyId);
   }
+  // The row has one item for each DiceKey and one for the button to load more DiceKeys.
+  const numberOfItems = storedDiceKeyDescriptors.length +  1;   
   return (
-    <StoredDiceKeysRow indexSelected={indexSelected} numberOfElements={storedDiceKeyDescriptors.length}>{
-      storedDiceKeyDescriptors.map( (storedDiceKeyDescriptor) => {
-        const isSelected = storedDiceKeyDescriptor.keyId === selectedDiceKeyId;
-        return isSelected ? (
-          <SelectedDiceKeyView
-            diceKey={DiceKeyMemoryStore.diceKeyForKeyId(storedDiceKeyDescriptor.keyId)}
-            key={storedDiceKeyDescriptor.keyId}
-            // {...{storedDiceKeyDescriptor, isSelected}}
-            // onClick={() => {alert("toggle"); ObscureDiceKey.toggle() }}
-          />
-          ) : (
-          <SelectableDiceKeyView
-            key={storedDiceKeyDescriptor.keyId} {...{storedDiceKeyDescriptor}}
-            onClick={selectDiceKey(storedDiceKeyDescriptor.keyId)}
-          />
-        )
-      })
-    }</StoredDiceKeysRow>
+    <RowWithSelectedItemScrolledtoCenter {...{numberOfItems, indexSelected, ...sizeModel}}>
+      {// Iterate through all the DiceKeys to display
+        storedDiceKeyDescriptors.map( (storedDiceKeyDescriptor) => {
+          const isSelected = storedDiceKeyDescriptor.keyId === selectedDiceKeyId;
+          return isSelected ? (
+            <SelectedDiceKeyView
+              {...sizeModel}
+              diceKey={DiceKeyMemoryStore.diceKeyForKeyId(storedDiceKeyDescriptor.keyId)}
+              key={storedDiceKeyDescriptor.keyId}
+            />
+            ) : (
+            <SelectableDiceKeyView
+               {...sizeModel}
+               key={storedDiceKeyDescriptor.keyId} {...{storedDiceKeyDescriptor}}
+              onClick={selectDiceKey(storedDiceKeyDescriptor.keyId)}
+            />
+          )
+        })
+      // End of iteration
+      }
+      <SelectableItemViewContainer onClick={loadRequested} {...sizeModel}>
+        <SubViewButtonImage src={LoadDiceKeyImage} {...sizeModel} />
+        <SubViewButtonCaption {...sizeModel}>{
+          storedDiceKeyDescriptors.length === 0 ? "Load a DiceKey" : "Load another DiceKey"
+        }</SubViewButtonCaption>
+      </SelectableItemViewContainer>
+    </RowWithSelectedItemScrolledtoCenter>
   )
 });
 
 export const PREVIEW_DiceKeySelectorView = () => {
   DiceKeyMemoryStore.addDiceKeyWithKeyId(new DiceKeyWithKeyId("testA", DiceKeyWithoutKeyId.fromHumanReadableForm("A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm).faces));
-  // DiceKeyMemoryStore.addDiceKeyWithKeyId(new DiceKeyWithKeyId("testB", DiceKeyWithoutKeyId.fromHumanReadableForm("B2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2t" as DiceKeyInHumanReadableForm).faces));
-  // DiceKeyMemoryStore.addDiceKeyWithKeyId(new DiceKeyWithKeyId("testC", DiceKeyWithoutKeyId.fromHumanReadableForm("C2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2t" as DiceKeyInHumanReadableForm).faces));
-  // DiceKeyMemoryStore.addDiceKeyWithKeyId(new DiceKeyWithKeyId("testY", DiceKeyWithoutKeyId.fromHumanReadableForm("Y3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY1t" as DiceKeyInHumanReadableForm).faces));
+  DiceKeyMemoryStore.addDiceKeyWithKeyId(new DiceKeyWithKeyId("testB", DiceKeyWithoutKeyId.fromHumanReadableForm("B2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2t" as DiceKeyInHumanReadableForm).faces));
+  DiceKeyMemoryStore.addDiceKeyWithKeyId(new DiceKeyWithKeyId("testC", DiceKeyWithoutKeyId.fromHumanReadableForm("C2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2t" as DiceKeyInHumanReadableForm).faces));
+  DiceKeyMemoryStore.addDiceKeyWithKeyId(new DiceKeyWithKeyId("testY", DiceKeyWithoutKeyId.fromHumanReadableForm("Y3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY3tZ6tY1t" as DiceKeyInHumanReadableForm).faces));
   DiceKeyMemoryStore.addDiceKeyWithKeyId(new DiceKeyWithKeyId("testZ", DiceKeyWithoutKeyId.fromHumanReadableForm("Z2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2tZ2t" as DiceKeyInHumanReadableForm).faces));
-  const [selectedDiceKeyId, setSelectedDiceKeyId] = React.useState<string | undefined>("testA");
+  const [selectedDiceKeyId, setSelectedDiceKeyId] = React.useState<string | undefined>("testY");
   return  ( 
-  <DiceKeySelectorView selectedDiceKeyId={selectedDiceKeyId} setSelectedDiceKeyId={(keyId) => setSelectedDiceKeyId(keyId)} />
+  <DiceKeySelectorView
+    selectedDiceKeyId={selectedDiceKeyId}
+    setSelectedDiceKeyId={(keyId) => setSelectedDiceKeyId(keyId)}
+    loadRequested={() => alert("Load DiceKey clicked")}
+    rowWidth={`90vw`}
+    selectedItemWidth={`min(70vh,50vw)`}
+    ratioOfSelectedItemWidthToSelectableItemWidth={`4`}
+  />
   );
 };

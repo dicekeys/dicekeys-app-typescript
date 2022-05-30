@@ -89,6 +89,7 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
       // We're in an environment with web workers. Await a remote execute
       const ComputeApiCommandWorkerModule = await import ("../workers/call-api-command-worker");
       const result = await new ComputeApiCommandWorkerModule.ComputeApiCommandWorker().calculate({seedString, request});
+      console.log(`calculated ${seedString}`, request, result)
       return {...result, requestId};
     }
   }

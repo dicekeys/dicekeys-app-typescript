@@ -27,8 +27,10 @@ export class WorkerRequest<REQUEST, RESULT, REQUEST_MESSAGE extends REQUEST = RE
   public calculate = (
     request: REQUEST
   ): Promise<RESULT> => {
+    // console.log(`calculate called`, this._request, request)
     if (this._resultPromise && jsonStringifyWithSortedFieldOrder(this._request) === jsonStringifyWithSortedFieldOrder(request)) {
       // The request hasn't changed.
+      // console.log(`request hasn't changed`)
       return this._resultPromise;
     }
     this._result = undefined;
@@ -58,6 +60,7 @@ export class WorkerRequest<REQUEST, RESULT, REQUEST_MESSAGE extends REQUEST = RE
       };
   
       const handleMessageEvent = (messageEvent: MessageEvent) => {
+        // console.log(`response`, messageEvent.data);
         resolve(this._result = messageEvent.data as RESULT);
         this.terminate();
       }

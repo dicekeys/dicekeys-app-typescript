@@ -8,19 +8,21 @@ import {
   getKnownHost
 } from "../../phrasing/api";
 import { observer } from "mobx-react";
-import { CenterColumn, CenteredControls, ContentBox, Spacer, Instruction } from "../../views/basics";
-import { ScanDiceKeyView } from "../../views/LoadingDiceKeys/ScanDiceKeyView";
+import { CenterColumn, CenteredControls, ContentBox, Spacer, Instruction2 } from "../../views/basics";
 import { addPreview } from "../../views/basics/Previews";
 import { QueuedUrlApiRequest } from "../../api-handler";
-import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
 import { uint8ArrayToHexString } from "../../utilities/convert";
-import { DiceKeyView } from "../../views/SVG/DiceKeyView";
 import { PushButton } from "../../css/Button";
 
 import styled from "styled-components";
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 import { action, makeAutoObservable } from "mobx";
 import { DiceKeyMemoryStore } from "../../state";
+import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyViewState";
+import { LoadDiceKeyFullPageView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
+import { DiceKeySelectorView } from "../../views/DiceKeySelectorView";
+import { MobxObservedPromise } from "../../utilities/MobxObservedPromise";
 
 const HostNameSpan = styled.span`
   font-family: monospace;
@@ -193,25 +195,15 @@ export const ApiResultString = <COMMAND extends ApiCalls.Command>(
 export const ApiResponsePreview = observer ( <COMMAND extends ApiCalls.Command>(props: {
   command: COMMAND,
   host: string,
-  resultPromise: Promise<ApiCalls.ResponseForCommand<COMMAND>>
+  mobxObservedResponse: MobxObservedPromise<ApiCalls.ResponseForCommand<COMMAND>>
 }) => {
-  const {command, host, resultPromise} = props;
-  const [apiResult, setApiResult] = React.useState<ApiCalls.ResponseForCommand<COMMAND> | undefined>(undefined);
-  React.useEffect(() => {
-    (async () => {
-      // console.log("awaiting result");
-      const result = await resultPromise;
-      // console.log("attempt to set result", result);
-      setApiResult(result);
-    })();
-  }, []);
-  if (apiResult == null) return null;
-  // console.log(`apiResult`, apiResult, command, host);
+  const {command, host, mobxObservedResponse} = props;
+  const response = mobxObservedResponse.result;
 
   return (
     <div style={{display: "flex", flexDirection:"column", alignItems:"center", alignContent: "center"}}>
       <div style={{maxWidth: "80%", fontFamily: "monospace", borderBottom: "gray solid 1px"}}>
-        { ApiResultString(command, apiResult) }
+        { response == null ? "" : ApiResultString(command, response) }
       </div>
       <div style={{color: "rgba(0,0,0,0.666)", fontSize: ".75rem"}}>
         {describeCommandResultType(command)} to be sent to <HostDescriptorView host={host}/>
@@ -238,6 +230,25 @@ export class ApproveApiRequestState {
     this._diceKey = diceKey;
   });
 
+  private _loadDiceKeyViewState: LoadDiceKeyViewState | undefined;
+  get loadDiceDiceInProgress(): boolean { return this._loadDiceKeyViewState != null }
+  get loadDiceKeyViewState() { return this._loadDiceKeyViewState }
+  readonly setLoadDiceKeyViewState = action( (newValue: LoadDiceKeyViewState | undefined) => {
+    this._loadDiceKeyViewState = newValue;
+  });
+
+  startLoadDiceKey = () => {
+    this.setLoadDiceKeyViewState(new LoadDiceKeyViewState());
+  }
+
+  onDiceKeyReadOrCancelled = (diceKeyWithKeyId: DiceKeyWithKeyId | undefined ) => {
+    this.setLoadDiceKeyViewState(undefined);
+    if (diceKeyWithKeyId != null) {
+      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKeyWithKeyId);
+      this.setDiceKey(diceKeyWithKeyId);
+    }
+  }
+
   constructor(
     public readonly queuedApiRequest: QueuedApiRequest,
     diceKey?: DiceKeyWithKeyId
@@ -249,15 +260,25 @@ export class ApproveApiRequestState {
 }
 
 
+
 export interface ApproveApiRequestViewProps {
   state: ApproveApiRequestState;
   onApiRequestResolved: () => any;
 }
 
 export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: ApproveApiRequestViewProps) => {
-  const { queuedApiRequest, diceKey } = state;
+  const { queuedApiRequest, diceKey, loadDiceKeyViewState } = state;
   const { request, host } = queuedApiRequest;
   const { command } = request;
+
+  if (loadDiceKeyViewState != null) {
+    return (
+      <LoadDiceKeyFullPageView
+        onDiceKeyReadOrCancelled={state.onDiceKeyReadOrCancelled}
+        state={loadDiceKeyViewState}
+      />
+    );
+  }
 
   const handleDeclineRequestButton = () => {
     queuedApiRequest.sendUserDeclined();
@@ -284,32 +305,29 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
         <RequestDescriptionView {...{command, host}} />
         <KeyAccessRestrictionsView {...{command, host}} />
       </RequestDescription>
-      { diceKey == null ? (
-        <>
-          <Spacer/>
-          <CenterColumn>
-            <Instruction>
-              To allow this action, you'll first need to load your DiceKey.
-            </Instruction>
-            <ScanDiceKeyView
-              onDiceKeyRead={state.setDiceKey}
-              maxHeight={"60vh"}
-            />
-          </CenterColumn>
-          <Spacer/>
-        </>
-      ) : (
-        <ContentBox>
-          <DiceKeyView
-            size="min(50vh,60vw)"
-            faces={diceKey.faces}
-          />
-          <ApiResponsePreview
-            host={host}
-            command={request.command}
-            resultPromise={queuedApiRequest.getResponse(diceKey.toSeedString()) as Promise<ApiCalls.ResponseForCommand<typeof command>> } />
-        </ContentBox>
-      )}
+      <ContentBox>
+      <CenterColumn>
+        <DiceKeySelectorView
+          loadRequested={state.startLoadDiceKey}
+          selectedDiceKeyId={diceKey?.keyId}
+          setSelectedDiceKeyId={
+            (keyId) => state.setDiceKey(DiceKeyMemoryStore.diceKeyForKeyId(keyId))
+          }
+        />
+        { diceKey == null ? (
+          <>
+              <Instruction2>
+                You will need your DiceKey to continue.
+              </Instruction2>
+          </>
+        ) : (
+            <ApiResponsePreview
+              host={host}
+              command={request.command}
+              mobxObservedResponse={new MobxObservedPromise(queuedApiRequest.getResponse(diceKey?.toSeedString()) as Promise<ApiCalls.ResponseForCommand<typeof command>>)} />
+        )}
+      </CenterColumn>
+      </ContentBox>
       <CenteredControls>
         <PushButton onClick={handleDeclineRequestButton}>Cancel</PushButton>
         <PushButton invisible={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
@@ -319,10 +337,11 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
   )
 })
 
-const createPreview = (name: string, urlString: string, diceKey?: DiceKeyWithKeyId) => {
+const createPreview = (name: string, urlString: string, ...diceKeys: DiceKeyWithKeyId[]) => {
   addPreview(name, () => {
+    diceKeys.forEach( diceKey => DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey) );
     const request = new QueuedUrlApiRequest(new URL(urlString));
-    const state = new ApproveApiRequestState(request, diceKey);
+    const state = new ApproveApiRequestState(request, diceKeys[0]);
     return (
       <ApproveApiRequestView
         state={state}
@@ -341,4 +360,11 @@ const msftAccountGetSecretRequestUrl = `https://dicekeys.app/?${""
   }&respondTo=${ encodeURIComponent(`https://account.microsoft.com/--derived-secret-api--/`)
   }${""}`
 createPreview("Approve Api Request (no key)", msftAccountGetSecretRequestUrl);
-createPreview("Approve Api Request (key loaded)", msftAccountGetSecretRequestUrl, DiceKeyWithKeyId.testExample);
+createPreview("Approve Api Request (key loaded)", msftAccountGetSecretRequestUrl,
+  DiceKeyWithKeyId.testExample
+);
+createPreview("Approve Api Request (more keys loaded)", msftAccountGetSecretRequestUrl,
+  new DiceKeyWithKeyId("testA", DiceKeyWithoutKeyId.fromHumanReadableForm("A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm).faces),
+  new DiceKeyWithKeyId("testB", DiceKeyWithoutKeyId.fromHumanReadableForm("B2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2t" as DiceKeyInHumanReadableForm).faces),
+  new DiceKeyWithKeyId("testC", DiceKeyWithoutKeyId.fromHumanReadableForm("C2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2t" as DiceKeyInHumanReadableForm).faces),
+);
