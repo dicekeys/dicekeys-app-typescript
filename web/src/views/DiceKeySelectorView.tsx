@@ -92,7 +92,9 @@ const RowWithSelectedItemScrolledtoCenter = styled.div<SpacingInformation & Sele
       padding-left: ${paddingRequiredToCenterOneEdge({numberOfElementsBetweenItemAndEdge: indexSelected, ...sizeModel})};
   `}
   width: ${ sizeModel => sizeModel.rowWidth ?? defaultRowWidth};
-  min-height: ${ sizeModel => cssCalcTyped(`${cssExprWithoutCalc(sizeModel.selectedItemWidth ?? defaultSelectedItemWidth)} + 1.25rem`) };
+  min-height: ${ sizeModel => cssCalcTyped(
+    `${cssExprWithoutCalc(sizeModel.selectedItemWidth ?? defaultSelectedItemWidth)} + 1.25rem`
+  ) };
   display: flex;
   flex-direction: row;
   justify-content: ${ ({indexSelected}) => indexSelected < 0 ? "center" : "flex-start"  };
@@ -106,7 +108,8 @@ const RowWithSelectedItemScrolledtoCenterItem = styled.div<SelectorViewSizeModel
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: calc(${sizeModel => itemPadding(sizeModel)});
+  padding-left: calc(${sizeModel => itemPadding(sizeModel)});
+  padding-right: calc(${sizeModel => itemPadding(sizeModel)});
   border-radius: calc(${sizeModel => itemPadding(sizeModel)})
 `
 
