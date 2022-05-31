@@ -74,9 +74,11 @@ const paddingRequiredToCenterOneEdge = ({
     selectedItemWidth=defaultSelectedItemWidth,
     rowWidth=defaultRowWidth,
   } = sizeModel;
-  const paddingRequiredIfNoObjectsToLeft = `( (${rowWidth} - (${selectedItemWidth} + ${spaceBetweenItems}) ) / 2)` as const;
-  const paddingRequireAccountingForToLeft = `${paddingRequiredIfNoObjectsToLeft} - (${numberOfElementsBetweenItemAndEdge} * ${selectableItemSizeWithMargins(sizeModel)})` as const;
-  const neverLessThanZero = `max(0px,${paddingRequireAccountingForToLeft})` as const;
+  const paddingRequiredIfNoObjectsBetweenThisObjectAndEdge =
+    `( (${rowWidth} - (${selectedItemWidth} + ${spaceBetweenItems}) ) / 2)` as const;
+  const paddingRequireAccountingForObjectsBetweenThisObjectAndEdge =
+    `${paddingRequiredIfNoObjectsBetweenThisObjectAndEdge} - (${numberOfElementsBetweenItemAndEdge} * ${selectableItemSizeWithMargins(sizeModel)})` as const;
+  const neverLessThanZero = `max(0px,${paddingRequireAccountingForObjectsBetweenThisObjectAndEdge})` as const;
   const padding = `calc(${neverLessThanZero})` as const;
   return padding;
 }
@@ -89,10 +91,11 @@ const RowWithSelectedItemScrolledtoCenter = styled.div<SpacingInformation & Sele
       padding-right: ${paddingRequiredToCenterOneEdge({numberOfElementsBetweenItemAndEdge: numberOfItems - (indexSelected + 1), ...sizeModel})};
       padding-left: ${paddingRequiredToCenterOneEdge({numberOfElementsBetweenItemAndEdge: indexSelected, ...sizeModel})};
   `}
-  max-width: ${ sizeModel => sizeModel.rowWidth ?? defaultRowWidth};
+  width: ${ sizeModel => sizeModel.rowWidth ?? defaultRowWidth};
+  min-height: ${ sizeModel => cssCalcTyped(`${cssExprWithoutCalc(sizeModel.selectedItemWidth ?? defaultSelectedItemWidth)} + 1.25rem`) };
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  justify-content: ${ ({indexSelected}) => indexSelected < 0 ? "center" : "flex-start"  };
   align-items: center;
   overflow-x: auto;
 `;

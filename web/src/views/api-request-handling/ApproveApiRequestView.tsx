@@ -5,7 +5,7 @@ import {
   getKnownHost
 } from "../../phrasing/api";
 import { observer } from "mobx-react";
-import { Spacer, Instruction2, CompressedContentBox, CenteredCompressedControls } from "../../views/basics";
+import { Spacer, Instruction2, CompressedContentBox, CenteredCompressedControls, ColumnCentered, RowCentered } from "../../views/basics";
 import { addPreview } from "../../views/basics/Previews";
 import { QueuedUrlApiRequest } from "../../api-handler";
 import { DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
@@ -289,11 +289,11 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
         rowWidth={`100vw`}
       />
       { diceKey != null ? null : (
-        <>
+        <RowCentered>        
             <Instruction2>
               You will need your DiceKey to continue.
             </Instruction2>
-        </>
+        </RowCentered>
       )}{ diceKey == null ? null : (
           <SequenceNumberRow>
             <label>Sequence number</label>
@@ -311,7 +311,9 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
           <PushButton invisible={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
         </CenteredCompressedControls>
         <CenteredCompressedControls>
-            <label style={{userSelect: "none"}} onClick={state.toggleRevealCenterLetterAndDigit}>Reveal that the center die {
+            <label style={{userSelect: "none"}} onClick={state.toggleRevealCenterLetterAndDigit}>Reveal
+            { diceKey == null ? " " : " that "}
+             the center die {
               diceKey == null ? null : <>is {diceKey.centerLetterAndDigit}</>
             } so that <HostDescriptorView host={host}/> can remind you next time.</label>
             <input
