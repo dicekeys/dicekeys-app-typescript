@@ -17,6 +17,7 @@ const HideInstruction = styled(DivSupportingInvisible)`
   font-family: sans-serif;
   font-style: italic;
   font-size: 1.25rem;
+  user-select: none;
 `
 
 interface OptionalSpaceBetweenItems {
@@ -108,6 +109,7 @@ const RowWithSelectedItemScrolledtoCenterItem = styled.div<SelectorViewSizeModel
 
 const SelectableItemViewContainer = styled(RowWithSelectedItemScrolledtoCenterItem)<SelectorViewSizeModel>`
   cursor: grab;
+  user-select: none;
   width: calc(${ sizeModel => selectableItemWidth(sizeModel)} );
   :hover {
     background-color: rgba(0,0,0,0.25);
@@ -158,8 +160,15 @@ const SelectedDiceKeyView = observer ( ({diceKey, ...sizeModel}: {diceKey?: Dice
           faces={ diceKey?.faces }
           showLidTab={false}
         />
-        <HideInstruction invisible={ToggleState.ObscureDiceKey.value} style={{fontSize: cssCalcTyped(`${sizeModel.selectedItemWidth ?? defaultSelectedItemWidth} / 24`)}}>
-          press on DiceKey to hide all but center face
+        <HideInstruction
+          invisible={ToggleState.ObscureDiceKey.value}
+          style={{
+            fontSize: cssCalcTyped(`${sizeModel.selectedItemWidth ?? defaultSelectedItemWidth} / 24`),
+            cursor: "grab",
+          }}
+          onClick={ToggleState.ObscureDiceKey.toggle}
+        >
+          press to hide all but center face
         </HideInstruction>
     </SelectedItemViewContainer>
   )

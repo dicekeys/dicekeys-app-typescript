@@ -86,11 +86,23 @@ export class ApproveApiRequestState {
     }
   };
 
+  private _revealCenterLetterAndDigit: boolean = true;
+  get revealCenterLetterAndDigit() { return this._revealCenterLetterAndDigit }
+  readonly setRevealCenterLetterAndDigit = action( (revealCenterLetterAndDigit: boolean) => {
+    this._revealCenterLetterAndDigit = revealCenterLetterAndDigit
+  });
+  readonly toggleRevealCenterLetterAndDigit = () => this.setRevealCenterLetterAndDigit(!this.revealCenterLetterAndDigit)
+
+  get centerLetterAndDigit() { return this.diceKey?.centerLetterAndDigit }
+  get centerLetterAndDigitToReveal() {  return this.revealCenterLetterAndDigit ?
+    (this.diceKey?.centerLetterAndDigit) : undefined
+  }
+
   transmitSuccessResponse = () => {
     const seedString = this.diceKey?.toSeedString();
     if (seedString == null)
       return;
-    const centerLetterAndDigit = this.diceKey?.centerLetterAndDigit;
+    const centerLetterAndDigit = this.centerLetterAndDigitToReveal;
     const sequenceNumber = this.sequenceNumber;
     this.queuedApiRequest.respond(seedString, {centerLetterAndDigit, sequenceNumber});
   }

@@ -5,7 +5,7 @@ import {
   getKnownHost
 } from "../../phrasing/api";
 import { observer } from "mobx-react";
-import { CenterColumn, ContentBox, Spacer, Instruction2, CompressedContentBox, CenteredCompressedControls } from "../../views/basics";
+import { Spacer, Instruction2, CompressedContentBox, CenteredCompressedControls } from "../../views/basics";
 import { addPreview } from "../../views/basics/Previews";
 import { QueuedUrlApiRequest } from "../../api-handler";
 import { DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
@@ -21,6 +21,7 @@ import { MobxObservedPromise } from "../../utilities/MobxObservedPromise";
 import { SequenceNumberInputField } from "../../views/Recipes/DerivationView/RecipeStyles"
 import { NumericTextFieldState, NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
 import { ApproveApiRequestState } from "./ApproveApiRequestState";
+import { BuiltInRecipes } from "../../dicekeys";
 
 export const SequenceNumberFormFieldValueView = observer( ({state}: {state: NumericTextFieldState}) => {
   return (
@@ -279,43 +280,44 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
         <RequestDescriptionView {...{command, host}} />
         <KeyAccessRestrictionsView {...{command, host}} />
       </RequestDescription>
-      <ContentBox>
-      <CenterColumn>
-        <DiceKeySelectorView
-          loadRequested={state.startLoadDiceKey}
-          selectedDiceKeyId={diceKey?.keyId}
-          ratioOfSelectedItemWidthToSelectableItemWidth={`3`}
-          selectedItemWidth={`min(40vw, 40vh)`}
-          setSelectedDiceKeyId={state.setDiceKeyFromId}
-        />
-        { diceKey == null ? (
-          <>
-              <Instruction2>
-                You will need your DiceKey to continue.
-              </Instruction2>
-          </>
-        ) : (<>
-            <SequenceNumberRow>
-              <label>Sequence number</label>
-              <SequenceNumberFormFieldValueView state={state.sequenceNumberState} />
-            </SequenceNumberRow>
-            <ApiResponsePreview
-              host={host}
-              command={request.command}
-              mobxObservedResponse={state.response} />
-        </>)}
-      </CenterColumn>
-      </ContentBox>
+      <DiceKeySelectorView
+        loadRequested={state.startLoadDiceKey}
+        selectedDiceKeyId={diceKey?.keyId}
+        ratioOfSelectedItemWidthToSelectableItemWidth={`3`}
+        selectedItemWidth={`min(40vw, 40vh)`}
+        setSelectedDiceKeyId={state.setDiceKeyFromId}
+        rowWidth={`100vw`}
+      />
+      { diceKey != null ? null : (
+        <>
+            <Instruction2>
+              You will need your DiceKey to continue.
+            </Instruction2>
+        </>
+      )}{ diceKey == null ? null : (
+          <SequenceNumberRow>
+            <label>Sequence number</label>
+            <SequenceNumberFormFieldValueView state={state.sequenceNumberState} />
+          </SequenceNumberRow>
+      )}{ diceKey == null ? null : (
+          <ApiResponsePreview
+            host={host}
+            command={request.command}
+            mobxObservedResponse={state.response} />
+      )}
       <CompressedContentBox>
         <CenteredCompressedControls>
           <PushButton onClick={handleDeclineRequestButton}>Cancel</PushButton>
           <PushButton invisible={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
         </CenteredCompressedControls>
         <CenteredCompressedControls>
-            <label>Let <HostDescriptorView host={host}/> know the center die {
+            <label style={{userSelect: "none"}} onClick={state.toggleRevealCenterLetterAndDigit}>Reveal that the center die {
               diceKey == null ? null : <>is {diceKey.centerLetterAndDigit}</>
-            } so that it can remind you.</label>
-            <input type="checkbox" checked />
+            } so that <HostDescriptorView host={host}/> can remind you next time.</label>
+            <input
+              type="checkbox"
+              checked={state.revealCenterLetterAndDigit}
+              onChange={state.toggleRevealCenterLetterAndDigit} />
         </CenteredCompressedControls>
       </CompressedContentBox>
       <Spacer/>
@@ -335,10 +337,14 @@ const createPreview = (name: string, urlString: string, ...diceKeys: DiceKeyWith
       />
     );
   });
-  
 }
 
-
+const bitwardenAccountGetPasswordRequestUrl = `https://dicekeys.app/?${""
+  }command=getPassword${""
+  }&requestId=${"testRequestId" 
+  }&recipe=${ encodeURIComponent(BuiltInRecipes.find( x => x.name === "Bitwarden")?.recipeJson ?? "" ) 
+  }&respondTo=${ encodeURIComponent(`https://vault.bitwarden.com/--derived-secret-api--/`)
+  }${""}`;
 const msftAccountGetSecretRequestUrl = `https://dicekeys.app/?${""
   }command=getSecret${""
   }&requestId=${"testRequestId" 
@@ -350,6 +356,11 @@ createPreview("Approve Api Request (key loaded)", msftAccountGetSecretRequestUrl
   DiceKeyWithKeyId.testExample
 );
 createPreview("Approve Api Request (more keys loaded)", msftAccountGetSecretRequestUrl,
+  new DiceKeyWithKeyId("testA", DiceKeyWithoutKeyId.fromHumanReadableForm("A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm).faces),
+  new DiceKeyWithKeyId("testB", DiceKeyWithoutKeyId.fromHumanReadableForm("B2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2t" as DiceKeyInHumanReadableForm).faces),
+  new DiceKeyWithKeyId("testC", DiceKeyWithoutKeyId.fromHumanReadableForm("C2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2t" as DiceKeyInHumanReadableForm).faces),
+);
+createPreview("Approve Api Request for Bitwarden", bitwardenAccountGetPasswordRequestUrl,
   new DiceKeyWithKeyId("testA", DiceKeyWithoutKeyId.fromHumanReadableForm("A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm).faces),
   new DiceKeyWithKeyId("testB", DiceKeyWithoutKeyId.fromHumanReadableForm("B2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2t" as DiceKeyInHumanReadableForm).faces),
   new DiceKeyWithKeyId("testC", DiceKeyWithoutKeyId.fromHumanReadableForm("C2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2t" as DiceKeyInHumanReadableForm).faces),

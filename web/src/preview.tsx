@@ -16,6 +16,7 @@ import { PushButton } from "./css/Button";
 import styled from "styled-components";
 import { ThemeProvider } from "styled-components";
 import { lightTheme } from "./css/lightTheme";
+import { PrimaryView } from "./css";
 
 // To make sure everything is loaded, load the view for the app even if we're not using it.
 if (!WindowRoutingView) {
@@ -74,7 +75,9 @@ window.addEventListener('load', () => {
     root.render((
       <ErrorHandler>
         <ThemeProvider theme={lightTheme}>
-          <Previews />
+          <PrimaryView>
+            <Previews />
+          </PrimaryView>
         </ThemeProvider>
       </ErrorHandler>
     ));

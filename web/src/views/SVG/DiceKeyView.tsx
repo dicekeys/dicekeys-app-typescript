@@ -151,9 +151,7 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
 
 const DiceKeySvgElement = styled.svg`
   display: flex;
-  /* flex-basis: 0;
-  flex-grow: 1;
-  flex-shrink: 5; */
+  cursor: grab;
   align-self: center;
   justify-self: center;
 `;
