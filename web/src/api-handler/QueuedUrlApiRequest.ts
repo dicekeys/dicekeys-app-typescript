@@ -262,7 +262,7 @@ export class QueuedUrlApiRequest extends QueuedApiRequest {
 
   throwIfClientNotPermitted: () => void = () => throwIfUrlNotPermitted(this)(this.request);
 
-  transmitResponse = (response: ApiCalls.Response, centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number) => {
+  transmitResponse = (response: ApiCalls.Response, {centerLetterAndDigit, sequenceNumber}: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) => {
     // console.log(`Response to be transmitted`, {...response});
     const marshalledResponseUrl = addResponseToUrl( this.request.command, this.respondTo, response);
     if (centerLetterAndDigit != null) {

@@ -142,7 +142,7 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
             fontSize={sizeModel.height * 0.1}
             textAnchor={'middle'}
             fillOpacity={1}
-          ><tspan>Press to Reveal</tspan
+          ><tspan>press to reveal</tspan
           ></text>
         )}
       </g>

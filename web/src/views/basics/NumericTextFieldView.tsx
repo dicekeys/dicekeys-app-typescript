@@ -9,7 +9,7 @@ import { action, makeAutoObservable } from "mobx";
 
 
 export class NumericTextFieldState {
-  defaultValue: number;
+  defaultValue: number | undefined;
 
   editingModeOn: boolean;
   textValue: string;
@@ -64,7 +64,7 @@ export class NumericTextFieldState {
   constructor({minValue = 0, incrementBy=1, defaultValue, initialValue, onChanged} : {
       minValue: number,
       incrementBy?: number,
-      defaultValue: number,
+      defaultValue: number | undefined,
       onChanged?: (value: number | undefined) => any,
       initialValue?: string
     }
@@ -87,7 +87,7 @@ export class NumericTextFieldState {
 
 type CommonProps = {
   state: NumericTextFieldState;
-  onFocusedOrChanged?: () => any;
+  onFocusedOrChanged?: () => void;
 }
 
 export const IncrementDecrementKeyHandler = ({increment, decrement}: {increment: () => void, decrement: () =>void}): React.KeyboardEventHandler => (e) => {

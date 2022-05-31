@@ -109,7 +109,7 @@ export class QueuedPostMessageApiRequest extends QueuedApiRequest {
 
   throwIfClientNotPermitted: () => void = () => throwIfHostNotPermitted(this.host)(this.request);
 
-  transmitResponse = (response: ApiCalls.Response, centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number) =>  { (this.requestEvent.source?.postMessage as (m: any, t?: Transferable[]) => unknown)({
+  transmitResponse = (response: ApiCalls.Response, {centerLetterAndDigit, sequenceNumber}: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) =>  { (this.requestEvent.source?.postMessage as (m: any, t?: Transferable[]) => unknown)({
     ...response,
     ...(centerLetterAndDigit == null ? {} : {centerLetterAndDigit}),
     ...(sequenceNumber == null ? {} : {"#": sequenceNumber}),

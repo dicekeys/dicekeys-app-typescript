@@ -50,12 +50,21 @@ export const CenterColumn = styled.div`
 export const ContentBox  = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-content: stretch;
   overflow: hide;
   flex-grow: 1;
   align-self: stretch;
   justify-content: space-around;
+`;
+
+export const CompressedContentBox  = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-content: stretch;
+  overflow: hide;
+  flex-grow: 1;
+  align-self: stretch;
 `;
 
 export const ContentRow  = styled.div`

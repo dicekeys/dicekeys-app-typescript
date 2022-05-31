@@ -15,11 +15,6 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
   abstract readonly host: string;
   abstract readonly originalRequest: ApiCalls.RequestMessage;
 
-  // constructor({host, request}: ApiRequestContext) {
-  //   this.host = host;
-  //   this.originalRequest = request;
-  // }
-
   mutatedRequest?: ApiCalls.RequestMessage;
 
   get request(): ApiCalls.RequestMessage { return this.mutatedRequest ?? this.originalRequest }
@@ -33,7 +28,7 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
   /**
    * Subclasses must implement this method to transmit the response back to the client.
    */
-  abstract transmitResponse: (response: ApiCalls.Response, centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number) => Promise<void> | void;
+  abstract transmitResponse: (response: ApiCalls.Response, options: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) => Promise<void> | void;
 
   /**
    * Security check implemented as static so that it can be exposed to unit tests
@@ -65,18 +60,10 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
     this.throwIfClientMayNotRetrieveKey();
     this.throwIfClientNotPermitted();
   }
-  
-  /**
-   * Get the correct response for a request, spawning a working to do the computation
-   * and then caching the result so that it need only be computed once..
-   * @param seedString The cryptographic seed for the operation
-   * @returns A promise for the requests corresponding response object
-   * @throws Exceptions when a request is not permitted.
-   */
-  async getResponse(seedString: string): Promise<ApiCalls.Response> {
+
+  async getResponseForRequest(seedString: string, request: ApiCalls.RequestMessage): Promise<ApiCalls.Response> {
     this.throwIfNotPermitted();
-    const request = this.mutatedRequest ?? this.request;
-    const {requestId} = this.request;
+    const {requestId} = request;
     if (typeof Worker === "undefined") {
       // We have no choice but to run synchronously in this process
       // (fortunately, that means we're non-interactive and just testing)
@@ -92,6 +79,17 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
       console.log(`calculated ${seedString}`, request, result)
       return {...result, requestId};
     }
+  }
+  
+  /**
+   * Get the correct response for a request, spawning a working to do the computation
+   * and then caching the result so that it need only be computed once..
+   * @param seedString The cryptographic seed for the operation
+   * @returns A promise for the requests corresponding response object
+   * @throws Exceptions when a request is not permitted.
+   */
+  getResponse(seedString: string): Promise<ApiCalls.Response> {
+    return this.getResponseForRequest(seedString, this.mutatedRequest ?? this.request);
   }
 
   /**
@@ -115,7 +113,7 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
     const { requestId } = this.request;
     await this.transmitResponse({
       requestId, exception, message, stack
-    });
+    }, {});
   }
 
   /**
@@ -131,11 +129,11 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
    * otherwise.
    * @param seedString The seed to use for the cryptographic operations requested.
    */
-  respond = async (seedString: string, centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number) => {
+  respond = async (seedString: string, options: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) => {
     try {
       const response = await this.getResponse(seedString);
       console.log(`response.response=`, response);
-      this.transmitResponse(response, centerLetterAndDigit, sequenceNumber);
+      this.transmitResponse({...response, requestId: this.request.requestId}, options);
     } catch(e) {
       this.sendError(e);
     }

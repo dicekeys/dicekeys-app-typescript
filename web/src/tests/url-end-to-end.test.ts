@@ -17,9 +17,6 @@ import { Crypto } from "@peculiar/webcrypto"
 global.crypto = new Crypto() as typeof global.crypto;
 
 const defaultSeedString = "a bogus seed";
-
-// const getUsersConsentApprove = (requestContext: ApiRequestContext): Promise<ConsentResponse> =>
-//   Promise.resolve({seedString: defaultSeedString, mutatedRequest: requestContext.request } );
   
 const defaultRespondToHost = "client.app";
 const defaultRespondToUrl = `https://${defaultRespondToHost}/--derived-secret-api--/handle-response`;
@@ -39,7 +36,7 @@ const getMockClient = (seedString: string = defaultSeedString) => {
   var client: UrlApi;
   client = new UrlApi(defaultServerUrl, defaultRespondToUrl, url => {
     const requestObj = new MockQueuedUrlApiRequest(url, client.handleResult);
-    requestObj.respond(seedString);
+    requestObj.respond(seedString, {});
   });
   return client;
 }

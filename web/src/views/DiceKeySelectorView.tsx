@@ -15,6 +15,7 @@ import { DivSupportingInvisible } from "../css";
 
 const HideInstruction = styled(DivSupportingInvisible)`
   font-family: sans-serif;
+  font-style: italic;
   font-size: 1.25rem;
 `
 
@@ -157,7 +158,9 @@ const SelectedDiceKeyView = observer ( ({diceKey, ...sizeModel}: {diceKey?: Dice
           faces={ diceKey?.faces }
           showLidTab={false}
         />
-        <HideInstruction invisible={ToggleState.ObscureDiceKey.value}>Press on DiceKey to hide all but center face</HideInstruction>
+        <HideInstruction invisible={ToggleState.ObscureDiceKey.value} style={{fontSize: cssCalcTyped(`${sizeModel.selectedItemWidth ?? defaultSelectedItemWidth} / 24`)}}>
+          press on DiceKey to hide all but center face
+        </HideInstruction>
     </SelectedItemViewContainer>
   )
 });

@@ -101,6 +101,8 @@ class DiceKeyMemoryStoreClass {
    */
   load = async (descriptor: {keyId: string}): Promise<DiceKeyWithKeyId | undefined> => {
     const {keyId} = descriptor;
+    const keyAlreadyInMemory = this.diceKeyForKeyId(keyId);
+    if (keyAlreadyInMemory != null) return keyAlreadyInMemory;
     const diceKeyInHumanReadableForm = this.keyIdToDiceKeyInHumanReadableForm.get(keyId);
     if (diceKeyInHumanReadableForm != null) {
       return new DiceKeyWithKeyId(keyId, diceKeyFacesFromHumanReadableForm(diceKeyInHumanReadableForm));

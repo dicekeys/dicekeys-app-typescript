@@ -2,13 +2,10 @@ import React from "react";
 import {
   ApiCalls, PasswordJson, SealingKeyJson, SecretJson, SignatureVerificationKeyJson, SigningKeyJson, SymmetricKeyJson, UnsealingKeyJson} from "@dicekeys/dicekeys-api-js";
 import {
-  QueuedApiRequest
-} from "../../api-handler/QueuedApiRequest";
-import {
   getKnownHost
 } from "../../phrasing/api";
 import { observer } from "mobx-react";
-import { CenterColumn, CenteredControls, ContentBox, Spacer, Instruction2 } from "../../views/basics";
+import { CenterColumn, ContentBox, Spacer, Instruction2, CompressedContentBox, CenteredCompressedControls } from "../../views/basics";
 import { addPreview } from "../../views/basics/Previews";
 import { QueuedUrlApiRequest } from "../../api-handler";
 import { DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
@@ -17,13 +14,27 @@ import { PushButton } from "../../css/Button";
 
 import styled from "styled-components";
 import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
-import { action, makeAutoObservable } from "mobx";
 import { DiceKeyMemoryStore } from "../../state";
-import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyViewState";
 import { LoadDiceKeyFullPageView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
 import { DiceKeySelectorView } from "../../views/DiceKeySelectorView";
 import { MobxObservedPromise } from "../../utilities/MobxObservedPromise";
+import { SequenceNumberInputField } from "../../views/Recipes/DerivationView/RecipeStyles"
+import { NumericTextFieldState, NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
+import { ApproveApiRequestState } from "./ApproveApiRequestState";
 
+export const SequenceNumberFormFieldValueView = observer( ({state}: {state: NumericTextFieldState}) => {
+  return (
+      <NumberPlusMinusView
+        key={"#"}
+        state={state}
+      >
+        <SequenceNumberInputField
+          value={state.textValue}
+          onChange={state.onChangeInTextField}
+        />
+      </NumberPlusMinusView>
+ )});
+ 
 const HostNameSpan = styled.span`
   font-family: monospace;
 `;
@@ -61,6 +72,16 @@ const KnownApplicationNameSpan = styled.span`
   /* background-color: rgba(152, 160, 47, 0.1); */
   /* border-radius: 0.3rem; */
   /* text-decoration: rgba(152, 160, 47, 0.2) solid underline 0.2rem; */
+`;
+
+const SequenceNumberRow = styled.div`
+  align-self: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-content: center;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 `;
 
 // We recommend you never write down your DiceKey (there are better ways to copy it)
@@ -163,7 +184,7 @@ const outputStringIfAsciiOrHexOtherwise = (content: Uint8Array) =>
 
 export const ApiResultString = <COMMAND extends ApiCalls.Command>(
   command: COMMAND,
-  result: ApiCalls.ResponseForCommand<COMMAND>
+  result:  ApiCalls.Response// ApiCalls.ResponseForCommand<COMMAND>
 ): string => {
   switch (command) {
     case ApiCalls.Command.getSecret:
@@ -195,17 +216,17 @@ export const ApiResultString = <COMMAND extends ApiCalls.Command>(
 export const ApiResponsePreview = observer ( <COMMAND extends ApiCalls.Command>(props: {
   command: COMMAND,
   host: string,
-  mobxObservedResponse: MobxObservedPromise<ApiCalls.ResponseForCommand<COMMAND>>
+  mobxObservedResponse: MobxObservedPromise<ApiCalls.Response> | undefined
 }) => {
   const {command, host, mobxObservedResponse} = props;
-  const response = mobxObservedResponse.result;
+  const response = mobxObservedResponse?.result;
 
   return (
     <div style={{display: "flex", flexDirection:"column", alignItems:"center", alignContent: "center"}}>
-      <div style={{maxWidth: "80%", fontFamily: "monospace", borderBottom: "gray solid 1px"}}>
+      <div style={{maxWidth: "80vw", fontFamily: "monospace", borderBottom: "gray solid 1px", minHeight: "1rem"}}>
         { response == null ? "" : ApiResultString(command, response) }
       </div>
-      <div style={{color: "rgba(0,0,0,0.666)", fontSize: ".75rem"}}>
+      <div style={{color: "rgba(0,0,0,0.666)", fontSize: ".75rem", borderTop: "gray solid 1px"}}>
         {describeCommandResultType(command)} to be sent to <HostDescriptorView host={host}/>
       </div>
     </div>
@@ -220,56 +241,13 @@ const KeyAccessRestrictionsView = observer( ({command, host}: {command: ApiCalls
   )
 );
 
-export class ApproveApiRequestState {
-  static lastKeyIdUsed: string | undefined;
-
-  private _diceKey: DiceKeyWithKeyId | undefined;
-  get diceKey() {return this._diceKey}
-  setDiceKey = action( (diceKey: DiceKeyWithKeyId | undefined) => {
-    ApproveApiRequestState.lastKeyIdUsed = diceKey?.keyId;
-    this._diceKey = diceKey;
-  });
-
-  private _loadDiceKeyViewState: LoadDiceKeyViewState | undefined;
-  get loadDiceDiceInProgress(): boolean { return this._loadDiceKeyViewState != null }
-  get loadDiceKeyViewState() { return this._loadDiceKeyViewState }
-  readonly setLoadDiceKeyViewState = action( (newValue: LoadDiceKeyViewState | undefined) => {
-    this._loadDiceKeyViewState = newValue;
-  });
-
-  startLoadDiceKey = () => {
-    this.setLoadDiceKeyViewState(new LoadDiceKeyViewState());
-  }
-
-  onDiceKeyReadOrCancelled = (diceKeyWithKeyId: DiceKeyWithKeyId | undefined ) => {
-    this.setLoadDiceKeyViewState(undefined);
-    if (diceKeyWithKeyId != null) {
-      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKeyWithKeyId);
-      this.setDiceKey(diceKeyWithKeyId);
-    }
-  }
-
-  constructor(
-    public readonly queuedApiRequest: QueuedApiRequest,
-    diceKey?: DiceKeyWithKeyId
-  ) {
-    this._diceKey = diceKey ?? DiceKeyMemoryStore.diceKeyForKeyId(ApproveApiRequestState.lastKeyIdUsed ??= DiceKeyMemoryStore.keyIds[0])
-    makeAutoObservable(this);
-  }
-  
-}
-
-
-
 export interface ApproveApiRequestViewProps {
   state: ApproveApiRequestState;
   onApiRequestResolved: () => any;
 }
 
 export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: ApproveApiRequestViewProps) => {
-  const { queuedApiRequest, diceKey, loadDiceKeyViewState } = state;
-  const { request, host } = queuedApiRequest;
-  const { command } = request;
+  const { diceKey, loadDiceKeyViewState, request, host, command } = state;
 
   if (loadDiceKeyViewState != null) {
     return (
@@ -281,16 +259,12 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
   }
 
   const handleDeclineRequestButton = () => {
-    queuedApiRequest.sendUserDeclined();
+    state.transmitDeclinedResponse();
     onApiRequestResolved();
   }
-  const seedString = diceKey?.toSeedString();
 
   const handleApproveRequestButton = () => {
-    if (seedString) {
-      const centerLetterAndDigit = diceKey?.centerLetterAndDigit
-      queuedApiRequest.respond(seedString, centerLetterAndDigit);
-    }
+    state.transmitSuccessResponse();
     onApiRequestResolved();
   }
 
@@ -310,9 +284,9 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
         <DiceKeySelectorView
           loadRequested={state.startLoadDiceKey}
           selectedDiceKeyId={diceKey?.keyId}
-          setSelectedDiceKeyId={
-            (keyId) => state.setDiceKey(DiceKeyMemoryStore.diceKeyForKeyId(keyId))
-          }
+          ratioOfSelectedItemWidthToSelectableItemWidth={`3`}
+          selectedItemWidth={`min(40vw, 40vh)`}
+          setSelectedDiceKeyId={state.setDiceKeyFromId}
         />
         { diceKey == null ? (
           <>
@@ -320,18 +294,30 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
                 You will need your DiceKey to continue.
               </Instruction2>
           </>
-        ) : (
+        ) : (<>
+            <SequenceNumberRow>
+              <label>Sequence number</label>
+              <SequenceNumberFormFieldValueView state={state.sequenceNumberState} />
+            </SequenceNumberRow>
             <ApiResponsePreview
               host={host}
               command={request.command}
-              mobxObservedResponse={new MobxObservedPromise(queuedApiRequest.getResponse(diceKey?.toSeedString()) as Promise<ApiCalls.ResponseForCommand<typeof command>>)} />
-        )}
+              mobxObservedResponse={state.response} />
+        </>)}
       </CenterColumn>
       </ContentBox>
-      <CenteredControls>
-        <PushButton onClick={handleDeclineRequestButton}>Cancel</PushButton>
-        <PushButton invisible={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
-      </CenteredControls>
+      <CompressedContentBox>
+        <CenteredCompressedControls>
+          <PushButton onClick={handleDeclineRequestButton}>Cancel</PushButton>
+          <PushButton invisible={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
+        </CenteredCompressedControls>
+        <CenteredCompressedControls>
+            <label>Let <HostDescriptorView host={host}/> know the center die {
+              diceKey == null ? null : <>is {diceKey.centerLetterAndDigit}</>
+            } so that it can remind you.</label>
+            <input type="checkbox" checked />
+        </CenteredCompressedControls>
+      </CompressedContentBox>
       <Spacer/>
     </>
   )
