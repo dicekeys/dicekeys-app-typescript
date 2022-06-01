@@ -9,7 +9,6 @@ import { DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId } fro
 import { PushButton } from "../../css/Button";
 
 import styled from "styled-components";
-import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
 import { DiceKeyMemoryStore } from "../../state";
 import { LoadDiceKeyFullPageView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
 import { DiceKeySelectorView } from "../../views/DiceKeySelectorView";
@@ -128,10 +127,6 @@ export const ApproveApiRequestView = observer( ({state}: ApproveApiRequestViewPr
 
   return (
     <>
-      <SimpleTopNavBar
-        title={`${diceKey?.nickname ?? ""}`} //  using ${diceKey?.nickname ?? ""}
-        goBack={state.respondByDeclining}
-      />
       <Spacer/>
       <RequestDescription>
         <RequestDescriptionView {...{command, host}} />
