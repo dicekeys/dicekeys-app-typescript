@@ -14,13 +14,22 @@ import {
 import {
   writeResultToStdOutAndExit
 } from "./CommandLineApi";
-import {
-  AppLinkHandler
-} from "./AppLinksApi";
 import { saveUtf8File } from "./SaveAndLoad";
 
 const openLinkInBrowser = async (url: string) => {
   await shell.openExternal(url);
+}
+
+const findAppUrl = (commandLineArgs: string[]): URL | undefined => {
+  const urlStringOrUndefined = commandLineArgs.find((value) =>
+    value.indexOf("dicekeys:/") !== -1 && value.indexOf("command=") !== -1
+  );
+  if (urlStringOrUndefined == null) return;
+  try {
+    return new URL(urlStringOrUndefined);
+  } catch {
+    return;
+  }
 }
 
 export class DiceKeysElectronApplication {
@@ -32,13 +41,12 @@ export class DiceKeysElectronApplication {
 
 
   mainWindow: BrowserWindow | undefined;
+  readonly apiRequestWindows: BrowserWindow[] = [];
   readonly rendererApi: MainToRendererAsyncApi;
-  readonly appLinkHandler: AppLinkHandler;
 
   constructor() {
-    this.mainWindow = createBrowserWindow();
+    this.mainWindow = createBrowserWindow("electron.html", findAppUrl(process.argv)?.search);
     this.rendererApi = IpcApiFactory.implementMainToRendererAsyncClientInMainProcess(this.mainWindow.webContents);
-    this.appLinkHandler = new AppLinkHandler(this.rendererApi.handleAppLink);
 
     IpcApiFactory.implementRendererToMainAsynchApiServerInMainProcess({
       deleteDiceKeyFromCredentialStore,
@@ -49,7 +57,6 @@ export class DiceKeysElectronApplication {
     });
 
     IpcApiFactory.implementRendererToMainSyncApiServerInMainProcess({
-//      getAppLink: () => this.appLinkHandler?.getAppLink(),
       writeResultToStdOutAndExit,
       "openExternal": (url: string) => shell.openExternal(url),
     });
@@ -57,8 +64,6 @@ export class DiceKeysElectronApplication {
     createMenu(this.rendererApi);
     
     this.mainWindow.webContents.once('dom-ready', () => {
-      this.appLinkHandler.processArgsForAppLink(process.argv);      
-//      dialog.showErrorBox(`process.argv`, JSON.stringify(process.argv, undefined, 2));
     });
 
     app.on("second-instance", this.onSecondInstance);
@@ -73,9 +78,13 @@ export class DiceKeysElectronApplication {
     });
   }
 
-  onOsXOpenUrl(event: Electron.Event, url: string) {
+  onOsXOpenUrl(event: Electron.Event, urlString: string) {
     event.preventDefault();
-    this.appLinkHandler.processArgsForAppLink([url]);
+    const url = findAppUrl([urlString]);
+    if (url != null) {
+      createBrowserWindow("electron.html", url.search);
+    }
+    // this.appLinkHandler.processArgsForAppLink([urlString]);
   }
 
   // Quit when all windows are closed, except on macOS. There, it's common
@@ -87,20 +96,29 @@ export class DiceKeysElectronApplication {
     // }
   };
 
+  focusMainWindow = () => {
+    const {mainWindow} = this;
+    if (!mainWindow) return; 
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    mainWindow.focus();
+  }
+
   onSecondInstance = (_event: Electron.Event, commandLineArgV: string[]) => {
-    if (this.mainWindow) {
-
-      // Protocol handler for win32/linux
-      // argv: An array of the second instance’s (command line / deep linked) arguments
-      if (process.platform == 'win32' || process.platform == 'linux') {        
-//        dialog.showErrorBox(`second instance argv`, JSON.stringify(commandLineArgV, undefined, 2));
-        this.appLinkHandler.processArgsForAppLink(commandLineArgV);
+    // Protocol handler for win32/linux
+    // argv: An array of the second instance’s (command line / deep linked) arguments
+    if (process.platform == 'win32' || process.platform == 'linux') {        
+    // dialog.showErrorBox(`second instance argv`, JSON.stringify(commandLineArgV, undefined, 2));
+      const url = findAppUrl(commandLineArgV);
+      if (url != null) {
+        createBrowserWindow("electron.html", url.search);
+      } else {
+        this.focusMainWindow();
       }
-
-      if (this.mainWindow.isMinimized()) {
-        this.mainWindow.restore();
-      }
-      this.mainWindow.focus();
+    //this.appLinkHandler.processArgsForAppLink(commandLineArgV);
+    } else {
+      this.focusMainWindow();
     }
   };
 }

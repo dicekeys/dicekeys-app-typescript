@@ -20,6 +20,8 @@ import { BuiltInRecipes } from "../../dicekeys";
 import { HostDescriptorView } from "./HostDescriptionView";
 import { ApiResponsePreview } from "./ApiResponsePreview";
 import { RequestDescriptionView } from "./RequestDescriptionView"
+import { PrimaryView } from "../../css";
+import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 
 const RequestCommonDiv = styled.div`
   flex-shrink: 0;
@@ -91,13 +93,25 @@ export const SequenceNumberFormFieldValueView = observer( ({state}: {state: Nume
       </NumberPlusMinusView>
  )});
  
+ const PrimaryOpaqueView = styled(PrimaryView)`
+   background-color: black;
+ `
+
+ const SendingMessageContainer = styled.div`
+   color: white;
+   align-self: center;
+ `
+
+const SendingMessageView = () => (
+  <PrimaryOpaqueView>
+    <SendingMessageContainer>Sending...</SendingMessageContainer>
+  </PrimaryOpaqueView>
+);
 
 export interface ApproveApiRequestViewProps {
   state: ApproveApiRequestState;
-  onApiRequestResolved: () => any;
 }
-
-export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: ApproveApiRequestViewProps) => {
+export const ApproveApiRequestView = observer( ({state}: ApproveApiRequestViewProps) => {
   const { diceKey, loadDiceKeyViewState, request, host, command } = state;
 
   if (loadDiceKeyViewState != null) {
@@ -108,22 +122,15 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
       />
     );
   }
-
-  const handleDeclineRequestButton = () => {
-    state.transmitDeclinedResponse();
-    onApiRequestResolved();
-  }
-
-  const handleApproveRequestButton = () => {
-    state.transmitSuccessResponse();
-    onApiRequestResolved();
+  if (state.sendingResponse && RUNNING_IN_ELECTRON) {
+    return (<SendingMessageView/>);
   }
 
   return (
     <>
       <SimpleTopNavBar
         title={`${diceKey?.nickname ?? ""}`} //  using ${diceKey?.nickname ?? ""}
-        goBack={handleDeclineRequestButton}
+        goBack={state.respondByDeclining}
       />
       <Spacer/>
       <RequestDescription>
@@ -159,8 +166,8 @@ export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: A
       )}
       <CompressedContentBox>
         <CenteredCompressedControls>
-          <PushButton onClick={handleDeclineRequestButton}>Cancel</PushButton>
-          <PushButton invisible={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
+          <PushButton onClick={state.respondByDeclining}>Cancel</PushButton>
+          <PushButton invisible={diceKey == null} onClick={state.respondSuccessfully}>{ "Send " + describeCommandResultType(command) }</PushButton>
         </CenteredCompressedControls>
         <CenteredCompressedControls>
             <label style={{userSelect: "none"}} onClick={state.toggleRevealCenterLetterAndDigit}>Reveal
@@ -187,7 +194,6 @@ const createPreview = (name: string, urlString: string, ...diceKeys: DiceKeyWith
     return (
       <ApproveApiRequestView
         state={state}
-        onApiRequestResolved={() => alert("request resolved")}
       />
     );
   });
