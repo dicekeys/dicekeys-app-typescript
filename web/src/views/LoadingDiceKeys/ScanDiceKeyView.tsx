@@ -8,44 +8,20 @@ import { Camera, CamerasOnThisDevice } from "./CamerasOnThisDevice";
 import { TupleOf25Items, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { MediaStreamState } from "./MediaStreamState";
 import { CameraSelectionView } from "./CameraSelectionView";
-import styled from "styled-components";
 import { RUNNING_IN_BROWSER } from "../../utilities/is-electron";
-import { TopNavigationBarHeight } from "../Navigation/NavigationLayout";
 import { action } from "mobx";
+import { PushButton } from "../../css/Button";
+import { CenteredControls } from "../../views/basics";
+import {
+  FullScreenNotification,
+  FullScreenNotificationContent,
+  FullScreenNotificationPrimaryText,
+  FullScreenNotificationSecondaryText,
+} from "../../css/FullScreenNotification";
 // import { CamerasBeingInspected } from "./CamerasBeingInspected";
 
 const minCameraWidth = 1024;
 const minCameraHeight = 720;
-
-
-const NotificationDiv = styled.div`
-  min-height: ${TopNavigationBarHeight};
-  flex-direction: column;
-  justify-content: flex-start;
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  align-content: center;
-  padding-left: 2vw;
-  padding-right: 2vw;
-  padding-top: 0.25vh;
-  padding-bottom: 0.25vh;
-  background-color: yellow;
-  font-size: 1.5rem
-`;
-
-const PrimaryInstruction = styled.div`
-  display: flex;
-  font-size: 1.5rem
-`;
-
-const SecondaryInstruction = styled.div`
-  display: flex;
-  font-size: 1.0em;
-`;
 
 const defaultMediaTrackConstraints: MediaTrackConstraints = {
   width: {
@@ -67,6 +43,7 @@ export interface ScanDiceKeyViewProps extends Omit<CameraCaptureWithOverlayPrope
   onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
   onDiceKeyRead?: (diceKey: DiceKeyWithKeyId) => any,
   showBoxOverlay?: boolean;
+  editManually?: () => void;
 };
 /* type ScanDiceKeyViewProps =  Exclude<CameraCaptureWithOverlayProperties, "cameras" | "mediaStreamState"> &  React.PropsWithoutRef<{
   onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
@@ -78,31 +55,46 @@ export interface ScanDiceKeyViewProps extends Omit<CameraCaptureWithOverlayPrope
   height?: string
 }>; */
 
-const PermissionRequiredView = () => (
-  <NotificationDiv>
-    <PrimaryInstruction>
-      You need to grant &ldquo;allow always&rdquo; permission to your device's cameras to scan DiceKeys.
-    </PrimaryInstruction>
-    <SecondaryInstruction>
-      If this message does not go away after granting permissions, refresh this page.
-    </SecondaryInstruction>
-  </NotificationDiv>
+const PermissionRequiredView = ({editManually}: ScanDiceKeyViewProps) => (
+  <FullScreenNotification>
+    <FullScreenNotificationContent>
+      <FullScreenNotificationPrimaryText>
+        You need to grant &ldquo;allow always&rdquo; permission to your device's cameras to scan DiceKeys.
+      </FullScreenNotificationPrimaryText>
+      <FullScreenNotificationSecondaryText>
+        If this message does not go away after granting permissions, refresh this page.
+      </FullScreenNotificationSecondaryText>
+      { editManually == null ? null : (
+        <CenteredControls>
+          <PushButton onClick={editManually}>enter manually instead</PushButton>
+        </CenteredControls>
+      )}
+    </FullScreenNotificationContent>
+  </FullScreenNotification>
 );
 
 
-const NoCameraAvailableView = ({minCameraWidth, minCameraHeight}: {
+const NoCameraAvailableView = ({minCameraWidth, minCameraHeight, editManually}: {
   minCameraWidth: number,
   minCameraHeight: number
-}) => {
+} & ScanDiceKeyViewProps) => {
   return (
-    <NotificationDiv>
-      <PrimaryInstruction>
-        You do not have a sufficiently-high resolution camera available to scan your DiceKey.
-      </PrimaryInstruction>
-      <SecondaryInstruction>
-        You need a camera with resolution at least {minCameraWidth}&times;{minCameraHeight}.
-      </SecondaryInstruction>
-    </NotificationDiv>
+    <FullScreenNotification>    
+      <FullScreenNotificationContent>
+        <FullScreenNotificationPrimaryText>
+          You do not have a sufficiently-high resolution camera available to scan your DiceKey
+          or you have not provided permission to access it.
+        </FullScreenNotificationPrimaryText>
+        <FullScreenNotificationSecondaryText>
+          You need a camera with resolution at least {minCameraWidth}&times;{minCameraHeight}.
+        </FullScreenNotificationSecondaryText>
+        { editManually == null ? null : (
+        <CenteredControls>
+          <PushButton onClick={editManually}>enter manually instead</PushButton>
+        </CenteredControls>
+      )}
+      </FullScreenNotificationContent>
+    </FullScreenNotification>
   )
 }
 
@@ -156,12 +148,12 @@ export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Co
     } */
     if (!camerasOnThisDevice.readyAndNonEmpty && RUNNING_IN_BROWSER) {
       if (this.componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning) {
-        return ( <PermissionRequiredView/> );
+        return ( <PermissionRequiredView {...this.props} /> );
       }
     }
     const cameras = this.cameras;
     if (camerasOnThisDevice.ready && cameras.length === 0) {
-      return ( <NoCameraAvailableView minCameraWidth={minCameraWidth} minCameraHeight={minCameraHeight} /> );
+      return ( <NoCameraAvailableView {...this.props} minCameraWidth={minCameraWidth} minCameraHeight={minCameraHeight} /> );
     }
     return (
       <>
@@ -181,5 +173,7 @@ export const Preview_ScanDiceKeyView = () => (
     const hrf = diceKeyRead.inHumanReadableForm;
     console.log(`Read ${hrf}`);
     alert(`Read ${hrf}`);
-  }} />
+  }}
+    editManually={() => alert("edit manually")}
+  />
 );

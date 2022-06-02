@@ -24,7 +24,8 @@ export const PageTopNotificationBarContainer = styled.div`
 
   /* User colors thate emulate common browser chrome */
   border-color: #a0a0a0;
-  background-color: #f9ed95;
+  /* background-color: #f9ed95; */
+  background-color: rgba(248,248,248,0.95);
   color: black;
 
   /* Border around everything but top */
