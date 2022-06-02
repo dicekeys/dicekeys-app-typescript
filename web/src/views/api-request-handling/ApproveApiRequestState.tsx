@@ -7,23 +7,30 @@ import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyVie
 import { MobxObservedPromise } from "../../utilities/MobxObservedPromise";
 import { NumericTextFieldState } from "../../views/basics/NumericTextFieldView";
 import { addSequenceNumberToRecipeJson } from "../../dicekeys/ConstructRecipe";
-
+import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
+import { ApiRequestsReceivedState } from "../../state/ApiRequestsReceivedState";
 
 export class ApproveApiRequestState {
   static lastKeyIdUsed: string | undefined;
 
   private _diceKey: DiceKeyWithKeyId | undefined;
   get diceKey() { return this._diceKey; }
+
   setDiceKey = action((diceKey: DiceKeyWithKeyId) => {
     ApproveApiRequestState.lastKeyIdUsed = diceKey.keyId;
     this._diceKey = diceKey;
   });
 
+  private _sendingResponse: boolean = false;
+  get sendingResponse() { return this._sendingResponse; }
+  setSendingResponse = action(() => {
+    this._sendingResponse = true;
+  });
+
+
   setDiceKeyFromId =  async (keyId: string | undefined) => {
     if (keyId == null) return;
-    console.log(`setDiceKeyFromId`, keyId);
     const diceKey = await DiceKeyMemoryStore.load({keyId});
-    console.log(`setDiceKeyFromId`, diceKey);
     if (diceKey == null) return;
     this.setDiceKey(diceKey);
   };
@@ -98,17 +105,34 @@ export class ApproveApiRequestState {
     (this.diceKey?.centerLetterAndDigit) : undefined
   }
 
-  transmitSuccessResponse = () => {
+  respondSuccessfully = () => {
     const seedString = this.diceKey?.toSeedString();
     if (seedString == null)
       return;
     const centerLetterAndDigit = this.centerLetterAndDigitToReveal;
     const sequenceNumber = this.sequenceNumber;
     this.queuedApiRequest.respond(seedString, {centerLetterAndDigit, sequenceNumber});
+    this.startCompleteRequest();
   }
 
-  transmitDeclinedResponse = () => {
+  respondByDeclining = () => {
     this.queuedApiRequest.sendUserDeclined();
+    this.startCompleteRequest(500);
+  }
+
+  startCompleteRequest = (howLongToWaitMs: number = RUNNING_IN_ELECTRON ? 2000 : 500) => {
+    this.setSendingResponse();
+    setTimeout(this.#completeRequest, howLongToWaitMs)
+  }
+
+  #completeRequest = () => {
+    if (RUNNING_IN_ELECTRON) {
+      // Electron handles one API request per window, so close the window when a request is resolved.
+      window.close();
+    } else {
+      // Remove the request from the queue.
+      ApiRequestsReceivedState.dequeueApiRequestReceived();
+    }
   }
 
   get request() { return this.queuedApiRequest.request }
@@ -120,7 +144,12 @@ export class ApproveApiRequestState {
     public readonly queuedApiRequest: QueuedApiRequest,
     diceKey?: DiceKeyWithKeyId
   ) {
-    this._diceKey = diceKey ?? DiceKeyMemoryStore.diceKeyForKeyId(ApproveApiRequestState.lastKeyIdUsed ??= DiceKeyMemoryStore.keyIds[0]);
+    this._diceKey = diceKey;
+    if (diceKey == null) {
+      DiceKeyMemoryStore.onReady(() => {
+          this.setDiceKeyFromId(ApproveApiRequestState.lastKeyIdUsed ??= DiceKeyMemoryStore.keysInMemoryOrSavedToDevice[0]?.keyId);
+      });
+    }
     makeAutoObservable(this);
   }
 

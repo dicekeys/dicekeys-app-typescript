@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import {WindowTopLevelView} from "./views/WindowTopLevelView";
 import { ErrorHandler } from "./views/ErrorHandler";
 import { DiceKeyMemoryStore } from "./state";
-import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "./utilities/is-electron";
+import { RUNNING_IN_ELECTRON } from "./utilities/is-electron";
 import { QueuedUrlApiRequest } from "./api-handler";
 import { ApiCalls } from "@dicekeys/dicekeys-api-js";
 import { ApiRequestsReceivedState } from "./state/ApiRequestsReceivedState";
@@ -43,10 +43,10 @@ try {
     console.log(`Request received`, request);
     // If we've reached this point, there is a valid API request that needs to be handled.
     // Add it to the queue.
-    if (RUNNING_IN_BROWSER) {
-      // Open DiceKeys app, or better create a new UI view.
-      ApiRequestsReceivedState.enqueueApiRequestReceived(request);
-      console.log(`Request enqueued for handling by web app`);
+    // Open DiceKeys app, or better create a new UI view.
+    ApiRequestsReceivedState.enqueueApiRequestReceived(request);
+    console.log(`Request enqueued for handling by web app`);
+    // if (RUNNING_IN_BROWSER) {
       // const schemeBasedApiRequest = "dicekeys:/" + url.search;
       // customProtocolCheck(schemeBasedApiRequest, () => {
       //   // On failure, handle API request locally...
@@ -58,7 +58,7 @@ try {
       //   window.location.assign(schemeBasedApiRequest);
       //   // setTimeout( () => {window.close();}, 2000)
       // }, 5000 );
-    }
+    // }
   }
 } catch (e) {
   // Not a valid request.  Carry on.

@@ -1,5 +1,7 @@
 // Ported to typescript from the npm custom-protocol-check pacakge
 
+// Stuart notes: also useful reference is https://github.com/fingerprintjs/external-protocol-flooding/blob/master/packages/client/src/detector/detection.ts
+
 const userAgentLc = window.navigator.userAgent.toLocaleLowerCase();
 
 const userAgentContains = (mixedCaseString: string) =>
@@ -19,9 +21,9 @@ function isFirefox() {
 
 /**
  * Detects IE 11 and older
- * @return {Boolean} Returns true when IE 11 and older
+ * @return Returns true when IE 11 and older
  */
-function isIE() {
+function isIE(): boolean {
     // Test values.
     // Uncomment to check result
 

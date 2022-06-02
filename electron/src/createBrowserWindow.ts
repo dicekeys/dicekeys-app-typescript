@@ -10,7 +10,7 @@ export const FiltersForUsbDeviceASeedableFIDOKey: HIDDeviceFilter[] = [
   {vendorId: 0x0483, productId: 0xa2ca},
 ];  
 
-export const createBrowserWindow = () => {
+export const createBrowserWindow = (htmlFileName: "electron.html" = "electron.html", query?: string) => {
   // Create the browser window.
   const window = new BrowserWindow({
     height: 600,
@@ -53,7 +53,10 @@ export const createBrowserWindow = () => {
   })
 
   // and load the index.html of the app.
-  window.loadFile(path.resolve(__dirname, '..', 'electron-html', 'electron.html'));
+  const htmlPath =  path.resolve(app.getAppPath(), 'electron-html', htmlFileName);
+  const pathToLoad = `file://${htmlPath}${query ?? ""}`;
+  // console.log("Loading window with path", pathToLoad);
+  window.loadURL(pathToLoad);
 
   if (!app.isPackaged){
     // Open the DevTools.

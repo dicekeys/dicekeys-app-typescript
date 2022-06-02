@@ -24,9 +24,7 @@ export const WindowRoutingView = observer ( ({state}: {state: WindowTopLevelNavi
   const {foregroundApiRequest} = ApiRequestsReceivedState;
   if (foregroundApiRequest != null) {
     return (
-      <ApproveApiRequestView state={new ApproveApiRequestState(foregroundApiRequest)}
-        onApiRequestResolved={ApiRequestsReceivedState.dequeueApiRequestReceived}
-      />
+      <ApproveApiRequestView state={new ApproveApiRequestState(foregroundApiRequest)}/>
     )
   }
   // console.log(`Displaying subview ${state.subView}`)

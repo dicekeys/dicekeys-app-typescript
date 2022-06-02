@@ -26,6 +26,7 @@ const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
             height="70vh"
             showBoxOverlay={true}
             onDiceKeyRead={ (diceKey) => props.onDiceKeyReadOrCancelled( diceKey, "camera") }
+            editManually={ () => props.state.setMode("manual") }
           />
         </CenterColumn>
     );

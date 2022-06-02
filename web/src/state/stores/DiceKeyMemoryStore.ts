@@ -33,12 +33,14 @@ class DiceKeyMemoryStoreClass {
   #triggerReadyState = action( () => {
     if (!this.#isReady) {
       this.#isReady = true;
+      // console.log(`DiceKeyMemoryStoreClass ready`);
       this.#readyEvent.sendImmediately()
     }
   });
 
   onReady = (callback: () => any) => {
     if (this.#isReady) {
+      // console.log(`onReady called when already ready`);
       callback();
     } else {
       this.#readyEvent.onOnce( callback );
