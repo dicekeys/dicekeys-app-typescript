@@ -48,7 +48,7 @@
     "@peculiar/webcrypto": "^1.1.6",
     "@types/core-js": "^2.5.3",
     "@types/emscripten": "^1.39.4",
-    "@types/jest": "^27.0.2",
+    "@types/jest": "^28.1.0",
     "@types/jsdom": "^16.2.4",
     "@types/node": "^17.0.29",
     "@types/react": "^18.0.8",
@@ -66,7 +66,7 @@
     "rimraf": "^3.0.2",
     "ts-jest": "^28.0.0-next.1",
     "ts-node": "^10.3.0",
-    "typescript": "^4.4.4",
+    "typescript": "^4.7.2",
     "vite": "^2.9.6"
   },
   "volta": {
