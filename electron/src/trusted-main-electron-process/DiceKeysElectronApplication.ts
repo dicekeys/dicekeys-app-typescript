@@ -48,7 +48,7 @@ export class DiceKeysElectronApplication {
     this.mainWindow = createBrowserWindow("electron.html", findAppUrl(process.argv)?.search);
     this.rendererApi = IpcApiFactory.implementMainToRendererAsyncClientInMainProcess(this.mainWindow.webContents);
 
-    IpcApiFactory.implementRendererToMainAsynchApiServerInMainProcess({
+    IpcApiFactory.implementRendererToMainAsyncApiServerInMainProcess({
       deleteDiceKeyFromCredentialStore,
       getDiceKeyFromCredentialStore,
       storeDiceKeyInCredentialStore,
@@ -69,12 +69,10 @@ export class DiceKeysElectronApplication {
     app.on("second-instance", this.onSecondInstance);
     app.on("window-all-closed", this.onWindowsAllClosed);
 
-    app.on('will-finish-launching', () => {
-      // Protocol handler for osx
-      app.on('open-url', (event, url) => {
-        this.onOsXOpenUrl(event, url);
-//        dialog.showErrorBox(`Received via open-url`, url);
-      });
+    // Protocol handler for osx
+    app.on('open-url', (event, url) => {
+      // console.log(`open-url`, event, url);
+      this.onOsXOpenUrl(event, url);
     });
   }
 
@@ -106,6 +104,7 @@ export class DiceKeysElectronApplication {
   }
 
   onSecondInstance = (_event: Electron.Event, commandLineArgV: string[]) => {
+    // console.log(`onSecondInstance`, _event, commandLineArgV);
     // Protocol handler for win32/linux
     // argv: An array of the second instance’s (command line / deep linked) arguments
     if (process.platform == 'win32' || process.platform == 'linux') {        

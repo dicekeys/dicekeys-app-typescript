@@ -12,6 +12,7 @@ export const FiltersForUsbDeviceASeedableFIDOKey: HIDDeviceFilter[] = [
 
 export const createBrowserWindow = (htmlFileName: "electron.html" = "electron.html", query?: string) => {
   // Create the browser window.
+  // console.log(`createBrowserWindow`, htmlFileName, query);
   const window = new BrowserWindow({
     height: 600,
     webPreferences: {
@@ -32,6 +33,8 @@ export const createBrowserWindow = (htmlFileName: "electron.html" = "electron.ht
         return codeIsFromFileSystem;
       // Allow access to WebHID so we can interact with seedable FIDO keys
       case "hid":
+        return codeIsFromFileSystem;
+      case "accessibility-events":
         return codeIsFromFileSystem;
       // Deny other access
       case "serial":
