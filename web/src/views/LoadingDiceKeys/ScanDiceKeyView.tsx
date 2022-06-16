@@ -16,8 +16,9 @@ import {
   FullScreenNotificationPrimaryText,
   FullScreenNotificationSecondaryText,
 } from "../../css/FullScreenNotification";
-import { DiceKeyAnimationRotationProps, DiceKeyView, CenterFaceOrientationToRotateFromRbl } from "../../views/SVG/DiceKeyView";
+import { DiceKeyAnimationRotationProps } from "../../views/SVG/DiceKeyView";
 import { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
+import { DiceKeyMemoryStore } from "../../state";
 // import { CamerasBeingInspected } from "./CamerasBeingInspected";
 
 const minCameraWidth = 1024;
@@ -93,16 +94,6 @@ const NoCameraAvailableView = ({minCameraWidth, minCameraHeight, editManually}: 
   )
 }
 
-export const KeyRotationView = observer( ({diceKey, size}: {diceKey: DiceKeyWithKeyId, size: string}) => (
-  <DiceKeyView
-    faces={diceKey.faces}
-    obscureAllButCenterDie={false}
-    leaveSpaceForTab={false}
-    size={size}
-  />
-))
-
-
 const CaptureView = ({camerasOnThisDevice, ...scanDiceKeyViewProps}: ScanDiceKeyViewProps & {
   camerasOnThisDevice: CamerasOnThisDevice;
 }) => {
@@ -125,27 +116,29 @@ const CaptureView = ({camerasOnThisDevice, ...scanDiceKeyViewProps}: ScanDiceKey
   );
 }
 
-interface RotationState {
-  diceKeyToRotate: DiceKeyWithKeyId;
-  centerFaceOrientationToRotateFromRbl: CenterFaceOrientationToRotateFromRbl;
-}
+// const msDelayBeforeStart = 500;
+// const msToRotate = 3000;
+// const msDelayAtEnd = 500;
+// const msTotalForRotation = msDelayBeforeStart + msToRotate + msDelayAtEnd;
 
-const msDelayBeforeStart = 500;
-const msToRotate = 3000;
-const msDelayAtEnd = 500;
-const msTotalForRotation = msDelayBeforeStart + msToRotate + msDelayAtEnd;
+// const getRotationParameters = (centerFaceOrientationToRotateFromRbl: FaceOrientationLetterTrbl) => ({
+//   rotationDelayTimeInSeconds: msDelayBeforeStart/1000,
+//   rotationTimeInSeconds: msToRotate/1000,
+//   centerFaceOrientationToRotateFrom: centerFaceOrientationToRotateFromRbl,
+// });
 
 export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) => {
-  const [rotationState, setRotationState] = useState<RotationState|undefined>(undefined);
+//  const [rotationState, setRotationState] = useState<RotationState|undefined>(undefined);
   const onDiceKeyRead = (diceKeyWithKeyId: DiceKeyWithKeyId, centerFaceOrientationAsScannedTrbl: FaceOrientationLetterTrbl) => {
-    if (centerFaceOrientationAsScannedTrbl === "t") {
+    // if (centerFaceOrientationAsScannedTrbl === "t") {
+      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKeyWithKeyId, centerFaceOrientationAsScannedTrbl);
       props.onDiceKeyRead(diceKeyWithKeyId, centerFaceOrientationAsScannedTrbl);
-    } else {
-      setRotationState({diceKeyToRotate: diceKeyWithKeyId, centerFaceOrientationToRotateFromRbl: centerFaceOrientationAsScannedTrbl});
-      setTimeout(() => {
-        props.onDiceKeyRead(diceKeyWithKeyId, centerFaceOrientationAsScannedTrbl);
-      }, msTotalForRotation );
-    }
+    // } else {
+    //   setRotationState({diceKeyToRotate: diceKeyWithKeyId, centerFaceOrientationToRotateFromRbl: centerFaceOrientationAsScannedTrbl});
+    //   setTimeout(() => {
+    //     props.onDiceKeyRead(diceKeyWithKeyId, centerFaceOrientationAsScannedTrbl);
+    //   }, msTotalForRotation );
+    //}
   }
   const [
     componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning,
@@ -160,20 +153,6 @@ export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) => {
 
   // Uncomment if we want to provide transparency into the
   // camera scanning process rather than just wait for it to complete...
-  /* if (!camerasOnThisDevice.ready) {
-    return (<CamerasBeingInspected {...{camerasOnThisDevice}} />)
-  } */
-  if (rotationState != null) {
-    const {diceKeyToRotate, centerFaceOrientationToRotateFromRbl} = rotationState;
-    return ( <DiceKeyView
-        faces={diceKeyToRotate.faces}
-        size={props.height}
-        rotationDelayTimeInSeconds={msDelayBeforeStart/1000}
-        rotationTimeInSeconds={msToRotate/1000}
-        centerFaceOrientationToRotateFrom={centerFaceOrientationToRotateFromRbl}
-        obscureAllButCenterDie={false}
-      />)
-  }
   if (componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning) {
     return ( <PermissionRequiredView {...props} /> );
   }
