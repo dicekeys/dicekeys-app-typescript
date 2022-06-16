@@ -236,7 +236,11 @@ export const DiceKeyView = observer ( ({
   ...svgProps
 }: {size?: string, diceKeyWithKeyId?: DiceKeyWithKeyId} & DiceKeyRenderOptions & DiceKeyAnimationRotationProps & React.SVGAttributes<SVGElement>) => {
   const sizeModel = (showLidTab || leaveSpaceForTab) ? sizeModelWithTab : sizeModelWithoutTab;
-  const rotationParameters = diceKeyWithKeyId == null ? {} : DiceKeyMemoryStore.getRotationParametersForKeyId(diceKeyWithKeyId.keyId);
+  const rotationParameters = diceKeyWithKeyId == null ? undefined : DiceKeyMemoryStore.getRotationParametersForKeyId(diceKeyWithKeyId.keyId);
+  if (rotationParameters != null) {
+    obscureAllButCenterDie = false;
+    onFaceClicked = undefined;
+  }
   const {size} = svgProps;
   return (
     <DiceKeyContainerDiv size={size} >

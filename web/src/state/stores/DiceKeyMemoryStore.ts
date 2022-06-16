@@ -39,12 +39,12 @@ class DiceKeyMemoryStoreClass {
   private centerLetterAndDigitToKeyId = new ObservableMap<string, string>();
   private keyIdToCenterFaceOrientationWhenScanned = new ObservableMap<string, FaceOrientationLetterTrbl>();
 
-  getRotationParametersForKeyId = (keyId: string): ReturnType<typeof getRotationParameters> | {} => {
+  getRotationParametersForKeyId = (keyId: string): ReturnType<typeof getRotationParameters> | undefined => {
     const centerFaceOrientationWhenScanned = this.keyIdToCenterFaceOrientationWhenScanned.get(keyId);
     if (centerFaceOrientationWhenScanned != null && centerFaceOrientationWhenScanned != "t") {
       return getRotationParameters(centerFaceOrientationWhenScanned);
     }
-    return {};
+    return;
   }
 
   #readyEvent = new CustomEvent(this);
