@@ -1,15 +1,13 @@
 import { observer } from "mobx-react";
-import React from "react";
-import { FaceRead } from "@dicekeys/read-dicekey-js";
-import { CameraCaptureWithOverlay, CameraCaptureWithOverlayProperties } from "./CameraCaptureWithOverlay";
+import React, { useEffect, useState } from "react";
+import { CameraCaptureWithOverlay } from "./CameraCaptureWithOverlay";
 import { DiceKeyFrameProcessorState } from "./DiceKeyFrameProcessorState";
 import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
-import { Camera, CamerasOnThisDevice } from "./CamerasOnThisDevice";
-import { TupleOf25Items, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { CamerasOnThisDevice } from "./CamerasOnThisDevice";
+import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { MediaStreamState } from "./MediaStreamState";
 import { CameraSelectionView } from "./CameraSelectionView";
 import { RUNNING_IN_BROWSER } from "../../utilities/is-electron";
-import { action } from "mobx";
 import { PushButton } from "../../css/Button";
 import { CenteredControls } from "../../views/basics";
 import {
@@ -18,6 +16,8 @@ import {
   FullScreenNotificationPrimaryText,
   FullScreenNotificationSecondaryText,
 } from "../../css/FullScreenNotification";
+import { DiceKeyAnimationRotationProps, DiceKeyView, CenterFaceOrientationToRotateFromRbl } from "../../views/SVG/DiceKeyView";
+import { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
 // import { CamerasBeingInspected } from "./CamerasBeingInspected";
 
 const minCameraWidth = 1024;
@@ -39,21 +39,16 @@ const defaultMediaTrackConstraints: MediaTrackConstraints = {
   aspectRatio: {ideal: 1}
 };
 
-export interface ScanDiceKeyViewProps extends Omit<CameraCaptureWithOverlayProperties, "cameras" | "mediaStreamState"> {
-  onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
-  onDiceKeyRead?: (diceKey: DiceKeyWithKeyId) => any,
+export interface OnDiceKeyRead {
+  onDiceKeyRead: (diceKey: DiceKeyWithKeyId, centerOrientationAsScannedTrbl: FaceOrientationLetterTrbl) => void
+}
+
+//export interface ScanDiceKeyViewProps extends Omit<CameraCaptureWithOverlayProperties, "cameras" | "mediaStreamState">, DiceKeyAnimationRotationProps {
+export interface ScanDiceKeyViewProps extends OnDiceKeyRead, DiceKeyAnimationRotationProps {
+  height: string;
   showBoxOverlay?: boolean;
   editManually?: () => void;
 };
-/* type ScanDiceKeyViewProps =  Exclude<CameraCaptureWithOverlayProperties, "cameras" | "mediaStreamState"> &  React.PropsWithoutRef<{
-  onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
-  onDiceKeyRead?: (diceKey: DiceKeyWithKeyId) => any,
-  showBoxOverlay?: boolean;
-  maxWidth?: string;
-  maxHeight?: string;
-  minHeight?: string;
-  height?: string
-}>; */
 
 const PermissionRequiredView = ({editManually}: ScanDiceKeyViewProps) => (
   <FullScreenNotification>
@@ -98,74 +93,99 @@ const NoCameraAvailableView = ({minCameraWidth, minCameraHeight, editManually}: 
   )
 }
 
-
-export const ScanDiceKeyView = observer ( class ScanDiceKeyView extends React.Component<ScanDiceKeyViewProps>  {
-  frameProcessorState: DiceKeyFrameProcessorState;
-  mediaStreamState = new MediaStreamState(this.camerasOnThisDevice, defaultMediaTrackConstraints);
-  onFrameCaptured = async (framesImageData: ImageData, canvasRenderingContext: CanvasRenderingContext2D): Promise<void> => {
-    this.frameProcessorState.handleProcessedCameraFrame(await processDiceKeyImageFrame(framesImageData), canvasRenderingContext);
-  }
-
-  constructor(props: ScanDiceKeyView["props"]) {
-    super(props);
-    this.frameProcessorState = new DiceKeyFrameProcessorState(props);
-  }
-
-  get camerasOnThisDevice(): CamerasOnThisDevice { return  CamerasOnThisDevice.instance(minCameraWidth, minCameraHeight); }
-
-  componentWillUnmount() {
-    this.mediaStreamState.clear();
-  }
-
-  get cameras() {
-    return this.camerasOnThisDevice.cameras.filter( (camera) => {
-      const width = camera.capabilities?.width?.max;
-      const height = camera.capabilities?.height?.max;
-      return (!height || !minCameraHeight || height >= minCameraHeight) &&
-      (!width || !minCameraHeight ||  width >= minCameraWidth)
-    });
-  }
-
-  get defaultCamera(): Camera | undefined { return this.cameras[0] }
-
-  static readonly msToWaitBeforeCameraPermissionWarning = 5000;
-  componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning: boolean = (() => {
-    setTimeout( action ( () => {
-      this.componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning = true;
-    }), ScanDiceKeyView.msToWaitBeforeCameraPermissionWarning)
-    return false;
-  })();
+export const KeyRotationView = observer( ({diceKey, size}: {diceKey: DiceKeyWithKeyId, size: string}) => (
+  <DiceKeyView
+    faces={diceKey.faces}
+    obscureAllButCenterDie={false}
+    leaveSpaceForTab={false}
+    size={size}
+  />
+))
 
 
-  render() {
-    const camerasOnThisDevice = this.camerasOnThisDevice;
-    const cameraCaptureWithOverlayProps = this.props;
-
-    // Uncomment if we want to provide transparency into the
-    // camera scanning process rather than just wait for it to complete...
-    /* if (!camerasOnThisDevice.ready) {
-      return (<CamerasBeingInspected {...{camerasOnThisDevice}} />)
-    } */
-    if (!camerasOnThisDevice.readyAndNonEmpty && RUNNING_IN_BROWSER) {
-      if (this.componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning) {
-        return ( <PermissionRequiredView {...this.props} /> );
-      }
-    }
-    const cameras = this.cameras;
-    if (camerasOnThisDevice.ready && cameras.length === 0) {
-      return ( <NoCameraAvailableView {...this.props} minCameraWidth={minCameraWidth} minCameraHeight={minCameraHeight} /> );
-    }
-    return (
-      <>
-        <CameraCaptureWithOverlay
-          {...cameraCaptureWithOverlayProps}
-          onFrameCaptured={this.onFrameCaptured}
-          mediaStreamState={this.mediaStreamState}
-        />
-        <CameraSelectionView mediaStreamState={this.mediaStreamState} cameras={cameras} />
-      </>
+const CaptureView = ({camerasOnThisDevice, ...scanDiceKeyViewProps}: ScanDiceKeyViewProps & {
+  camerasOnThisDevice: CamerasOnThisDevice;
+}) => {
+  const [frameProcessorState] = useState(new DiceKeyFrameProcessorState(scanDiceKeyViewProps));
+  const [mediaStreamState] = useState(new MediaStreamState(camerasOnThisDevice, defaultMediaTrackConstraints));
+  const onFrameCaptured = async (framesImageData: ImageData, canvasRenderingContext: CanvasRenderingContext2D) =>
+    processDiceKeyImageFrame(framesImageData).then( processFrameResponse => 
+      frameProcessorState.handleProcessedCameraFrame(processFrameResponse, canvasRenderingContext)
     );
+  // Clear the media stream state when unloading this view
+  useEffect( mediaStreamState.clear );
+
+  return (
+    <>
+    <CameraCaptureWithOverlay
+      {...{...scanDiceKeyViewProps, onFrameCaptured, mediaStreamState}}
+    />
+    <CameraSelectionView mediaStreamState={mediaStreamState} cameras={camerasOnThisDevice.cameras} />
+  </>
+  );
+}
+
+interface RotationState {
+  diceKeyToRotate: DiceKeyWithKeyId;
+  centerFaceOrientationToRotateFromRbl: CenterFaceOrientationToRotateFromRbl;
+}
+
+const msDelayBeforeStart = 500;
+const msToRotate = 3000;
+const msDelayAtEnd = 500;
+const msTotalForRotation = msDelayBeforeStart + msToRotate + msDelayAtEnd;
+
+export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) => {
+  const [rotationState, setRotationState] = useState<RotationState|undefined>(undefined);
+  const onDiceKeyRead = (diceKeyWithKeyId: DiceKeyWithKeyId, centerFaceOrientationAsScannedTrbl: FaceOrientationLetterTrbl) => {
+    if (centerFaceOrientationAsScannedTrbl === "t") {
+      props.onDiceKeyRead(diceKeyWithKeyId, centerFaceOrientationAsScannedTrbl);
+    } else {
+      setRotationState({diceKeyToRotate: diceKeyWithKeyId, centerFaceOrientationToRotateFromRbl: centerFaceOrientationAsScannedTrbl});
+      setTimeout(() => {
+        props.onDiceKeyRead(diceKeyWithKeyId, centerFaceOrientationAsScannedTrbl);
+      }, msTotalForRotation );
+    }
   }
+  const [
+    componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning,
+    setComponentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning
+  ] = useState(false);
+  setTimeout( () => {
+    if (RUNNING_IN_BROWSER && !camerasOnThisDevice.readyAndNonEmpty) {
+      setComponentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning(true)
+    }}, 5000 );
+
+  const camerasOnThisDevice = CamerasOnThisDevice.instance(minCameraWidth, minCameraHeight);
+
+  // Uncomment if we want to provide transparency into the
+  // camera scanning process rather than just wait for it to complete...
+  /* if (!camerasOnThisDevice.ready) {
+    return (<CamerasBeingInspected {...{camerasOnThisDevice}} />)
+  } */
+  if (rotationState != null) {
+    const {diceKeyToRotate, centerFaceOrientationToRotateFromRbl} = rotationState;
+    return ( <DiceKeyView
+        faces={diceKeyToRotate.faces}
+        size={props.height}
+        rotationDelayTimeInSeconds={msDelayBeforeStart/1000}
+        rotationTimeInSeconds={msToRotate/1000}
+        centerFaceOrientationToRotateFrom={centerFaceOrientationToRotateFromRbl}
+        obscureAllButCenterDie={false}
+      />)
+  }
+  if (componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning) {
+    return ( <PermissionRequiredView {...props} /> );
+  }
+  if (camerasOnThisDevice.ready && camerasOnThisDevice.cameras.length === 0) {
+    return ( <NoCameraAvailableView {...props} minCameraWidth={minCameraWidth} minCameraHeight={minCameraHeight} /> );
+  }
+
+  return (
+      <CaptureView
+        {...{...props, camerasOnThisDevice, onDiceKeyRead}}
+      />
+  );
 });
 
 export const Preview_ScanDiceKeyView = () => (
@@ -174,6 +194,7 @@ export const Preview_ScanDiceKeyView = () => (
     console.log(`Read ${hrf}`);
     alert(`Read ${hrf}`);
   }}
+    height={`60vh`}
     editManually={() => alert("edit manually")}
   />
 );

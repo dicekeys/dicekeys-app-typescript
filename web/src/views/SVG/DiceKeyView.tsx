@@ -4,8 +4,9 @@ import { EmptyPartialDiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
 import { fitRectangleWithAspectRatioIntoABoundingBox, viewBox, Bounds } from "../../utilities/bounding-rects";
 import { ToggleState } from "../../state";
-import styled from "styled-components";
+import styled, {keyframes, css} from "styled-components";
 import { cssCalcTyped } from "../../utilities";
+import { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
 
 export interface DiceKeyRenderOptions {
   faces?: PartialDiceKey;
@@ -149,12 +150,61 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
     );
 });
 
-const DiceKeySvgElement = styled.svg`
+const rotateFromCenterFaceLeft = keyframes`
+  from {
+    transform: rotate(-90deg);
+  }
+  to {
+    transform: rotate(0);
+  }
+`;
+const rotateFromCenterFaceRight = keyframes`
+  from {
+    transform: rotate(90deg);
+  }
+  to {
+    transform: rotate(0);
+  }
+`;
+const rotateFromCenterFaceBottom = keyframes`
+  from {
+    transform: rotate(180deg);
+  }
+  to {
+    transform: rotate(0);
+  }
+`;
+
+export type CenterFaceOrientationToRotateFromRbl = Exclude<FaceOrientationLetterTrbl, "t">;
+
+export interface DiceKeyAnimationRotationProps {
+  rotationTimeInSeconds?: number;
+  rotationDelayTimeInSeconds?: number;
+  centerFaceOrientationToRotateFrom?: CenterFaceOrientationToRotateFromRbl;
+}
+
+const DiceKeySvgElement = styled.svg<DiceKeyAnimationRotationProps>`
   display: flex;
-  cursor: grab;
   align-self: center;
   justify-self: center;
-`;
+  cursor: grab;
+${ ({centerFaceOrientationToRotateFrom, rotationDelayTimeInSeconds=0, rotationTimeInSeconds=2.25}) =>
+  centerFaceOrientationToRotateFrom == null ? `` : css`
+cursor: none;
+  animation-name: ${
+    centerFaceOrientationToRotateFrom === "l" ? rotateFromCenterFaceLeft :
+    centerFaceOrientationToRotateFrom === "b" ? rotateFromCenterFaceBottom :
+    rotateFromCenterFaceRight
+  };
+  animation-delay: ${ rotationDelayTimeInSeconds }s;
+  animation-duration: ${ rotationTimeInSeconds }s;
+  animation-timing-function: ease;
+  animation-iteration-count: 1;
+  animation-fill-mode: both;
+  animation-direction: forward;
+`}
+`
+
 
 export const DiceKeyView = ({
   // DiceKeyRenderOptions
@@ -170,7 +220,7 @@ export const DiceKeyView = ({
   // Props to pass down to svg element.
   style: parentStyle,
   ...svgProps
-}: {size?: string} & DiceKeyRenderOptions & React.SVGAttributes<SVGElement>) => {
+}: {size?: string} & DiceKeyRenderOptions & DiceKeyAnimationRotationProps & React.SVGAttributes<SVGElement>) => {
   const sizeModel = (showLidTab || leaveSpaceForTab) ? sizeModelWithTab : sizeModelWithoutTab;
   const cssCalcSize = size != null ? cssCalcTyped(size) : undefined;
   const style: React.CSSProperties | undefined = (size == null) ? parentStyle : {...parentStyle, width: cssCalcSize, height: cssCalcSize};

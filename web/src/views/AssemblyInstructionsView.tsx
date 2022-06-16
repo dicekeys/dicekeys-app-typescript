@@ -104,7 +104,7 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
       // Scanning action
       (
         <CenterColumn>
-          <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } height={`65vh`} />
+          <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } height={`45vh`} />
           <CenteredControls>
             <PushButton onClick={stopScanning}>Cancel</PushButton>
           </CenteredControls>
