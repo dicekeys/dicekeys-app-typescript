@@ -7,7 +7,7 @@ import { CustomEvent } from "../../utilities/event";
 import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { EncryptedDiceKeyStore, sortPublicDiceKeyDescriptors } from "./EncryptedDiceKeyStore";
 import { writeStringToEncryptedLocalStorageField, readStringFromEncryptedLocalStorageField } from "../core/EncryptedStorageFields";
-import { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
+import type { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
 
 export interface PublicDiceKeyDescriptorWithSavedOnDevice extends PublicDiceKeyDescriptor {
   savedOnDevice: boolean

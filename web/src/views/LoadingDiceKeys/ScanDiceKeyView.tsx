@@ -17,9 +17,8 @@ import {
   FullScreenNotificationSecondaryText,
 } from "../../css/FullScreenNotification";
 import { DiceKeyAnimationRotationProps } from "../../views/SVG/DiceKeyView";
-import { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
+import type { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
 import { DiceKeyMemoryStore } from "../../state";
-// import { CamerasBeingInspected } from "./CamerasBeingInspected";
 
 const minCameraWidth = 1024;
 const minCameraHeight = 720;
@@ -116,29 +115,11 @@ const CaptureView = ({camerasOnThisDevice, ...scanDiceKeyViewProps}: ScanDiceKey
   );
 }
 
-// const msDelayBeforeStart = 500;
-// const msToRotate = 3000;
-// const msDelayAtEnd = 500;
-// const msTotalForRotation = msDelayBeforeStart + msToRotate + msDelayAtEnd;
-
-// const getRotationParameters = (centerFaceOrientationToRotateFromRbl: FaceOrientationLetterTrbl) => ({
-//   rotationDelayTimeInSeconds: msDelayBeforeStart/1000,
-//   rotationTimeInSeconds: msToRotate/1000,
-//   centerFaceOrientationToRotateFrom: centerFaceOrientationToRotateFromRbl,
-// });
-
 export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) => {
 //  const [rotationState, setRotationState] = useState<RotationState|undefined>(undefined);
   const onDiceKeyRead = (diceKeyWithKeyId: DiceKeyWithKeyId, centerFaceOrientationAsScannedTrbl: FaceOrientationLetterTrbl) => {
-    // if (centerFaceOrientationAsScannedTrbl === "t") {
       DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKeyWithKeyId, centerFaceOrientationAsScannedTrbl);
       props.onDiceKeyRead(diceKeyWithKeyId, centerFaceOrientationAsScannedTrbl);
-    // } else {
-    //   setRotationState({diceKeyToRotate: diceKeyWithKeyId, centerFaceOrientationToRotateFromRbl: centerFaceOrientationAsScannedTrbl});
-    //   setTimeout(() => {
-    //     props.onDiceKeyRead(diceKeyWithKeyId, centerFaceOrientationAsScannedTrbl);
-    //   }, msTotalForRotation );
-    //}
   }
   const [
     componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning,

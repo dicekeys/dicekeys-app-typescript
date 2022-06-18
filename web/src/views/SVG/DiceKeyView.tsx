@@ -5,7 +5,7 @@ import { FaceGroupView } from "./FaceView";
 import { fitRectangleWithAspectRatioIntoABoundingBox, viewBox, Bounds } from "../../utilities/bounding-rects";
 import { DiceKeyMemoryStore, ToggleState } from "../../state";
 import styled, {keyframes, css} from "styled-components";
-import { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
+import type { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
 import { cssCalcTyped } from "../../utilities";
 
 export interface DiceKeyRenderOptions {
