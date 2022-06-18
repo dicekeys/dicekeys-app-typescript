@@ -35,6 +35,8 @@ import {
 import { addAuthenticationToken, getUrlForAuthenticationToken } from "../state/stores/AuthenticationTokens";
 import {RUNNING_IN_ELECTRON} from "../utilities/is-electron";
 import type {ElectronBridgeRendererView} from "../../../common/IElectronBridge";
+import { KnownCustomProtocolsToTheirAssociatedDomains } from "./KnownCustomProtocols";
+import { CenterLetterAndDigit } from "../dicekeys/DiceKey";
 
 
 const getApiRequestFromSearchParams = (
@@ -117,6 +119,7 @@ const decodeRequestFromUrlIfPresent = (
       hostValidatedViaAuthToken = true;
     }
   }
+  // console.log(`decodeRequestFromUrlIfPresent`, requestId, respondTo)
   if (typeof requestId !== "string" || typeof respondTo !== "string") {
     // This is not a request.  Ignore this message event.
     return undefined;
@@ -125,9 +128,10 @@ const decodeRequestFromUrlIfPresent = (
   if (request == null) {
     return undefined;
   }
-  const {origin, host, pathname} = new URL(respondTo);
+  const {origin, protocol, host, pathname} = new URL(respondTo);
   return {
     originalRequest: {...request, requestId},
+    protocol,
     host,
     hostValidatedViaAuthToken,
     respondTo,
@@ -239,6 +243,7 @@ const addResponseToUrl = (
 }
 
 export class QueuedUrlApiRequest extends QueuedApiRequest {
+  readonly protocol: string;
   readonly host: string;
   readonly originalRequest: ApiCalls.RequestMessage;
   readonly origin: string;
@@ -246,19 +251,26 @@ export class QueuedUrlApiRequest extends QueuedApiRequest {
   readonly hostValidatedViaAuthToken: boolean;
   readonly respondTo: string;
 
-  transmitResponseUrl: (responseURL: URL) => any = (url: URL) => {
-    if(RUNNING_IN_ELECTRON){
+  transmitResponseUrl: (responseURL: URL) => void = (url: URL) => {
+    if (RUNNING_IN_ELECTRON) {
       (window as unknown as  {ElectronBridge: ElectronBridgeRendererView}).ElectronBridge.openExternal(url.toString());
-    }else{
-      console.log(`Transmitting URL`)
+    } else {
+      // console.log(`Transmitting URL`, url.toString())
       window.location.replace(url.toString());
     }
   }
 
-  throwIfClientNotPermitted: () => void = () => throwIfUrlNotPermitted(this.host, this.pathname, this.hostValidatedViaAuthToken)(this.request);
+  throwIfClientNotPermitted: () => void = () => throwIfUrlNotPermitted(this)(this.request);
 
-  transmitResponse = (response: ApiCalls.Response) => {
+  transmitResponse = (response: ApiCalls.Response, {centerLetterAndDigit, sequenceNumber}: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) => {
+    // console.log(`Response to be transmitted`, {...response});
     const marshalledResponseUrl = addResponseToUrl( this.request.command, this.respondTo, response);
+    if (centerLetterAndDigit != null) {
+      marshalledResponseUrl.searchParams.set("centerLetterAndDigit", centerLetterAndDigit);
+    }
+    if (sequenceNumber != null) {
+      marshalledResponseUrl.searchParams.set("#", sequenceNumber.toString());
+    }
     this.transmitResponseUrl(marshalledResponseUrl)
   }
 
@@ -268,14 +280,20 @@ export class QueuedUrlApiRequest extends QueuedApiRequest {
     super();
     const decoded = decodeRequestFromUrlIfPresent(requestUrl);
     if (!decoded) {
-      throw "Invalid request URL"
+      throw new Error("Invalid request URL");
     }
     // Should a future version of TypeScript be able to recognize that Object.assign will initialize all the
     // object's parameters, we could replace the below assignments with:
     //   Object.assign(this, decoded);
-    const {originalRequest, host, hostValidatedViaAuthToken, respondTo, origin, pathname} = decoded;
+    const {originalRequest, protocol, host, hostValidatedViaAuthToken, respondTo, origin, pathname} = decoded;
     this.originalRequest = originalRequest as ApiCalls.RequestMessage;
-    this.host = host;
+    this.protocol = protocol;
+    const replacementHost = (host != null && host.length > 0) ? undefined :  
+      KnownCustomProtocolsToTheirAssociatedDomains[protocol] ?? "INVALID";
+    // const replacementPath = replacementHost == null ? undefined :
+    //   pathname.startsWith("//")
+    this.host = replacementHost ?? host;
+    // console.log(`host: "${host}", protocol: "${protocol}", this.host="${this.host}"`, host);
     this.hostValidatedViaAuthToken = hostValidatedViaAuthToken;
     this.respondTo = respondTo;
     this.origin = origin;
@@ -290,10 +308,10 @@ export class QueuedUrlApiRequest extends QueuedApiRequest {
    * @throws Exceptions when a request is not permitted.
    */
   async getResponse(seedString: string): Promise<ApiCalls.Response> {
+      const {requestId} = this.request;
     if (this.request.command === UrlApiMetaCommand.getAuthToken) {
       // getAuthToken is unique to URL requests  Send an authToken that
       // proves the recipient is able to receive responses at the respondTo URL.
-      const {requestId} = this.request;
       const authToken = addAuthenticationToken(this.respondTo);
       return {requestId, authToken} as any as ApiCalls.Response;
     } else {

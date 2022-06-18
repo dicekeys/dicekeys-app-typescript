@@ -1,26 +1,35 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, shell } from "electron";
+//import { dialog } from "electron";
 import * as IpcApiFactory from "./MainProcessApiFactory";
 import { createBrowserWindow } from "../createBrowserWindow";
-import { createMenu } from '../menu';
+import { createMenu } from "../menu";
 import {
   MainToRendererAsyncApi,
-} from './ElectronBridge';
+} from "./ElectronBridge";
 import {
   deleteDiceKeyFromCredentialStore,
   getDiceKeyFromCredentialStore,
   storeDiceKeyInCredentialStore
- } from './SecureDiceKeyStoreApi';
+ } from "./SecureDiceKeyStoreApi";
 import {
-  getCommandLineArguments,
   writeResultToStdOutAndExit
-} from './CommandLineApi';
-import {
-  AppLinkHandler
-} from "./AppLinksApi";
-import { saveUtf8File } from './SaveAndLoad';
+} from "./CommandLineApi";
+import { saveUtf8File } from "./SaveAndLoad";
 
 const openLinkInBrowser = async (url: string) => {
   await shell.openExternal(url);
+}
+
+const findAppUrl = (commandLineArgs: string[]): URL | undefined => {
+  const urlStringOrUndefined = commandLineArgs.find((value) =>
+    value.indexOf("dicekeys:/") !== -1 && value.indexOf("command=") !== -1
+  );
+  if (urlStringOrUndefined == null) return;
+  try {
+    return new URL(urlStringOrUndefined);
+  } catch {
+    return;
+  }
 }
 
 export class DiceKeysElectronApplication {
@@ -32,15 +41,14 @@ export class DiceKeysElectronApplication {
 
 
   mainWindow: BrowserWindow | undefined;
-  rendererApi: MainToRendererAsyncApi;
-  appLinkHandler: AppLinkHandler | undefined;
+  readonly apiRequestWindows: BrowserWindow[] = [];
+  readonly rendererApi: MainToRendererAsyncApi;
 
   constructor() {
-    this.mainWindow = createBrowserWindow();
+    this.mainWindow = createBrowserWindow("electron.html", findAppUrl(process.argv)?.search);
     this.rendererApi = IpcApiFactory.implementMainToRendererAsyncClientInMainProcess(this.mainWindow.webContents);
-    this.appLinkHandler = new AppLinkHandler(this.rendererApi.handleAppLink);
 
-    IpcApiFactory.implementRendererToMainAsynchApiServerInMainProcess({
+    IpcApiFactory.implementRendererToMainAsyncApiServerInMainProcess({
       deleteDiceKeyFromCredentialStore,
       getDiceKeyFromCredentialStore,
       storeDiceKeyInCredentialStore,
@@ -49,28 +57,32 @@ export class DiceKeysElectronApplication {
     });
 
     IpcApiFactory.implementRendererToMainSyncApiServerInMainProcess({
-      getAppLink: () => this.appLinkHandler?.getAppLink(),
-      getCommandLineArguments,
       writeResultToStdOutAndExit,
       "openExternal": (url: string) => shell.openExternal(url),
     });
 
     createMenu(this.rendererApi);
-
-    this.appLinkHandler.processArgsForAppLink(process.argv);
+    
+    this.mainWindow.webContents.once('dom-ready', () => {
+    });
 
     app.on("second-instance", this.onSecondInstance);
     app.on("window-all-closed", this.onWindowsAllClosed);
 
-    app.on('will-finish-launching', () => {
-      // Protocol handler for osx
-      app.on('open-url', this.onOsXOpenUrl);
+    // Protocol handler for osx
+    app.on('open-url', (event, url) => {
+      // console.log(`open-url`, event, url);
+      this.onOsXOpenUrl(event, url);
     });
   }
 
-  onOsXOpenUrl(event: Electron.Event, url: string) {
+  onOsXOpenUrl(event: Electron.Event, urlString: string) {
     event.preventDefault();
-    this.appLinkHandler?.processArgsForAppLink([url]);
+    const url = findAppUrl([urlString]);
+    if (url != null) {
+      createBrowserWindow("electron.html", url.search);
+    }
+    // this.appLinkHandler.processArgsForAppLink([urlString]);
   }
 
   // Quit when all windows are closed, except on macOS. There, it's common
@@ -82,19 +94,30 @@ export class DiceKeysElectronApplication {
     // }
   };
 
+  focusMainWindow = () => {
+    const {mainWindow} = this;
+    if (!mainWindow) return; 
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    mainWindow.focus();
+  }
+
   onSecondInstance = (_event: Electron.Event, commandLineArgV: string[]) => {
-    if (this.mainWindow) {
-
-      // Protocol handler for win32/linux
-      // argv: An array of the second instance’s (command line / deep linked) arguments
-      if (process.platform == 'win32' || process.platform == 'linux') {
-        this.appLinkHandler?.processArgsForAppLink(commandLineArgV);
+    // console.log(`onSecondInstance`, _event, commandLineArgV);
+    // Protocol handler for win32/linux
+    // argv: An array of the second instance’s (command line / deep linked) arguments
+    if (process.platform == 'win32' || process.platform == 'linux') {        
+    // dialog.showErrorBox(`second instance argv`, JSON.stringify(commandLineArgV, undefined, 2));
+      const url = findAppUrl(commandLineArgV);
+      if (url != null) {
+        createBrowserWindow("electron.html", url.search);
+      } else {
+        this.focusMainWindow();
       }
-
-      if (this.mainWindow.isMinimized()) {
-        this.mainWindow.restore();
-      }
-      this.mainWindow.focus();
+    //this.appLinkHandler.processArgsForAppLink(commandLineArgV);
+    } else {
+      this.focusMainWindow();
     }
   };
 }

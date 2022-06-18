@@ -8,7 +8,8 @@ import { LoadDiceKeyViewStateName } from "./LoadingDiceKeys/LoadDiceKeyViewState
 import { LoadDiceKeyFullPageView } from "./LoadingDiceKeys/LoadDiceKeyView";
 import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
 import { AssemblyInstructionsStateName } from "./AssemblyInstructionsState";
-import {ApproveApiRequestState, ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
+import {ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
+import { ApproveApiRequestState } from "./api-request-handling/ApproveApiRequestState";
 import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
 import { PrimaryView } from "../css";
 import { SeedHardwareKeyFullPageView } from "./Recipes/SeedHardwareKeyView";
@@ -23,9 +24,7 @@ export const WindowRoutingView = observer ( ({state}: {state: WindowTopLevelNavi
   const {foregroundApiRequest} = ApiRequestsReceivedState;
   if (foregroundApiRequest != null) {
     return (
-      <ApproveApiRequestView state={new ApproveApiRequestState(foregroundApiRequest)}
-        onApiRequestResolved={ApiRequestsReceivedState.dequeueApiRequestReceived}
-      />
+      <ApproveApiRequestView state={new ApproveApiRequestState(foregroundApiRequest)}/>
     )
   }
   // console.log(`Displaying subview ${state.subView}`)

@@ -93,7 +93,8 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
       }
     };
 
-    const {width, height, maxHeight, minHeight} = this.props;  
+    const {width, height, maxHeight, minHeight} = this.props;
+//    console.log(`Rendering CameraCaptureWithOverlay`, height, width, this.props);
 
     return (
         <>

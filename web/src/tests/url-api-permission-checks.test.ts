@@ -31,90 +31,111 @@ describe ("URL API Permissions", () => {
         testPathList.forEach( (testPath) => {
           test (`examples from documentation: required: "${pathRequired}", observed: "${testPath}" expecting ${expectedResult}"`, () => {
       
-            expect(isUrlOnAllowList(defaultHost, testPath, [ {host: defaultHost, paths: [pathRequired] } ]))
+            expect(isUrlOnAllowList({
+              protocol: "https:",
+              host: defaultHost,
+              pathname: testPath,
+              webBasedApplicationIdentities: [ {host: defaultHost, paths: [pathRequired] } ]
+            }))
             .toBe(expectedResult);
           });
   })}));
 
   test ("Path prefix match", () => {
 
-    expect(isUrlOnAllowList(defaultHost, "/ourPathInTheMiddleOfOurStreet", [
+    expect(isUrlOnAllowList({
+      protocol: "https:",
+      host: defaultHost,
+      pathname: "/ourPathInTheMiddleOfOurStreet",
+      webBasedApplicationIdentities: [
           {host: "bogus eentry to make sure we look beyond first entry"},
           {host: defaultHost, paths: ["bogusPath", "ourPath*"]}
         ]
-    )).toBe(true);
+    })).toBe(true);
   });
 
   test ("Path exact match", () => {
     expect(
-      isUrlOnAllowList(
-        defaultHost, "/ourPathInTheMiddleOfOurStreet",
-        [
+      isUrlOnAllowList({
+        protocol: "https:",
+        host: defaultHost,
+        pathname: "/ourPathInTheMiddleOfOurStreet",
+        webBasedApplicationIdentities: [
           {host: "bogus eentry to make sure we look beyond first entry"},
           {host: defaultHost, paths: ["/bogusPath", "/ourPathInTheMiddleOfOurStreet"]}
         ]
-      )
+    })
     ).toBe(true);
   });
     
   test("Path mismatch detected", () => {
     expect(
-      isUrlOnAllowList(
-        defaultHost, "/someoneElsesPathInTheMiddleOfTheirStreet",
-        [
+      isUrlOnAllowList({
+        protocol: "https:",
+        host: defaultHost,
+        pathname: "/someoneElsesPathInTheMiddleOfTheirStreet",
+        webBasedApplicationIdentities: [
           {host: "bogus eentry to make sure we look beyond first entry"},
           {host: defaultHost, paths: ["bogusPath", "ourPathourPathInTheMiddleOfOurStreet"]}
         ]
-      )
+      })
     ).toBe(false)
   });
 
   test("Host suffix test", () => {
     expect(
-      isUrlOnAllowList(
-        defaultHost, "/inTheMiddleofOurStreet",
-        [
+      isUrlOnAllowList({
+        protocol: "https:",
+        host: defaultHost,
+        pathname: "/inTheMiddleofOurStreet",
+        webBasedApplicationIdentities: [
           {host: "bogus eentry to make sure we look beyond first entry"},
           {host: "*.example.com", paths: ["bogusPath", "inTheMiddleofOurStreet"]}
         ]
-      )
+      })
     ).toBe(true);
   });
 
   test("Host suffix test should work if no subdomain", () => {
     expect(
-      isUrlOnAllowList(
-        defaultHost, "/inTheMiddleofOurStreet",
-        [
+      isUrlOnAllowList({
+        protocol: "https:",
+        host: defaultHost,
+        pathname: "/inTheMiddleofOurStreet",
+        webBasedApplicationIdentities: [
           {host: "bogus eentry to make sure we look beyond first entry"},
           {host: "*.example.com", paths: ["bogusPath", "inTheMiddleofOurStreet"]}
         ]
-      )
+      })
     ).toBe(true);
   });
 
 
   test("Host suffix test bad domain should fail", () => {
     expect(
-      isUrlOnAllowList(
-        "ex.sample.com", "/inTheMiddleofOurStreet",
-        [
+      isUrlOnAllowList({
+        protocol: "https:",
+        host: "ex.sample.com",
+        pathname: "/inTheMiddleofOurStreet",
+        webBasedApplicationIdentities: [
           {host: "bogus eentry to make sure we look beyond first entry"},
           {host: "*.example.com", paths: ["bogusPath", "/inTheMiddleofOurStreet"]}
         ]
-      )
+      })
     ).toBe(false);
   });
 
   test("Host suffix test should work if no subdomain", () => {
     expect(
-      isUrlOnAllowList(
-        "ex-sample.com", "/inTheMiddleofOurStreet",
-        [
+      isUrlOnAllowList({
+        protocol: "https:",
+        host: "ex-sample.com",
+        pathname: "/inTheMiddleofOurStreet",
+        webBasedApplicationIdentities: [
           {host: "bogus eentry to make sure we look beyond first entry"},
           {host: "*.example.com", paths: ["bogusPath", "/inTheMiddleofOurStreet"]}
         ]
-      )
+      })
     ).toBe(false);
   });
 

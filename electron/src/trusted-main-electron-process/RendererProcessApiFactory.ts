@@ -47,8 +47,7 @@ export const implementMainToRendererAsyncApiServerInRendererProcess = (implement
   pretendWeHaveUsedInputToMakeTypeScriptHappy(_testOfRendererToMainAsyncFunctionNamesAllValid_, _testOfRendererToMainAsyncFunctionNamesIncludesAll_);
   
   const rendererToMainSyncFunctionNames = [
-    "getAppLink",
-    "getCommandLineArguments",
+//    "getCommandLineArguments",
     "openExternal",
     "writeResultToStdOutAndExit"
   ] as const;

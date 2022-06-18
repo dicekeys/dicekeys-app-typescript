@@ -30,8 +30,6 @@ export interface Device extends DeviceUniqueIdentifier {
 export interface RendererToMainSyncApi {
   openExternal(url: string): void;
   writeResultToStdOutAndExit(result: string): void;
-  getCommandLineArguments(): string[];
-  getAppLink(): string | undefined;
 }
 
 export interface RendererToMainDeprecatedAsyncApi{
@@ -47,6 +45,7 @@ export interface RendererToMainDiceKeysStoreAsyncApi {
 export interface ElectronBridgeConstants {
   osPlatform: NodeJS.Platform;
   requiresWindowsAdmin: boolean;
+  commandLineArgs: string[];
 }
 
 export type RemoveListener = () => void;

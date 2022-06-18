@@ -12,14 +12,16 @@ import {
   DeleteDiceKeyViewState, DeleteDiceKeyViewStateName
 } from "../../views/SaveOrDeleteDiceKeyViewState";
 import { SaveOrDeleteDiceKeyViewState } from "../../views/SaveOrDeleteDiceKeyViewState";
+import { action, makeAutoObservable } from "mobx";
+import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyViewState";
 
 export const DisplayDiceKeyViewStateName = "";
 export type DisplayDiceKeyViewStateName = typeof DisplayDiceKeyViewStateName;
 export class DisplayDiceKeyViewState implements ViewState {
   readonly viewName = DisplayDiceKeyViewStateName;
   navState: NavigationPathState;
-  constructor(parentNavState: NavigationPathState, public readonly diceKey: DiceKeyWithKeyId) {
-    this.navState = new NavigationPathState(parentNavState, DisplayDiceKeyViewStateName)
+  constructor(parentNavState: NavigationPathState, public readonly selectedDiceKeyVewState: SelectedDiceKeyViewState) {
+    this.navState = new NavigationPathState(parentNavState, DisplayDiceKeyViewStateName);
   }
   // toPath = () => ``;
 }
@@ -39,7 +41,7 @@ export class SelectedDiceKeyViewState implements ViewState<SelectedDiceKeyViewSt
   readonly viewName = SelectedDiceKeyViewStateName;
 
   _displayDiceKeyViewState?: DisplayDiceKeyViewState;
-  get displayDiceKeyViewState() { return this._displayDiceKeyViewState ||= new DisplayDiceKeyViewState(this.navState, this.diceKey) }
+  get displayDiceKeyViewState() { return this._displayDiceKeyViewState ||= new DisplayDiceKeyViewState(this.navState, this) }
   _backupViewState?: BackupViewState;
   get backupViewState() { return this._backupViewState ||= new BackupViewState(this.navState, {diceKey: this.diceKey}) }
   _seedHardwareKeyViewState?: SeedHardwareKeyViewState;
@@ -50,22 +52,52 @@ export class SelectedDiceKeyViewState implements ViewState<SelectedDiceKeyViewSt
   navState: NavigationPathState;
   subView: SubViewState<SelectedDiceKeySubViewStates>;
 
+  private _diceKey: DiceKeyWithKeyId;
+  get diceKey() { return this._diceKey;}
+  readonly setDiceKey = action( (diceKey: DiceKeyWithKeyId | undefined) => {
+    if (diceKey != null) {
+      this._diceKey = diceKey;
+    }
+  });
+
+  private _loadDiceKeyViewState: LoadDiceKeyViewState | undefined;
+  get loadDiceDiceInProgress(): boolean { return this._loadDiceKeyViewState != null }
+  get loadDiceKeyViewState() { return this._loadDiceKeyViewState }
+  readonly setLoadDiceKeyViewState = action( (newValue: LoadDiceKeyViewState | undefined) => {
+    this._loadDiceKeyViewState = newValue;
+  });
+
+  startLoadDiceKey = () => {
+    this.setLoadDiceKeyViewState(new LoadDiceKeyViewState());
+  }
+
+  onDiceKeyReadOrCancelled = (diceKeyWithKeyId: DiceKeyWithKeyId | undefined ) => {
+    this.setLoadDiceKeyViewState(undefined);
+    if (diceKeyWithKeyId != null) {
+      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKeyWithKeyId);
+      this.setDiceKey(diceKeyWithKeyId);
+    }
+  }
+
+
   get subViewState() { return this.subView.subViewState ?? this.displayDiceKeyViewState }
   constructor(
     parentNavState: NavigationPathState, 
-    public readonly diceKey: DiceKeyWithKeyId,
+    diceKey: DiceKeyWithKeyId,
   ) {
+    this._diceKey = diceKey;
     this.navState = new NavigationPathState(parentNavState, diceKey.centerLetterAndDigit, () => this.subViewState.navState.fromHereToEndOfPathInclusive );
     this.subView = new SubViewState<SelectedDiceKeySubViewStates>(this.viewName, this.navState, this.displayDiceKeyViewState);
     this.subView.subStateChangedEvent.on( (_prevState, _currentState) => {
       const diceKeyIsInMemory = DiceKeyMemoryStore.hasKeyIdInMemory(diceKey.keyId);
-      console.log(`SelectedDiceKeyView subview state changed from ${_prevState?.viewName ?? "undefined"} to ${_currentState?.viewName ?? "undefined"} and DiceKeyInMemory=${diceKeyIsInMemory ? "true" : "false"}`)
+      // console.log(`SelectedDiceKeyView subview state changed from ${_prevState?.viewName ?? "undefined"} to ${_currentState?.viewName ?? "undefined"} and DiceKeyInMemory=${diceKeyIsInMemory ? "true" : "false"}`)
       if (!diceKeyIsInMemory) {
         // We've navigated to this view after the key has been deleted from memory.
-        console.log(`Arrived at SelectedDiceKeyView with deleted DiceKey. Must have returned from deleted state`);
+        // console.log(`Arrived at SelectedDiceKeyView with deleted DiceKey. Must have returned from deleted state`);
         addressBarState.back();
       }
-    })
+    });
+    makeAutoObservable(this);
   }
 
   /**

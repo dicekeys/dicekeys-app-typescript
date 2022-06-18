@@ -2,7 +2,6 @@ import { DivSupportingInvisible } from "../../css";
 import styled, {css} from "styled-components";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities";
 
-
 export const StandardSideMargin = `5vw`;
 export const StandardWidthBetweenSideMargins = cssExprWithoutCalc(`100vw - 2 * ${StandardSideMargin}`);
 export const TopNavigationBarHeight = `7vh`;
@@ -79,12 +78,6 @@ export const ModalOverlayForDialogOrMessage = styled(ModalOverlayBetweenTopNavig
 export const ModalOverlayForWarningDialog = styled(ModalOverlayForDialogOrMessage)`
   background-color: yellow;
 `;
-
-
-
-
-
-
 
 export const NavigationBar = styled.div`
   width: 100vw;

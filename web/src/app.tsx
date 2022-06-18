@@ -17,6 +17,7 @@ import { createGlobalStyle } from 'styled-components';
 
 import InconsolataBoldWoff from "./css/fonts/InconsolataBold.woff";
 import InconsolataBoldWoff2 from "./css/fonts/InconsolataBold.woff2";
+
 const GlobalFonts = createGlobalStyle`
   @font-face {
     font-family: "Inconsolata";
@@ -39,18 +40,29 @@ try {
   const url = new URL(window.location.href);
   if (url.searchParams.has(ApiCalls.RequestMetadataParameterNames.command)) {
     const request = new QueuedUrlApiRequest(new URL(window.location.href));
+    console.log(`Request received`, request);
     // If we've reached this point, there is a valid API request that needs to be handled.
     // Add it to the queue.
-    if (RUNNING_IN_ELECTRON) {
-      ApiRequestsReceivedState.enqueueApiRequestReceived(request);
-    } else{
-      // Open DiceKeys app, or better create a new UI view.
-      const schemeBasedApiRequest = "dicekeys://" + url.search;
-      window.location.href = schemeBasedApiRequest
-    }
+    // Open DiceKeys app, or better create a new UI view.
+    ApiRequestsReceivedState.enqueueApiRequestReceived(request);
+    console.log(`Request enqueued for handling by web app`);
+    // if (RUNNING_IN_BROWSER) {
+      // const schemeBasedApiRequest = "dicekeys:/" + url.search;
+      // customProtocolCheck(schemeBasedApiRequest, () => {
+      //   // On failure, handle API request locally...
+      //   ApiRequestsReceivedState.enqueueApiRequestReceived(request);
+      //   console.log(`Request enqueued for handling by web app`);            
+      //   // window.location.assign(schemeBasedApiRequest);
+      // }, () => {
+      //   // On success, we'll do A
+      //   window.location.assign(schemeBasedApiRequest);
+      //   // setTimeout( () => {window.close();}, 2000)
+      // }, 5000 );
+    // }
   }
-} catch {
+} catch (e) {
   // Not a valid request.  Carry on.
+  console.log("Invalid request", window.location.href, e)
 
   // FUTURE -- throw error if search param had command but it was an invalid command.
 }
@@ -64,7 +76,7 @@ if (RUNNING_IN_ELECTRON) {
           const request = new QueuedUrlApiRequest(url);
           ApiRequestsReceivedState.enqueueApiRequestReceived(request);
         }
-      }catch (e) {
+      } catch (e) {
         console.log(e)
       }
     }
@@ -80,6 +92,15 @@ if (RUNNING_IN_ELECTRON) {
     "importRecipes": async (recipesToImport) => RecipeStore.importStoredRecipeAsJsonArrary(recipesToImport),
     loadRandomDiceKey
   });
+
+  if (electronBridge.osPlatform === "linux" || electronBridge.osPlatform === "win32") {
+    // If the application was just launched and the command line contains an API request
+    // in the form of a dicekeys:/ link, process it here.
+    try {
+      electronBridge.commandLineArgs.filter( (x => x.startsWith("dicekeys:/") && x.indexOf("command") > 0))
+      .forEach( url => handleAppLink(url ));
+    } catch {}
+  }
 }
 
 window.addEventListener('load', () => {

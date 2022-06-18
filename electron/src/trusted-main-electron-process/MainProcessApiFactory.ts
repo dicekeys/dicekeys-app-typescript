@@ -25,7 +25,7 @@ pretendWeHaveUsedInputToMakeTypeScriptHappy(_testOfRendererToMainAsyncFunctionNa
 const implementRendererToMainSyncFnInMainProcess = implementIpcSyncApiServerFn(ipcMain);
 const implementRendererToMainAsyncFnInMainProcess = implementIpcAsyncApiServerFn(ipcMain);
 
-export const implementRendererToMainAsynchApiServerInMainProcess = (implementation: ElectronBridge.RendererToMainAsyncApi) => {
+export const implementRendererToMainAsyncApiServerInMainProcess = (implementation: ElectronBridge.RendererToMainAsyncApi) => {
   (Object.keys(implementation) as (keyof ElectronBridge.RendererToMainAsyncApi)[])
     .forEach( (fnName) => implementRendererToMainAsyncFnInMainProcess(fnName, implementation[fnName]) );
   }

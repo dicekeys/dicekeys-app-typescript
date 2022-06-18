@@ -6,6 +6,7 @@ import {
   AuthenticationRequirements, ApiCalls
 } from "@dicekeys/dicekeys-api-js";
 import { Command } from "@dicekeys/dicekeys-api-js/dist/api-calls";
+import {KnownCustomProtocolsToTheirAssociatedDomains} from "./KnownCustomProtocols";
 import { extraRequestRecipeAndInstructions } from "./get-requests-recipe";
 import {
   doesHostMatchRequirement
@@ -35,10 +36,14 @@ const doesPathMatchRequirement = (
   }
 }
 
+interface UrlCheckParameters {
+  protocol: string;
+  host: string;
+  pathname: string;
+}
 export const isUrlOnAllowList = (
-  host: string,
-  path: string,
-  webBasedApplicationIdentities: WebBasedApplicationIdentity[]
+  {host, pathname, webBasedApplicationIdentities}:
+    UrlCheckParameters & {webBasedApplicationIdentities: WebBasedApplicationIdentity[]}
 ): boolean => webBasedApplicationIdentities.some(
   webBasedApplicationIdentity =>
     doesHostMatchRequirement({
@@ -48,23 +53,25 @@ export const isUrlOnAllowList = (
     (
       ( webBasedApplicationIdentity.paths ?? DefaultPermittedPathList ).some( pathExpected =>
         doesPathMatchRequirement({
-          pathExpected, pathObserved: path
+          pathExpected, pathObserved: pathname
         })
       )
     )
 );
 
-
+interface AllowListCheckParameters extends UrlCheckParameters {
+  hostValidatedViaAuthToken: boolean;
+}
 export const throwIfUrlNotOnAllowList =
-  (host: string, path: string, hostValidatedViaAuthToken: boolean) =>
+  ({protocol,host, pathname, hostValidatedViaAuthToken}: AllowListCheckParameters) =>
     (requirements: AuthenticationRequirements): void => {
       const {allow = [], requireAuthenticationHandshake} = requirements;
       if (requireAuthenticationHandshake && !hostValidatedViaAuthToken) {
         throw new Exceptions.ClientNotAuthorizedException(`Host authentication required`);
       }
-      if (!isUrlOnAllowList(host, path, allow)) {
+      if (!isUrlOnAllowList({protocol, host, pathname, webBasedApplicationIdentities: allow})) {
         throw new Exceptions.ClientNotAuthorizedException(
-          `Client ${host} and ${path} is not on this list of allowed urls: ${JSON.stringify(allow)}`
+          `Client ${host} and ${pathname} is not on this list of allowed urls: ${JSON.stringify(allow)}`
         );
       }
     }
@@ -78,8 +85,16 @@ export const throwIfUrlNotOnAllowList =
  * @throws ClientNotAuthorizedException
  */
 
-export const throwIfUrlNotPermitted = (host: string, path: string, hostValidatedViaAuthToken: boolean) => {
-  const throwIfNotOnAllowList = throwIfUrlNotOnAllowList(host, path, hostValidatedViaAuthToken);
+export const throwIfUrlNotPermitted = (allowListCheckParameters:
+    AllowListCheckParameters) => {
+  const replacementHost = KnownCustomProtocolsToTheirAssociatedDomains[allowListCheckParameters.protocol];
+  const throwIfNotOnAllowList = throwIfUrlNotOnAllowList(
+    replacementHost == null ? 
+      allowListCheckParameters :
+      // If the URL was a known custom scheme (e.g., "bitwarden:"), replace it with
+      // the host associated with that custom scheme.
+      {...allowListCheckParameters, protocol: "https:", host: replacementHost}
+    );
   return (request: ApiCalls.ApiRequestObject): void => {
     const {recipe, unsealingInstructions} = extraRequestRecipeAndInstructions(request);
 

@@ -4,6 +4,7 @@ import {
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { SeededApiCommands } from "./SeededApiCommands";
 import { ApiRequestObject } from "@dicekeys/dicekeys-api-js/dist/api-calls";
+import { CenterLetterAndDigit } from "../dicekeys/DiceKey";
 
 export interface ApiRequestContext {
   readonly host: string,
@@ -13,11 +14,6 @@ export interface ApiRequestContext {
 export abstract class QueuedApiRequest implements ApiRequestContext {
   abstract readonly host: string;
   abstract readonly originalRequest: ApiCalls.RequestMessage;
-
-  // constructor({host, request}: ApiRequestContext) {
-  //   this.host = host;
-  //   this.originalRequest = request;
-  // }
 
   mutatedRequest?: ApiCalls.RequestMessage;
 
@@ -32,7 +28,7 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
   /**
    * Subclasses must implement this method to transmit the response back to the client.
    */
-  abstract transmitResponse: (response: ApiCalls.Response) => Promise<void> | void;
+  abstract transmitResponse: (response: ApiCalls.Response, options: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) => Promise<void> | void;
 
   /**
    * Security check implemented as static so that it can be exposed to unit tests
@@ -64,6 +60,26 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
     this.throwIfClientMayNotRetrieveKey();
     this.throwIfClientNotPermitted();
   }
+
+  async getResponseForRequest(seedString: string, request: ApiCalls.RequestMessage): Promise<ApiCalls.Response> {
+    this.throwIfNotPermitted();
+    const {requestId} = request;
+    if (typeof Worker === "undefined") {
+      // We have no choice but to run synchronously in this process
+      // (fortunately, that means we're non-interactive and just testing)
+      const response = new SeededApiCommands(await SeededCryptoModulePromise, seedString).executeRequest<ApiRequestObject>(request);
+      const responseWIthRequestId = {...response, requestId};
+      // console.log(`getResponse.requestId`, requestId)
+      // console.log(`getResponse.responseWIthRequestId`, responseWIthRequestId)
+      return responseWIthRequestId;
+    } else {
+      // We're in an environment with web workers. Await a remote execute
+      const ComputeApiCommandWorkerModule = await import ("../workers/call-api-command-worker");
+      const result = await new ComputeApiCommandWorkerModule.ComputeApiCommandWorker().calculate({seedString, request});
+      console.log(`calculated ${seedString}`, request, result)
+      return {...result, requestId};
+    }
+  }
   
   /**
    * Get the correct response for a request, spawning a working to do the computation
@@ -72,20 +88,8 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
    * @returns A promise for the requests corresponding response object
    * @throws Exceptions when a request is not permitted.
    */
-  async getResponse(seedString: string): Promise<ApiCalls.Response> {
-    this.throwIfNotPermitted();
-    const request = this.mutatedRequest ?? this.request;
-    const {requestId} = this.request;
-    if (typeof Worker === "undefined") {
-      // We have no choice but to run synchronously in this process
-      // (fortunately, that means we're non-interactive and just testing)
-      const response = new SeededApiCommands(await SeededCryptoModulePromise, seedString).executeRequest<ApiRequestObject>(request);
-      return {requestId, ...response};
-    } else {
-      // We're in an environment with web workers. Await a remote execute
-      const ComputeApiCommandWorkerModule = await import ("../workers/call-api-command-worker");
-      return await new ComputeApiCommandWorkerModule.ComputeApiCommandWorker().calculate({seedString, request});
-    }
+  getResponse(seedString: string): Promise<ApiCalls.Response> {
+    return this.getResponseForRequest(seedString, this.mutatedRequest ?? this.request);
   }
 
   /**
@@ -109,7 +113,7 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
     const { requestId } = this.request;
     await this.transmitResponse({
       requestId, exception, message, stack
-    });
+    }, {});
   }
 
   /**
@@ -125,10 +129,11 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
    * otherwise.
    * @param seedString The seed to use for the cryptographic operations requested.
    */
-  respond = async (seedString: string) => {
+  respond = async (seedString: string, options: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) => {
     try {
       const response = await this.getResponse(seedString);
-      this.transmitResponse(response);
+      console.log(`response.response=`, response);
+      this.transmitResponse({...response, requestId: this.request.requestId}, options);
     } catch(e) {
       this.sendError(e);
     }

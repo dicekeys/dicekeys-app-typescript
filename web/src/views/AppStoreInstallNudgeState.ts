@@ -1,5 +1,5 @@
 import { action, makeAutoObservable } from "mobx";
-import { ObservableLocalStorageBoolean } from "../state/core/ObservableLocalStorage";
+import { ObservableLocalStorageBoolean } from "../utilities/ObservableLocalStorage";
 import { AppStoreName, OperatingSystemName } from "../utilities/OperatingSystemAndAppStoreName";
 import { RUNNING_IN_BROWSER } from "../utilities/is-electron";
 import { downloadOrNavigateToAppStore } from "../utilities/AppStoreLink";

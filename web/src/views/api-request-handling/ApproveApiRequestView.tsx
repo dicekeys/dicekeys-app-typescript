@@ -1,30 +1,26 @@
 import React from "react";
 import {
-  ApiCalls, PasswordJson, SealingKeyJson, SecretJson, SignatureVerificationKeyJson, SigningKeyJson, SymmetricKeyJson, UnsealingKeyJson} from "@dicekeys/dicekeys-api-js";
-import {
-  QueuedApiRequest
-} from "../../api-handler/QueuedApiRequest";
-import {
-  getKnownHost
-} from "../../phrasing/api";
+  ApiCalls} from "@dicekeys/dicekeys-api-js";
 import { observer } from "mobx-react";
-import { CenterColumn, CenteredControls, ContentBox, Spacer, Instruction } from "../../views/basics";
-import { ScanDiceKeyView } from "../../views/LoadingDiceKeys/ScanDiceKeyView";
+import { Spacer, Instruction2, CompressedContentBox, CenteredCompressedControls, RowCentered } from "../../views/basics";
 import { addPreview } from "../../views/basics/Previews";
 import { QueuedUrlApiRequest } from "../../api-handler";
-import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
-import { uint8ArrayToHexString } from "../../utilities/convert";
-import { DiceKeyView } from "../../views/SVG/DiceKeyView";
+import { DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
 import { PushButton } from "../../css/Button";
 
 import styled from "styled-components";
-import { SimpleTopNavBar } from "../Navigation/SimpleTopNavBar";
-import { action, makeAutoObservable } from "mobx";
 import { DiceKeyMemoryStore } from "../../state";
-
-const HostNameSpan = styled.span`
-  font-family: monospace;
-`;
+import { LoadDiceKeyFullPageView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
+import { DiceKeySelectorView } from "../../views/DiceKeySelectorView";
+import { SequenceNumberInputField } from "../../views/Recipes/DerivationView/RecipeStyles"
+import { NumericTextFieldState, NumberPlusMinusView } from "../../views/basics/NumericTextFieldView";
+import { ApproveApiRequestState } from "./ApproveApiRequestState";
+import { BuiltInRecipes } from "../../dicekeys";
+import { HostDescriptorView } from "./HostDescriptionView";
+import { ApiResponsePreview } from "./ApiResponsePreview";
+import { RequestDescriptionView } from "./RequestDescriptionView"
+import { PrimaryView } from "../../css";
+import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 
 const RequestCommonDiv = styled.div`
   flex-shrink: 0;
@@ -40,12 +36,6 @@ const RequestDescription = styled(RequestCommonDiv)`
   font-weight: 400;
 `;
 
-const RequestChoice = styled(RequestCommonDiv)`
-  font-size: 1.6666rem;
-  color: #202000;
-  font-weight: 400;
-`
-
 const RequestPromise = styled(RequestCommonDiv)`
   margin-top: 0.5rem;
   font-size: 1.1rem;
@@ -53,42 +43,15 @@ const RequestPromise = styled(RequestCommonDiv)`
   text-align: center;
 `;
 
-const KnownApplicationNameSpan = styled.span`
-  /* font-family: serif; */
-  font-weight: 400;
-  /* background-color: rgba(152, 160, 47, 0.1); */
-  /* border-radius: 0.3rem; */
-  /* text-decoration: rgba(152, 160, 47, 0.2) solid underline 0.2rem; */
+const SequenceNumberRow = styled.div`
+  align-self: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-content: center;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 `;
-
-// We recommend you never write down your DiceKey (there are better ways to copy it)
-// or read it over the phone (which you should never be asked to do), but if you
-// had a legitimate reason to, removing orientations make it easier and more reliable.
-
-// By removing orientations from your DiceKey before generating a ___,
-// your DiceKey will be more than a quadrillion
-// (one million billion) times easier to guess, but the number of possible
-// values will still be ... 
-
-// This hint makes your DiceKey 303,600 easier to guess.  However, the number of possible
-// guesses is still greater than ... .
-// The hint does make it possible for others to know that you used the same  DiceKey for multiple
-// accounts.
-
-
-
-
-export const HostDescriptorView = ( {host}: {host: string}) => {
-  const knownHost = getKnownHost(host);
-  return (knownHost != null) ? (
-    <KnownApplicationNameSpan>{ knownHost}</KnownApplicationNameSpan>
-  ) : (
-    <div>The website at <HostNameSpan>{ host }</HostNameSpan></div>
-  )
-}
-
-const DICEKEY = "DiceKey";
-
 
 export const describeCommandResultType = (command: ApiCalls.Command): string => {
   switch (command) {
@@ -109,227 +72,134 @@ export const describeCommandResultType = (command: ApiCalls.Command): string => 
 };
 
 
-export const RequestDescriptionView = ({command, host, isRecipeSigned = false}: {
-  command: ApiCalls.Command,
-  host: string,
-  isRecipeSigned?: boolean
-}) => {
-  const createOrRecreate = isRecipeSigned ?
-    "recreate" : "create";
-  // use your DiceKey to 
-  switch (command) {
-    case "getPassword":
-      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} a password?</RequestChoice>);
-    case "getSecret":
-      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} a secret code?</RequestChoice>);
-    case "getUnsealingKey":
-      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} keys to encode and decode secrets?</RequestChoice>);
-    case "getSymmetricKey":
-      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to a {createOrRecreate} key to encode and decode secrets?</RequestChoice>);
-    case "sealWithSymmetricKey":
-      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to encode a secret?</RequestChoice>);
-    case "unsealWithSymmetricKey":
-      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to decode a secret?</RequestChoice>);
-    case "unsealWithUnsealingKey":
-      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to decode a secret?</RequestChoice>);
-    // Less common
-    case "getSigningKey":
-      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} keys to sign data?</RequestChoice>);
-    case "generateSignature":
-      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to add its digital signature to data?</RequestChoice>);
-    case "getSignatureVerificationKey":
-      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} a key used to verify data it has signed?</RequestChoice>);
-      // Uncommon
-    case "getSealingKey": 
-      return (<RequestChoice>May&nbsp;<HostDescriptorView host={host}/>&nbsp;use your { DICEKEY } to {createOrRecreate} keys to store secrets?</RequestChoice>);
-    // Never
-    // default:
-    //     throw new Exceptions.InvalidCommand("Invalid API Command: " + command);
-  }
-};
-
-
-const isAscii = (content: Uint8Array): boolean =>
-  content.every( (byte) => {
-    byte === 0x09 || // TAB
-    byte === 0x0a || // LF
-    byte === 0x0d || // CR
-    (byte >= 0x20 && byte < 0x7f) // printable characters
-  });
-const outputStringIfAsciiOrHexOtherwise = (content: Uint8Array) =>
-  isAscii(content) ? new TextDecoder().decode(content): uint8ArrayToHexString(content);
-
-export const ApiResultString = <COMMAND extends ApiCalls.Command>(
-  command: COMMAND,
-  result: ApiCalls.ResponseForCommand<COMMAND>
-): string => {
-  switch (command) {
-    case ApiCalls.Command.getSecret:
-      return (JSON.parse((result as ApiCalls.ResponseForCommand<typeof ApiCalls.Command.getSecret>).secretJson) as SecretJson).secretBytes;
-    case ApiCalls.Command.getPassword:
-      return (JSON.parse((result as ApiCalls.ResponseForCommand<typeof ApiCalls.Command.getPassword>).passwordJson) as PasswordJson).password;
-    case ApiCalls.Command.getSealingKey:
-      return (JSON.parse((result as ApiCalls.ResponseForCommand<typeof ApiCalls.Command.getSealingKey>).sealingKeyJson) as SealingKeyJson).sealingKeyBytes;
-    case ApiCalls.Command.getSignatureVerificationKey:
-      return (JSON.parse((result as ApiCalls.ResponseForCommand<typeof ApiCalls.Command.getSignatureVerificationKey>).signatureVerificationKeyJson) as SignatureVerificationKeyJson).signatureVerificationKeyBytes;
-    case ApiCalls.Command.getSigningKey:
-      return (JSON.parse((result as ApiCalls.ResponseForCommand<typeof ApiCalls.Command.getSigningKey>).signingKeyJson) as SigningKeyJson).signingKeyBytes;
-    case ApiCalls.Command.getSymmetricKey:
-      return (JSON.parse((result as ApiCalls.ResponseForCommand<typeof ApiCalls.Command.getSymmetricKey>).symmetricKeyJson) as SymmetricKeyJson).keyBytes;
-    case ApiCalls.Command.getUnsealingKey:
-      return (JSON.parse((result as ApiCalls.ResponseForCommand<typeof ApiCalls.Command.getUnsealingKey>).unsealingKeyJson) as UnsealingKeyJson).unsealingKeyBytes;
-    case ApiCalls.Command.generateSignature:
-      return uint8ArrayToHexString((result as ApiCalls.ResponseForCommand<typeof ApiCalls.Command.generateSignature>).signature);
-    case ApiCalls.Command.sealWithSymmetricKey:
-      return ((result as ApiCalls.ResponseForCommand<typeof ApiCalls.Command.sealWithSymmetricKey>).packagedSealedMessageJson);
-    case ApiCalls.Command.unsealWithUnsealingKey:
-    case ApiCalls.Command.unsealWithSymmetricKey:
-      return  outputStringIfAsciiOrHexOtherwise((result as ApiCalls.ResponseForCommand<typeof ApiCalls.Command.unsealWithSymmetricKey>).plaintext);
-    default:
-      return "";
-  }
-}
-
-export const ApiResponsePreview = observer ( <COMMAND extends ApiCalls.Command>(props: {
-  command: COMMAND,
-  host: string,
-  resultPromise: Promise<ApiCalls.ResponseForCommand<COMMAND>>
-}) => {
-  const {command, host, resultPromise} = props;
-  const [apiResult, setApiResult] = React.useState<ApiCalls.ResponseForCommand<COMMAND> | undefined>(undefined);
-  React.useEffect(() => {
-    (async () => {
-      console.log("attempt to set result");
-      setApiResult(await resultPromise);
-    })();
-  }, []);
-  if (apiResult == null) return null;
-
-  return (
-    <div style={{display: "flex", flexDirection:"column", alignItems:"center", alignContent: "center"}}>
-      <div style={{maxWidth: "80%", fontFamily: "monospace", borderBottom: "gray solid 1px"}}>
-        { ApiResultString(command, apiResult) }
-      </div>
-      <div style={{color: "rgba(0,0,0,0.666)", fontSize: ".75rem"}}>
-        {describeCommandResultType(command)} to be sent to <HostDescriptorView host={host}/>
-      </div>
-    </div>
-  )
-});
-
-
 const KeyAccessRestrictionsView = observer( ({command, host}: {command: ApiCalls.Command, host: string}) => (
     <RequestPromise>
-      <HostDescriptorView host={host}/> will not see your {DICEKEY}. They will only receive the {describeCommandResultType(command)}.
+      <HostDescriptorView host={host}/> will not see your DiceKey. They will only receive the {describeCommandResultType(command)}.
     </RequestPromise>
   )
 );
 
-export class ApproveApiRequestState {
-  static lastKeyIdUsed: string | undefined;
+export const SequenceNumberFormFieldValueView = observer( ({state}: {state: NumericTextFieldState}) => {
+  return (
+      <NumberPlusMinusView
+        key={"#"}
+        state={state}
+      >
+        <SequenceNumberInputField
+          value={state.textValue}
+          onChange={state.onChangeInTextField}
+        />
+      </NumberPlusMinusView>
+ )});
+ 
+ const PrimaryOpaqueView = styled(PrimaryView)`
+   background-color: black;
+ `
 
-  private _diceKey: DiceKeyWithKeyId | undefined;
-  get diceKey() {return this._diceKey}
-  setDiceKey = action( (diceKey: DiceKeyWithKeyId | undefined) => {
-    ApproveApiRequestState.lastKeyIdUsed = diceKey?.keyId;
-    this._diceKey = diceKey;
-  });
+ const SendingMessageContainer = styled.div`
+   color: white;
+   align-self: center;
+ `
 
-  constructor(
-    public readonly queuedApiRequest: QueuedApiRequest,
-    diceKey: DiceKeyWithKeyId | undefined = DiceKeyMemoryStore.diceKeyForKeyId(ApproveApiRequestState.lastKeyIdUsed)
-  ) {
-    this._diceKey = diceKey;
-    makeAutoObservable(this);
-  }
-  
-}
-
+const SendingMessageView = () => (
+  <PrimaryOpaqueView>
+    <SendingMessageContainer>Sending...</SendingMessageContainer>
+  </PrimaryOpaqueView>
+);
 
 export interface ApproveApiRequestViewProps {
   state: ApproveApiRequestState;
-  onApiRequestResolved: () => any;
 }
+export const ApproveApiRequestView = observer( ({state}: ApproveApiRequestViewProps) => {
+  const { diceKey, loadDiceKeyViewState, request, host, command } = state;
 
-export const ApproveApiRequestView = observer( ({state, onApiRequestResolved}: ApproveApiRequestViewProps) => {
-  const { queuedApiRequest, diceKey } = state;
-  const { request, host } = queuedApiRequest;
-  const { command } = request;
-
-  const handleDeclineRequestButton = () => {
-    queuedApiRequest.sendUserDeclined();
-    onApiRequestResolved();
+  if (loadDiceKeyViewState != null) {
+    return (
+      <LoadDiceKeyFullPageView
+        onDiceKeyReadOrCancelled={state.onDiceKeyReadOrCancelled}
+        state={loadDiceKeyViewState}
+      />
+    );
   }
-  const seedString = diceKey?.toSeedString();
-
-  const handleApproveRequestButton = () => {
-    if (seedString) {
-      queuedApiRequest.respond(seedString);
-    }
-    onApiRequestResolved();
+  if (state.sendingResponse && RUNNING_IN_ELECTRON) {
+    return (<SendingMessageView/>);
   }
 
   return (
     <>
-      <SimpleTopNavBar
-        title={`${diceKey?.nickname ?? ""}`} //  using ${diceKey?.nickname ?? ""}
-        goBack={handleDeclineRequestButton}
-      />
       <Spacer/>
       <RequestDescription>
         <RequestDescriptionView {...{command, host}} />
         <KeyAccessRestrictionsView {...{command, host}} />
       </RequestDescription>
-      { diceKey == null ? (
-        <>
-          <Spacer/>
-          <CenterColumn>
-            <Instruction>
-              To allow this action, you'll first need to load your DiceKey.
-            </Instruction>
-            <ScanDiceKeyView
-              onDiceKeyRead={state.setDiceKey}
-              maxHeight={"60vh"}
-            />
-          </CenterColumn>
-          <Spacer/>
-        </>
-      ) : (
-        <ContentBox>
-          <DiceKeyView
-            size="min(50vh,60vw)"
-            faces={diceKey.faces}
-          />
+      <Spacer/>
+      <DiceKeySelectorView
+        loadRequested={state.startLoadDiceKey}
+        selectedDiceKeyId={diceKey?.keyId}
+        ratioOfSelectedItemWidthToSelectableItemWidth={`3`}
+        selectedItemWidth={`min(40vw, 40vh)`}
+        setSelectedDiceKeyId={state.setDiceKeyFromId}
+        rowWidth={`100vw`}
+      />
+      <Spacer/>
+      { diceKey != null ? null : (
+        <RowCentered>        
+            <Instruction2>
+              You will need your DiceKey to continue.
+            </Instruction2>
+        </RowCentered>
+      )}{ diceKey == null ? null : (
+          <SequenceNumberRow>
+            <label>Sequence number</label>
+            <SequenceNumberFormFieldValueView state={state.sequenceNumberState} />
+          </SequenceNumberRow>
+      )}{ diceKey == null ? null : (
           <ApiResponsePreview
             host={host}
             command={request.command}
-            resultPromise={queuedApiRequest.getResponse(diceKey.toSeedString()) as Promise<ApiCalls.ResponseForCommand<typeof command>> } />
-        </ContentBox>
+            mobxObservedResponse={state.response} />
       )}
-      <CenteredControls>
-        <PushButton onClick={handleDeclineRequestButton}>Cancel</PushButton>
-        <PushButton invisible={diceKey == null} onClick={handleApproveRequestButton}>{ "Send " + describeCommandResultType(command) }</PushButton>
-      </CenteredControls>
+      <CompressedContentBox>
+        <CenteredCompressedControls>
+          <PushButton onClick={state.respondByDeclining}>Cancel</PushButton>
+          <PushButton invisible={diceKey == null} onClick={state.respondSuccessfully}>{ "Send " + describeCommandResultType(command) }</PushButton>
+        </CenteredCompressedControls>
+        <CenteredCompressedControls>
+            <label style={{userSelect: "none"}} onClick={state.toggleRevealCenterLetterAndDigit}>Reveal
+            { diceKey == null ? " " : " that "}
+             the center die {
+              diceKey == null ? null : <>is {diceKey.centerLetterAndDigit}</>
+            } so that <HostDescriptorView host={host}/> can remind you next time.</label>
+            <input
+              type="checkbox"
+              checked={state.revealCenterLetterAndDigit}
+              onChange={state.toggleRevealCenterLetterAndDigit} />
+        </CenteredCompressedControls>
+      </CompressedContentBox>
       <Spacer/>
     </>
   )
 })
 
-const createPreview = (name: string, urlString: string, diceKey?: DiceKeyWithKeyId) => {
+const createPreview = (name: string, urlString: string, ...diceKeys: DiceKeyWithKeyId[]) => {
   addPreview(name, () => {
+    diceKeys.forEach( diceKey => DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey) );
     const request = new QueuedUrlApiRequest(new URL(urlString));
-    const state = new ApproveApiRequestState(request, diceKey);
+    const state = new ApproveApiRequestState(request, diceKeys[0]);
     return (
       <ApproveApiRequestView
         state={state}
-        onApiRequestResolved={() => alert("request resolved")}
       />
     );
   });
-  
 }
 
-
+const bitwardenAccountGetPasswordRequestUrl = `https://dicekeys.app/?${""
+  }command=getPassword${""
+  }&requestId=${"testRequestId" 
+  }&recipe=${ encodeURIComponent(BuiltInRecipes.find( x => x.name === "Bitwarden")?.recipeJson ?? "" ) 
+  }&respondTo=${ encodeURIComponent(`https://vault.bitwarden.com/--derived-secret-api--/`)
+  }${""}`;
 const msftAccountGetSecretRequestUrl = `https://dicekeys.app/?${""
   }command=getSecret${""
   }&requestId=${"testRequestId" 
@@ -337,4 +207,16 @@ const msftAccountGetSecretRequestUrl = `https://dicekeys.app/?${""
   }&respondTo=${ encodeURIComponent(`https://account.microsoft.com/--derived-secret-api--/`)
   }${""}`
 createPreview("Approve Api Request (no key)", msftAccountGetSecretRequestUrl);
-createPreview("Approve Api Request (key loaded)", msftAccountGetSecretRequestUrl, DiceKeyWithKeyId.testExample);
+createPreview("Approve Api Request (key loaded)", msftAccountGetSecretRequestUrl,
+  DiceKeyWithKeyId.testExample
+);
+createPreview("Approve Api Request (more keys loaded)", msftAccountGetSecretRequestUrl,
+  new DiceKeyWithKeyId("testA", DiceKeyWithoutKeyId.fromHumanReadableForm("A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm).faces),
+  new DiceKeyWithKeyId("testB", DiceKeyWithoutKeyId.fromHumanReadableForm("B2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2t" as DiceKeyInHumanReadableForm).faces),
+  new DiceKeyWithKeyId("testC", DiceKeyWithoutKeyId.fromHumanReadableForm("C2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2t" as DiceKeyInHumanReadableForm).faces),
+);
+createPreview("Approve Api Request for Bitwarden", bitwardenAccountGetPasswordRequestUrl,
+  new DiceKeyWithKeyId("testA", DiceKeyWithoutKeyId.fromHumanReadableForm("A1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1tA1t" as DiceKeyInHumanReadableForm).faces),
+  new DiceKeyWithKeyId("testB", DiceKeyWithoutKeyId.fromHumanReadableForm("B2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2tB2t" as DiceKeyInHumanReadableForm).faces),
+  new DiceKeyWithKeyId("testC", DiceKeyWithoutKeyId.fromHumanReadableForm("C2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2tC2t" as DiceKeyInHumanReadableForm).faces),
+);

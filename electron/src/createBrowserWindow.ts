@@ -10,8 +10,9 @@ export const FiltersForUsbDeviceASeedableFIDOKey: HIDDeviceFilter[] = [
   {vendorId: 0x0483, productId: 0xa2ca},
 ];  
 
-export const createBrowserWindow = () => {
+export const createBrowserWindow = (htmlFileName: "electron.html" = "electron.html", query?: string) => {
   // Create the browser window.
+  // console.log(`createBrowserWindow`, htmlFileName, query);
   const window = new BrowserWindow({
     height: 600,
     webPreferences: {
@@ -33,6 +34,8 @@ export const createBrowserWindow = () => {
       // Allow access to WebHID so we can interact with seedable FIDO keys
       case "hid":
         return codeIsFromFileSystem;
+      case "accessibility-events":
+        return codeIsFromFileSystem;
       // Deny other access
       case "serial":
       default:
@@ -53,7 +56,10 @@ export const createBrowserWindow = () => {
   })
 
   // and load the index.html of the app.
-  window.loadFile(path.resolve(__dirname, '..', 'electron-html', 'electron.html'));
+  const htmlPath =  path.resolve(app.getAppPath(), 'electron-html', htmlFileName);
+  const pathToLoad = `file://${htmlPath}${query ?? ""}`;
+  // console.log("Loading window with path", pathToLoad);
+  window.loadURL(pathToLoad);
 
   if (!app.isPackaged){
     // Open the DevTools.

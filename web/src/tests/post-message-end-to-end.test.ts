@@ -50,7 +50,7 @@ const getMockClient = (
       
       return new Promise<ApiCalls.ApiCallResult<CALL>>( resolve => {
         const requestObj = new MockQueuedPostMessageApiRequest(requestEvent, response => resolve(response as ApiCalls.ApiCallResult<CALL>));
-        requestObj.respond(seedString);
+        requestObj.respond(seedString, {});
       });
     }
   )

@@ -16,7 +16,7 @@ export const PlatformSupportsSavingToDevice = RUNNING_IN_ELECTRON;
 
 interface StorageFormat {
   keyIdToDiceKeyInHumanReadableForm: [string, DiceKeyInHumanReadableForm][];
-  centerLetterAndDigitToKeyId: [string, string][];
+//  centerLetterAndDigitToKeyId: [string, string][];
 }
 
 class DiceKeyMemoryStoreClass {
@@ -33,12 +33,14 @@ class DiceKeyMemoryStoreClass {
   #triggerReadyState = action( () => {
     if (!this.#isReady) {
       this.#isReady = true;
+      // console.log(`DiceKeyMemoryStoreClass ready`);
       this.#readyEvent.sendImmediately()
     }
   });
 
   onReady = (callback: () => any) => {
     if (this.#isReady) {
+      // console.log(`onReady called when already ready`);
       callback();
     } else {
       this.#readyEvent.onOnce( callback );
@@ -47,7 +49,7 @@ class DiceKeyMemoryStoreClass {
 
   toStorageFormat = (): StorageFormat => ({
     keyIdToDiceKeyInHumanReadableForm: [...this.keyIdToDiceKeyInHumanReadableForm.entries()],
-    centerLetterAndDigitToKeyId: [...this.centerLetterAndDigitToKeyId.entries()]
+//    centerLetterAndDigitToKeyId: [...this.centerLetterAndDigitToKeyId.entries()]
   });
   toStorageFormatJson = () => JSON.stringify(this.toStorageFormat())
 
@@ -59,7 +61,10 @@ class DiceKeyMemoryStoreClass {
 
   onReadFromShortTermEncryptedStorage = action ( (s: StorageFormat) => {
     this.keyIdToDiceKeyInHumanReadableForm = new ObservableMap(s.keyIdToDiceKeyInHumanReadableForm);
-    this.centerLetterAndDigitToKeyId = new ObservableMap(s.centerLetterAndDigitToKeyId);
+    this.centerLetterAndDigitToKeyId = new ObservableMap(
+      s.keyIdToDiceKeyInHumanReadableForm.map( ([keyId, diceKeyInHumanReadableForm]) =>
+        ([DiceKeyWithoutKeyId.fromHumanReadableForm(diceKeyInHumanReadableForm).centerLetterAndDigit, keyId])
+    ));
   });
 
   /**
@@ -96,12 +101,14 @@ class DiceKeyMemoryStoreClass {
    * @param descriptor A public descriptor storing a DiceKey
    * @returns 
    */
-  load = async (descriptor: PublicDiceKeyDescriptorWithSavedOnDevice): Promise<DiceKeyWithKeyId | undefined> => {
-    const {keyId, savedOnDevice} = descriptor;
+  load = async (descriptor: {keyId: string}): Promise<DiceKeyWithKeyId | undefined> => {
+    const {keyId} = descriptor;
+    const keyAlreadyInMemory = this.diceKeyForKeyId(keyId);
+    if (keyAlreadyInMemory != null) return keyAlreadyInMemory;
     const diceKeyInHumanReadableForm = this.keyIdToDiceKeyInHumanReadableForm.get(keyId);
     if (diceKeyInHumanReadableForm != null) {
       return new DiceKeyWithKeyId(keyId, diceKeyFacesFromHumanReadableForm(diceKeyInHumanReadableForm));
-    } else if (savedOnDevice) {
+    } else if (RUNNING_IN_ELECTRON /* && savedOnDevice */) {
       return await this.loadFromDeviceStorage(descriptor);
     }
     return;
@@ -174,6 +181,10 @@ class DiceKeyMemoryStoreClass {
     return [...this.keysInMemory, ...this.keysSavedToDeviceButNotInMemory];
   }
 
+  get keysInMemoryOrSavedToDeviceSortedByCenterDie(): PublicDiceKeyDescriptorWithSavedOnDevice[] {
+    return sortPublicDiceKeyDescriptors(this.keysInMemoryOrSavedToDevice);
+  }
+
   get isNonEmpty(): boolean { return this.keyIds.length > 0 }
 
   get keysIdsAndNicknames() {
@@ -202,12 +213,13 @@ class DiceKeyMemoryStoreClass {
       if (json == null) {
         console.log("No DiceKeys in memory store");
       } else if (json) {
+        // console.log(`DiceKeysMemoryStore json`, json);
         const storageFormat = JSON.parse(json) as StorageFormat;
         this.onReadFromShortTermEncryptedStorage(storageFormat);
-        console.log(`Read ${storageFormat.keyIdToDiceKeyInHumanReadableForm.length} DiceKey(s) from memory`)
+        // console.log(`Read ${storageFormat.keyIdToDiceKeyInHumanReadableForm.length} DiceKey(s) from memory`)
       }
     } catch {
-      console.log("Problem reading DiceKeys from memory store")
+      console.log("Problem reading DiceKeys from memory store");
     }
     this.#triggerReadyState();
   }

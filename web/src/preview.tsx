@@ -6,6 +6,7 @@ import { Preview_EnterDiceKeyView } from "./views/LoadingDiceKeys/EnterDiceKeyVi
 import { Preview_StickerSheetView } from "./views/SVG/StickerSheetView";
 import { Preview_StickerTargetSheetView } from "./views/SVG/StickerTargetSheetView";
 import { Preview_FaceCopyingView } from "./views/SVG/FaceCopyingView";
+import { PREVIEW_DiceKeySelectorView } from "./views/DiceKeySelectorView"
 import { getPreview, addPreviewWithMargins, addCenteredPreview, getPreviewNames } from "./views/basics/Previews";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
@@ -13,6 +14,9 @@ import {WindowRoutingView} from "./views/WindowTopLevelView";
 import { DiceKeyMemoryStore } from "./state";
 import { PushButton } from "./css/Button";
 import styled from "styled-components";
+import { ThemeProvider } from "styled-components";
+import { lightTheme } from "./css/lightTheme";
+import { PrimaryView } from "./css";
 
 // To make sure everything is loaded, load the view for the app even if we're not using it.
 if (!WindowRoutingView) {
@@ -24,7 +28,7 @@ addCenteredPreview("ScanDiceKey", () => ( <Preview_ScanDiceKeyView/> ));
 addPreviewWithMargins("StickerSheet", () => ( <Preview_StickerSheetView />));
 addPreviewWithMargins("StickerTargetSheet", () => ( <Preview_StickerTargetSheetView />));
 addPreviewWithMargins("FaceCopying", () => ( <Preview_FaceCopyingView />));
-
+addCenteredPreview("DiceKeySelectorView", () => ( <PREVIEW_DiceKeySelectorView/>))
 
 class PreviewState {
   constructor (public name: string | undefined =
@@ -70,7 +74,11 @@ window.addEventListener('load', () => {
     const root = createRoot(container!);
     root.render((
       <ErrorHandler>
-          <Previews />
+        <ThemeProvider theme={lightTheme}>
+          <PrimaryView>
+            <Previews />
+          </PrimaryView>
+        </ThemeProvider>
       </ErrorHandler>
     ));
   })
