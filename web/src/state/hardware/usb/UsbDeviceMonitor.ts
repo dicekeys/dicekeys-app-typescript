@@ -6,8 +6,8 @@
 
 
 export type Device = HIDDevice;
-export type DeviceListUpdateCallback = (devices: Device[]) => any;
-export type ErrorCallback = (error: any) => any;
+export type DeviceListUpdateCallback = (devices: Device[]) => void;
+export type ErrorCallback = (error: any) => void;
 export type StopMonitoringFunction = () => void;
 
 const getDeviceKey = (device: Device): string =>

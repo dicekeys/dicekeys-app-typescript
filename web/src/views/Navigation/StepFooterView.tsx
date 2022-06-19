@@ -27,10 +27,10 @@ const SpaceBetweenLeftAndRightButtons = styled.div`
 `;
 
 interface StepFooterViewProps {
-  prev?: () => any;
-  pprev?: () => any;
-  next?: () => any;
-  nnext?: () => any;
+  prev?: () => void;
+  pprev?: () => void;
+  next?: () => void;
+  nnext?: () => void;
   nextIsDone?: boolean;
   aboveFooter?: JSX.Element | undefined;
 }

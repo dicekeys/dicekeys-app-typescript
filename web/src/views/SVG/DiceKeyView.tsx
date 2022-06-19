@@ -15,7 +15,7 @@ export interface DiceKeyRenderOptions {
   diceBoxColor?: string; // [number, number, number];
   showLidTab?: boolean;
   leaveSpaceForTab?: boolean;
-  onFaceClicked?: (faceIndex: number) => any;
+  onFaceClicked?: (faceIndex: number) => void;
 }
 
 export const distanceBetweenFacesAsFractionOfLinearSizeOfFace = 0.2;

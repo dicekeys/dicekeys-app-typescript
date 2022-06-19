@@ -142,7 +142,7 @@ interface FaceViewProps {
   backgroundColor?: string;
   stroke?: string;
   strokeWidth?: string | number;
-  onFaceClicked?: () => any;
+  onFaceClicked?: () => void;
 }
 
 interface FaceGroupViewProps extends FaceViewProps {

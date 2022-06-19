@@ -4,7 +4,7 @@ import { getRandomBytes } from "../../utilities/get-random-bytes";
 
 const myWindowId = urlSafeBase64Encode(getRandomBytes(20));
 const heartbeatFrequencyInMs = 10000;
-let heartbeatInterval: any;
+let heartbeatInterval: ReturnType<typeof setInterval>;
 
 const localStoreName = "DiceKeysOpenWindowIds"
 

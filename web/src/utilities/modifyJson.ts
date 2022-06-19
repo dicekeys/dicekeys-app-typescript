@@ -5,11 +5,13 @@ const isDigit = ( c: string ) => c >= '0' && c <= '9';
 export const DeleteThisField = Symbol();
 //type DeleteThisField = typeof DeleteThisField;
 
+export type ParsedValue = string | number | boolean | object | null;
+
 export interface ModifyJsonCallbackParameters {
   key: string;
-  value: any;
+  value: ParsedValue;
   replaceValueWithNewJsonEncodedValue: (newValue: string) => void;
-  replaceValueWithNewValue: (newValue: any) => void;
+  replaceValueWithNewValue: (newValue: ParsedValue) => void;
   remove: () => void;
 }
 
@@ -161,8 +163,8 @@ class JsonModificationParser {
     return this.atString || this.atNumber || this.atObject || this.atArray || this.atBoolean || this.atNull;
   }
   
-  private parseArray = (key: string): any[] => {
-    const result = [] as any[];
+  private parseArray = (key: string): ParsedValue[] => {
+    const result = [] as ParsedValue[];
     this.verifyCharAndAdvance('[', key);
 
     const indexIntoDestStringOfStartOfThisArray = this.destString.length;
@@ -202,7 +204,7 @@ class JsonModificationParser {
     // first item must remove until comma after
     // last item must remove start comma before
     // other items ??? 
-    let obj = {} as Record<any, any>
+    let obj = {} as Record<string | number | symbol, ParsedValue>
     this.verifyCharAndAdvance('{', key);
 
     const indexIntoDestStringOfStartOfThisObject = this.destString.length;
@@ -244,10 +246,10 @@ class JsonModificationParser {
     return obj;
   }
 
-  private parseValue = (key: string, remove: ()=>void ): any => {
+  private parseValue = (key: string, remove: ()=>void ): ParsedValue => {
     this.skipWhiteSpace();
     const start = this.indexIntoSourceJson;
-    var value: any;
+    var value: ParsedValue;
     if (this.atString) { value = this.parseString(key) }
     else if (this.atNumber) { value = this.parseNumber(key) }
     else if (this.atObject) { value = this.parseObject(key) }
@@ -260,7 +262,7 @@ class JsonModificationParser {
     const replaceValueWithNewJsonEncodedValue = (newJsonEncodedValue: string): void => {
       this.destString = this.destString.substr(0, this.destString.length - (this.indexIntoSourceJson - start)).concat(newJsonEncodedValue); 
     }
-    const replaceValueWithNewValue = (newValue: any): void => replaceValueWithNewJsonEncodedValue(JSON.stringify(newValue));
+    const replaceValueWithNewValue = (newValue: ParsedValue): void => replaceValueWithNewJsonEncodedValue(JSON.stringify(newValue));
     this.callback({key, value, replaceValueWithNewJsonEncodedValue, replaceValueWithNewValue, remove});
     this.skipWhiteSpace();
     return value;

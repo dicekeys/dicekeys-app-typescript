@@ -112,7 +112,7 @@ export class CamerasOnThisDevice {
 
   public readonly camerasToBeAdded = new ObservableMap<string, MediaDeviceInfo>();
   public readonly camerasByDeviceId = new ObservableMap<string, Camera>();
-  public readonly unreadableCameraDevices = new ObservableMap<string, {cameraDevice: MediaDeviceInfo, exceptions: any[]}>();
+  public readonly unreadableCameraDevices = new ObservableMap<string, {cameraDevice: MediaDeviceInfo, exceptions: unknown[]}>();
 
   /**
    * A list of cameras sorted by direction (back-facing first, front-facing last)

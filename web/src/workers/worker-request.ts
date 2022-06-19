@@ -52,7 +52,7 @@ export class WorkerRequest<REQUEST, RESULT, REQUEST_MESSAGE extends REQUEST = RE
         reject(e);
         return;
       }  
-      const cancel = this._cancel = (e?: any) => {
+      const cancel = this._cancel = (e?: unknown) => {
         this._resultPromise = undefined;
         this._request = undefined;
         this._cancel = undefined;

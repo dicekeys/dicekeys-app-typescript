@@ -59,13 +59,13 @@ export class NumericTextFieldState {
 
   public readonly minValue;
   public readonly incrementBy: number;
-  private readonly onChanged?: (value: number | undefined) => any;
+  private readonly onChanged?: (value: number | undefined) => void;
 
   constructor({minValue = 0, incrementBy=1, defaultValue, initialValue, onChanged} : {
       minValue: number,
       incrementBy?: number,
       defaultValue: number | undefined,
-      onChanged?: (value: number | undefined) => any,
+      onChanged?: (value: number | undefined) => void,
       initialValue?: string
     }
   ) {

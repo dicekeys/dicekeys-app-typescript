@@ -14,11 +14,11 @@ export interface ApiRequestWithSeed<REQUEST extends ApiCalls.ApiRequestObject> {
 }
 export type ExecuteApiResponse<REQUEST extends ApiCalls.ApiRequestObject = ApiCalls.ApiRequestObject> = ApiCalls.ResponseForRequest<REQUEST>;
 
-function isApiRequestWithSeed(t: any) : t is ApiRequestWithSeed<ApiCalls.ApiRequestObject> {
-    return typeof t === "object" &&
-      typeof t["seedString"] === "string" &&
-      typeof t["request"] === "object" &&
-      t["request"]["command"] in ApiCalls.Command
+function isApiRequestWithSeed(t: unknown) : t is ApiRequestWithSeed<ApiCalls.ApiRequestObject> {
+    return typeof t === "object" && t != null &&
+      typeof ((t as {seedString?: unknown})["seedString"]) === "string" &&
+      typeof ((t as {request?: unknown})["request"]) === "object" &&
+      ((t as {request: {command?: string}}).request?.command ?? "") in ApiCalls.Command
 }
 
 addEventListener( "message", async (requestMessage) => {

@@ -1,6 +1,6 @@
-type CALLBACK<ARGS extends any[], RESULT=any> = (...args: ARGS) => RESULT;
+type CALLBACK<ARGS extends any[], RESULT=unknown> = (...args: ARGS) => RESULT;
 
-export class CustomEvent<ARGS extends any[] = [], TARGET_TYPE = any> {
+export class CustomEvent<ARGS extends unknown[] = [], TARGET_TYPE = unknown> {
   private callbacks = new Set<CALLBACK<ARGS>>();
 
   constructor(protected target: TARGET_TYPE) {}

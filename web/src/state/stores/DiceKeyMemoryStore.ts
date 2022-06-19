@@ -58,7 +58,7 @@ class DiceKeyMemoryStoreClass {
     }
   });
 
-  onReady = (callback: () => any) => {
+  onReady = (callback: () => void) => {
     if (this.#isReady) {
       // console.log(`onReady called when already ready`);
       callback();

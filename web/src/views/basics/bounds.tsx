@@ -3,7 +3,7 @@ import { withDefined } from "../../utilities/with-defined";
 
 export type MakeThisElementsBoundsObservable = (element?: HTMLElement | null) => void;
 
-type SetObservableBoundsFunction = (newBounds: DOMRectReadOnly) => any;
+type SetObservableBoundsFunction = (newBounds: DOMRectReadOnly) => void;
 export class ObservableBounds {
   contentRect: DOMRectReadOnly = new DOMRectReadOnly();
 

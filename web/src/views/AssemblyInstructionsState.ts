@@ -52,7 +52,7 @@ export class AssemblyInstructionsState implements ViewState {
       this.step = step;
     })
   } } );
-  get goToNextStep(): (() => any) | undefined {
+  get goToNextStep(): (() => void) | undefined {
     const {stepPlus1} = this;
     return stepPlus1 == null ? undefined : (() => this.setStep(stepPlus1))
   };

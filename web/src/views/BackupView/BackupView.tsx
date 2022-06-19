@@ -201,8 +201,8 @@ export const BackupContentView = observer ( (props: BackupViewProps) => (
 
 interface BackupViewProps {
   state: BackupViewState;
-  prevStepBeforeStart?: () => any;
-  nextStepAfterEnd?: () => any;
+  prevStepBeforeStart?: () => void;
+  nextStepAfterEnd?: () => void;
 }
 
 const RowAboveFooter = styled.div`

@@ -313,7 +313,7 @@ export class QueuedUrlApiRequest extends QueuedApiRequest {
       // getAuthToken is unique to URL requests  Send an authToken that
       // proves the recipient is able to receive responses at the respondTo URL.
       const authToken = addAuthenticationToken(this.respondTo);
-      return {requestId, authToken} as any as ApiCalls.Response;
+      return {requestId, authToken} as unknown as ApiCalls.Response;
     } else {
       return await super.getResponse(seedString);
     }

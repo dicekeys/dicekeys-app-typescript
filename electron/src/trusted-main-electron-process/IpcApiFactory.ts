@@ -39,7 +39,7 @@ export const implementIpcSyncApiServerFn = (
   })
 }
 
-export const implementIpcSyncApiClietFn = (
+export const implementIpcSyncApiClientFn = (
   client: IpcRenderer = ipcRenderer
  ) =>
     <FN extends ((...args: any[]) => any)>(fnName: string) =>
@@ -52,7 +52,7 @@ export const implementIpcAsyncApiClientFn = (
   clientSender: WebContents | IpcRenderer = ipcRenderer,
   clientListener: IpcListener = ipcRenderer
 ) =>
-//  client: {sendSync(channel: string, ...args: any[]): any;}) =>
+//  client: {sendSync(channel: string, ...args: unknown[]): unknown;}) =>
     <FN extends ((...args: any[]) => any)>(fnName: string) =>
       (
         ...args: Parameters<FN>
@@ -62,14 +62,14 @@ export const implementIpcAsyncApiClientFn = (
     const requestSpecificResponseChannelNames = getRequestSpecificResponseChannelNames(fnName);
     const {successResponseChannelName, errorResponseChannelName} = requestSpecificResponseChannelNames;
     const stopListeningForResponsesToThisRequest = () => {
-      // Because these two channels were constrcuted exclusively for the request, and are
+      // Because these two channels were constructed exclusively for the request, and are
       // identified by a one-time nonce, we can remove all associated with the request.
       clientListener.removeAllListeners(successResponseChannelName);
       clientListener.removeAllListeners(errorResponseChannelName);
     }
     clientListener.on(successResponseChannelName, (_event, result) => {
       stopListeningForResponsesToThisRequest();
-      resolve(result as ReturnType<FN>);
+      resolve(result as Awaited<ReturnType<FN>>);
     })
     clientListener.on(errorResponseChannelName, (_event, error) => {
       stopListeningForResponsesToThisRequest();

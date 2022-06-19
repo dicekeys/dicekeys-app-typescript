@@ -13,7 +13,7 @@ import { LoadDiceKeyViewState, Mode } from "./LoadDiceKeyViewState";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 
 type LoadDiceKeyProps = {
-  onDiceKeyReadOrCancelled: (diceKey: DiceKeyWithKeyId | undefined, howRead: Mode | "cancelled") => any,
+  onDiceKeyReadOrCancelled: (diceKey: DiceKeyWithKeyId | undefined, howRead: Mode | "cancelled") => void,
   state: LoadDiceKeyViewState
 };
 

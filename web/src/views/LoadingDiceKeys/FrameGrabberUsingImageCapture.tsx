@@ -10,7 +10,7 @@ export class FrameGrabberUsingImageCapture {
 
   imageCapture: ImageCapture;
 
-  constructor(videoTrack: MediaStreamTrack, private callback: (frame: ImageData) => any) {
+  constructor(videoTrack: MediaStreamTrack, private callback: (frame: ImageData) => void) {
     this.imageCapture = new ImageCapture(videoTrack);
     this.frameGrabLoopIteration();
   }
@@ -19,7 +19,7 @@ export class FrameGrabberUsingImageCapture {
   private readonly msToWaitOnSuccess = 1;
 
   private frameBeingReadOrProcessed: boolean = false;
-  private timeout?: number;
+  private timeout?: ReturnType<typeof setTimeout>;
 
   private completeFrameGrabAndStartNextAfterDelayOf = (delayInMs: number) => {
     withDefined(this.timeout, timeout => {
@@ -27,7 +27,7 @@ export class FrameGrabberUsingImageCapture {
       this.timeout = undefined;
     });
     this.frameBeingReadOrProcessed = false;
-    this.timeout = setTimeout(this.frameGrabLoopIteration, delayInMs) as any as number;
+    this.timeout = setTimeout(this.frameGrabLoopIteration, delayInMs);
   };
 
   private getFrame = async (): Promise<ImageData | undefined> => {

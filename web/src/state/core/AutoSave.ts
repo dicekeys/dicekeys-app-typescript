@@ -16,7 +16,7 @@ export function autoSave<T>(_this: T, name: string, dontLoadOnPreview: boolean =
 	})
 }
 
-export function autoSaveEncrypted<T>(_this: T, name: string, onReady: () => any, dontLoadOnPreview: boolean = false) {
+export function autoSaveEncrypted<T>(_this: T, name: string, onReady: () => void, dontLoadOnPreview: boolean = false) {
 	// We don't load or save state in preview mode
 	if (dontLoadOnPreview && isRunningInPreviewMode()) {
 		onReady();

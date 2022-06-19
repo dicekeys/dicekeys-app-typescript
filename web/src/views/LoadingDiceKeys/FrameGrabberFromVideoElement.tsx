@@ -9,7 +9,7 @@ export class FrameGrabberFromVideoElement {
   private readonly captureCanvas: HTMLCanvasElement = document.createElement("canvas");
   private captureCanvasCtx: CanvasRenderingContext2D = this.captureCanvas.getContext("2d")!;
 
-  constructor(private videoElement: HTMLVideoElement, private callback: (frame: ImageData) => any) {
+  constructor(private videoElement: HTMLVideoElement, private callback: (frame: ImageData) => void) {
     this.frameGrabLoopIteration();
   }
 
@@ -17,7 +17,7 @@ export class FrameGrabberFromVideoElement {
   private readonly msToWaitOnSuccess = 1;
 
   private frameBeingReadOrProcessed: boolean = false;
-  private timeout?: number;
+  private timeout?: ReturnType<typeof setTimeout>;
 
   private completeFrameGrabAndStartNextAfterDelayOf = (delayInMs: number) => {
     withDefined(this.timeout, timeout => {
@@ -25,7 +25,7 @@ export class FrameGrabberFromVideoElement {
       this.timeout = undefined;
     });
     this.frameBeingReadOrProcessed = false;
-    this.timeout = setTimeout(this.frameGrabLoopIteration, delayInMs) as any as number;
+    this.timeout = setTimeout(this.frameGrabLoopIteration, delayInMs)
   };
 
   private getFrameFromVideoPlayer = (): ImageData | undefined => {

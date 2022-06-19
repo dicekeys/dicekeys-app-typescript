@@ -6,7 +6,7 @@ export interface ToggleState {
   toggle: () => void;
 }
 
-type ToggleStateChangeListener = (newValue: boolean) => any;
+type ToggleStateChangeListener = (newValue: boolean) => void;
 
 export class GlobalSharedToggleState implements ToggleState {
   value: boolean;
