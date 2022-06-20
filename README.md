@@ -29,6 +29,8 @@ _If `npm` fails, check **GitHub Packages** instructions._
 npm run start
 ```
 
+If seeing a browser error for `Uncaught ReferenceError: WebAssembly is not defined` you may need to turn off browser safe mode for localhost.  (In edge, go to the circle `i` just to the left of the address in the address bar and then look for the enhanced security option.)
+
 ## Running electron app
 
 ```bash
