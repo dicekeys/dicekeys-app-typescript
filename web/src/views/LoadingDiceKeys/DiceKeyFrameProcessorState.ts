@@ -1,4 +1,5 @@
 import {
+  FaceOrientationLetterTrbl,
   FaceRead,
 } from "@dicekeys/read-dicekey-js";
 import {
@@ -54,12 +55,12 @@ export class DiceKeyFrameProcessorState {
    */
   private framesSinceErrorsNarrowedToJustBitErrors: number | undefined;
 
-  public onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
-  public onDiceKeyRead?: (diceKeyRead: DiceKeyWithKeyId) => any
+  public onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => void
+  public onDiceKeyRead?: (diceKey: DiceKeyWithKeyId, centerOrientationAsScannedTrbl: FaceOrientationLetterTrbl) => void
 
   constructor({onFacesRead, onDiceKeyRead}: {
-    onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => any
-    onDiceKeyRead?: (diceKeyRead: DiceKeyWithKeyId) => any
+    onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => void
+    onDiceKeyRead?: (diceKey: DiceKeyWithKeyId, centerOrientationAsScannedTrbl: FaceOrientationLetterTrbl) => void
   }) {
     this.onDiceKeyRead = onDiceKeyRead;
     this.onFacesRead = onFacesRead;
@@ -76,12 +77,13 @@ export class DiceKeyFrameProcessorState {
       this.onFacesRead = undefined;
     }
     if (this.bestFacesRead && this.onDiceKeyRead) {
+      const centeredOrientationAsScannedTrbl = this.bestFacesRead[12]?.orientationAsLowercaseLetterTrbl;
       const onDiceKeyReadCallback = this.onDiceKeyRead;
       this.onDiceKeyRead = undefined;
       try {
         // If the DiceKey validates, call the onDiceKeyRead callback we just removed
         DiceKeyWithKeyId.create(DiceKeyFaces(this.bestFacesRead.map( faceRead => validateFaceRead(faceRead) ))).then( 
-          diceKeyWithKeyId => onDiceKeyReadCallback(diceKeyWithKeyId)
+          diceKeyWithKeyId => onDiceKeyReadCallback(diceKeyWithKeyId, centeredOrientationAsScannedTrbl!)
         )
       } catch {}
     }

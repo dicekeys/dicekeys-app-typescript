@@ -84,7 +84,7 @@ const paddingRequiredToCenterOneEdge = ({
 }
 
 
-const RowWithSelectedItemScrolledtoCenter = styled.div<SpacingInformation & SelectorViewSizeModel>`
+const RowWithSelectedItemScrolledToCenter = styled.div<SpacingInformation & SelectorViewSizeModel>`
   box-sizing: border-box;
   ${ ({indexSelected, numberOfItems, ...sizeModel}) => (indexSelected < 0) ? css`` : 
     css`
@@ -102,7 +102,7 @@ const RowWithSelectedItemScrolledtoCenter = styled.div<SpacingInformation & Sele
   overflow-x: auto;
 `;
 
-const RowWithSelectedItemScrolledtoCenterItem = styled.div<SelectorViewSizeModel>`
+const RowWithSelectedItemScrolledToCenterItem = styled.div<SelectorViewSizeModel>`
   display: flex;
   border: none;
   flex-direction: column;
@@ -113,7 +113,7 @@ const RowWithSelectedItemScrolledtoCenterItem = styled.div<SelectorViewSizeModel
   border-radius: calc(${sizeModel => itemPadding(sizeModel)})
 `
 
-const SelectableItemViewContainer = styled(RowWithSelectedItemScrolledtoCenterItem)<SelectorViewSizeModel>`
+const SelectableItemViewContainer = styled(RowWithSelectedItemScrolledToCenterItem)<SelectorViewSizeModel>`
   cursor: grab;
   user-select: none;
   width: calc(${ sizeModel => selectableItemWidth(sizeModel)} );
@@ -125,7 +125,7 @@ const SelectableItemViewContainer = styled(RowWithSelectedItemScrolledtoCenterIt
   }
 `;
 
-const SelectedItemViewContainer = styled(RowWithSelectedItemScrolledtoCenterItem)<SelectorViewSizeModel>`
+const SelectedItemViewContainer = styled(RowWithSelectedItemScrolledToCenterItem)<SelectorViewSizeModel>`
   width: calc(${ sizeModel => sizeModel.selectedItemWidth ?? defaultSelectedItemWidth });
 `;
 
@@ -163,7 +163,7 @@ const SelectedDiceKeyView = observer ( ({diceKey, ...sizeModel}: {diceKey?: Dice
     >
         <DiceKeyView
           size={`${cssCalcTyped(sizeModel.selectedItemWidth ?? defaultSelectedItemWidth)}`}
-          faces={ diceKey?.faces }
+          diceKeyWithKeyId={diceKey}
           showLidTab={false}
         />
         <HideInstruction
@@ -211,7 +211,7 @@ export const DiceKeySelectorView = observer ( ({
   // The row has one item for each DiceKey and one for the button to load more DiceKeys.
   const numberOfItems = storedDiceKeyDescriptors.length +  1;   
   return (
-    <RowWithSelectedItemScrolledtoCenter {...{numberOfItems, indexSelected, ...sizeModel}}>
+    <RowWithSelectedItemScrolledToCenter {...{numberOfItems, indexSelected, ...sizeModel}}>
       {// Iterate through all the DiceKeys to display
         storedDiceKeyDescriptors.map( (storedDiceKeyDescriptor) => {
           const isSelected = storedDiceKeyDescriptor.keyId === selectedDiceKeyId;
@@ -237,7 +237,7 @@ export const DiceKeySelectorView = observer ( ({
           storedDiceKeyDescriptors.length === 0 ? "Load a DiceKey" : "Load another DiceKey"
         }</SubViewButtonCaption>
       </SelectableItemViewContainer>
-    </RowWithSelectedItemScrolledtoCenter>
+    </RowWithSelectedItemScrolledToCenter>
   )
 });
 

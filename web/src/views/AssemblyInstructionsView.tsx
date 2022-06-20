@@ -104,14 +104,14 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
       // Scanning action
       (
         <CenterColumn>
-          <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } height={`65vh`} />
+          <ScanDiceKeyView onDiceKeyRead={ onDiceKeyRead } height={`45vh`} />
           <CenteredControls>
             <PushButton onClick={stopScanning}>Cancel</PushButton>
           </CenteredControls>
         </CenterColumn>
       ) : diceKey != null ? (<>
         <CenterRow>
-          <DiceKeyView size={`min(50vh,70vw)`} faces={diceKey.faces} obscureAllButCenterDie={false} />
+          <DiceKeyView size={`min(50vh,70vw)`} diceKeyWithKeyId={diceKey} obscureAllButCenterDie={false} />
         </CenterRow>
         <CenteredControls>
           <PushButton onClick={startScanning} >Scan again</PushButton>
@@ -140,17 +140,15 @@ const StepSealBox = () => (
 
 const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsState}) => {
   const {diceKey} = state;
-  const {faces} = diceKey ?? {faces: undefined};
-  const createdDiceKey = faces != null;
   const backedUpSuccessfully = !!state.backupState?.validationStepViewState.backupScannedSuccessfully;
   return (
     <ColumnVerticallyCentered>
       <div style={{display: "block"}}>{
-        createdDiceKey ? (<>
+        diceKey != null ? (<>
           <Instruction>You did it!</Instruction>
           <Spacer/>
           <CenterColumn>
-            <DiceKeyView size={`min(50vh,70vw)`} faces={faces} />
+            <DiceKeyView size={`min(50vh,70vw)`} diceKeyWithKeyId={diceKey} />
           </CenterColumn>
           <Spacer/>
           { backedUpSuccessfully ? null : (

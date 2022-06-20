@@ -4,6 +4,7 @@
     "cSpell.words": [
         "API's",
         "appendable",
+        "assetlinks",
         "authy",
         "BCNTH",
         "bcntl",
@@ -65,6 +66,7 @@
         "TRBL",
         "ts",
         "tsbuildinfo",
+        "typecheck",
         "ubyte",
         "undoverline",
         "undoverlines",
@@ -72,6 +74,7 @@
         "view",
         "vite",
         "vitejs",
+        "webasm",
         "webassembly",
         "webcrypto",
         "will",

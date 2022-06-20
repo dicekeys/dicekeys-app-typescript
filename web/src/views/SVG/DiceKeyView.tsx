@@ -1,10 +1,11 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { EmptyPartialDiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
+import { DiceKeyWithKeyId, EmptyPartialDiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
 import { fitRectangleWithAspectRatioIntoABoundingBox, viewBox, Bounds } from "../../utilities/bounding-rects";
-import { ToggleState } from "../../state";
-import styled from "styled-components";
+import { DiceKeyMemoryStore, ToggleState } from "../../state";
+import styled, {keyframes, css} from "styled-components";
+import type { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
 import { cssCalcTyped } from "../../utilities";
 
 export interface DiceKeyRenderOptions {
@@ -149,38 +150,108 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
     );
 });
 
-const DiceKeySvgElement = styled.svg`
-  display: flex;
-  cursor: grab;
-  align-self: center;
-  justify-self: center;
+const rotateFromCenterFaceLeft = keyframes`
+  from {
+    transform: rotate(-90deg);
+  }
+  to {
+    transform: rotate(0);
+  }
+`;
+const rotateFromCenterFaceRight = keyframes`
+  from {
+    transform: rotate(90deg);
+  }
+  to {
+    transform: rotate(0);
+  }
+`;
+const rotateFromCenterFaceBottom = keyframes`
+  from {
+    transform: rotate(180deg);
+  }
+  to {
+    transform: rotate(0);
+  }
 `;
 
-export const DiceKeyView = ({
+export type CenterFaceOrientationToRotateFromRbl = Exclude<FaceOrientationLetterTrbl, "t">;
+
+export interface DiceKeyAnimationRotationProps {
+  rotationTimeInSeconds?: number;
+  rotationDelayTimeInSeconds?: number;
+  centerFaceOrientationToRotateFrom?: CenterFaceOrientationToRotateFromRbl;
+}
+
+const DiceKeyContainerDiv = styled.div<{size?: string}>`
+  display: flex;
+  align-self: center;
+  justify-self: center;
+  ${ ({size}) => size == null ? `` : css`
+    width: ${cssCalcTyped(size)};
+    height: ${cssCalcTyped(size)};
+  `}
+`
+
+  
+const DiceKeySvgElement = styled.svg<DiceKeyAnimationRotationProps & {size?: string}>`
+  position: absolute;
+  display: flex;
+  align-self: center;
+  justify-self: center;
+  cursor: grab;
+  ${ ({size}) => size == null ? `` : css`
+    width: ${cssCalcTyped(size)};
+    height: ${cssCalcTyped(size)};
+  `}
+${ ({centerFaceOrientationToRotateFrom, rotationDelayTimeInSeconds=0, rotationTimeInSeconds=2.25}) =>
+  centerFaceOrientationToRotateFrom == null ? `` : css`
+    cursor: none;
+    animation-name: ${
+      centerFaceOrientationToRotateFrom === "l" ? rotateFromCenterFaceLeft :
+      centerFaceOrientationToRotateFrom === "b" ? rotateFromCenterFaceBottom :
+      rotateFromCenterFaceRight
+    };
+    animation-delay: ${ rotationDelayTimeInSeconds }s;
+    animation-duration: ${ rotationTimeInSeconds }s;
+    animation-timing-function: ease;
+    animation-iteration-count: 1;
+    animation-fill-mode: both;
+    animation-direction: forward;
+  `}
+`
+
+
+export const DiceKeyView = observer ( ({
   // DiceKeyRenderOptions
-  faces,
+  diceKeyWithKeyId,
+  faces = diceKeyWithKeyId?.faces,
   highlightFaceAtIndex,
   obscureAllButCenterDie,
   diceBoxColor,
   showLidTab,
   leaveSpaceForTab,
   onFaceClicked,
-  // Prop specific to this view
-  size,
   // Props to pass down to svg element.
-  style: parentStyle,
   ...svgProps
-}: {size?: string} & DiceKeyRenderOptions & React.SVGAttributes<SVGElement>) => {
+}: {size?: string, diceKeyWithKeyId?: DiceKeyWithKeyId} & DiceKeyRenderOptions & DiceKeyAnimationRotationProps & React.SVGAttributes<SVGElement>) => {
   const sizeModel = (showLidTab || leaveSpaceForTab) ? sizeModelWithTab : sizeModelWithoutTab;
-  const cssCalcSize = size != null ? cssCalcTyped(size) : undefined;
-  const style: React.CSSProperties | undefined = (size == null) ? parentStyle : {...parentStyle, width: cssCalcSize, height: cssCalcSize};
+  const rotationParameters = diceKeyWithKeyId == null ? undefined : DiceKeyMemoryStore.getRotationParametersForKeyId(diceKeyWithKeyId.keyId);
+  if (rotationParameters != null) {
+    obscureAllButCenterDie = false;
+    onFaceClicked = undefined;
+  }
+  const {size} = svgProps;
   return (
-    <DiceKeySvgElement
-      {...svgProps}
-      viewBox={viewBox((sizeModel.bounds))}
-      preserveAspectRatio="xMidYMid meet"
-      style={style}    >
-      <DiceKeySvgGroup {...{faces,sizeModel,highlightFaceAtIndex,obscureAllButCenterDie,diceBoxColor,showLidTab,leaveSpaceForTab,onFaceClicked,}} />
-    </DiceKeySvgElement>
+    <DiceKeyContainerDiv size={size} >
+      <DiceKeySvgElement
+        {...svgProps}
+        {...rotationParameters}
+        viewBox={viewBox((sizeModel.bounds))}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <DiceKeySvgGroup {...{faces,sizeModel,highlightFaceAtIndex,obscureAllButCenterDie,diceBoxColor,showLidTab,leaveSpaceForTab,onFaceClicked,}} />
+      </DiceKeySvgElement>
+    </DiceKeyContainerDiv>
   );
-};
+});
