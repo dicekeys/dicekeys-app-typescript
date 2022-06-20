@@ -103,9 +103,10 @@ const CaptureView = ({camerasOnThisDevice, ...scanDiceKeyViewProps}: ScanDiceKey
       frameProcessorState.handleProcessedCameraFrame(processFrameResponse, canvasRenderingContext)
     );
   // Clear the media stream state when unloading this view
-  useEffect( () => () => {
-    mediaStreamState.clear();
-  });
+  const viewComponentDestructor = () => {mediaStreamState.clear();}
+  // To ensure the destructor is called when unloading this view component,
+  // return the destructor from a useEffect function
+  useEffect( () => { return viewComponentDestructor });
 
   return (
     <>
