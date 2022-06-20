@@ -14,13 +14,21 @@ export class MediaStreamState {
   get supportsFixedFocus() { return this._supportsFixedFocus }
 
   clear = action (() => {
+    const mediaStream = this._mediaStream;
+    // if (mediaStream == null) {
+    //   console.log(`mediaStreamState.clear() with null media stream`);
+    // }
     this._deviceId = undefined;
     this._supportsFixedFocus = false;
-    if (this._mediaStream != null) {
-      this._mediaStream?.getVideoTracks().forEach(track => {
+    if (mediaStream != null) {
+      const videoTracks = mediaStream.getVideoTracks();
+      // console.log(`mediaStreamState.clear() with ${videoTracks.length} tracks`);
+      videoTracks.forEach(track => {
+        // console.log(`Stopping track`, track.id)
         try { track.stop(); } catch {}
       });
-      try {this._mediaStream.stop?.()} catch {}
+      try {mediaStream.stop()} catch {}
+      // console.log(`Media stream cleared to undefined from`, this._mediaStream);
       this._mediaStream = undefined;
     }
   });
@@ -31,6 +39,7 @@ export class MediaStreamState {
     this._deviceId = deviceId;
     this._mediaStream = mediaStream;
     this._supportsFixedFocus = supportsFixedFocus;
+    // console.log(`Media stream set to`, this._mediaStream);
   });
 
   get defaultDevice(): Camera | undefined { return this.camerasOnThisDevice.cameras[0] }
@@ -79,7 +88,7 @@ export class MediaStreamState {
       camerasOnThisDevice: false,
       defaultMediaTrackConstraints: false
     });
+    // console.log(`new MediaStreamState created`);
   }
-
 
 }
