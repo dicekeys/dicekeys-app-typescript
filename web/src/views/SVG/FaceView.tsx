@@ -202,7 +202,7 @@ export const FaceView = ({
     face, highlightThisFace, backgroundColor, stroke, strokeWidth, onFaceClicked,
     ...svgProps
   }: FaceViewProps & React.SVGAttributes<SVGElement>) => (
-  <svg {...svgProps}>
+  <svg width={`100%`} height={`100%`} {...svgProps}>
     <FaceGroupView {...{face, highlightThisFace, backgroundColor, stroke, strokeWidth, onFaceClicked}} />
   </svg>
 );

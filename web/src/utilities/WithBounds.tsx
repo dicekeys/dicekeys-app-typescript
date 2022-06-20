@@ -29,8 +29,8 @@ const WithBoundsColumn = styled(WithBoundsDiv)`
 // https://stackoverflow.com/questions/43817118/how-to-get-the-width-of-a-react-element
 export const useContainerDimensions = (myRef: React.RefObject<{offsetWidth: number, offsetHeight: number}>, setBounds: (bounds: {width: number, height: number}) => void) => {
   const getBounds = () => ({
-    width: myRef.current?.offsetWidth ?? 0,
-    height: myRef.current?.offsetHeight ?? 0,
+    width: myRef.current?.offsetWidth ?? window.innerWidth,
+    height: myRef.current?.offsetHeight ?? window.innerHeight,
   })
 
   React.useEffect(() => {
