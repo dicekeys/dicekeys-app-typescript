@@ -4,6 +4,8 @@
  * non-bus enumeration ways to detect device plug / unplug.
  */
 
+import { UnknownValueCaughtByCatch } from "../../../utilities/exceptions";
+
 
 export type Device = HIDDevice;
 export type DeviceListUpdateCallback = (devices: Device[]) => void;
@@ -21,7 +23,7 @@ export class UsbDeviceMonitor {
   /**
    * A set of callbacks to notify when the device list changes
    */
-  private _errorOnFindDevices: any;
+  private _errorOnFindDevices: UnknownValueCaughtByCatch;
   public get errorOnFindDevices() {return this._errorOnFindDevices}
   private deviceMap = new Map<string, Device>();
   private onDeviceListChangedCallbacks: Set<DeviceListUpdateCallback> = new Set();
@@ -36,7 +38,7 @@ export class UsbDeviceMonitor {
       }
       this.notifyOnKeysChangedListeners();
       return filteredDevices;
-    } catch (e) {
+    } catch (e: UnknownValueCaughtByCatch) {
       this._errorOnFindDevices = e;
       throw e;
     }
