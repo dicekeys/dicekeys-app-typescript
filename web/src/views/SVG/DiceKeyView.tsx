@@ -184,21 +184,23 @@ export interface DiceKeyAnimationRotationProps {
 }
 
 const DiceKeyContainerDiv = styled.div<{size?: string}>`
+  position: relative;
   display: flex;
   align-self: center;
   justify-self: center;
+  overflow: hidden;
   ${ ({size}) => size == null ? `` : css`
     width: ${cssCalcTyped(size)};
     height: ${cssCalcTyped(size)};
   `}
 `
 
-  
 const DiceKeySvgElement = styled.svg<DiceKeyAnimationRotationProps & {size?: string}>`
   position: absolute;
   display: flex;
   align-self: center;
   justify-self: center;
+  overflow: hidden;
   cursor: grab;
   ${ ({size}) => size == null ? `` : css`
     width: ${cssCalcTyped(size)};
