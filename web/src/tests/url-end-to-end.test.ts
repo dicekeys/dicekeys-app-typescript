@@ -24,9 +24,9 @@ const defaultServerUrl = "https://dicekeys.app/"
 
 class MockQueuedUrlApiRequest extends QueuedUrlApiRequest {
 
-  transmitResponseUrl: (responseUrl: URL) => any;
+  transmitResponseUrl: (responseUrl: URL) => void;
 
-  constructor(requestUrl: URL, mockTransmitResponseUrl: (responseUrl: URL) => any) {
+  constructor(requestUrl: URL, mockTransmitResponseUrl: (responseUrl: URL) => void) {
     super(requestUrl);
     this.transmitResponseUrl = mockTransmitResponseUrl;
   }

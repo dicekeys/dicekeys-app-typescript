@@ -76,7 +76,7 @@ export const SelectedDiceKeyNavigationBar = observer( ( {
 export const NavigationBarForDiceKey = observer( ( {
   diceKey,
   goBack
-}: {diceKey: DiceKeyWithKeyId, goBack: () => any}) => {
+}: {diceKey: DiceKeyWithKeyId, goBack: () => void}) => {
   return (
     <TopNavigationBar>
       <TopNavLeftSide onClick={ goBack } >{

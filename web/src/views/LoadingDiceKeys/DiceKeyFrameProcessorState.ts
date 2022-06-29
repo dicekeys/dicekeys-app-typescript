@@ -8,7 +8,7 @@ import {
 import {
   allDiceErrorTypes, allFacesReadHaveMajorityValues
 } from "../../dicekeys/FacesRead";
-import {
+import type {
     ProcessFrameResponse,
 } from "../../workers/dicekey-image-frame-worker";
 import {

@@ -6,7 +6,7 @@ import {
   implementIpcAsyncApiClientFn,
 } from "./IpcApiFactory"
 
-const pretendWeHaveUsedInputToMakeTypeScriptHappy = <T extends unknown[]>(..._args: T) => {}
+const pretendWeHaveUsedInputToMakeTypeScriptHappy = <T extends any[]>(..._args: T) => {}
 
 const MainToRendererAsyncApiFunctionNames = [
   "getRecipesToExport",
@@ -35,8 +35,6 @@ export const implementRendererToMainSyncApiServerInMainProcess = (implementation
     .forEach( (fnName) => implementRendererToMainSyncFnInMainProcess(fnName, implementation[fnName]) );
   }
 
-// const implementMainToRendererAsyncClientFuntionInMainProcess = (webContents: WebContents) =>
-//   implementIpcAsyncApiClietFn(webContents, ipcMain);
 
 export const implementMainToRendererAsyncClientInMainProcess = (webContents: WebContents) => {
   const implementClientFunction = implementIpcAsyncApiClientFn(webContents, ipcMain);

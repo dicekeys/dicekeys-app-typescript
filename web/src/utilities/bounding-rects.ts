@@ -3,9 +3,9 @@ export interface Bounds {width: number; height: number;}
 export const viewBox = ({width, height}: Bounds): string => 
 `${-width/2} ${-height/2} ${width} ${height}`;
 
-export const isBounds = (obj: any): obj is Bounds =>
-  typeof obj === "object" && "width" in obj && "height" in obj &&
-  typeof(obj.width) === "number" && typeof(obj.height) === "number";
+export const isBounds = (obj: unknown): obj is Bounds =>
+  typeof obj === "object" && obj != null && "width" in obj && "height" in obj &&
+  typeof((obj as {width: unknown}).width) === "number" && typeof((obj as {height: unknown}).height) === "number";
 
 export const requireBounds = (optional: Partial<Bounds> | undefined, required: Bounds) => {
   const {width, height} = optional ?? {};

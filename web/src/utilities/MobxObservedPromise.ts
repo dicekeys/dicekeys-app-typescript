@@ -1,11 +1,12 @@
 import { makeAutoObservable, runInAction } from "mobx";
+import { Caught } from "./exceptions";
 
 export class MobxObservedPromise<T> {
   private _fulfilled: boolean = false;
   get fulfilled() { return this._fulfilled }
   private _result: T | undefined = undefined;
   get result() { return this._result }
-  private _error: any = undefined;
+  private _error: Caught = undefined;
   get error() { return this._error }
 
   constructor(promise: Promise<T>) {

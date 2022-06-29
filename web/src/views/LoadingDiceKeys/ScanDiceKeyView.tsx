@@ -103,7 +103,10 @@ const CaptureView = ({camerasOnThisDevice, ...scanDiceKeyViewProps}: ScanDiceKey
       frameProcessorState.handleProcessedCameraFrame(processFrameResponse, canvasRenderingContext)
     );
   // Clear the media stream state when unloading this view
-  useEffect( mediaStreamState.clear );
+  const viewComponentDestructor = () => {mediaStreamState.clear();}
+  // To ensure the destructor is called when unloading this view component,
+  // return the destructor from a useEffect function
+  useEffect( () => { return viewComponentDestructor });
 
   return (
     <>
@@ -115,7 +118,10 @@ const CaptureView = ({camerasOnThisDevice, ...scanDiceKeyViewProps}: ScanDiceKey
   );
 }
 
+
 export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) => {
+  const camerasOnThisDevice = CamerasOnThisDevice.instance(minCameraWidth, minCameraHeight);
+
 //  const [rotationState, setRotationState] = useState<RotationState|undefined>(undefined);
   const onDiceKeyRead = (diceKeyWithKeyId: DiceKeyWithKeyId, centerFaceOrientationAsScannedTrbl: FaceOrientationLetterTrbl) => {
       DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKeyWithKeyId, centerFaceOrientationAsScannedTrbl);
@@ -130,7 +136,6 @@ export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) => {
       setComponentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning(true)
     }}, 5000 );
 
-  const camerasOnThisDevice = CamerasOnThisDevice.instance(minCameraWidth, minCameraHeight);
 
   // Uncomment if we want to provide transparency into the
   // camera scanning process rather than just wait for it to complete...

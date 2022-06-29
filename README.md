@@ -29,6 +29,10 @@ _If `npm` fails, check **GitHub Packages** instructions._
 npm run start
 ```
 
+If seeing a browser error for `Uncaught ReferenceError: WebAssembly is not defined` you may need to turn off browser safe mode for localhost.  (In edge, go to the circle `i` just to the left of the address in the address bar and then look for the enhanced security option.)
+
+Due to an [incompatibility](https://github.com/vitejs/vite/issues/4586) between vite's handling of imports and FireFox, workers don't work in FireFox on dev (but works fine when built for production and deployed to a web server, so test on the staging server.)
+
 ## Running electron app
 
 ```bash

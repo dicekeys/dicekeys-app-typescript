@@ -14,7 +14,7 @@ export const imageCaptureSupported: boolean = (window.hasOwnProperty("ImageCaptu
 
 export interface CameraCaptureWithOverlayProperties {
   mediaStreamState: MediaStreamState;
-  onFrameCaptured?: (frame: ImageData, canvasRenderingContext: CanvasRenderingContext2D) => any;
+  onFrameCaptured?: (frame: ImageData, canvasRenderingContext: CanvasRenderingContext2D) => void;
   showBoxOverlay?: boolean;
   width?: string;
   minHeight?: string;

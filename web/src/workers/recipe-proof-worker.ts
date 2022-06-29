@@ -31,11 +31,11 @@ export interface AddProofResponse {
   recipe: string;
 }
 
-const isVerifyRequest = (data: any): data is VerifyRequestMessage =>
-  typeof data === "object" && data.action === "verify";
+const isVerifyRequest = (data: unknown): data is VerifyRequestMessage =>
+  typeof data === "object" && (data as {action?: unknown}).action === "verify";
 
-const isAddProofRequest = (data: any): data is AddProofRequestMessage =>
-  typeof data === "object" && data.action === "addProof";
+const isAddProofRequest = (data: unknown): data is AddProofRequestMessage =>
+  typeof data === "object" && (data as {action?: unknown}).action === "addProof";
 
 
 addEventListener( "message", async (requestMessage) =>
@@ -44,13 +44,13 @@ addEventListener( "message", async (requestMessage) =>
     if (isVerifyRequest(data)) {
       const {seedString, recipe} = data;
       const result: VerifyResponse = {verified: proofOfPriorDerivationModule.verify(seedString, recipe)};
-      (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(result);
+      (self as unknown as {postMessage: (m: VerifyResponse, t?: Transferable[]) => unknown}).postMessage(result);
     } else if (isAddProofRequest(data)) {
       const {seedString, recipe} = data;
       const result: AddProofResponse = {
         recipe: proofOfPriorDerivationModule.addToRecipeJson(seedString, recipe)
       };
-      (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(result);
+      (self as unknown as {postMessage: (m: AddProofResponse, t?: Transferable[]) => unknown}).postMessage(result);
     }
   })
 )

@@ -1,8 +1,9 @@
 import { makeObservable, observable, runInAction } from "mobx";
+import { UnknownValueCaughtByCatch } from "./exceptions";
 
 export class AsyncResultObservable<T> {
   result?: T = undefined;
-  exception?: any = undefined;
+  exception?: UnknownValueCaughtByCatch = undefined;
 
   constructor(promise: Promise<T>) {
     makeObservable(this, {

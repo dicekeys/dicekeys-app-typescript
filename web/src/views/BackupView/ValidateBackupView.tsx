@@ -40,7 +40,7 @@ export const ValidateBackupView = observer ( ({
 }: {
   viewState: ValidateBackupViewState
 }) => {
-  const {withDiceKey, originalDiceKey} = viewState;
+  const {withDiceKey, originalDiceKey, diceKeyScanned} = viewState;
   const onDiceKeyRead = (diceKey: DiceKeyWithKeyId) => {
     if (viewState.scanning === "backup") {
       viewState.setDiceKeyScannedForValidation(diceKey);
@@ -71,15 +71,24 @@ export const ValidateBackupView = observer ( ({
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />
           <CenteredControls>
-            <PushButton onClick={viewState.startScanningOriginal}>Re-scan your original DiceKey</PushButton>
+            <PushButton invisible={!("setDiceKey" in viewState.withDiceKey)} onClick={viewState.startScanningOriginal}>Re-scan your original DiceKey</PushButton>
           </CenteredControls>
         </ComparisonBox>
         <ComparisonBox>
-          <DiceKeyView
-            faces={viewState.diceKeyScanned?.faces ?? [] as unknown as PartialDiceKey }
-            size={`min(25vw,40vh)`}
-            highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
-          />
+          {diceKeyScanned == null ? (
+            <DiceKeyView
+              size={`min(25vw,40vh)`}
+              onFaceClicked={viewState.startScanningBackup}
+              obscureAllButCenterDie={false}
+            />
+          ) : (
+            <DiceKeyView
+              faces={diceKeyScanned?.faces ?? [] as unknown as PartialDiceKey }
+              size={`min(25vw,40vh)`}
+              highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
+            />
+          )
+          }
           <CenteredControls>
             <PushButton  onClick={viewState.startScanningBackup} >{
               viewState.diceKeyScannedForValidation == null ? (<>Scan backup to verify</>) : (<>Re-scan Backup</>)

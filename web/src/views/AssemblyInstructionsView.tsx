@@ -179,7 +179,7 @@ const AssemblyInstructionsStepSwitchView = observer ( (props: {state: AssemblyIn
 
 interface AssemblyInstructionsViewProps {
   state: AssemblyInstructionsState;
-  onComplete: (diceKeyLoaded?: DiceKeyWithKeyId) => any;
+  onComplete: (diceKeyLoaded?: DiceKeyWithKeyId) => void;
 }
 
 const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  AssemblyInstructionsViewProps) => {

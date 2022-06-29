@@ -45,18 +45,18 @@ export interface ProcessFrameResponse extends RequestMetadata {
   exception?: Error;
 }
 
-function isTerminateSessionRequest(t: any) : t is TerminateSessionRequest {
-    return typeof t === "object" &&
+function isTerminateSessionRequest(t: unknown) : t is TerminateSessionRequest {
+    return typeof t === "object" && t != null &&
         "action" in t &&
-        t.action === "terminateSession" &&
+        (t as {action?: unknown}).action === "terminateSession" &&
         "sessionId" in t;
 }
 
 
-function isProcessFrameRequest(t: any) : t is ProcessFrameRequest {
-    return typeof t === "object" &&
+function isProcessFrameRequest(t: unknown) : t is ProcessFrameRequest {
+    return typeof t === "object" && t != null &&
         "action" in t &&
-        (t.action === "processRGBAImageFrame") &&
+        ((t as {action?: unknown}).action === "processRGBAImageFrame") &&
         "sessionId" in t && "width" in t && "height" in t &&
         "rgbImageAsArrayBuffer" in t;
 }

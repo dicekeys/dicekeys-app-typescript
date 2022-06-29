@@ -18,7 +18,7 @@ import {
   Exceptions,
 } from "@dicekeys/dicekeys-api-js";
 
-function deleteAfterOperation<DELETABLE extends {delete: () => any}, RESULT>(
+function deleteAfterOperation<DELETABLE extends {delete: () => void}, RESULT>(
   deletable: DELETABLE,
   callback: (d: DELETABLE) => RESULT
 ): RESULT {
@@ -29,7 +29,7 @@ function deleteAfterOperation<DELETABLE extends {delete: () => any}, RESULT>(
   }
 }
 
-function toJsonAndDelete<RESULT, T extends {delete: () => any, toJson: () => RESULT}>(
+function toJsonAndDelete<RESULT, T extends {delete: () => void, toJson: () => RESULT}>(
   derivedValue: T
 ): RESULT {
   return deleteAfterOperation( derivedValue, ( d ) => d.toJson() )

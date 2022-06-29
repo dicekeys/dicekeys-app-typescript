@@ -58,7 +58,7 @@ class DiceKeyMemoryStoreClass {
     }
   });
 
-  onReady = (callback: () => any) => {
+  onReady = (callback: () => void) => {
     if (this.#isReady) {
       // console.log(`onReady called when already ready`);
       callback();
@@ -93,7 +93,7 @@ class DiceKeyMemoryStoreClass {
    */
   addDiceKeyWithKeyId = action ( (diceKey: DiceKeyWithKeyId, centerFaceOrientationWhenScanned?: FaceOrientationLetterTrbl): DiceKeyWithKeyId => {
     const diceKeyWithCenterFaceUpright = diceKey.rotateToTurnCenterFaceUpright();
-    if (!(diceKeyWithCenterFaceUpright.keyId in this.diceKeyForKeyId)) {
+    if (this.diceKeyForKeyId(diceKeyWithCenterFaceUpright.keyId) == null) {
       this.keyIdToDiceKeyInHumanReadableForm.set(diceKeyWithCenterFaceUpright.keyId, diceKeyWithCenterFaceUpright.inHumanReadableForm);
       if (centerFaceOrientationWhenScanned != null) {
         this.keyIdToCenterFaceOrientationWhenScanned.set(diceKeyWithCenterFaceUpright.keyId, centerFaceOrientationWhenScanned);

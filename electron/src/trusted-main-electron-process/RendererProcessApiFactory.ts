@@ -2,7 +2,7 @@ import {ipcRenderer} from 'electron';
 import * as ElectronBridge from "./ElectronBridge";
 import {
   implementIpcAsyncApiServerFn,
-  implementIpcSyncApiClietFn,
+  implementIpcSyncApiClientFn,
   implementIpcAsyncApiClientFn
 } from "./IpcApiFactory";
 import type {
@@ -17,7 +17,7 @@ export const implementRendererToMainSyncClientInRendererProcess =
   <FN_NAME extends keyof ElectronBridge.RendererToMainSyncApi>(
     fnName: FN_NAME
   ): ElectronBridge.RendererToMainSyncApi[FN_NAME] =>
-    implementIpcSyncApiClietFn()(fnName);
+    implementIpcSyncApiClientFn()(fnName);
 
 export const implementRendererToMainAsyncClientInRendererProcess = 
   <FN_NAME extends keyof ElectronBridge.RendererToMainAsyncApi>(

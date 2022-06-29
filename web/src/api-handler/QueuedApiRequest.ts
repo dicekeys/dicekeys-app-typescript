@@ -97,19 +97,19 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
    * triple and sends it as a response.
    * @param e An error of unspecified type
    */
-  sendError = async (e: any) => {
+  sendError = async (e: unknown) => {
     const exception: string = 
       (typeof e === "string") ?
         e :
-    (typeof e === "object" && "name" in e && typeof e.name === "string") ?
-        e.name :
+    (typeof e === "object" && e != null && "name" in e && typeof ((e as {name: unknown}).name) === "string") ?
+      (e as {name: string}).name :
       "unknown";
     const message: string | undefined = 
-      (typeof e === "object" && "message" in e && typeof e.message === "string") ?
-        e.message : "unknown";
+      (typeof e === "object" && e != null && "message" in e && typeof ((e as {message: unknown}).message)  === "string") ?
+      (e as {message: string}).message : "unknown";
     const stack: string | undefined = 
-    (typeof e === "object" && "stack" in e && typeof e.stack === "string") ?
-      e.stack : undefined;
+    (typeof e === "object" && e != null && "stack" in e && typeof ((e as {stack: unknown}).stack) === "string") ?
+    (e as {stack: string}).stack : undefined;
     const { requestId } = this.request;
     await this.transmitResponse({
       requestId, exception, message, stack
