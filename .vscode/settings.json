@@ -51,6 +51,7 @@
         "preload",
         "pwmgr",
         "rarr",
+        "reloadable",
         "seedable",
         "setmeta",
         "span",
