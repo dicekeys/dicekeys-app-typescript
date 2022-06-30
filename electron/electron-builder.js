@@ -33,7 +33,10 @@ module.exports = {
         "entitlements": "./packaging/entitlements.mac.plist",
         "entitlementsInherit": "./packaging/entitlements.mac.plist",
         "provisioningProfile": "./DiceKeys_Electron.provisionprofile",
-        "gatekeeperAssess": false
+        "gatekeeperAssess": false,
+        // TODO - set to true when adding support for dark mode in
+        // https://github.com/dicekeys/dicekeys-app-typescript/issues/218
+        "darkModeSupport": false,
     },
     "directories": {
         "output": "out"
