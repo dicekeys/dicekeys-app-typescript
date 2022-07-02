@@ -14,6 +14,23 @@ export {
   SaveDialogOptions
 }
 
+
+/**
+ * DiceKeys as 75 characters, with each element represented as a
+ * three-character sequence of:
+ *   letter,
+ *   digit ['1' - '6'],
+ *   FaceRotationLetter
+ * [letter][digit][FaceRotationLetter]
+ */
+ enum DiceKeyInHumanReadableFormType { _ = "" };
+ export type DiceKeyInHumanReadableForm = DiceKeyInHumanReadableFormType & string;
+
+
+export interface DiceKeyMemoryStoreStorageFormat {
+  keyIdToDiceKeyInHumanReadableForm: [string, DiceKeyInHumanReadableForm][];
+}
+
 export interface DeviceUniqueIdentifier {
   vendorId: number;
   productId: number;
@@ -29,13 +46,13 @@ export interface Device extends DeviceUniqueIdentifier {
 
 export interface RendererToMainSyncApi {
   openExternal(url: string): void;
+  setSynchronizedStringState: (key:string, newValue: string | undefined) => void;
+//  broadcastUpdateToDiceKeyMemoryStore(storedDiceKeys: DiceKeyMemoryStoreStorageFormat): void;
+//  getDiceKeyMemoryStore: () => DiceKeyMemoryStoreStorageFormat;
+  getSynchronizedStringState: (key: string) => string | undefined;
   writeResultToStdOutAndExit(result: string): void;
 }
 
-export interface RendererToMainDeprecatedAsyncApi{
-  // openFileDialog(options: OpenDialogOptions): Promise<OpenDialogReturnValue>;
-  // openMessageDialog(options: MessageBoxOptions): Promise<MessageBoxReturnValue>;
-}
 export interface RendererToMainDiceKeysStoreAsyncApi {
   getDiceKeyFromCredentialStore(id: string): Promise<string | null>
   storeDiceKeyInCredentialStore(id: string, humanReadableForm: string): Promise<void>
@@ -50,20 +67,25 @@ export interface ElectronBridgeConstants {
 
 export type RemoveListener = () => void;
 
-export interface MainToRendererAsyncApi {
+export interface MainToPrimaryRendererAsyncApi {
   getRecipesToExport: () => Promise<string>;
-  handleAppLink: (appLink: string) => void;
   loadRandomDiceKey: () => void;
   importRecipes: (jsonRecipesToImport: string) => void;
 }
 
-export type MainToRendererAsyncApiImplementationFunctions = {
-  [key in keyof MainToRendererAsyncApi]:
-    ((...args: Parameters<MainToRendererAsyncApi[key]>) => ReturnType<MainToRendererAsyncApi[key]>);
+export interface MainToAllRenderersApi {
+  broadcastUpdatedSynchronizedStringState: (key: string, newValue: string | undefined) => void;
+//  updateDiceKeyMemoryStore: (storedDiceKeys: DiceKeyMemoryStoreStorageFormat) => void;
+}
+
+export type MainToPrimaryRendererAsyncApiImplementationFunctions = {
+  [key in keyof MainToPrimaryRendererAsyncApi]:
+    ((...args: Parameters<MainToPrimaryRendererAsyncApi[key]>) => ReturnType<MainToPrimaryRendererAsyncApi[key]>);
 }
 
 //export type ImplementMainToRendererSyncApi = (implementation: MainToRendererSyncApiImplementationFunctions) => void;
-export type ImplementMainToRendererAsyncApi = (implementation: MainToRendererAsyncApiImplementationFunctions) => void;
+export type ImplementMainToPrimaryRendererAsyncApi = (implementation: MainToPrimaryRendererAsyncApiImplementationFunctions) => void;
+export type ImplementMainToAllRenderersApi = (implementation: MainToAllRenderersApi) => void;
 
 export type SaveTextFileParameters = {
   content: string,
@@ -72,7 +94,6 @@ export type SaveTextFileParameters = {
 }
 
 export interface RendererToMainAsyncApi extends
-  RendererToMainDeprecatedAsyncApi,
   RendererToMainDiceKeysStoreAsyncApi
 {
   saveUtf8File(saveTextFileParameters: SaveTextFileParameters): Promise<boolean>;
@@ -80,6 +101,7 @@ export interface RendererToMainAsyncApi extends
 }
 
 export interface ElectronBridgeRendererView extends ElectronBridgeConstants, RendererToMainAsyncApi, RendererToMainSyncApi {
-  implementMainToRendererAsyncApi: ImplementMainToRendererAsyncApi;
+  implementMainToPrimaryRendererAsyncApi: ImplementMainToPrimaryRendererAsyncApi;
+  implementMainToAllRenderersApi: ImplementMainToAllRenderersApi;
 }
 

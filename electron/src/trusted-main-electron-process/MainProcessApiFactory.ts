@@ -1,25 +1,35 @@
-import {ipcMain, WebContents} from 'electron';
+import {ipcMain} from 'electron';
 import * as ElectronBridge from "./ElectronBridge";
 import {
   implementIpcSyncApiServerFn,
   implementIpcAsyncApiServerFn,
-  implementIpcAsyncApiClientFn,
+  implementIpcAsyncApiClientFnInMain,
+  implementIpcSendBroadcastFromElectronToAllRenderersFn,
 } from "./IpcApiFactory"
 
 const pretendWeHaveUsedInputToMakeTypeScriptHappy = <T extends any[]>(..._args: T) => {}
 
-const MainToRendererAsyncApiFunctionNames = [
+const MainToPrimaryRendererAsyncApiFunctionNames = [
   "getRecipesToExport",
-  "handleAppLink",
   "importRecipes",
   "loadRandomDiceKey",
 ] as const;
-type MainToRendererAsyncApiFunctionName = (typeof MainToRendererAsyncApiFunctionNames)[number];
+type MainToPrimaryRendererAsyncApiFunctionName = (typeof MainToPrimaryRendererAsyncApiFunctionNames)[number];
 // Ensure we've enumerated all function names
-const _testOfRendererToMainAsyncFunctionNamesIncludesAll_: MainToRendererAsyncApiFunctionName = "" as (keyof ElectronBridge.MainToRendererAsyncApi);
+const _testOfRendererToMainAsyncFunctionNamesIncludesAll_: MainToPrimaryRendererAsyncApiFunctionName = "" as (keyof ElectronBridge.MainToPrimaryRendererAsyncApi);
 // Ensure we've only written valid function names
-const _testOfRendererToMainAsyncFunctionNamesAllValid_: keyof ElectronBridge.MainToRendererAsyncApi = "" as MainToRendererAsyncApiFunctionName;
+const _testOfRendererToMainAsyncFunctionNamesAllValid_: keyof ElectronBridge.MainToPrimaryRendererAsyncApi = "" as MainToPrimaryRendererAsyncApiFunctionName;
 pretendWeHaveUsedInputToMakeTypeScriptHappy(_testOfRendererToMainAsyncFunctionNamesAllValid_, _testOfRendererToMainAsyncFunctionNamesIncludesAll_);
+
+const MainToAllRenderersApiFunctionNames = [
+  "broadcastUpdatedSynchronizedStringState",
+] as const;
+type MainToAllRenderersApiFunctionName = (typeof MainToAllRenderersApiFunctionNames)[number];
+// Ensure we've enumerated all function names
+const _testOfMainToAllRenderersFunctionNamesIncludesAll_: MainToAllRenderersApiFunctionName = "" as (keyof ElectronBridge.MainToAllRenderersApi);
+// Ensure we've only written valid function names
+const _testOfMainToAllRenderersFunctionNamesAllValid_: keyof ElectronBridge.MainToPrimaryRendererAsyncApi = "" as MainToPrimaryRendererAsyncApiFunctionName;
+pretendWeHaveUsedInputToMakeTypeScriptHappy(_testOfMainToAllRenderersFunctionNamesAllValid_, _testOfMainToAllRenderersFunctionNamesIncludesAll_);
 
 
 const implementRendererToMainSyncFnInMainProcess = implementIpcSyncApiServerFn(ipcMain);
@@ -35,14 +45,22 @@ export const implementRendererToMainSyncApiServerInMainProcess = (implementation
     .forEach( (fnName) => implementRendererToMainSyncFnInMainProcess(fnName, implementation[fnName]) );
   }
 
-
-export const implementMainToRendererAsyncClientInMainProcess = (webContents: WebContents) => {
-  const implementClientFunction = implementIpcAsyncApiClientFn(webContents, ipcMain);
-  return MainToRendererAsyncApiFunctionNames.reduce( <FN_NAME extends keyof ElectronBridge.MainToRendererAsyncApi>(
-    api: Partial<ElectronBridge.MainToRendererAsyncApi>, fnName: FN_NAME) => {
-    api[fnName] = implementClientFunction(fnName);
+export const implementMainToRendererAsyncClientInMainProcess = () => {
+  return MainToPrimaryRendererAsyncApiFunctionNames.reduce( <FN_NAME extends keyof ElectronBridge.MainToPrimaryRendererAsyncApi>(
+    api: Partial<ElectronBridge.MainToPrimaryRendererAsyncApi>, fnName: FN_NAME) => {
+    api[fnName] = implementIpcAsyncApiClientFnInMain(fnName);
     return api;
-  }, {} as Partial<ElectronBridge.MainToRendererAsyncApi> ) as ElectronBridge.MainToRendererAsyncApi;
+  }, {} as Partial<ElectronBridge.MainToPrimaryRendererAsyncApi> ) as ElectronBridge.MainToPrimaryRendererAsyncApi;
 }
+export const mainToRendererAsyncClient = implementMainToRendererAsyncClientInMainProcess();
+
+export const implementMainToAllRenderersClientInMainProcess = () => {
+  return MainToAllRenderersApiFunctionNames.reduce( <FN_NAME extends keyof ElectronBridge.MainToAllRenderersApi>(
+    api: Partial<ElectronBridge.MainToAllRenderersApi>, fnName: FN_NAME) => {
+    api[fnName] = implementIpcSendBroadcastFromElectronToAllRenderersFn(fnName);
+    return api;
+  }, {} as Partial<ElectronBridge.MainToAllRenderersApi>) as ElectronBridge.MainToAllRenderersApi;
+}
+export const mainToAllRenderersClient = implementMainToAllRenderersClientInMainProcess();
   
 

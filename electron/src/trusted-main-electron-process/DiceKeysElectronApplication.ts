@@ -1,11 +1,12 @@
-import { app, BrowserWindow, shell } from "electron";
+import { app, shell } from "electron";
 //import { dialog } from "electron";
-import * as IpcApiFactory from "./MainProcessApiFactory";
-import { createBrowserWindow } from "../createBrowserWindow";
-import { createMenu } from "../menu";
 import {
-  MainToRendererAsyncApi,
-} from "./ElectronBridge";
+  implementRendererToMainSyncApiServerInMainProcess,
+  implementRendererToMainAsyncApiServerInMainProcess,
+  mainToRendererAsyncClient,
+} from "./MainProcessApiFactory";
+import { BrowserWindows } from "./BrowserWindows";
+import { createMenu } from "../menu";
 import {
   deleteDiceKeyFromCredentialStore,
   getDiceKeyFromCredentialStore,
@@ -15,6 +16,8 @@ import {
   writeResultToStdOutAndExit
 } from "./CommandLineApi";
 import { saveUtf8File } from "./SaveAndLoad";
+import { DiceKeyMemoryStoreStorageFormat } from "../../../common/IElectronBridge";
+import { SynchronizedStringState } from "./SynchronizedStringState";
 
 const openLinkInBrowser = async (url: string) => {
   await shell.openExternal(url);
@@ -32,6 +35,8 @@ const findAppUrl = (commandLineArgs: string[]): URL | undefined => {
   }
 }
 
+
+
 export class DiceKeysElectronApplication {
   static #instance: DiceKeysElectronApplication | undefined;
   static get instance() { return this.#instance; }
@@ -39,16 +44,18 @@ export class DiceKeysElectronApplication {
     this.#instance ??= new DiceKeysElectronApplication();
   };
 
+  storedDiceKeys: DiceKeyMemoryStoreStorageFormat = {keyIdToDiceKeyInHumanReadableForm: []};
 
-  mainWindow: BrowserWindow | undefined;
-  readonly apiRequestWindows: BrowserWindow[] = [];
-  readonly rendererApi: MainToRendererAsyncApi;
+  getDiceKeyMemoryStore = () => this.storedDiceKeys;
+  broadcastUpdateToDiceKeyMemoryStore = (storedDiceKeys: DiceKeyMemoryStoreStorageFormat) => {
+    // Send this message to all renderer processes.
+    this.storedDiceKeys = storedDiceKeys;
+  }
 
   constructor() {
-    this.mainWindow = createBrowserWindow("electron.html", findAppUrl(process.argv)?.search);
-    this.rendererApi = IpcApiFactory.implementMainToRendererAsyncClientInMainProcess(this.mainWindow.webContents);
+    BrowserWindows.mainWindow = BrowserWindows.createBrowserWindow("electron.html", findAppUrl(process.argv)?.search);
 
-    IpcApiFactory.implementRendererToMainAsyncApiServerInMainProcess({
+    implementRendererToMainAsyncApiServerInMainProcess({
       deleteDiceKeyFromCredentialStore,
       getDiceKeyFromCredentialStore,
       storeDiceKeyInCredentialStore,
@@ -56,15 +63,14 @@ export class DiceKeysElectronApplication {
       openLinkInBrowser,
     });
 
-    IpcApiFactory.implementRendererToMainSyncApiServerInMainProcess({
+    implementRendererToMainSyncApiServerInMainProcess({
       writeResultToStdOutAndExit,
       "openExternal": (url: string) => shell.openExternal(url),
+      "setSynchronizedStringState": SynchronizedStringState.setSynchronizedStringForKey,
+      "getSynchronizedStringState": SynchronizedStringState.getSynchronizedStringForKey,
     });
 
-    createMenu(this.rendererApi);
-    
-    this.mainWindow.webContents.once('dom-ready', () => {
-    });
+    createMenu(mainToRendererAsyncClient);
 
     app.on("second-instance", this.onSecondInstance);
     app.on("window-all-closed", this.onWindowsAllClosed);
@@ -80,7 +86,7 @@ export class DiceKeysElectronApplication {
     event.preventDefault();
     const url = findAppUrl([urlString]);
     if (url != null) {
-      createBrowserWindow("electron.html", url.search);
+      BrowserWindows.createBrowserWindow("electron.html", url.search);
     }
     // this.appLinkHandler.processArgsForAppLink([urlString]);
   }
@@ -95,7 +101,7 @@ export class DiceKeysElectronApplication {
   };
 
   focusMainWindow = () => {
-    const {mainWindow} = this;
+    const {mainWindow} = BrowserWindows;
     if (!mainWindow) return; 
     if (mainWindow.isMinimized()) {
       mainWindow.restore();
@@ -111,7 +117,7 @@ export class DiceKeysElectronApplication {
     // dialog.showErrorBox(`second instance argv`, JSON.stringify(commandLineArgV, undefined, 2));
       const url = findAppUrl(commandLineArgV);
       if (url != null) {
-        createBrowserWindow("electron.html", url.search);
+        BrowserWindows.createBrowserWindow("electron.html", url.search);
       } else {
         this.focusMainWindow();
       }

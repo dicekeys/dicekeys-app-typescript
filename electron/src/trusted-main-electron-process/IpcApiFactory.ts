@@ -1,4 +1,5 @@
 import {IpcMain, ipcMain, IpcRenderer, ipcRenderer, WebContents} from 'electron';
+import { BrowserWindows } from './BrowserWindows';
 
 export const requestChannelNameFor = <T extends string> (functionName: T) => `api:${functionName}:request` as const;
 export const successResponseChannelName = <FN_NAME extends string>(
@@ -48,8 +49,8 @@ export const implementIpcSyncApiClientFn = (
       ): ReturnType<FN> => 
         client.sendSync(requestChannelNameFor(fnName), ...args) as ReturnType<FN>;
 
-export const implementIpcAsyncApiClientFn = (
-  clientSender: WebContents | IpcRenderer = ipcRenderer,
+const implementIpcAsyncApiClientFn = (
+  getClientSender: () => WebContents | IpcRenderer | undefined = () => ipcRenderer,
   clientListener: IpcListener = ipcRenderer
 ) =>
 //  client: {sendSync(channel: string, ...args: unknown[]): unknown;}) =>
@@ -77,10 +78,30 @@ export const implementIpcAsyncApiClientFn = (
     })
     const channel = requestChannelNameFor(fnName);
     // console.log(`Call to ${fnName}`, channel, requestSpecificResponseChannelNames, args)
-    clientSender.send(channel, requestSpecificResponseChannelNames, ...args);
+    getClientSender()?.send(channel, requestSpecificResponseChannelNames, ...args);
   });
-
 }
+export const implementIpcAsyncApiClientFnInMain = implementIpcAsyncApiClientFn(
+  () => BrowserWindows.mainWindow?.webContents, ipcMain
+);
+export const implementIpcAsyncApiClientFnInRenderer = implementIpcAsyncApiClientFn(
+  () => ipcRenderer, ipcRenderer
+);
+
+export const implementIpcSendBroadcastFromElectronToAllRenderersFn =
+  <FN extends ((...args: []) => void)>(fnName: string) =>
+    (
+      ...args: Parameters<FN>
+    ): void => {
+  // Create a code that allows us to match requests to responses
+  const channel = requestChannelNameFor(fnName);
+  BrowserWindows.allBrowserWindows.forEach( browserWindow => {
+    try {
+      browserWindow.webContents.send(channel, ...args);
+    } catch {}
+  });
+}
+
 export const implementIpcAsyncApiServerFn = (
   server: {
     on(channel: string, listener: (event: Electron.IpcMainEvent | Electron.IpcRendererEvent, ...args: any[]) => void): void;
@@ -101,5 +122,15 @@ export const implementIpcAsyncApiServerFn = (
         console.log(`API Server Function ${fnName} failed`, exception);
         event.sender.send(errorResponseChannelName, exception)
       }
+  })
+}
+
+export const implementIpcBroadcastReceiverServerFn =
+  <FN extends ((...args: any[]) => any)>(
+    fnName: string,
+    implementation:  (...args: Parameters<FN>) => ReturnType<FN>
+  ) => {
+    ipcRenderer.on(requestChannelNameFor(fnName), async (_event, ...args) => {
+      try {implementation(...(args as Parameters<FN>)); } catch {}
   })
 }

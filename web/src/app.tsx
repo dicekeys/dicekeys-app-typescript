@@ -17,6 +17,7 @@ import { createGlobalStyle } from 'styled-components';
 
 import InconsolataBoldWoff from "./css/fonts/InconsolataBold.woff";
 import InconsolataBoldWoff2 from "./css/fonts/InconsolataBold.woff2";
+import { SynchronizedString } from "./state/stores/SynchronizedStringStore";
 
 const GlobalFonts = createGlobalStyle`
   @font-face {
@@ -76,22 +77,25 @@ if (RUNNING_IN_ELECTRON) {
           const request = new QueuedUrlApiRequest(url);
           ApiRequestsReceivedState.enqueueApiRequestReceived(request);
         }
-      } catch (e) {
-        console.log(e)
-      }
+    } catch (e) {
+      console.log(e)
     }
+  }
 
   const loadRandomDiceKey = async () => {
     const diceKey = await DiceKeyWithKeyId.fromRandom();
     windowTopLevelNavigationState?.onReturnFromActionThatMayLoadDiceKey(diceKey);
   }
 
-  electronBridge.implementMainToRendererAsyncApi({
+  electronBridge.implementMainToPrimaryRendererAsyncApi({
     "getRecipesToExport": async () => RecipeStore.getStoredRecipesJson(),
-    handleAppLink,
-    "importRecipes": async (recipesToImport) => RecipeStore.importStoredRecipeAsJsonArrary(recipesToImport),
-    loadRandomDiceKey
+    "importRecipes": async (recipesToImport) => RecipeStore.importStoredRecipeAsJsonArray(recipesToImport),
+    loadRandomDiceKey,
   });
+
+  electronBridge.implementMainToAllRenderersApi({
+    broadcastUpdatedSynchronizedStringState: SynchronizedString.updateFromBroadcast,
+  })
 
   if (electronBridge.osPlatform === "linux" || electronBridge.osPlatform === "win32") {
     // If the application was just launched and the command line contains an API request

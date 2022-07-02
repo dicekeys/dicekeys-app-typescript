@@ -1,9 +1,9 @@
 import {app, Menu} from 'electron';
 import { exportRecipesToFile, getRecipesToImportFromFile } from "./trusted-main-electron-process/SaveAndLoad";
-import { MainToRendererAsyncApi } from "./trusted-main-electron-process/ElectronBridge";
+import { MainToPrimaryRendererAsyncApi } from "./trusted-main-electron-process/ElectronBridge";
 const isMac = process.platform === "darwin";
 
-export const createMenu = (mainToRendererAsyncApi: MainToRendererAsyncApi) => {
+export const createMenu = (MainToPrimaryRendererAsyncApi: MainToPrimaryRendererAsyncApi) => {
 
   const AppNameSubMenuItems: Electron.MenuItemConstructorOptions[] = [
     { role: 'about' },
@@ -24,13 +24,13 @@ export const createMenu = (mainToRendererAsyncApi: MainToRendererAsyncApi) => {
   const importRecipes = async () => {
     const recipesJson = await getRecipesToImportFromFile();
     if (typeof recipesJson === "string") {
-      mainToRendererAsyncApi.importRecipes(recipesJson);
+      MainToPrimaryRendererAsyncApi.importRecipes(recipesJson);
     }
     // console.log(`Import recipes`); //, recipes);
   }
 
   const exportRecipes = async () => {
-    const recipesJson = await mainToRendererAsyncApi.getRecipesToExport();
+    const recipesJson = await MainToPrimaryRendererAsyncApi.getRecipesToExport();
     const wasExported = await exportRecipesToFile(recipesJson);
     // console.log(`Export recipes`, recipesJson, wasExported);
     return wasExported;
@@ -39,7 +39,7 @@ export const createMenu = (mainToRendererAsyncApi: MainToRendererAsyncApi) => {
   const FileMenuItems: Electron.MenuItemConstructorOptions[] = [
     {
       label: 'Load random DiceKey',
-      click: () => mainToRendererAsyncApi.loadRandomDiceKey(),
+      click: () => MainToPrimaryRendererAsyncApi.loadRandomDiceKey(),
     },
     { type: 'separator' },
     {
