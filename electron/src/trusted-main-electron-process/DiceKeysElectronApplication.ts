@@ -20,6 +20,7 @@ import { DiceKeyMemoryStoreStorageFormat } from "../../../common/IElectronBridge
 import { SynchronizedStringState } from "./SynchronizedStringState";
 
 const openLinkInBrowser = async (url: string) => {
+  console.log(`Open external url`, url);
   await shell.openExternal(url);
 }
 
@@ -53,7 +54,9 @@ export class DiceKeysElectronApplication {
   }
 
   constructor() {
-    BrowserWindows.mainWindow = BrowserWindows.createBrowserWindow("electron.html", findAppUrl(process.argv)?.search);
+    const url = findAppUrl(process.argv);
+    console.log(`process.argv => URL`, process.argv, url?.toString());
+    BrowserWindows.mainWindow = BrowserWindows.createBrowserWindow("electron.html", url?.search);
 
     implementRendererToMainAsyncApiServerInMainProcess({
       deleteDiceKeyFromCredentialStore,
@@ -65,7 +68,10 @@ export class DiceKeysElectronApplication {
 
     implementRendererToMainSyncApiServerInMainProcess({
       writeResultToStdOutAndExit,
-      "openExternal": (url: string) => shell.openExternal(url),
+      "openExternal": (url: string) => {
+        console.log(`openExternal`, url);
+        shell.openExternal(url)
+      },
       "setSynchronizedStringState": SynchronizedStringState.setSynchronizedStringForKey,
       "getSynchronizedStringState": SynchronizedStringState.getSynchronizedStringForKey,
     });

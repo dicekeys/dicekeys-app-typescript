@@ -6,7 +6,7 @@ export class SynchronizedString {
   get stringValue() { return this._stringValue }
 
   setStringValueWithoutUpdatingOthers = action ( (newValue: string | undefined) => {
-    console.log(`setStringValueWithoutUpdatingOthers("${newValue}")`, this._stringValue, newValue === this._stringValue);
+    // console.log(`setStringValueWithoutUpdatingOthers("${newValue}")`, this._stringValue, newValue === this._stringValue);
     if (newValue === this._stringValue) return false;
     this._stringValue = newValue;
     return true;
