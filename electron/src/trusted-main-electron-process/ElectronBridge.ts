@@ -3,7 +3,8 @@ export type {
   DeviceUniqueIdentifier,
   RendererToMainSyncApi,
   RendererToMainAsyncApi,
-  MainToRendererAsyncApi,
+  MainToAllRenderersApi,
+  MainToPrimaryRendererAsyncApi,
   ElectronBridgeConstants,
   ElectronBridgeRendererView,
 } from "../../../common/IElectronBridge";

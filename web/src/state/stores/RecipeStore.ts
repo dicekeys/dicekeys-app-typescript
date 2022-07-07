@@ -108,7 +108,7 @@ class RecipeStoreClass {
       )
     )
 
-  importStoredRecipeAsJsonArrary = (storedRecipesAsJsonArray: string) => {
+  importStoredRecipeAsJsonArray = (storedRecipesAsJsonArray: string) => {
     const recipesToImport = filterArrayOfStoredRecipes(
       defaultOnException( () => JSON.parse(storedRecipesAsJsonArray ))
     );

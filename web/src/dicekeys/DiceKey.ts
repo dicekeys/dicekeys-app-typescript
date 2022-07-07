@@ -12,6 +12,7 @@ import {
   FaceIdentifiers
 } from "@dicekeys/read-dicekey-js";
 import { computeLazilyAtMostOnce } from "../utilities/computeLazilyAtMostOnce";
+import type { DiceKeyInHumanReadableForm as BridgeDiceKeyInHumanReadableForm } from "../../../common/IElectronBridge";
 
 export type Face = FaceIdentifiers & {
   orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl
@@ -184,16 +185,6 @@ const getRandomDiceKey = (numberOfFacesPerDie: number = 6): DiceKeyFaces => {
   }));
 }
 
-/**
- * DiceKeys as 75 characters, with each element represented as a
- * three-character sequence of:
- *   letter,
- *   digit ['1' - '6'],
- *   FaceRotationLetter
- * [letter][digit][FaceRotationLetter]
- */
-enum DiceKeyInHumanReadableFormType { _ = "" };
-export type DiceKeyInHumanReadableForm = DiceKeyInHumanReadableFormType & string;
 
 export const FaceInHumanReadableForm = ({letter, digit, orientationAsLowercaseLetterTrbl}: Face): string =>
   `${letter}${digit}${orientationAsLowercaseLetterTrbl}`;
@@ -204,6 +195,7 @@ export const FaceFromHumanReadableForm = (hrf: string, options?: {position?: num
   orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl(hrf[2]!, options)
 })
 
+export type DiceKeyInHumanReadableForm = BridgeDiceKeyInHumanReadableForm;
 export const DiceKeyInHumanReadableForm = (diceKey: DiceKeyFaces): DiceKeyInHumanReadableForm =>
   diceKey.map( face => FaceInHumanReadableForm(face) ).join("") as DiceKeyInHumanReadableForm
 
@@ -539,7 +531,7 @@ abstract class DiceKeyBase {
         * uniqueOrientationEncodingSize ) + orientationsAsBigInt;
   }
 
-  toSeedString = computeLazilyAtMostOnce( () => diceKeyFacesToSeedString(this.faces));
+  toSeedString: () => DiceKeyInHumanReadableForm = computeLazilyAtMostOnce( () => diceKeyFacesToSeedString(this.faces));
 
   get inHumanReadableForm(): DiceKeyInHumanReadableForm { return DiceKeyInHumanReadableForm(this.faces) }
   get centerFace(): Face { return this.faces[12]; }
@@ -632,7 +624,7 @@ export class DiceKeyWithKeyId extends DiceKeyBase implements PublicDiceKeyDescri
   
   get inRotationIndependentForm(): DiceKeyWithKeyId { return new DiceKeyWithKeyId(this.keyId, rotateToRotationIndependentForm(this.faces)) };
 
-  toSeedString = () => diceKeyFacesToSeedString(this.faces);
+  toSeedString = (): DiceKeyInHumanReadableForm => diceKeyFacesToSeedString(this.faces);
 
   rotateToTurnCenterFaceUpright = (): DiceKeyWithKeyId => {
     switch (this.centerFace.orientationAsLowercaseLetterTrbl) {

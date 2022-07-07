@@ -8,7 +8,8 @@ import {
   electronBridgeConstants,
 } from "./trusted-main-electron-process/ElectronBridgeConstants";
 import {
-  implementMainToRendererAsyncApiServerInRendererProcess,
+  implementMainToPrimaryRendererAsyncApiServerInRendererProcess,
+  implementMainToAllRenderersApi,
   rendererToMainAsyncApi,
   rendererToMainSyncApi,
 } from "./trusted-main-electron-process/RendererProcessApiFactory"
@@ -18,7 +19,8 @@ const electronBridgeTypeChecked: ElectronBridgeRendererView = {
   ...electronBridgeConstants,
   ...rendererToMainAsyncApi,
   ...rendererToMainSyncApi,
-  implementMainToRendererAsyncApi: implementMainToRendererAsyncApiServerInRendererProcess,
+  implementMainToPrimaryRendererAsyncApi: implementMainToPrimaryRendererAsyncApiServerInRendererProcess,
+  implementMainToAllRenderersApi,
 };
 
 // Expose the API

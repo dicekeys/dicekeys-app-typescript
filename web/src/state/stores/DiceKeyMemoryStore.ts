@@ -1,24 +1,37 @@
 import {
   diceKeyFacesFromHumanReadableForm, DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId, PublicDiceKeyDescriptor
 } from "../../dicekeys/DiceKey";
-import { action, makeAutoObservable, ObservableMap} from "mobx";
+import { action, autorun, makeAutoObservable, ObservableMap} from "mobx";
 import { AllAppWindowsAndTabsAreClosingEvent } from "../core/AllAppWindowsAndTabsAreClosingEvent";
 import { CustomEvent } from "../../utilities/event";
 import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { EncryptedDiceKeyStore, sortPublicDiceKeyDescriptors } from "./EncryptedDiceKeyStore";
 import { writeStringToEncryptedLocalStorageField, readStringFromEncryptedLocalStorageField } from "../core/EncryptedStorageFields";
 import type { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
+import type { DiceKeyMemoryStoreStorageFormat } from "../../../../common/IElectronBridge";
+import { SynchronizedString } from "./SynchronizedStringStore";
+import { jsonStringifyWithSortedFieldOrder } from "../../utilities/json";
 
 export interface PublicDiceKeyDescriptorWithSavedOnDevice extends PublicDiceKeyDescriptor {
   savedOnDevice: boolean
 };
 
-export const PlatformSupportsSavingToDevice = RUNNING_IN_ELECTRON;
 
-interface StorageFormat {
-  keyIdToDiceKeyInHumanReadableForm: [string, DiceKeyInHumanReadableForm][];
-//  centerLetterAndDigitToKeyId: [string, string][];
-}
+const SynchronizedStorageFormat = new class {
+  synchronizedString = SynchronizedString.forKey('DiceKeyMemoryStore');
+  get json() { return this.synchronizedString.stringValue }
+  get storageFormat(): DiceKeyMemoryStoreStorageFormat {
+    const json = this.json;
+    return (json == null) ? {keyIdToDiceKeyInHumanReadableForm: []} :
+      JSON.parse(json) as DiceKeyMemoryStoreStorageFormat;
+  }
+  set storageFormat(value: DiceKeyMemoryStoreStorageFormat | undefined) {
+    // console.log(`set storageFormat("${value}")`);
+    this.synchronizedString.setStringValue(value == null ? value : jsonStringifyWithSortedFieldOrder(value))
+  }
+}();
+
+export const PlatformSupportsSavingToDevice = RUNNING_IN_ELECTRON;
 
 const msDelayBeforeStart = 250;
 const msToRotate = 2500;
@@ -67,31 +80,32 @@ class DiceKeyMemoryStoreClass {
     }
   }
 
-  toStorageFormat = (): StorageFormat => ({
+  toStorageFormat = (): DiceKeyMemoryStoreStorageFormat => ({
     keyIdToDiceKeyInHumanReadableForm: [...this.keyIdToDiceKeyInHumanReadableForm.entries()],
 //    centerLetterAndDigitToKeyId: [...this.centerLetterAndDigitToKeyId.entries()]
   });
   toStorageFormatJson = () => JSON.stringify(this.toStorageFormat())
 
   updateStorage = () => {
-    if (!RUNNING_IN_ELECTRON) {
+    if (RUNNING_IN_ELECTRON) {
+      // Broadcast to all windows main process
+      // console.log(`updateStorage()`);
+      SynchronizedStorageFormat.storageFormat = this.toStorageFormat();
+    } else {
+      // Running in the browser
       writeStringToEncryptedLocalStorageField(DiceKeyMemoryStoreClass.StorageFieldName, this.toStorageFormatJson());
     }
   }
 
-  onReadFromShortTermEncryptedStorage = action ( (s: StorageFormat) => {
-    this.keyIdToDiceKeyInHumanReadableForm = new ObservableMap(s.keyIdToDiceKeyInHumanReadableForm);
-    this.centerLetterAndDigitToKeyId = new ObservableMap(
+  updateFromSharedStorage = action ( (s: DiceKeyMemoryStoreStorageFormat) => {
+    this.keyIdToDiceKeyInHumanReadableForm.replace(s.keyIdToDiceKeyInHumanReadableForm);
+    this.centerLetterAndDigitToKeyId.replace(
       s.keyIdToDiceKeyInHumanReadableForm.map( ([keyId, diceKeyInHumanReadableForm]) =>
         ([DiceKeyWithoutKeyId.fromHumanReadableForm(diceKeyInHumanReadableForm).centerLetterAndDigit, keyId])
     ));
   });
 
-  /**
-   * Adds a DiceKey to the memory store, ensuring that it is rotated so that the middle face is upright.
-   * It returns the DiceKey with the middle face upright.
-   */
-  addDiceKeyWithKeyId = action ( (diceKey: DiceKeyWithKeyId, centerFaceOrientationWhenScanned?: FaceOrientationLetterTrbl): DiceKeyWithKeyId => {
+  addDiceKeyWithKeyIdWithoutUpdatingSharedStorage = action ( (diceKey: DiceKeyWithKeyId, centerFaceOrientationWhenScanned?: FaceOrientationLetterTrbl): DiceKeyWithKeyId => {
     const diceKeyWithCenterFaceUpright = diceKey.rotateToTurnCenterFaceUpright();
     if (this.diceKeyForKeyId(diceKeyWithCenterFaceUpright.keyId) == null) {
       this.keyIdToDiceKeyInHumanReadableForm.set(diceKeyWithCenterFaceUpright.keyId, diceKeyWithCenterFaceUpright.inHumanReadableForm);
@@ -106,9 +120,19 @@ class DiceKeyMemoryStoreClass {
         this.centerLetterAndDigitToKeyId.set(diceKeyWithCenterFaceUpright.centerLetterAndDigit, diceKeyWithCenterFaceUpright.keyId);
       }
     }
-    this.updateStorage();
     return diceKeyWithCenterFaceUpright;
   });
+
+  /**
+   * Adds a DiceKey to the memory store, ensuring that it is rotated so that the middle face is upright.
+   * It returns the DiceKey with the middle face upright.
+   */
+  addDiceKeyWithKeyId = (diceKey: DiceKeyWithKeyId, centerFaceOrientationWhenScanned?: FaceOrientationLetterTrbl): DiceKeyWithKeyId => {
+    const diceKeyWithCenterFaceUpright = this.addDiceKeyWithKeyIdWithoutUpdatingSharedStorage(diceKey, centerFaceOrientationWhenScanned);
+    // console.log(`addDiceKeyWithKeyId()`);
+    this.updateStorage();
+    return diceKeyWithCenterFaceUpright;
+  };
 
   private loadFromDeviceStorage = async (...params: Parameters<typeof EncryptedDiceKeyStore.load>) : Promise<DiceKeyWithKeyId | undefined> => {
     if (!RUNNING_IN_ELECTRON)  return;
@@ -168,6 +192,7 @@ class DiceKeyMemoryStoreClass {
     // console.log(`Remove all`);
     this.keyIdToDiceKeyInHumanReadableForm.clear();
     this.centerLetterAndDigitToKeyId.clear();
+    this.keyIdToCenterFaceOrientationWhenScanned.clear();
     this.updateStorage();
   });
 
@@ -233,16 +258,29 @@ class DiceKeyMemoryStoreClass {
   keyIdForCenterLetterAndDigit = (centerLetterAndDigit: string): string | undefined =>
     this.centerLetterAndDigitToKeyId.get(centerLetterAndDigit);
 
-  #initiateReadFromLocalStorage = async () => {
+  #fetchFromLocalStorageField = async (): Promise<DiceKeyMemoryStoreStorageFormat | undefined> => {
     try {
       const json = await readStringFromEncryptedLocalStorageField(DiceKeyMemoryStoreClass.StorageFieldName);
       if (json == null) {
         console.log("No DiceKeys in memory store");
       } else if (json) {
         // console.log(`DiceKeysMemoryStore json`, json);
-        const storageFormat = JSON.parse(json) as StorageFormat;
-        this.onReadFromShortTermEncryptedStorage(storageFormat);
-        // console.log(`Read ${storageFormat.keyIdToDiceKeyInHumanReadableForm.length} DiceKey(s) from memory`)
+        const storageFormat = JSON.parse(json) as DiceKeyMemoryStoreStorageFormat;
+        return storageFormat;
+      }
+    } catch {
+      console.log("Problem reading DiceKeys from memory store");
+    }
+    return;
+  }
+
+  #initiateReadFromLocalStorage = async () => {
+    try {
+      const storageFormat = RUNNING_IN_ELECTRON ?
+        SynchronizedStorageFormat.storageFormat :
+        await this.#fetchFromLocalStorageField();
+      if (storageFormat != null) {
+        this.updateFromSharedStorage(storageFormat);
       }
     } catch {
       console.log("Problem reading DiceKeys from memory store");
@@ -252,11 +290,13 @@ class DiceKeyMemoryStoreClass {
 
   constructor() {
     makeAutoObservable(this);
-    if (!RUNNING_IN_ELECTRON) {
-      // We don't need to save the DiceKeyStore in electron because there is only one window right now
-      // and there's no chance of a refresh.
-      this.#initiateReadFromLocalStorage();
+    this.#initiateReadFromLocalStorage();
+    if (RUNNING_IN_ELECTRON) {
+      autorun( () => {
+        this.updateFromSharedStorage( SynchronizedStorageFormat.storageFormat );
+      })
     }
+    
     AllAppWindowsAndTabsAreClosingEvent.on( () => {
       // Empty the store if all app windows are closing.
       this.removeAll();

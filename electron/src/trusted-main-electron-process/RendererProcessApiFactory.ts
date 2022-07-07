@@ -3,7 +3,8 @@ import * as ElectronBridge from "./ElectronBridge";
 import {
   implementIpcAsyncApiServerFn,
   implementIpcSyncApiClientFn,
-  implementIpcAsyncApiClientFn
+  implementIpcAsyncApiClientFnInRenderer,
+  implementIpcBroadcastReceiverServerFn,
 } from "./IpcApiFactory";
 import type {
   RendererToMainAsyncApi,
@@ -12,6 +13,7 @@ import type {
 } from "./ElectronBridge";
 
 export const implementMainToRendererAsyncFnInRendererProcess = implementIpcAsyncApiServerFn(ipcRenderer);
+export const implementMainToAllRenderersFnInRendererProcess = implementIpcBroadcastReceiverServerFn;
 
 export const implementRendererToMainSyncClientInRendererProcess = 
   <FN_NAME extends keyof ElectronBridge.RendererToMainSyncApi>(
@@ -23,12 +25,17 @@ export const implementRendererToMainAsyncClientInRendererProcess =
   <FN_NAME extends keyof ElectronBridge.RendererToMainAsyncApi>(
     fnName: FN_NAME
   ): ElectronBridge.RendererToMainAsyncApi[FN_NAME] =>
-    implementIpcAsyncApiClientFn()(fnName);
+  implementIpcAsyncApiClientFnInRenderer(fnName);
 
-export const implementMainToRendererAsyncApiServerInRendererProcess = (implementation: ElectronBridge.MainToRendererAsyncApi) => {
-  (Object.keys(implementation) as (keyof ElectronBridge.MainToRendererAsyncApi)[])
+export const implementMainToAllRenderersApi = (implementation: ElectronBridge.MainToAllRenderersApi) => {
+  (Object.keys(implementation) as (keyof ElectronBridge.MainToAllRenderersApi)[])
+    .forEach( (fnName) => implementMainToAllRenderersFnInRendererProcess(fnName, implementation[fnName]) );
+}
+
+export const implementMainToPrimaryRendererAsyncApiServerInRendererProcess = (implementation: ElectronBridge.MainToPrimaryRendererAsyncApi) => {
+  (Object.keys(implementation) as (keyof ElectronBridge.MainToPrimaryRendererAsyncApi)[])
     .forEach( (fnName) => implementMainToRendererAsyncFnInRendererProcess(fnName, implementation[fnName]) );
-  }
+}
 
   const pretendWeHaveUsedInputToMakeTypeScriptHappy = <T extends unknown[]>(..._args: T) => {}
 
@@ -49,7 +56,11 @@ export const implementMainToRendererAsyncApiServerInRendererProcess = (implement
   const rendererToMainSyncFunctionNames = [
 //    "getCommandLineArguments",
     "openExternal",
-    "writeResultToStdOutAndExit"
+    "setSynchronizedStringState",
+    "getSynchronizedStringState",
+    "writeResultToStdOutAndExit",
+//    "broadcastUpdateToDiceKeyMemoryStore",
+//    "getDiceKeyMemoryStore",
   ] as const;
   type RendererToMainSyncFunctionNames = (typeof rendererToMainSyncFunctionNames)[number];
   // Ensure we've enumerated all function names
