@@ -17,7 +17,7 @@ export interface PublicDiceKeyDescriptorWithSavedOnDevice extends PublicDiceKeyD
 };
 
 
-const SynchronizedStorageFormat = new class {
+const SynchronizedStorageFormat = RUNNING_IN_ELECTRON ? new class {
   synchronizedString = SynchronizedString.forKey('DiceKeyMemoryStore');
   get json() { return this.synchronizedString.stringValue }
   get storageFormat(): DiceKeyMemoryStoreStorageFormat {
@@ -29,7 +29,7 @@ const SynchronizedStorageFormat = new class {
     // console.log(`set storageFormat("${value}")`);
     this.synchronizedString.setStringValue(value == null ? value : jsonStringifyWithSortedFieldOrder(value))
   }
-}();
+}() : undefined;
 
 export const PlatformSupportsSavingToDevice = RUNNING_IN_ELECTRON;
 
@@ -90,7 +90,7 @@ class DiceKeyMemoryStoreClass {
     if (RUNNING_IN_ELECTRON) {
       // Broadcast to all windows main process
       // console.log(`updateStorage()`);
-      SynchronizedStorageFormat.storageFormat = this.toStorageFormat();
+      SynchronizedStorageFormat!.storageFormat = this.toStorageFormat();
     } else {
       // Running in the browser
       writeStringToEncryptedLocalStorageField(DiceKeyMemoryStoreClass.StorageFieldName, this.toStorageFormatJson());
@@ -277,7 +277,7 @@ class DiceKeyMemoryStoreClass {
   #initiateReadFromLocalStorage = async () => {
     try {
       const storageFormat = RUNNING_IN_ELECTRON ?
-        SynchronizedStorageFormat.storageFormat :
+        SynchronizedStorageFormat!.storageFormat :
         await this.#fetchFromLocalStorageField();
       if (storageFormat != null) {
         this.updateFromSharedStorage(storageFormat);
@@ -293,7 +293,7 @@ class DiceKeyMemoryStoreClass {
     this.#initiateReadFromLocalStorage();
     if (RUNNING_IN_ELECTRON) {
       autorun( () => {
-        this.updateFromSharedStorage( SynchronizedStorageFormat.storageFormat );
+        this.updateFromSharedStorage( SynchronizedStorageFormat!.storageFormat );
       })
     }
     
