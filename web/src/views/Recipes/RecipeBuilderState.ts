@@ -209,7 +209,7 @@ export class RecipeBuilderState {
     return false;// this.origin !== "Template";
   }
   get mayEditLengthInChars(): boolean { return this.type === "Password" }
-  lengthInCharsState = new NumericTextFieldState({minValue: 6, incrementBy: 4, defaultValue: 64, onChanged: action( (lengthInChars) => {
+  lengthInCharsState = new NumericTextFieldState({minValue: 8, incrementBy: 4, defaultValue: 64, onChanged: action( (lengthInChars) => {
     this.rawRecipeJson = addLengthInCharsToRecipeJson(this.rawRecipeJson, lengthInChars);
   })});
   get lengthInChars(): number | undefined { return this.lengthInCharsState.numericValue }
@@ -323,7 +323,7 @@ export class RecipeBuilderState {
   });
 
   rawRecipeJson: string | undefined;
-  get canonicalRecipeJson(): string | undefined { return canonicalizeRecipeJson(this.rawRecipeJson) };
+  get canonicalRecipeJson(): string | undefined { return canonicalizeRecipeJson(this.rawRecipeJson) }
 
   get recipe(): Recipe | undefined {
     try {
