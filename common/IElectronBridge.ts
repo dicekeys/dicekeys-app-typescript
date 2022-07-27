@@ -1,20 +1,3 @@
-import type {
-  OpenDialogOptions,
-  OpenDialogReturnValue,
-  MessageBoxOptions,
-  MessageBoxReturnValue,
-  SaveDialogOptions
-} from "electron";
-
-export {
-  OpenDialogOptions,
-  OpenDialogReturnValue,
-  MessageBoxOptions,
-  MessageBoxReturnValue,
-  SaveDialogOptions
-}
-
-
 /**
  * DiceKeys as 75 characters, with each element represented as a
  * three-character sequence of:

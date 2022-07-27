@@ -3,7 +3,7 @@
   "author": "DiceKeys, LLC",
   "productName": "DiceKeys",
   "description": "DiceKeys App",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "main": "electron-js/electron.js",
   "homepage": "https://dicekeys.com",
   "scripts": {
@@ -24,7 +24,7 @@
   "config": {
     "forge": "./forge.config.js"
   },
-  "build": "electron-builder.js",
+  "build": "electron-builder.js", 
   "devDependencies": {
     "@types/w3c-web-hid": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^5.27.0",

@@ -1,5 +1,4 @@
 import { app, shell } from "electron";
-//import { dialog } from "electron";
 import {
   implementRendererToMainSyncApiServerInMainProcess,
   implementRendererToMainAsyncApiServerInMainProcess,
@@ -37,12 +36,9 @@ const findAppUrl = (commandLineArgs: string[]): URL | undefined => {
 
 
 
-export class DiceKeysElectronApplication {
-  static #instance: DiceKeysElectronApplication | undefined;
-  static get instance() { return this.#instance; }
-  static createInstance = () => {
-    this.#instance ??= new DiceKeysElectronApplication();
-  };
+export const DiceKeysElectronApplication = new (class DiceKeysElectronApplication {
+  // eslint-disable-next-line @typescript-eslint/no-inferrable-types
+  #firstWindowOpened: boolean = false;
 
   storedDiceKeys: DiceKeyMemoryStoreStorageFormat = {keyIdToDiceKeyInHumanReadableForm: []};
 
@@ -53,43 +49,60 @@ export class DiceKeysElectronApplication {
   }
 
   constructor() {
-    BrowserWindows.mainWindow = BrowserWindows.createBrowserWindow("electron.html", findAppUrl(process.argv)?.search);
-
-    implementRendererToMainAsyncApiServerInMainProcess({
-      deleteDiceKeyFromCredentialStore,
-      getDiceKeyFromCredentialStore,
-      storeDiceKeyInCredentialStore,
-      saveUtf8File,
-      openLinkInBrowser,
-    });
-
-    implementRendererToMainSyncApiServerInMainProcess({
-      writeResultToStdOutAndExit,
-      "openExternal": (url: string) => shell.openExternal(url),
-      "setSynchronizedStringState": SynchronizedStringState.setSynchronizedStringForKey,
-      "getSynchronizedStringState": SynchronizedStringState.getSynchronizedStringForKey,
-    });
-
-    createMenu(mainToRendererAsyncClient);
-
     app.on("second-instance", this.onSecondInstance);
     app.on("window-all-closed", this.onWindowsAllClosed);
+    app.on("activate", () => {
+      // open new window on macOS
+      BrowserWindows.mainWindow = BrowserWindows.createBrowserWindow("electron.html", findAppUrl(process.argv)?.search);
+    });
+    app.on('open-url', this.onOsXOpenUrl );
 
-    // Protocol handler for osx
-    app.on('open-url', (event, url) => {
-      // console.log(`open-url`, event, url);
-      this.onOsXOpenUrl(event, url);
+    app.on('will-finish-launching', () => {
+      // dialog.showMessageBoxSync({message: `will-finish-launching`});
+      //     app.on('open-url', this.onOsXOpenUrl );
+    });
+
+    app.whenReady().then(() => {
+      if (!this.#firstWindowOpened) {
+        this.#firstWindowOpened = true;
+        BrowserWindows.mainWindow = BrowserWindows.createBrowserWindow("electron.html", findAppUrl(process.argv)?.search);
+      }
+
+      implementRendererToMainAsyncApiServerInMainProcess({
+        deleteDiceKeyFromCredentialStore,
+        getDiceKeyFromCredentialStore,
+        storeDiceKeyInCredentialStore,
+        saveUtf8File,
+        openLinkInBrowser,
+      });
+
+      implementRendererToMainSyncApiServerInMainProcess({
+        writeResultToStdOutAndExit,
+        "openExternal": (url: string) => shell.openExternal(url),
+        "setSynchronizedStringState": SynchronizedStringState.setSynchronizedStringForKey,
+        "getSynchronizedStringState": SynchronizedStringState.getSynchronizedStringForKey,
+      });
+
+      createMenu(mainToRendererAsyncClient);
     });
   }
 
-  onOsXOpenUrl(event: Electron.Event, urlString: string) {
-    event.preventDefault();
-    const url = findAppUrl([urlString]);
+  openUrl = async (url?: URL) => {
+    await app.whenReady();
     if (url != null) {
+      this.#firstWindowOpened = true;
       BrowserWindows.createBrowserWindow("electron.html", url.search);
     }
-    // this.appLinkHandler.processArgsForAppLink([urlString]);
   }
+
+  onOsXOpenUrl = async (event: Electron.Event, urlString: string) => {
+    const url = findAppUrl([urlString]);
+    if (url != null) {
+      event.preventDefault();
+      this.openUrl(findAppUrl([urlString]));
+    }
+    await app.whenReady();
+  };
 
   // Quit when all windows are closed, except on macOS. There, it's common
   // for applications and their menu bar to stay active until the user quits
@@ -117,13 +130,12 @@ export class DiceKeysElectronApplication {
     // dialog.showErrorBox(`second instance argv`, JSON.stringify(commandLineArgV, undefined, 2));
       const url = findAppUrl(commandLineArgV);
       if (url != null) {
-        BrowserWindows.createBrowserWindow("electron.html", url.search);
+        this.openUrl(url);
       } else {
         this.focusMainWindow();
       }
-    //this.appLinkHandler.processArgsForAppLink(commandLineArgV);
     } else {
       this.focusMainWindow();
     }
   };
-}
+})();

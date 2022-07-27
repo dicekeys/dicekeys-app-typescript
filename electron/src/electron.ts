@@ -8,6 +8,11 @@ import { aboutPanelOptions } from './trusted-main-electron-process/AboutPanelOpt
 // and seeds can be written to them.
 app.commandLine.appendSwitch('disable-hid-blocklist', "true");
 
+if (DiceKeysElectronApplication == null) {
+  // Forcing the use of the object ensures it loads.
+  throw `Failed to load DiceKeysElectronApplication`;
+}
+
 app.setAboutPanelOptions(aboutPanelOptions);
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -24,19 +29,20 @@ if (!app.requestSingleInstanceLock()) {
   // This method will be called when Electron has finished
   // initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
+
   app.whenReady().then(() => {
     app.setAsDefaultProtocolClient('dicekeys');
-    DiceKeysElectronApplication.createInstance();
   });
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     require('electron-reloader')(module , {
         ignore : ['src', 'packaging', 'out'],
         debug: false
     });
     console.log(`In development mode. Making windows reloadable.`)
     // The try/catch is needed so it doesn't throw Cannot find module 'electron-reloader' in production.
-  } catch {}
+  } catch {/**/}
 
   // app.on("activate", function () {
   //     // On macOS it's common to re-create a window in the app when the
