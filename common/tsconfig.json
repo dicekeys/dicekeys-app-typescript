@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
-      "target": "esnext",
-      "module": "esnext",
-      "moduleResolution": "node",
-      "declaration": true,
-      "declarationMap": true,
-      "outDir": "../dist/common",
-      "composite": true
+    "types": ["node"],
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "../dist/common",
+    "composite": true
   }
 }
