@@ -14,7 +14,7 @@ import { jsonStringifyWithSortedFieldOrder } from "../../utilities/json";
 
 export interface PublicDiceKeyDescriptorWithSavedOnDevice extends PublicDiceKeyDescriptor {
   savedOnDevice: boolean
-};
+}
 
 
 const SynchronizedStorageFormat = RUNNING_IN_ELECTRON ? new class {

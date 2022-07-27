@@ -24,7 +24,7 @@
   "config": {
     "forge": "./forge.config.js"
   },
-  "build": "electron-builder.js",
+  "build": "electron-builder.js", 
   "devDependencies": {
     "@types/w3c-web-hid": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
