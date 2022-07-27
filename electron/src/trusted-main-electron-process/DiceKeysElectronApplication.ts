@@ -17,7 +17,6 @@ import {
 import { saveUtf8File } from "./SaveAndLoad";
 import { DiceKeyMemoryStoreStorageFormat } from "../../../common/IElectronBridge";
 import { SynchronizedStringState } from "./SynchronizedStringState";
-//import { electronBridgeConstants } from "./ElectronBridgeConstants";
 
 const openLinkInBrowser = async (url: string) => {
   await shell.openExternal(url);
@@ -52,7 +51,7 @@ export const DiceKeysElectronApplication = new (class DiceKeysElectronApplicatio
   constructor() {
     app.on("second-instance", this.onSecondInstance);
     app.on("window-all-closed", this.onWindowsAllClosed);
-    app.on("activate", (event) => {
+    app.on("activate", () => {
       // open new window on macOS
       BrowserWindows.mainWindow = BrowserWindows.createBrowserWindow("electron.html", findAppUrl(process.argv)?.search);
     });
