@@ -30,7 +30,6 @@ if (!app.requestSingleInstanceLock()) {
   // initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
 
-  // FIXME HERE BUG-- calling this only whenReady is after first open-url event and prevents!
   app.whenReady().then(() => {
     app.setAsDefaultProtocolClient('dicekeys');
   });
