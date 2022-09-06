@@ -200,7 +200,8 @@ export class RecipeBuilderState {
   sequenceNumberState = new NumericTextFieldState({minValue: 2, incrementBy: 1, defaultValue: undefined, onChanged: (sequenceNumber) => {
     this.rawRecipeJson = addSequenceNumberToRecipeJson(this.rawRecipeJson, sequenceNumber);
   }});
-  get sequenceNumber(): number | undefined { return this.sequenceNumberState.numericValue } 
+  get sequenceNumber(): number | undefined { return this.sequenceNumberState.numericValue }
+  get sequenceNumberOrDefault(): number { return this.sequenceNumberState.numericValue ?? 1 }
 
   /////////////////////////////////////////////////////////////
   // LengthInChars field ("lengthInChars") for Passwords only

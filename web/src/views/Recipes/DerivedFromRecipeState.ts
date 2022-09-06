@@ -96,6 +96,11 @@ export class DerivedFromRecipeState {
   });
   setOutputFieldTo = (value: OutputFormat<DerivationRecipeType>) => () => this.setOutputField(value);
 
+  showQrCode: boolean = false;
+  setShowQrCode = action( (showQrCode: boolean) => this.showQrCode = showQrCode);
+  setShowQrCodeOn = () => this.setShowQrCode(true);
+  setShowQrCodeOff = () => this.setShowQrCode(false);
+
   get secretTypeAndOutputType(): SecretTypeAndOutputType | undefined {
     const {type} = this.recipeState;
     if (type == null) return;
@@ -116,7 +121,7 @@ export class DerivedFromRecipeState {
     const {type, recipeJson, recipeIsValid} = recipeState;
     if (type !== "Secret" || recipeIsValid !== true || recipeJson == null) return;
     return api?.getSecretHexForRecipe(recipeJson);
-  };
+  }
 
   get derivedValue(): string | undefined {
     const {recipeState, api} = this;
@@ -204,5 +209,5 @@ export class DerivedFromRecipeState {
               return doubleSpaceJson(api?.getSigningKeyJsonForRecipe(recipeJson));
           }
       }
-  };
+  }
 }
