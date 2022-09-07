@@ -5,7 +5,6 @@ import { Observer } from "mobx-react";
 import { ModalOverlayBetweenTopNavigationBarAndBottomIconBar } from "../../views/Navigation/NavigationLayout";
 import { ButtonRow, PushButton } from "../../css/Button";
 
-
 export const QrCodeToSvgStringPromise = (content: string, options: QRCode.QRCodeToStringOptions={}) =>
   new Promise<string>( (resolve, reject) =>
     QRCode.toString(

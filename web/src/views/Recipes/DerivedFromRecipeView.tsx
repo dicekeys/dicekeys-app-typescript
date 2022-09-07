@@ -12,6 +12,7 @@ import { electronBridge } from "../../state/core/ElectronBridge";
 import { defaultOnException } from "../../utilities/default-on-exception";
 import { Recipe } from "@dicekeys/dicekeys-api-js";
 import { QrCodeSvgOverlayView } from "./QrCodeOverlay";
+import QrCodeSvg from "../../images/QrCode.svg";
 
 const Bip39Field = styled.div`
   display: flex;
@@ -185,7 +186,7 @@ export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputT
             <CharButton
                 invisible={derivedValue == null || type == null}
                 onClick={state.setShowQrCodeOn}
-              >QR<CharButtonToolTip>Display {(outputFormat ?? "").toLocaleLowerCase()} as QR code</CharButtonToolTip>
+              ><img src={QrCodeSvg} style={{height: `1rem`}}></img><CharButtonToolTip>Display {(outputFormat ?? "").toLocaleLowerCase()} as QR code</CharButtonToolTip>
             </CharButton>
             <SecretFieldsCommonObscureButton />
             { (RUNNING_IN_ELECTRON && fileName != null) ? (
