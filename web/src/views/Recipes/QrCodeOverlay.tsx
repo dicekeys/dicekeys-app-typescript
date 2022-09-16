@@ -4,6 +4,7 @@ import { MobxObservedPromise } from "../../utilities/MobxObservedPromise";
 import { Observer } from "mobx-react";
 import { ModalOverlayBetweenTopNavigationBarAndBottomIconBar } from "../../views/Navigation/NavigationLayout";
 import { ButtonRow, PushButton } from "../../css/Button";
+import styled from "styled-components"
 
 export const QrCodeToSvgStringPromise = (content: string, options: QRCode.QRCodeToStringOptions={}) =>
   new Promise<string>( (resolve, reject) =>
@@ -27,6 +28,20 @@ export const QrCodeToSvgStringPromise = (content: string, options: QRCode.QRCode
 export const QrCodeToSvgStringMobxObservedPromise = (content: string, options?: QRCode.QRCodeToStringOptions) =>
   new MobxObservedPromise(QrCodeToSvgStringPromise(content, options));
 
+const QrContainerDiv = styled.div`
+  margin-top: 1rem;
+`
+
+const QrTextContentsDiv = styled.div`
+  font-family: monospace;
+  font-size: 0.8rem;
+  max-width: 80vw;
+  word-wrap: normal;
+  white-space: pre-wrap;
+  margin-bottom: 1rem;
+  font-weight: bold;
+`;
+
 export const QrCodeSvgOverlayView = ({content, qrCodeOptions, close}: {
   content: string,
   qrCodeOptions?: QRCode.QRCodeToStringOptions,
@@ -36,7 +51,8 @@ export const QrCodeSvgOverlayView = ({content, qrCodeOptions, close}: {
   return (
     <Observer>{ () => s.fulfilled ? (
       <ModalOverlayBetweenTopNavigationBarAndBottomIconBar>
-        <div dangerouslySetInnerHTML={{__html: s.result ?? ""}}></div>
+        <QrContainerDiv dangerouslySetInnerHTML={{__html: s.result ?? ""}}></QrContainerDiv>
+        <QrTextContentsDiv>{ content }</QrTextContentsDiv>
         <ButtonRow><PushButton onClick={close}>Close</PushButton></ButtonRow>
       </ModalOverlayBetweenTopNavigationBarAndBottomIconBar>
     ) : null }
