@@ -12,11 +12,12 @@ const spaceJson = (spaces: number = 2) => (json: string | undefined): string | u
 }
 const doubleSpaceJson = spaceJson(2);
 
+const BIP39 = "BIP39" as const;
 const OpenPGP_Private_Key = "OpenPGP Private Key" as const;
 const OpenSSH_Private_Key = "OpenSSH Private Key" as const;
 export const OutputFormats = {
   "Password": ["Password", "JSON"],
-  "Secret": ["JSON", "Hex", "BIP39"],
+  "Secret": ["JSON", "Hex", BIP39],
   "SigningKey": [
     "JSON",
     OpenPGP_Private_Key,
@@ -86,6 +87,12 @@ export class DerivedFromRecipeState {
     if (t === "SigningKey" && purposeLowerCase?.includes("ssh")) {
       return OpenSSH_Private_Key;
     }
+
+    // If this is a crypto wallet secret, default to BIP39 format
+    if (t === "Secret" && purposeLowerCase === "wallet") {
+      return BIP39;
+    }
+    // Otherwise, use the default from the table
     return DefaultOutputFormat[t];
   };
   setOutputField = action ( (value: OutputFormat<DerivationRecipeType>) => {
@@ -142,7 +149,7 @@ export class DerivedFromRecipeState {
           }
         case "Secret":
           switch (this.outputFieldFor("Secret")) {
-            case "BIP39":
+            case BIP39:
               return api?.getSecretBip39ForRecipe(recipeJson);
             case "Hex":
               return api?.getSecretHexForRecipe(recipeJson);

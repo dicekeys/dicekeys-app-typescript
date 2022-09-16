@@ -58,6 +58,7 @@ export const BuiltInRecipes: StoredRecipe[] = [
 	new BuiltInRecipe("Password", "Microsoft", `{"allow":[{"host":"*.microsoft.com"},{"host":"*.live.com"}]}`),
 	new BuiltInRecipe("SigningKey", "SSH", `{"purpose":"ssh"}`),
 	new BuiltInRecipe("SigningKey", "PGP", `{"purpose":"pgp"}`),
+	new BuiltInRecipe("Secret", "Cryptocurrency wallet seed", `{"purpose":"wallet"}`),
 ];
 
 
@@ -140,6 +141,18 @@ export const recipeDefaultBaseName = (recipe: Recipe): string | undefined =>
 export const enhancedRecipeName = (recipe: Recipe, type: DerivationRecipeType, baseName?: string): string | undefined => {
   const base = (baseName != null && baseName.length > 0) ? baseName : recipeDefaultBaseName(recipe);
   if (base == null) return;
+  const baseNameLc = baseName?.toLocaleLowerCase() ?? "";
+  // Dont add a suffix if...
+  if (
+    // The name of a secret already contains the word "secret" or "seed".
+    (type==="Secret" && (baseNameLc.indexOf("seed") >= 0) || baseNameLc.indexOf("secret") >= 0) ||
+    // The name of a password already contains the word "password".
+    (type==="Password" && (baseNameLc.indexOf("password") >= 0)) ||
+    // The name of a key already contains the word "key".
+    ((type==="SigningKey" || type==="SymmetricKey" || type==="UnsealingKey") && (baseNameLc.indexOf("key") >= 0))
+  ) {
+    return base;
+  }
   return `${base}${getRecipeNameSuffix(recipe, type)}`;
 }
 
