@@ -11,7 +11,7 @@ import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { electronBridge } from "../../state/core/ElectronBridge";
 import { defaultOnException } from "../../utilities/default-on-exception";
 import { Recipe } from "@dicekeys/dicekeys-api-js";
-import { QrCodeSvgOverlayView } from "./QrCodeOverlay";
+import { QrCodeOverlayState, QrCodeOverlayView } from "./QrCodeOverlay";
 import QrCodeSvg from "../../images/QrCode.svg";
 
 const Bip39Field = styled.div`
@@ -172,7 +172,7 @@ export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputT
   return (
     <>
       { derivedValue != null && state.showQrCode ? (
-        <QrCodeSvgOverlayView content={derivedValue} close={state.setShowQrCodeOff} />
+        <QrCodeOverlayView state={new QrCodeOverlayState(state.setShowQrCodeOff, derivedValue)} />
       ) : null }
       <DerivedValueHeaderDiv>
         { allowUserToChangeOutputType ? (<SelectDerivedOutputType state={state} />) : null }
