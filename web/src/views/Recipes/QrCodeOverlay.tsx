@@ -106,21 +106,30 @@ export const QrCodeReaderTypeDialogView = observer (({state}: {
   </div>
 ));
 
+const WarningDiv = styled.div`
+  background-color: yellow;
+  padding: 2rem;
+`
+
 export const QrCodeReaderWarningForIosView = observer (({state}: {
   state: QrCodeOverlayState,
 }) => (
-  <div>
-    <h3>Be careful: iPhone and iPads can leak to contents of QR codes</h3>
+  <WarningDiv>
+    <h2>Caution: iPhone and iPads can leak secrets from QR codes</h2>
 
-    <Instruction2>If you click on the contents, iOS will launch a web search,
-      sending the secret in your QR code over the Internet to your search engine.
+    <Instruction2>Clicking on the notification that appears when the camera has scanned your QR code
+      will start a web search.
+      The web search sends your secrets to your search engine over the Internet.
+      Your search engine will likely store them.
     </Instruction2>
-    <Instruction2>To prevent this, once your QR code is scanned you will need to very carefully
-      swipe your finger downward to cause iOS to expose the the copy option instead of searching.
+    <Instruction2>To prevent your secrets from being exposed,
+      swipe the notification downward to the bottom of the screen to 
+      expose the copy option.
+      This option copies the secret to the clipboard on your device.
     </Instruction2>
      
-    <ButtonRow><PushButton onClick={state.setWarningDismissed}>I'll be careful</PushButton></ButtonRow>
-  </div>
+    <ButtonRow><PushButton onClick={state.setWarningDismissed}>Got it. I'll be careful</PushButton></ButtonRow>
+  </WarningDiv>
 ));
 
 export const QrCodeOverlayView = observer( ({state}: {
