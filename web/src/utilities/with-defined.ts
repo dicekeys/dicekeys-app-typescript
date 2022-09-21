@@ -7,7 +7,7 @@ export const withDefined = <T, R>(value: T | undefined, callback: (value: T) => 
 
 export const withNonNull = <T, R>(value: T | undefined, callback: (value: NonNullable<T>) => R): R | undefined => {
   if (value != null) {
-    return callback(value as Exclude<T, null | undefined>);
+    return callback(value as NonNullable<T>);
   }
   return;
 }

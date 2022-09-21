@@ -8,10 +8,10 @@ const deepCanonicalizeObjectFieldOrder = <T>(item: T): T =>
         (result, item) => {
           result.push( deepCanonicalizeObjectFieldOrder(item ) );
           return result;
-        }, new Array() as typeof item
+        }, [] as typeof item
       )
     :
-  (typeof(item) === "object" && !(item instanceof Date)) ?
+  (typeof(item) === "object" && item != null && !(item instanceof Date)) ?
       // Copy the object entry by entry...
       Object.entries(item)
       // re-ordering keys in string sort order...
