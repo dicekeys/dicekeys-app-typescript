@@ -11,6 +11,8 @@ import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { electronBridge } from "../../state/core/ElectronBridge";
 import { defaultOnException } from "../../utilities/default-on-exception";
 import { Recipe } from "@dicekeys/dicekeys-api-js";
+import { QrCodeOverlayState, QrCodeOverlayView } from "./QrCodeOverlay";
+import QrCodeSvg from "../../images/QrCode.svg";
 
 const Bip39Field = styled.div`
   display: flex;
@@ -169,6 +171,9 @@ export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputT
   const fileName = recipeStateToFileName(state);
   return (
     <>
+      { derivedValue != null && state.showQrCode ? (
+        <QrCodeOverlayView state={new QrCodeOverlayState(state.setShowQrCodeOff, derivedValue)} />
+      ) : null }
       <DerivedValueHeaderDiv>
         { allowUserToChangeOutputType ? (<SelectDerivedOutputType state={state} />) : null }
         { type == null || derivedValue == null ? null : (
@@ -177,6 +182,11 @@ export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputT
                 invisible={derivedValue == null || type == null}
                 onClick={() => copyToClipboard(derivedValue)}
               >&#128203;<CharButtonToolTip>Copy {(outputFormat ?? "").toLocaleLowerCase()} to clipboard</CharButtonToolTip>
+            </CharButton>
+            <CharButton
+                invisible={derivedValue == null || type == null}
+                onClick={state.setShowQrCodeOn}
+              ><img src={QrCodeSvg} style={{height: `1rem`}}></img><CharButtonToolTip>Display {(outputFormat ?? "").toLocaleLowerCase()} as QR code</CharButtonToolTip>
             </CharButton>
             <SecretFieldsCommonObscureButton />
             { (RUNNING_IN_ELECTRON && fileName != null) ? (

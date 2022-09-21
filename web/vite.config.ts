@@ -33,5 +33,7 @@ export default defineConfig({
         main: resolve(__dirname, './src/index.html'),
       }
     },
+  },  server: {
+    port: 3000
   }
 })

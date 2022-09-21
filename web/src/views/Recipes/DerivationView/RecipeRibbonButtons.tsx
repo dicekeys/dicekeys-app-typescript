@@ -67,14 +67,14 @@ export const EditButtonHoverTextView = ({
               (<>Delete from saved recipe list.</>) :
               (<>Save this recipe locally.</>)
             case "Increment":
-              return recipeBuilderState.sequenceNumber! > 1 ?
+              return recipeBuilderState.sequenceNumberOrDefault > 1 ?
                 (<>Increment the sequence number to change the {recipeBuilderState.typeNameLc}.</>):
                 (<>Add a sequence number to create a different {recipeBuilderState.typeNameLc}
                     <RecipePurposeContentView recipe={recipeBuilderState.recipe} />.</>);
             case "Decrement":
-              return recipeBuilderState.sequenceNumber! > 2 ?
+              return recipeBuilderState.sequenceNumberOrDefault > 2 ?
                 (<>Decrement the sequence number</>) :
-                recipeBuilderState.sequenceNumber! == 2 ?
+                recipeBuilderState.sequenceNumberOrDefault == 2 ?
                   (<>Remove the sequence number.</>) :
                   (<>&nbsp;</>);
             case "EditFields":
