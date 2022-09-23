@@ -15,7 +15,7 @@ import {
   writeResultToStdOutAndExit
 } from "./CommandLineApi";
 import { saveUtf8File } from "./SaveAndLoad";
-import { DiceKeyMemoryStoreStorageFormat } from "../../../common/IElectronBridge";
+import type { DiceKeyMemoryStoreStorageFormat } from "../../../common/IElectronBridge";
 import { SynchronizedStringState } from "./SynchronizedStringState";
 
 const openLinkInBrowser = async (url: string) => {
