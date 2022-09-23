@@ -23,6 +23,11 @@ export const BrowserWindows = new (class BrowserWindows {
       height: 600,
       webPreferences: {
         spellcheck: false,
+        // Technically, we don't need node integration and this is slightly dangerous.
+        // In practice, if we turn this off we'd have to compile the preload script so that modules wouldn't
+        // have to resolve, which would add more dependencies, and reduce security in other ways.
+        // For now, we do this.  Stuart 2022-09-23
+        nodeIntegration: true,
         preload: path.resolve(app.getAppPath(), "electron-js", "preload.js")
       },
       width: 800,
