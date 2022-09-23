@@ -2,12 +2,12 @@ export type OperatingSystemName =
   "Android" | "ChromeOS" | "iOS" | "MacOS" | "Windows" | "Linux";
 
 export type AppStoreName =
-  "Microsoft" | "Apple" | "GooglePlay"
+  "Microsoft" | "Apple" | "GooglePlay" | "MacElectron"
 
 const PlatformOsPrefixPairs: [OperatingSystemName, AppStoreName | undefined, string][] = [
   ["Windows", "Microsoft", "Win"],
   ["Android", "GooglePlay", "Android"],
-  ["MacOS", "Apple", "Mac"],
+  ["MacOS", "MacElectron", "Mac"],
   ["iOS", "Apple", "iP"], // iPhone, iPad
 ]
 
@@ -15,7 +15,7 @@ const UserAgentOsRegExpPairs: [OperatingSystemName, AppStoreName | undefined, Re
   ["Windows", "Microsoft", /(Windows*|Windows*)/],
   ["Android", "GooglePlay", /Android/],
   ["iOS", "Apple", /(iPhone|iPad|iPod)/],
-  ["MacOS", "Apple", /(Mac OS|MacIntel)/],
+  ["MacOS", "MacElectron", /(Mac OS|MacIntel)/],
   ["ChromeOS", "GooglePlay", /CrOS/],
   // Always place Linux at the end of the list
   // as other operating ystems (ChromeOS) are built
@@ -30,11 +30,11 @@ const navigatorUserAgent = navigator.userAgent;
 
 const OperatingSystemNameAndAppStoreNamePair  =
   PlatformOsPrefixPairs.find(
-    ([_osName, _appStoreName, prefix]) => navigatorPlatformName.startsWith(prefix)
+    ([/*osName*/, /*appStoreName*/, prefix]) => navigatorPlatformName.startsWith(prefix)
   ) ??
   // Test for match in navigatorUserAgent
   UserAgentOsRegExpPairs.find(
-    ([_osName, _appStoreName,regExp]) => regExp.test(navigatorUserAgent)
+    ([/*osName*/, /*appStoreName*/, regExp]) => regExp.test(navigatorUserAgent)
   ) ??
   [];
 

@@ -64,7 +64,7 @@ export const PageTopNotificationBarContent = styled.div`
 const NudgeTitle = styled.h2`
 `;
 
-export const MicrosoftWindowsNudgeCotent = () => (
+export const MicrosoftWindowsNudgeContent = () => (
   <>
     <NudgeTitle>
       Install DiceKeys for Windows?
@@ -87,6 +87,19 @@ export const AppleStoreNudgeContent = () => (
       { OperatingSystemName !== "iOS" ? (
         <li>Seed SoloKeys with a master secret from your DiceKey.</li>
       ) : null}
+      <li>Just like our web-based app, it is open source and has no advertising or trackers.</li>
+    </ul>
+  </>
+);
+
+export const MacOSInstallNudgeContent = () => (
+  <>
+    <NudgeTitle>
+      Install DiceKeys for MacOS?
+    </NudgeTitle>
+    <ul>
+      <li>Save DiceKeys on your Mac.</li>
+      <li>Seed SoloKeys with a master secret from your DiceKey.</li>
       <li>Just like our web-based app, it is open source and has no advertising or trackers.</li>
     </ul>
   </>
@@ -118,7 +131,8 @@ export const AppStoreInstallNudgeView = observer( ( {
         <PageTopNotificationBarContent>{
             AppStoreName === "Apple" ? (<AppleStoreNudgeContent/>) :
             AppStoreName === "GooglePlay" ? (<GooglePlayStoreNudgeContent/>) :
-            AppStoreName === "Microsoft" ? (<MicrosoftWindowsNudgeCotent/>) :
+            AppStoreName === "Microsoft" ? (<MicrosoftWindowsNudgeContent/>) :
+            AppStoreName === "MacElectron" ? (<MacOSInstallNudgeContent/>) :            
             null
         }
         <ButtonRow>
