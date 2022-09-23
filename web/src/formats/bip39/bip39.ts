@@ -15,7 +15,7 @@ const invertedEnglish: Record<string, number> = english.reduce( (result, word, i
 const convertArrayBitWidth= (srcBits: number, dstBits: number) => (source: number[]): number[] => {
 	let bitsLeftInDestNumber = 0;
 	let bitsLeftInSourceNumber = 0;
-	let srcNumbersLeft = [...source];
+	const srcNumbersLeft = [...source];
 	let srcNumber: number = 0;
 	const destNumbers: number[] = [];
 	while (true) {
@@ -59,6 +59,7 @@ const toBip39Array = async (data32Bytes: Uint8ClampedArray): Promise<string[]> =
 	}
 	const checksum = new Uint8ClampedArray((await crypto.subtle.digest('SHA-256', data32Bytes)).slice(0, 1) );
 	const wordIndexes = convertArrayOf8BitNumbersTo11BitNumbers([...data32Bytes, ...checksum]);
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 	const bip39Array = wordIndexes.map( i => english[i]! );
 	return bip39Array;
 }
