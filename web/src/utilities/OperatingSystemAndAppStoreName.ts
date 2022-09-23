@@ -18,7 +18,7 @@ const UserAgentOsRegExpPairs: [OperatingSystemName, AppStoreName | undefined, Re
   ["MacOS", "MacElectron", /(Mac OS|MacIntel)/],
   ["ChromeOS", "GooglePlay", /CrOS/],
   // Always place Linux at the end of the list
-  // as other operating ystems (ChromeOS) are built
+  // as other operating systems (ChromeOS) are built
   // on top of it.
   ["Linux", undefined, /(Linux|X11)/],
   // no app store, so no reason to detect 

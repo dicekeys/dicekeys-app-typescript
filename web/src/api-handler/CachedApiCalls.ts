@@ -24,6 +24,7 @@ const deferCalculation = <T>(fn: () => Promise<T>) => {
         e => reject(e)
       );
   });
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return {promise, trigger: trigger!};
 }
 

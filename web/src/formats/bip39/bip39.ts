@@ -1,4 +1,5 @@
 import { FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { _ } from "core-js";
 import { makeAutoObservable, runInAction } from "mobx";
 import { DiceKey, DiceKeyFaces, DiceKeyWithKeyId, Face } from "../../dicekeys/DiceKey";
@@ -15,7 +16,7 @@ const invertedEnglish: Record<string, number> = english.reduce( (result, word, i
 const convertArrayBitWidth= (srcBits: number, dstBits: number) => (source: number[]): number[] => {
 	let bitsLeftInDestNumber = 0;
 	let bitsLeftInSourceNumber = 0;
-	let srcNumbersLeft = [...source];
+	const srcNumbersLeft = [...source];
 	let srcNumber: number = 0;
 	const destNumbers: number[] = [];
 	while (true) {
@@ -23,7 +24,7 @@ const convertArrayBitWidth= (srcBits: number, dstBits: number) => (source: numbe
 			if (srcNumbersLeft.length == 0) {
 				return destNumbers;
 			}
-			srcNumber = srcNumbersLeft.shift()!;
+			srcNumber = srcNumbersLeft.shift() ?? 0;
 			bitsLeftInSourceNumber = srcBits;
 		}
 		if (bitsLeftInDestNumber <= 0) {
@@ -59,6 +60,7 @@ const toBip39Array = async (data32Bytes: Uint8ClampedArray): Promise<string[]> =
 	}
 	const checksum = new Uint8ClampedArray((await crypto.subtle.digest('SHA-256', data32Bytes)).slice(0, 1) );
 	const wordIndexes = convertArrayOf8BitNumbersTo11BitNumbers([...data32Bytes, ...checksum]);
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 	const bip39Array = wordIndexes.map( i => english[i]! );
 	return bip39Array;
 }

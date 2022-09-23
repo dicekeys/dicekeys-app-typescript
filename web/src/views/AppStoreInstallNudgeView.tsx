@@ -22,7 +22,7 @@ export const PageTopNotificationBarContainer = styled.div`
   /* Move in front of main content */
   z-index: 1;
 
-  /* User colors thate emulate common browser chrome */
+  /* User colors that emulate common browser chrome */
   border-color: #a0a0a0;
   /* background-color: #f9ed95; */
   background-color: rgba(248,248,248,0.95);
@@ -40,7 +40,7 @@ export const PageTopNotificationBarContainer = styled.div`
   margin: 0;
   border-top: 0px;
 
-  /* Pad so that while the background touches the top, the actual notificaiton content
+  /* Pad so that while the background touches the top, the actual notification content
      isn't squished up against the edges
   */
   padding: calc(${horizontalPaddingFormula});
