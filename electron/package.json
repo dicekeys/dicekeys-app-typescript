@@ -24,13 +24,13 @@
   "config": {
     "forge": "./forge.config.js"
   },
-  "build": "electron-builder.js", 
+  "build": "electron-builder.js",
   "devDependencies": {
     "@types/w3c-web-hid": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
-    "electron": "^19.0.2",
-    "electron-builder": "^23.0.3",
+    "electron": "^20.2.0",
+    "electron-builder": "^23.3.3",
     "electron-builder-squirrel-windows": "^23.1.0",
     "electron-reloader": "^1.2.3",
     "eslint": "^8.16.0",
