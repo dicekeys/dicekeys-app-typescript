@@ -117,7 +117,7 @@ export class CachedApiCalls {
 
   getSecretBip39ForRecipe = (recipe: string) : string | undefined => {
     const secret = this.getSecretBytesForRecipe(recipe);
-    if (secret == null) return;
+    if (secret == null || secret.length != 32) return;
     return Bip39Calculation.get( uint8ClampedArrayToHexString(secret), () => toBip39(secret) );
   }
 

@@ -89,9 +89,12 @@ const SelectDerivedOutputType = observer( ({state}: {state: DerivedFromRecipeSta
       { type == null ? (
           <option value="NullType" disabled={true}>format</option>
         ) : 
-          OutputFormats[type].map( (format: string) => (
-            <option key={format} value={format}>{format}</option>
-          ))  
+          OutputFormats[type].map( (format: string) =>
+            // Skip BIP39 if secret length isn't 32 bytes
+            (format === "BIP39" && state.derivedSeedBytesHex?.length != 64) ? null :
+            (
+              <option key={format} value={format}>{format}</option>
+            ))  
       }
     </SelectOutputType>
     )}
