@@ -2,7 +2,7 @@
   "name": "dicekeys-webapp",
   "author": "DiceKeys, LLC",
   "description": "DiceKeys App",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dicekeys/dicekeys-webapp.git"
