@@ -32,12 +32,13 @@ module.exports = {
         // compile time eg. com.apple.application-identifier
         "entitlements": "./packaging/entitlements.mac.plist",
         "entitlementsInherit": "./packaging/entitlements.mac.plist",
-        "provisioningProfile": "./DiceKeys_Electron.provisionprofile",
+        "provisioningProfile": "./DiceKeys_For_Distribution_Outside_App_Store.provisionprofile",
         "gatekeeperAssess": false,
         // TODO - set to true when adding support for dark mode in
         // https://github.com/dicekeys/dicekeys-app-typescript/issues/218
         "darkModeSupport": false,
     },
+    afterSign: "scripts/notarize.js",
     "directories": {
         "output": "out"
     },
