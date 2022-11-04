@@ -11,7 +11,7 @@ export const SynchronizedStringState = new class {
   getSynchronizedStringForKey: getSynchronizedStringForKey =
     (key: string) => {
       const value = this.keyToSynchronizedString.get(key);
-      console.log(`Fetched '${key}' as`, value);
+      //console.log(`Fetched '${key}' as`, value);
       return value;
     }
 
@@ -19,7 +19,7 @@ export const SynchronizedStringState = new class {
     (key, newValue) => {
     const currentValue = this.keyToSynchronizedString.get(key);
     if (newValue === currentValue) return;
-    console.log(`Setting '${key}' to`, newValue);
+    //console.log(`Setting '${key}' to`, newValue);
     if (newValue == null) {
       this.keyToSynchronizedString.delete(key);
     } else {
