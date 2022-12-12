@@ -12,6 +12,8 @@ import { FaceDigit, FaceLetter, FaceOrientationLetterTrbl, FaceOrientationLetter
 export class EnterDiceKeyState {
   currentFaceIndex: number = 0;
 
+  usedLetters: string = "";
+
   get isValid(): boolean {
     return validateDiceKey(this.partialDiceKey)!!;
   }
@@ -37,9 +39,14 @@ export class EnterDiceKeyState {
 
   keyDownListener = action((event: KeyboardEvent) => {
     const upperKey = event.key.toUpperCase();
-    if (FaceLetter.isValid(upperKey)) {
+    if (FaceLetter.isValid(upperKey) && !this.usedLetters.includes(upperKey)) {
       if (this.currentFace.letter != null && this.currentFace.digit != null && this.nextFace.letter == null) {
         this.currentFaceIndex = this.nextFaceIndex;
+      }
+      if (this.currentFace.letter != null) {
+        this.usedLetters.replace(this.currentFace.letter, upperKey);
+      } else {
+        this.usedLetters += upperKey;
       }
       this.currentFace.letter = upperKey;
     } else if (FaceDigit.isValid(upperKey)) {
