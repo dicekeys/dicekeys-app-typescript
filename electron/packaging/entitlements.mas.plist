@@ -2,6 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
+    <!-- required for app store -->
+  	<key>com.apple.security.app-sandbox</key>
+  	<true/>
+    <!-- See https://jondot.medium.com/shipping-electron-apps-to-mac-app-store-with-electron-builder-e960d46148ec -->
+    <key>com.apple.security.application-groups</key>
+    <string>CTDV6HX5KK.com.dicekeys</string>
+    <key>com.apple.security.files.user-selected.read-only</key>
+    <true/>
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
     <!-- Required by Electron -->
     <key>com.apple.security.cs.allow-jit</key>
     <true/>
@@ -9,19 +19,19 @@
     <true/>
     <key>com.apple.security.cs.debugger</key>
     <true/>
-    <key>keychain-access-groups</key>
-    <array>
-        <string>CTDV6HX5KK.com.dicekeys</string>
-    </array>
-    <!-- Unclear if this is needed: https://github.com/electron-userland/electron-builder/issues/3940 -->
-    <!-- <key>com.apple.security.cs.allow-dyld-environment-variables</key>
-    <true/> -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+    <true/>
+    <!-- Stuart not entirely sure this is necessary -->
     <key>com.apple.security.cs.disable-library-validation</key>
     <true/>
 
     <!-- Associated Domains requires also com.apple.application-identifier to be set to the configured App ID -->
     <key>com.apple.application-identifier</key>
   	<string>CTDV6HX5KK.com.dicekeys</string>
+    <key>com.apple.developer.team-identifier</key>
+    <string>CTDV6HX5KK</string>
 
 	<!-- Associated Domains should be enabled in App ID Configuration (developer.apple.com)  -->
 	<!-- and associated with the apple-app-site-association hosted at https://dicekeys.app/.well-known/ -->
@@ -29,11 +39,6 @@
     <array>
         <string>applinks:dicekeys.app</string>
     </array>
-    <!-- is this needed? -->
-    <key>com.apple.security.network.client</key>
-    <true/>
-    <key>com.apple.security.device.audio-input</key>
-    <true/>
     <key>com.apple.security.device.camera</key>
     <true/>
     <!-- Stuart believes this is needed to talk to FIDO hardware over USB -->

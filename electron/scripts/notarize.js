@@ -12,6 +12,11 @@ module.exports = async function (params) {
         return
     }
 
+    if (params.electronPlatformName === "mas") {
+        console.log("No need to notarize mas (Mac App Store) packages");
+        return;
+    }
+
     console.log('afterSign hook triggered', params)
 
     let appId = 'com.dicekeys'

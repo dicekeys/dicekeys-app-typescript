@@ -26,3 +26,4 @@ electron/out/
 
 # buildinfo files
 *.tsbuildinfo
+electron/DeploymentNotes.md
