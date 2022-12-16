@@ -2,6 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
+    <!-- required for app store -->
+  	<key>com.apple.security.app-sandbox</key>
+  	<true/>
     <!-- Required by Electron -->
     <key>com.apple.security.cs.allow-jit</key>
     <true/>
@@ -16,7 +19,7 @@
 
     <!-- Associated Domains requires also com.apple.application-identifier to be set to the configured App ID -->
     <key>com.apple.application-identifier</key>
-	<string>CTDV6HX5KK.com.dicekeys.electron</string>
+	<string>CTDV6HX5KK.com.dicekeys</string>
 
 	<!-- Associated Domains should be enabled in App ID Configuration (developer.apple.com)  -->
 	<!-- and associated with the apple-app-site-association hosted at https://dicekeys.app/.well-known/ -->
@@ -24,10 +27,13 @@
     <array>
         <string>applinks:dicekeys.app</string>
     </array>
-
+    <!-- is this needed? -->
     <key>com.apple.security.device.audio-input</key>
     <true/>
     <key>com.apple.security.device.camera</key>
+    <true/>
+    <!-- Stuart believes this is needed to talk to FIDO hardware over USB -->
+    <key>com.apple.security.device.usb</key>
     <true/>
   </dict>
 </plist>

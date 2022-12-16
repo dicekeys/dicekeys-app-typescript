@@ -16,7 +16,8 @@
     "pack": "node ./node_modules/electron-builder/cli.js --dir --config=electron-builder.js",
     "dist-linux": "node ./node_modules/electron-builder/cli.js --config=electron-builder.js --linux --x64",
     "dist-macos-external": "node ./node_modules/electron-builder/cli.js --config=electron-builder-external.js --macos --arm64 --x64",
-    "dist-macos-app-store": "node ./node_modules/electron-builder/cli.js --config=electron-builder-app-store.js --macos --arm64 --x64",
+    "dist-macos-external-universal": "node ./node_modules/electron-builder/cli.js --config=electron-builder-external.js --macos --universal",
+    "dist-macos-app-store": "cp ./Profile_App_Store_Cert_on_M1.provisionprofile ./embedded.provisionprofile && node ./node_modules/electron-builder/cli.js --config=electron-builder-app-store.js --macos --universal",
     "dist-win": "node ./node_modules/electron-builder/cli.js --config=electron-builder.js --win --x64",
     "dist-win-linux": "node ./node_modules/electron-builder/cli.js --config=electron-builder.js --linux --win --x64"
   },

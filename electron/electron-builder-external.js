@@ -3,7 +3,7 @@
  * @see https://www.electron.build/configuration/configuration
  */
 module.exports = {
-    "appId": "com.dicekeys.electron",
+    "appId": "com.dicekeys",
     "files": [
         "!.idea",
         "!.eslintrc",

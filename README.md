@@ -67,6 +67,10 @@ npm run pack
 npm run dist-macos
 ```
 
+Signing the installer package
+> productsign --sign "3rd Party Mac Developer Installer" ./out/DiceKeys-1.0.0-universal.pkg ./out/DiceKeys-1.0.0-universal.signed.pkg
+(update version number)
+
 ## Build electron app for Windows/Linux
 
 Using docker to create distributions written under `/electron/out`

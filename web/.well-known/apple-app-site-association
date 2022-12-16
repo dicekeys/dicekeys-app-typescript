@@ -3,7 +3,7 @@
     "apps": [],
     "details": [
       {
-        "appIDs": [ "CTDV6HX5KK.com.dicekeys", "CTDV6HX5KK.com.dicekeys.electron" ],
+        "appIDs": [ "CTDV6HX5KK.com.dicekeys" ],
         "components": [
           {
             "/": "/",

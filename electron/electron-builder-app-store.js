@@ -3,7 +3,7 @@
  * @see https://www.electron.build/configuration/configuration
  */
 module.exports = {
-    "appId": "com.dicekeys.electron",
+    "appId": "com.dicekeys",
     "files": [
         "!.idea",
         "!.eslintrc",
@@ -19,10 +19,11 @@ module.exports = {
         "!src",
         "!build_modules.sh",
     ],
+    "buildVersion": 27,
     "mac": {
         "target": ["pkg"],
         "category": "public.app-category.utilities",
-        "identity": "DiceKeys, LLC (CTDV6HX5KK)",
+        "identity": "Apple Distribution",
         "icon": "./packaging/icon.icns",
         "extendInfo": {
             "CFBundleURLSchemes": ["dicekeys"]
@@ -33,13 +34,13 @@ module.exports = {
         // compile time eg. com.apple.application-identifier
         "entitlements": "./packaging/entitlements.mac.plist",
         "entitlementsInherit": "./packaging/entitlements.mac.plist",
-        "provisioningProfile": "./DiceKeys_Electron_App_Store.provisionprofile",
+        "provisioningProfile": "./embedded.provisionprofile",
         "gatekeeperAssess": false,
         // TODO - set to true when adding support for dark mode in
         // https://github.com/dicekeys/dicekeys-app-typescript/issues/218
         "darkModeSupport": false,
     },
-    afterSign: "scripts/notarize.js",
+    // afterSign: "scripts/notarize-app-store.js",
     "directories": {
         "output": "out"
     },
@@ -50,13 +51,13 @@ module.exports = {
             "schemes": ["dicekeys"]
         }
     ],
-    "dmg": {
-        "format": "ULFO",
-        "icon": "./packaging/icon.icns",
-        "iconSize": 80,
-        "background": "./packaging/dmg/background.tiff",
-        "sign": true
-    },
+    // "dmg": {
+    //     "format": "ULFO",
+    //     "icon": "./packaging/icon.icns",
+    //     "iconSize": 80,
+    //     "background": "./packaging/dmg/background.tiff",
+    //     "sign": true
+    // },
     "linux": {
         "maintainer": "DiceKeys LLC",
         "category": 'Utility',
