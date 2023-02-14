@@ -74,4 +74,4 @@ export class CustomEvent<ARGS extends unknown[] = [], TARGET_TYPE = unknown> {
   }
 
 
-};
+}

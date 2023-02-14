@@ -9,7 +9,7 @@ const addOrAppendFieldToJsonObjectString =
   const targetKey = `[${JSON.stringify(fieldName)}]`
   if (originalJsonObjectString != null) {
     // Trying modifying the original JSON string
-    var wasJsonModifiedInPlace: boolean = false;
+    let wasJsonModifiedInPlace: boolean = false;
     const jsonWithFieldReplaced = modifyJson(originalJsonObjectString, ({key, replaceValueWithNewValue: replaceWithNewValue, replaceValueWithNewJsonEncodedValue, remove}) => {
         if (key == targetKey) {
           wasJsonModifiedInPlace = true;
