@@ -15,8 +15,10 @@ Install [vite](https://vitejs.dev/) in your system.
 npm install -g vite
 ```
 
-Make sure you have access to [GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-with-a-personal-access-token).
-(add you personal token to ~/.npmrc)
+We're currently using [GitHub Packages](https://docs.github.com/en/packages/) for the project's internal dependencies, which we now regret because it requires you to have a GitHub account and personal access token to install this repository's dependencies. (If this is arduous, please file an issue and we may move to NPM.) If you don't already have a personal access token with the read:packages permission set, create a GitHub personal access token [following the instructions in the GitHub documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token), ensure it has the read:packages permission, then use the following command to login to github before the step where you'll run `npm install`
+> npm login --scope=@dicekeys --auth-type=legacy --registry=https://npm.pkg.github.com
+
+(you will be prompted for the personal access token)
 
 Install modules
 ```bash
