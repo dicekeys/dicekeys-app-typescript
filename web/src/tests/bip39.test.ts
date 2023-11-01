@@ -3,6 +3,7 @@ import { toBip39, bip39ToByteArray, diceKeyToBip39String, bip39StringToDiceKey a
 
 import { TestDiceKeys } from "./TestDiceKeys";
 
+// FUTURE: Remove 7 following lines after moving to Node 19+
 import { webcrypto } from 'node:crypto';
 if (!globalThis?.crypto?.subtle) {
 	if ("crypto" in globalThis) {

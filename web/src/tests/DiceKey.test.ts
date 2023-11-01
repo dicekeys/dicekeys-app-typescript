@@ -2,6 +2,7 @@ import { DiceKeyWithoutKeyId } from "../dicekeys/DiceKey";
 
 import { TestDiceKeys } from "./TestDiceKeys";
 
+// FUTURE: Remove 7 following lines after moving to Node 19+
 import { webcrypto } from 'node:crypto';
 if (!globalThis?.crypto?.subtle) {
 	if ("crypto" in globalThis) {
