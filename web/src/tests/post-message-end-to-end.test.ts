@@ -13,9 +13,6 @@ import { jsonStringifyWithSortedFieldOrder } from "../utilities/json";
 import { QueuedPostMessageApiRequest, PostMessageRequestEvent } from "../api-handler/QueuedPostMessageApiRequest";
 import { strToUTF8Arr } from "../utilities/utf8";
 
-import { Crypto } from "@peculiar/webcrypto"
-global.crypto = new Crypto() as typeof global.crypto;
-
 const defaultSeedString = "a bogus seed";
 const defaultRequestHost = "client.app";
 const defaultRequestOrigin = `https://${defaultRequestHost}`;

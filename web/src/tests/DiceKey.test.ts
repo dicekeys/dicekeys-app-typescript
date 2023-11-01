@@ -1,9 +1,15 @@
 import { DiceKeyWithoutKeyId } from "../dicekeys/DiceKey";
 
-import { Crypto } from "@peculiar/webcrypto"
 import { TestDiceKeys } from "./TestDiceKeys";
-global.crypto = new Crypto() as typeof global.crypto;
 
+import { webcrypto } from 'node:crypto';
+if (!globalThis?.crypto?.subtle) {
+	if ("crypto" in globalThis) {
+		Object.assign(globalThis.crypto, {subtle: webcrypto.subtle});
+	} else {
+		globalThis.crypto = {subtle: webcrypto.subtle} as typeof globalThis["crypto"];
+	}
+}
 
 describe("Formats: Bip39", () => {
 

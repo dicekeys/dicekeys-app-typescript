@@ -45,9 +45,12 @@ export const BrowserWindows = new (class BrowserWindows {
         case "media":
           return codeIsFromFileSystem;
         // Allow access to WebHID so we can interact with seedable FIDO keys
+        case "usb":
         case "hid":
           return codeIsFromFileSystem;
-        case "accessibility-events":
+        // This following case is likely deprecated, or was never needed, but should be harmless
+        // to leave in if it doesn't exist. Note and type hack created SS 2023-11-01.
+        case "accessibility-events" as "hid":
           return codeIsFromFileSystem;
         // Deny other access
         case "serial":
