@@ -37,7 +37,6 @@
     "electron-reloader": "^1.2.3",
     "eslint": "^8.52.0",
     "eslint-plugin-import": "^2.29.0",
-    "keyv": "^4.5.4",
     "rimraf": "^5.0.5",
     "typescript": "^5.2.2"
   },
