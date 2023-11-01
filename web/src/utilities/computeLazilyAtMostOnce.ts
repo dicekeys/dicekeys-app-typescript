@@ -1,6 +1,6 @@
 export const computeLazilyAtMostOnce = <T>(fn: () => T): (() => T) => {
-  var fnResultHasBeenWrittenToResultVariable: boolean = false;
-  var result: T;
+  let fnResultHasBeenWrittenToResultVariable: boolean = false;
+  let result: T;
   return (() => {
     if (!fnResultHasBeenWrittenToResultVariable) {
       result = fn();

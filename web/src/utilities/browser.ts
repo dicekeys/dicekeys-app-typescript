@@ -52,8 +52,8 @@ const getBrowserInfo = () => {
   const appVersion = navigator.appVersion;
   const userAgent = navigator.userAgent;
   const appName = navigator.appName;
-  var browser : string = "";
-  var browserVersion : string = "";
+  let browser : string = "";
+  let browserVersion : string = "";
 
   const browserEntry = browsers.find( b => userAgent.indexOf(b.searchKey) != -1);
   if (browserEntry) {
@@ -88,7 +88,7 @@ const getBrowserInfo = () => {
     }     
   }
 
-  var browserMajorVersion = parseInt('' + browserVersion, 10);
+  let browserMajorVersion = parseInt('' + browserVersion, 10);
   if (isNaN(browserMajorVersion)) {
     browserVersion = '' + parseFloat(appVersion);
     browserMajorVersion = parseInt(appVersion, 10);
@@ -99,9 +99,9 @@ const getBrowserInfo = () => {
 
   // system
   const osTableEntry = osTable.find( ([_, regExp]) => regExp.test(userAgent) );
-  var os: string = osTableEntry ? osTableEntry[0] : "";
+  let os: string = osTableEntry ? osTableEntry[0] : "";
 
-  var osVersion: string = "";
+  let osVersion: string = "";
   if (/Windows/.test(os)) {
       osVersion = /Windows (.*)/.exec(os)?.[1] ?? "";
       os = 'Windows';

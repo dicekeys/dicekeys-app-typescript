@@ -10,7 +10,7 @@ export const FramesOfReferenceForReallyBigNumbers: [number, string, string][] = 
 ];
 
 export const describeFrameOfReferenceForReallyBigNumber = (reallyBigNumber: number): string => {
-  for (var [frameOfReferenceNumber, frameOfReferenceUnits, _link] of FramesOfReferenceForReallyBigNumbers) {
+  for (let [frameOfReferenceNumber, frameOfReferenceUnits, _link] of FramesOfReferenceForReallyBigNumbers) {
     if (reallyBigNumber > frameOfReferenceNumber) {
       const multipleOfFrameOfReferenceUnits =
         Math.floor(reallyBigNumber / frameOfReferenceNumber);

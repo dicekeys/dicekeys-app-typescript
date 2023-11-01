@@ -61,7 +61,7 @@ PublicSuffixDataList.split("\n").forEach( rawLine => {
   // Turn the domain name into an array of labels from top to bottom (e.g. ["com", "dicekeys", "api"])
   const labelsFromTopToBottom = line.split(".").reverse();
   // Populate the tree as necessary and walk down to the end of the public suffix
-  var labelMap = topLevelDomainLabelMap;
+  let labelMap = topLevelDomainLabelMap;
   for (const label of labelsFromTopToBottom) {
     if (!(label in labelMap)) {{
       labelMap[label] = {};
@@ -83,9 +83,9 @@ PublicSuffixDataList.split("\n").forEach( rawLine => {
  */
 export const getDepthOfPublicSuffix = (domain: string): number => {
   const labelsFromTopToBottom = domain.split(".").reverse();
-  var depth = 0;
-  var depthOfPublicSuffix = 0;
-  var labelMap: LabelMap | undefined = topLevelDomainLabelMap;
+  let depth = 0;
+  let depthOfPublicSuffix = 0;
+  let labelMap: LabelMap | undefined = topLevelDomainLabelMap;
   while (depth < labelsFromTopToBottom.length && labelMap != null) {
     if (labelMap.isTerminalNode) {
       depthOfPublicSuffix = depth;

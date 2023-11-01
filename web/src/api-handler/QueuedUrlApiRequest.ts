@@ -109,8 +109,8 @@ const decodeRequestFromUrlIfPresent = (
   requestUrl: URL
 ) => {
   const {searchParams} = requestUrl;
-  var respondTo = searchParams.get(UrlRequestMetadataParameterNames.respondTo);
-  var hostValidatedViaAuthToken = false;
+  let respondTo = searchParams.get(UrlRequestMetadataParameterNames.respondTo);
+  let hostValidatedViaAuthToken = false;
   const requestId = searchParams.get(ApiCalls.RequestMetadataParameterNames.requestId);
   const authToken = searchParams.get(UrlRequestMetadataParameterNames.authToken!) ?? undefined;
   if (authToken != null ) {

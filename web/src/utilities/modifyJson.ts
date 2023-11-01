@@ -83,7 +83,7 @@ class JsonModificationParser {
     while(this.atWhiteSpace) { this.advance() }
   }
 
-  private get atString() { return this.isAt('"') };
+  private get atString() { return this.isAt('"') }
 
   private parseString = (key: string): string => {
     const start = this.indexIntoSourceJson;
@@ -99,7 +99,7 @@ class JsonModificationParser {
     return JSON.parse(this.sourceJson.substr(start, end - start));
   } 
 
-  private get atNumber() { return this.atDigit || this.isAt('-') };
+  private get atNumber() { return this.atDigit || this.isAt('-') }
 
   private parseNumber = (key: string): number => {
     const start = this.indexIntoSourceJson;
@@ -134,7 +134,7 @@ class JsonModificationParser {
   }
 
   private parseBoolean = (key: string): boolean => {
-    var value: boolean = false;
+    let value: boolean = false;
     if (this.sourceJson.substr(this.indexIntoSourceJson, 4) === "true") {
       value = true;
       this.advance(4);
@@ -168,8 +168,8 @@ class JsonModificationParser {
     this.verifyCharAndAdvance('[', key);
 
     const indexIntoDestStringOfStartOfThisArray = this.destString.length;
-    var indexIntoDestStringOfCommaPriorToThisItem: number | undefined;
-    var awaitingRemovalOfFirstItem: boolean = false;
+    let indexIntoDestStringOfCommaPriorToThisItem: number | undefined;
+    let awaitingRemovalOfFirstItem: boolean = false;
     const remove = () => {
       if (indexIntoDestStringOfCommaPriorToThisItem != null) {
         this.destString = this.destString.substr(0, indexIntoDestStringOfCommaPriorToThisItem)
@@ -179,7 +179,7 @@ class JsonModificationParser {
     }
 
     this.skipWhiteSpace();
-    var index: number = 0;
+    let index: number = 0;
     if (this.atValue) {
       result.push(this.parseValue(`${key}[${index++}]`, remove));
       while (this.advanceIfAt(',')) {
@@ -199,17 +199,17 @@ class JsonModificationParser {
     return result;
   }
 
-  private parseObject = (key: string): Object => {
+  private parseObject = (key: string): object => {
     // FIXME ... on remove,
     // first item must remove until comma after
     // last item must remove start comma before
     // other items ??? 
-    let obj = {} as Record<string | number | symbol, ParsedValue>
+    const obj = {} as Record<string | number | symbol, ParsedValue>
     this.verifyCharAndAdvance('{', key);
 
     const indexIntoDestStringOfStartOfThisObject = this.destString.length;
-    var indexIntoDestStringOfCommaPriorToThisItem: number | undefined;
-    var awaitingRemovalOfFirstItem: boolean = false;
+    let indexIntoDestStringOfCommaPriorToThisItem: number | undefined;
+    let awaitingRemovalOfFirstItem: boolean = false;
     const remove = () => {
       if (indexIntoDestStringOfCommaPriorToThisItem != null) {
         this.destString = this.destString.substr(0, indexIntoDestStringOfCommaPriorToThisItem)
@@ -249,7 +249,7 @@ class JsonModificationParser {
   private parseValue = (key: string, remove: ()=>void ): ParsedValue => {
     this.skipWhiteSpace();
     const start = this.indexIntoSourceJson;
-    var value: ParsedValue;
+    let value: ParsedValue;
     if (this.atString) { value = this.parseString(key) }
     else if (this.atNumber) { value = this.parseNumber(key) }
     else if (this.atObject) { value = this.parseObject(key) }
@@ -269,7 +269,7 @@ class JsonModificationParser {
   }
 
   parse = () => {
-    var returnEmptyString: boolean = false;
+    let returnEmptyString: boolean = false;
     const remove = () => { returnEmptyString = true; }
     const result = this.parseValue("", remove);
     return returnEmptyString ? "" : result;

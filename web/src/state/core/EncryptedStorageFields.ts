@@ -15,7 +15,7 @@ const getSessionEncryptionSymmetricKey = async (
   }
 
   const setSessionKeySeedCookie = (value: string): string => {
-    var expires: string | undefined;
+    let expires: string | undefined;
     if (expireAfterMinutesUnused != null) {
       const expireAfterMsUnused = expireAfterMinutesUnused * minutesToMs;
       const expireDate = new Date((new Date()).getTime() + expireAfterMsUnused);

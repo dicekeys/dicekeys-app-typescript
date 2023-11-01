@@ -21,7 +21,7 @@ export class TimeoutException extends Exceptions.NamedException {}
 const withTimeout = (timeoutInMs: number = 5000) =>
   <T>( fn: () => Promise<T> ) => new Promise<T>( (resolve, reject ) => {
 
-    var timeout: ReturnType<typeof setTimeout> | undefined = setTimeout( () => {
+    let timeout: ReturnType<typeof setTimeout> | undefined = setTimeout( () => {
       timeout = undefined;
       reject(new TimeoutException("Timeout"));
     }, timeoutInMs);
@@ -178,7 +178,7 @@ export class CamerasOnThisDevice {
         label: cameraDevice.label
       };
       const {label, facingMode} = cameraWithoutName;
-      var {width, height} = cameraWithoutName;
+      let {width, height} = cameraWithoutName;
       if (capabilities && capabilities.width?.max && capabilities.height?.max) {
         width = capabilities.width.max;
         height = capabilities.height.max;

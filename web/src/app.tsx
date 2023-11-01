@@ -32,7 +32,7 @@ const GlobalFonts = createGlobalStyle`
 
 const electronBridge = (window as unknown as  {ElectronBridge: ElectronBridgeRendererView}).ElectronBridge;
 
-var windowTopLevelNavigationState: WindowTopLevelNavigationState | undefined;
+let windowTopLevelNavigationState: WindowTopLevelNavigationState | undefined;
 
 /**
  * For web-based apps, scan the URL on page load

@@ -41,7 +41,7 @@ class PreviewState {
     this.name = name;
     window.history.pushState("", "", `?name=${name}`);
   });
-  get preview() { return getPreview(this.name) };
+  get preview() { return getPreview(this.name) }
 }
 
 const previewState = new PreviewState();
