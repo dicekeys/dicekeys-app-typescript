@@ -18,8 +18,8 @@ export class SeedableFIDOKeys {
   setDevices = action ((devices: HIDDevice[]) => {
     this.devices = devices
   });
-  error?: any;
-  setError = action ((error: any) => {
+  error?: unknown;
+  setError = action ((error: unknown) => {
     this.error = error;
   });
 

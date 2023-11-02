@@ -21,7 +21,7 @@ export class TimeoutException extends Exceptions.NamedException {}
 const withTimeout = (timeoutInMs: number = 5000) =>
   <T>( fn: () => Promise<T> ) => new Promise<T>( (resolve, reject ) => {
 
-    var timeout: ReturnType<typeof setTimeout> | undefined = setTimeout( () => {
+    let timeout: ReturnType<typeof setTimeout> | undefined = setTimeout( () => {
       timeout = undefined;
       reject(new TimeoutException("Timeout"));
     }, timeoutInMs);
@@ -75,14 +75,12 @@ export class CamerasOnThisDevice {
 
   public static instance(minWidth: number | undefined, minHeight: number | undefined): CamerasOnThisDevice {
     const key = `${minWidth}:${minHeight}`;
-    if (CamerasOnThisDevice._instances.has(key)) {
-      // Return the existing instance
-      return CamerasOnThisDevice._instances.get(key)!
-    };
-    // Create an instance
-    const camerasOnThisDevice = new CamerasOnThisDevice(minWidth, minHeight);
-    this._instances.set(key, camerasOnThisDevice);
-    return camerasOnThisDevice;
+    return CamerasOnThisDevice._instances.get(key) ?? ( ()=> {
+      // Create an instance
+      const camerasOnThisDevice = new CamerasOnThisDevice(minWidth, minHeight);
+      this._instances.set(key, camerasOnThisDevice);
+      return camerasOnThisDevice;
+    })()
   }
 
   private constructor(public readonly minWidth: number | undefined, public readonly minHeight: number | undefined) {
@@ -132,10 +130,11 @@ export class CamerasOnThisDevice {
 
   private cameraDeviceIdToCameraNumber = new ObservableMap<string,number>(); // new Map<string, number>();
   private getCameraNumber = (deviceId: string): number => {
-    if (!this.cameraDeviceIdToCameraNumber.has(deviceId)) {
-      this.cameraDeviceIdToCameraNumber.set(deviceId, this.cameraDeviceIdToCameraNumber.size +1);
-    }
-    return this.cameraDeviceIdToCameraNumber.get(deviceId)!;
+    return this.cameraDeviceIdToCameraNumber.get(deviceId) ?? (() => {
+      const cameraNumber = this.cameraDeviceIdToCameraNumber.size +1;
+      this.cameraDeviceIdToCameraNumber.set(deviceId, cameraNumber);
+      return cameraNumber;
+    })()
   }
 
   /**
@@ -178,7 +177,7 @@ export class CamerasOnThisDevice {
         label: cameraDevice.label
       };
       const {label, facingMode} = cameraWithoutName;
-      var {width, height} = cameraWithoutName;
+      let {width, height} = cameraWithoutName;
       if (capabilities && capabilities.width?.max && capabilities.height?.max) {
         width = capabilities.width.max;
         height = capabilities.height.max;

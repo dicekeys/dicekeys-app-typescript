@@ -80,10 +80,10 @@ class FrameProcessingWorker {
                 ];
                 // TypeScript hack since it doesn't understand this is a worker and StackOverflow
                 // posts make it look hard to convince it otherwise.
-                (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(response, transferableObjectsWithinResponse);
+                (self as unknown as {postMessage: (m: unknown, t?: Transferable[]) => unknown}).postMessage(response, transferableObjectsWithinResponse);
             }
         });
-        (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage({action: "workerReady"} as ReadyMessage);
+        (self as unknown as {postMessage: (m: unknown, t?: Transferable[]) => unknown}).postMessage({action: "workerReady"} as ReadyMessage);
     }
 
     processRGBAImageFrame = ({
@@ -94,10 +94,11 @@ class FrameProcessingWorker {
     ): ProcessFrameResponse => {
       try {
       const rgbImagesArrayUint8Array = new Uint8Array(inputRgbImageAsArrayBuffer);
-        if (!this.sessionIdToImageProcessor.has(sessionId)) {
-            this.sessionIdToImageProcessor.set(sessionId, new this.module.DiceKeyImageProcessor());
-        }
-        const diceKeyImageProcessor = this.sessionIdToImageProcessor.get(sessionId)!;
+      const diceKeyImageProcessor = this.sessionIdToImageProcessor.get(sessionId) ?? (() => {
+        const newDiceKeyImageProcessor = new this.module.DiceKeyImageProcessor();
+        this.sessionIdToImageProcessor.set(sessionId, newDiceKeyImageProcessor);
+        return newDiceKeyImageProcessor;
+      })()
 
         // console.log("Worker starts processing frame", (Date.now() % 100000) / 1000);
         try {

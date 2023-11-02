@@ -12,7 +12,7 @@ export const getRandomBytes: (numberOfBytes: number) => Uint8Array =
   (() => {
     // Test purposes only in NodeJS.  Uses Math.random and not crypto
     return  (numberOfBytes: number): Uint8Array =>
-    Uint8Array.from( Array.from(new Array(numberOfBytes), (_)=> Math.floor(Math.random() * 256) %  256) );
+    Uint8Array.from( Array.from(new Array(numberOfBytes), ()=> Math.floor(Math.random() * 256) %  256) );
   })();
 
 export const getRandomUInt32 = () =>

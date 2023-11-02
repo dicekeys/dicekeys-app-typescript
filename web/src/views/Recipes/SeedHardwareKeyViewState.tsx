@@ -134,7 +134,7 @@ export class SeedHardwareKeyViewState implements ViewState {
 
   writeInProgress: boolean = false;
   writeSucceeded?: boolean;
-  writeError?: WriteSeedToFIDOKeyException | undefined;
+  writeError?: WriteSeedToFIDOKeyException | undefined | unknown;
   resetWriteState = action ( () => {
     this.writeInProgress = false;
     this.writeError = undefined;
@@ -145,10 +145,10 @@ export class SeedHardwareKeyViewState implements ViewState {
     this.writeError = undefined;
     this.writeSucceeded = undefined;
   });
-  setWriteError = action ( (error: any) => {
+  setWriteError = action ( (error: unknown) => {
     this.writeInProgress = false
     this.writeError = error;
-    this.writeSucceeded = false;;
+    this.writeSucceeded = false;
   });
   setWriteSucceeded = action ( () => {
     this.writeInProgress = false;

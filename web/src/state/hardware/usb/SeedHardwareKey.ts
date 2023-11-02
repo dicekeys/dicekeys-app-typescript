@@ -114,6 +114,7 @@ class CtapHidInitResponseMessage {
 //   return device.sendReport(reportType, dataArray);
 // }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const receiveNextHIDInputReportEvent = (device: HIDDevice, reportId: number = 0) => new Promise<HIDInputReportEvent>( (resolve, _reject) => {
   const receiveReportHandler = (event: HIDInputReportEvent) => {
     if (event.reportId === reportId) {
@@ -140,7 +141,8 @@ const sendCtapHidMessage = async (device: HIDDevice, channel: number, command: n
   initializationPacket.setUint32(0, channel, makeBigEndianPassingFalseForLittleEndian);
   initializationPacket.setUint8(4, command | 0x80);
   initializationPacket.setUint16(5, data.byteLength, makeBigEndianPassingFalseForLittleEndian);
-  let dest = 7, src = 0, packetSequenceByte = 0;
+  let dest = 7, src = 0;
+  const packetSequenceByte = 0;
   // Copy the data
   while (dest < hidPacketLengthInBytes && src < data.byteLength) {
     initializationPacket.setUint8(dest++, data.getUint8(src++));
@@ -158,7 +160,7 @@ const sendCtapHidMessage = async (device: HIDDevice, channel: number, command: n
        */
       dest = 5;
       const continuationPacketArray = new Uint8ClampedArray(hidPacketLengthInBytes)
-      const continuationPacket = new DataView(continuationPacketArray);
+      const continuationPacket = new DataView(continuationPacketArray.buffer);
       continuationPacket.setUint32(0, channel, makeBigEndianPassingFalseForLittleEndian);
       continuationPacket.setUint8(4, packetSequenceByte);
       // Copy the data
@@ -171,7 +173,7 @@ const sendCtapHidMessage = async (device: HIDDevice, channel: number, command: n
 }
 
 const getChannel = async (device: HIDDevice): Promise<number> => {
-  let channelCreationNonce = new Uint8ClampedArray(8);
+  const channelCreationNonce = new Uint8ClampedArray(8);
   window.crypto.getRandomValues(channelCreationNonce);
 
   await sendCtapHidMessage(device, BroadcastChannel, CTAP_HID_Commands.INIT, new DataView(channelCreationNonce.buffer));
@@ -228,6 +230,7 @@ const sendWriteSeedMessage = async (device: HIDDevice, channel: number, seed: Ui
 
 const hexStringToUint8ClampedArray = (hexString?: string): Uint8ClampedArray =>
   (hexString == null || hexString.length === 0) ? new Uint8ClampedArray(0) :
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   new Uint8ClampedArray(hexString.match(/.{1,2}/g)!.map( (byte) => parseInt(byte, 16)));
 
 /**

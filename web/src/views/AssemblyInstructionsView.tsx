@@ -82,8 +82,8 @@ const StepFillEmptySlots = () => (
 );
 
 const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState}) => {
-  // @State var scanning: Bool = false
-  // @Binding var diceKey: DiceKey?
+  // @State let scanning: Bool = false
+  // @Binding let diceKey: DiceKey?
   // #if os(iOS)
   // let scanningImageName = "Scanning Side View"
   // #else

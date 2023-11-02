@@ -45,8 +45,11 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & Bo
       showLetter = "A",
       highlightFaceWithDigit,
       hideFaces,
-      width: boundsWidth,
-      height: boundsHeight,
+      // destructured into unused variable to isolate svgGroupProps
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      width: _boundsWidth,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      height: _boundsHeight,
       ...svgGroupProps
     } = props;
     const {

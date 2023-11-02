@@ -13,7 +13,7 @@ export class EnterDiceKeyState {
   currentFaceIndex: number = 0;
 
   get isValid(): boolean {
-    return validateDiceKey(this.partialDiceKey)!!;
+    return validateDiceKey(this.partialDiceKey);
   }
 
   get diceKey(): DiceKeyWithoutKeyId | undefined {
@@ -26,9 +26,11 @@ export class EnterDiceKeyState {
     makeAutoObservable(this);
   }
 
-  private get currentFace(): Partial<Face> { return this.partialDiceKey![this.currentFaceIndex]!; }
-  private get previousFaceIndex(): number { return (this.currentFaceIndex! + 24) % 25; }
-  private get nextFaceIndex(): number { return (this.currentFaceIndex! + 1) % 25; }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  private get currentFace(): Partial<Face> { return this.partialDiceKey[this.currentFaceIndex]!; }
+  private get previousFaceIndex(): number { return (this.currentFaceIndex + 24) % 25; }
+  private get nextFaceIndex(): number { return (this.currentFaceIndex + 1) % 25; }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   private get nextFace(): Partial<Face> { return this.partialDiceKey[this.nextFaceIndex]!; }
 
   setCurrentFaceIndex = action((index: number) => {
@@ -69,10 +71,10 @@ export class EnterDiceKeyState {
         FaceOrientationLetterTrblOrUnknown.rotate(this.currentFace.orientationAsLowercaseLetterTrbl ?? 't', 3) as FaceOrientationLetterTrbl ?? 't';
     } else if (event.code === "ArrowUp") {
       // Move up ( index -= 5 % 25 )
-      this.currentFaceIndex = (this.currentFaceIndex! + 20) % 25;
+      this.currentFaceIndex = (this.currentFaceIndex + 20) % 25;
     } else if (event.code === "ArrowDown") {
       // Move down ( index += 5 % 25 )
-      this.currentFaceIndex = (this.currentFaceIndex! + 5) % 25;
+      this.currentFaceIndex = (this.currentFaceIndex + 5) % 25;
     } else if (event.code === "ArrowLeft" || ((event.shiftKey || event.ctrlKey) && (event.code === "Tab" || event.code === "Space"))) {
       // Move left
       this.currentFaceIndex = this.previousFaceIndex;

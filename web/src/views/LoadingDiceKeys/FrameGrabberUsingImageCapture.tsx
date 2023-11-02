@@ -1,3 +1,4 @@
+import { throwIfNull } from "../../utilities/throwIfNull";
 import { withDefined } from "../../utilities/with-defined";
 
 
@@ -6,6 +7,7 @@ export class FrameGrabberUsingImageCapture {
    * A re-usable canvas into which to capture image frames
    */
   private readonly captureCanvas: HTMLCanvasElement = document.createElement("canvas");
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   private captureCanvasCtx: CanvasRenderingContext2D = this.captureCanvas.getContext("2d")!;
 
   imageCapture: ImageCapture;
@@ -46,12 +48,12 @@ export class FrameGrabberUsingImageCapture {
       if (bitMap == null) return;
       const {width, height} = bitMap;
       // console.log(`Grabbing frame with dimensions ${width}x${height}`)
-      if (this.captureCanvas!.width != width || this.captureCanvas!.height != height) {
-        [this.captureCanvas!.width, this.captureCanvas!.height] = [width, height];
-        this.captureCanvasCtx = this.captureCanvas!.getContext("2d")!;
+      if (this.captureCanvas.width != width || this.captureCanvas.height != height) {
+        [this.captureCanvas.width, this.captureCanvas.height] = [width, height];
+        this.captureCanvasCtx = throwIfNull(this.captureCanvas.getContext("2d"));
       }
       this.captureCanvasCtx.drawImage(bitMap, 0, 0);
-      return this.captureCanvasCtx!.getImageData(0, 0, width, height);
+      return this.captureCanvasCtx.getImageData(0, 0, width, height);
     } catch {
       return;
     }

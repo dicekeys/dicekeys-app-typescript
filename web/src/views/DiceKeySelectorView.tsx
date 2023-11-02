@@ -22,7 +22,7 @@ const HideInstruction = styled(DivSupportingInvisible)`
 
 interface OptionalSpaceBetweenItems {
   spaceBetweenItems?: string; // default: min(2vw, 2vh)`
-};
+}
 const defaultSpaceBetweenItems = `min(2vw, 2vh)`;
 interface OptionalSelectedItemWidth {
   selectedItemWidth?: string; // default: min(40vw, 50vh)
@@ -41,7 +41,7 @@ interface SelectorViewSizeModel extends
   OptionalSelectedItemWidth,
   OptionalRatioOfSelectedItemWidthToSelectableItemWidth,
   OptionalRowWidth
-  {};
+  {}
 
 const itemPadding = ({spaceBetweenItems=defaultSpaceBetweenItems}: OptionalSpaceBetweenItems) => `( (${cssExprWithoutCalc(spaceBetweenItems)}) / 2 )` as const;
 // const keyRowWidth = `90vw` as const;

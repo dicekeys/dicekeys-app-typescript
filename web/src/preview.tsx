@@ -17,6 +17,7 @@ import styled from "styled-components";
 import { ThemeProvider } from "styled-components";
 import { lightTheme } from "./css/lightTheme";
 import { PrimaryView } from "./css";
+import { throwIfNull } from "./utilities/throwIfNull";
 
 // To make sure everything is loaded, load the view for the app even if we're not using it.
 if (!WindowRoutingView) {
@@ -41,7 +42,7 @@ class PreviewState {
     this.name = name;
     window.history.pushState("", "", `?name=${name}`);
   });
-  get preview() { return getPreview(this.name) };
+  get preview() { return getPreview(this.name) }
 }
 
 const previewState = new PreviewState();
@@ -70,8 +71,8 @@ const Previews = observer ( () => {
 
 window.addEventListener('load', () => {
   DiceKeyMemoryStore.onReady( () => {
-    const container = document.getElementById("app_container");
-    const root = createRoot(container!);
+    const container = throwIfNull(document.getElementById("app_container"));
+    const root = createRoot(container);
     root.render((
       <ErrorHandler>
         <ThemeProvider theme={lightTheme}>

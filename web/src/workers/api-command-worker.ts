@@ -26,10 +26,10 @@ addEventListener( "message", async (requestMessage) => {
     const {seedString, request} = requestMessage.data;
     try {
       const response = new SeededApiCommands(await SeededCryptoModulePromise, seedString).executeRequest<ApiRequestObject>(request);
-      (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(response);
+      (self as unknown as {postMessage: (m: unknown, t?: Transferable[]) => unknown}).postMessage(response);
     } catch (exception) {
       console.log("Worker exception", exception, typeof (exception));
-      (self as unknown as {postMessage: (m: any, t?: Transferable[]) => unknown}).postMessage(
+      (self as unknown as {postMessage: (m: unknown, t?: Transferable[]) => unknown}).postMessage(
         {exception: exception instanceof Error ?
           JSON.stringify({name: exception.name, message: exception.message, stack: exception.stack}) :
           JSON.stringify(exception, undefined, " "), request});

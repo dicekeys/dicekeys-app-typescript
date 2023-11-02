@@ -69,7 +69,7 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
       diceBoxColor =  "#050350",
       highlightFaceAtIndex,
       showLidTab = false,
-      leaveSpaceForTab = showLidTab,
+//      leaveSpaceForTab = showLidTab,
       obscureAllButCenterDie = ToggleState.ObscureDiceKey,
       sizeModel,
       // If onFaceClick is not defined and obscureAllButCenterDie is,

@@ -9,6 +9,7 @@ export class WorkerRequest<REQUEST, RESULT, REQUEST_MESSAGE extends REQUEST = RE
   private _resultPromise: Promise<RESULT> | undefined;
   private _request: REQUEST | undefined;
   
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   public get cancel(): (() => void) { return this._cancel! }
   public get resultPromise(): Promise<RESULT> | undefined { return this._resultPromise; }
   public get result(): RESULT | undefined { return this._result; }
@@ -74,6 +75,7 @@ export class WorkerRequest<REQUEST, RESULT, REQUEST_MESSAGE extends REQUEST = RE
         console.log(`Exception in worker request`, e);
       }
     });
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return this.resultPromise!;
   }
 

@@ -9,7 +9,7 @@ import { UnknownValueCaughtByCatch } from "../../../utilities/exceptions";
 
 export type Device = HIDDevice;
 export type DeviceListUpdateCallback = (devices: Device[]) => void;
-export type ErrorCallback = (error: any) => void;
+export type ErrorCallback = (error: unknown) => void;
 export type StopMonitoringFunction = () => void;
 
 const getDeviceKey = (device: Device): string =>
@@ -117,6 +117,7 @@ export class UsbDeviceMonitor {
    * An array potential seedable FIDO keys connected to this device.
    */
   public get devices(): Device[] {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return [...this.deviceMap.keys()].sort().map( k => this.deviceMap.get(k)! )
   } 
 

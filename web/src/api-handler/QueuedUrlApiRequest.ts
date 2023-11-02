@@ -109,10 +109,10 @@ const decodeRequestFromUrlIfPresent = (
   requestUrl: URL
 ) => {
   const {searchParams} = requestUrl;
-  var respondTo = searchParams.get(UrlRequestMetadataParameterNames.respondTo);
-  var hostValidatedViaAuthToken = false;
+  const respondTo = searchParams.get(UrlRequestMetadataParameterNames.respondTo);
+  let hostValidatedViaAuthToken = false;
   const requestId = searchParams.get(ApiCalls.RequestMetadataParameterNames.requestId);
-  const authToken = searchParams.get(UrlRequestMetadataParameterNames.authToken!) ?? undefined;
+  const authToken = searchParams.get(UrlRequestMetadataParameterNames.authToken) ?? undefined;
   if (authToken != null ) {
     const authUrl = getUrlForAuthenticationToken(authToken);
     if (authUrl === respondTo) {
@@ -227,10 +227,10 @@ const addResponseToUrl = (
     const {exception, message, stack} = response;
     add(ApiCalls.ExceptionResponseParameterNames.exception, exception);
     if (message != null) {
-      add(ApiCalls.ExceptionResponseParameterNames.message!, message);
+      add(ApiCalls.ExceptionResponseParameterNames.message, message);
     }
     if (stack != null) {
-      add(ApiCalls.ExceptionResponseParameterNames.stack!, stack);
+      add(ApiCalls.ExceptionResponseParameterNames.stack, stack);
     }
     return url;
   }

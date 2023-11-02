@@ -4,7 +4,7 @@ const validControlCodes = new Set<number>(
 
 export function isMessageUTF8PrintableString(message: Uint8Array): boolean {
   // https://en.wikipedia.org/wiki/UTF-8, see table in section "Description"
-  for (var i=0; i < message.length;) {
+  for (let i=0; i < message.length;) {
     const byte = message[i++];
     if (byte == null) continue;
     if (byte < 32 && !validControlCodes.has(byte)) {
@@ -34,9 +34,9 @@ export function isMessageUTF8PrintableString(message: Uint8Array): boolean {
       // Character would extend beyond byte array
       return false;
     }
-    for (var j = 0; j < additionalBytes; j++) {
+    for (let j = 0; j < additionalBytes; j++) {
       // All additional bytes for this character must be of the form 10xxxxxx
-      const extensionByte = message[i++]!;
+      const extensionByte = message[i++] ?? 0;
       if ((extensionByte & 0xc0) != 0x80) {
         return false;
       }

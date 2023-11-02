@@ -18,7 +18,7 @@ export enum UndoverlineType {
   overline = "overline",
 }
 
-export function addUndoverlineCodes<T extends Partial<Face>>(face: T): T & (UndoverlineCodes | {}) {
+export function addUndoverlineCodes<T extends Partial<Face>>(face: T): T & (UndoverlineCodes | object) {
   if (face.letter == null || face.digit == null) {
     return face;
   }

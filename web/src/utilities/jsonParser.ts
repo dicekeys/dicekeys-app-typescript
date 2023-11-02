@@ -51,7 +51,7 @@ export interface ParsedJsonString extends ParsedJsonBaseType<"string", string> {
   indexOfClosingQuote: number;
   originalQuotedString: string;
 }
-export interface ParsedJsonNull extends ParsedJsonBaseType<"null", null> {}
+export type ParsedJsonNull = ParsedJsonBaseType<"null", null>
 
 export interface ParsedJsonObject extends ParsedJsonElementCommon {
   type: "object";
@@ -133,7 +133,7 @@ class JsonAnnotationParser {
   }
   
   private skipWhiteSpace = (): string => {
-    var whiteSpaceSkipped: string = "";
+    let whiteSpaceSkipped: string = "";
     while(this.atWhiteSpace) {
       whiteSpaceSkipped += this.c;
       this.advance();
@@ -141,7 +141,7 @@ class JsonAnnotationParser {
     return whiteSpaceSkipped;
   }
 
-  private get atString() { return this.isAt('"') };
+  private get atString() { return this.isAt('"') }
 
   private parseString = (): Omit<ParsedJsonString, keyof ParsedJsonElementCommon> => {
     const indexOfOpeningQuote = this.indexIntoSourceJson;
@@ -165,7 +165,7 @@ class JsonAnnotationParser {
     }
   } 
 
-  private get atNumber() { return this.atDigit || this.isAt('-') };
+  private get atNumber() { return this.atDigit || this.isAt('-') }
 
   private parseNumber = (): Omit<ParsedJsonNumber, keyof ParsedJsonElementCommon> => {
     const indexOfStart = this.indexIntoSourceJson;
@@ -207,7 +207,7 @@ class JsonAnnotationParser {
   }
 
   private parseBoolean = (): Omit<ParsedJsonBoolean, keyof ParsedJsonElementCommon> => {
-    var value: boolean = false;
+    let value: boolean = false;
     if (this.sourceJson.substr(this.indexIntoSourceJson, 4) === "true") {
       value = true;
       this.advance(4);
@@ -242,7 +242,7 @@ class JsonAnnotationParser {
     const indexOfOpeningBracket = this.indexIntoSourceJson;
     this.verifyCharAndAdvance('[');
     let whiteSpacePrecedingElement = this.skipWhiteSpace();
-    var indexOfLeadingComma: number | undefined;
+    let indexOfLeadingComma: number | undefined;
     if (this.atValue) {
       const indexOfFieldValueStart = this.indexIntoSourceJson;
       do {
@@ -257,6 +257,7 @@ class JsonAnnotationParser {
           break;
         }
         // The trailing comma for the previous field is at this location
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         fields.at(-1)!.indexOfTrailingComma = this.indexIntoSourceJson;
         // The leading comma for the next field is at this location
         indexOfLeadingComma = this.indexIntoSourceJson;
@@ -279,7 +280,7 @@ class JsonAnnotationParser {
     const indexOfOpeningBrace = this.indexIntoSourceJson;
     this.verifyCharAndAdvance('{');
 
-    var indexOfLeadingComma: number | undefined;
+    let indexOfLeadingComma: number | undefined;
     let whiteSpacePreceding = this.skipWhiteSpace();
     if (!this.isAt('}')) {
       while (!this.beyondEnd) {
@@ -307,6 +308,7 @@ class JsonAnnotationParser {
           break;
         }
         // The trailing comma for the previous field is at this location
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         fields.at(-1)!.indexOfTrailingComma = this.indexIntoSourceJson;
         // The leading comma for the next field is at this location
         indexOfLeadingComma = this.indexIntoSourceJson;
@@ -333,7 +335,7 @@ class JsonAnnotationParser {
   private parse = (leadingWhiteSpaceCharsAlreadySkipped: string): ParsedJsonElement => {
     const leadingWhiteSpace = leadingWhiteSpaceCharsAlreadySkipped + this.skipWhiteSpace();
     const indexOfStartAfterWhiteSpace = this.indexIntoSourceJson;
-    var value: Omit<ParsedJsonElement, keyof ParsedJsonElementCommon>;
+    let value: Omit<ParsedJsonElement, keyof ParsedJsonElementCommon>;
     if (this.atString) { value = this.parseString() }
     else if (this.atNumber) { value = this.parseNumber() }
     else if (this.atObject) { value = this.parseObject() }

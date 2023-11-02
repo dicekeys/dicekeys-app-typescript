@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {getRandomUInt32} from "../utilities/get-random-bytes";
 import { uint8ClampedArrayToHexString } from "../utilities/convert";
 import {
@@ -109,7 +110,7 @@ export class DiceKeyLettersRepeatedAndAbsentException extends InvalidDiceKeyExce
 }
 
 export interface DiceKeyValidationOptions {
-  requireOneOfEachLetter?: Boolean
+  requireOneOfEachLetter?: boolean
   throwOnFailures?: boolean
  }
 
@@ -124,7 +125,7 @@ export const validateDiceKey = (diceKey: readonly Partial<Face>[], {
   const lettersPresent = new Set<FaceLetter>();
   const absentLetters = new Set<FaceLetter>(FaceLetters);
   const repeatedLetters = new Set<FaceLetter>();
-  for (var position = 0; position < NumberOfFacesInKey; position++) {
+  for (let position = 0; position < NumberOfFacesInKey; position++) {
     const {letter, digit, orientationAsLowercaseLetterTrbl} = diceKey[position]!;
     if (!FaceLetter.isValid(letter)) {
       if (!throwOnFailures) { return false; }
@@ -411,7 +412,7 @@ export const SizeOfNumericEncodingForUniqueLetters = uniqueLetterEncodingSize * 
 
 const facesFromNumericForm = (numericForm: bigint): DiceKeyFaces => {
   const orientationsAsBigInt = numericForm % uniqueOrientationEncodingSize;
-  let withoutOrientations = numericForm / uniqueOrientationEncodingSize;
+  const withoutOrientations = numericForm / uniqueOrientationEncodingSize;
   const digitsAsBigInt = withoutOrientations % digitEncodingSize;
   const withoutDigits = withoutOrientations / digitEncodingSize;
   const lettersAsBigInt = withoutDigits % uniqueLetterEncodingSize;
@@ -419,7 +420,8 @@ const facesFromNumericForm = (numericForm: bigint): DiceKeyFaces => {
   const {orientations} = [...Array(24).keys()].reduce( (r, _, index) => {
     // Build right to left by reading the number from its least significant 2 bits to most-significant two bits
     // and appending orientations onto the start of the array.
-    let {orientations, orientationsAsBigInt} = r;
+    let {orientationsAsBigInt} = r;
+    const {orientations} = r;
     if (index == 12) {
       // the center face is always upright, so index 12 actually refers to the 13th face.
       r.orientations.unshift("t")
@@ -432,7 +434,8 @@ const facesFromNumericForm = (numericForm: bigint): DiceKeyFaces => {
   const {digits} = [...Array(25).keys()].reduce( (r) => {
     // Build right to left by reading the number 0-5 from digitsAsBigInt % 6, then dividing by 6
     // for the next most significant value (the digit to the left) 
-    let {digits, digitsAsBigInt} = r;
+    let {digitsAsBigInt} = r;
+    const {digits} = r;
     digits.unshift(FaceDigits[Number(digitsAsBigInt % 6n) as Clockwise90DegreeRotationsFromUpright]);
     digitsAsBigInt /= 6n;
     return {digits, digitsAsBigInt};
@@ -441,14 +444,15 @@ const facesFromNumericForm = (numericForm: bigint): DiceKeyFaces => {
   const {letterIndexes} = [...Array(25).keys()].reduce( (r, _, index) => {
     // Build right to left by reading the number 0-5 from digitsAsBigInt % 6, then dividing by 6
     // for the next most significant value (the digit to the left) 
-    let {letterIndexes, lettersAsBigInt} = r;
+    const {letterIndexes} = r;
+    let {lettersAsBigInt} = r;
     letterIndexes.unshift(Number(lettersAsBigInt % BigInt(index + 1)));
     lettersAsBigInt /= BigInt(index + 1);
     return {letterIndexes, lettersAsBigInt};
   }, {letterIndexes: [] as number[], lettersAsBigInt});
 
   const {letters} = letterIndexes.reduce( (r, letterIndex) => {
-    let {letters, lettersRemaining} = r;
+    const {letters, lettersRemaining} = r;
     letters.push(lettersRemaining[letterIndex]!);
     lettersRemaining.splice(letterIndex, 1);
     return {letters, lettersRemaining};
@@ -467,7 +471,7 @@ const facesFromNumericForm = (numericForm: bigint): DiceKeyFaces => {
 export interface PublicDiceKeyDescriptor {
   readonly centerLetterAndDigit: CenterLetterAndDigit;
   readonly keyId: string;
-};
+}
 
 /**
  * Given a public descriptor of a DiceKey containing the center letter and digit,
@@ -518,10 +522,10 @@ abstract class DiceKeyBase {
     // Fail by returning undefined if there wasn't a unique letter encoding
     if (lettersAsBigInt == null) return lettersAsBigInt;
 
-    let digitsAsBigInt = faces.map( ({digit}) => digit.charCodeAt(0) - "1".charCodeAt(0) )
+    const digitsAsBigInt = faces.map( ({digit}) => digit.charCodeAt(0) - "1".charCodeAt(0) )
       .reduce( (prev, digitMinus1is0to5) => prev * BigInt(6) + BigInt(digitMinus1is0to5), BigInt(0) );
 
-    let orientationsAsBigInt = faces.map( ({orientationAsLowercaseLetterTrbl}) =>
+    const orientationsAsBigInt = faces.map( ({orientationAsLowercaseLetterTrbl}) =>
       FaceOrientationLetterTrbl.toClockwise90DegreeRotationsFromUpright(orientationAsLowercaseLetterTrbl))
       .reduce( (prev, rotations0to3) => prev * BigInt(4) + BigInt(rotations0to3), BigInt(0) );
 
@@ -571,7 +575,7 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
     new DiceKeyWithoutKeyId(facesFromNumericForm(numericForm));
 
   rotate = (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright): DiceKeyWithoutKeyId => new DiceKeyWithoutKeyId(rotateDiceKey(this.faces, clockwise90DegreeRotationsFromUpright));
-  get inRotationIndependentForm(): DiceKeyWithoutKeyId { return new DiceKeyWithoutKeyId(rotateToRotationIndependentForm(this.faces)) };
+  get inRotationIndependentForm(): DiceKeyWithoutKeyId { return new DiceKeyWithoutKeyId(rotateToRotationIndependentForm(this.faces)) }
   rotateToTurnCenterFaceUpright = (): DiceKeyWithoutKeyId => {
     const centerFacesOrientationTrbl = this.faces[12].orientationAsLowercaseLetterTrbl;
     switch (centerFacesOrientationTrbl) {
@@ -622,7 +626,7 @@ export class DiceKeyWithKeyId extends DiceKeyBase implements PublicDiceKeyDescri
   
   rotate = (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright): DiceKeyWithKeyId => new DiceKeyWithKeyId(this.keyId, rotateDiceKey(this.faces, clockwise90DegreeRotationsFromUpright));
   
-  get inRotationIndependentForm(): DiceKeyWithKeyId { return new DiceKeyWithKeyId(this.keyId, rotateToRotationIndependentForm(this.faces)) };
+  get inRotationIndependentForm(): DiceKeyWithKeyId { return new DiceKeyWithKeyId(this.keyId, rotateToRotationIndependentForm(this.faces)) }
 
   toSeedString = (): DiceKeyInHumanReadableForm => diceKeyFacesToSeedString(this.faces);
 

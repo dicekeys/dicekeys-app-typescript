@@ -19,7 +19,7 @@ export class FormFocusState<T extends string = string> {
     if (!this.#focusStateCache.has(fieldName)) {
       this.#focusStateCache.set(fieldName, new FieldFocusState<T, F>(this, fieldName));
     }
-    return this.#focusStateCache.get(fieldName)! as FieldFocusState<T, F>;
+    return this.#focusStateCache.get(fieldName) as FieldFocusState<T, F>;
   }
 
   private _fieldInFocus: T | undefined;

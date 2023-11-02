@@ -34,7 +34,7 @@ export const RecipePurposeContentView = ({recipe}: {recipe: Recipe | undefined})
 export const RecipeDescriptionContentView = observer ( ({state}: {state: RecipeState}) => {
   const {type, recipeJson, recipeIsValid} = state;
   if (type == null || recipeJson == null || !recipeIsValid) return null;
-  let recipe = defaultOnException( () => (JSON.parse(recipeJson ?? "{}") as Recipe) );
+  const recipe = defaultOnException( () => (JSON.parse(recipeJson ?? "{}") as Recipe) );
   if (recipe == null) {
     return (<><i>Improperly formatted JSON {describeRecipeType(type)} recipe</i></>);
   }

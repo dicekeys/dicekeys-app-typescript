@@ -13,9 +13,6 @@ import {
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { jsonStringifyWithSortedFieldOrder } from "../utilities/json";
 
-import { Crypto } from "@peculiar/webcrypto"
-global.crypto = new Crypto() as typeof global.crypto;
-
 const defaultSeedString = "a bogus seed";
   
 const defaultRespondToHost = "client.app";
@@ -33,8 +30,7 @@ class MockQueuedUrlApiRequest extends QueuedUrlApiRequest {
 }
 
 const getMockClient = (seedString: string = defaultSeedString) => {
-  var client: UrlApi;
-  client = new UrlApi(defaultServerUrl, defaultRespondToUrl, url => {
+  const client: UrlApi = new UrlApi(defaultServerUrl, defaultRespondToUrl, url => {
     const requestObj = new MockQueuedUrlApiRequest(url, client.handleResult);
     requestObj.respond(seedString, {});
   });

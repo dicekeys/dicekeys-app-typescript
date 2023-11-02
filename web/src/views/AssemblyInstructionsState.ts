@@ -55,8 +55,8 @@ export class AssemblyInstructionsState implements ViewState {
   get goToNextStep(): (() => void) | undefined {
     const {stepPlus1} = this;
     return stepPlus1 == null ? undefined : (() => this.setStep(stepPlus1))
-  };
-  get goToPrevStep() { const {stepMinus1} = this; return stepMinus1 == null ? undefined : () => this.setStep(stepMinus1) };
+  }
+  get goToPrevStep() { const {stepMinus1} = this; return stepMinus1 == null ? undefined : () => this.setStep(stepMinus1) }
   get stepPlus1() { 
     if (this.step === AssemblyInstructionsStep.ScanFirstTime && this.diceKey == undefined) {
       return this.userChoseToSkipScanningStep ? AssemblyInstructionsStep.SealBox : undefined;

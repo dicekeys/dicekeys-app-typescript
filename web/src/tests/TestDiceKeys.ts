@@ -5,7 +5,7 @@ import { testDiceKeysInHumanReadableForm } from "./TestDiceKeysInHumanReadableFo
 export const createSetOfTestDiceKeys = (count: number) => {
   fs.writeFileSync('TestDiceKeysInHumanReadableForm.ts', `export const testDiceKeysInHumanReadableForm = ${
    JSON.stringify( 
-      Array.from(Array(count).keys()).map( _ => 
+      Array.from(Array(count).keys()).map( () => 
         DiceKeyWithoutKeyId.fromRandom().inHumanReadableForm
       ), undefined, 2)
     };` + "\n");

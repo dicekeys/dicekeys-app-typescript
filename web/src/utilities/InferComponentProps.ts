@@ -16,6 +16,6 @@ export type InferComponentProps<T> =
         Omit<StyledComponentInnerOtherProps<T>, StyledComponentInnerAttrs<T>>
     )
     :
-    T extends keyof JSX.IntrinsicElements | JSXElementConstructor<any> ?
+    T extends keyof JSX.IntrinsicElements | JSXElementConstructor<unknown> ?
       ComponentPropsWithoutRef<T> :
       never;

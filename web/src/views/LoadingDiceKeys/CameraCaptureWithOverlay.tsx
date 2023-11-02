@@ -80,7 +80,7 @@ export const CameraCaptureWithOverlay = observer ( class CameraCaptureWithOverla
     const aspectRatio = track?.getSettings().aspectRatio ?? 1;
     if (useImageCapture) {
       if (track) {
-        new FrameGrabberUsingImageCapture(track, this.onFrameCaptured);;
+        new FrameGrabberUsingImageCapture(track, this.onFrameCaptured);
       }
     }
          

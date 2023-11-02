@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 // A TypeScript port of...
 //  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
 
@@ -5,9 +6,9 @@
 
 export function UTF8ArrToStr (aBytes: Uint8Array) {
 
-  var sView = "";
+  let sView = "";
 
-  for (var nPart, nLen = aBytes.length, nIdx = 0; nIdx < nLen; nIdx++) {
+  for (let nPart, nLen = aBytes.length, nIdx = 0; nIdx < nLen; nIdx++) {
     nPart = aBytes[nIdx]!;
     sView += String.fromCharCode(
       nPart > 251 && nPart < 254 && nIdx + 5 < nLen ? /* six bytes */
@@ -33,11 +34,11 @@ export function UTF8ArrToStr (aBytes: Uint8Array) {
 export function strToUTF8Arr (sDOMStr: string) {
 
   const nStrLen: number = sDOMStr.length;
-  var nArrLen: number = 0;
+  let nArrLen: number = 0;
 
   /* mapping... */
 
-  for (var nMapIdx = 0; nMapIdx < nStrLen; nMapIdx++) {
+  for (let nMapIdx = 0; nMapIdx < nStrLen; nMapIdx++) {
     const nChr = sDOMStr.charCodeAt(nMapIdx);
     nArrLen += nChr < 0x80 ? 1 : nChr < 0x800 ? 2 : nChr < 0x10000 ? 3 : nChr < 0x200000 ? 4 : nChr < 0x4000000 ? 5 : 6;
   }
@@ -46,7 +47,7 @@ export function strToUTF8Arr (sDOMStr: string) {
 
   /* transcription... */
 
-  for (var nIdx = 0, nChrIdx = 0; nIdx < nArrLen; nChrIdx++) {
+  for (let nIdx = 0, nChrIdx = 0; nIdx < nArrLen; nChrIdx++) {
     const nChr = sDOMStr.charCodeAt(nChrIdx);
     if (nChr < 128) {
       /* one byte */

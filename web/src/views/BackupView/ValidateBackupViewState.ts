@@ -18,6 +18,7 @@ export class FaceErrorDescriptor<T extends DiceKey = DiceKey> {
   get cause() {
     const {error} = this;
     if (error == null) return [];
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {index, ...errorObject} = error;
     return (Object.keys(errorObject) as (keyof FaceComparisonErrorTypes)[])
       .map( k => k === "orientationAsLowercaseLetterTrbl" ? "orientation" : k )

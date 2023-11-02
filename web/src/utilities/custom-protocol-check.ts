@@ -1,4 +1,4 @@
-// Ported to typescript from the npm custom-protocol-check pacakge
+// Ported to typescript from the npm custom-protocol-check package
 
 // Stuart notes: also useful reference is https://github.com/fingerprintjs/external-protocol-flooding/blob/master/packages/client/src/detector/detection.ts
 
@@ -9,7 +9,7 @@ const userAgentContains = (mixedCaseString: string) =>
 
 function isOSX() {
   return userAgentContains("Macintosh");
-};
+}
 
 function isFirefox() {
   return userAgentContains("firefox");
@@ -33,13 +33,13 @@ function isIE(): boolean {
     // IE 11
     // ua = 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko/20100101 Firefox/12.0';
 
-    var msie = userAgentLc.indexOf("msie");
+    const msie = userAgentLc.indexOf("msie");
     if (msie > 0) {
       // IE 10 or older
       return true;
     }
 
-    var trident = userAgentLc.indexOf("trident/");
+    const trident = userAgentLc.indexOf("trident/");
     if (trident > 0) {
       // IE 11
       return true;
@@ -56,7 +56,7 @@ function isEdge() {
   // Edge
   // ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.10240';
 
-  var edge = userAgentLc.indexOf("edge");
+  const edge = userAgentLc.indexOf("edge");
   if (edge > 0) {
     return true;
   }
@@ -154,7 +154,7 @@ const openUriWithTimeoutHack = (uri: string, failCb: () => void, successCb: () =
 };
 
 const openUriUsingFirefox = (uri: string, failCb: () => void, successCb: () => void) => {
-  let iframe = document.querySelector("#hiddenIframe") as HTMLIFrameElement ?? 
+  const iframe = document.querySelector("#hiddenIframe") as HTMLIFrameElement ?? 
     createHiddenIframe(document.body, "about:blank");
 
   try {
@@ -167,16 +167,16 @@ const openUriUsingFirefox = (uri: string, failCb: () => void, successCb: () => v
   }
 };
 
-const getBrowserVersion = () => {
+const getBrowserVersion = (): number => {
   const ua = window.navigator.userAgent;
   let tem,
-    M: RegExpMatchArray =
+    M =
       ua.match(
         /(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i
-      ) || [];
+      ) ?? [];
   if (/trident/i.test(M[1] ?? "")) {
     tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
-    return parseFloat(tem[1] ?? "") || "";
+    return parseFloat(tem[1] ?? "");
   }
   if (M[1] === "Chrome") {
     tem = ua.match(/\b(OPR|Edge)\/(\d+)/);
@@ -230,7 +230,7 @@ export const customProtocolCheck = (
 
   if (isEdge() || isIE() && "msLaunchUri" in navigator) {
     //for IE and Edge in Win 8 and Win 10
-    (navigator as any).msLaunchUri(uri, successCb, failCb);
+    (navigator as unknown as {msLaunchUri: (a: string, b: () => void, c: () => void) => void}).msLaunchUri(uri, successCb, failCb);
   } else {
     if (document.hasFocus()) {
       openUri(callbackTimeoutInMs);
