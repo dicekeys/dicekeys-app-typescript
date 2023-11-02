@@ -32,11 +32,11 @@ new (class WindowsOpen {
 			}
 		} catch {}
 		return {};
-	};
+	}
 
 	private set openWindowIds(windowIds: {[windowId: string]: number}) {
 		localStorage.setItem(localStoreName, JSON.stringify(windowIds));
-	};
+	}
 
 	private sendHeartbeat = () => {
 		// this.openWindowIds[myWindowId] = (new Date()).getTime() + (2 * heartbeatFrequencyInMs);

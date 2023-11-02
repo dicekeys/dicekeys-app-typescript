@@ -55,7 +55,7 @@ export class DiceKeyState implements SettableOptionalDiceKey {
   public get diceKey(): DiceKeyWithKeyId | undefined {
     const {keyId} = this;
     return keyId ? DiceKeyMemoryStore.diceKeyForKeyId(keyId) : undefined;
-  };
+  }
 
   constructor(
     diceKey?: DiceKeyWithKeyId,

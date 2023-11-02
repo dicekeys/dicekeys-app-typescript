@@ -77,13 +77,14 @@ export class DiceKeyFrameProcessorState {
       this.onFacesRead = undefined;
     }
     if (this.bestFacesRead && this.onDiceKeyRead) {
-      const centeredOrientationAsScannedTrbl = this.bestFacesRead[12]?.orientationAsLowercaseLetterTrbl;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const centeredOrientationAsScannedTrbl = this.bestFacesRead[12]!.orientationAsLowercaseLetterTrbl;
       const onDiceKeyReadCallback = this.onDiceKeyRead;
       this.onDiceKeyRead = undefined;
       try {
         // If the DiceKey validates, call the onDiceKeyRead callback we just removed
         DiceKeyWithKeyId.create(DiceKeyFaces(this.bestFacesRead.map( faceRead => validateFaceRead(faceRead) ))).then( 
-          diceKeyWithKeyId => onDiceKeyReadCallback(diceKeyWithKeyId, centeredOrientationAsScannedTrbl!)
+          diceKeyWithKeyId => onDiceKeyReadCallback(diceKeyWithKeyId, centeredOrientationAsScannedTrbl)
         )
       } catch {}
     }
@@ -160,8 +161,8 @@ export class DiceKeyFrameProcessorState {
     this.frameProcessedTimesMs.push(Date.now());
     if (this.frameProcessedTimesMs.length > 1) {
       const msPerFrame = (
-        this.frameProcessedTimesMs.at(-1)! -
-        this.frameProcessedTimesMs[0]!
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        this.frameProcessedTimesMs.at(-1)! - this.frameProcessedTimesMs[0]!
       ) / (this.frameProcessedTimesMs.length - 1);
       this.framesPerSecond = Math.round( 10000 / msPerFrame) / 10;
       if (this.frameProcessedTimesMs.length === 4) {
@@ -182,4 +183,4 @@ export class DiceKeyFrameProcessorState {
       renderFacesRead(overlayCanvasCtx, this.facesRead, {sourceImageSize: {width, height}});
     }
   });
-};
+}

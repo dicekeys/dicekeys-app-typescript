@@ -17,6 +17,7 @@ export class AsyncCalculation<RESULT, KEY=string> {
     key: KEY, fn: () => Promise<RESULT>
   ): RESULT | undefined => {
     if (this.cache.has(key)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       return this.cache.get(key)!.result as RESULT;
     }
     this.calculate(key, fn);

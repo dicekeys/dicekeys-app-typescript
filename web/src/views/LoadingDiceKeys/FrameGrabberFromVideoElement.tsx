@@ -1,4 +1,5 @@
 // import { action, makeAutoObservable } from "mobx";
+import { throwIfNull } from "../../utilities/throwIfNull";
 import { withDefined } from "../../utilities/with-defined";
 
 
@@ -6,10 +7,12 @@ export class FrameGrabberFromVideoElement {
   /**
    * A re-usable canvas into which to capture image frames
    */
-  private readonly captureCanvas: HTMLCanvasElement = document.createElement("canvas");
-  private captureCanvasCtx: CanvasRenderingContext2D = this.captureCanvas.getContext("2d")!;
+  private readonly captureCanvas: HTMLCanvasElement;
+  private captureCanvasCtx: CanvasRenderingContext2D;
 
   constructor(private videoElement: HTMLVideoElement, private callback: (frame: ImageData) => void) {
+    this.captureCanvas = document.createElement("canvas");
+    this.captureCanvasCtx = throwIfNull(this.captureCanvas.getContext("2d"));
     this.frameGrabLoopIteration();
   }
 
@@ -37,10 +40,10 @@ export class FrameGrabberFromVideoElement {
     // Ensure the capture canvas is the size of the video being retrieved
     if (this.captureCanvas.width != this.videoElement.videoWidth || this.captureCanvas.height != this.videoElement.videoHeight) {
       [this.captureCanvas.width, this.captureCanvas.height] = [this.videoElement.videoWidth, this.videoElement.videoHeight];
-      this.captureCanvasCtx = this.captureCanvas.getContext("2d")!;
+      this.captureCanvasCtx = throwIfNull(this.captureCanvas.getContext("2d"));
     }
-    this.captureCanvasCtx!.drawImage(this.videoElement!, 0, 0);
-    return this.captureCanvasCtx!.getImageData(0, 0, this.captureCanvas.width, this.captureCanvas.height);
+    this.captureCanvasCtx.drawImage(this.videoElement, 0, 0);
+    return this.captureCanvasCtx.getImageData(0, 0, this.captureCanvas.width, this.captureCanvas.height);
   };
 
   private frameGrabFailed = () =>

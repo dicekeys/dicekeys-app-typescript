@@ -11,7 +11,7 @@ type ObscuringFunction = (unobscuredValue: string) => string;
 
 export const defaultObscuringFunction = (password: string): string => {
   const words = password.split(' ');
-  const obscuredWords = words.map( word => word.split("").map( _ => obscuringCharacter).join("")); // * ▓▒░
+  const obscuredWords = words.map( word => word.split("").map( () => obscuringCharacter).join("")); // * ▓▒░
   const sortedObscuredWords = obscuredWords.sort();
   return sortedObscuredWords.join(' ');
 }
@@ -92,11 +92,11 @@ export const GeneratedDiceKeySeedFieldView = GeneratedTextFieldViewWithSharedTog
 
 const obscureDiceKeyInHumanReadableForm = (s: string) =>
   // The 12 triples before the center face should be obscured
-  s.slice(0, 12*3).split("").map( _ => obscuringCharacter).join("") +
+  s.slice(0, 12*3).split("").map( () => obscuringCharacter).join("") +
   // The first two characters (letter and digit) of the center face should not be obscured
   s.slice(12*3, 12*3 + 2) +
   // The orientation character of the center face and the last 12 faces should be obscured
-  s.slice(12*3 + 2).split("").map( _ => obscuringCharacter).join("");
+  s.slice(12*3 + 2).split("").map( () => obscuringCharacter).join("");
 
 export const DiceKeyAsSeedView = GeneratedTextFieldViewWithSharedToggleState({
   toggleState: ToggleState.ObscureDiceKey,

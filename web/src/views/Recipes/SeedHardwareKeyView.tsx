@@ -70,7 +70,7 @@ const TextInputFor64HexCharsFontSize = cssExprWithoutCalc(
 const CalcTextInputFor64HexCharsFontSize = cssCalcTyped(TextInputFor64HexCharsFontSize);
 
 
-const TextInputFor64HexChars = styled.input.attrs( (_props) => ({
+const TextInputFor64HexChars = styled.input.attrs( () => ({
   type: "text",
   size: 64,
 }))`

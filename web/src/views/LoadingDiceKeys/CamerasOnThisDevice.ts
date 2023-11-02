@@ -75,14 +75,12 @@ export class CamerasOnThisDevice {
 
   public static instance(minWidth: number | undefined, minHeight: number | undefined): CamerasOnThisDevice {
     const key = `${minWidth}:${minHeight}`;
-    if (CamerasOnThisDevice._instances.has(key)) {
-      // Return the existing instance
-      return CamerasOnThisDevice._instances.get(key)!
-    };
-    // Create an instance
-    const camerasOnThisDevice = new CamerasOnThisDevice(minWidth, minHeight);
-    this._instances.set(key, camerasOnThisDevice);
-    return camerasOnThisDevice;
+    return CamerasOnThisDevice._instances.get(key) ?? ( ()=> {
+      // Create an instance
+      const camerasOnThisDevice = new CamerasOnThisDevice(minWidth, minHeight);
+      this._instances.set(key, camerasOnThisDevice);
+      return camerasOnThisDevice;
+    })()
   }
 
   private constructor(public readonly minWidth: number | undefined, public readonly minHeight: number | undefined) {
@@ -132,10 +130,11 @@ export class CamerasOnThisDevice {
 
   private cameraDeviceIdToCameraNumber = new ObservableMap<string,number>(); // new Map<string, number>();
   private getCameraNumber = (deviceId: string): number => {
-    if (!this.cameraDeviceIdToCameraNumber.has(deviceId)) {
-      this.cameraDeviceIdToCameraNumber.set(deviceId, this.cameraDeviceIdToCameraNumber.size +1);
-    }
-    return this.cameraDeviceIdToCameraNumber.get(deviceId)!;
+    return this.cameraDeviceIdToCameraNumber.get(deviceId) ?? (() => {
+      const cameraNumber = this.cameraDeviceIdToCameraNumber.size +1;
+      this.cameraDeviceIdToCameraNumber.set(deviceId, cameraNumber);
+      return cameraNumber;
+    })()
   }
 
   /**

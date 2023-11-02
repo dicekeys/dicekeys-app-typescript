@@ -36,7 +36,7 @@ export function isMessageUTF8PrintableString(message: Uint8Array): boolean {
     }
     for (let j = 0; j < additionalBytes; j++) {
       // All additional bytes for this character must be of the form 10xxxxxx
-      const extensionByte = message[i++]!;
+      const extensionByte = message[i++] ?? 0;
       if ((extensionByte & 0xc0) != 0x80) {
         return false;
       }

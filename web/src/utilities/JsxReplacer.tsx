@@ -7,6 +7,7 @@ export const findIndexAndLength = (original: string, searchFor: string | RegExp)
 //    const [matchResult] = original.match(searchFor); 
     const matchResult = original.match(searchFor);
     if (matchResult == null || matchResult.index == null) return undefined;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return {index: matchResult.index, length: matchResult[0]!.length};
   }
 }

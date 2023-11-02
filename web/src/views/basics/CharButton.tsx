@@ -4,7 +4,7 @@ import styled from "styled-components";
 import type {InferComponentProps} from "../../utilities/InferComponentProps";
 import { copyToClipboard } from "../../utilities/copyToClipboard";
 
-interface CharButtonExtraProps {invisible?: boolean};
+interface CharButtonExtraProps {invisible?: boolean}
 
 export const CharButton = styled.button.attrs(() =>({
   tabIndex: -1 as number // Widening type from -1 to number is hack to fix typing issues in StyledComponents/InferComponentProps

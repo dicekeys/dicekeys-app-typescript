@@ -39,8 +39,8 @@ export class NavigationPathState {
     const thisPathElementStr = this.thisPathElementStr;
     return thisPathElementStr.length > 0 ? `/${thisPathElementStr}` : "";
   }
-  get fromRootToHereInclusive(): string { return `${this.fromRootToLeftOfHere}${this.thisPathElement}`; };
-  get fromHereToEndOfPathInclusive(): string { return `${this.thisPathElement}${this.fromRightOfHereToEndOfPath}`; };
+  get fromRootToHereInclusive(): string { return `${this.fromRootToLeftOfHere}${this.thisPathElement}`; }
+  get fromHereToEndOfPathInclusive(): string { return `${this.thisPathElement}${this.fromRightOfHereToEndOfPath}`; }
   getPath = (): string => {
     const path = `${this.fromRootToLeftOfHere}${this.thisPathElement}${this.fromRightOfHereToEndOfPath}`;
     return path;
@@ -48,7 +48,7 @@ export class NavigationPathState {
   };
   get path(): string {
     return this.getPath();
-  };
+  }
 
   static root = new NavigationPathState("", "");
 

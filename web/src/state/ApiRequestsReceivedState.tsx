@@ -15,6 +15,7 @@ class ApiRequestsReceivedStateClass {
     this.setApiRequestsReceived([...this._apiRequestsReceived, apiRequestReceived]);
   });
   dequeueApiRequestReceived = action ( () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_dequeued, ...remaining] = this._apiRequestsReceived;
     this.setApiRequestsReceived(remaining);
   });

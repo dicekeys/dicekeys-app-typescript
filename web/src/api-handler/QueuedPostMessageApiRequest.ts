@@ -109,7 +109,7 @@ export class QueuedPostMessageApiRequest extends QueuedApiRequest {
 
   throwIfClientNotPermitted: () => void = () => throwIfHostNotPermitted(this.host)(this.request);
 
-  transmitResponse = (response: ApiCalls.Response, {centerLetterAndDigit, sequenceNumber}: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) =>  { (this.requestEvent.source?.postMessage as (m: any, t?: Transferable[]) => unknown)({
+  transmitResponse = (response: ApiCalls.Response, {centerLetterAndDigit, sequenceNumber}: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) =>  { (this.requestEvent.source?.postMessage as (m: unknown, t?: Transferable[]) => unknown)({
     ...response,
     ...(centerLetterAndDigit == null ? {} : {centerLetterAndDigit}),
     ...(sequenceNumber == null ? {} : {"#": sequenceNumber}),
@@ -130,6 +130,7 @@ export class QueuedPostMessageApiRequest extends QueuedApiRequest {
     super();
     const origin = requestEvent.origin;
     this.origin = origin;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {windowName, ...request} = requestEvent.data as ApiCalls.RequestMessage & PostMessageRequestMetadata;
     // The host must match any requirements in the recipe and
     // (for unseal operations) the UnsealingInstructions.      

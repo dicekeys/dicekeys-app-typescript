@@ -51,7 +51,7 @@ export interface ParsedJsonString extends ParsedJsonBaseType<"string", string> {
   indexOfClosingQuote: number;
   originalQuotedString: string;
 }
-export interface ParsedJsonNull extends ParsedJsonBaseType<"null", null> {}
+export type ParsedJsonNull = ParsedJsonBaseType<"null", null>
 
 export interface ParsedJsonObject extends ParsedJsonElementCommon {
   type: "object";
@@ -141,7 +141,7 @@ class JsonAnnotationParser {
     return whiteSpaceSkipped;
   }
 
-  private get atString() { return this.isAt('"') };
+  private get atString() { return this.isAt('"') }
 
   private parseString = (): Omit<ParsedJsonString, keyof ParsedJsonElementCommon> => {
     const indexOfOpeningQuote = this.indexIntoSourceJson;
@@ -165,7 +165,7 @@ class JsonAnnotationParser {
     }
   } 
 
-  private get atNumber() { return this.atDigit || this.isAt('-') };
+  private get atNumber() { return this.atDigit || this.isAt('-') }
 
   private parseNumber = (): Omit<ParsedJsonNumber, keyof ParsedJsonElementCommon> => {
     const indexOfStart = this.indexIntoSourceJson;
@@ -257,6 +257,7 @@ class JsonAnnotationParser {
           break;
         }
         // The trailing comma for the previous field is at this location
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         fields.at(-1)!.indexOfTrailingComma = this.indexIntoSourceJson;
         // The leading comma for the next field is at this location
         indexOfLeadingComma = this.indexIntoSourceJson;
@@ -307,6 +308,7 @@ class JsonAnnotationParser {
           break;
         }
         // The trailing comma for the previous field is at this location
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         fields.at(-1)!.indexOfTrailingComma = this.indexIntoSourceJson;
         // The leading comma for the next field is at this location
         indexOfLeadingComma = this.indexIntoSourceJson;

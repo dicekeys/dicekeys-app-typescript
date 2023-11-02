@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React from "react";
 import { observer } from "mobx-react";
 import { DiceKeyFaces, DiceKeyWithKeyId, DiceKeyWithoutKeyId, Face } from "../../dicekeys/DiceKey";

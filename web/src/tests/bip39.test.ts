@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { DiceKeyWithoutKeyId } from "../dicekeys/DiceKey";
 import { toBip39, bip39ToByteArray, diceKeyToBip39String, bip39StringToDiceKey as bip39ToDiceKey } from "../formats/bip39/bip39";
 

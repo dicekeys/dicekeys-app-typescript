@@ -48,7 +48,7 @@ export interface ScanDiceKeyViewProps extends OnDiceKeyRead, DiceKeyAnimationRot
   height: string;
   showBoxOverlay?: boolean;
   editManually?: () => void;
-};
+}
 
 const PermissionRequiredView = ({editManually}: ScanDiceKeyViewProps) => (
   <FullScreenNotification>

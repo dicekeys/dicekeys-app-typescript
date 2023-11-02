@@ -110,7 +110,7 @@ export const PurposeInputField = styled(RecipeTextInputField)`
 
 export const RecipeQuoteCharacterSpan = styled(DefaultJsonTextSpan)``;
 
-export const InDoubleQuotes = (props: React.PropsWithChildren<{}>) => (
+export const InDoubleQuotes = (props: React.PropsWithChildren<unknown>) => (
   <>
     <RecipeQuoteCharacterSpan>"</RecipeQuoteCharacterSpan>
     {props.children}
@@ -121,7 +121,7 @@ export const InDoubleQuotes = (props: React.PropsWithChildren<{}>) => (
 const RecipeQuoteBraceSpan = styled(DefaultJsonTextSpan)``;
 const RecipeQuoteBracketSpan = styled(DefaultJsonTextSpan)``;
 
-export const InBrackets = (props: React.PropsWithChildren<{}>) => (
+export const InBrackets = (props: React.PropsWithChildren<unknown>) => (
   <>
     <RecipeQuoteBracketSpan>[</RecipeQuoteBracketSpan>
     {props.children}
@@ -129,7 +129,7 @@ export const InBrackets = (props: React.PropsWithChildren<{}>) => (
   </>    
 );
 
-export const InBraces = (props: React.PropsWithChildren<{}>) => (
+export const InBraces = (props: React.PropsWithChildren<unknown>) => (
   <>
     <RecipeQuoteBraceSpan>{"{"}</RecipeQuoteBraceSpan>
     {props.children}
@@ -149,7 +149,7 @@ const FieldNameSpan = styled(DefaultJsonTextSpan)`
   color: rgba(0, 0, 0, 0.5);
 `;
 
-export const QuotedFieldNameSpan = (props: React.PropsWithChildren<{}>) => (
+export const QuotedFieldNameSpan = (props: React.PropsWithChildren<unknown>) => (
   <InDoubleQuotes><FieldNameSpan>{props.children}</FieldNameSpan></InDoubleQuotes>
 )
 

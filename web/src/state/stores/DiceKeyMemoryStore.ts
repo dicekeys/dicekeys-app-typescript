@@ -87,10 +87,10 @@ class DiceKeyMemoryStoreClass {
   toStorageFormatJson = () => JSON.stringify(this.toStorageFormat())
 
   updateStorage = () => {
-    if (RUNNING_IN_ELECTRON) {
+    if (SynchronizedStorageFormat) {
       // Broadcast to all windows main process
       // console.log(`updateStorage()`);
-      SynchronizedStorageFormat!.storageFormat = this.toStorageFormat();
+      SynchronizedStorageFormat.storageFormat = this.toStorageFormat();
     } else {
       // Running in the browser
       writeStringToEncryptedLocalStorageField(DiceKeyMemoryStoreClass.StorageFieldName, this.toStorageFormatJson());
@@ -276,8 +276,8 @@ class DiceKeyMemoryStoreClass {
 
   #initiateReadFromLocalStorage = async () => {
     try {
-      const storageFormat = RUNNING_IN_ELECTRON ?
-        SynchronizedStorageFormat!.storageFormat :
+      const storageFormat = SynchronizedStorageFormat ?
+        SynchronizedStorageFormat.storageFormat :
         await this.#fetchFromLocalStorageField();
       if (storageFormat != null) {
         this.updateFromSharedStorage(storageFormat);
@@ -291,9 +291,9 @@ class DiceKeyMemoryStoreClass {
   constructor() {
     makeAutoObservable(this);
     this.#initiateReadFromLocalStorage();
-    if (RUNNING_IN_ELECTRON) {
+    if (SynchronizedStorageFormat) {
       autorun( () => {
-        this.updateFromSharedStorage( SynchronizedStorageFormat!.storageFormat );
+        this.updateFromSharedStorage( SynchronizedStorageFormat.storageFormat );
       })
     }
     

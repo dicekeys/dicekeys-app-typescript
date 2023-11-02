@@ -88,6 +88,7 @@ export class SelectedDiceKeyViewState implements ViewState<SelectedDiceKeyViewSt
     this._diceKey = diceKey;
     this.navState = new NavigationPathState(parentNavState, diceKey.centerLetterAndDigit, () => this.subViewState.navState.fromHereToEndOfPathInclusive );
     this.subView = new SubViewState<SelectedDiceKeySubViewStates>(this.viewName, this.navState, this.displayDiceKeyViewState);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     this.subView.subStateChangedEvent.on( (_prevState, _currentState) => {
       const diceKeyIsInMemory = DiceKeyMemoryStore.hasKeyIdInMemory(diceKey.keyId);
       // console.log(`SelectedDiceKeyView subview state changed from ${_prevState?.viewName ?? "undefined"} to ${_currentState?.viewName ?? "undefined"} and DiceKeyInMemory=${diceKeyIsInMemory ? "true" : "false"}`)

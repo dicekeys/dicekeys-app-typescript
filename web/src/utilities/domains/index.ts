@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 // import {readFileSync} from 'fs'
 
 import {PublicSuffixDataList} from "./public_suffix_list";

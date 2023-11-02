@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 // A TypeScript port of...
 //  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
 

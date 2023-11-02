@@ -14,7 +14,7 @@ export class AddressBarState {
 
   get current() { return this.stateStack[this.historyIndex] }
 
-  get path(): string { return this.current?.path ?? ""};
+  get path(): string { return this.current?.path ?? ""}
 
 
   back = () => {
@@ -69,6 +69,7 @@ export class AddressBarState {
     if (this.stateStack.length === 0) {
       this.pushState(path, stateChangeFuntion, undoStateChangeFn ?? (() => {}));
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.stateStack[this.historyIndex] = {path, stateChangeFuntion, undoStateChangeFn: undoStateChangeFn ?? this.stateStack[0]!.undoStateChangeFn };
     }
     // console.log(`replaceState completed at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)

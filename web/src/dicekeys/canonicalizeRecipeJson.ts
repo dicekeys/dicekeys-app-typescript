@@ -36,6 +36,6 @@ export const canonicalizeRecipeJson = (recipeJson: string | undefined): string |
     return toCanonicalizeRecipeJson(recipeJsonObj);
   } catch (e) {
     console.log(e);
-    return undefined;;
+    return undefined;
   }
 }
