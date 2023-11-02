@@ -3,7 +3,7 @@
 ## Requirements
 
 ## Running web app locally
-Tested to work with Node.js LTS v14.
+Tested to work with Node.js LTS v18.
 
 Install [TypeScript](https://www.typescriptlang.org/download) in your system.
 ```bash
@@ -94,7 +94,8 @@ docker builder prune
 
 ## Run tests
 ```bash
-jest
+cd web/
+npm run test
 ```
 
 ## Architecture
