@@ -87,11 +87,13 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 	modP = (val: INT) => val % this.prime as INT;
 	addModP = (a: INT, b: INT) =>
 		(((a as bigint) + (b as bigint)) % (this.prime as bigint)) as INT;
-	sumModP = (first: INT, ...rest: INT[]) =>
-		rest.reduce(
+	sumModP = (...values: INT[]) => {
+		const [first = this.#zero, ...rest] = values;
+		return rest.reduce(
 			(sum, value) => ((sum as bigint) + (value as bigint)),
 			first as bigint
 		) % (this.prime as bigint) as INT;
+	}
 	subModP = (a: INT, b: INT): INT => {
 		let sub = ((a as bigint) - (b as bigint));
 		if (sub < 0) {
@@ -126,37 +128,19 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 		} else if (points.length < this.minimumNumberOfSharesToRecover) {
 			throw RangeError(`Cannot interpolate ${this.minimumNumberOfSharesToRecover} degree polynomial from ${points.length} points`);
 		}
-		const nums: INT[] = []; // avoid inexact division
-		const dens: INT[] = [];
-		// for i in range(k):
-		for (let i = 0; i < points.length; i++) {
-			const other_x_values = points.map( p => p.x ); //  list(x_s)
-			// cur = others.pop(i)
-			const current_x = other_x_values.splice(i, 1)[0]!;
-			console.log(`cur/others`, current_x, other_x_values);
-			//  nums.append(PI( x - o for o in others))
-			nums.push(this.productModP(other_x_values.map( o => this.subModP(atX, o) )));
-			//  dens.append(PI(cur - o for o in others))
-			dens.push(this.productModP(other_x_values.map( o => this.subModP(current_x, o) )))
-		}
-		// den = PI(dens)
-		const den:INT = this.productModP(dens);
-		// num = sum([_divmod(nums[i] * den * y_s[i] % p, dens[i], p)
-		//           for i in range(k)])
-		const num: INT = nums.reduce( (sum, _num_i, i) => {
-				const numerator = this.productModP([nums[i]!, den, points[i]!.y]);
-				const denominator = dens[i]!;
-				const resultOfDivision = this.divideModP(numerator, denominator);
-				console.log(`loop`, resultOfDivision, sum, numerator, denominator,  nums[i], den, points[i]!.y);
-				return this.addModP(sum, resultOfDivision);
-					// sum,
-					// this.divideModP(
-					// 	this.productModP([nums[i]!, den, points[i]![1]]),
-					// 	dens[i]!
-					// )
-			}, this.#zero) as INT
-		console.log(`lagrangeInterpolate nums/dens/den,num`, nums, dens, den, num);
-		return this.divideModP(num, den);
+
+		const {numerators, denominators} = points.reduce( (result, {x}) => {
+			const other_x_values = points.map( p => p.x ).filter( xi => xi !== x );
+			result.numerators.push( this.productModP(other_x_values.map( o => this.subModP(atX, o) )));
+			result.denominators.push( this.productModP(other_x_values.map( o => this.subModP(x, o) )) );
+			return result;
+		}, {numerators: [] as INT[], denominators: [] as INT[]});
+
+		const productOfAllDenominators:INT = this.productModP(denominators);
+		const sumOfAllNumerators: INT = this.sumModP( ...numerators.map( (_num_i, i) =>
+			this.divideModP(this.productModP([numerators[i]!, productOfAllDenominators, points[i]!.y]), denominators[i]!)
+		));
+		return this.divideModP(sumOfAllNumerators, productOfAllDenominators);
 	}
 
 	lagrangeInterpolate2 = (points: Point<INT>[], atX: INT = this.#zero): INT => {
