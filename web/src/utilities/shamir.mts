@@ -1,14 +1,12 @@
 import * as crypto from 'node:crypto';
 
-interface Point<INT extends number | bigint> {
+export interface PointInIntegerSpace<INT extends number | bigint> {
 	x: INT;
 	y: INT;
 }
 
-const range = (from: number, count: number): number[] =>
-	[...Array(count).keys()].map( i => from + i );
-
-
+// const range = (from: number, count: number): number[] =>
+// 	[...Array(count).keys()].map( i => from + i );
 
 const log2Ceiling = <INT extends number | bigint>(value: INT): number => {
 	if (typeof value === "number") {
@@ -27,7 +25,6 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 
 	constructor(
 		public readonly prime: INT,
-		public readonly minimumNumberOfSharesToRecover: number = 1
 	) {
 		this.#zero = ((typeof prime === "number") ? 0 : 0n) as INT;
 		this.#one = ((typeof prime === "number") ? 1 : 1n) as INT;
@@ -39,31 +36,63 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 		);
 	}
 
+
+	randomIntModP = (): INT => {
+		crypto.getRandomValues(this.#arrayBufferToGetRandomValues);
+		const randomInt = this.#arrayBufferToGetRandomValues.reduce( (r, uint) => {
+				const uInt = typeof this.prime === "number" ? uint : BigInt(uint);
+				return ( ((r as bigint) << (this.#thirtyTwo as bigint)) | ( uInt as bigint) ) as INT
+			},
+			this.#zero
+		) as INT;
+		return randomInt % this.prime as INT;
+	}
+
+	Int = (val: number): INT => (typeof this.prime === "number" ? val : BigInt(val)) as INT;
+	modP = (val: INT) => val < this.prime ? (val) : (val % this.prime) as INT;
+	addModP = (a: INT, b: INT) => this.modP((a as bigint) + (b as bigint) as INT);
+//		(((a as bigint) + (b as bigint)) % (this.prime as bigint)) as INT;
+	sumModP = (...values: INT[]) => {
+		const [first = this.#zero, ...rest] = values;
+		return this.modP(rest.reduce(
+			(sum, value) => ((sum as bigint) + (value as bigint)),
+			first as bigint
+		) as INT);
+	}
+	subModP = (a: INT, b: INT): INT => {
+		const sub = ((a as bigint) - (this.modP(b) as bigint));
+		return ( (sub as INT) >= this.#zero ? sub : (sub + (this.prime as bigint)) ) as INT;
+		// if (sub < 0) {
+		// 	sub += this.prime as bigint;
+		// }
+		// return sub as INT;
+	}
+	multiplyModP = (a: INT, b: INT) =>
+		(((a as bigint) * (b as bigint)) % (this.prime as bigint)) as INT;
+	productModP = ([first, ...rest]: INT[]) =>
+		rest.reduce( this.multiplyModP, first ?? this.#one);
+
 	// Division in integers modulus p means finding the inverse of the
 	// denominator modulo p and then multiplying the numerator by this
 	// inverse (Note: inverse of A is B such that A*B % p == 1). This can
 	// be computed via the extended Euclidean algorithm
 	// http://en.wikipedia.org/wiki/Modular_multiplicative_inverse#Computation
- 	extendedGCD = (a: INT, b: INT): [INT, INT] => {
-	// console.log(`extendedGCD a, b`, a, b);
-	let [x, y, last_x, last_y] = [this.#zero, this.#one, this.#one, this.#zero] as [INT, INT, INT, INT];
-	while (b != this.#zero) {
-		const quotient = (typeof a === "number" ? Math.floor(a / b) : a/b) as INT;
-		// console.log(`a, b, a/b x y`, a, b, quotient, x, y);
-		// [a, b] = [b, a % b] as [INT, INT];
-		// [x, last_x] = [this.subModP(last_x, this.multiplyModP(quotient, x)), x] as [INT, INT];
-		// [y, last_y] = [this.subModP(last_y, this.multiplyModP(quotient, y)), y] as [INT, INT];
-		[	a, b,
-			x, last_x,
-			y, last_y
-		] = [
-			b, a % b,
-			this.subModP(last_x, this.multiplyModP(quotient, x)), x,
-			this.subModP(last_y, this.multiplyModP(quotient, y)), y] as [INT, INT, INT, INT, INT, INT];
+	inverseModP = (a: INT): INT => {
+		let b = this.prime;
+		let [x, y, last_x, last_y] = [this.#zero, this.#one, this.#one, this.#zero] as [INT, INT, INT, INT];
+		while (b != this.#zero) {
+			const quotient = (typeof a === "number" ? Math.floor(a / b) : a/b) as INT;
+			[	a, b,
+				x, last_x,
+				y, last_y
+			] = [
+				b, a % b,
+				this.subModP(last_x, this.multiplyModP(quotient, x)), x,
+				this.subModP(last_y, this.multiplyModP(quotient, y)), y] as [INT, INT, INT, INT, INT, INT];
+		}
+		// console.log(`extendedGCD result`, last_x, last_y);
+		return last_x;
 	}
-	// console.log(`extendedGCD result`, last_x, last_y);
-	return [last_x, last_y]
-}
 
 	// Compute num / den modulo prime p
 	divideModP = (numerator: INT, denominator: INT): INT => {
@@ -76,37 +105,13 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 		if (denominator > this.prime) {
 			denominator = denominator % this.prime as INT;
 		}
-		const [inv] = this.extendedGCD(denominator, this.prime);
-		const result = this.multiplyModP(numerator, inv);
-		if (this.multiplyModP(result, denominator) !== numerator) {
-			throw new Error("Division failed");
-		}
+		const result = this.multiplyModP(numerator, this.inverseModP(denominator));
+		// if (this.multiplyModP(result, denominator) !== numerator) {
+		// 	throw new Error("Division failed");
+		// }
 		return result;
 	}
 
-	modP = (val: INT) => val % this.prime as INT;
-	addModP = (a: INT, b: INT) =>
-		(((a as bigint) + (b as bigint)) % (this.prime as bigint)) as INT;
-	sumModP = (...values: INT[]) => {
-		const [first = this.#zero, ...rest] = values;
-		return rest.reduce(
-			(sum, value) => ((sum as bigint) + (value as bigint)),
-			first as bigint
-		) % (this.prime as bigint) as INT;
-	}
-	subModP = (a: INT, b: INT): INT => {
-		let sub = ((a as bigint) - (b as bigint));
-		if (sub < 0) {
-			sub += this.prime as bigint;
-		}
-		return sub as INT;
-	}
-
-	multiplyModP = (a: INT, b: INT) =>
-		(((a as bigint) * (b as bigint)) % (this.prime as bigint)) as INT;
-	productModP = ([first, ...rest]: INT[]) =>
-		rest.reduce( this.multiplyModP, first ?? this.#one);
-	
 	// Evaluates polynomial (coefficient tuple) at x, used to generate a
 	// shamir pool in make_random_shares below.
 	evalAt = (poly: INT[], x: INT) =>
@@ -115,20 +120,14 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 			this.#zero
 		);
 
-	// productOfInputs = (vals: INT[]): INT => // upper-case PI -- product of inputs
-	// 	vals.reduce( (productOfInputs, v) => productOfInputs * v as INT, this.#one );
-	// 
+
 	// Find the y-value for the given x, given n (x, y) points;
 	// k points will define a polynomial of up to kth order.
 	// 
-	lagrangeInterpolate = (points: Point<INT>[], atX: INT = this.#zero): INT => {
-		console.log(`lagrangeInterpolate`, atX, points);
+	lagrangeInterpolate = (points: PointInIntegerSpace<INT>[], atX: INT = this.#zero): INT => {
 		if (new Set<INT>(points.map( p => p.x)).size < points.length) {
 			throw Error("Redundant points");
-		} else if (points.length < this.minimumNumberOfSharesToRecover) {
-			throw RangeError(`Cannot interpolate ${this.minimumNumberOfSharesToRecover} degree polynomial from ${points.length} points`);
-		}
-
+		}		
 		const {numerators, denominators} = points.reduce( (result, {x}) => {
 			const other_x_values = points.map( p => p.x ).filter( xi => xi !== x );
 			result.numerators.push( this.productModP(other_x_values.map( o => this.subModP(atX, o) )));
@@ -143,12 +142,10 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 		return this.divideModP(sumOfAllNumerators, productOfAllDenominators);
 	}
 
-	lagrangeInterpolate2 = (points: Point<INT>[], atX: INT = this.#zero): INT => {
+	lagrangeInterpolate2 = (points: PointInIntegerSpace<INT>[], atX: INT = this.#zero): INT => {
 		console.log(`lagrangeInterpolate2`, atX, points);
 		if (new Set<INT>(points.map( p => p.x)).size < points.length) {
 			throw Error("Redundant points");
-		} else if (points.length < this.minimumNumberOfSharesToRecover) {
-			throw RangeError(`Cannot interpolate ${this.minimumNumberOfSharesToRecover} degree polynomial from ${points.length} points`);
 		}
 
 		const product = (vals: INT[], sub: INT | undefined, skip: number | undefined): INT => {
@@ -214,65 +211,104 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 	// (points (x,y) on the polynomial).
 	//
 	// def recover_secret(shares, prime=_PRIME):
-	recoverSecret = (shares: Point<INT>[]): INT => {
-		if (shares.length < this.minimumNumberOfSharesToRecover) {
+	recoverSecret = (shares: PointInIntegerSpace<INT>[], atPublicX: INT = this.#zero, minimumNumberOfSharesToRecover?: number): INT => {
+		if (minimumNumberOfSharesToRecover != null && shares.length < minimumNumberOfSharesToRecover) {
 			throw new RangeError("not enough shares provided")
-			//    raise ValueError("need at least three shares")
 		}
-		// x_s, y_s = zip(*shares)
-		// const points: [INT, INT][] = ( (typeof this.prime === "number") ? 
-		// 	shares.map( (y, index) => [index + 1, y] ) : 
-		// 	shares.map( (y, index) => [BigInt(index + 1), y])) as [INT, INT][];
-		console.log(`recoverSecret`, shares, this.#zero);
-		const l1 = this.lagrangeInterpolate(shares);
-		const l2 = this.lagrangeInterpolate2(shares);
-		if (l1 != l2) {
-			console.log(`l1 != l2`, l1, l2);
-		} else {
-			console.log(`lagrange algorithms agree`);
-		}
-		return l1;
+		return this.lagrangeInterpolate(shares, atPublicX);
+		// const l1 = this.lagrangeInterpolate(shares, atPublicX);
+		// const l2 = this.lagrangeInterpolate2(shares, atPublicX);
+		// if (l1 != l2) {
+		// 	console.log(`l1 != l2`, l1, l2);
+		// } else {
+		// 	console.log(`lagrange algorithms agree`);
+		// }
+		// return l1;
 	}
 
-	randomIntModP = (): INT => {
-		crypto.getRandomValues(this.#arrayBufferToGetRandomValues);
-		const randomInt = this.#arrayBufferToGetRandomValues.reduce( (r, uint) => {
-				const uInt = typeof this.prime === "number" ? uint : BigInt(uint);
-				return ( ((r as bigint) << (this.#thirtyTwo as bigint)) | ( uInt as bigint) ) as INT
-			},
-			this.#zero
-		) as INT;
-		return randomInt % this.prime as INT;
-	}
 
 	// 
 	// Generates a random shamir pool for a given secret, returns share points.
 	// 
-	generateShares = (
-		secret: INT,
-		totalSharesToGenerate: number
-	): Point<INT>[] => {
-		if (this.minimumNumberOfSharesToRecover > totalSharesToGenerate) {
+	// generateSharesForSecretAtXEqualZero = (
+	// 	secret: INT,
+	// 	totalSharesToGenerate: number
+	// ): PointInIntegerSpace<INT>[] => {
+	// 	if (this.minimumNumberOfSharesToRecover > totalSharesToGenerate) {
+	// 		throw new RangeError("There must be at least as many minimum shares as total shares");
+	// 	}
+	// 	// poly = [secret] + [_RINT(prime - 1) for i in range(minimum - 1)]
+	// 	const poly: INT[] = [secret];
+	// 	while (poly.length < this.minimumNumberOfSharesToRecover) {
+	// 		poly.push(this.randomIntModP());
+	// 	}
+	// 	const testAtZero = this.evalAt(poly, this.#zero);
+	// 	if (testAtZero !== secret) {
+	// 		console.log(`Fail`, testAtZero, secret);
+	// 		throw new Error(`failed ${secret}===${testAtZero}`);
+	// 	}
+	// 	// points = [(i, _eval_at(poly, i, prime))
+	// 	//	for i in range(1, shares + 1)]
+	// 	const shares = range(1, totalSharesToGenerate).map( i => {
+	// 		const x = ((typeof this.prime === "number") ? i : BigInt(i)) as INT;
+	// 		return ({x: x, y: this.evalAt(poly, x)});
+	// 	});
+	// 	return shares;
+	// }
+
+
+	generateAdditionalShares = (
+		existingShares: PointInIntegerSpace<INT>[],
+		xValuesOfNewShares: INT[],
+		minimumNumberOfSharesToRecover: number
+	): PointInIntegerSpace<INT>[] => {
+		const existingXValues = new Set<INT>();
+		const redundantXValueInExistingShares = existingShares.reduce( (result, {x}) => {
+			if (existingXValues.has(x) && result == null) {
+				return x;
+			} else {
+				existingXValues.add(x);
+				return result;
+			}
+		}, undefined as INT | undefined);
+		if (redundantXValueInExistingShares != null) {
+			throw new RangeError("Two or more existing shares have the same x value: `${redundantXValueInExistingShares}`");
+		}
+		const firstRedundantXValueForNewShares = xValuesOfNewShares.reduce( (result, x) => {
+			if (existingXValues.has(x) && result == null) {
+				return x;
+			} else {
+				existingXValues.add(x);
+				return result;
+			}
+		}, undefined as INT | undefined);
+		if (firstRedundantXValueForNewShares != null) {
+			throw new RangeError("X value for new share is not unique: `${redundantXValueInExistingShares}`")
+		}
+		if (minimumNumberOfSharesToRecover > existingShares.length + xValuesOfNewShares.length) {
 			throw new RangeError("There must be at least as many minimum shares as total shares");
 		}
-		// poly = [secret] + [_RINT(prime - 1) for i in range(minimum - 1)]
-		const poly: INT[] = [secret];
-		while (poly.length < this.minimumNumberOfSharesToRecover) {
-			poly.push(this.randomIntModP());
-		}
-		const testAtZero = this.evalAt(poly, this.#zero);
-		if (testAtZero !== secret) {
-			console.log(`Fail`, testAtZero, secret);
-			throw new Error(`failed ${secret}===${testAtZero}`);
-		}
-		// points = [(i, _eval_at(poly, i, prime))
-		//	for i in range(1, shares + 1)]
-		const shares = range(1, totalSharesToGenerate).map( i => {
-			const x = ((typeof this.prime === "number") ? i : BigInt(i)) as INT;
-			return ({x: x, y: this.evalAt(poly, x)});
-		});
-		return shares;
+		const points = [...existingShares];
+		return xValuesOfNewShares.map( x => {
+			const y = points.length < minimumNumberOfSharesToRecover ?
+				this.randomIntModP() :
+				this.lagrangeInterpolate(points.slice(0), x);
+			const point = {x, y};
+			points.push(point);
+			return point;
+		})
 	}
+
+	generateAdditionalSharesForSecret = (
+		publicX: INT,
+		secretY: INT,
+		existingShares: PointInIntegerSpace<INT>[],
+		xValuesOfNewShares: INT[],
+		minimumNumberOfSharesToRecover: number,
+	): PointInIntegerSpace<INT>[] => this.generateAdditionalShares([
+			{x: publicX, y: secretY} as PointInIntegerSpace<INT>,
+			...existingShares
+		], xValuesOfNewShares, minimumNumberOfSharesToRecover)
 
 
 
@@ -280,22 +316,25 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 // const _RINT = functools.partial(random.SystemRandom().randint, 0)
 
 // 12th Mersenne Prime
-const TwelfthMersennePrime: bigint = 2n ** 127n - 1n;
+// const TwelfthMersennePrime: bigint = 2n ** 127n - 1n;
 // 12th Mersenne Prime
 // const TwelfthMersennePrimeNumber: number = 2 ** 127 - 1;
 
 
-
+// The closest prime is at 827514231081199274682194003812398710017109379105423360000n +29n =
+// 827514231081199274682194003812398710017109379105423360029n
+const PrimeClosestToSizeOfDiceKeyWithCenterDiePublic = 827514231081199274682194003812398710017109379105423360029n;
 
 const stest = () => {
-	const shamir = new ShamirSecretSharing(TwelfthMersennePrime, 3);
+	const shamir = new ShamirSecretSharing<bigint>(PrimeClosestToSizeOfDiceKeyWithCenterDiePublic);
   const secret = 1234n;
-  const shares = shamir.generateShares(secret, 6);
+//  const shares = shamir.generateSharesForSecretAtXEqualZero(secret, 6);
+	const shares = shamir.generateAdditionalSharesForSecret(0n, secret, [], [1n, 2n, 3n, 4n, 5n, 6n], 3);
 
 	console.log('Secret:', secret)
 	console.log('Shares:', shares);
 	console.log('Secret recovered from minimum subset of shares:',
-		shamir.recoverSecret(shares.slice(0, 3))
+		shamir.recoverSecret(shares.slice(2, 5))
 	);
 	// console.log('Secret recovered from a different minimum subset of shares:',
 	// 	shamir.recoverSecret(shares.slice(3,6))
@@ -303,3 +342,4 @@ const stest = () => {
 }
 
 stest();
+
