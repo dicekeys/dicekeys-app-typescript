@@ -142,120 +142,13 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 		return this.divideModP(sumOfAllNumerators, productOfAllDenominators);
 	}
 
-	// lagrangeInterpolate2 = (points: PointInIntegerSpace<INT>[], atX: INT = this.#zero): INT => {
-	// 	console.log(`lagrangeInterpolate2`, atX, points);
-	// 	if (new Set<INT>(points.map( p => p.x)).size < points.length) {
-	// 		throw Error("Redundant points");
-	// 	}
 
-	// 	const product = (vals: INT[], sub: INT | undefined, skip: number | undefined): INT => {
-	// 		// p := big.NewInt(1)
-	// 		let aggregateProduct = this.#one;
-	// 		// for i := range vals {
-	// 		for (let i = 0; i < vals.length; i++) {
-	// 			if (i === skip) {
-	// 				continue
-	// 			}
-	// 			// v := cp(vals[i])
-	// 			let v = vals[i]!;
-	// 			if (sub != null) {
-	// 				v = this.subModP(sub, v);
-	// 			}
-	// 			// p.Mul(p, v)
-	// 			aggregateProduct = this.multiplyModP(aggregateProduct, v);
-	// 		}
-	// 		return aggregateProduct
-	// 	}
-	// 	// nums := make([]*big.Int, len(x))
-	// 	// dens := make([]*big.Int, len(x))
-
-	// 	// for i := range x {
-	// 	// 	nums[i] = product(x, x0, i)
-	// 	// 	dens[i] = product(x, x[i], i)
-	// 	// }
-	// 	const xs = points.map( ({x}) => x );
-	// 	const numerators = xs.map( (_, i) => product(xs, atX, i) );
-	// 	const denominators = xs.map( (_, i) => product(xs, points[i]!.x, i) );
-
-	// 	// den := product(dens, nil, -1)
-	// 	const den = product(denominators, undefined, undefined)
-
-	// 	// num := big.NewInt(0)
-	// 	let num = this.#zero;
-	// 	// for i := range nums {
-	// 	[...numerators.keys()].forEach( i => {
-	// 	// 	nums[i].Mul(nums[i], den)
-	// 		numerators[i] = this.multiplyModP(numerators[i]!, den);
-	// 	// 	nums[i].Mul(nums[i], y[i])
-	// 		numerators[i] = this.multiplyModP(numerators[i]!, points[i]!.y);
-	// 	// 	nums[i].Mod(nums[i], modulus)
-	// 	// 	v := divmod(nums[i], dens[i], modulus)
-	// 		const v = this.divideModP(numerators[i]!, denominators[i]!)
-	// 	// 	if v == nil {
-	// 	// 		return nil // x values are not distinct.
-	// 	// 	}
-	// 	// 	num.Add(num, v)
-	// 		num = this.addModP(num, v);
-	// 	// }
-	// 	})
-
-	// 	// y0 = divmod(num, den, modulus)
-	// 	const y0 = this.divideModP(num, den);
-	// 	// y0.Add(y0, modulus)
-	// 	// y0.Mod(y0, modulus)
-	// 	// return y0
-	// 	return y0;
-	// }
-
-	// Recover the secret from share points
-	// (points (x,y) on the polynomial).
-	//
-	// def recover_secret(shares, prime=_PRIME):
 	recoverSecret = (shares: PointInIntegerSpace<INT>[], atPublicX: INT = this.#zero, minimumNumberOfSharesToRecover?: number): INT => {
 		if (minimumNumberOfSharesToRecover != null && shares.length < minimumNumberOfSharesToRecover) {
 			throw new RangeError("not enough shares provided")
 		}
 		return this.lagrangeInterpolate(shares, atPublicX);
-		// const l1 = this.lagrangeInterpolate(shares, atPublicX);
-		// const l2 = this.lagrangeInterpolate2(shares, atPublicX);
-		// if (l1 != l2) {
-		// 	console.log(`l1 != l2`, l1, l2);
-		// } else {
-		// 	console.log(`lagrange algorithms agree`);
-		// }
-		// return l1;
 	}
-
-
-	// 
-	// Generates a random shamir pool for a given secret, returns share points.
-	// 
-	// generateSharesForSecretAtXEqualZero = (
-	// 	secret: INT,
-	// 	totalSharesToGenerate: number
-	// ): PointInIntegerSpace<INT>[] => {
-	// 	if (this.minimumNumberOfSharesToRecover > totalSharesToGenerate) {
-	// 		throw new RangeError("There must be at least as many minimum shares as total shares");
-	// 	}
-	// 	// poly = [secret] + [_RINT(prime - 1) for i in range(minimum - 1)]
-	// 	const poly: INT[] = [secret];
-	// 	while (poly.length < this.minimumNumberOfSharesToRecover) {
-	// 		poly.push(this.randomIntModP());
-	// 	}
-	// 	const testAtZero = this.evalAt(poly, this.#zero);
-	// 	if (testAtZero !== secret) {
-	// 		console.log(`Fail`, testAtZero, secret);
-	// 		throw new Error(`failed ${secret}===${testAtZero}`);
-	// 	}
-	// 	// points = [(i, _eval_at(poly, i, prime))
-	// 	//	for i in range(1, shares + 1)]
-	// 	const shares = range(1, totalSharesToGenerate).map( i => {
-	// 		const x = ((typeof this.prime === "number") ? i : BigInt(i)) as INT;
-	// 		return ({x: x, y: this.evalAt(poly, x)});
-	// 	});
-	// 	return shares;
-	// }
-
 
 	generateAdditionalShares = (
 		existingShares: PointInIntegerSpace<INT>[],

@@ -132,7 +132,7 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
   respond = async (seedString: string, options: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) => {
     try {
       const response = await this.getResponse(seedString);
-      console.log(`response.response=`, response);
+      // console.log(`response.response=`, response);
       this.transmitResponse({...response, requestId: this.request.requestId}, options);
     } catch(e) {
       this.sendError(e);
