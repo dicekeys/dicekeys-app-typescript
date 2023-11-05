@@ -142,70 +142,70 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 		return this.divideModP(sumOfAllNumerators, productOfAllDenominators);
 	}
 
-	lagrangeInterpolate2 = (points: PointInIntegerSpace<INT>[], atX: INT = this.#zero): INT => {
-		console.log(`lagrangeInterpolate2`, atX, points);
-		if (new Set<INT>(points.map( p => p.x)).size < points.length) {
-			throw Error("Redundant points");
-		}
+	// lagrangeInterpolate2 = (points: PointInIntegerSpace<INT>[], atX: INT = this.#zero): INT => {
+	// 	console.log(`lagrangeInterpolate2`, atX, points);
+	// 	if (new Set<INT>(points.map( p => p.x)).size < points.length) {
+	// 		throw Error("Redundant points");
+	// 	}
 
-		const product = (vals: INT[], sub: INT | undefined, skip: number | undefined): INT => {
-			// p := big.NewInt(1)
-			let aggregateProduct = this.#one;
-			// for i := range vals {
-			for (let i = 0; i < vals.length; i++) {
-				if (i === skip) {
-					continue
-				}
-				// v := cp(vals[i])
-				let v = vals[i]!;
-				if (sub != null) {
-					v = this.subModP(sub, v);
-				}
-				// p.Mul(p, v)
-				aggregateProduct = this.multiplyModP(aggregateProduct, v);
-			}
-			return aggregateProduct
-		}
-		// nums := make([]*big.Int, len(x))
-		// dens := make([]*big.Int, len(x))
+	// 	const product = (vals: INT[], sub: INT | undefined, skip: number | undefined): INT => {
+	// 		// p := big.NewInt(1)
+	// 		let aggregateProduct = this.#one;
+	// 		// for i := range vals {
+	// 		for (let i = 0; i < vals.length; i++) {
+	// 			if (i === skip) {
+	// 				continue
+	// 			}
+	// 			// v := cp(vals[i])
+	// 			let v = vals[i]!;
+	// 			if (sub != null) {
+	// 				v = this.subModP(sub, v);
+	// 			}
+	// 			// p.Mul(p, v)
+	// 			aggregateProduct = this.multiplyModP(aggregateProduct, v);
+	// 		}
+	// 		return aggregateProduct
+	// 	}
+	// 	// nums := make([]*big.Int, len(x))
+	// 	// dens := make([]*big.Int, len(x))
 
-		// for i := range x {
-		// 	nums[i] = product(x, x0, i)
-		// 	dens[i] = product(x, x[i], i)
-		// }
-		const xs = points.map( ({x}) => x );
-		const numerators = xs.map( (_, i) => product(xs, atX, i) );
-		const denominators = xs.map( (_, i) => product(xs, points[i]!.x, i) );
+	// 	// for i := range x {
+	// 	// 	nums[i] = product(x, x0, i)
+	// 	// 	dens[i] = product(x, x[i], i)
+	// 	// }
+	// 	const xs = points.map( ({x}) => x );
+	// 	const numerators = xs.map( (_, i) => product(xs, atX, i) );
+	// 	const denominators = xs.map( (_, i) => product(xs, points[i]!.x, i) );
 
-		// den := product(dens, nil, -1)
-		const den = product(denominators, undefined, undefined)
+	// 	// den := product(dens, nil, -1)
+	// 	const den = product(denominators, undefined, undefined)
 
-		// num := big.NewInt(0)
-		let num = this.#zero;
-		// for i := range nums {
-		[...numerators.keys()].forEach( i => {
-		// 	nums[i].Mul(nums[i], den)
-			numerators[i] = this.multiplyModP(numerators[i]!, den);
-		// 	nums[i].Mul(nums[i], y[i])
-			numerators[i] = this.multiplyModP(numerators[i]!, points[i]!.y);
-		// 	nums[i].Mod(nums[i], modulus)
-		// 	v := divmod(nums[i], dens[i], modulus)
-			const v = this.divideModP(numerators[i]!, denominators[i]!)
-		// 	if v == nil {
-		// 		return nil // x values are not distinct.
-		// 	}
-		// 	num.Add(num, v)
-			num = this.addModP(num, v);
-		// }
-		})
+	// 	// num := big.NewInt(0)
+	// 	let num = this.#zero;
+	// 	// for i := range nums {
+	// 	[...numerators.keys()].forEach( i => {
+	// 	// 	nums[i].Mul(nums[i], den)
+	// 		numerators[i] = this.multiplyModP(numerators[i]!, den);
+	// 	// 	nums[i].Mul(nums[i], y[i])
+	// 		numerators[i] = this.multiplyModP(numerators[i]!, points[i]!.y);
+	// 	// 	nums[i].Mod(nums[i], modulus)
+	// 	// 	v := divmod(nums[i], dens[i], modulus)
+	// 		const v = this.divideModP(numerators[i]!, denominators[i]!)
+	// 	// 	if v == nil {
+	// 	// 		return nil // x values are not distinct.
+	// 	// 	}
+	// 	// 	num.Add(num, v)
+	// 		num = this.addModP(num, v);
+	// 	// }
+	// 	})
 
-		// y0 = divmod(num, den, modulus)
-		const y0 = this.divideModP(num, den);
-		// y0.Add(y0, modulus)
-		// y0.Mod(y0, modulus)
-		// return y0
-		return y0;
-	}
+	// 	// y0 = divmod(num, den, modulus)
+	// 	const y0 = this.divideModP(num, den);
+	// 	// y0.Add(y0, modulus)
+	// 	// y0.Mod(y0, modulus)
+	// 	// return y0
+	// 	return y0;
+	// }
 
 	// Recover the secret from share points
 	// (points (x,y) on the polynomial).
@@ -309,37 +309,4 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 			{x: publicX, y: secretY} as PointInIntegerSpace<INT>,
 			...existingShares
 		], xValuesOfNewShares, minimumNumberOfSharesToRecover)
-
-
-
 }
-// const _RINT = functools.partial(random.SystemRandom().randint, 0)
-
-// 12th Mersenne Prime
-// const TwelfthMersennePrime: bigint = 2n ** 127n - 1n;
-// 12th Mersenne Prime
-// const TwelfthMersennePrimeNumber: number = 2 ** 127 - 1;
-
-
-// The closest prime is at 827514231081199274682194003812398710017109379105423360000n +29n =
-// 827514231081199274682194003812398710017109379105423360029n
-const PrimeClosestToSizeOfDiceKeyWithCenterDiePublic = 827514231081199274682194003812398710017109379105423360029n;
-
-const stest = () => {
-	const shamir = new ShamirSecretSharing<bigint>(PrimeClosestToSizeOfDiceKeyWithCenterDiePublic);
-  const secret = 1234n;
-//  const shares = shamir.generateSharesForSecretAtXEqualZero(secret, 6);
-	const shares = shamir.generateAdditionalSharesForSecret(0n, secret, [], [1n, 2n, 3n, 4n, 5n, 6n], 3);
-
-	console.log('Secret:', secret)
-	console.log('Shares:', shares);
-	console.log('Secret recovered from minimum subset of shares:',
-		shamir.recoverSecret(shares.slice(2, 5))
-	);
-	// console.log('Secret recovered from a different minimum subset of shares:',
-	// 	shamir.recoverSecret(shares.slice(3,6))
-	// );
-}
-
-stest();
-
