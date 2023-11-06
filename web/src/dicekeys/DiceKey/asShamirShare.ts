@@ -59,7 +59,7 @@ export const facesTooShamirShareFiniteFieldPoint = (faces: DiceKeyFaces): Shamir
 
 export const shamirShareFiniteFieldPointToFaces = (share: ShamirShareAsFiniteFieldPoint) => {
   let {y} = share;
-  const faces24 = [Array(24).keys()].map( () => {
+  const faces24 = [...Array(24).keys()].map( () => {
     const face = number0to599ToFaceLetterDigitAndOrientation(Number(y % 600n))
     y /= 600n;
     return face;
@@ -68,5 +68,5 @@ export const shamirShareFiniteFieldPointToFaces = (share: ShamirShareAsFiniteFie
     ...number0to149ToFaceLetterAndDigit(Number(share.x)),
     orientationAsLowercaseLetterTrbl: 't'
   };
-  return faces24.splice(12, 0, centerFace);
+  return DiceKeyFaces([...faces24.slice(0,12), centerFace, ...faces24.slice(12)]);
 }

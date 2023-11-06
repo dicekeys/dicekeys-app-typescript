@@ -39,5 +39,18 @@ describe("Formats: Bip39", () => {
     });
   });
 
+
+  describe("Shamir share form", () => {
+    TestDiceKeys.forEach( (diceKey, testIndex) => {
+      test(`${diceKey.inHumanReadableForm} (${testIndex})`, () => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const shamirForm = diceKey.toShamirShareAsFiniteFieldPoint();
+        const replica = DiceKeyWithoutKeyId.fromShamirShareFiniteFieldPoint(shamirForm);
+        expect(replica.inHumanReadableForm).toStrictEqual(replica.inHumanReadableForm);
+      });
+    });
+  });
+
+
   
 });

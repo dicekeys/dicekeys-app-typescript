@@ -16,6 +16,7 @@ import { DiceKeyInHumanReadableForm, diceKeyFacesFromHumanReadableForm } from ".
 import { rotateToRotationIndependentForm, rotateDiceKey, rotateToTurnCenterFaceUpright } from "./Rotation";
 import { diceKeyFacesToKeyId } from "./KeyIds";
 import { factorialConstants0to25, digitEncodingSize, uniqueOrientationEncodingSize, facesFromNumericForm } from "./NumericForm";
+import { ShamirShareAsFiniteFieldPoint, facesTooShamirShareFiniteFieldPoint, shamirShareFiniteFieldPointToFaces } from "./asShamirShare";
 
 export * from "./Face";
 export * from "./InvalidDiceKeyException";
@@ -186,6 +187,11 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
   static fromNumericForm = (numericForm: bigint): DiceKeyWithoutKeyId =>
     new DiceKeyWithoutKeyId(facesFromNumericForm(numericForm));
 
+  toShamirShareAsFiniteFieldPoint = (): ShamirShareAsFiniteFieldPoint => facesTooShamirShareFiniteFieldPoint(this.faces);
+  static fromShamirShareFiniteFieldPoint = (shamirShareFiniteFieldPoint : ShamirShareAsFiniteFieldPoint) =>
+    new DiceKeyWithoutKeyId(shamirShareFiniteFieldPointToFaces(shamirShareFiniteFieldPoint));
+
+
   rotate = (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright): DiceKeyWithoutKeyId => new DiceKeyWithoutKeyId(rotateDiceKey(this.faces, clockwise90DegreeRotationsFromUpright));
   get inRotationIndependentForm(): DiceKeyWithoutKeyId { return new DiceKeyWithoutKeyId(rotateToRotationIndependentForm(this.faces)) }
   rotateToTurnCenterFaceUpright = (): DiceKeyWithoutKeyId => { return new DiceKeyWithoutKeyId(rotateToTurnCenterFaceUpright(this.faces)) }
@@ -233,6 +239,9 @@ export class DiceKeyWithKeyId extends DiceKeyBase implements PublicDiceKeyDescri
   get inRotationIndependentForm(): DiceKeyWithKeyId { return new DiceKeyWithKeyId(this.keyId, rotateToRotationIndependentForm(this.faces)) }
 
   toSeedString = (): DiceKeyInHumanReadableForm => diceKeyFacesToSeedString(this.faces);
+
+  static fromShamirShareFiniteFieldPoint = (shamirShareFiniteFieldPoint : ShamirShareAsFiniteFieldPoint) =>
+    DiceKeyWithKeyId.create(shamirShareFiniteFieldPointToFaces(shamirShareFiniteFieldPoint));
 
   rotateToTurnCenterFaceUpright = (): DiceKeyWithKeyId => {
     switch (this.centerFace.orientationAsLowercaseLetterTrbl) {

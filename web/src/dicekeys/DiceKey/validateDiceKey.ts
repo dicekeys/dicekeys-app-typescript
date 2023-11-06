@@ -44,7 +44,7 @@ export const validateDiceKey = (diceKey: readonly Partial<Face>[], {
 } : DiceKeyValidationOptions = {}): diceKey is DiceKeyFaces => {
   if (diceKey.length !== NumberOfFacesInKey) {
     if (!throwOnFailures) { return false; }
-    throw new Error(`A DiceKey must have ${NumberOfFacesInKey} faces`);
+    throw new Error(`A DiceKey must have ${NumberOfFacesInKey} faces (not ${diceKey.length})`);
   }
   const lettersPresent = new Set<FaceLetter>();
   const absentLetters = new Set<FaceLetter>(FaceLetters);
