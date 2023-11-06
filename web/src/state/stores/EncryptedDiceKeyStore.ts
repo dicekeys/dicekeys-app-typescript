@@ -1,6 +1,7 @@
 import { action, makeAutoObservable } from "mobx";
 import { autoSave } from "../core/AutoSave";
-import {DiceKeyInHumanReadableForm, DiceKeyWithKeyId, PublicDiceKeyDescriptor} from "../../dicekeys/DiceKey";
+import {DiceKeyWithKeyId, PublicDiceKeyDescriptor} from "../../dicekeys/DiceKey";
+import { DiceKeyInHumanReadableForm } from "../../dicekeys/DiceKey";
 import { electronBridge } from "../../state/core/ElectronBridge";
 
 /**

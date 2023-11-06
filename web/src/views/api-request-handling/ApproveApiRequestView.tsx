@@ -5,7 +5,8 @@ import { observer } from "mobx-react";
 import { Spacer, Instruction2, CompressedContentBox, CenteredCompressedControls, RowCentered } from "../../views/basics";
 import { addPreview } from "../../views/basics/Previews";
 import { QueuedUrlApiRequest } from "../../api-handler";
-import { DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
+import { DiceKeyWithKeyId, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
+import { DiceKeyInHumanReadableForm } from "../../dicekeys/DiceKey";
 import { PushButton } from "../../css/Button";
 
 import styled from "styled-components";

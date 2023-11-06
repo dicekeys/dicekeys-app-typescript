@@ -17,16 +17,65 @@ import { ShamirSecretSharing} from "../utilities/ShamirSecretSharing";
 // }
 // type RecoveryTestCase<INT extends number | bigint> = RecoveryTestCaseSuccess<INT> | RecoveryTestCaseFailure<INT>
 
+interface TestCase<INT extends number | bigint> {
+	p: INT,
+	secret: INT;
+}
+
+const combinations = <T>(items: T[], count: number): T[][] =>
+	(count === 0) ? [] :
+	(count === 1) ? items.map( item => ([item])) :
+		items.slice(0, 1-count).reduce( ( results, item, index) =>
+			([...results, ...(( count === 1 ) ? [[item]] : combinations(items.slice(index+1), count -1).map( c => ([item, ...c])))])
+		, [] as T[][]);
+
 describe("Shamir Secret Sharing", () => {
 
-	const p = 827514231081199274682194003812398710017109379105423360029n;
-  describe(`Test for prime ${p}`, () => {
-		const shamir = new ShamirSecretSharing<bigint>(p);
-		const secret = 1234n;
-		const shares = shamir.generateAdditionalSharesForSecret(0n, secret, [], [1n, 2n, 3n, 4n, 5n, 6n], 3);
-		test(`Recover slice 2-5`, () => {
-			const recoveredSecret =	shamir.recoverSecret(shares.slice(2, 5));
-			expect(recoveredSecret).toStrictEqual(secret);
+	const simpleTestCases = [
+		{p: 827514231081199274682194003812398710017109379105423360029n, secret: 1234n},
+		{p: 65521n, secret: 1234n},
+		{p: 65521, secret: 1234},
+		{p: 65537n, secret: 1234n},
+		{p: 65537, secret: 1234},
+	] as TestCase<number | bigint>[];
+
+
+	simpleTestCases.forEach(({p, secret}) => {
+		const shamir = new ShamirSecretSharing(p);
+		describe(`Test for prime ${p}`, () => {
+			// Test over range of 2-7 shares
+			const TestOverNumberOfSharesN = [3, 4, 5, 6, 7];
+			TestOverNumberOfSharesN.forEach( N => {
+				// Test minimum number of shares K over range 2..N.
+				const MinMinShares = 2;
+				const TestOverMinimumNumberOfSharesK = [...Array(N-MinMinShares).keys()].map( (x) => x + MinMinShares ) 
+				TestOverMinimumNumberOfSharesK.forEach( K => {
+					describe(`${K} of ${N}`, () => {
+						const shareXValues = [...Array(N).keys()].map( (x) => shamir.ff.coerceToTypeOfPrime(x + 1) )
+						const shares = shamir.generateAdditionalSharesForSecret(shamir.ff.coerceToTypeOfPrime(0), secret, [], shareXValues, K);
+						// Test recovery for all possible combinations os K of N shares.
+						const shareCombinations = combinations(shares, K);
+						shareCombinations.map( sharesUsedForRecovery => {
+							test(`Recover from shares at x=${sharesUsedForRecovery.map( share => `${share.x}`).join(", ")}`, () => {
+								const recoveredSecret =	shamir.recoverSecret(sharesUsedForRecovery);
+								expect(recoveredSecret).toStrictEqual(secret);
+							});							
+						});
+					});
+				});
+			});
 		});
-	});
+	});	
+
+	test(`Forbids primes as numbers when should be bigints`, () => {
+		expect(() => { new ShamirSecretSharing(4294967296); }).toThrow("overflow");
+	})
+
+	test(`Throws if not enough shares`, () => {
+		expect(() => { 
+			const shamir = new ShamirSecretSharing<number>(13);
+			shamir.recoverSecret([], 0, 2);
+		}).toThrow("shares");
+	})
+
 });

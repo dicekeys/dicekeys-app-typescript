@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 import styled from "styled-components";
-import type {InferComponentProps} from "../../utilities/InferComponentProps";
+// import type {InferComponentProps} from "../../utilities/InferComponentProps";
 import { copyToClipboard } from "../../utilities/copyToClipboard";
 
 interface CharButtonExtraProps {invisible?: boolean}
@@ -51,7 +51,7 @@ export const CharButtonToolTip = styled.span`
 
 export const CopyButton = ({
   valueToCopy, onClick, invisible, ...props
-}: InferComponentProps<typeof CharButton> & {valueToCopy?: string}) => (
+}: React.ComponentProps<typeof CharButton> & {valueToCopy?: string}) => (
    <CharButton {...props} invisible={valueToCopy == null || invisible} onClick={(e)=>{copyToClipboard(valueToCopy); onClick?.(e);}}
    >&#128203;<CharButtonToolTip>Copy</CharButtonToolTip></CharButton>
 );

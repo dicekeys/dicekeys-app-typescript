@@ -1,5 +1,5 @@
-import { DiceKeyInHumanReadableForm, DiceKeyWithoutKeyId } from "../dicekeys/DiceKey";
 import fs from "fs";
+import { DiceKeyInHumanReadableForm, DiceKeyWithoutKeyId } from "../dicekeys/DiceKey";
 import { testDiceKeysInHumanReadableForm } from "./TestDiceKeysInHumanReadableForm";
 
 export const createSetOfTestDiceKeys = (count: number) => {

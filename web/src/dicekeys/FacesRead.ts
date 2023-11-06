@@ -1,6 +1,7 @@
 import { FaceRead, FaceReadError, FaceReadJson} from "@dicekeys/read-dicekey-js";
 // import { action, makeAutoObservable } from "mobx";
 // import { TupleOf25Items } from "./dicekey";
+import { NumberOfFacesInKey } from "./DiceKey";
 
 export type FaceReadJsonObjectWithImageIfErrorFound = FaceReadJson & {squareImageAsRgbaArray?: Uint8ClampedArray};
 export type FaceReadWithImageIfErrorFound = FaceRead & {squareImageAsRgbaArray?: Uint8ClampedArray};
@@ -8,7 +9,7 @@ export type FaceReadWithImageIfErrorFound = FaceRead & {squareImageAsRgbaArray?:
 export const allFacesReadHaveMajorityValues = (facesRead?: FaceRead[]): boolean =>
   facesRead?.filter( faceRead =>
     faceRead.letter != null && faceRead.digit != null
-  )?.length === 25;
+  )?.length === NumberOfFacesInKey;
 
   
  /**

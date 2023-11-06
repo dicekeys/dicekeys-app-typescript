@@ -1,6 +1,7 @@
 import {
-  diceKeyFacesFromHumanReadableForm, DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId, PublicDiceKeyDescriptor
+  DiceKeyWithKeyId, DiceKeyWithoutKeyId, PublicDiceKeyDescriptor
 } from "../../dicekeys/DiceKey";
+import { diceKeyFacesFromHumanReadableForm, DiceKeyInHumanReadableForm } from "../../dicekeys/DiceKey";
 import { action, autorun, makeAutoObservable, ObservableMap} from "mobx";
 import { AllAppWindowsAndTabsAreClosingEvent } from "../core/AllAppWindowsAndTabsAreClosingEvent";
 import { CustomEvent } from "../../utilities/event";
