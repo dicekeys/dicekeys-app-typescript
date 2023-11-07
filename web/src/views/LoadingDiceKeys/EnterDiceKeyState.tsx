@@ -8,6 +8,9 @@ import {
   validateDiceKey
 } from "../../dicekeys/DiceKey";
 
+type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
 
 export class EnterDiceKeyState {
   currentFaceIndex: number = 0;
@@ -27,7 +30,7 @@ export class EnterDiceKeyState {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  private get currentFace(): Partial<OrientedFace> { return this.partialDiceKey[this.currentFaceIndex]!; }
+  private get currentFace(): Partial<Mutable<OrientedFace>> { return this.partialDiceKey[this.currentFaceIndex]!; }
   private get previousFaceIndex(): number { return (this.currentFaceIndex + 24) % 25; }
   private get nextFaceIndex(): number { return (this.currentFaceIndex + 1) % 25; }
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

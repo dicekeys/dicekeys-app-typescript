@@ -1,14 +1,30 @@
+import { getRandomUInt32 } from "../../utilities/get-random-bytes";
+import { PointInIntegerSpace } from "../../utilities/ShamirSecretSharing";
 import {
-  OrientedFace
-  } from "./Face";
+  Face,
+  OrientedFace,
+  faceLetterAndDigitToNumber0to149, faceLetterDigitAndOrientationToNumber0to599,
+  number0to149ToFaceLetterAndDigit,
+  number0to599ToFaceLetterDigitAndOrientation,
+  NumberOfPossibleFaces
+} from "./Face";
 import { DiceKeyFaces } from "./KeyGeometry";
 import { rotateToTurnCenterFaceUpright } from "./Rotation";
-import { PointInIntegerSpace } from "../../utilities/ShamirSecretSharing";
-import { faceLetterAndDigitToNumber0to149, faceLetterDigitAndOrientationToNumber0to599, number0to599ToFaceLetterDigitAndOrientation, number0to149ToFaceLetterAndDigit } from "./numericConversions";
 
 export type ShamirShareAsFiniteFieldPoint = PointInIntegerSpace<bigint>;
 
-export const facesTooShamirShareFiniteFieldPoint = (faces: DiceKeyFaces): ShamirShareAsFiniteFieldPoint => {
+export const getUnusedFaceIndexes = (usedFaceIndexes: number[]): number[] => {
+  const usedFaceIndexesSet = new Set(usedFaceIndexes);
+  return [...(Array(NumberOfPossibleFaces).keys())].filter( i => !usedFaceIndexesSet.has(i) );
+}
+
+export const getRandomUnusedFace = (faces: Face[]) => {
+  const faceIndexes = getUnusedFaceIndexes( faces.map( faceLetterAndDigitToNumber0to149 ) );
+  const randomFaceIndex = faceIndexes[getRandomUInt32() % faceIndexes.length]!;
+  return number0to149ToFaceLetterAndDigit( randomFaceIndex )
+}
+
+export const facesToShamirShareFiniteFieldPoint = (faces: DiceKeyFaces): ShamirShareAsFiniteFieldPoint => {
   const facesCenterUpright = rotateToTurnCenterFaceUpright(faces) as readonly OrientedFace[];
   // remove center die
   const [centerDie] = (facesCenterUpright as OrientedFace[]).splice(12, 1);

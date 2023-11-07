@@ -54,8 +54,11 @@ export const DiceKeyFaces = <F extends OrientedFace = OrientedFace>(faces: F[] |
 	return ReadOnlyTupleOf25Items<F>(faces);
 }
 
-export type PartialDiceKey = DiceKeyFaces | TupleOf25Items<Partial<OrientedFace>>
-export const PartialDiceKey = <F extends OrientedFace = OrientedFace>(faces: Partial<F>[] | DiceKeyFaces<F>): TupleOf25Items<Partial<F>> => {
+type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+export type PartialDiceKey = DiceKeyFaces<Mutable<OrientedFace>> | TupleOf25Items<Partial<Mutable<OrientedFace>>>
+export const PartialDiceKey = <F extends OrientedFace = OrientedFace>(faces: Partial<F>[] | DiceKeyFaces<F>): TupleOf25Items<Partial<Mutable<F>>> => {
 	return faces as unknown as TupleOf25Items<Partial<F>>;
 } 
 

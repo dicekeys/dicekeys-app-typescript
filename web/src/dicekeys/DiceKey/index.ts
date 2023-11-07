@@ -16,7 +16,7 @@ import { DiceKeyInHumanReadableForm, diceKeyFacesFromHumanReadableForm } from ".
 import { rotateToRotationIndependentForm, rotateDiceKey, rotateToTurnCenterFaceUpright } from "./Rotation";
 import { diceKeyFacesToKeyId } from "./KeyIds";
 import { factorialConstants0to25, digitEncodingSize, uniqueOrientationEncodingSize, facesFromNumericForm } from "./NumericForm";
-import { ShamirShareAsFiniteFieldPoint, facesTooShamirShareFiniteFieldPoint, shamirShareFiniteFieldPointToFaces } from "./asShamirShare";
+import { ShamirShareAsFiniteFieldPoint, facesToShamirShareFiniteFieldPoint, shamirShareFiniteFieldPointToFaces } from "./asShamirShare";
 
 export * from "./Face";
 export * from "./InvalidDiceKeyException";
@@ -187,7 +187,7 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
   static fromNumericForm = (numericForm: bigint): DiceKeyWithoutKeyId =>
     new DiceKeyWithoutKeyId(facesFromNumericForm(numericForm));
 
-  toShamirShareAsFiniteFieldPoint = (): ShamirShareAsFiniteFieldPoint => facesTooShamirShareFiniteFieldPoint(this.faces);
+  toShamirShareAsFiniteFieldPoint = (): ShamirShareAsFiniteFieldPoint => facesToShamirShareFiniteFieldPoint(this.faces);
   static fromShamirShareFiniteFieldPoint = (shamirShareFiniteFieldPoint : ShamirShareAsFiniteFieldPoint) =>
     new DiceKeyWithoutKeyId(shamirShareFiniteFieldPointToFaces(shamirShareFiniteFieldPoint));
 
