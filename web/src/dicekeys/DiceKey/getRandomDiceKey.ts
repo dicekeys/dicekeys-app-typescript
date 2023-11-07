@@ -17,9 +17,9 @@ export const getRandomDiceKey = (numberOfFacesPerDie: number = 6): DiceKeyFaces 
       const digit = ((getRandomUInt32() % numberOfFacesPerDie) + 1).toString() as FaceDigit;
       const clockwiseOrientationsFromUpright = getRandomUInt32() % 4;
       const orientationAsLowercaseLetterTrbl = FaceOrientationLettersTrbl[Clockwise90DegreeRotationsFromUpright(clockwiseOrientationsFromUpright % 4)];
-      const faceAndOrientation: OrientedFace = {
+      const orientedFace: OrientedFace = {
         digit, letter, orientationAsLowercaseLetterTrbl
       };
-      return faceAndOrientation;
+      return orientedFace;
     }));
 };

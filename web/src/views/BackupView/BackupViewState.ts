@@ -13,6 +13,7 @@ export enum BackupStep {
   LastFace = FirstFace + 24,
   Validate,
   END_EXCLUSIVE,
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   START_INCLUSIVE = 1,
 }
 
@@ -20,7 +21,7 @@ const validStepOrUndefined = (step: number): BackupStep | undefined =>
   (step >= BackupStep.START_INCLUSIVE && step < BackupStep.END_EXCLUSIVE) ? step : undefined;
 
 export const BackupViewStateName = "backup";
-export class BackupViewState implements ViewState {
+export class BackupViewState implements ViewState<typeof BackupViewStateName> {
   readonly viewName = BackupViewStateName;
   navState: NavigationPathState;
   constructor(

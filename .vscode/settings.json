@@ -101,5 +101,6 @@
     ],
     "files.exclude": {
         "**/node_modules": true
-    }
+    },
+    "typescript.preferences.importModuleSpecifier": "relative"
 }
