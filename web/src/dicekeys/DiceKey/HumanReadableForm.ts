@@ -1,6 +1,6 @@
 import type { DiceKeyInHumanReadableForm as BridgeDiceKeyInHumanReadableForm } from "../../../../common/IElectronBridge";
 import {
-  Face,
+  OrientedFace,
   FaceDigit, FaceLetter, FaceOrientationLetterTrbl
 } from "./Face";
 import { InvalidDiceKeyException } from "./InvalidDiceKeyException";
@@ -8,9 +8,9 @@ import { DiceKeyFaces, FacePosition, FacePositions } from "./KeyGeometry";
 import { DiceKeyValidationOptions, validateDiceKey } from "./validateDiceKey";
 
 
-export const FaceInHumanReadableForm = ({ letter, digit, orientationAsLowercaseLetterTrbl }: Face): string => `${letter}${digit}${orientationAsLowercaseLetterTrbl}`;
+export const FaceInHumanReadableForm = ({ letter, digit, orientationAsLowercaseLetterTrbl }: OrientedFace): string => `${letter}${digit}${orientationAsLowercaseLetterTrbl}`;
 
-export const FaceFromHumanReadableForm = (hrf: string, options?: { position?: number; }): Face => ({
+export const FaceFromHumanReadableForm = (hrf: string, options?: { position?: number; }): OrientedFace => ({
   letter: FaceLetter(hrf[0]!, options),
   digit: FaceDigit(hrf[1]!, options),
   orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl(hrf[2]!, options)
@@ -22,7 +22,7 @@ export const DiceKeyInHumanReadableForm = (diceKey: DiceKeyFaces): DiceKeyInHuma
 export const diceKeyFacesFromHumanReadableForm = (
   humanReadableForm: DiceKeyInHumanReadableForm,
   validationOptions: DiceKeyValidationOptions = {}
-): DiceKeyFaces<Face> => {
+): DiceKeyFaces<OrientedFace> => {
   if (typeof (humanReadableForm) !== "string") {
     throw new InvalidDiceKeyException("DiceKey in human-readable-form must be a string");
   }
@@ -35,13 +35,13 @@ export const diceKeyFacesFromHumanReadableForm = (
       letter, digitString, orientationAsLowercaseLetterTrbl
     ] = humanReadableForm.substring(charsPerFace * position, charsPerFace * (position + 1)).split("") as [string, string, string];
     const positionObj = { position: position as FacePosition };
-    const faceAndOrientation: Face = {
+    const faceAndOrientation: OrientedFace = {
       letter: FaceLetter(letter, positionObj),
       digit: FaceDigit(digitString, positionObj),
       orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl(orientationAsLowercaseLetterTrbl, positionObj)
     };
     return faceAndOrientation;
-  }) as readonly Face[] as DiceKeyFaces;
+  }) as readonly OrientedFace[] as DiceKeyFaces;
   validateDiceKey(diceKey, { throwOnFailures: true, ...validationOptions });
   return diceKey;
 };

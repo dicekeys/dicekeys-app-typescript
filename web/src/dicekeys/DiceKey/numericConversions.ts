@@ -1,7 +1,7 @@
-import { FaceIdentifiers } from "./Face";
+import { Face } from "./Face";
 import { Clockwise90DegreeRotationsFromUpright } from "./KeyGeometry";
 import {
-  Face,
+  OrientedFace,
   FaceDigit,
   FaceDigits,
   FaceLetter, FaceLetters,
@@ -22,15 +22,15 @@ export const number0to6ToFaceDigit = (number0to5: Number0To5) => FaceDigits[numb
 export const faceOrientationTrblToClockwise90RotationsFromUpright = (faceOrientationTrbl: FaceOrientationLetterTrbl) => FaceOrientationLettersTrbl.indexOf(faceOrientationTrbl) as Clockwise90DegreeRotationsFromUpright;
 export const clockwise90DegreeRotationsToTrbl = (number0To3: Clockwise90DegreeRotationsFromUpright) => FaceOrientationLettersTrbl[number0To3];
 
-export const faceLetterAndDigitToNumber0to149 = (face: FaceIdentifiers) => (faceLetterToNumber0to24(face.letter) * 6) + faceDigitToNumber0to5(face.digit);
-export const number0to149ToFaceLetterAndDigit = (number0to149: number): FaceIdentifiers => ({
+export const faceLetterAndDigitToNumber0to149 = (face: Face) => (faceLetterToNumber0to24(face.letter) * 6) + faceDigitToNumber0to5(face.digit);
+export const number0to149ToFaceLetterAndDigit = (number0to149: number): Face => ({
   digit: number0to6ToFaceDigit(number0to149 % 6 as Number0To5),
   letter: number0to24ToFaceLetter(Math.floor(number0to149 / 6) % 25 as Number0To24),
 });
 
-export const faceLetterDigitAndOrientationToNumber0to599 = (face: Face) => (faceOrientationTrblToClockwise90RotationsFromUpright(face.orientationAsLowercaseLetterTrbl) * 150) +
+export const faceLetterDigitAndOrientationToNumber0to599 = (face: OrientedFace) => (faceOrientationTrblToClockwise90RotationsFromUpright(face.orientationAsLowercaseLetterTrbl) * 150) +
   faceLetterAndDigitToNumber0to149(face);
-export const number0to599ToFaceLetterDigitAndOrientation = (number0to599: number): Face => ({
+export const number0to599ToFaceLetterDigitAndOrientation = (number0to599: number): OrientedFace => ({
   ...number0to149ToFaceLetterAndDigit(number0to599 % 150),
   orientationAsLowercaseLetterTrbl: clockwise90DegreeRotationsToTrbl(Math.floor(number0to599 / 150) % 4 as Clockwise90DegreeRotationsFromUpright)
 });

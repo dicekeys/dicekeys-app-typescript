@@ -17,7 +17,7 @@ import {
   FullScreenNotificationSecondaryText,
 } from "../../css/FullScreenNotification";
 import { DiceKeyAnimationRotationProps } from "../../views/SVG/DiceKeyView";
-import type { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
+import type { FaceOrientationLetterTrbl } from "../../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../../state";
 
 const minCameraWidth = 1024;

@@ -1,8 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { Face } from "../../dicekeys/DiceKey";
+import { OrientedFace } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
-import { FaceDigit, FaceDigits, FaceIdentifiers, FaceLetter, FaceLetters } from "@dicekeys/read-dicekey-js";
+import { FaceDigit, FaceDigits, FaceLetter, FaceLetters, Face } from "../../dicekeys/DiceKey";
 import { fitRectangleWithAspectRatioIntoABoundingBox, Bounds, viewBox } from "../../utilities/bounding-rects";
 import { OptionalMaxSizeCalcProps, WithBounds } from "../../utilities/WithBounds";
 
@@ -35,7 +35,7 @@ export const StickerSheetSizeModelFromBounds = (bounds: Bounds) =>
 type StickerSheetViewProps = {
   showLetter?: FaceLetter;
   highlightFaceWithDigit?: FaceDigit;
-  hideFaces?: FaceIdentifiers[];
+  hideFaces?: Face[];
 }
 
 const lettersPerStickySheet = 5;
@@ -78,7 +78,7 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & Bo
         {
           FaceDigits.map( (digit, digitIndex) => lettersOnPage.map( (letter, letterIndex) => {
             const key = letter + digit;
-            const face: Face = {letter, digit, orientationAsLowercaseLetterTrbl: 't'};
+            const face: OrientedFace = {letter, digit, orientationAsLowercaseLetterTrbl: 't'};
             return (hideFace(face) ? null : (
               <FaceGroupView
                 key={key} face={face}

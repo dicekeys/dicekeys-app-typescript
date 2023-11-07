@@ -3,7 +3,7 @@ import {
   FaceLetter, FaceLetters, InvalidFaceLetterException,
   FaceDigit, InvalidFaceDigitException,
   FaceOrientationLetterTrblOrUnknown,
-  InvalidFaceOrientationLettersTrblOrUnknownException, Face
+  InvalidFaceOrientationLettersTrblOrUnknownException, OrientedFace
 } from "./Face";
 import {
   DiceKeyFaces,
@@ -38,7 +38,7 @@ export interface DiceKeyValidationOptions {
   throwOnFailures?: boolean
  }
 
-export const validateDiceKey = (diceKey: readonly Partial<Face>[], {
+export const validateDiceKey = (diceKey: readonly Partial<OrientedFace>[], {
   requireOneOfEachLetter = false,
   throwOnFailures = false
 } : DiceKeyValidationOptions = {}): diceKey is DiceKeyFaces => {

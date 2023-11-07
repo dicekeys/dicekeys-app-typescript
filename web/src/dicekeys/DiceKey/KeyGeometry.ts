@@ -1,6 +1,6 @@
 
 import {
-	Face
+	OrientedFace
 } from "./Face";
 import { validateDiceKey } from "./validateDiceKey";
 import { Clockwise90DegreeRotationsFromUpright } from "@dicekeys/read-dicekey-js";
@@ -45,8 +45,8 @@ export const ReadOnlyTupleOf25Items = <T>(fromArray: T[] | ReadOnlyTupleOf25Item
  * we choose the one with the lowest unicode string (the one with the letter with the lowest
  * charCode.) 
  */
-export type DiceKeyFaces<F extends Face = Face> = ReadOnlyTupleOf25Items<F>;
-export const DiceKeyFaces = <F extends Face = Face>(faces: F[] | DiceKeyFaces<F>, validate: boolean = true) => {
+export type DiceKeyFaces<F extends OrientedFace = OrientedFace> = ReadOnlyTupleOf25Items<F>;
+export const DiceKeyFaces = <F extends OrientedFace = OrientedFace>(faces: F[] | DiceKeyFaces<F>, validate: boolean = true) => {
  if (validate) {
 	 validateDiceKey(faces, {throwOnFailures: validate});
  }
@@ -54,8 +54,8 @@ export const DiceKeyFaces = <F extends Face = Face>(faces: F[] | DiceKeyFaces<F>
 	return ReadOnlyTupleOf25Items<F>(faces);
 }
 
-export type PartialDiceKey = DiceKeyFaces | TupleOf25Items<Partial<Face>>
-export const PartialDiceKey = <F extends Face = Face>(faces: Partial<F>[] | DiceKeyFaces<F>): TupleOf25Items<Partial<F>> => {
+export type PartialDiceKey = DiceKeyFaces | TupleOf25Items<Partial<OrientedFace>>
+export const PartialDiceKey = <F extends OrientedFace = OrientedFace>(faces: Partial<F>[] | DiceKeyFaces<F>): TupleOf25Items<Partial<F>> => {
 	return faces as unknown as TupleOf25Items<Partial<F>>;
 } 
 

@@ -1,25 +1,22 @@
 import {
-  FaceOrientationLetterTrbl,
   FaceRead,
 } from "@dicekeys/read-dicekey-js";
+import { action, makeAutoObservable } from "mobx";
+import { DiceKeyFaces, DiceKeyWithKeyId, FaceOrientationLetterTrbl, OrientedFace, TupleOf25Items } from "../../dicekeys/DiceKey";
 import {
-  renderFacesRead
-} from "./renderFacesRead";
-import {
+  FaceReadWithImageIfErrorFound,
   allDiceErrorTypes, allFacesReadHaveMajorityValues
 } from "../../dicekeys/FacesRead";
 import type {
-    ProcessFrameResponse,
+  ProcessFrameResponse,
 } from "../../workers/dicekey-image-frame-worker";
 import {
-  FaceReadWithImageIfErrorFound
-} from "../../dicekeys/FacesRead"
-import { action, makeAutoObservable } from "mobx";
-import {  DiceKeyFaces, DiceKeyWithKeyId, Face, TupleOf25Items } from "../../dicekeys/DiceKey";
+  renderFacesRead
+} from "./renderFacesRead";
 
 
 
-const validateFaceRead = (faceRead: FaceRead): Face => {
+const validateFaceRead = (faceRead: FaceRead): OrientedFace => {
   const {letter, digit, orientationAsLowercaseLetterTrbl} = faceRead;
   if (letter == null || digit == null) {
     throw new Error("Invalid face read");

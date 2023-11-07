@@ -1,4 +1,4 @@
-import { Clockwise90DegreeRotationsFromUpright } from "@dicekeys/read-dicekey-js";
+import { Clockwise90DegreeRotationsFromUpright } from "./KeyGeometry";
 import {
   FaceDigit,
   FaceDigits,

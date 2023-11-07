@@ -1,9 +1,8 @@
-import { FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { _ } from "core-js";
 import { makeAutoObservable, runInAction } from "mobx";
-import { DiceKey, DiceKeyFaces, DiceKeyWithKeyId, Face } from "../../dicekeys/DiceKey";
-import {english} from "./word-lists/english";
+import { DiceKey, DiceKeyFaces, DiceKeyWithKeyId, FaceDigits, FaceLetters, FaceOrientationLettersTrbl, OrientedFace } from "../../dicekeys/DiceKey";
+import { english } from "./word-lists/english";
 
 const invertedEnglish: Record<string, number> = english.reduce( (result, word, index) => {
 	result[word] = index;
@@ -107,13 +106,13 @@ export const bip39ToByteArray = (bip39: string) => bip39WordsToByteArray(bip39St
 const fromBip39StringTo10BitNumbers = async (bip39: string): Promise<number[]> =>
 convertArrayOf8BitNumbersTo10BitNumbers([...await bip39ToByteArray(bip39)]);
 
-const faceFromNumber0to599 = (faceAs10BitNumber: number): Face => ({
+const faceFromNumber0to599 = (faceAs10BitNumber: number): OrientedFace => ({
 	letter: FaceLetters[ Math.floor( faceAs10BitNumber / 24 ) ],
 	digit: FaceDigits[ (Math.floor( faceAs10BitNumber / 4 ) % 6) ],
 	orientationAsLowercaseLetterTrbl: FaceOrientationLettersTrbl[faceAs10BitNumber % 4]
-} as Face );
+} as OrientedFace );
 
-export const faceToNumber0to599 = (face: Face): number =>
+export const faceToNumber0to599 = (face: OrientedFace): number =>
 	(FaceLetters.indexOf(face.letter) * 24) +
 	(FaceDigits.indexOf(face.digit) * 4) +
 	(FaceOrientationLettersTrbl.indexOf(face.orientationAsLowercaseLetterTrbl));

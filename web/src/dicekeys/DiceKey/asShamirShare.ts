@@ -1,5 +1,5 @@
 import {
-  Face
+  OrientedFace
   } from "./Face";
 import { DiceKeyFaces } from "./KeyGeometry";
 import { rotateToTurnCenterFaceUpright } from "./Rotation";
@@ -9,9 +9,9 @@ import { faceLetterAndDigitToNumber0to149, faceLetterDigitAndOrientationToNumber
 export type ShamirShareAsFiniteFieldPoint = PointInIntegerSpace<bigint>;
 
 export const facesTooShamirShareFiniteFieldPoint = (faces: DiceKeyFaces): ShamirShareAsFiniteFieldPoint => {
-  const facesCenterUpright = rotateToTurnCenterFaceUpright(faces) as readonly Face[];
+  const facesCenterUpright = rotateToTurnCenterFaceUpright(faces) as readonly OrientedFace[];
   // remove center die
-  const [centerDie] = (facesCenterUpright as Face[]).splice(12, 1);
+  const [centerDie] = (facesCenterUpright as OrientedFace[]).splice(12, 1);
   if (centerDie == null || facesCenterUpright.length != 24) {
     throw new RangeError(`DiceKey must have 25 faces`);
   }
@@ -30,7 +30,7 @@ export const shamirShareFiniteFieldPointToFaces = (share: ShamirShareAsFiniteFie
     y /= 600n;
     return face;
   }).reverse();
-  const centerFace: Face = {
+  const centerFace: OrientedFace = {
     ...number0to149ToFaceLetterAndDigit(Number(share.x)),
     orientationAsLowercaseLetterTrbl: 't'
   };

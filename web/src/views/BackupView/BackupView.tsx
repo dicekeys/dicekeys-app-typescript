@@ -1,23 +1,22 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import React from "react";
 import { observer } from "mobx-react";
-import { DiceKeyFaces, DiceKeyWithKeyId, DiceKeyWithoutKeyId, Face } from "../../dicekeys/DiceKey";
+import React from "react";
+import styled from "styled-components";
+import { StepButton } from "../../css/Button";
+import { DiceKeyFaces, DiceKeyWithKeyId, DiceKeyWithoutKeyId, FaceDigits, FaceLetters, FaceOrientationLettersTrbl, OrientedFace } from "../../dicekeys/DiceKey";
+import { ObscureDiceKey } from "../../state/ToggleState";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
+import { ExternalLink } from "../../views/basics/ExternalLink";
 import { StepFooterView } from "../Navigation/StepFooterView";
+import { DiceKeyView } from "../SVG/DiceKeyView";
 import { FaceCopyingView } from "../SVG/FaceCopyingView";
-import { FaceDigits, FaceLetters, FaceOrientationLettersTrbl } from "@dicekeys/read-dicekey-js";
+import { StickerSheetView } from "../SVG/StickerSheetView";
+import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
 import { CenterRow, Instruction, Spacer } from "../basics";
 import { addPreviewWithMargins } from "../basics/Previews";
 import { BackupMedium } from "./BackupMedium";
+import { BackupStep, BackupViewState } from "./BackupViewState";
 import { ValidateBackupView } from "./ValidateBackupView";
-import { StickerSheetView } from "../SVG/StickerSheetView";
-import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
-import { DiceKeyView } from "../SVG/DiceKeyView";
-import {BackupStep, BackupViewState} from "./BackupViewState";
-import { StepButton } from "../../css/Button";
-import styled from "styled-components";
-import { NavigationPathState } from "../../state/core/NavigationPathState";
-import { ObscureDiceKey } from "../../state/ToggleState";
-import { ExternalLink } from "../../views/basics/ExternalLink";
 
 export const ComparisonBox = styled.div`
   display: flex;
@@ -103,7 +102,7 @@ const IntroToBackingUpToASticKeyView = () => (
   </>
 );
 
-const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Face, index: number, medium: BackupMedium}) => {
+const CopyFaceInstructionView = observer( ({face, index, medium}: {face: OrientedFace, index: number, medium: BackupMedium}) => {
   const sheetIndex = FaceLetters.indexOf(face.letter) % 5;
   const firstLetterOnSheet = FaceLetters[sheetIndex * 5];
   const lastLetterOnSheet = FaceLetters[sheetIndex * 5 + 4];

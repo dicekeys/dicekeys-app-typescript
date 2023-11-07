@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
   Clockwise90DegreeRotationsFromUpright,
-} from "@dicekeys/read-dicekey-js";
+} from "./KeyGeometry";
 import { computeLazilyAtMostOnce } from "../../utilities/computeLazilyAtMostOnce";
 import {
-  Face,
+  OrientedFace,
   FaceDigit,
   FaceDigits,
   FaceLetter, FaceLetters,
@@ -40,7 +40,7 @@ export interface FaceComparisonError extends FaceComparisonErrorTypes {
   index: number;
 }
 
-const compareFaces = (a: Face, b: Face, index: number): FaceComparisonError | undefined => {
+const compareFaces = (a: OrientedFace, b: OrientedFace, index: number): FaceComparisonError | undefined => {
   const errors: FaceComparisonErrorTypes = {
     ...(a.letter !== b.letter ? {letter: true} : {}),
     ...(a.digit !== b.digit ? {digit: true} : {}),
@@ -100,7 +100,7 @@ export const facesFromPublicKeyDescriptor = (descriptor: PublicDiceKeyDescriptor
   const letter = descriptor.centerLetterAndDigit.charAt(0) as FaceLetter;
   const digit = descriptor.centerLetterAndDigit.charAt(1) as FaceDigit;
   const orientationAsLowercaseLetterTrbl = 't';
-  const face: Face = {letter, digit, orientationAsLowercaseLetterTrbl};
+  const face: OrientedFace = {letter, digit, orientationAsLowercaseLetterTrbl};
   return DiceKeyFaces(
     Array.from({ length: NumberOfFacesInKey }, ()=> face)
   );
@@ -151,7 +151,7 @@ abstract class DiceKeyBase {
   toSeedString: () => DiceKeyInHumanReadableForm = computeLazilyAtMostOnce( () => diceKeyFacesToSeedString(this.faces));
 
   get inHumanReadableForm(): DiceKeyInHumanReadableForm { return DiceKeyInHumanReadableForm(this.faces) }
-  get centerFace(): Face { return this.faces[12]; }
+  get centerFace(): OrientedFace { return this.faces[12]; }
   get centerLetterAndDigit(): CenterLetterAndDigit { return `${this.centerFace.letter}${this.centerFace.digit}` }
   get nickname(): string { return`DiceKey with ${this.centerLetterAndDigit} in center`; }
 
@@ -201,7 +201,7 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
       letter: FaceLetters[i],
       digit: FaceDigits[i % 6],
       orientationAsLowercaseLetterTrbl: "trbl"[i % 4]
-    } as Face ) )
+    } as OrientedFace ) )
   ));
 }
 

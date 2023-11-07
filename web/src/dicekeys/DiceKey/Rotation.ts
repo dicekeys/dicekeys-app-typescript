@@ -1,13 +1,12 @@
-import { Clockwise90DegreeRotationsFromUpright } from "@dicekeys/read-dicekey-js";
-import { Face, FaceOrientationLetterTrblOrUnknown } from "./Face";
-import { DiceKeyFaces, ReadOnlyTupleOf25Items, rotationIndexes5x5 } from "./KeyGeometry";
+import { OrientedFace, FaceOrientationLetterTrblOrUnknown } from "./Face";
+import { Clockwise90DegreeRotationsFromUpright, DiceKeyFaces, ReadOnlyTupleOf25Items, rotationIndexes5x5 } from "./KeyGeometry";
 import { DiceKeyInHumanReadableForm } from "./HumanReadableForm";
 
-type RotateFaceFn<F extends Face> = (
+type RotateFaceFn<F extends OrientedFace> = (
   f: F,
   clockwise90DegreeTurnsToRotate: number
 ) => F;
-const defaultRotateFaceFn = <F extends Face>(
+const defaultRotateFaceFn = <F extends OrientedFace>(
   { orientationAsLowercaseLetterTrbl, letter, digit, ...rest }: F,
   clockwise90DegreeTurnsToRotate: number
 ) => ({
@@ -21,16 +20,16 @@ const defaultRotateFaceFn = <F extends Face>(
   orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrblOrUnknown.rotate(orientationAsLowercaseLetterTrbl, clockwise90DegreeTurnsToRotate)
 } as F);
 
-export function rotateDiceKey<F extends Face = Face>(
+export function rotateDiceKey<F extends OrientedFace = OrientedFace>(
   diceKey: DiceKeyFaces<F>,
   clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright,
   rotateFaceFn: RotateFaceFn<F>
 ): DiceKeyFaces<F>;
 export function rotateDiceKey(
-  diceKey: DiceKeyFaces<Face>,
+  diceKey: DiceKeyFaces<OrientedFace>,
   clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright
 ): DiceKeyFaces;
-export function rotateDiceKey<F extends Face = Face>(
+export function rotateDiceKey<F extends OrientedFace = OrientedFace>(
   diceKey: DiceKeyFaces<F>,
   clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright,
   rotateFaceFn: RotateFaceFn<F> = defaultRotateFaceFn
@@ -42,14 +41,14 @@ export function rotateDiceKey<F extends Face = Face>(
   ); //  as DiceKeyFaces<F>;
 }
 const FaceRotationsNonStationary = [1, 2, 3] as const;
-export function rotateToRotationIndependentForm<F extends Face = Face>(
-  diceKey: DiceKeyFaces<Face>,
+export function rotateToRotationIndependentForm<F extends OrientedFace = OrientedFace>(
+  diceKey: DiceKeyFaces<OrientedFace>,
   rotateFaceFn: RotateFaceFn<F>
 ): DiceKeyFaces;
 export function rotateToRotationIndependentForm(
-  diceKey: DiceKeyFaces<Face>
+  diceKey: DiceKeyFaces<OrientedFace>
 ): DiceKeyFaces;
-export function rotateToRotationIndependentForm<F extends Face = Face>(
+export function rotateToRotationIndependentForm<F extends OrientedFace = OrientedFace>(
   diceKey: DiceKeyFaces<F>,
   rotateFaceFn: RotateFaceFn<F> = defaultRotateFaceFn
 ): DiceKeyFaces<F> {
@@ -69,7 +68,7 @@ export function rotateToRotationIndependentForm<F extends Face = Face>(
   return rotationIndependentDiceKey;
 }
 
-export const rotateToTurnCenterFaceUpright = <F extends Face = Face>(
+export const rotateToTurnCenterFaceUpright = <F extends OrientedFace = OrientedFace>(
   diceKey: DiceKeyFaces<F>,
   rotateFaceFn: RotateFaceFn<F> = defaultRotateFaceFn
 ): DiceKeyFaces<F> => {

@@ -1,12 +1,12 @@
-import React from "react";
 import { observer } from "mobx-react";
+import React from "react";
+import styled, { css, keyframes } from "styled-components";
+import type { FaceOrientationLetterTrbl } from "../../dicekeys/DiceKey";
 import { DiceKeyWithKeyId, EmptyPartialDiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
-import { FaceGroupView } from "./FaceView";
-import { fitRectangleWithAspectRatioIntoABoundingBox, viewBox, Bounds } from "../../utilities/bounding-rects";
 import { DiceKeyMemoryStore, ToggleState } from "../../state";
-import styled, {keyframes, css} from "styled-components";
-import type { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
 import { cssCalcTyped } from "../../utilities";
+import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox, viewBox } from "../../utilities/bounding-rects";
+import { FaceGroupView } from "./FaceView";
 
 export interface DiceKeyRenderOptions {
   faces?: PartialDiceKey;

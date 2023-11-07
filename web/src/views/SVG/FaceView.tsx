@@ -2,13 +2,13 @@ import React from "react";
 import { observer } from "mobx-react";
 import {
   letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes,
-  Face,
   FaceLetters, 
   faceRotationLetterToClockwiseAngle,
   Point,
   UndoverlineCodes, getUndoverlineCodes,
   FaceDimensionsFractional
 } from "@dicekeys/read-dicekey-js";
+import { OrientedFace } from "../../dicekeys/DiceKey";
 import {EventHandlerOverridesDefault} from "../../utilities/EventHandlerOverridesDefault"
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
@@ -18,7 +18,7 @@ export enum UndoverlineType {
   overline = "overline",
 }
 
-export function addUndoverlineCodes<T extends Partial<Face>>(face: T): T & (UndoverlineCodes | object) {
+export function addUndoverlineCodes<T extends Partial<OrientedFace>>(face: T): T & (UndoverlineCodes | object) {
   if (face.letter == null || face.digit == null) {
     return face;
   }
@@ -108,7 +108,7 @@ const OverlineGroupView = ({code}: { code: number | undefined }) => (
  * 
  * @param face 
  */
-const UnitFaceGroupView = observer ( ({face, ...svgGroupProps}: {face: Partial<Face>} & React.SVGAttributes<SVGGElement>,) => {
+const UnitFaceGroupView = observer ( ({face, ...svgGroupProps}: {face: Partial<OrientedFace>} & React.SVGAttributes<SVGGElement>,) => {
   const {letter, digit} = face;
   const {underlineCode, overlineCode} = letter && digit ?
     getUndoverlineCodes({letter, digit}) :
@@ -137,7 +137,7 @@ const UnitFaceGroupView = observer ( ({face, ...svgGroupProps}: {face: Partial<F
 
 
 interface FaceViewProps {
-  face: Partial<Face>;
+  face: Partial<OrientedFace>;
   highlightThisFace?: boolean;
   backgroundColor?: string;
   stroke?: string;

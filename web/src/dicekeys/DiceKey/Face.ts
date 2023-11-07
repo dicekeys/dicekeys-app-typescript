@@ -11,10 +11,8 @@ export {
   FaceDigits,
   FaceOrientationLetterTrbl
 } from "@dicekeys/read-dicekey-js";
-export type {
-  FaceIdentifiers
-} from "@dicekeys/read-dicekey-js";
 
-export type Face = FaceIdentifiers & {
+export type Face = FaceIdentifiers;
+export type OrientedFace = FaceIdentifiers & {
   orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl
 }

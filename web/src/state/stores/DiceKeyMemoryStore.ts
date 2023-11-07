@@ -1,17 +1,18 @@
+import { ObservableMap, action, autorun, makeAutoObservable } from "mobx";
+import type { DiceKeyMemoryStoreStorageFormat } from "../../../../common/IElectronBridge";
+import type { FaceOrientationLetterTrbl } from "../../dicekeys/DiceKey";
 import {
-  DiceKeyWithKeyId, DiceKeyWithoutKeyId, PublicDiceKeyDescriptor
+  DiceKeyInHumanReadableForm,
+  DiceKeyWithKeyId, DiceKeyWithoutKeyId, PublicDiceKeyDescriptor,
+  diceKeyFacesFromHumanReadableForm
 } from "../../dicekeys/DiceKey";
-import { diceKeyFacesFromHumanReadableForm, DiceKeyInHumanReadableForm } from "../../dicekeys/DiceKey";
-import { action, autorun, makeAutoObservable, ObservableMap} from "mobx";
-import { AllAppWindowsAndTabsAreClosingEvent } from "../core/AllAppWindowsAndTabsAreClosingEvent";
 import { CustomEvent } from "../../utilities/event";
 import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
-import { EncryptedDiceKeyStore, sortPublicDiceKeyDescriptors } from "./EncryptedDiceKeyStore";
-import { writeStringToEncryptedLocalStorageField, readStringFromEncryptedLocalStorageField } from "../core/EncryptedStorageFields";
-import type { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
-import type { DiceKeyMemoryStoreStorageFormat } from "../../../../common/IElectronBridge";
-import { SynchronizedString } from "./SynchronizedStringStore";
 import { jsonStringifyWithSortedFieldOrder } from "../../utilities/json";
+import { AllAppWindowsAndTabsAreClosingEvent } from "../core/AllAppWindowsAndTabsAreClosingEvent";
+import { readStringFromEncryptedLocalStorageField, writeStringToEncryptedLocalStorageField } from "../core/EncryptedStorageFields";
+import { EncryptedDiceKeyStore, sortPublicDiceKeyDescriptors } from "./EncryptedDiceKeyStore";
+import { SynchronizedString } from "./SynchronizedStringStore";
 
 export interface PublicDiceKeyDescriptorWithSavedOnDevice extends PublicDiceKeyDescriptor {
   savedOnDevice: boolean

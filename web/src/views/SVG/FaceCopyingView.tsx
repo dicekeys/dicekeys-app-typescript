@@ -1,6 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { DiceKey, DiceKeyWithoutKeyId, Face, PartialDiceKey } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithoutKeyId, OrientedFace, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { StickerTargetSheetSvgGroup } from "./StickerTargetSheetView";
 import { DiceKeySizeModelFromBoundsWithoutTab, DiceKeySvgGroup } from "./DiceKeyView";
 import { StickerSheetSvgGroup, portraitSheetWidthOverHeight, StickerSheetSizeModelFromBounds } from "./StickerSheetView";
@@ -55,7 +55,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
     fitStiKeyFaceCopyingImageIntoBounds(props) :
     fitDiceKeyFaceCopyingImageIntoBounds(props);
   const {width, height} = bounds;
-  const face = diceKey?.faces[indexOfLastFacePlaced ?? -1] as Face | undefined;
+  const face = diceKey?.faces[indexOfLastFacePlaced ?? -1] as OrientedFace | undefined;
   const modelBounds = {width: width * fractionalWidths[0], height: height};
   const stickerSheetSizeModel = StickerSheetSizeModelFromBounds(modelBounds);
   const diceKeySizeModel = DiceKeySizeModelFromBoundsWithoutTab( matchSticKeyAspectRatio ?
