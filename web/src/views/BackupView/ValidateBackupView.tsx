@@ -66,7 +66,7 @@ export const ValidateBackupView = observer ( ({
       <ContentRow>
         <ComparisonBox>
           <DiceKeyView
-            diceKeyWithKeyId={originalDiceKey}
+            diceKey={originalDiceKey}
             size={`min(25vw,40vh)`}
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />

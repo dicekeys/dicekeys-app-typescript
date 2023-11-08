@@ -116,10 +116,8 @@ We borrow from environments like SwiftUI, which allow you to run and inspect ind
 creating preview HTML files for key components that operate only on the subset of the application state that required for those views.
 
 ```bash
-vite src/preview.html
+npm run preview
 ```
-Then load [http://localhost:3000/](http://localhost:3000/)
-
 
 ### Windows USB device handling
 Windows requires the app to have admin rights in order to list FIDO usb devices and write to them.

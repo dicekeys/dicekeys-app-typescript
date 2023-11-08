@@ -1,8 +1,8 @@
 import { observer } from "mobx-react";
 import React from "react";
 import styled, { css, keyframes } from "styled-components";
-import type { FaceOrientationLetterTrbl } from "../../dicekeys/DiceKey";
-import { DiceKeyWithKeyId, EmptyPartialDiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
+import type { DiceKey, FaceOrientationLetterTrbl } from "../../dicekeys/DiceKey";
+import { EmptyPartialDiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { DiceKeyMemoryStore, ToggleState } from "../../state";
 import { cssCalcTyped } from "../../utilities";
 import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox, viewBox } from "../../utilities/bounding-rects";
@@ -69,7 +69,9 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
       diceBoxColor =  "#050350",
       highlightFaceAtIndex,
       showLidTab = false,
-//      leaveSpaceForTab = showLidTab,
+      // Next line needed to remove the leaveSpaceForTab from props
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      leaveSpaceForTab: _,
       obscureAllButCenterDie = ToggleState.ObscureDiceKey,
       sizeModel,
       // If onFaceClick is not defined and obscureAllButCenterDie is,
@@ -226,8 +228,8 @@ ${ ({centerFaceOrientationToRotateFrom, rotationDelayTimeInSeconds=0, rotationTi
 
 export const DiceKeyView = observer ( ({
   // DiceKeyRenderOptions
-  diceKeyWithKeyId,
-  faces = diceKeyWithKeyId?.faces,
+  diceKey,
+  faces = diceKey?.faces,
   highlightFaceAtIndex,
   obscureAllButCenterDie,
   diceBoxColor,
@@ -236,9 +238,9 @@ export const DiceKeyView = observer ( ({
   onFaceClicked,
   // Props to pass down to svg element.
   ...svgProps
-}: {size?: string, diceKeyWithKeyId?: DiceKeyWithKeyId} & DiceKeyRenderOptions & DiceKeyAnimationRotationProps & React.SVGAttributes<SVGElement>) => {
+}: {size?: string, diceKey?: DiceKey} & DiceKeyRenderOptions & DiceKeyAnimationRotationProps & React.SVGAttributes<SVGElement>) => {
   const sizeModel = (showLidTab || leaveSpaceForTab) ? sizeModelWithTab : sizeModelWithoutTab;
-  const rotationParameters = diceKeyWithKeyId == null ? undefined : DiceKeyMemoryStore.getRotationParametersForKeyId(diceKeyWithKeyId.keyId);
+  const rotationParameters = (diceKey == null || !("keyId" in diceKey)) ?  undefined : DiceKeyMemoryStore.getRotationParametersForKeyId(diceKey.keyId);
   if (rotationParameters != null) {
     obscureAllButCenterDie = false;
     onFaceClicked = undefined;

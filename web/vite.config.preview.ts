@@ -2,10 +2,13 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 
+const input = resolve(__dirname, "src", "preview.html");
+console.log(`preview path`, input);
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  root: "./src/",
+  root: "./src/preview",
   // IMPORTANT: base must not be set to a relative path, or when we call; window.history.pushState
   // to update the path, the paths used to import images, workers, and other assets will
   // all break.  This MUST BE hard coded for the web app.
@@ -29,9 +32,10 @@ export default defineConfig({
     
     // Compile the preview.html file as the root
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, './src/preview.html'),
-      }
+      input: resolve(__dirname, "src", "preview", "preview.html"),
+  //    input: {
+  //        main: resolve(__dirname, './src/preview.html'),
+  //    }
     },
   }
 })

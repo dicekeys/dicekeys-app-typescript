@@ -16,7 +16,7 @@ import { DiceKeyInHumanReadableForm, diceKeyFacesFromHumanReadableForm } from ".
 import { rotateToRotationIndependentForm, rotateDiceKey, rotateToTurnCenterFaceUpright } from "./Rotation";
 import { diceKeyFacesToKeyId } from "./KeyIds";
 import { factorialConstants0to25, digitEncodingSize, uniqueOrientationEncodingSize, facesFromNumericForm } from "./NumericForm";
-import { ShamirShareAsFiniteFieldPoint, facesToShamirShareFiniteFieldPoint, shamirShareFiniteFieldPointToFaces } from "./asShamirShare";
+import { DiceKeyInFiniteFieldPointFormat, facesToShamirShareFiniteFieldPoint, shamirShareFiniteFieldPointToFaces } from "./asShamirShare";
 
 export * from "./Face";
 export * from "./InvalidDiceKeyException";
@@ -148,6 +148,8 @@ abstract class DiceKeyBase {
         * uniqueOrientationEncodingSize ) + orientationsAsBigInt;
   }
 
+  get asShamirShareFiniteFieldPoint() { return facesToShamirShareFiniteFieldPoint( this.faces ) }
+
   toSeedString: () => DiceKeyInHumanReadableForm = computeLazilyAtMostOnce( () => diceKeyFacesToSeedString(this.faces));
 
   get inHumanReadableForm(): DiceKeyInHumanReadableForm { return DiceKeyInHumanReadableForm(this.faces) }
@@ -187,10 +189,8 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
   static fromNumericForm = (numericForm: bigint): DiceKeyWithoutKeyId =>
     new DiceKeyWithoutKeyId(facesFromNumericForm(numericForm));
 
-  toShamirShareAsFiniteFieldPoint = (): ShamirShareAsFiniteFieldPoint => facesToShamirShareFiniteFieldPoint(this.faces);
-  static fromShamirShareFiniteFieldPoint = (shamirShareFiniteFieldPoint : ShamirShareAsFiniteFieldPoint) =>
+  static fromFiniteFieldPointForShamirSharing = (shamirShareFiniteFieldPoint : DiceKeyInFiniteFieldPointFormat) =>
     new DiceKeyWithoutKeyId(shamirShareFiniteFieldPointToFaces(shamirShareFiniteFieldPoint));
-
 
   rotate = (clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright): DiceKeyWithoutKeyId => new DiceKeyWithoutKeyId(rotateDiceKey(this.faces, clockwise90DegreeRotationsFromUpright));
   get inRotationIndependentForm(): DiceKeyWithoutKeyId { return new DiceKeyWithoutKeyId(rotateToRotationIndependentForm(this.faces)) }
@@ -240,7 +240,7 @@ export class DiceKeyWithKeyId extends DiceKeyBase implements PublicDiceKeyDescri
 
   toSeedString = (): DiceKeyInHumanReadableForm => diceKeyFacesToSeedString(this.faces);
 
-  static fromShamirShareFiniteFieldPoint = (shamirShareFiniteFieldPoint : ShamirShareAsFiniteFieldPoint) =>
+  static fromFiniteFieldPointForShamirSharing = (shamirShareFiniteFieldPoint : DiceKeyInFiniteFieldPointFormat) =>
     DiceKeyWithKeyId.create(shamirShareFiniteFieldPointToFaces(shamirShareFiniteFieldPoint));
 
   rotateToTurnCenterFaceUpright = (): DiceKeyWithKeyId => {

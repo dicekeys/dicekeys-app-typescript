@@ -12,15 +12,13 @@ import {
 import { DiceKeyFaces } from "./KeyGeometry";
 import { rotateToTurnCenterFaceUpright } from "./Rotation";
 
-export type ShamirShareAsFiniteFieldPoint = PointInIntegerSpace<bigint>;
+export type DiceKeyInFiniteFieldPointFormat = PointInIntegerSpace<bigint>;
 
-export const getUnusedFaceIndexes = (usedFaceIndexes: number[]): number[] => {
-  const usedFaceIndexesSet = new Set(usedFaceIndexes);
-  return [...(Array(NumberOfPossibleFaces).keys())].filter( i => !usedFaceIndexesSet.has(i) );
-}
+export const getUnusedFaceIndexes = (usedFaceIndexes: Set<number>): number[] =>
+  [...(Array(NumberOfPossibleFaces).keys())].filter( i => !usedFaceIndexes.has(i) )
 
 export const getRandomUnusedFace = (faces: Face[]) => {
-  const faceIndexes = getUnusedFaceIndexes( faces.map( faceLetterAndDigitToNumber0to149 ) );
+  const faceIndexes = getUnusedFaceIndexes( new Set( faces.map( faceLetterAndDigitToNumber0to149 ) ) );
   const randomFaceIndex = faceIndexes[getRandomUInt32() % faceIndexes.length]!;
   return number0to149ToFaceLetterAndDigit( randomFaceIndex )
 }
@@ -32,8 +30,10 @@ const digitsEndAt = digitsStartAt * (6n**24n);;
 const lettersStartAt = digitsEndAt;
 const factorial = (n: number): bigint => n <= 1 ? 1n : BigInt(n) * factorial(n-1)
 const lettersEndAt = lettersStartAt * factorial(24);
+// This is lettersEndAt + 29
+export const PrimeAtDiceKeyFixedPointMaxPlus30 = 827514231081199274682194003812398710017109379105423360029n as bigint;
 
-export const facesToShamirShareFiniteFieldPoint = (faces: DiceKeyFaces): ShamirShareAsFiniteFieldPoint => {
+export const facesToShamirShareFiniteFieldPoint = (faces: DiceKeyFaces): DiceKeyInFiniteFieldPointFormat => {
   const facesCenterUpright = rotateToTurnCenterFaceUpright(faces) as readonly OrientedFace[];
   // remove center die
   const [centerDie] = (facesCenterUpright as OrientedFace[]).splice(12, 1);
@@ -46,12 +46,12 @@ export const facesToShamirShareFiniteFieldPoint = (faces: DiceKeyFaces): ShamirS
   const yDigits = digitsStartAt *
     faceDigitsToBigInt( facesCenterUpright.map( f => f.digit ) );
   const yOrientations = orientationsStartAt *
-      faceOrientationTrblToBigInt( facesCenterUpright.map( f => f.orientationAsLowercaseLetterTrbl ) );
+    faceOrientationTrblToBigInt( facesCenterUpright.map( f => f.orientationAsLowercaseLetterTrbl ) );
   const y: bigint = yLetters + yDigits +  yOrientations;
   return {x, y};
 }
 
-export const shamirShareFiniteFieldPointToFaces = (share: ShamirShareAsFiniteFieldPoint) => {
+export const shamirShareFiniteFieldPointToFaces = (share: DiceKeyInFiniteFieldPointFormat) => {
   const {x, y} = share;
 
   const centerFace: OrientedFace = {

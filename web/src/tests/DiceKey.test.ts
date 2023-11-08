@@ -44,8 +44,8 @@ describe("Formats: Bip39", () => {
     TestDiceKeys.forEach( (diceKey, testIndex) => {
       test(`${diceKey.inHumanReadableForm} (${testIndex})`, () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const shamirForm = diceKey.toShamirShareAsFiniteFieldPoint();
-        const replica = DiceKeyWithoutKeyId.fromShamirShareFiniteFieldPoint(shamirForm);
+        const shamirForm = diceKey.asShamirShareFiniteFieldPoint;
+        const replica = DiceKeyWithoutKeyId.fromFiniteFieldPointForShamirSharing(shamirForm);
         expect(replica.inHumanReadableForm).toStrictEqual(replica.inHumanReadableForm);
       });
     });

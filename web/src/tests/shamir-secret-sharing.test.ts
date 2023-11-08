@@ -1,4 +1,10 @@
-import { ShamirSecretSharing} from "../utilities/ShamirSecretSharing";
+import { ShamirSecretSharing } from "../utilities/ShamirSecretSharing";
+
+// FUTURE: Remove 7 following lines after moving to Node 19+
+import { webcrypto } from 'node:crypto';
+if (!globalThis?.crypto) {
+	globalThis.crypto = webcrypto as typeof globalThis["crypto"];
+}
 
 // interface RecoveryTestCaseBase<INT extends number | bigint> {
 // 	p: INT;
@@ -33,6 +39,7 @@ describe("Shamir Secret Sharing", () => {
 
 	const simpleTestCases = [
 		{p: 827514231081199274682194003812398710017109379105423360029n, secret: 1234n},
+		
 		{p: 65521n, secret: 1234n},
 		{p: 65521, secret: 1234},
 		{p: 65537n, secret: 1234n},

@@ -164,7 +164,7 @@ const SelectedDiceKeyView = observer ( ({diceKey, ...sizeModel}: {diceKey?: Dice
     >
         <DiceKeyView
           size={`${cssCalcTyped(sizeModel.selectedItemWidth ?? defaultSelectedItemWidth)}`}
-          diceKeyWithKeyId={diceKey}
+          diceKey={diceKey}
           showLidTab={false}
         />
         <HideInstruction
