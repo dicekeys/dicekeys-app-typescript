@@ -162,7 +162,11 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 	 * @param minimumNumberOfSharesToRecover 
 	 * @returns 
 	 */
-	recoverSecret = (shares: PointInIntegerSpace<INT>[], atPublicX: INT = this.ff.coerceToTypeOfPrime(0), minimumNumberOfSharesToRecover?: number): INT => {
+	recoverSecret = (
+		shares: PointInIntegerSpace<INT>[],
+		atPublicX: INT = this.ff.coerceToTypeOfPrime(0),
+		minimumNumberOfSharesToRecover?: number
+	): INT => {
 		if (minimumNumberOfSharesToRecover != null && shares.length < minimumNumberOfSharesToRecover) {
 			throw new RangeError("Too few shares provided")
 		}
@@ -184,22 +188,26 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 			}
 		}, undefined as INT | undefined);
 		if (redundantXValueInExistingShares != null) {
-			throw new RangeError("Two or more existing shares have the same x value: `${redundantXValueInExistingShares}`");
+			throw new RangeError(`Two or more existing shares have the same x value: ${redundantXValueInExistingShares}`);
 		}
 		const firstRedundantXValueForNewShares = xValuesOfNewShares.reduce( (result, x) => {
-			if (existingXValues.has(x) && result == null) {
-				return x;
-			} else {
-				existingXValues.add(x);
-				return result;
-			}
-		}, undefined as INT | undefined);
+				if (result != null) {
+					return result;
+				} else if (existingXValues.has(x) ) {
+					return x;
+				} else {
+					existingXValues.add(x);
+					return;
+				}
+			},
+			undefined as INT | undefined
+		);
 		if (firstRedundantXValueForNewShares != null) {
-			throw new RangeError("X value for new share is not unique: `${redundantXValueInExistingShares}`")
+			throw new RangeError(`X value for new share is not unique: ${firstRedundantXValueForNewShares} of ${xValuesOfNewShares.map( x => `${x}`).join(", ")} should not be in ${existingShares.map( ({x}) => `${x}`).join(", ")}`);
 		}
-		if (minimumNumberOfSharesToRecover > existingShares.length + xValuesOfNewShares.length) {
-			throw new RangeError("There must be at least as many minimum shares as total shares");
-		}
+		// if (minimumNumberOfSharesToRecover > existingShares.length + xValuesOfNewShares.length) {
+		// 	throw new RangeError("There must be at least as many minimum shares as total shares");
+		// }
 		const points = [...existingShares];
 		return xValuesOfNewShares.map( x => {
 			const y = points.length < minimumNumberOfSharesToRecover ?
@@ -246,3 +254,4 @@ export class ShamirSecretSharing<INT extends number | bigint> {
 		return {initialShares, newShares, }
 	}
 }
+
