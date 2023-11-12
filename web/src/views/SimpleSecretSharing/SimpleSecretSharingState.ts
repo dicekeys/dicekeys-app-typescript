@@ -1,5 +1,5 @@
 
-import { action, autorun, makeAutoObservable, runInAction } from "mobx";
+import { action, autorun, makeAutoObservable } from "mobx";
 import { DiceKeyInFiniteFieldPointFormat, EncodingSpaceOfDiceKeyInFiniteFieldPointFormatYEncodingSpace } from "../../dicekeys/DiceKey/asShamirShare";
 import { secretSharingForDiceKeys } from "../../dicekeys/DiceKey/SecretSharingForDiceKeys";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
@@ -29,24 +29,25 @@ export class SimpleSecretSharingState implements ViewState<typeof SimpleSecretSh
 
 	userSpecifiedDiceKeyToSplitIntoShares: DiceKey | undefined;
 	secretCenterLetter: FaceLetter = DefaultSecretCenterLetter;
-	userProvidedShares: DiceKeyInFiniteFieldPointFormat[];
+	userProvidedShares: DiceKeyInFiniteFieldPointFormat[] = [];
+	get userProvidedSharesSorted() {
+		return [...this.userProvidedShares].sort( (a, b) => Number(a.x) - Number(b.x) );
+	}
 
-	random24YValuesForUserSpecifiedDiceKey: bigint[] = [];
+	pseudoRandom24YValuesDerivedFromUserSpecifiedDiceKey: bigint[] = [];
+	setPseudoRandom24YValuesDerivedFromUserSpecifiedDiceKey = action( (arrayOf24PseudoRandomBigInts: bigint[]) => {
+		this.pseudoRandom24YValuesDerivedFromUserSpecifiedDiceKey = arrayOf24PseudoRandomBigInts;
+	});
 
 	#generate24RandomYValuesForUserSpecifiedDiceKey = () => {
 		autorun( () => {
 			const userSpecifiedDiceKeyToSplitIntoShares = this.userSpecifiedDiceKeyToSplitIntoShares;
-			console.log(`generate24RandomYValuesForUserSpecifiedDiceKey`, userSpecifiedDiceKeyToSplitIntoShares?.inHumanReadableForm);
 			if (userSpecifiedDiceKeyToSplitIntoShares == null) {
-				runInAction( () => { this.random24YValuesForUserSpecifiedDiceKey = []; });
+				this.setPseudoRandom24YValuesDerivedFromUserSpecifiedDiceKey([]);
 			} else {
 				PseudoRandom.createFromStringSeed(userSpecifiedDiceKeyToSplitIntoShares.inHumanReadableForm).then(
-					pRandom => pRandom.getUInts256(24).then( random256BitUnits =>
-						runInAction( () => {
-							console.log(`writing`, random256BitUnits);
-							this.random24YValuesForUserSpecifiedDiceKey =
-								random256BitUnits.map( i => BigInt(i) % EncodingSpaceOfDiceKeyInFiniteFieldPointFormatYEncodingSpace );
-						})
+					pRandom => pRandom.getUInts256(24, EncodingSpaceOfDiceKeyInFiniteFieldPointFormatYEncodingSpace).then( random24YValuesFromUserSpecifiedDiceKey =>
+						this.setPseudoRandom24YValuesDerivedFromUserSpecifiedDiceKey(random24YValuesFromUserSpecifiedDiceKey)
 					)
 				)
 			}
@@ -59,8 +60,8 @@ export class SimpleSecretSharingState implements ViewState<typeof SimpleSecretSh
 		if (this.userSpecifiedDiceKeyToSplitIntoShares != null) {
 			return this.userSpecifiedDiceKeyToSplitIntoShares.asShamirShareFiniteFieldPoint;
 		}
-		if (this.userProvidedShares.length >= this.minSharesToDecode) {
-			secretSharingForDiceKeys.recoverDiceKeyInFiniteFieldPointFormat(this.secretCenterLetter, this.userProvidedShares, this.minSharesToDecode);
+		if (this.userProvidedSharesSorted.length >= this.minSharesToDecode) {
+			secretSharingForDiceKeys.recoverDiceKeyInFiniteFieldPointFormat(this.secretCenterLetter, this.userProvidedSharesSorted, this.minSharesToDecode);
 		}
 		return;
 	}
@@ -74,54 +75,84 @@ export class SimpleSecretSharingState implements ViewState<typeof SimpleSecretSh
 		return;
 	}
 
-	get centerDieLettersOfUserGeneratedShares() {
-		return new Set<FaceLetter>( this.userProvidedShares.map( ({x}) => number0to24ToFaceLetter(Number(x) % 25 as Number0To24) ) )
-	}
 
+	/**
+	 * If the user HAS NOT provided a DiceKey (secret) to split into share, use minSharesToDecode total shares
+	 * (combining any userProvidedShares with pseudoRandomShares) to define the secret (DiceKey) to be shared.
+	 * and the next share (minSharesToDecode) will complete the minimal set of shares needed to decode the secret.
+	 * 
+	 * If the user HAS provided a DiceKey (secret) to split into shares, use minSharesToDecode - 1 total shares
+	 * (combining any userProvidedShares with pseudoRandomShares) to define the secret (DiceKey) to be shared.
+	 */
 	get pseudoRandomShares() {
-		const numSharesToGenerate = Math.min(this.minSharesToDecode - this.userProvidedShares.length, this.random24YValuesForUserSpecifiedDiceKey.length);
-		const lettersForSharesRequired = getRemainingCenterLetters(this.centerDieLettersOfUserGeneratedShares, this.startDerivedShareCenterFacesAtLetter)
-			.slice(0, numSharesToGenerate);
-		return lettersForSharesRequired.map( (letter, i) => {
-			const x = BigInt(faceLetterToNumber0to24(letter));
-			const y = this.random24YValuesForUserSpecifiedDiceKey[i]!;
-			return {x, y} satisfies DiceKeyInFiniteFieldPointFormat;
-		})
+		const numberOfUserDefinedShares = this.userProvidedShares.length + ( this.userSpecifiedDiceKeyToSplitIntoShares == null ? 0 : 1 );
+		const numSharesToGenerate = Math.min(
+			this.minSharesToDecode - numberOfUserDefinedShares,
+			this.pseudoRandom24YValuesDerivedFromUserSpecifiedDiceKey.length
+		);
+		if (numSharesToGenerate <= 0) return [];
+		const lettersAlreadyUsed = [
+				...(this.diceKeyToSplitIntoShares == null ? [] : [this.diceKeyToSplitIntoShares.centerFace.letter]),
+				...this.userProvidedShares.map( ({x}) => number0to24ToFaceLetter(Number(x) % 25 as Number0To24) )
+			];
+		return getRemainingCenterLetters(lettersAlreadyUsed, this.startDerivedShareCenterFacesAtLetter)
+			.slice(0, numSharesToGenerate)
+			.map( (letter, i) => ({
+					x: BigInt(faceLetterToNumber0to24(letter)),
+					y: this.pseudoRandom24YValuesDerivedFromUserSpecifiedDiceKey[i]!,
+				} satisfies DiceKeyInFiniteFieldPointFormat)
+			);
 	}
 
-	get definingShares(): DiceKeyInFiniteFieldPointFormat[] {
-		return [
-			...this.userProvidedShares,
+	/**
+	 * The redundant shares (those beyond minSharesToDecode) that do not
+	 * define the secret in our calculations but can be used to re-derive it
+	 * if other shares are missing.
+	 */
+	get derivedRedundantShares(): DiceKeyInFiniteFieldPointFormat[] {
+		const numRedundantSharesNeeded = this.numSharesToDisplay - (this.minSharesToDecode - (this.userSpecifiedDiceKeyToSplitIntoShares == null ? 0 : 1));
+		// These shares define the secret and are sufficient to decode it
+		const userDefinedPoints = [
+			...(this.userSpecifiedDiceKeyToSplitIntoShares == null ? [] : [this.userSpecifiedDiceKeyToSplitIntoShares.asShamirShareFiniteFieldPoint]),
+			...this.userProvidedSharesSorted,
+		];
+		const definingPoints = [
+			...userDefinedPoints,
 			...this.pseudoRandomShares
-		].slice(0, this.minSharesToDecode);
-	}
-
-	// get derivedShareCenterLetters(): FaceLetter[] {
-	// 	return getRemainingCenterLetters(
-	// 		this.userProvidedShares.map( ({x}) => number0to24ToFaceLetter(Number(x) % 25 as Number0To24) ),
-	// 		this.startDerivedShareCenterFacesAtLetter
-	// 	).slice(0, this.numSharesToDisplay - this.userProvidedShares.length);
-	// }
-
-	get derivedShares(): DiceKeyInFiniteFieldPointFormat[] {
-		if (this.definingShares.length < this.minSharesToDecode) return [];
+		];
+		if (definingPoints.length < this.minSharesToDecode) return [];
 		const derivedShareCenterLetters = getRemainingCenterLetters(
-			this.definingShares.map( ({x}) => number0to24ToFaceLetter(Number(x) % 25 as Number0To24) ),
+			definingPoints.map( ({x}) => number0to24ToFaceLetter(Number(x) % 25 as Number0To24) ),
 			this.startDerivedShareCenterFacesAtLetter
-		).slice(0, this.numSharesToDisplay - this.minSharesToDecode);
+		).slice(0, numRedundantSharesNeeded);
+		console.log(`derivedRedundantShares`, derivedShareCenterLetters, this.numSharesToDisplay, this.minSharesToDecode);
 		return secretSharingForDiceKeys.generateSharesForLetters(
-			this.definingShares,
+			definingPoints,
 			derivedShareCenterLetters,
 			this.minSharesToDecode
 		);
 	}
 
-	get derivedDiceKeys(): DiceKeyWithoutKeyId[] {
-		return this.derivedShares.map( DiceKeyWithoutKeyId.fromFiniteFieldPointForShamirSharing )
+	get generatedShares() {
+		return [
+			...this.pseudoRandomShares,
+			...this.derivedRedundantShares
+		];
 	}
 
-	get sharesAsDiceKeys(): DiceKeyWithoutKeyId[] {
-		return [...this.definingShares, ...this.derivedShares].map( DiceKeyWithoutKeyId.fromFiniteFieldPointForShamirSharing )
+	// get derivedDiceKeys(): DiceKeyWithoutKeyId[] {
+	// 	return this.derivedRedundantShares.map( DiceKeyWithoutKeyId.fromFiniteFieldPointForShamirSharing )
+	// }
+
+	get sharesAsDiceKeys(): {source: "user" | "pseudorandom" | "interpolated", diceKey: DiceKey}[] {
+		return [
+			...this.userProvidedSharesSorted.map( share => ({source: "user" as const, share}) ),
+			...this.pseudoRandomShares.map( share => ({source: "pseudorandom" as const, share}) ),
+			...this.derivedRedundantShares.map( share => ({source: "interpolated" as const, share}) )
+		].map( ({source, share}) => ({
+			source,
+			diceKey: DiceKeyWithoutKeyId.fromFiniteFieldPointForShamirSharing(share)
+		}) );
 	}
 
 
@@ -130,7 +161,7 @@ export class SimpleSecretSharingState implements ViewState<typeof SimpleSecretSh
 		{
 			userSpecifiedDiceKeyToSplitIntoShares,
 			minSharesToDecode = 2,
-			numSharesToDisplay = minSharesToDecode + 2,
+			numSharesToDisplay = 3,
 		} : {
 			userSpecifiedDiceKeyToSplitIntoShares?: DiceKey,
 			minSharesToDecode?: number,
@@ -140,7 +171,6 @@ export class SimpleSecretSharingState implements ViewState<typeof SimpleSecretSh
     this.navState = new NavigationPathState(parentNavState, SimpleSecretSharingStateName, () => "");
 		this.minSharesToDecode = minSharesToDecode;
 		this.numSharesToDisplay = numSharesToDisplay;
-		this.userProvidedShares = [];
 		this.userSpecifiedDiceKeyToSplitIntoShares = userSpecifiedDiceKeyToSplitIntoShares;
     makeAutoObservable(this);
 		this.#generate24RandomYValuesForUserSpecifiedDiceKey();

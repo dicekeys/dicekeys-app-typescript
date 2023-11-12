@@ -96,18 +96,18 @@ export const SimpleSecretSharingView = observer(({
 			</SimpleSecretSharingViewRow>
 			<SimpleSecretSharingControlRowView {...{simplesSecretSharingState}} />
 			<SimpleSecretSharingViewRow style={{gap: `${ 0.5 * 80 / ((1 * sharesAsDiceKeys.length) + (.5 * (sharesAsDiceKeys.length -1)) )}vw`}}>
-				{ sharesAsDiceKeys.map( shareAsDiceKey => (
-					<div key={ faceLetterAndDigitToNumber0to149(shareAsDiceKey.centerFace) }>
+				{ sharesAsDiceKeys.map( ({source, diceKey}) => (
+					<div key={ faceLetterAndDigitToNumber0to149((diceKey).centerFace) }>
 						<DiceKeyView
-							key={faceLetterAndDigitToNumber0to149(shareAsDiceKey.centerFace)}
+							key={faceLetterAndDigitToNumber0to149(diceKey.centerFace)}
 							size={`min(${ (80 / ((1 * sharesAsDiceKeys.length) + (.5 * (sharesAsDiceKeys.length -1))) )}vw, 25vw, 40vh)`}
-							diceKey={shareAsDiceKey}
-						/>
+							diceKey={diceKey}
+						/>{ source }
 					</div>
 				)) }
 			</SimpleSecretSharingViewRow>
 			<SimpleSecretSharingViewRow>
-				{ simplesSecretSharingState.random24YValuesForUserSpecifiedDiceKey.length },
+				{ simplesSecretSharingState.pseudoRandom24YValuesDerivedFromUserSpecifiedDiceKey.length },
 				{ sharesAsDiceKeys.length }
 			</SimpleSecretSharingViewRow>
 		</SimpleSecretSharingViewContainer>
@@ -118,7 +118,7 @@ addPreviewWithMargins("SimpleSecretSharing", () => (
   <SimpleSecretSharingView simplesSecretSharingState={
 		new SimpleSecretSharingState(NavigationPathState.root, {
 			userSpecifiedDiceKeyToSplitIntoShares: DiceKeyWithoutKeyId.testExample,
-			numSharesToDisplay: 5,
+			numSharesToDisplay: 3,
 		})
 	 } />
 ));

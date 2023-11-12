@@ -48,7 +48,8 @@ export class PseudoRandom {
 			).finished;
 
 	getUInt256 = () => this.getBigUInt(2);
-	getUInts256 = (count: number) => this.getBigUInts(count, 2);
+	getUInts256 = (count: number, mod?: bigint) => mod == null ? this.getBigUInts(count, 2) :
+		this.getBigUInts(count, 2).then( bigInts => bigInts.map( x=> x % mod) );
 	getUInt128 = () => this.getBigUInt(1);
 	getUInt = async (upperLimitExclusive?: number) =>
 		(await this.getUInt128()) % (upperLimitExclusive != null ? BigInt(upperLimitExclusive) : (BigInt(Number.MAX_SAFE_INTEGER) + 1n));
