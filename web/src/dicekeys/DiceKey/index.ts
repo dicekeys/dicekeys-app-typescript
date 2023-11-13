@@ -157,6 +157,9 @@ abstract class DiceKeyBase {
   get centerLetterAndDigit(): CenterLetterAndDigit { return `${this.centerFace.letter}${this.centerFace.digit}` }
   get nickname(): string { return`DiceKey with ${this.centerLetterAndDigit} in center`; }
 
+  equals = (other: DiceKeyBase): boolean => DiceKeyInHumanReadableForm(rotateToTurnCenterFaceUpright(this.faces)) ==
+    DiceKeyInHumanReadableForm(rotateToTurnCenterFaceUpright(other.faces));
+
   compareTo = <T extends DiceKey>(other: T): DiceKeyComparisonResult<T> =>
   // Compare DiceKey a against the four possible rotations of B to get the list of errors
   ([0, 1, 2, 3] as const)
