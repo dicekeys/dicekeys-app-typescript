@@ -1,6 +1,7 @@
 import { OrientedFace, FaceOrientationLetterTrblOrUnknown } from "./Face";
 import { Clockwise90DegreeRotationsFromUpright, DiceKeyFaces, ReadOnlyTupleOf25Items, rotationIndexes5x5 } from "./KeyGeometry";
 import { DiceKeyInHumanReadableForm } from "./HumanReadableForm";
+import { DiceKeyWithoutKeyId } from ".";
 
 type RotateFaceFn<F extends OrientedFace> = (
   f: F,
@@ -20,25 +21,19 @@ const defaultRotateFaceFn = <F extends OrientedFace>(
   orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrblOrUnknown.rotate(orientationAsLowercaseLetterTrbl, clockwise90DegreeTurnsToRotate)
 } as F);
 
+
 export function rotateDiceKey<F extends OrientedFace = OrientedFace>(
   diceKey: DiceKeyFaces<F>,
   clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright,
-  rotateFaceFn: RotateFaceFn<F>
-): DiceKeyFaces<F>;
-export function rotateDiceKey(
-  diceKey: DiceKeyFaces<OrientedFace>,
-  clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright
-): DiceKeyFaces;
-export function rotateDiceKey<F extends OrientedFace = OrientedFace>(
-  diceKey: DiceKeyFaces<F>,
-  clockwise90DegreeRotationsFromUpright: Clockwise90DegreeRotationsFromUpright,
-  rotateFaceFn: RotateFaceFn<F> = defaultRotateFaceFn
+  rotateFaceFn: RotateFaceFn<F> = defaultRotateFaceFn<F>
 ): DiceKeyFaces<F> {
-  return ReadOnlyTupleOf25Items(
+  console.log("rotateDiceKey", new DiceKeyWithoutKeyId(diceKey).inHumanReadableForm, clockwise90DegreeRotationsFromUpright)
+  const result = ReadOnlyTupleOf25Items(
     rotationIndexes5x5[clockwise90DegreeRotationsFromUpright]
       .map(i => diceKey[i]!)
       .map(faceAndRotation => rotateFaceFn(faceAndRotation, clockwise90DegreeRotationsFromUpright))
-  ); //  as DiceKeyFaces<F>;
+  );
+  return result;
 }
 const FaceRotationsNonStationary = [1, 2, 3] as const;
 export function rotateToRotationIndependentForm<F extends OrientedFace = OrientedFace>(

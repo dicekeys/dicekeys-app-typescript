@@ -13,25 +13,32 @@ import { LoadDiceKeyViewState, Mode } from "./LoadDiceKeyViewState";
 import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 
 type LoadDiceKeyProps = {
-  onDiceKeyReadOrCancelled: (diceKey: DiceKeyWithKeyId | undefined, howRead: Mode | "cancelled") => void,
-  state: LoadDiceKeyViewState
+  onDiceKeyReadOrCancelled: (diceKey: DiceKeyWithKeyId | undefined, howRead: Mode | "cancelled") => void;
+  state: LoadDiceKeyViewState;
+  instruction?: JSX.Element | string;
+  scanViewHeight?: string;
 };
 
-const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
-  switch(props.state.mode) {
+const LoadDiceKeySubView = observer( ({
+  state,
+  onDiceKeyReadOrCancelled,
+  instruction = `Place your DiceKey into the camera's field of view.`,
+  scanViewHeight = `70vh`,
+}: LoadDiceKeyProps ) => {
+  switch(state.mode) {
     case "camera": return (
         <CenterColumn>
-          <Instruction>Place your DiceKey into the camera's field of view.</Instruction>
+          <Instruction>{ instruction }</Instruction>
           <ScanDiceKeyView
-            height="70vh"
+            height={scanViewHeight}
             showBoxOverlay={true}
-            onDiceKeyRead={ (diceKey) => props.onDiceKeyReadOrCancelled( diceKey, "camera") }
-            editManually={ () => props.state.setMode("manual") }
+            onDiceKeyRead={ (diceKey) => onDiceKeyReadOrCancelled( diceKey, "camera") }
+            editManually={ () => state.setMode("manual") }
           />
         </CenterColumn>
     );
     case "manual": return (
-      <EnterDiceKeyView state={props.state.enterDiceKeyState} />
+      <EnterDiceKeyView state={state.enterDiceKeyState} />
     );
   }
 });

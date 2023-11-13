@@ -40,7 +40,7 @@ export const facesToShamirShareFiniteFieldPoint = (faces: DiceKeyFaces): DiceKey
   const facesCenterUpright = rotateToTurnCenterFaceUpright(faces) as readonly OrientedFace[];
   const all25Digits = facesCenterUpright.map( f => f.digit );
   const centerFaceLetter = facesCenterUpright[12]?.letter;
-  const facesExceptCenter = [...faces.slice(0,12), ...faces.slice(13)];
+  const facesExceptCenter = [...facesCenterUpright.slice(0,12), ...facesCenterUpright.slice(13)];
   if (centerFaceLetter == null || facesExceptCenter.length != 24) {
     throw new RangeError(`DiceKey must have 25 faces`);
   }

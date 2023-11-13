@@ -9,7 +9,7 @@ interface CharButtonExtraProps {invisible?: boolean}
 export const CharButton = styled.button.attrs(() =>({
   tabIndex: -1 as number // Widening type from -1 to number is hack to fix typing issues in StyledComponents/InferComponentProps
 }))<CharButtonExtraProps>`
-  display: flex;
+  display: inline flex;
   justify-content: center;
   align-items: center;
   background: none;

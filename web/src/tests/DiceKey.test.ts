@@ -12,6 +12,7 @@ if (!globalThis?.crypto?.subtle) {
 	}
 }
 
+
 describe("Formats: Bip39", () => {
 
   describe("Human readable form", () => {
@@ -46,7 +47,7 @@ describe("Formats: Bip39", () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const shamirForm = diceKey.asShamirShareFiniteFieldPoint;
         const replica = DiceKeyWithoutKeyId.fromFiniteFieldPointForShamirSharing(shamirForm);
-        expect(replica.inHumanReadableForm).toStrictEqual(replica.inHumanReadableForm);
+        expect(replica.inHumanReadableForm).toStrictEqual(diceKey.rotateToTurnCenterFaceUpright().inHumanReadableForm);
       });
     });
   });

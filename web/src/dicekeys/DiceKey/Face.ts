@@ -31,21 +31,39 @@ export const faceLetterToNumber0to24 = (faceLetter: FaceLetter) => FaceLetters.i
 export const number0to24ToFaceLetter = (number0to24: Number0To24) => FaceLetters[number0to24];
 
 export const faceDigitToNumber0to5 = (faceDigit: FaceDigit) => FaceDigits.indexOf(faceDigit) as Number0To5;
-export const number0to6ToFaceDigit = (number0to5: Number0To5) => FaceDigits[number0to5];
+export const number0to5ToFaceDigit = (number0to5: Number0To5) => FaceDigits[number0to5];
 
-
+/**
+ * Encode an array of FaceDigits as a bigint, with each face representing a base6 digits (0-5),
+ * encoded with the first (leftmost) digit as the highest-order value.
+ * @param faceDigits An array of digits '1'-'6'
+ * @returns A bigint with each face representing a base6 digits (0-5),
+ * encoded with the first (leftmost) digit as the highest-order value.
+ */
 export const faceDigitsToBigInt = (faceDigits: FaceDigit[]): bigint => faceDigits.reduce(
 	(asBigInt, faceDigit) => (asBigInt * 6n) + BigInt(faceDigitToNumber0to5(faceDigit)),
 	0n
 );
-export const facesToBigIntForAllDigits = (faces: Face[]): bigint =>
-	faceDigitsToBigInt( faces.map( face => face.digit ) );
-export const bigIntForAllDigitsToFaceDigits = (bitIntForAllDigits: bigint, count: number) =>
-	[...Array(count).keys()].reduce( (digits) => {
-		digits.unshift(number0to6ToFaceDigit(Number(bitIntForAllDigits % 6n) as Number0To5));
-		bitIntForAllDigits /= 6n; 
-		return digits;
-	}, [] as FaceDigit[]);
+// export const facesToBigIntForAllDigits = (faces: Face[]): bigint =>
+// 	faceDigitsToBigInt( faces.map( face => face.digit ) );
+
+/**
+ * Extract arrays of FaceDigits ('1'-'6') from a bigint format that encodes them as in base 6
+ * with the first digit array as the highest-order value.
+ * 
+ * The inverse of faceDigitsToBigInt
+ * @param bigIntForAllDigits 
+ * @param count 
+ * @returns 
+ */
+export const bigIntForAllDigitsToFaceDigits = (bigIntForAllDigits: bigint, count: number) =>
+	// decode rightmost (lowest order) first, appending new digits to the start of the array.
+	[...Array(count).keys()].map( () => {
+		const lowestOrderDigit = Number(bigIntForAllDigits % 6n) as Number0To5;
+		const faceDigit = number0to5ToFaceDigit(lowestOrderDigit);
+		bigIntForAllDigits /= 6n;
+		return faceDigit;
+	}).reverse();
 
 
 export const faceOrientationTrblTo0To3Clockwise90RotationsFromUpright = (faceOrientationTrbl: FaceOrientationLetterTrbl) =>
@@ -62,7 +80,7 @@ export const facesToBigIntForAllOrientations = (faces: OrientedFace[]): bigint =
 export const bigIntForAllOrientationsToFaceOrientations = (bitIntForAllOrientations: bigint, count: number) =>
 	[...Array(count).keys()].reduce( (orientations) => {
 		orientations.unshift(clockwise90DegreeRotationsToTrbl(Number(bitIntForAllOrientations % 4n) as Clockwise90DegreeRotationsFromUpright));
-		bitIntForAllOrientations /= 6n; 
+		bitIntForAllOrientations /= 4n; 
 		return orientations;
 	}, [] as FaceOrientationLetterTrbl[]);
 
@@ -114,7 +132,7 @@ export const bigIntToUniqueFaceLetters = (uniqueLettersAsBigInt: bigint, exclude
 export const faceLetterAndDigitToNumber0to149 = (face: Face) => (faceLetterToNumber0to24(face.letter) * 6) + faceDigitToNumber0to5(face.digit);
 
 export const number0to149ToFaceLetterAndDigit = (number0to149: number): Face => ({
-	digit: number0to6ToFaceDigit(number0to149 % 6 as Number0To5),
+	digit: number0to5ToFaceDigit(number0to149 % 6 as Number0To5),
 	letter: number0to24ToFaceLetter(Math.floor(number0to149 / 6) % 25 as Number0To24),
 });
 
