@@ -9,7 +9,7 @@ import HandWithSticker from /*url:*/"../../images/Hand with Sticker.svg";
 import { FaceGroupView } from "./FaceView";
 import { weightsToFractionalProportions, sum } from "../../utilities/weights";
 import { OptionalMaxSizeCalcProps, WithBounds } from "../../utilities/WithBounds";
-import { ToggleState } from "../../state/ToggleState";
+import { BooleanWithToggle } from "../../state/stores/HideRevealSecretsState";
 
 // Hand with sticker is 219wide x 187 high
 const handImageSVGHeight = 187;
@@ -43,7 +43,7 @@ type FaceCopyingViewProps = {
   matchSticKeyAspectRatio?: boolean,
   showArrow?: boolean,
   indexOfLastFacePlaced?: number,
-  obscureAllButCenterDie: boolean | ToggleState
+  obscureAllButCenterDie: boolean | BooleanWithToggle
 }; //  & React.SVGAttributes<SVGGElement>
 const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) => {
   const {

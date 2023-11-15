@@ -3,15 +3,16 @@ import React from "react";
 import styled, { css, keyframes } from "styled-components";
 import type { DiceKey, FaceOrientationLetterTrbl } from "../../dicekeys/DiceKey";
 import { EmptyPartialDiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
-import { DiceKeyMemoryStore, ToggleState } from "../../state";
+import { DiceKeyMemoryStore } from "../../state";
 import { cssCalcTyped } from "../../utilities";
 import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox, viewBox } from "../../utilities/bounding-rects";
 import { FaceGroupView } from "./FaceView";
+import { BooleanWithToggle, HideRevealSecretsState } from "../../state/stores/HideRevealSecretsState";
 
 export interface DiceKeyRenderOptions {
   faces?: PartialDiceKey;
   highlightFaceAtIndex?: number;
-  obscureAllButCenterDie?: ToggleState.ToggleState | boolean;
+  obscureAllButCenterDie?: BooleanWithToggle | boolean;
   diceBoxColor?: string; // [number, number, number];
   showLidTab?: boolean;
   leaveSpaceForTab?: boolean;
@@ -72,7 +73,8 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
       // Next line needed to remove the leaveSpaceForTab from props
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       leaveSpaceForTab: _,
-      obscureAllButCenterDie = ToggleState.ObscureDiceKey,
+      obscureAllButCenterDie = (faces?.[12] == null || faces[12].letter == null || faces[12].digit == null) ? false :
+        HideRevealSecretsState.hideRevealDiceKeyBooleanWithToggle(`${faces[12].letter}${faces[12].digit}`, false),
       sizeModel,
       // If onFaceClick is not defined and obscureAllButCenterDie is,
       // the when the face is clicked trigger the obscuring toggle
@@ -82,13 +84,13 @@ export const DiceKeySvgGroup = observer( (props: DiceKeySvgGroupProps & {sizeMod
     } = props;
 
     const obscure: boolean = typeof obscureAllButCenterDie === "object" ?
-      obscureAllButCenterDie?.value :
+      obscureAllButCenterDie.getValue() :
       !!obscureAllButCenterDie;
     const showPressToReveal = (typeof obscureAllButCenterDie === "object") && obscure;
   
     return (
       <g {...svgGroupProps}
-        onClick={typeof obscureAllButCenterDie !== "object" ? undefined : obscureAllButCenterDie.toggle}
+        onClick={() => typeof obscureAllButCenterDie !== "object" ? undefined : obscureAllButCenterDie.toggle()}
         >
         { (!showLidTab) ? null : (
           // Lid tab as circle
@@ -180,9 +182,9 @@ const rotateFromCenterFaceBottom = keyframes`
 export type CenterFaceOrientationToRotateFromRbl = Exclude<FaceOrientationLetterTrbl, "t">;
 
 export interface DiceKeyAnimationRotationProps {
-  rotationTimeInSeconds?: number;
-  rotationDelayTimeInSeconds?: number;
-  centerFaceOrientationToRotateFrom?: CenterFaceOrientationToRotateFromRbl;
+  $rotationTimeInSeconds?: number;
+  $rotationDelayTimeInSeconds?: number;
+  $centerFaceOrientationToRotateFrom?: CenterFaceOrientationToRotateFromRbl;
 }
 
 const DiceKeyContainerDiv = styled.div<{size?: string}>`
@@ -208,7 +210,7 @@ const DiceKeySvgElement = styled.svg<DiceKeyAnimationRotationProps & {size?: str
     width: ${cssCalcTyped(size)};
     height: ${cssCalcTyped(size)};
   `}
-${ ({centerFaceOrientationToRotateFrom, rotationDelayTimeInSeconds=0, rotationTimeInSeconds=2.25}) =>
+${ ({$centerFaceOrientationToRotateFrom: centerFaceOrientationToRotateFrom, $rotationDelayTimeInSeconds: rotationDelayTimeInSeconds=0, $rotationTimeInSeconds: rotationTimeInSeconds=2.25}) =>
   centerFaceOrientationToRotateFrom == null ? `` : css`
     cursor: none;
     animation-name: ${

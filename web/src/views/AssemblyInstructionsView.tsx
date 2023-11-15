@@ -190,13 +190,13 @@ const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  Ass
     <StepFooterView               
     aboveFooter={
       (state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.diceKey == null) ? (
-        <StepButton invisible={state.userChoseToSkipScanningStep == null}
+        <StepButton $invisible={state.userChoseToSkipScanningStep == null}
           onClick={ state.setUserChoseToSkipScanningStep }
           style={{marginBottom: "0.5rem"}}
         >Let me skip scanning and backing up my DiceKey
         </StepButton>
       ) : (state.step === AssemblyInstructionsStep.CreateBackup && state.backupState?.step === BackupStep.SelectBackupMedium && !state.userChoseToSkipScanningStep) ? (
-        <StepButton invisible={state.userChoseToSkipScanningStep == null}
+        <StepButton $invisible={state.userChoseToSkipScanningStep == null}
           onClick={ state.setUserChoseToSkipBackupStep }
           style={{marginBottom: "0.5rem"}}
         >Let me skip backing up my DiceKey

@@ -23,8 +23,11 @@ export interface OrientedFace extends Face, FaceOrientation {
 	readonly orientationAsLowercaseLetterTrbl: FaceOrientationLetterTrbl
 }
 
+export type FaceLetterAndDigit = `${FaceLetter}${FaceDigit}`;
+
 export type Number0To5 = 0 | 1 | 2 | 3 | 4 | 5;
 export type Number0To24 = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24;
+export type Number0To149 = number;
 export const NumberOfPossibleFaces = 150; // 6 * 25
 
 export const faceLetterToNumber0to24 = (faceLetter: FaceLetter) => FaceLetters.indexOf(faceLetter) as Number0To24;

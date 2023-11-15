@@ -43,11 +43,11 @@ export const StepFooterView = observer ( (props: StepFooterViewProps) => (
       </StepFooterRow>
     ) }
     <StepFooterRow>
-      <PushButton invisible={props.pprev == null} onClick={ props.pprev } >&lt;&lt;</PushButton>
-      <PushButton invisible={props.prev == null} onClick={ props.prev } >&lt; previous</PushButton>
+      <PushButton $invisible={props.pprev == null} onClick={ props.pprev } >&lt;&lt;</PushButton>
+      <PushButton $invisible={props.prev == null} onClick={ props.prev } >&lt; previous</PushButton>
       <SpaceBetweenLeftAndRightButtons></SpaceBetweenLeftAndRightButtons>
-      <PushButton invisible={props.next == null} onClick={ props.next } >{props.nextIsDone ? "done" : "next"} &gt;</PushButton>
-      <PushButton invisible={props.nnext == null} onClick={ props.nnext } >&gt;&gt;</PushButton>
+      <PushButton $invisible={props.next == null} onClick={ props.next } >{props.nextIsDone ? "done" : "next"} &gt;</PushButton>
+      <PushButton $invisible={props.nnext == null} onClick={ props.nnext } >&gt;&gt;</PushButton>
     </StepFooterRow>
   </StepFooter>
 ));

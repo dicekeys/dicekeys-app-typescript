@@ -9,9 +9,9 @@ export const ButtonRow = styled.div`
   align-items: center;
 `;
 
-export const BaseButton = styled.button<{invisible?: boolean}>`
+export const BaseButton = styled.button<{$invisible?: boolean}>`
   display: block;
-  ${props => props.invisible ? `visibility: hidden` : ``};
+  ${props => props.$invisible ? `visibility: hidden` : ``};
   cursor: grab;
   font-size: 1rem;
   user-select: none;

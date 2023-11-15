@@ -57,6 +57,13 @@ export class SimpleSecretSharingState implements ViewState<typeof SimpleSecretSh
 		return [...this.userProvidedShares].sort( (a, b) => Number(a.x) - Number(b.x) );
 	}
 
+	get forbiddenLetters(): FaceLetter[] {
+		return [
+			...this.diceKeyToSplitIntoShares == null ? [] : [this.diceKeyToSplitIntoShares.centerFace.letter],
+			...this.userProvidedShares.map( ({x}) => number0to24ToFaceLetter(Number(x) % 25 as Number0To24) )
+		].sort();
+	}
+
 	/**
 	 * An array of 24 random Y values in the secret sharing space derived from the DiceKey
 	 * to be shared. This must be generated with a cryptographically secure pseudo-random
@@ -111,7 +118,7 @@ export class SimpleSecretSharingState implements ViewState<typeof SimpleSecretSh
 		if (this.userSpecifiedDiceKeyToBeShared != null) {
 			return this.userSpecifiedDiceKeyToBeShared;
 		} else if (this.diceKeyToBeSharedAsFiniteFieldPoint != null) {
-		return DiceKeyWithoutKeyId.fromFiniteFieldPointForShamirSharing(this.diceKeyToBeSharedAsFiniteFieldPoint);
+			return DiceKeyWithoutKeyId.fromFiniteFieldPointForShamirSharing(this.diceKeyToBeSharedAsFiniteFieldPoint);
 		}
 		return;
 	}
@@ -165,7 +172,6 @@ export class SimpleSecretSharingState implements ViewState<typeof SimpleSecretSh
 			definingPoints.map( ({x}) => number0to24ToFaceLetter(Number(x) % 25 as Number0To24) ),
 			this.startDerivedShareCenterFacesAtLetter
 		).slice(0, numRedundantSharesNeeded);
-		console.log(`derivedRedundantShares`, derivedShareCenterLetters, this.numSharesToDisplay, this.minSharesToDecode);
 		return secretSharingForDiceKeys.generateSharesForLetters(
 			definingPoints,
 			derivedShareCenterLetters,

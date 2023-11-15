@@ -5,7 +5,7 @@ import {
 import {
   EnterDiceKeyView} from "./EnterDiceKeyView"
 import { observer } from "mobx-react";
-import { CenteredControls, CenterColumn, Instruction, Spacer } from "../basics";
+import { CenteredControls, CenterColumn, Instruction, Spacer, Instruction2 } from "../basics";
 import { PushButton } from "../../css/Button";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarWithSideMargins } from "../Navigation/NavigationLayout";
@@ -22,13 +22,14 @@ type LoadDiceKeyProps = {
 const LoadDiceKeySubView = observer( ({
   state,
   onDiceKeyReadOrCancelled,
-  instruction = `Place your DiceKey into the camera's field of view.`,
+  instruction,
   scanViewHeight = `70vh`,
 }: LoadDiceKeyProps ) => {
   switch(state.mode) {
     case "camera": return (
         <CenterColumn>
-          <Instruction>{ instruction }</Instruction>
+          <Instruction>Place your DiceKey into the camera's field of view.</Instruction>
+          { instruction == null ? null : (<Instruction2>{instruction}</Instruction2>) }
           <ScanDiceKeyView
             height={scanViewHeight}
             showBoxOverlay={true}
@@ -38,7 +39,7 @@ const LoadDiceKeySubView = observer( ({
         </CenterColumn>
     );
     case "manual": return (
-      <EnterDiceKeyView state={state.enterDiceKeyState} />
+      <EnterDiceKeyView state={state.enterDiceKeyState} instruction={instruction} />
     );
   }
 });
@@ -64,7 +65,7 @@ export const LoadDiceKeyContentPaneView = observer( (props: LoadDiceKeyProps) =>
         ) : null }
         <PushButton onClick={ () => state.setMode(state.mode === "camera" ? "manual" : "camera") } >{state.mode !== "camera" ? "Use Camera" : "Enter Manually"}</PushButton>        
         <PushButton
-          invisible={state.mode !== "manual" || !state.enterDiceKeyState.isValid}
+          $invisible={state.mode !== "manual" || !state.enterDiceKeyState.isValid}
           onClick={ onDonePressedWithinEnterDiceKey }
         >Done</PushButton>          
       </CenteredControls>

@@ -4,7 +4,6 @@ import React from "react";
 import styled from "styled-components";
 import { StepButton } from "../../css/Button";
 import { DiceKeyFaces, DiceKeyWithKeyId, DiceKeyWithoutKeyId, FaceDigits, FaceLetters, FaceOrientationLettersTrbl, OrientedFace } from "../../dicekeys/DiceKey";
-import { ObscureDiceKey } from "../../state/ToggleState";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
 import { ExternalLink } from "../../views/basics/ExternalLink";
 import { StepFooterView } from "../Navigation/StepFooterView";
@@ -17,6 +16,7 @@ import { addPreviewWithMargins } from "../basics/Previews";
 import { BackupMedium } from "./BackupMedium";
 import { BackupStep, BackupViewState } from "./BackupViewState";
 import { ValidateBackupView } from "./ValidateBackupView";
+import { HideRevealSecretsState } from "../../state/stores/HideRevealSecretsState";
 
 export const ComparisonBox = styled.div`
   display: flex;
@@ -146,7 +146,7 @@ const StepSelectBackupMedium = observer (({state, prevStepBeforeStart}: BackupVi
           onClick={state.setBackupMedium(medium)}
         >
           <FaceCopyingView medium={medium} diceKey={state.withDiceKey.diceKey!} showArrow={true} indexOfLastFacePlaced={12}
-          obscureAllButCenterDie={typeof ObscureDiceKey === "boolean" ? ObscureDiceKey : ObscureDiceKey.value }
+          obscureAllButCenterDie={HideRevealSecretsState.shouldDiceKeyBeHidden(state.withDiceKey.diceKey) === true}
             maxWidth="60vw"
             maxHeight={prevStepBeforeStart != null ? 
               // Leave space for a footer with a previous step button
@@ -224,7 +224,7 @@ export const BackupStepFooterView = observer ( ({
       (state.step === BackupStep.SelectBackupMedium && skipBackup) ? (
         <RowAboveFooter>
           <StepButton
-            invisible={state.userChoseToSkipValidationStep || state.validationStepViewState.backupScannedSuccessfully}
+            $invisible={state.userChoseToSkipValidationStep || state.validationStepViewState.backupScannedSuccessfully}
             onClick={skipBackup}
             style={{marginBottom: "0.5rem"}}  
           >Skip backing up my DiceKey
@@ -233,7 +233,7 @@ export const BackupStepFooterView = observer ( ({
       ) : (state.step === BackupStep.Validate) ? (
         <RowAboveFooter>
           <StepButton
-            invisible={state.userChoseToSkipValidationStep || state.validationStepViewState.backupScannedSuccessfully}
+            $invisible={state.userChoseToSkipValidationStep || state.validationStepViewState.backupScannedSuccessfully}
             onClick={state.setUserChoseToSkipValidationStep}
             style={{marginBottom: "0.5rem"}}  
           >Let me skip this step

@@ -9,7 +9,7 @@ import { cssCalcTyped } from "../../../utilities";
 
 export type RecipeRibbonButtons = "SaveOrDelete" | "Increment" | "Decrement" | "EditFields" | "EditRawJson" | "RemoveRecipe";
 
-const RecipeEditStateButton = styled.button<{$selected?: boolean; invisible?: boolean}>`
+const RecipeEditStateButton = styled.button<{$selected?: boolean; $invisible?: boolean}>`
   border: none;
   margin-top: 0px;
   padding-top: 0px;
@@ -24,7 +24,7 @@ const RecipeEditStateButton = styled.button<{$selected?: boolean; invisible?: bo
   min-width: 2rem;
   height: 1.5rem;
   vertical-align: middle;
-  visibility: ${(p)=>p.invisible ? "hidden" : "visible"};
+  visibility: ${(p)=>p.$invisible ? "hidden" : "visible"};
   background-color: ${(p) => p.$selected ?
     `rgba(128, 128, 128, 0.666)` :
     `rgba(255, 255, 255, 0.666)`
@@ -120,27 +120,27 @@ export const RecipeRibbonButtonsView = observer( ({recipeBuilderState, editButto
   return (
     <RecipeButtonRibbon>
       <RecipeEditStateButton
-        invisible={!recipeBuilderState.wizardComplete || recipeBuilderState.sequenceNumber == null}
+        $invisible={!recipeBuilderState.wizardComplete || recipeBuilderState.sequenceNumber == null}
         {...editButtonsHoverState.hoverStateActions("Decrement")}
         onClick={recipeBuilderState.sequenceNumberState.decrement}>-</RecipeEditStateButton>
       <RecipeEditStateButton
-        invisible={!recipeBuilderState.wizardComplete}
+        $invisible={!recipeBuilderState.wizardComplete}
         {...editButtonsHoverState.hoverStateActions("Increment")}
         onClick={recipeBuilderState.sequenceNumberState.increment}>+</RecipeEditStateButton>
       <RecipeEditStateButton
-        invisible={!recipeBuilderState.wizardComplete}
+        $invisible={!recipeBuilderState.wizardComplete}
         {...editButtonsHoverState.hoverStateActions("EditFields")}
         $selected={recipeBuilderState.editingMode === RecipeEditingMode.EditWithTemplateOnly}
         onClick={()=>{recipeBuilderState.toggleEditingMode(RecipeEditingMode.EditWithTemplateOnly);}}>
           <span style={{textDecoration: "underline"}}>&nbsp;&#9998;&nbsp;</span></RecipeEditStateButton>
       <RecipeEditStateButton
-        invisible={!recipeBuilderState.wizardComplete}
+        $invisible={!recipeBuilderState.wizardComplete}
         {...editButtonsHoverState.hoverStateActions("EditRawJson")}
         $selected={recipeBuilderState.editingMode === RecipeEditingMode.EditIncludingRawJson}
         onClick={()=>{recipeBuilderState.toggleEditingMode(RecipeEditingMode.EditIncludingRawJson);}
       }>{`{`}&#9998;{`}`}</RecipeEditStateButton>
       <RecipeEditStateButton
-        invisible={!recipeBuilderState.wizardComplete}
+        $invisible={!recipeBuilderState.wizardComplete}
         // Adjust sizing so that Save/Delete take equal space
         style={{minWidth: `7rem`}}
         {...editButtonsHoverState.hoverStateActions("SaveOrDelete")}
@@ -148,7 +148,7 @@ export const RecipeRibbonButtonsView = observer( ({recipeBuilderState, editButto
           { recipeBuilderState.savedRecipeIdentifier == null ? (<>save</>): (<>delete</>) }
         </RecipeEditStateButton>
       <RecipeEditStateButton
-        invisible={!recipeBuilderState.wizardComplete}
+        $invisible={!recipeBuilderState.wizardComplete}
         {...editButtonsHoverState.hoverStateActions("RemoveRecipe")}
         onClick={()=>{recipeBuilderState.emptyAllRecipeFields()}}
       >&#x2715;</RecipeEditStateButton>

@@ -1,6 +1,6 @@
 import { action, makeAutoObservable } from "mobx";
 import { autoSave } from "../core/AutoSave";
-import {DiceKeyWithKeyId, PublicDiceKeyDescriptor} from "../../dicekeys/DiceKey";
+import { DiceKeyWithKeyId, PublicDiceKeyDescriptor } from "../../dicekeys/DiceKey";
 import { DiceKeyInHumanReadableForm } from "../../dicekeys/DiceKey";
 import { electronBridge } from "../../state/core/ElectronBridge";
 
@@ -90,7 +90,7 @@ class EncryptedDiceKeyStoreClass {
   constructor() {
     this._publicDescriptorsOfEncryptedDiceKeys = [];
     makeAutoObservable(this);
-    autoSave(this, "EncryptedDiceKeyMetadataStore");
+    autoSave(this, "EncryptedDiceKeyMetadataStore", true);
   }
 }
 export const EncryptedDiceKeyStore = new EncryptedDiceKeyStoreClass();

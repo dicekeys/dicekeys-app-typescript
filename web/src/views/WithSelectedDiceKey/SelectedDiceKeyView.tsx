@@ -55,9 +55,9 @@ export const DisplayDiceKeyView = observer( ({state}: {state: DisplayDiceKeyView
       if (diceKey == null) return;
       state.selectedDiceKeyVewState.setDiceKey(diceKey);
     }}
-    rowWidth={`90vw`}
-    selectedItemWidth={`min(70vh,50vw)`}
-    ratioOfSelectedItemWidthToSelectableItemWidth={`4`}
+    $rowWidth={`90vw`}
+    $selectedItemWidth={`min(70vh,50vw)`}
+    $ratioOfSelectedItemWidthToSelectableItemWidth={`4`}
   />
 ));
 

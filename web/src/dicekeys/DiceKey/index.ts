@@ -8,6 +8,7 @@ import {
   FaceDigit,
   FaceDigits,
   FaceLetter, FaceLetters,
+  FaceLetterAndDigit,
   FaceOrientationLetterTrbl} from "./Face";
 import { DiceKeyFaces, NumberOfFacesInKey } from "./KeyGeometry";
 import { DiceKeyValidationOptions } from "./validateDiceKey";
@@ -23,9 +24,6 @@ export * from "./InvalidDiceKeyException";
 export * from "./KeyGeometry";
 export * from "./validateDiceKey";
 export * from "./HumanReadableForm";
-export type CenterLetterAndDigit = `${FaceLetter}${FaceDigit}`;
-
-
 
 
 export const EmptyPartialDiceKey = Array.from(Array(25).keys()).map( () => ({}) );
@@ -82,7 +80,7 @@ export const diceKeyFacesToSeedString = (
 }
 
 export interface PublicDiceKeyDescriptor {
-  readonly centerLetterAndDigit: CenterLetterAndDigit;
+  readonly centerLetterAndDigit: FaceLetterAndDigit;
   readonly keyId: string;
 }
 
@@ -154,7 +152,7 @@ abstract class DiceKeyBase {
 
   get inHumanReadableForm(): DiceKeyInHumanReadableForm { return DiceKeyInHumanReadableForm(this.faces) }
   get centerFace(): OrientedFace { return this.faces[12]; }
-  get centerLetterAndDigit(): CenterLetterAndDigit { return `${this.centerFace.letter}${this.centerFace.digit}` }
+  get centerLetterAndDigit(): FaceLetterAndDigit { return `${this.centerFace.letter}${this.centerFace.digit}` }
   get nickname(): string { return`DiceKey with ${this.centerLetterAndDigit} in center`; }
 
   equals = (other: DiceKeyBase): boolean => DiceKeyInHumanReadableForm(rotateToTurnCenterFaceUpright(this.faces)) ==

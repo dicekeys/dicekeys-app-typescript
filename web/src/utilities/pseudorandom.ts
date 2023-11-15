@@ -57,6 +57,5 @@ export class PseudoRandom {
 	constructor(key: CryptoKey, counter: bigint = 0n) {
 		this.#key = key;
 		this.#counter = counter;
-		console.log(``,this.#key);
 	}
 }

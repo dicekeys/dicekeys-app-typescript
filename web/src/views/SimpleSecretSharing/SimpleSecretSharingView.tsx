@@ -73,38 +73,70 @@ const NumberIncrementDecrement = observer( ({setValue, ...args}: {
 		</NumberIncrementDecrementSpan>);
 });
 
+// const OldSimpleSecretSharingControlRowView = observer(({
+// 	simplesSecretSharingState,
+// }: SimpleSecretSharingProps
+// ) => {
+// 	return (
+// 		<SimpleSecretSharingViewRow>
+// 			<div>
+// 				<label>Total number of shares to generate:</label>
+// 				<NumberIncrementDecrement
+// 					value={() => simplesSecretSharingState.numSharesToDisplay}
+// 					setValue={simplesSecretSharingState.setNumSharesToDisplay}
+// 					minValue={() => simplesSecretSharingState.minSharesToDecode}
+// 				/>
+// 				<label>Minimum shares to recover the DiceKey to be shared:</label>
+// 				<NumberIncrementDecrement
+// 					value={() => simplesSecretSharingState.minSharesToDecode}
+// 					setValue={simplesSecretSharingState.setMinSharesToDecode}
+// 					minValue={1}
+// 					maxValue={() => simplesSecretSharingState.numSharesToDisplay}
+// 				/>
+// 				<label>Center letters of Shares start with:</label>
+// 				<select value={simplesSecretSharingState.startDerivedShareCenterFacesAtLetter}
+// 					onChange={ e => {
+// 						simplesSecretSharingState.startDerivedShareCenterFacesAtLetter = e.currentTarget.value as FaceLetter}
+// 					}
+// 				>{
+// 					FaceLetters.map( letter => (
+// 						<option key={letter} value={letter}>{letter}</option>
+// 					))
+// 				}
+// 				</select>
+// 			</div>
+// 		</SimpleSecretSharingViewRow>
+// 	);
+// });
+
 const SimpleSecretSharingControlRowView = observer(({
 	simplesSecretSharingState,
 }: SimpleSecretSharingProps
 ) => {
 	return (
 		<SimpleSecretSharingViewRow>
-			<div>
-				<label>Total number of shares to generate:</label>
-				<NumberIncrementDecrement
-					value={() => simplesSecretSharingState.numSharesToDisplay}
-					setValue={simplesSecretSharingState.setNumSharesToDisplay}
-					minValue={() => simplesSecretSharingState.minSharesToDecode}
-				/>
-				<label>Minimum shares to recover the DiceKey to be shared:</label>
-				<NumberIncrementDecrement
+			Split the above DiceKey into <NumberIncrementDecrement
 					value={() => simplesSecretSharingState.minSharesToDecode}
 					setValue={simplesSecretSharingState.setMinSharesToDecode}
 					minValue={1}
 					maxValue={() => simplesSecretSharingState.numSharesToDisplay}
-				/>
-				<label>Center letters of Shares start with:</label>
-				<select value={simplesSecretSharingState.startDerivedShareCenterFacesAtLetter}
+				/> shares,
+				with center letters start with&nbsp;<select value={simplesSecretSharingState.startDerivedShareCenterFacesAtLetter}
 					onChange={ e => {
 						simplesSecretSharingState.startDerivedShareCenterFacesAtLetter = e.currentTarget.value as FaceLetter}
 					}
 				>{
-					FaceLetters.map( letter => (
+					FaceLetters.filter( letter => letter !== simplesSecretSharingState.userSpecifiedDiceKeyToBeShared?.centerFace.letter)
+					.map( letter => (
 						<option key={letter} value={letter}>{letter}</option>
 					))
 				}
-				</select>
-			</div>
+				</select>,
+				<NumberIncrementDecrement
+					value={() => simplesSecretSharingState.numSharesToDisplay}
+					setValue={simplesSecretSharingState.setNumSharesToDisplay}
+					minValue={() => simplesSecretSharingState.minSharesToDecode}
+				/> of which are needed to recover it.
 		</SimpleSecretSharingViewRow>
 	);
 });
@@ -117,9 +149,15 @@ export const SimpleSecretSharingView = observer(({
 		diceKeyToSplitIntoShares,
 		sharesAsDiceKeys,
 	} = simplesSecretSharingState;
+	const instruction = simplesSecretSharingState.forbiddenLetters.length === 0 ? undefined :
+	 `Your center die of your DiceKey cannot use ${
+		simplesSecretSharingState.forbiddenLetters.length == 1 ? `the letter ${simplesSecretSharingState.forbiddenLetters[0]}.` :
+		`the letters ${simplesSecretSharingState.forbiddenLetters.slice(0, -1).join(", ")}, or ${simplesSecretSharingState.forbiddenLetters.slice(-1)[0]}.`
+	 }`;
 	if (simplesSecretSharingState.loadShareAsDiceKeyState) {
 		return (
 			<LoadDiceKeyContentPaneView
+				instruction={instruction}
 				state={simplesSecretSharingState.loadShareAsDiceKeyState}
 				onDiceKeyReadOrCancelled={simplesSecretSharingState.onShareAsDiceKeyLoadCompletedOrCancelled}
 			/>);

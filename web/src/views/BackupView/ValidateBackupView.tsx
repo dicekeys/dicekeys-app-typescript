@@ -71,7 +71,7 @@ export const ValidateBackupView = observer ( ({
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />
           <CenteredControls>
-            <PushButton invisible={!("setDiceKey" in viewState.withDiceKey)} onClick={viewState.startScanningOriginal}>Re-scan your original DiceKey</PushButton>
+            <PushButton $invisible={!("setDiceKey" in viewState.withDiceKey)} onClick={viewState.startScanningOriginal}>Re-scan your original DiceKey</PushButton>
           </CenteredControls>
         </ComparisonBox>
         <ComparisonBox>
@@ -144,7 +144,7 @@ const ErrorStepView = observer ( ({viewState}: {viewState: ValidateBackupViewSta
   <ErrorStepViewBox>
     <MinWidthButtonContainer style={{ ...( (errorIndex) > 0 ? {} : {visibility: "hidden"})}}>
       <PushButton
-        invisible={errorIndex == 0 || errorIndex == null}
+        $invisible={errorIndex == 0 || errorIndex == null}
         onClick={() => viewState.setErrorIndex((errorIndex ?? 1) - 1)}
         >previous
       </PushButton>
@@ -154,7 +154,7 @@ const ErrorStepView = observer ( ({viewState}: {viewState: ValidateBackupViewSta
     </ErrorExplanation>
     <MinWidthButtonContainer style={visibility(errorIndex < numberOfFacesWithErrors-1)}>
       <PushButton
-        invisible={errorIndex >= numberOfFacesWithErrors - 1 }
+        $invisible={errorIndex >= numberOfFacesWithErrors - 1 }
         onClick={() => viewState.setErrorIndex((errorIndex ?? 0) + 1)}
       >next
       </PushButton>

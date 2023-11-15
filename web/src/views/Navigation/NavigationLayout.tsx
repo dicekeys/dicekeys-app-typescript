@@ -126,7 +126,7 @@ export const TopNavRightSide = styled(TopEdgeNavRegion)`
   justify-content: end;
 `;
 
-export const TopNavPopUpMenu = styled.div<{isOpen: boolean}>`
+export const TopNavPopUpMenu = styled.div<{$isOpen: boolean}>`
   display: flex;
   position: absolute;
   top: ${TopNavigationBarHeight};
@@ -137,7 +137,7 @@ export const TopNavPopUpMenu = styled.div<{isOpen: boolean}>`
   /* padding-left: 1rem;
   padding-right: 1rem; */
   background-color: ${ props => props.theme.colors.navigationBar };
-  ${ ({isOpen}) => isOpen ? `` : `visibility: hidden` }
+  ${ ({$isOpen: isOpen}) => isOpen ? `` : `visibility: hidden` }
 `;
 
 export const Clickable = styled.span`

@@ -12,6 +12,7 @@ export class FrameGrabberFromVideoElement {
 
   constructor(private videoElement: HTMLVideoElement, private callback: (frame: ImageData) => void) {
     this.captureCanvas = document.createElement("canvas");
+    this.captureCanvas.setAttribute("willReadFrequently", "true")
     this.captureCanvasCtx = throwIfNull(this.captureCanvas.getContext("2d"));
     this.frameGrabLoopIteration();
   }

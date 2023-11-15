@@ -38,7 +38,7 @@ export interface ExpandableMenuProps {
 }
 
 export const ExpandableMenu = observer ( ({children, booleanStateTrueIfMenuExpanded, ...props}: PropsWithChildren<ExpandableMenuProps>) => (
-  <TopNavRightPopUpMenu isOpen={booleanStateTrueIfMenuExpanded.value} {...props}>{children}</TopNavRightPopUpMenu>
+  <TopNavRightPopUpMenu $isOpen={booleanStateTrueIfMenuExpanded.value} {...props}>{children}</TopNavRightPopUpMenu>
 ));
 
 export const HamburgerMenuButton = ({booleanStateTrueIfMenuExpanded}: ExpandableMenuProps) => (

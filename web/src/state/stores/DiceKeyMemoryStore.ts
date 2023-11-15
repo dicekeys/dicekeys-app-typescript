@@ -40,18 +40,19 @@ const msToRotate = 2500;
 const msTotalForRotation = msDelayBeforeStart + msToRotate;
 
 const getRotationParameters = (centerFaceOrientationToRotateFromRbl: Exclude<FaceOrientationLetterTrbl, "t">) => ({
-  rotationDelayTimeInSeconds: msDelayBeforeStart/1000,
-  rotationTimeInSeconds: msToRotate/1000,
-  centerFaceOrientationToRotateFrom: centerFaceOrientationToRotateFromRbl,
+  $rotationDelayTimeInSeconds: msDelayBeforeStart/1000,
+  $rotationTimeInSeconds: msToRotate/1000,
+  $centerFaceOrientationToRotateFrom: centerFaceOrientationToRotateFromRbl,
 });
 
 class DiceKeyMemoryStoreClass {
   static readonly StorageFieldName = "DiceKeyStore";
-  // Because this class is saved using autoSaveEncrypted, all
-  // files must be exposed (no private # fields) and must be 
-  // classic JavaScript objects (no maps or observable maps)
+  // These object are converted to raw form before saving
   private keyIdToDiceKeyInHumanReadableForm = new ObservableMap<string, DiceKeyInHumanReadableForm>();
+
+  // Reconstituted across processes from keyIdToDiceKeyInHumanReadableForm
   private centerLetterAndDigitToKeyId = new ObservableMap<string, string>();
+  // Not saved across processes
   private keyIdToCenterFaceOrientationWhenScanned = new ObservableMap<string, FaceOrientationLetterTrbl>();
 
   getRotationParametersForKeyId = (keyId: string): ReturnType<typeof getRotationParameters> | undefined => {
@@ -135,6 +136,7 @@ class DiceKeyMemoryStoreClass {
     this.updateStorage();
     return diceKeyWithCenterFaceUpright;
   };
+
 
   private loadFromDeviceStorage = async (...params: Parameters<typeof EncryptedDiceKeyStore.load>) : Promise<DiceKeyWithKeyId | undefined> => {
     if (!RUNNING_IN_ELECTRON)  return;
