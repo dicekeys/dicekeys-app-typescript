@@ -12,6 +12,7 @@ import { LoadDiceKeyContentPaneView } from "../../views/LoadingDiceKeys/LoadDice
 import { AnchorButton } from "../../views/basics/AnchorButton";
 import { ExternalLink } from "../../views/basics/ExternalLink";
 import { HideRevealSecretsState } from "../../state/stores/HideRevealSecretsState";
+import { rangeStartingAt0 } from "../../utilities/range";
 
 const FieldRow = styled.div<{$invisible?: boolean}>`
     ${ props => props.$invisible ? css`visibility: hidden;` : ``}
@@ -209,7 +210,7 @@ const obscureByReplacingOtherCharactersWithThisCharacter = opaqueBlockCharacter;
 const obscureHex = (hexString: string, cursorPosition: number | undefined | null): string => {
   const length = hexString.length;
 //  const cursorPositionOrEnd: number = Math.min(cursorPosition ?? hexString.length, hexString.length);
-  const obscureString = [...Array(length).keys()].map( (_, index) => 
+  const obscureString = rangeStartingAt0(length).map( (_, index) => 
       ( cursorPosition == null || (index < (cursorPosition - 2)) || (index > (cursorPosition + 1)) ) ?
       obscureByReplacingOtherCharactersWithThisCharacter : " "
   ).join("");

@@ -8,6 +8,7 @@ import { BooleanState } from "../../state/reusable/BooleanState";
 import styled from "styled-components";
 
 export const MenuItem = styled.div`
+  cursor: grab;
   align-self: stretch;
   display: flex;
   flex-direction: row;
@@ -22,7 +23,7 @@ export const MenuItem = styled.div`
   padding-right: 1rem;
   font-size: 1rem;
   user-select: none;
-  :hover {
+  &:hover {
     color: ${ props => (props.onClick != null) ? props.theme.colors.background : props.theme.colors.navigationBarForeground }
   }
 `;
@@ -43,7 +44,7 @@ export const ExpandableMenu = observer ( ({children, booleanStateTrueIfMenuExpan
 
 export const HamburgerMenuButton = ({booleanStateTrueIfMenuExpanded}: ExpandableMenuProps) => (
   <Clickable
-    style={{fontSize: `6vh`, cursor: `grab`}}
+    style={{fontSize: `6vh`}}
     onClick={ booleanStateTrueIfMenuExpanded.toggle }
   >
   &#8801;

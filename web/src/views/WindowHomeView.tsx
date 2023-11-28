@@ -109,7 +109,7 @@ const StoredDiceKeyView = observer ( (props: StoredDiceKeyProps) => {
         onClick={() => state.loadStoredDiceKey(storedDiceKeyDescriptor)}
       >
         <DiceKeyView
-          size={`${cssCalcTyped(storedKeySize)}`}
+          $size={`${cssCalcTyped(storedKeySize)}`}
           faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
           obscureAllButCenterDie={true}
           showLidTab={true}

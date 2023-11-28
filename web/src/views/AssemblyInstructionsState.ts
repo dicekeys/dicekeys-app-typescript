@@ -3,7 +3,7 @@ import { action, makeAutoObservable } from "mobx";
 import { BackupViewState } from "./BackupView/BackupViewState";
 import { ViewState } from "../state/core/ViewState";
 import { NavigationPathState } from "../state/core/NavigationPathState";
-import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
+import { DiceKey } from "../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../state";
 import { SettableOptionalDiceKeyIndirect } from "../state/Window/DiceKeyState";
 import { addressBarState } from "../state/core/AddressBarState";
@@ -17,6 +17,7 @@ export enum AssemblyInstructionsStep {
   SealBox,
   Done,
   END_EXCLUSIVE,
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   START_INCLUSIVE = 1,
 }
 
@@ -28,12 +29,16 @@ export type AssemblyInstructionsStateName = typeof AssemblyInstructionsStateName
 export class AssemblyInstructionsState implements ViewState {
   readonly viewName = AssemblyInstructionsStateName;
 
-  diceKey: DiceKeyWithKeyId | undefined;
-  setDiceKey = action( (diceKey: DiceKeyWithKeyId | undefined) => {
+  diceKey: DiceKey | undefined;
+  setDiceKey = action( (diceKey: DiceKey | undefined) => {
     if (diceKey == null) {
       this.diceKey = diceKey;
-    } else {
+    } else if ("keyId" in diceKey) {
       this.diceKey = DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
+    } else {
+      diceKey.withKeyId.then( diceKeyWithKeyId => {
+        this.setDiceKey(diceKeyWithKeyId);
+      });
     }
   });
 

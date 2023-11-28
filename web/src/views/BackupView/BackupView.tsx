@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { StepButton } from "../../css/Button";
 import { DiceKeyFaces, DiceKeyWithKeyId, DiceKeyWithoutKeyId, FaceDigits, FaceLetters, FaceOrientationLettersTrbl, OrientedFace } from "../../dicekeys/DiceKey";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
-import { ExternalLink } from "../../views/basics/ExternalLink";
+import { StoreLink } from "../../views/basics/ExternalLink";
 import { StepFooterView } from "../Navigation/StepFooterView";
 import { DiceKeyView } from "../SVG/DiceKeyView";
 import { FaceCopyingView } from "../SVG/FaceCopyingView";
@@ -13,10 +13,10 @@ import { StickerSheetView } from "../SVG/StickerSheetView";
 import { StickerTargetSheetView } from "../SVG/StickerTargetSheetView";
 import { CenterRow, Instruction, Spacer } from "../basics";
 import { addPreviewWithMargins } from "../basics/Previews";
-import { BackupMedium } from "./BackupMedium";
+import { PhysicalMedium } from "../../dicekeys/PhysicalMedium";
 import { BackupStep, BackupViewState } from "./BackupViewState";
 import { ValidateBackupView } from "./ValidateBackupView";
-import { HideRevealSecretsState } from "../../state/stores/HideRevealSecretsState";
+import { StepSelectBackupMediumView } from "./StepSelectBackupMedium";
 
 export const ComparisonBox = styled.div`
   display: flex;
@@ -33,31 +33,7 @@ export const ComparisonBox = styled.div`
   }
 `;
 
-const FeatureCardButton = styled.button`
-  align-self: center;
-  display: flex;
-  cursor: grab;
-  flex-direction: column;
-  justify-content: stretch;
-  align-items: stretch;
-  align-content: center;
-  padding-top: 1.5vh;
-  padding-bottom: 1.5vh;
-  margin-top: 1.5vh;
-  margin-bottom: 1.5vh;
-  border-radius: min(1vh,1vw);
-  padding-left: 1vw;
-  padding-right: 1vw;
-  border: none;
-  &:hover {
-    background: rgba(128,128,128,0.2);
-  }
-  &:not(:first-of-type) {
-    margin-top: 1vh;
-  }
-`;
-
-const LabelBelowButtonImage = styled.div`
+export const LabelBelowButtonImage = styled.div`
   margin-top: 0.5rem;
 `;
 
@@ -71,13 +47,13 @@ const IntroToBackingUpToADiceKeyView = () => (
     <Spacer/>
     <CenterRow>
       <ComparisonBox>
-        <DiceKeyView size={`min(35vh,45vw)`} obscureAllButCenterDie={false} />
+        <DiceKeyView $size={`min(35vh,45vw)`} obscureAllButCenterDie={false} />
       </ComparisonBox>
     </CenterRow>
     <Spacer/>
     <Instruction>Next, you will replicate the first DiceKey by copying the arrangement of dice.</Instruction>
     <Spacer/>
-    <NoteDiv>Need another DiceKey?  You can <ExternalLink url="https://dicekeys.com/store">order more</ExternalLink>.</NoteDiv>
+    <NoteDiv>Need another DiceKey?  You can <StoreLink>order more</StoreLink>.</NoteDiv>
   </>
 )
 const IntroToBackingUpToASticKeyView = () => (
@@ -87,30 +63,30 @@ const IntroToBackingUpToASticKeyView = () => (
     <Spacer />
     <CenterRow>
       <ComparisonBox>
-        <StickerSheetView maxHeight="45vh" maxWidth="45vw" />
+        <StickerSheetView style={{width: `30vw`}} />
         5 sticker sheets
       </ComparisonBox>
       <ComparisonBox>
-        <StickerTargetSheetView maxHeight="45vh" maxWidth="45vw" />
+        <StickerTargetSheetView style={{width: `30vw`}} />
         1 target sheet
       </ComparisonBox>
     </CenterRow>
     <Spacer />
     <Instruction>Next, you will create a copy of your DiceKey on the target sheet by placing stickers.</Instruction>
     <Spacer />
-    <NoteDiv>Out of SticKeys?  You can <ExternalLink url="https://dicekeys.com/store">order more</ExternalLink>.</NoteDiv>
+    <NoteDiv>Out of SticKeys?  You can <StoreLink>order more</StoreLink>.</NoteDiv>
   </>
 );
 
-const CopyFaceInstructionView = observer( ({face, index, medium}: {face: OrientedFace, index: number, medium: BackupMedium}) => {
+const CopyFaceInstructionView = observer( ({face, index, medium}: {face: OrientedFace, index: number, medium: PhysicalMedium}) => {
   const sheetIndex = FaceLetters.indexOf(face.letter) % 5;
   const firstLetterOnSheet = FaceLetters[sheetIndex * 5];
   const lastLetterOnSheet = FaceLetters[sheetIndex * 5 + 4];
   const indexMod5 = index % 5;
   const {letter, digit, orientationAsLowercaseLetterTrbl: oriented} = face;
 
-  return (<Instruction minLines={4}>
-    { medium === BackupMedium.SticKey ? (<>
+  return (<Instruction $minLines={4}>
+    { medium === PhysicalMedium.stickers ? (<>
         Remove the {letter}{digit} sticker
         from the sheet with letters {firstLetterOnSheet} to {lastLetterOnSheet}.
       </>) : (<>
@@ -124,7 +100,7 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Oriente
       (indexMod5 == 0) ? (<>Place it in the leftmost position of the next (new) row</>) :
       (<>Place it in to the right of the previous sticker in the {
         indexMod5 === 1 ? "second" : indexMod5 === 2 ? "third" : "fourth"
-      } row</>)
+      }&nbsp;row</>)
     }
     &nbsp;with {letter}{digit}&nbsp;
     { 
@@ -136,43 +112,18 @@ const CopyFaceInstructionView = observer( ({face, index, medium}: {face: Oriente
   </Instruction>);
 });
 
-const StepSelectBackupMedium = observer (({state, prevStepBeforeStart}: BackupViewProps) => (
-  <>
-    <Instruction>Do you want to back up your key to a DiceKey kit or a SticKey kit?</Instruction>{
-      ([[BackupMedium.SticKey, "Use a SticKey kit (stickers on a paper sheet)"],
-        [BackupMedium.DiceKey, "Use a DiceKey kit (25 dice in a plastic box)"]
-      ] as [BackupMedium, string][]).map( ([medium, label]) => (
-        <FeatureCardButton key={medium}
-          onClick={state.setBackupMedium(medium)}
-        >
-          <FaceCopyingView medium={medium} diceKey={state.withDiceKey.diceKey!} showArrow={true} indexOfLastFacePlaced={12}
-          obscureAllButCenterDie={HideRevealSecretsState.shouldDiceKeyBeHidden(state.withDiceKey.diceKey) === true}
-            maxWidth="60vw"
-            maxHeight={prevStepBeforeStart != null ? 
-              // Leave space for a footer with a previous step button
-              "18vh" :
-              // No need for footer with space for previous step button.
-              "22vh"
-            }
-          />
-          <LabelBelowButtonImage>{label}</LabelBelowButtonImage>
-        </FeatureCardButton>
-      ))}
-    </>
-  ));
-
 export const BackupStepSwitchView = observer ( ({state}: BackupViewProps) => {
   const {step, backupMedium, withDiceKey, validationStepViewState} = state;
   const {diceKey} = withDiceKey;
   const faceIndex = step - BackupStep.FirstFace;
   switch (step) {
-    case BackupStep.SelectBackupMedium: return (<StepSelectBackupMedium state={state} />);
-    case BackupStep.Introduction: return backupMedium === BackupMedium.DiceKey ? (<IntroToBackingUpToADiceKeyView/>):(<IntroToBackingUpToASticKeyView/>)
+    case BackupStep.SelectBackupMedium: return (<StepSelectBackupMediumView state={state} />);
+    case BackupStep.Introduction: return backupMedium === PhysicalMedium.dice ? (<IntroToBackingUpToADiceKeyView/>):(<IntroToBackingUpToASticKeyView/>)
     case BackupStep.Validate: return ( <ValidateBackupView viewState={validationStepViewState} /> )
-    default: return (backupMedium == null || step < BackupStep.FirstFace || step > BackupStep.LastFace) ? (<></>) : (
+    default: return (backupMedium == null || backupMedium===PhysicalMedium.printout || step < BackupStep.FirstFace || step > BackupStep.LastFace) ? (<></>) : (
       <>
         <FaceCopyingView obscureAllButCenterDie={false} medium={backupMedium} diceKey={diceKey} indexOfLastFacePlaced={faceIndex}
-           maxWidth="80vw" maxHeight="45vh"
+           style={{width: '80vw', marginLeft: `auto`, marginRight: `auto`}}
         />
         { diceKey == null ? null : (
           <CopyFaceInstructionView medium={backupMedium} face={diceKey.faces[faceIndex]!} index={faceIndex} />
@@ -199,7 +150,7 @@ export const BackupContentView = observer ( (props: BackupViewProps) => (
 ));
 
 
-interface BackupViewProps {
+export interface BackupViewProps {
   state: BackupViewState;
   prevStepBeforeStart?: () => void;
   nextStepAfterEnd?: () => void;
@@ -263,7 +214,7 @@ export const BackupStepFooterView = observer ( ({
 
 export const BackupView = observer ( (props: BackupViewProps) => (
   <>
-    <BackupContentView state={props.state} />
+    <BackupContentView {...props} />
     <BackupStepFooterView {...props} />
   </>)
 );
@@ -274,7 +225,7 @@ addPreviewWithMargins("Backup", () => (
 
 addPreviewWithMargins("BackupNoErrors", () => {
   const state = new BackupViewState(NavigationPathState.root, {diceKey: DiceKeyWithKeyId.testExample});
-  state.setBackupMedium(BackupMedium.DiceKey);
+  state.setBackupMedium(PhysicalMedium.dice);
   state.setStep(BackupStep.Validate);
   state.validationStepViewState.setDiceKeyScannedForValidation(DiceKeyWithKeyId.testExample)
   return (<BackupView state={state} />
@@ -283,7 +234,7 @@ addPreviewWithMargins("BackupNoErrors", () => {
 addPreviewWithMargins("Backup1Error", () => {
   const diceKey = DiceKeyWithKeyId.testExample;
   const state = new BackupViewState(NavigationPathState.root, {diceKey}, BackupStep.Validate);
-  state.setBackupMedium(BackupMedium.DiceKey);
+  state.setBackupMedium(PhysicalMedium.dice);
   const diceKeyWithErrors = new DiceKeyWithoutKeyId(DiceKeyFaces(diceKey.rotate(1).faces.map( (face, index) => {
       switch(index) {
         case 3: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 5) % FaceLetters.length]!};
@@ -299,7 +250,7 @@ addPreviewWithMargins("Backup1Error", () => {
 addPreviewWithMargins("BackupShowErrors", () => {
   const diceKey = DiceKeyWithKeyId.testExample;
   const state = new BackupViewState(NavigationPathState.root, {diceKey}, BackupStep.Validate);
-  state.setBackupMedium(BackupMedium.DiceKey);
+  state.setBackupMedium(PhysicalMedium.dice);
   const diceKeyWithErrors = new DiceKeyWithoutKeyId(DiceKeyFaces(diceKey.rotate(1).faces.map( (face, index) => {
       switch(index) {
         case 3: return {...face, letter: FaceLetters[(FaceLetters.indexOf(face.letter) + 5) % FaceLetters.length]!};

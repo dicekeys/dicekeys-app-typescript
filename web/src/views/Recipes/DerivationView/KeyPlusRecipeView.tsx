@@ -123,7 +123,7 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
     <KeyPlusRecipeRow>
       {/* Key */}
       <ElementInDiceKeyColumn>
-        <DiceKeyView faces={diceKey.faces} size={`min(${Dimensions.DiceKeyBoxMaxHeight},${Dimensions.DiceKeyBoxMaxWidth})`}  />
+        <DiceKeyView faces={diceKey.faces} $size={`min(${Dimensions.DiceKeyBoxMaxHeight},${Dimensions.DiceKeyBoxMaxWidth})`}  />
       </ElementInDiceKeyColumn>
       {/* Plus sign */}
       <ElementInPlusSignColumn>+</ElementInPlusSignColumn>

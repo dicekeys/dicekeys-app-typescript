@@ -14,3 +14,6 @@ export const ExternalLink = ({children, url}: React.PropsWithChildren<{url: stri
     return (<a target="_blank" href={url}>{children}</a>);
   }
 }
+
+export const StoreLink = ({children}: React.PropsWithChildren) =>
+  (<ExternalLink url="https://dicekeys.app/store">{children}</ExternalLink>);

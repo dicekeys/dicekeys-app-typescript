@@ -5,7 +5,7 @@ import type { DiceKey, FaceOrientationLetterTrbl } from "../../dicekeys/DiceKey"
 import { EmptyPartialDiceKey, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { DiceKeyMemoryStore } from "../../state";
 import { cssCalcTyped } from "../../utilities";
-import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox, viewBox } from "../../utilities/bounding-rects";
+import { viewBox } from "../../utilities/bounding-rects";
 import { FaceGroupView } from "./FaceView";
 import { BooleanWithToggle, HideRevealSecretsState } from "../../state/stores/HideRevealSecretsState";
 
@@ -50,16 +50,11 @@ export const DiceKeySizeModel = (linearSizeOfFace: number = 1, includeSpaceForTa
     linearSizeOfFace, includeSpaceForTab,
     tabFraction, linearSizeOfBox,
     distanceBetweenDieCenters, linearSizeOfBoxWithTab,
-    width, height, bounds, top, vCenter, left, radius
+    width, height, bounds, top, vCenter, left, radius,
   }
 }
 export type DiceKeySizeModel = ReturnType<typeof DiceKeySizeModel>;
-
-const DiceKeySizeModelFromBounds = (widthOverHeight: number, includeSpaceForTab: boolean) => (bounds: Bounds) =>
-    DiceKeySizeModel(fitRectangleWithAspectRatioIntoABoundingBox(widthOverHeight)(bounds).width / ratioOfBoxWidthToFaceSize, includeSpaceForTab);
-export const DiceKeySizeModelFromBoundsWithTab = DiceKeySizeModelFromBounds(1/(1-fractionOfHeightDevotedToTabIfPresent), true);
-export const DiceKeySizeModelFromBoundsWithoutTab = DiceKeySizeModelFromBounds(1, false);
-
+export const DiceKeySizeModelForFaceAsUnit = DiceKeySizeModel(1); 
 const sizeModelWithTab = DiceKeySizeModel(1, true);
 const sizeModelWithoutTab = DiceKeySizeModel(1, false);
 type DiceKeySvgGroupProps = DiceKeyRenderOptions & React.SVGAttributes<SVGGElement>
@@ -187,26 +182,13 @@ export interface DiceKeyAnimationRotationProps {
   $centerFaceOrientationToRotateFrom?: CenterFaceOrientationToRotateFromRbl;
 }
 
-const DiceKeyContainerDiv = styled.div<{size?: string}>`
-  position: relative;
-  display: flex;
-  align-self: center;
-  justify-self: center;
-  overflow: hidden;
-  ${ ({size}) => size == null ? `` : css`
-    width: ${cssCalcTyped(size)};
-    height: ${cssCalcTyped(size)};
-  `}
-`
-
-const DiceKeySvgElement = styled.svg<DiceKeyAnimationRotationProps & {size?: string}>`
-  position: absolute;
+const DiceKeySvgElement = styled.svg<DiceKeyAnimationRotationProps & {$size?: string}>`
   display: flex;
   align-self: center;
   justify-self: center;
   overflow: hidden;
   cursor: grab;
-  ${ ({size}) => size == null ? `` : css`
+  ${ ({$size: size}) => size == null ? `` : css`
     width: ${cssCalcTyped(size)};
     height: ${cssCalcTyped(size)};
   `}
@@ -240,24 +222,23 @@ export const DiceKeyView = observer ( ({
   onFaceClicked,
   // Props to pass down to svg element.
   ...svgProps
-}: {size?: string, diceKey?: DiceKey} & DiceKeyRenderOptions & DiceKeyAnimationRotationProps & React.SVGAttributes<SVGElement>) => {
+}: {$size?: string, diceKey?: DiceKey} & DiceKeyRenderOptions & DiceKeyAnimationRotationProps & React.SVGAttributes<SVGElement>) => {
   const sizeModel = (showLidTab || leaveSpaceForTab) ? sizeModelWithTab : sizeModelWithoutTab;
   const rotationParameters = (diceKey == null || !("keyId" in diceKey)) ?  undefined : DiceKeyMemoryStore.getRotationParametersForKeyId(diceKey.keyId);
   if (rotationParameters != null) {
     obscureAllButCenterDie = false;
     onFaceClicked = undefined;
   }
-  const {size} = svgProps;
   return (
-    <DiceKeyContainerDiv size={size} >
-      <DiceKeySvgElement
-        {...svgProps}
-        {...rotationParameters}
-        viewBox={viewBox((sizeModel.bounds))}
-        preserveAspectRatio="xMidYMid meet"
-      >
-        <DiceKeySvgGroup {...{faces,sizeModel,highlightFaceAtIndex,obscureAllButCenterDie,diceBoxColor,showLidTab,leaveSpaceForTab,onFaceClicked,}} />
-      </DiceKeySvgElement>
-    </DiceKeyContainerDiv>
+    <DiceKeySvgElement
+      {...svgProps}
+      {...rotationParameters}
+      viewBox={viewBox((sizeModel.bounds))}
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <DiceKeySvgGroup {
+        ...{faces,sizeModel,highlightFaceAtIndex,obscureAllButCenterDie,diceBoxColor,showLidTab,leaveSpaceForTab,onFaceClicked
+        }} />
+    </DiceKeySvgElement>
   );
 });

@@ -2,6 +2,7 @@ import { ShamirSecretSharing } from "../utilities/ShamirSecretSharing";
 
 // FUTURE: Remove 7 following lines after moving to Node 19+
 import { webcrypto } from 'node:crypto';
+import { rangeFromTo } from "../utilities/range";
 if (!globalThis?.crypto) {
 	globalThis.crypto = webcrypto as typeof globalThis["crypto"];
 }
@@ -52,11 +53,11 @@ describe("Shamir Secret Sharing", () => {
 		const shamir = new ShamirSecretSharing(p);
 		describe(`Test for prime ${p}`, () => {
 			// Test over range of 2-7 shares
-			const TestOverNumberOfSharesN = [3, 4, 5, 6, 7];
+			const TestOverNumberOfSharesN = rangeFromTo(3, 7);
 			TestOverNumberOfSharesN.forEach( N => {
 				// Test minimum number of shares K over range 2..N.
 				const MinMinShares = 2;
-				const TestOverMinimumNumberOfSharesK = [...Array(N-MinMinShares).keys()].map( (x) => x + MinMinShares ) 
+				const TestOverMinimumNumberOfSharesK = rangeFromTo(MinMinShares, N);
 				TestOverMinimumNumberOfSharesK.forEach( K => {
 					describe(`${K} of ${N}`, () => {
 						const shareXValues = [...Array(N).keys()].map( (x) => shamir.ff.coerceToTypeOfPrime(x + 1) )

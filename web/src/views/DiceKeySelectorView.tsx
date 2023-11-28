@@ -142,7 +142,7 @@ const SelectableDiceKeyView = observer ( (props: {
     >
       <DiceKeyView
         onClick={onClick}
-        size={`${cssCalcTyped(selectableItemWidth(sizeModel))}`}
+        $size={`${cssCalcTyped(selectableItemWidth(sizeModel))}`}
         faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
         obscureAllButCenterDie={true}
         showLidTab={true}
@@ -163,7 +163,7 @@ const SelectedDiceKeyView = observer ( ({diceKey, ...sizeModel}: {diceKey?: Dice
        }}
     >
         <DiceKeyView
-          size={`${cssCalcTyped(sizeModel.$selectedItemWidth ?? defaultSelectedItemWidth)}`}
+          $size={`${cssCalcTyped(sizeModel.$selectedItemWidth ?? defaultSelectedItemWidth)}`}
           diceKey={diceKey}
           showLidTab={false}
         />

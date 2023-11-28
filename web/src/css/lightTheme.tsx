@@ -18,6 +18,8 @@ export const lightTheme: DefaultTheme = {
     // 
     navigationBar: "#5576C5",
     navigationBarForeground: "black",
-    bottomButtonBarBackground: "rgba(128,128,128,1)"
+    bottomButtonBarBackground: "rgba(128,128,128,1)",
+    //
+    highlightBackground: "yellow",
   }
 };

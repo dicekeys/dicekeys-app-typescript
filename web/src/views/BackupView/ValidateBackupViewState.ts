@@ -1,10 +1,10 @@
-import { DiceKey, DiceKeyComparisonResult, DiceKeyWithKeyId, FaceComparisonErrorTypes } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyComparisonResult, FaceComparisonErrorTypes } from "../../dicekeys/DiceKey";
 import { action, makeAutoObservable } from "mobx";
 import { SettableOptionalDiceKey, WithDiceKey } from "../../state/Window/DiceKeyState";
 
 export class FaceErrorDescriptor<T extends DiceKey = DiceKey> {
   constructor(
-    private readonly originalDiceKey: DiceKeyWithKeyId,
+    private readonly originalDiceKey: DiceKey,
     private readonly diceKeyComparisonResult: DiceKeyComparisonResult<T>,
     private readonly errorIndex: number,
   ) {
@@ -42,9 +42,9 @@ export class ValidateBackupViewState {
   
   get originalDiceKey() { return this.withDiceKey.diceKey }
 
-  public _diceKeyScannedForValidation: DiceKeyWithKeyId | undefined;
+  public _diceKeyScannedForValidation: DiceKey | undefined;
   get diceKeyScannedForValidation() { return this._diceKeyScannedForValidation }
-  setDiceKeyScannedForValidation = action( (diceKey: DiceKeyWithKeyId) => this._diceKeyScannedForValidation = diceKey );
+  setDiceKeyScannedForValidation = action( (diceKey: DiceKey) => this._diceKeyScannedForValidation = diceKey );
   
   clear = action ( () => {
     this.scanning = undefined;

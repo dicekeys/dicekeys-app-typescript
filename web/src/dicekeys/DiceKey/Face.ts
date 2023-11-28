@@ -11,6 +11,7 @@ import {
 	FaceOrientationLettersTrbl
 } from "@dicekeys/read-dicekey-js";
 import { Clockwise90DegreeRotationsFromUpright, NumberOfFacesInKey } from "./KeyGeometry";
+import { rangeStartingAt0 } from "../../utilities/range";
 export {
 	FaceDigit, FaceDigits, FaceLetter, FaceLetters, FaceOrientationLetterTrbl, FaceOrientationLetterTrblOrUnknown, FaceOrientationLettersTrbl, InvalidFaceDigitException, InvalidFaceLetterException, InvalidFaceOrientationLettersTrblOrUnknownException
 } from "@dicekeys/read-dicekey-js";
@@ -61,7 +62,7 @@ export const faceDigitsToBigInt = (faceDigits: FaceDigit[]): bigint => faceDigit
  */
 export const bigIntForAllDigitsToFaceDigits = (bigIntForAllDigits: bigint, count: number) =>
 	// decode rightmost (lowest order) first, appending new digits to the start of the array.
-	[...Array(count).keys()].map( () => {
+	rangeStartingAt0(count).map( () => {
 		const lowestOrderDigit = Number(bigIntForAllDigits % 6n) as Number0To5;
 		const faceDigit = number0to5ToFaceDigit(lowestOrderDigit);
 		bigIntForAllDigits /= 6n;
@@ -81,7 +82,7 @@ export const faceOrientationTrblToBigInt = (faceOrientationTrbl: FaceOrientation
 export const facesToBigIntForAllOrientations = (faces: OrientedFace[]): bigint =>
 	faceOrientationTrblToBigInt( faces.map( face => face.orientationAsLowercaseLetterTrbl ) );
 export const bigIntForAllOrientationsToFaceOrientations = (bitIntForAllOrientations: bigint, count: number) =>
-	[...Array(count).keys()].reduce( (orientations) => {
+	rangeStartingAt0(count).reduce( (orientations) => {
 		orientations.unshift(clockwise90DegreeRotationsToTrbl(Number(bitIntForAllOrientations % 4n) as Clockwise90DegreeRotationsFromUpright));
 		bitIntForAllOrientations /= 4n; 
 		return orientations;

@@ -1,20 +1,29 @@
 import { observer } from "mobx-react";
 import React from "react";
-import { SimpleSecretSharingState } from "./SimpleSecretSharingState";
-import { DiceKeyView } from "../SVG/DiceKeyView";
-import { addPreviewWithMargins } from "../basics/Previews";
-import { NavigationPathState } from "../../state/core/NavigationPathState";
-import { DiceKeyWithoutKeyId, FaceLetter, FaceLetters, faceLetterAndDigitToNumber0to149 } from "../../dicekeys/DiceKey";
 import styled from "styled-components";
-import { CharButton } from "../basics";
+import { DiceKeyWithoutKeyId, FaceLetter, FaceLetters } from "../../dicekeys/DiceKey";
+import { NavigationPathState } from "../../state/core/NavigationPathState";
+import { rangeFromTo } from "../../utilities/range";
 import { LoadDiceKeyContentPaneView } from "../LoadingDiceKeys/LoadDiceKeyView";
+import { DiceKeyView } from "../SVG/DiceKeyView";
+import { addPreview } from "../basics/Previews";
+import { SimpleSecretSharingState } from "./SimpleSecretSharingState";
+import { BottomInstructionRow, RowViewHeightDiceKey, ShareLetter, TopInstructionRow, maxViewWidth } from "./layout";
+import { AndClause, Instruction, Instruction2, InstructionTextHeight } from "../basics";
+import { LoadDiceKeyViewState } from "../LoadingDiceKeys/LoadDiceKeyViewState";
+import { PrintDiceKeyShareView, PrintDiceKeyShareViewPropsWrapper, disregardedPrintWarningViewThisSession } from "./PrintDiceKeyView";
+import { BackupView, PhysicalMedium } from "../BackupView";
+import { ShareEntry, RowOfSharesDiv } from "./SubViews/RowOfShares";
+import { Die3dView } from "./Die3dView";
+import { FaceSvg } from "../SVG/FaceView";
+import { BackupViewState } from "../BackupView/BackupViewState";
+import { StepFooterView } from "../Navigation/StepFooterView";
+
 
 
 export interface SimpleSecretSharingProps {
 	simplesSecretSharingState: SimpleSecretSharingState;
 }
-
-const maxViewWidth = 90;
 
 const SimpleSecretSharingViewContainer = styled.div`
   display: flex;
@@ -23,186 +32,342 @@ const SimpleSecretSharingViewContainer = styled.div`
   justify-content: flex-start;
   align-items: center;
   flex-grow: 1;
+	gap: 2vh;
+	max-width: ${maxViewWidth}vw;
+	margin-left: ${50-maxViewWidth/2}vw;
+	margin-right: ${50-maxViewWidth/2}vw;
 `;
 
-const SimpleSecretSharingViewRow = styled.div<{$numShares?: number}>`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: flex-start;
-	${ ({$numShares: numShares}) => numShares == null ? `` : 
-		`gap: ${ 0.5 * maxViewWidth / ((1 * numShares) + (.5 * (numShares -1)) )}vw;` }
+
+const ChoiceText = styled.div`
+	font-size: ${InstructionTextHeight};
+	font-family: sans-serif;
+	text-align: center;
 `;
 
-const LabeledDiceKey = styled.div`
-  display: flex;
-  flex-direction: column;
-	justify-content: flex-start;
-	align-items: center;
-`;
+const ChoiceSelect = styled.select`
+	font-size: ${InstructionTextHeight};
+`
 
-const DiceKeyLabel = styled.div`
-	display: block;
-`;
+const DiceKeyBeingSharedRowView = observer(({
+	simplesSecretSharingState,
+}: {
+	simplesSecretSharingState: SimpleSecretSharingState;
+}) => (<DiceKeyView  
+					$size={`min(80vw,${RowViewHeightDiceKey}vh)`}
+					diceKey={simplesSecretSharingState.diceKeyToSplitIntoShares}
+			/>));
 
-const DiceKeyTopLabel = styled(DiceKeyLabel)`
-`;
-const DiceKeyBottomLabel = styled(DiceKeyLabel)<{$numShares?: number}>`
-	font-size: ${ (p) => (p.$numShares == null  || p.$numShares < 4) ? `1vw` : `${4/p.$numShares}vw` };
-`;
-
-const NumberIncrementDecrementSpan = styled.span`
-	display: block;
-	/* display: flex;
-	flex-direction: row; */
-`;
-
-const NumberIncrementDecrement = observer( ({setValue, ...args}: {
-	setValue: (value: number) => void;
-	value: number | (() => number);
-	minValue?: number | (() => (number | undefined));
-	maxValue?: number | (() => (number | undefined));
+export const SimpleSecretSharingDiceKeyAndSharesView = observer( ({
+	simplesSecretSharingState,
+	highlightIfCenterLetterIs
+}: {
+	simplesSecretSharingState: SimpleSecretSharingState;
+	highlightIfCenterLetterIs?: FaceLetter | Set<FaceLetter>
 }) => {
-	const getValue: () => number = (typeof args.value === "function") ? args.value : (() => args.value as number);
-	const getMinValue = () => (typeof args.minValue === "function" ? args.minValue() : args.minValue) ?? Number.MIN_SAFE_INTEGER;
-	const getMaxValue = () => (typeof args.maxValue === "function" ? args.maxValue() : args.maxValue) ?? Number.MAX_SAFE_INTEGER;
-	return (<NumberIncrementDecrementSpan>
-			<CharButton disabled={getValue() <= getMinValue()} onClick={() => setValue(getValue() - 1)}>-</CharButton>
-			<span>{getValue()}</span>
-			<CharButton disabled={getValue() >= getMaxValue()} onClick={() => setValue(getValue() + 1)}>+</CharButton>
-		</NumberIncrementDecrementSpan>);
+	return (<>
+		<DiceKeyBeingSharedRowView {...{simplesSecretSharingState}} />
+		<RowOfSharesDiv $numShares={simplesSecretSharingState.numSharesToDisplay}>{
+			simplesSecretSharingState.sharesAsDiceKeysWithSource.map(({ diceKey, source }) => (
+				<ShareEntry key={diceKey.centerFace.letter}
+					highlightIfCenterLetterIs={highlightIfCenterLetterIs}
+					numShares={simplesSecretSharingState.numSharesToDisplay}
+					diceKey={diceKey}
+			>{
+				source
+			}</ShareEntry>
+		))}
+		</RowOfSharesDiv>
+	</>);
 });
 
-// const OldSimpleSecretSharingControlRowView = observer(({
-// 	simplesSecretSharingState,
-// }: SimpleSecretSharingProps
-// ) => {
-// 	return (
-// 		<SimpleSecretSharingViewRow>
-// 			<div>
-// 				<label>Total number of shares to generate:</label>
-// 				<NumberIncrementDecrement
-// 					value={() => simplesSecretSharingState.numSharesToDisplay}
-// 					setValue={simplesSecretSharingState.setNumSharesToDisplay}
-// 					minValue={() => simplesSecretSharingState.minSharesToDecode}
-// 				/>
-// 				<label>Minimum shares to recover the DiceKey to be shared:</label>
-// 				<NumberIncrementDecrement
-// 					value={() => simplesSecretSharingState.minSharesToDecode}
-// 					setValue={simplesSecretSharingState.setMinSharesToDecode}
-// 					minValue={1}
-// 					maxValue={() => simplesSecretSharingState.numSharesToDisplay}
-// 				/>
-// 				<label>Center letters of Shares start with:</label>
-// 				<select value={simplesSecretSharingState.startDerivedShareCenterFacesAtLetter}
-// 					onChange={ e => {
-// 						simplesSecretSharingState.startDerivedShareCenterFacesAtLetter = e.currentTarget.value as FaceLetter}
-// 					}
-// 				>{
-// 					FaceLetters.map( letter => (
-// 						<option key={letter} value={letter}>{letter}</option>
-// 					))
-// 				}
-// 				</select>
-// 			</div>
-// 		</SimpleSecretSharingViewRow>
-// 	);
-// });
+const ToPhysicalMediumRowDiv = styled.div`
+	display: flex;
+	flex-direction:row;
+	margin: 0.5rem;
+	margin-top: 0;
+	gap: 1rem;
+	user-select: none;
+`;
 
-const SimpleSecretSharingControlRowView = observer(({
+const ToPhysicalMediumColumnDiv = styled.div`
+	display: flex;
+	flex-direction: column;
+	justify-content: start;
+	align-items: center;
+`;
+const CheckboxContainerDiv = styled.div`
+	display: flex; flex-direction: column; justify-content: end; align-items: center;
+	height: 1.25rem;
+	font-size: 1rem;
+	font-weight: bold;
+	color: green;
+`;
+const ToPhysicalMediumButton = styled.button.attrs({type: "button"})`
+	display: flex; flex-direction: column; justify-content: center; align-items: center;
+	font-size: 1.2rem;
+	height: 2.25rem;
+	width: 2.25rem;
+	border-width: 1px;
+	border-color: rgba(128,128,128,0.5);
+	border-radius: 0.25rem;
+	background-color: rgba(128,128,128,0.1);
+	&:hover {
+		background-color: rgba(128,128,128,0.25);
+	}
+	&:active {
+		background-color: rgba(128,128,128,0);
+	}
+`
+
+const ToPhysicalMediumColumnView =  observer( ({
+	checked,
+	children,
+	...props
+}: React.PropsWithChildren<{
+	checked: boolean;
+	title?: string;
+	onClick: () => void;
+}>) => {
+	return (
+		<ToPhysicalMediumColumnDiv>
+			<CheckboxContainerDiv>{ checked ? '✓' : '' }</CheckboxContainerDiv>
+			<ToPhysicalMediumButton {...props}>{children}</ToPhysicalMediumButton>
+		</ToPhysicalMediumColumnDiv>
+	);
+});
+
+const StepCopyToPhysicalMediumView = observer(({
 	simplesSecretSharingState,
 }: SimpleSecretSharingProps
 ) => {
-	return (
-		<SimpleSecretSharingViewRow>
-			Split the above DiceKey into <NumberIncrementDecrement
-					value={() => simplesSecretSharingState.minSharesToDecode}
-					setValue={simplesSecretSharingState.setMinSharesToDecode}
-					minValue={1}
-					maxValue={() => simplesSecretSharingState.numSharesToDisplay}
-				/> shares,
-				with center letters start with&nbsp;<select value={simplesSecretSharingState.startDerivedShareCenterFacesAtLetter}
-					onChange={ e => {
-						simplesSecretSharingState.startDerivedShareCenterFacesAtLetter = e.currentTarget.value as FaceLetter}
-					}
-				>{
-					FaceLetters.filter( letter => letter !== simplesSecretSharingState.userSpecifiedDiceKeyToBeShared?.centerFace.letter)
-					.map( letter => (
-						<option key={letter} value={letter}>{letter}</option>
-					))
-				}
-				</select>,
-				<NumberIncrementDecrement
-					value={() => simplesSecretSharingState.numSharesToDisplay}
-					setValue={simplesSecretSharingState.setNumSharesToDisplay}
-					minValue={() => simplesSecretSharingState.minSharesToDecode}
-				/> of which are needed to recover it.
-		</SimpleSecretSharingViewRow>
-	);
+	const {sharesAsDiceKeysWithSource} = simplesSecretSharingState;
+	const sharesToBackup = sharesAsDiceKeysWithSource.filter(
+		p => p.source !== "scanned" &&
+		Object.keys(simplesSecretSharingState.physicalMediaCreatedByUserForShare[p.diceKey.centerFace.letter] ?? {}).length === 0
+	).map( p => p.diceKey );
+	const sharesToBackupByLetter = sharesToBackup.map( s => s.centerFace.letter );
+	const [currentShareToBackup] = sharesToBackupByLetter;
+	
+	const {letter, digit} = sharesToBackup[0]?.centerFace ?? {letter: 'A', digit: '1'};
+	return (<>
+		<TopInstructionRow>
+			<Instruction>Copy Share {currentShareToBackup} into physical form.</Instruction>
+		</TopInstructionRow>
+		<DiceKeyBeingSharedRowView {...{simplesSecretSharingState}} />
+		<RowOfSharesDiv $numShares={sharesAsDiceKeysWithSource.length}>
+			{sharesAsDiceKeysWithSource.map( ({diceKey}) => {
+				const physicalMediaCreated = simplesSecretSharingState.physicalMediaCreatedByUserForShare[diceKey.centerFace.letter] ?? {};
+				return (
+					<ShareEntry
+						key={diceKey.centerFace.letter}
+						diceKey={diceKey}
+						numShares={sharesAsDiceKeysWithSource.length}
+						highlightIfCenterLetterIs={currentShareToBackup}>
+						<ToPhysicalMediumRowDiv>
+							<ToPhysicalMediumColumnView
+								title={"Copy using dice"}
+								checked={physicalMediaCreated[PhysicalMedium.dice] != null }
+								onClick={simplesSecretSharingState.initiateCopyToPhysicalMediumHandler(diceKey, PhysicalMedium.dice)}
+							>
+								<Die3dView letter={letter} $size={1.5} $units={`rem`} dieColor="white" />
+							</ToPhysicalMediumColumnView>
+							<ToPhysicalMediumColumnView
+								title={"Copy using stickers"}
+								checked={physicalMediaCreated[PhysicalMedium.stickers] != null }
+								onClick={simplesSecretSharingState.initiateCopyToPhysicalMediumHandler(diceKey, PhysicalMedium.stickers)}
+							>
+								<FaceSvg title="Copy using stickers"  size={`1.5rem`}
+									face={{letter, digit: `${digit}`, orientationAsLowercaseLetterTrbl: 't'}}
+								/>
+							</ToPhysicalMediumColumnView>
+							<ToPhysicalMediumColumnView
+								title={`Print ${ disregardedPrintWarningViewThisSession.value ? '' : '⚠️ (not recommended)' }`}
+								checked={physicalMediaCreated[PhysicalMedium.printout] != null }
+								onClick={simplesSecretSharingState.initiatePrintViewHandler(diceKey)}
+							>
+								🖨
+							</ToPhysicalMediumColumnView>
+						</ToPhysicalMediumRowDiv>
+					</ShareEntry>
+				)
+			})}
+		</RowOfSharesDiv>
+		<BottomInstructionRow>
+			<Instruction2>
+				Create physical copies of Share{sharesToBackupByLetter.length > 1 ? 's' : ''} <AndClause items={sharesToBackupByLetter} />,
+				using dice, stickers, or a printer (not recommended).
+			</Instruction2>
+			{/* <ButtonRowSpaced>
+				<PushButtonContentsColumn style={{}} onClick={() => {}}>
+					<Die3dView letter={letter} $size={4} $units={`rem`} dieColor="white" />
+					Use dice
+				</PushButtonContentsColumn>
+				<PushButtonContentsColumn style={{alignSelf: 'center'}} onClick={() => {}}>
+						<FaceSvg size={`4rem`}
+							face={{letter, digit: `${digit}`, orientationAsLowercaseLetterTrbl: 't'}}
+						/>
+						Use stickers
+				</PushButtonContentsColumn>
+				<PushButtonContentsColumn style={{alignSelf: 'center'}} onClick={simplesSecretSharingState.initiatePrintViewHandler(sharesToBackup[0]?.diceKey)}>
+					<span style={{fontSize: '3rem'}}>🖨</span>
+					Print { disregardedPrintWarningViewThisSession.value ? '' : '⚠️' }
+				</PushButtonContentsColumn>
+			</ButtonRowSpaced> */}
+		</BottomInstructionRow>
+	</>);
 });
+
+const StepReplaceWithRandomView = observer(({
+	simplesSecretSharingState,
+}: SimpleSecretSharingProps
+) => {
+	const sharesToRandomize = simplesSecretSharingState.sharesAsDiceKeysWithSource.filter( p => p.source === "pseudorandom");
+	const sharesToRandomizeByLetter = sharesToRandomize.map( s => s.diceKey.centerFace.letter );
+	const [currentShareLetterToRandomize] = sharesToRandomizeByLetter
+//	const numSharesMayBeRandom = simplesSecretSharingState.minSharesToDecode - 1;
+	return (<>
+		<TopInstructionRow>
+			<Instruction>Replace Share {currentShareLetterToRandomize} with a hand-randomized DiceKey.</Instruction>
+		</TopInstructionRow>
+		<SimpleSecretSharingDiceKeyAndSharesView {...{simplesSecretSharingState}} 
+			highlightIfCenterLetterIs={currentShareLetterToRandomize}
+		/>
+		<BottomInstructionRow>
+			<Instruction2>
+				You can use any randomly-generated DiceKey for Share{sharesToRandomizeByLetter.length > 1 ? 's' : ''} <AndClause items={sharesToRandomizeByLetter} />,
+				since the remaining shares are (re-)calculated from {sharesToRandomizeByLetter.length > 1 ? 'them' : 'it'}.
+			</Instruction2><Instruction2>
+				The current Share {currentShareLetterToRandomize} was pseudo-randomly generated.
+				Replacing it with a hand-randomized DiceKey will save you the work of copying it.
+			</Instruction2><Instruction2>
+				To replace Share {currentShareLetterToRandomize}, create a hand-randomized DiceKey,
+				swap the die with letter {currentShareLetterToRandomize} to be the center die,
+				lock it into place,
+				and then scan it.
+			</Instruction2>
+			<button type="button" style={{alignSelf: 'center'}} onClick={() => simplesSecretSharingState.loadShareAsDiceKey()}>Scan share A</button>
+		</BottomInstructionRow>
+	</>);
+});
+
+const StepChooseMinAndTotalNumberOfSharesView = observer(({
+	simplesSecretSharingState,
+}: SimpleSecretSharingProps
+) => {
+	return (<>
+		<TopInstructionRow>
+			<Instruction>
+				First, choose how many divide the DiceKey with center letter&nbsp;
+				<ShareLetter>{simplesSecretSharingState.diceKeyToSplitIntoShares?.centerFace.letter}</ShareLetter> into shares.
+			</Instruction>
+		</TopInstructionRow>
+		<SimpleSecretSharingDiceKeyAndSharesView {...{simplesSecretSharingState}} />
+		<BottomInstructionRow>
+			<ChoiceText>
+				Create&nbsp;<ChoiceSelect
+						value={simplesSecretSharingState.numSharesToDisplay}
+						onChange={ e => simplesSecretSharingState.setNumSharesToDisplay(parseInt(e.currentTarget.value)) }>{
+						rangeFromTo(simplesSecretSharingState.minSharesToDecode+1, 24).map( i => (
+							<option key={i} value={i}>{i}</option>
+						))
+				}</ChoiceSelect>&nbsp;shares,&nbsp;<ChoiceSelect
+				value={simplesSecretSharingState.startDerivedShareCenterFacesAtLetter}
+				onChange={ e => simplesSecretSharingState.setStartDerivedShareCenterFacesAtLetter(e.currentTarget.value as FaceLetter) }>{
+				FaceLetters.map( i => (
+					<option key={i} value={i}>{i}</option>
+				))
+			}</ChoiceSelect>&nbsp;through {simplesSecretSharingState.sharesAsDiceKeysWithSource.findLast( () => true )?.diceKey.centerFace.letter},
+				any&nbsp;
+					<ChoiceSelect
+						value={simplesSecretSharingState.minSharesToDecode}
+						onChange={ e => simplesSecretSharingState.setMinSharesToDecode(parseInt(e.currentTarget.value)) }>{
+						rangeFromTo(2, simplesSecretSharingState.numSharesToDisplay - 1).map( i => (
+							<option key={i} value={i}>{i}</option>
+						))
+					}</ChoiceSelect>&nbsp;<br/>of which can recover the DiceKey with center letter&nbsp;<ShareLetter>{simplesSecretSharingState.diceKeyToSplitIntoShares?.centerFace.letter}</ShareLetter>.
+
+			</ChoiceText>
+		</BottomInstructionRow>
+	</>);
+});
+
+export const SimpleSecretSharingStepsView = observer( ({simplesSecretSharingState}: SimpleSecretSharingProps) => {
+	switch (simplesSecretSharingState.step) {
+		case 0: return (<StepChooseMinAndTotalNumberOfSharesView {...{simplesSecretSharingState}} />);
+		case 1: return (<StepReplaceWithRandomView {...{simplesSecretSharingState}} />);
+		case 2: return (<StepCopyToPhysicalMediumView {...{simplesSecretSharingState}} />);
+		default:
+			return (<></>);
+	}
+});
+
+export const LoadDiceKeyShareView = observer(({simplesSecretSharingState}: {
+	simplesSecretSharingState: SimpleSecretSharingState & {subView: LoadDiceKeyViewState}
+}) => {
+	const instruction = simplesSecretSharingState.forbiddenLetters.length === 0 ? undefined :
+	`Your center die of your DiceKey cannot use ${
+	 simplesSecretSharingState.forbiddenLetters.length == 1 ? `the letter ${simplesSecretSharingState.forbiddenLetters[0]}.` :
+	 `the letters ${simplesSecretSharingState.forbiddenLetters.slice(0, -1).join(", ")}, or ${simplesSecretSharingState.forbiddenLetters.slice(-1)[0]}.`
+	}`; 
+	return (
+		<LoadDiceKeyContentPaneView
+			instruction={instruction}
+			state={simplesSecretSharingState.subView}
+			onDiceKeyReadOrCancelled={simplesSecretSharingState.onShareAsDiceKeyLoadCompletedOrCancelled}
+		/>);
+});
+
+const onCopyToPhysicalMediumComplete = (
+	simplesSecretSharingState: SimpleSecretSharingState & {subView: BackupViewState}
+) => () => {
+	const backupViewState = simplesSecretSharingState.subView;
+	simplesSecretSharingState.clearSubView();
+	const diceKey = backupViewState.withDiceKey.diceKey;
+	// const validated = backupViewState.backupValidated;
+	const physicalMedium = backupViewState.backupMedium;
+	if (diceKey != null && physicalMedium != null) {
+		simplesSecretSharingState.addPhysicalMediaCreatedByUserForShare(diceKey.centerFace.letter, physicalMedium)
+	}
+}
 
 export const SimpleSecretSharingView = observer(({
 	simplesSecretSharingState,
 }: SimpleSecretSharingProps
 ) => {
-	const {
-		diceKeyToSplitIntoShares,
-		sharesAsDiceKeys,
-	} = simplesSecretSharingState;
-	const instruction = simplesSecretSharingState.forbiddenLetters.length === 0 ? undefined :
-	 `Your center die of your DiceKey cannot use ${
-		simplesSecretSharingState.forbiddenLetters.length == 1 ? `the letter ${simplesSecretSharingState.forbiddenLetters[0]}.` :
-		`the letters ${simplesSecretSharingState.forbiddenLetters.slice(0, -1).join(", ")}, or ${simplesSecretSharingState.forbiddenLetters.slice(-1)[0]}.`
-	 }`;
-	if (simplesSecretSharingState.loadShareAsDiceKeyState) {
+	if (simplesSecretSharingState.subView instanceof PrintDiceKeyShareViewPropsWrapper) {
+		return (<PrintDiceKeyShareView {...simplesSecretSharingState.subView.props}/>);
+	} else if (simplesSecretSharingState.subView instanceof BackupViewState) {
 		return (
-			<LoadDiceKeyContentPaneView
-				instruction={instruction}
-				state={simplesSecretSharingState.loadShareAsDiceKeyState}
-				onDiceKeyReadOrCancelled={simplesSecretSharingState.onShareAsDiceKeyLoadCompletedOrCancelled}
-			/>);
+			<SimpleSecretSharingViewContainer>
+				<BackupView
+					state={simplesSecretSharingState.subView }
+					nextStepAfterEnd={onCopyToPhysicalMediumComplete(simplesSecretSharingState as SimpleSecretSharingState & {subView: BackupViewState})}
+				/>
+			</SimpleSecretSharingViewContainer>);
+	} else if (simplesSecretSharingState.subView instanceof LoadDiceKeyViewState) {
+		return <LoadDiceKeyShareView simplesSecretSharingState={simplesSecretSharingState as SimpleSecretSharingState & {subView: LoadDiceKeyViewState}} />;
 	}
 	return (
 		<SimpleSecretSharingViewContainer>
-			<SimpleSecretSharingViewRow>
-				<LabeledDiceKey>
-					<DiceKeyTopLabel>
-						The DiceKey Being Shared
-					</DiceKeyTopLabel>
-					<DiceKeyView  
-						size={`min(25vw,40vh)`}
-						diceKey={diceKeyToSplitIntoShares}
-					/>
-				</LabeledDiceKey>
-			</SimpleSecretSharingViewRow>
-			<SimpleSecretSharingControlRowView {...{simplesSecretSharingState}} />
-			<SimpleSecretSharingViewRow $numShares={sharesAsDiceKeys.length} >
-				{ sharesAsDiceKeys.map( ({source, diceKey}, i) => (
-					<LabeledDiceKey key={ faceLetterAndDigitToNumber0to149((diceKey).centerFace) }>
-						<DiceKeyTopLabel>
-							Share { diceKey.centerFace.letter }
-						</DiceKeyTopLabel>
-						<DiceKeyView
-							key={faceLetterAndDigitToNumber0to149(diceKey.centerFace)}
-							size={`min(${ (maxViewWidth / ((1 * sharesAsDiceKeys.length) + (.5 * (sharesAsDiceKeys.length -1))) )}vw, 25vw, 40vh)`}
-							diceKey={diceKey}
-						/><DiceKeyBottomLabel $numShares={sharesAsDiceKeys.length}>{
-							source === "interpolated" ? (<span>calculated from the {i > 1 ? `${i} DiceKeys` : `DiceKey`} to the left</span>) :
-							source === "pseudorandom" ? (<><span>calculated from DiceKey being shared</span><br/><span onClick={() => simplesSecretSharingState.loadShareAsDiceKey()}>(replace with newly random DiceKey)</span></>) :
-							(<><span>scanned</span><span onClick={() => simplesSecretSharingState.removeUserLoadedShare( diceKey.centerFace.letter )}>remove</span></>)
-						}</DiceKeyBottomLabel>
-					</LabeledDiceKey>
-				)) }
-			</SimpleSecretSharingViewRow>
-		</SimpleSecretSharingViewContainer>
+			<SimpleSecretSharingStepsView {...{simplesSecretSharingState}} />
+			<StepFooterView 
+				prev={simplesSecretSharingState.stepPrev}
+				next={simplesSecretSharingState.stepNext}
+			/>
+		</SimpleSecretSharingViewContainer>	
 	);
 });
 
-addPreviewWithMargins("SimpleSecretSharing", () => ( 
+
+
+addPreview("SimpleSecretSharing", () => ( 
   <SimpleSecretSharingView simplesSecretSharingState={
 		new SimpleSecretSharingState(NavigationPathState.root, {
-			userSpecifiedDiceKeyToSplitIntoShares: DiceKeyWithoutKeyId.testExample,
-			numSharesToDisplay: 3,
+			userSpecifiedDiceKeyToBeShared: DiceKeyWithoutKeyId.testExample,
+			numSharesToDisplay: 5,
+			minSharesToDecode: 3,
+			step: 2,
 		})
 	 } />
 ));

@@ -14,6 +14,8 @@ declare module "styled-components" {
       navigationBar: string;
       navigationBarForeground: string;
       bottomButtonBarBackground: string;
+
+      highlightBackground: string;
     };
   }
 }

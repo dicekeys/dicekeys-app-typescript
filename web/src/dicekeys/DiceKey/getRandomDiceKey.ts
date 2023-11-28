@@ -5,14 +5,18 @@ import {
   FaceDigit, FaceLetter, FaceLetters, FaceOrientationLettersTrbl
 } from "./Face";
 import { DiceKeyFaces, NumberOfFacesInKey } from "./KeyGeometry";
+import { rangeStartingAt0 } from "../../utilities/range";
 
-export const getRandomDiceKey = (numberOfFacesPerDie: number = 6): DiceKeyFaces => {
-  const remainingLetters = [...FaceLetters];
+export const getRandomDiceKey = (
+  centerLetter: FaceLetter = FaceLetters[getRandomUInt32() % FaceLetters.length]!,
+  numberOfFacesPerDie: number = 6
+): DiceKeyFaces => {
+  const remainingLetters = FaceLetters.filter( l => l !== centerLetter);
   return DiceKeyFaces(
-    Array.from({ length: NumberOfFacesInKey }, (): OrientedFace => {
+    rangeStartingAt0(NumberOfFacesInKey).map( (index): OrientedFace => {
       // Pull out a letter at random from the remainingLetters array
       const letterIndex = getRandomUInt32() % remainingLetters.length;
-      const letter = remainingLetters.splice(letterIndex, 1)[0] as FaceLetter;
+      const letter = index === 12 ? centerLetter : remainingLetters.splice(letterIndex, 1)[0] as FaceLetter;
       // Generate a digit at random
       const digit = ((getRandomUInt32() % numberOfFacesPerDie) + 1).toString() as FaceDigit;
       const clockwiseOrientationsFromUpright = getRandomUInt32() % 4;

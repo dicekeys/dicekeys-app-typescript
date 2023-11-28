@@ -4,7 +4,9 @@ import { createRoot } from "react-dom/client";
 import { ErrorHandler } from "../views/ErrorHandler";
 
 import * as _ from "../views/SimpleSecretSharing/SimpleSecretSharingView";
-if (_ == null) {
+import {PrintDiceKeyView as _1} from "../views/SimpleSecretSharing/PrintDiceKeyView";
+import {Die3dView} from "../views/SimpleSecretSharing/Die3dView";
+if (_ == null || _1 == null || Die3dView == null) {
   throw "";
 }
 

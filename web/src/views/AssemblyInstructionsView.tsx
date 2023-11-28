@@ -111,7 +111,7 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
         </CenterColumn>
       ) : diceKey != null ? (<>
         <CenterRow>
-          <DiceKeyView size={`min(50vh,70vw)`} diceKey={diceKey} obscureAllButCenterDie={false} />
+          <DiceKeyView $size={`min(50vh,70vw)`} diceKey={diceKey} obscureAllButCenterDie={false} />
         </CenterRow>
         <CenteredControls>
           <PushButton onClick={startScanning} >Scan again</PushButton>
@@ -148,7 +148,7 @@ const StepInstructionsDone = observer (({state}: {state: AssemblyInstructionsSta
           <Instruction>You did it!</Instruction>
           <Spacer/>
           <CenterColumn>
-            <DiceKeyView size={`min(50vh,70vw)`} diceKey={diceKey} />
+            <DiceKeyView $size={`min(50vh,70vw)`} diceKey={diceKey} />
           </CenterColumn>
           <Spacer/>
           { backedUpSuccessfully ? null : (
@@ -183,8 +183,12 @@ interface AssemblyInstructionsViewProps {
 }
 
 const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  AssemblyInstructionsViewProps) => {
-  const onDone = () => { 
-    onComplete(state.diceKey);
+  const onDone = () => {
+    if (state.diceKey == null || state.diceKey instanceof DiceKeyWithKeyId) {
+      onComplete(state.diceKey);
+    } else {
+      state.diceKey.withKeyId.then( diceKeyWithKeyId => onComplete(diceKeyWithKeyId) )
+    }
   };
   return (
     <StepFooterView               

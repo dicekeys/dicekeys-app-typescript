@@ -9,6 +9,16 @@ export const ButtonRow = styled.div`
   align-items: center;
 `;
 
+export const ButtonRowSpaced = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  margin-top: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+`;
+
 export const BaseButton = styled.button<{$invisible?: boolean}>`
   display: block;
   ${props => props.$invisible ? `visibility: hidden` : ``};
@@ -17,13 +27,12 @@ export const BaseButton = styled.button<{$invisible?: boolean}>`
   user-select: none;
   width: fit-content;
   align-self: center;
-  user-select: none;
   &:hover {
     background: rgba(128,128,128,0.3);
   }
 `;
 
-export const PushButton = styled(BaseButton)`
+export const PushButton = styled(BaseButton).attrs({type: "button"})`
   border-width: 1px;
   border-radius: 0.25rem;
   padding: 0.25rem;
@@ -31,6 +40,17 @@ export const PushButton = styled(BaseButton)`
   padding-right: 0.75rem;
   margin: 0.5rem;
 `;
+
+export const PushButtonContentsColumn = styled(PushButton)`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+`
+
+export const PreferredPushButton = styled(PushButton)`
+  font-weight: bold;
+`
 
 export const OptionButton = styled(PushButton)`
   &:not(:first-child) {

@@ -37,7 +37,7 @@ export const SaveDiceKeyToDeviceStorageContentView = observer( ( {
     <>
       <Spacer/>
       <DiceKeyView
-      size={calcDiceKeySize}
+      $size={calcDiceKeySize}
       faces={diceKey.faces}
     />
         <Instruction>
@@ -87,7 +87,7 @@ export const DeleteDiceKeyToDeviceStorageContentView = observer( (
     <>
       <Spacer/>
         <DiceKeyView
-          size={calcDiceKeySize}
+          $size={calcDiceKeySize}
           faces={diceKey.faces}
         />
         <Instruction>

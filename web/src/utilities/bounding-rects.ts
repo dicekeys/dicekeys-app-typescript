@@ -22,7 +22,7 @@ export const requireBounds = (optional: Partial<Bounds> | undefined, required: B
  */
  export const fitRectangleWithAspectRatioIntoABoundingBox = (aspectRatioAsWidthOverHeight: number) => {
   const heightOverWidth = 1 / aspectRatioAsWidthOverHeight;  
-  return (boxBounds: {width?: number, height?: number}) => {
+  return (boxBounds: {width?: number, height?: number}): {width: number, height: number, centered: {left: number; top: number}} => {
     const width = (boxBounds.width != null && boxBounds.height != null) ?
         // fit to box
         Math.min(boxBounds.width, boxBounds.height * aspectRatioAsWidthOverHeight) :

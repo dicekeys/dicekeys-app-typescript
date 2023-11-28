@@ -90,6 +90,7 @@ if (RUNNING_IN_ELECTRON) {
   electronBridge.implementMainToPrimaryRendererAsyncApi({
     "getRecipesToExport": async () => RecipeStore.getStoredRecipesJson(),
     "importRecipes": async (recipesToImport) => RecipeStore.importStoredRecipeAsJsonArray(recipesToImport),
+    "loadFromShares": async () => {/*FIXME*/},
     loadRandomDiceKey,
   });
 

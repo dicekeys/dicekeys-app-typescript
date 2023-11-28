@@ -18,6 +18,7 @@ import { rotateToRotationIndependentForm, rotateDiceKey, rotateToTurnCenterFaceU
 import { diceKeyFacesToKeyId } from "./KeyIds";
 import { factorialConstants0to25, digitEncodingSize, uniqueOrientationEncodingSize, facesFromNumericForm } from "./NumericForm";
 import { DiceKeyInFiniteFieldPointFormat, facesToShamirShareFiniteFieldPoint, shamirShareFiniteFieldPointToFaces } from "./asShamirShare";
+import { rangeStartingAt0 } from "../../utilities/range";
 
 export * from "./Face";
 export * from "./InvalidDiceKeyException";
@@ -182,7 +183,7 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
     return this._withKeyId;
   }
 
-  static fromRandom = (): DiceKeyWithoutKeyId => new DiceKeyWithoutKeyId(getRandomDiceKey());
+  static fromRandom = (centerLetter?: FaceLetter): DiceKeyWithoutKeyId => new DiceKeyWithoutKeyId(getRandomDiceKey(centerLetter));
   static fromHumanReadableForm = (
     humanReadableForm: DiceKeyInHumanReadableForm,
     validationOptions: DiceKeyValidationOptions = {}
@@ -198,7 +199,7 @@ export class DiceKeyWithoutKeyId extends DiceKeyBase {
   rotateToTurnCenterFaceUpright = (): DiceKeyWithoutKeyId => { return new DiceKeyWithoutKeyId(rotateToTurnCenterFaceUpright(this.faces)) }
   
   static readonly testExample = new DiceKeyWithoutKeyId(DiceKeyFaces(
-    [...Array(25).keys()].map( (i)  => ({
+    rangeStartingAt0(25).map( (i)  => ({
       letter: FaceLetters[i],
       digit: FaceDigits[i % 6],
       orientationAsLowercaseLetterTrbl: "trbl"[i % 4]

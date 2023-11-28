@@ -142,8 +142,8 @@ export const TopNavPopUpMenu = styled.div<{$isOpen: boolean}>`
 
 export const Clickable = styled.span`
   cursor: grab;
-  :hover {
-    color: ${ props => props.theme.colors.background}
+  &:hover {
+    color: ${ props => props.theme.colors.background};
   }
 `;
 

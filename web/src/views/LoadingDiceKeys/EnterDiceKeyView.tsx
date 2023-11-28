@@ -35,7 +35,7 @@ export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.C
           </KeyHints>
         </CenterColumn>
         <DiceKeyView
-          size="min(50vh,80vw)"
+          $size="min(50vh,80vw)"
           obscureAllButCenterDie={false}
           faces={this.props.state.partialDiceKey}
           highlightFaceAtIndex={this.props.state.currentFaceIndex}
