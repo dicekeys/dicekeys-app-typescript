@@ -176,9 +176,12 @@ abstract class DiceKeyBase {
 export class DiceKeyWithoutKeyId extends DiceKeyBase {
 
   private _withKeyId: Promise<DiceKeyWithKeyId> | undefined;
+  get keyId() {
+    return diceKeyFacesToKeyId(this.faces)
+  }
   public get withKeyId(): Promise<DiceKeyWithKeyId> {
     if (this._withKeyId == null) {
-      this._withKeyId = ( async () => {return new DiceKeyWithKeyId(await diceKeyFacesToKeyId(this.faces) , this.faces);} )();
+      this._withKeyId = ( async () => {return new DiceKeyWithKeyId(await this.keyId , this.faces);} )();
     }
     return this._withKeyId;
   }

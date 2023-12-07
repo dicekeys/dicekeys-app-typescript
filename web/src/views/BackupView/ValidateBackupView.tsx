@@ -40,14 +40,12 @@ export const ValidateBackupView = observer ( ({
 }: {
   viewState: ValidateBackupViewState
 }) => {
-  const {withDiceKey, originalDiceKey, diceKeyScanned} = viewState;
+  const {originalDiceKey, diceKeyScanned} = viewState;
   const onDiceKeyRead = (diceKey: DiceKeyWithKeyId) => {
     if (viewState.scanning === "backup") {
       viewState.setDiceKeyScannedForValidation(diceKey);
-    } else if (viewState.scanning === "original" && "setDiceKey" in withDiceKey) {
-      withDiceKey.setDiceKey(diceKey);
-      // DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
-      // viewState.setDiceKey(diceKey);
+    } else if (viewState.scanning === "original" && "setDiceKey" in viewState && viewState.setDiceKey != null) {
+      viewState.setDiceKey(diceKey);
     }
     viewState.stopScanning();
   };
@@ -71,7 +69,7 @@ export const ValidateBackupView = observer ( ({
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />
           <CenteredControls>
-            <PushButton $invisible={!("setDiceKey" in viewState.withDiceKey)} onClick={viewState.startScanningOriginal}>Re-scan your original DiceKey</PushButton>
+            <PushButton $invisible={viewState.setDiceKey == null} onClick={viewState.startScanningOriginal}>Re-scan your original DiceKey</PushButton>
           </CenteredControls>
         </ComparisonBox>
         <ComparisonBox>

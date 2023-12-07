@@ -3,7 +3,7 @@ import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 export type StateModificationFunction = () => void;
 
 interface StateStackElement {
-  stateChangeFuntion: StateModificationFunction;
+  stateChangeFunction: StateModificationFunction;
   undoStateChangeFn: StateModificationFunction;
   path: string;
 }
@@ -34,43 +34,43 @@ export class AddressBarState {
     while (this.historyIndex < targetHistoryIndex && this.stateStack.length > this.historyIndex + 1) {
       // We need to redo state changes to move forward in history
       this.historyIndex++;
-      try {this.current?.stateChangeFuntion()} catch {}
+      try {this.current?.stateChangeFunction()} catch {}
     }
     // console.log(`moveToHistoryIndex state completed at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
   }
 
   pushState(
     pathStrOrFn: string | (() => string),
-    stateChangeFuntion: StateModificationFunction,
+    stateChangeFunction: StateModificationFunction,
     undoStateChangeFn: StateModificationFunction
   ) {
     // console.log(`pushState initiated at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
     if (this.stateStack.length - 1 > this.historyIndex) {
       this.stateStack = this.stateStack.slice(0, this.historyIndex + 1);
     }
-    stateChangeFuntion();
+    stateChangeFunction();
     const pathStr = typeof pathStrOrFn === "string" ? pathStrOrFn : pathStrOrFn();
     const path = pathStr.length === 0 ?  "/" : pathStr;
     this.historyIndex = this.stateStack.length;
-    this.stateStack.push({path, stateChangeFuntion, undoStateChangeFn});
+    this.stateStack.push({path, stateChangeFunction: stateChangeFunction, undoStateChangeFn});
     // console.log(`pushState completed at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
     return path;
   }
 
   replaceState(
     pathStrOrFn: string | (() => string),
-    stateChangeFuntion: StateModificationFunction,
+    stateChangeFunction: StateModificationFunction,
     undoStateChangeFn?: StateModificationFunction
   ) {
     // console.log(`replaceState initiated at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
-    stateChangeFuntion();
+    stateChangeFunction();
     const pathStr = typeof pathStrOrFn === "string" ? pathStrOrFn : pathStrOrFn();
     const path = pathStr.length === 0 ?  "/" : pathStr;
     if (this.stateStack.length === 0) {
-      this.pushState(path, stateChangeFuntion, undoStateChangeFn ?? (() => {}));
+      this.pushState(path, stateChangeFunction, undoStateChangeFn ?? (() => {}));
     } else {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this.stateStack[this.historyIndex] = {path, stateChangeFuntion, undoStateChangeFn: undoStateChangeFn ?? this.stateStack[0]!.undoStateChangeFn };
+      this.stateStack[this.historyIndex] = {path, stateChangeFunction: stateChangeFunction, undoStateChangeFn: undoStateChangeFn ?? this.stateStack[0]!.undoStateChangeFn };
     }
     // console.log(`replaceState completed at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
     return path;
@@ -94,11 +94,11 @@ class BrowserAddressBarState extends AddressBarState {
 
   override pushState(
     pathStrOrFn: string | (() => string),
-    stateChangeFuntion: StateModificationFunction,
+    stateChangeFunction: StateModificationFunction,
     undoStateChangeFn: StateModificationFunction
   ) {
     // console.log(`push state initiated at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"="${window.location.pathname}"`)
-    const path = super.pushState(pathStrOrFn, stateChangeFuntion, undoStateChangeFn);
+    const path = super.pushState(pathStrOrFn, stateChangeFunction, undoStateChangeFn);
     const historyStateIdentifier: AddressBarHistoryStateIdentifier = {historyIndex: this.stateStack.length + 1}
     window.history.pushState(historyStateIdentifier, '', path);
     // console.log(`push state completed at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`);
@@ -107,12 +107,12 @@ class BrowserAddressBarState extends AddressBarState {
 
   override replaceState(
     pathStrOrFn: string | (() => string),
-    stateChangeFuntion: StateModificationFunction,
+    stateChangeFunction: StateModificationFunction,
     undoStateChangeFn?: StateModificationFunction
   ) {
     // console.log(`replace state initiated at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"`)
     const historyStateIdentifier: AddressBarHistoryStateIdentifier = {historyIndex: this.historyIndex}
-    const path = super.replaceState(pathStrOrFn, stateChangeFuntion, undoStateChangeFn);
+    const path = super.replaceState(pathStrOrFn, stateChangeFunction, undoStateChangeFn);
     window.history.replaceState(historyStateIdentifier, '', path);
     // console.log(`replace state completed at depth ${this.historyIndex} (${this.stateStack.length}) with path "${this.path}"="${path}"="${window.location.pathname}"`);
     return path;

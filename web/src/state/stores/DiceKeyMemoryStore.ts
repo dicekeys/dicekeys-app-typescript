@@ -1,6 +1,6 @@
-import { ObservableMap, action, autorun, makeAutoObservable } from "mobx";
+import { ObservableMap, action, autorun, makeAutoObservable, runInAction } from "mobx";
 import type { DiceKeyMemoryStoreStorageFormat } from "../../../../common/IElectronBridge";
-import type { FaceOrientationLetterTrbl } from "../../dicekeys/DiceKey";
+import type { DiceKey, FaceOrientationLetterTrbl } from "../../dicekeys/DiceKey";
 import {
   DiceKeyInHumanReadableForm,
   DiceKeyWithKeyId, DiceKeyWithoutKeyId, PublicDiceKeyDescriptor,
@@ -130,9 +130,8 @@ class DiceKeyMemoryStoreClass {
    * Adds a DiceKey to the memory store, ensuring that it is rotated so that the middle face is upright.
    * It returns the DiceKey with the middle face upright.
    */
-  addDiceKeyWithKeyId = (diceKey: DiceKeyWithKeyId, centerFaceOrientationWhenScanned?: FaceOrientationLetterTrbl): DiceKeyWithKeyId => {
-    const diceKeyWithCenterFaceUpright = this.addDiceKeyWithKeyIdWithoutUpdatingSharedStorage(diceKey, centerFaceOrientationWhenScanned);
-    // console.log(`addDiceKeyWithKeyId()`);
+  addDiceKeyWithKeyId = (diceKeyWithKeyId: DiceKeyWithKeyId, centerFaceOrientationWhenScanned?: FaceOrientationLetterTrbl): DiceKeyWithKeyId => {
+    const diceKeyWithCenterFaceUpright = this.addDiceKeyWithKeyIdWithoutUpdatingSharedStorage(diceKeyWithKeyId, centerFaceOrientationWhenScanned);
     this.updateStorage();
     return diceKeyWithCenterFaceUpright;
   };
@@ -172,24 +171,26 @@ class DiceKeyMemoryStoreClass {
     return this.addDiceKeyWithKeyId(await diceKey.withKeyId, centerFaceOrientationWhenScanned);
   }
 
-  saveToDeviceStorage = async (diceKey: DiceKeyWithKeyId) => {
+  saveToDeviceStorage = async (diceKey: DiceKey) => {
     if (RUNNING_IN_ELECTRON) {
       await EncryptedDiceKeyStore.add(diceKey)
     }
   }
 
-  removeDiceKey = action ( ({keyId, centerLetterAndDigit}: PublicDiceKeyDescriptor) => {
-    // console.log(`removeDiceKeyForKeyId(${keyId})`);
-    this.keyIdToDiceKeyInHumanReadableForm.delete(keyId);
-    if (this.centerLetterAndDigitToKeyId.get(centerLetterAndDigit) === keyId) {
-      this.centerLetterAndDigitToKeyId.delete(centerLetterAndDigit)
-    }
+  removeDiceKey = async ({keyId: keyIdOrPromise, centerLetterAndDigit}: {keyId: string | Promise<string>, centerLetterAndDigit: string}) => {
+    const keyId = await keyIdOrPromise;
+    runInAction( () => {
+      this.keyIdToDiceKeyInHumanReadableForm.delete(keyId);
+      if (this.centerLetterAndDigitToKeyId.get(centerLetterAndDigit) === keyId) {
+        this.centerLetterAndDigitToKeyId.delete(centerLetterAndDigit)
+      }  
+    })
     this.updateStorage();
-  });
+  }
 
-  deleteFromDeviceStorageAndMemory = (diceKeyWithKeyId: PublicDiceKeyDescriptor) => {
-    this.removeDiceKey(diceKeyWithKeyId)
-    EncryptedDiceKeyStore.delete(diceKeyWithKeyId)
+  deleteFromDeviceStorageAndMemory = (diceKey: DiceKey) => {
+    this.removeDiceKey(diceKey)
+    EncryptedDiceKeyStore.delete(diceKey)
   }
 
   removeAll = action ( () => {

@@ -2,14 +2,12 @@ import { observer } from "mobx-react";
 import React from "react";
 import { FaceCopyingView } from "../SVG/FaceCopyingView";
 import { Instruction } from "../basics";
-import { PhysicalMedium } from "../../dicekeys/PhysicalMedium";
 import { HideRevealSecretsState } from "../../state/stores/HideRevealSecretsState";
-import { BackupViewProps, LabelBelowButtonImage } from "./BackupView";
+import { LabelBelowButtonImage } from "./BackupDiceKeyView";
 import { DiceKey, DiceKeyWithoutKeyId, FaceLetters } from "../../dicekeys/DiceKey";
 import styled from "styled-components";
 import { ShareEntry } from "../SimpleSecretSharing/SubViews/RowOfShares";
-
-export type BackupType = PhysicalMedium.stickers | PhysicalMedium.dice |  PhysicalMedium.printout |  "shares";
+import { BackupMedium, HandGeneratedBackupMedium, HandGeneratedBackupMediumDice, HandGeneratedBackupMediumStickers, MachineGeneratedBackupMediumPrintout, MetaBackupMediumShares } from "../../dicekeys/PhysicalMedium";
 
 export const FeatureCardButton = styled.button`
   align-self: center;
@@ -47,13 +45,13 @@ export const SelectBackupMediumView = observer(({
   diceKey, onSelected
 }: {
   diceKey: DiceKey
-  onSelected: (medium: BackupType) => void,
+  onSelected: (medium: BackupMedium) => void,
 }) => (
   <>
     <Instruction>How do you want to backup your DiceKey?</Instruction>{([
-      [PhysicalMedium.stickers, (<>Backup to a paper sheet using stickers (a SticKey kit)</>)],
-      [PhysicalMedium.dice, (<>Backup to a box of dice (a DiceKey kit)</>)]
-    ] as const satisfies readonly (readonly [BackupType, JSX.Element | string])[]).map(([medium, label]) => (
+      [HandGeneratedBackupMediumStickers, (<>Backup to a paper sheet using stickers (a SticKey kit)</>)],
+      [HandGeneratedBackupMediumDice, (<>Backup to a box of dice (a DiceKey kit)</>)]
+    ] as const satisfies readonly (readonly [HandGeneratedBackupMedium, JSX.Element | string])[]).map(([medium, label]) => (
       <FeatureCardButton key={medium}
         onClick={ () => { onSelected(medium) } }
       >
@@ -65,7 +63,7 @@ export const SelectBackupMediumView = observer(({
       </FeatureCardButton>
     ))}
       <FeatureCardButton key={"shares"}
-        onClick={ () => { onSelected(PhysicalMedium.printout) } }
+        onClick={ () => { onSelected(MetaBackupMediumShares) } }
       >
         <RowOfSharesDiv>
         { FaceLetters.slice(0, 5).map( (letter) => (
@@ -76,7 +74,7 @@ export const SelectBackupMediumView = observer(({
         <LabelBelowButtonImage>Split into shares</LabelBelowButtonImage>
       </FeatureCardButton>
       <FeatureCardButton key={"print"}
-        onClick={ () => { onSelected(PhysicalMedium.printout) } }
+        onClick={ () => { onSelected(MachineGeneratedBackupMediumPrintout) } }
       >
         <span style={{fontSize: `3vh`}}>🖨</span>
         <LabelBelowButtonImage>Print (not recommended)</LabelBelowButtonImage>
@@ -85,9 +83,17 @@ export const SelectBackupMediumView = observer(({
 ));
 
 
-export const StepSelectBackupMediumView = observer(({ state }: BackupViewProps) => (
-    <SelectBackupMediumView
-      diceKey={state.withDiceKey.diceKey!}
-      onSelected={() => {}}// FIXME medium => state.setBackupMedium(medium)()}
-    />
-));
+// export const StepSelectBackupMediumView = observer(({
+//   getDiceKey 
+// }: {
+//   getDiceKey: () => DiceKey | undefined;
+//   onSelected: 
+// }) => {
+//   const diceKey = getDiceKey();
+//   return diceKey == null ? null : (
+//     <SelectBackupMediumView
+//       diceKey={diceKey}
+//       onSelected={() => {}}// FIXME medium => state.setBackupMedium(medium)()}
+//     />
+//   );
+// });

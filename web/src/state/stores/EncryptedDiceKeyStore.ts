@@ -1,6 +1,6 @@
 import { action, makeAutoObservable } from "mobx";
 import { autoSave } from "../core/AutoSave";
-import { DiceKeyWithKeyId, PublicDiceKeyDescriptor } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithKeyId, PublicDiceKeyDescriptor } from "../../dicekeys/DiceKey";
 import { DiceKeyInHumanReadableForm } from "../../dicekeys/DiceKey";
 import { electronBridge } from "../../state/core/ElectronBridge";
 
@@ -42,8 +42,9 @@ class EncryptedDiceKeyStoreClass {
     descriptor => keyId === descriptor.keyId
   );
 
-  add = async (diceKey: DiceKeyWithKeyId) => {
-    const {keyId, centerLetterAndDigit, inHumanReadableForm} = diceKey;
+  add = async (diceKey: DiceKey) => {
+    const {centerLetterAndDigit, inHumanReadableForm} = diceKey;
+    const keyId = await diceKey.keyId;
     await electronBridge.storeDiceKeyInCredentialStore(keyId, inHumanReadableForm);
     this.setPublicDescriptorsOfEncryptedDiceKeys([
       ...removePublicKeyDescriptor(this.publicDescriptorsOfEncryptedDiceKeys, {keyId}),
@@ -69,9 +70,10 @@ class EncryptedDiceKeyStoreClass {
     return undefined;
   }
 
-  delete = async (toRemove: {keyId: string} | PublicDiceKeyDescriptor) => {
-    await electronBridge.deleteDiceKeyFromCredentialStore(toRemove.keyId);
-    this.setPublicDescriptorsOfEncryptedDiceKeys(removePublicKeyDescriptor(this.publicDescriptorsOfEncryptedDiceKeys, toRemove));
+  delete = async (diceKey: DiceKey) => {
+    const keyId = await diceKey.keyId;
+    await electronBridge.deleteDiceKeyFromCredentialStore(keyId);
+    this.setPublicDescriptorsOfEncryptedDiceKeys(removePublicKeyDescriptor(this.publicDescriptorsOfEncryptedDiceKeys, {keyId}));
   };
 
   deleteAll = async () => {

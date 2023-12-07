@@ -75,7 +75,7 @@ const StoredDiceKeyButtonsView = observer ( ({storedDiceKeyDescriptor, state}: S
   const removeFromMemory = () => { DiceKeyMemoryStore.removeDiceKey(storedDiceKeyDescriptor) };
   if (!PlatformSupportsSavingToDevice) {
     // For platforms that don't support saving DiceKeys to long-term device storage,
-    // we can only allow the DiceKey currrently in memory to be removed.
+    // we can only allow the DiceKey currently in memory to be removed.
     return (
       <><DiceKeyActionButton onClick={removeFromMemory} >remove</DiceKeyActionButton></>
     )

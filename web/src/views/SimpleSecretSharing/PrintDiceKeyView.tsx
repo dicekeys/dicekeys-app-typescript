@@ -9,6 +9,7 @@ import { ObservableLocalStorageBoolean } from "../../utilities/ObservableLocalSt
 import { PreferredPushButton, PushButton } from "../../css/Button";
 import { ShareLetter } from "./layout";
 import { BooleanState } from "../../state/reusable";
+import { BackupStatus, BackupStatusCompletedWithoutValidation } from "../BackupView/BackupStatus";
 
 export const PrintContainer = styled.div`
 	display: flex;
@@ -136,12 +137,21 @@ export const PrintDiceKeyView = observer( ({
 } : React.PropsWithChildren<{
 	title?: string | JSX.Element;
 	diceKey: DiceKey;
-	onComplete: (status: "cancelled" | "printed") => void
+	onComplete: (status: BackupStatus) => void
 }>) => {
 	if (HidePrintWarningForever.value === false && disregardedPrintWarningViewThisSession.value === false) {
 		return <PrintWarningView cancel={() => onComplete("cancelled")} disregard={() => disregardedPrintWarningViewThisSession.set(true)} />;
 	}
-	setTimeout(() => window.print(), 500);
+	const complete = (backupStatus: BackupStatus = BackupStatusCompletedWithoutValidation) => onComplete(backupStatus);
+	const print = () => {
+		const afterPrint = () => {
+			window.removeEventListener("afterprint", afterPrint);
+			complete();
+		};
+		window.addEventListener("afterprint", afterPrint);
+		window.print();
+	}
+	setTimeout(print, 500);
 	return (
 		<PrintContainer>
 			{ title == null ? null : (<TitleRegion>{title}</TitleRegion>) }
@@ -151,9 +161,6 @@ export const PrintDiceKeyView = observer( ({
 				diceBoxColor="black"	
 			/>
 			{ children == null ? null : (<DetailedTextRegion>{children}</DetailedTextRegion>) }
-			<ScreenOnlyRegion>
-				<PushButton onClick={() => onComplete("printed")}>Done</PushButton>
-			</ScreenOnlyRegion>
 		</PrintContainer>
 	);
 });
@@ -185,7 +192,7 @@ export interface PrintDiceKeyShareViewProps {
 	otherShareLetters: FaceLetter[];
 	minSharesToDecode: number;
 	toRecoverDiceKeyWithCenterLetter: string;
-	onComplete: (status: "cancelled" | "printed") => void;
+	onComplete: (status: BackupStatus) => void;
 }
 
 export class PropsWrapper<T> {

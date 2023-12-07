@@ -1,53 +1,53 @@
-import { action, makeAutoObservable } from "mobx";
-import { DiceKey } from "../../dicekeys/DiceKey";
+// import { action, makeAutoObservable } from "mobx";
+// import { DiceKey } from "../../dicekeys/DiceKey";
 
-export interface WithOptionalDiceKey {
-  diceKey?: DiceKey;
-}
+// export interface WithOptionalDiceKey {
+//   diceKey?: DiceKey;
+// }
 
-export interface WithDiceKey {
-  diceKey: DiceKey;
-}
+// export interface WithDiceKey {
+//   diceKey: DiceKey;
+// }
 
-export interface SettableDiceKey {
-  diceKey: DiceKey;
-  setDiceKey: (diceKey: DiceKey) => void;
-}
+// export interface SettableDiceKey {
+//   diceKey: DiceKey;
+//   setDiceKey: (diceKey: DiceKey) => void;
+// }
 
-export interface SettableOptionalDiceKey {
-  diceKey?: DiceKey;
-  setDiceKey: (diceKey?: DiceKey) => void;
-}
+// export interface SettableOptionalDiceKey {
+//   diceKey?: DiceKey;
+//   setDiceKey: (diceKey?: DiceKey) => void;
+// }
 
-export class SettableOptionalDiceKeyIndirect implements SettableOptionalDiceKey {
-  constructor(
-    private readonly withObservableOptionalDiceKey: WithOptionalDiceKey,
-    public readonly setDiceKey: (diceKey?: DiceKey) => void,
-  ) {}
+// export class SettableOptionalDiceKeyIndirect implements SettableOptionalDiceKey {
+//   constructor(
+//     private readonly withObservableOptionalDiceKey: WithOptionalDiceKey,
+//     public readonly setDiceKey: (diceKey?: DiceKey) => void,
+//   ) {}
 
-  get diceKey() { return this.withObservableOptionalDiceKey.diceKey }
-}
+//   get diceKey() { return this.withObservableOptionalDiceKey.diceKey }
+// }
 
-export class SettableDiceKeyIndirect implements SettableDiceKey {
-  constructor(
-    private readonly withObservableDiceKey: WithDiceKey,
-    public readonly setDiceKey: (diceKey: DiceKey) => void,
-  ) {}
+// export class SettableDiceKeyIndirect implements SettableDiceKey {
+//   constructor(
+//     private readonly withObservableDiceKey: WithDiceKey,
+//     public readonly setDiceKey: (diceKey: DiceKey) => void,
+//   ) {}
 
-  get diceKey() { return this.withObservableDiceKey.diceKey }
-}
+//   get diceKey() { return this.withObservableDiceKey.diceKey }
+// }
 
-export class SettableOptionalDiceKeyState implements SettableOptionalDiceKey {
-  private _diceKey?: DiceKey;
+// export class SettableOptionalDiceKeyState implements SettableOptionalDiceKey {
+//   private _diceKey?: DiceKey;
 
-  get diceKey(): DiceKey | undefined { return this._diceKey }
-  setDiceKey = action ( (diceKey?: DiceKey) => {this._diceKey = diceKey} );
+//   get diceKey(): DiceKey | undefined { return this._diceKey }
+//   setDiceKey = action ( (diceKey?: DiceKey) => {this._diceKey = diceKey} );
 
-  constructor (diceKey ?: DiceKey) {
-    this._diceKey = diceKey;
-    makeAutoObservable(this);
-  }
-}
+//   constructor (diceKey ?: DiceKey) {
+//     this._diceKey = diceKey;
+//     makeAutoObservable(this);
+//   }
+// }
 
 // export class DiceKeyState implements SettableOptionalDiceKey {
 //   keyId?: string = undefined;

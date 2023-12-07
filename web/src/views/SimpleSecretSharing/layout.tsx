@@ -8,7 +8,7 @@ const RowViewHeightDiceKeys = 25 as const;
 export const RowViewHeightTopInstruction  = 10 as const;
 export const RowViewHeightDiceKey = RowViewHeightDiceKeys;
 export const RowViewHeightShares = RowViewHeightDiceKeys;
-export const BottomInstructionAndAction = 20 as const;
+export const BottomInstructionAndAction = 5 as const;
 
 const SecretSharingHelperRow = styled.div`
   display: flex;

@@ -1,12 +1,11 @@
 
 import { action, makeAutoObservable } from "mobx";
-import { BackupViewState } from "./BackupView/BackupViewState";
+import { BackupDiceKeyState } from "./BackupView/BackupDiceKeyState";
 import { ViewState } from "../state/core/ViewState";
 import { NavigationPathState } from "../state/core/NavigationPathState";
-import { DiceKey } from "../dicekeys/DiceKey";
-import { DiceKeyMemoryStore } from "../state";
-import { SettableOptionalDiceKeyIndirect } from "../state/Window/DiceKeyState";
 import { addressBarState } from "../state/core/AddressBarState";
+import { GetSetDiceKey } from "./WithSelectedDiceKey/SelectedDiceKeyViewState";
+import { BackupStatus, BackupStatusCompletedAndValidated, BackupStatusCompletedWithoutValidation } from "./BackupView/BackupStatus";
 
 export enum AssemblyInstructionsStep {
   Randomize = 1,
@@ -29,29 +28,29 @@ export type AssemblyInstructionsStateName = typeof AssemblyInstructionsStateName
 export class AssemblyInstructionsState implements ViewState {
   readonly viewName = AssemblyInstructionsStateName;
 
-  diceKey: DiceKey | undefined;
-  setDiceKey = action( (diceKey: DiceKey | undefined) => {
-    if (diceKey == null) {
-      this.diceKey = diceKey;
-    } else if ("keyId" in diceKey) {
-      this.diceKey = DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
-    } else {
-      diceKey.withKeyId.then( diceKeyWithKeyId => {
-        this.setDiceKey(diceKeyWithKeyId);
-      });
-    }
-  });
+  getSetDiceKey: GetSetDiceKey;
+  get diceKey() { return this.getSetDiceKey.getDiceKey(); }
+  // diceKey: DiceKey | undefined;
+  // setDiceKey = action( (diceKey: DiceKey | undefined) => {
+  //   if (diceKey == null) {
+  //     this.diceKey = diceKey;
+  //   } else if (diceKey instanceof DiceKeyWithKeyId) {
+  //     this.diceKey = DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
+  //   } else {
+  //     diceKey.withKeyId.then( diceKeyWithKeyId => {
+  //       this.setDiceKey(diceKeyWithKeyId);
+  //     });
+  //   }
+  // });
 
   setStep = action ( (step?: AssemblyInstructionsStep) => { if (step != null && step !=this.step) {
-    if (step === AssemblyInstructionsStep.CreateBackup && (this.backupState == null || this.backupState.withDiceKey.diceKey != this.diceKey)) {
-      // Need to create a backup state based on the currently-loaded DiceKey
-      const {diceKey} = this;
-      if (diceKey == null) {
-        console.error(`Attempt to go to backup step without a DiceKey to backup.`)
-        return;
-      }
-      this.backupState = new BackupViewState(this.navState, new SettableOptionalDiceKeyIndirect(this, this.setDiceKey))
-    }
+    // if (step === AssemblyInstructionsStep.CreateBackup && (this.backupState == null || this.backupState.diceKey. != this.diceKey)) {
+    //   // Need to create a backup state based on the currently-loaded DiceKey
+    //   this.backupState = new BackupViewState(this.navState, {
+    //     getDiceKey: this.diceKeyState.getDiceKey,
+    //     setDiceKey: this.diceKeyState.setDiceKey,
+    //   })
+    // }
     addressBarState.replaceState(this.navState.getPath, () => {
       this.ensureVisible();
       this.step = step;
@@ -80,15 +79,26 @@ export class AssemblyInstructionsState implements ViewState {
   userChoseToSkipBackupStep: boolean = false;
   setUserChoseToSkipBackupStep = action ( () => this.userChoseToSkipBackupStep = true );
 
-  backupState: BackupViewState | undefined;
+  backupState: BackupDiceKeyState;
+  step: AssemblyInstructionsStep;
+
+  backupStatus: BackupStatus | undefined;
+  setBackupStatus = action ( (backupStatus: BackupStatus | undefined) => { this.backupStatus = backupStatus; } );
+  get backedUpSuccessfully() { return this.backupStatus === BackupStatusCompletedAndValidated || this.backupStatus === BackupStatusCompletedWithoutValidation }
+
 
   navState: NavigationPathState;
   constructor(
     parentNavState: NavigationPathState,
     protected ensureVisible: () => void,
-    public step: AssemblyInstructionsStep = AssemblyInstructionsStep.START_INCLUSIVE,
+    {step = AssemblyInstructionsStep.START_INCLUSIVE, ...getSetDiceKey}: GetSetDiceKey & {
+      step?: AssemblyInstructionsStep
+    }
   ) {
-    this.navState = new NavigationPathState(parentNavState, () => `${AssemblyInstructionsStateName}/${this.step}` )
+    this.navState = new NavigationPathState(parentNavState, () => `${AssemblyInstructionsStateName}/${this.step}` );
+    this.step = step;
+    this.getSetDiceKey = getSetDiceKey;
+    this.backupState = new BackupDiceKeyState(this.navState, getSetDiceKey)
     makeAutoObservable(this);
   }
 }

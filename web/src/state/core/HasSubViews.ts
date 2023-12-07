@@ -12,13 +12,15 @@ export class SubViewState<VIEW_STATE extends ViewState> {
   get subViewState() { return this._subViewState; }
   rawSetSubView = action( (destinationSubViewState?: VIEW_STATE) => {
     const previousSubViewState = this._subViewState;
-    console.log(`Setting subview of ${this.name} from ${previousSubViewState?.viewName ?? "undefined"} to ${destinationSubViewState?.viewName ?? "undefined"}`)
+    // console.log(`Setting subview of ${this.name} from ${previousSubViewState?.viewName ?? "undefined"} to ${destinationSubViewState?.viewName ?? "undefined"}`)
     if (destinationSubViewState !== previousSubViewState) {
       this._subViewState = destinationSubViewState;
       this.subStateChangedEvent.sendEventually(previousSubViewState, destinationSubViewState);
     }
     return this;
   });
+
+  clear = () => this.rawSetSubView(undefined);
 
   /***
    * Navigate to a subview supporting back to get back to the current subview
@@ -49,8 +51,8 @@ export class SubViewState<VIEW_STATE extends ViewState> {
     addressBarState.replaceState(this.navState.getPath, doStateChange);
   };
 
-  constructor(public readonly name: string, public navState: NavigationPathState, defaultSubView?: VIEW_STATE) {
-    this._subViewState = defaultSubView;
+  constructor(public readonly name: string, public navState: NavigationPathState, initialSubView?: VIEW_STATE) {
+    this._subViewState = initialSubView;
     makeObservable<SubViewState<VIEW_STATE>, "_subViewState">(this, {      
       "_subViewState": observable,
       subViewState: computed,

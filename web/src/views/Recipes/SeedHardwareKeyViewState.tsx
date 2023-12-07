@@ -9,7 +9,7 @@ import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-elec
 import { electronBridge } from "../../state/core/ElectronBridge";
 import { ViewState } from "../../state/core/ViewState";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
-import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyViewState";
 import { DiceKeyMemoryStore } from "../../state";
 
@@ -40,7 +40,14 @@ export type SeedHardwareKeyViewStateName = typeof SeedHardwareKeyViewStateName;
 export class SeedHardwareKeyViewState implements ViewState {
   readonly viewName = SeedHardwareKeyViewStateName;
   recipeBuilderState: RecipeBuilderState;
-  diceKey: DiceKeyWithKeyId | undefined;
+
+  getDiceKey: () => DiceKey | undefined;
+  setDiceKey?: (diceKey: DiceKey | undefined) => void;
+
+  get diceKey(): DiceKey | undefined {
+    return this.getDiceKey();
+  };
+
   derivedFromRecipeState: DerivedFromRecipeState | undefined;
 
   loadDiceKeyState: LoadDiceKeyViewState | undefined;
@@ -51,8 +58,7 @@ export class SeedHardwareKeyViewState implements ViewState {
     this.loadDiceKeyState = undefined;
     if (diceKey) {
       DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
-      this.diceKey = diceKey;
-      this.derivedFromRecipeState = new DerivedFromRecipeState({recipeState: this.recipeBuilderState, diceKey });
+      this.setDiceKey?.(diceKey);
     }
   });
 
@@ -173,9 +179,14 @@ export class SeedHardwareKeyViewState implements ViewState {
 
   readonly navState: NavigationPathState;
   readonly mayLoadOrChangeDiceKey: boolean;
-  constructor(parentNavState: NavigationPathState, diceKey?: DiceKeyWithKeyId) {
+  constructor(parentNavState: NavigationPathState, {getDiceKey, setDiceKey} : {
+    getDiceKey: () => DiceKey | undefined,
+    setDiceKey?: (diceKey: DiceKey | undefined) => void,
+  }) {
     this.navState = new NavigationPathState(parentNavState, SeedHardwareKeyViewStateName);
-    this.mayLoadOrChangeDiceKey = (diceKey == null);
+    this.getDiceKey = getDiceKey;
+    this.setDiceKey = setDiceKey;
+    this.mayLoadOrChangeDiceKey = setDiceKey != null;
     this.loadDiceKeyState = undefined;
     const recipeBuilderState = new RecipeBuilderState({
       origin: "BuiltIn",
@@ -184,8 +195,7 @@ export class SeedHardwareKeyViewState implements ViewState {
     } as LoadedRecipe<"BuiltIn">);
     recipeBuilderState.setEditingMode(RecipeEditingMode.EditIncludingRawJson);
     this.recipeBuilderState = recipeBuilderState;
-    this.diceKey = diceKey;
-    this.derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, diceKey });
+    this.derivedFromRecipeState = new DerivedFromRecipeState({recipeState: recipeBuilderState, getDiceKey });
     makeAutoObservable(this);
   }
 

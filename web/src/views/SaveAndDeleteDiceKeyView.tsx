@@ -27,7 +27,8 @@ export const SaveDiceKeyToDeviceStorageContentView = observer( ( {
   closeFn = addressBarState.back
 }:
  {state: SaveDiceKeyViewState, closeFn?: () => void }) => {
-  const {diceKey} = state;
+  const diceKey = state.getDiceKey();
+  if (diceKey == null) return null;
   const saveFn = () => {
     DiceKeyMemoryStore.saveToDeviceStorage(diceKey);
     closeFn();
@@ -59,7 +60,8 @@ export const SaveDiceKeyToDeviceStorageView = observer( ( {
   closeFn = addressBarState.back
 }:
  {state: SaveDiceKeyViewState, closeFn?: () => void }) => {
-  const {diceKey} = state;
+  const diceKey = state.getDiceKey();
+  if (diceKey == null) return null;
    
    return (
     <>
@@ -77,8 +79,10 @@ export const DeleteDiceKeyToDeviceStorageContentView = observer( (
     state,
     closeFn = addressBarState.back
   }: {state: DeleteDiceKeyViewState, closeFn?: () => void }) => {
-  const {diceKey} = state;
-  const deleteFromDeviceStorageAndMemory = () => {
+    const diceKey = state.getDiceKey();
+    if (diceKey == null) return null;
+
+    const deleteFromDeviceStorageAndMemory = () => {
     DiceKeyMemoryStore.deleteFromDeviceStorageAndMemory(diceKey);
     closeFn();
   }
@@ -109,7 +113,9 @@ export const DeleteDiceKeyToDeviceStorageView = observer( ( {
   closeFn = addressBarState.back
 }:
  {state: DeleteDiceKeyViewState, closeFn?: () => void }) => {
-  const {diceKey} = state;
+  const diceKey = state.getDiceKey();
+  if (diceKey == null) return null;
+
    
    return (
     <>

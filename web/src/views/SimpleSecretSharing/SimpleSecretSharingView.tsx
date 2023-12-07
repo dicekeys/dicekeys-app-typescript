@@ -7,17 +7,18 @@ import { rangeFromTo } from "../../utilities/range";
 import { LoadDiceKeyContentPaneView } from "../LoadingDiceKeys/LoadDiceKeyView";
 import { DiceKeyView } from "../SVG/DiceKeyView";
 import { addPreview } from "../basics/Previews";
-import { SimpleSecretSharingState } from "./SimpleSecretSharingState";
+import { SimpleSecretSharingState, SimpleSecretSharingSteps } from "./SimpleSecretSharingState";
 import { BottomInstructionRow, RowViewHeightDiceKey, ShareLetter, TopInstructionRow, maxViewWidth } from "./layout";
 import { AndClause, Instruction, Instruction2, InstructionTextHeight } from "../basics";
 import { LoadDiceKeyViewState } from "../LoadingDiceKeys/LoadDiceKeyViewState";
 import { PrintDiceKeyShareView, PrintDiceKeyShareViewPropsWrapper, disregardedPrintWarningViewThisSession } from "./PrintDiceKeyView";
-import { BackupView, PhysicalMedium } from "../BackupView";
+import { CopyToPhysicalMediumWizardView, HandGeneratedBackupMediumDice, HandGeneratedBackupMediumStickers, MachineGeneratedBackupMediumPrintout } from "../BackupView";
 import { ShareEntry, RowOfSharesDiv } from "./SubViews/RowOfShares";
 import { Die3dView } from "./Die3dView";
 import { FaceSvg } from "../SVG/FaceView";
-import { BackupViewState } from "../BackupView/BackupViewState";
+import { CopyToPhysicalMediumWizardState } from "../../views/BackupView/CopyToPhysicalMediumWizardState";
 import { StepFooterView } from "../Navigation/StepFooterView";
+import { BackupStatus, BackupStatusCompletedAndValidated } from "../BackupView/BackupStatus";
 
 
 
@@ -43,6 +44,8 @@ const ChoiceText = styled.div`
 	font-size: ${InstructionTextHeight};
 	font-family: sans-serif;
 	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
 `;
 
 const ChoiceSelect = styled.select`
@@ -167,15 +170,15 @@ const StepCopyToPhysicalMediumView = observer(({
 						<ToPhysicalMediumRowDiv>
 							<ToPhysicalMediumColumnView
 								title={"Copy using dice"}
-								checked={physicalMediaCreated[PhysicalMedium.dice] != null }
-								onClick={simplesSecretSharingState.initiateCopyToPhysicalMediumHandler(diceKey, PhysicalMedium.dice)}
+								checked={physicalMediaCreated[HandGeneratedBackupMediumDice] != null }
+								onClick={simplesSecretSharingState.initiateCopyToPhysicalMediumHandler({getDiceKey: () => diceKey}, HandGeneratedBackupMediumDice)}
 							>
 								<Die3dView letter={letter} $size={1.5} $units={`rem`} dieColor="white" />
 							</ToPhysicalMediumColumnView>
 							<ToPhysicalMediumColumnView
 								title={"Copy using stickers"}
-								checked={physicalMediaCreated[PhysicalMedium.stickers] != null }
-								onClick={simplesSecretSharingState.initiateCopyToPhysicalMediumHandler(diceKey, PhysicalMedium.stickers)}
+								checked={physicalMediaCreated[HandGeneratedBackupMediumStickers] != null }
+								onClick={simplesSecretSharingState.initiateCopyToPhysicalMediumHandler({getDiceKey: () => diceKey}, HandGeneratedBackupMediumStickers)}
 							>
 								<FaceSvg title="Copy using stickers"  size={`1.5rem`}
 									face={{letter, digit: `${digit}`, orientationAsLowercaseLetterTrbl: 't'}}
@@ -183,7 +186,7 @@ const StepCopyToPhysicalMediumView = observer(({
 							</ToPhysicalMediumColumnView>
 							<ToPhysicalMediumColumnView
 								title={`Print ${ disregardedPrintWarningViewThisSession.value ? '' : '⚠️ (not recommended)' }`}
-								checked={physicalMediaCreated[PhysicalMedium.printout] != null }
+								checked={physicalMediaCreated[MachineGeneratedBackupMediumPrintout] != null }
 								onClick={simplesSecretSharingState.initiatePrintViewHandler(diceKey)}
 							>
 								🖨
@@ -292,11 +295,15 @@ const StepChooseMinAndTotalNumberOfSharesView = observer(({
 	</>);
 });
 
+
 export const SimpleSecretSharingStepsView = observer( ({simplesSecretSharingState}: SimpleSecretSharingProps) => {
 	switch (simplesSecretSharingState.step) {
-		case 0: return (<StepChooseMinAndTotalNumberOfSharesView {...{simplesSecretSharingState}} />);
-		case 1: return (<StepReplaceWithRandomView {...{simplesSecretSharingState}} />);
-		case 2: return (<StepCopyToPhysicalMediumView {...{simplesSecretSharingState}} />);
+		case SimpleSecretSharingSteps.ChooseMinAndTotalNumberOfShares:
+			return (<StepChooseMinAndTotalNumberOfSharesView {...{simplesSecretSharingState}} />);
+		case SimpleSecretSharingSteps.ReplaceWithRandom:
+			return (<StepReplaceWithRandomView {...{simplesSecretSharingState}} />);
+		case SimpleSecretSharingSteps.CopyToPhysicalMedium:
+			return (<StepCopyToPhysicalMediumView {...{simplesSecretSharingState}} />);
 		default:
 			return (<></>);
 	}
@@ -319,55 +326,64 @@ export const LoadDiceKeyShareView = observer(({simplesSecretSharingState}: {
 });
 
 const onCopyToPhysicalMediumComplete = (
-	simplesSecretSharingState: SimpleSecretSharingState & {subView: BackupViewState}
+	simplesSecretSharingState: SimpleSecretSharingState & {subView: CopyToPhysicalMediumWizardState}
 ) => () => {
-	const backupViewState = simplesSecretSharingState.subView;
+	const {getDiceKey, medium} = simplesSecretSharingState.subView;
+	const centerLetter = getDiceKey()?.centerFace.letter;
 	simplesSecretSharingState.clearSubView();
-	const diceKey = backupViewState.withDiceKey.diceKey;
-	// const validated = backupViewState.backupValidated;
-	const physicalMedium = backupViewState.backupMedium;
-	if (diceKey != null && physicalMedium != null) {
-		simplesSecretSharingState.addPhysicalMediaCreatedByUserForShare(diceKey.centerFace.letter, physicalMedium)
+	if (centerLetter != null && medium != null) {
+		simplesSecretSharingState.addPhysicalMediaCreatedByUserForShare(centerLetter, medium)
 	}
 }
 
 export const SimpleSecretSharingView = observer(({
+	onBackFromStart,
+	onComplete,
 	simplesSecretSharingState,
-}: SimpleSecretSharingProps
+}: SimpleSecretSharingProps & {
+	onBackFromStart?: () => void;
+	onComplete: (status: BackupStatus) => void;
+}
 ) => {
 	if (simplesSecretSharingState.subView instanceof PrintDiceKeyShareViewPropsWrapper) {
 		return (<PrintDiceKeyShareView {...simplesSecretSharingState.subView.props}/>);
-	} else if (simplesSecretSharingState.subView instanceof BackupViewState) {
+	} else if (simplesSecretSharingState.subView instanceof CopyToPhysicalMediumWizardState) {
 		return (
 			<SimpleSecretSharingViewContainer>
-				<BackupView
+				<CopyToPhysicalMediumWizardView
 					state={simplesSecretSharingState.subView }
-					nextStepAfterEnd={onCopyToPhysicalMediumComplete(simplesSecretSharingState as SimpleSecretSharingState & {subView: BackupViewState})}
+					onComplete={onCopyToPhysicalMediumComplete(simplesSecretSharingState as SimpleSecretSharingState & {subView: CopyToPhysicalMediumWizardState})}
 				/>
 			</SimpleSecretSharingViewContainer>);
 	} else if (simplesSecretSharingState.subView instanceof LoadDiceKeyViewState) {
 		return <LoadDiceKeyShareView simplesSecretSharingState={simplesSecretSharingState as SimpleSecretSharingState & {subView: LoadDiceKeyViewState}} />;
+	} else {
+		return (
+			<SimpleSecretSharingViewContainer>
+				<SimpleSecretSharingStepsView {...{simplesSecretSharingState}} />
+				<StepFooterView 
+					prev={simplesSecretSharingState.stepPrev ?? onBackFromStart}
+					next={simplesSecretSharingState.step === SimpleSecretSharingSteps.END_INCLUSIVE && simplesSecretSharingState.isStepComplete(SimpleSecretSharingSteps.END_INCLUSIVE) ?
+						() => onComplete(BackupStatusCompletedAndValidated) :
+						simplesSecretSharingState.stepNext}
+					nextIsDone={simplesSecretSharingState.step === SimpleSecretSharingSteps.END_INCLUSIVE}
+				></StepFooterView>
+			</SimpleSecretSharingViewContainer>	
+		);
 	}
-	return (
-		<SimpleSecretSharingViewContainer>
-			<SimpleSecretSharingStepsView {...{simplesSecretSharingState}} />
-			<StepFooterView 
-				prev={simplesSecretSharingState.stepPrev}
-				next={simplesSecretSharingState.stepNext}
-			/>
-		</SimpleSecretSharingViewContainer>	
-	);
 });
 
 
 
 addPreview("SimpleSecretSharing", () => ( 
   <SimpleSecretSharingView simplesSecretSharingState={
-		new SimpleSecretSharingState(NavigationPathState.root, {
-			userSpecifiedDiceKeyToBeShared: DiceKeyWithoutKeyId.testExample,
-			numSharesToDisplay: 5,
-			minSharesToDecode: 3,
-			step: 2,
-		})
-	 } />
+			new SimpleSecretSharingState(NavigationPathState.root, {
+				getUserSpecifiedDiceKeyToBeShared: () => DiceKeyWithoutKeyId.testExample,
+				numSharesToDisplay: 5,
+				minSharesToDecode: 3,
+				step: 2,
+			})
+	 	} 
+		onComplete={() => {alert("complete")}}
+	/>
 ));

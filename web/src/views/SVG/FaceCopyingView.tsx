@@ -9,7 +9,7 @@ import HandWithSticker from /*url:*/ "../../images/Hand with Sticker.svg";
 import { FaceGroupView } from "./FaceView";
 import { weightsToFractionalProportions, sum } from "../../utilities/weights";
 import { BooleanWithToggle } from "../../state/stores/HideRevealSecretsState";
-import { PhysicalMedium } from "../../dicekeys/PhysicalMedium";
+import { HandGeneratedBackupMedium, HandGeneratedBackupMediumDice, HandGeneratedBackupMediumStickers } from "../../dicekeys/PhysicalMedium";
 
 // Hand with sticker is 219wide x 187 high
 const handImageSVGHeight = 187;
@@ -34,8 +34,8 @@ const widthsInUnitsOf1KeyWidth = [
 const fractionalWidths = weightsToFractionalProportions<3>(...widthsInUnitsOf1KeyWidth);
 const totalWidthInUnitsOf1KeyWidth = sum(widthsInUnitsOf1KeyWidth);
 
-const FaceCopyingViewBounds = (medium: PhysicalMedium.dice | PhysicalMedium.stickers): {width: number, height: number} =>
-  medium === PhysicalMedium.stickers ? {
+const FaceCopyingViewBounds = (medium: HandGeneratedBackupMedium): {width: number, height: number} =>
+  medium === HandGeneratedBackupMediumStickers ? {
     width: StickerSheetSizeModelForFaceAsUnit.width * totalWidthInUnitsOf1KeyWidth,
     height: StickerSheetSizeModelForFaceAsUnit.height
   } : {
@@ -45,7 +45,7 @@ const FaceCopyingViewBounds = (medium: PhysicalMedium.dice | PhysicalMedium.stic
 
 type FaceCopyingViewProps = {
   diceKey?: DiceKey,
-  medium: PhysicalMedium.dice | PhysicalMedium.stickers,
+  medium: HandGeneratedBackupMedium,
   showArrow?: boolean,
   indexOfLastFacePlaced?: number,
   obscureAllButCenterDie: boolean | BooleanWithToggle
@@ -55,7 +55,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps) => {
     diceKey, medium, indexOfLastFacePlaced, showArrow, obscureAllButCenterDie // matchSticKeyAspectRatio, 
   } = props;
   const hideFaces = diceKey?.faces.slice(0, indexOfLastFacePlaced ?? -1);
-  const targetSizeModel = medium === PhysicalMedium.stickers ?
+  const targetSizeModel = medium === HandGeneratedBackupMediumStickers ?
     StickerSheetSizeModelForFaceAsUnit :
     DiceKeySizeModelForFaceAsUnit;
   const imageWidth = FaceCopyingViewBounds(props.medium).width;
@@ -73,7 +73,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps) => {
 
   return (
     <g>
-      { medium === PhysicalMedium.stickers ? (<>
+      { medium === HandGeneratedBackupMediumStickers ? (<>
         <StickerSheetSvgGroup {...targetSizeModel.bounds} showLetter={face?.letter} hideFaces={hideFaces} highlightFaceWithDigit={face?.digit}
           transform={`translate(${xoffsetImageCenterToLeftSheetCenter})`}
         />
@@ -84,7 +84,7 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps) => {
             highlightThisFace={indexOfLastFacePlaced}
             transform={`translate(${xoffsetImageCenterToRightSheetCenter}, 0)`}
         />        
-      </>) : medium === PhysicalMedium.dice ? (<>
+      </>) : medium === HandGeneratedBackupMediumDice ? (<>
         <DiceKeySvgGroup
           faces={diceKey?.faces}
           sizeModel={DiceKeySizeModelForFaceAsUnit}
@@ -146,10 +146,10 @@ export const FaceCopyingView = observer( ({
 ));
 
 export const DiceKeyCopyingView = observer( (props: Omit<FaceCopyingViewProps, "medium">) => (
-  <FaceCopyingView {...{...props, medium: PhysicalMedium.dice}} />
+  <FaceCopyingView {...{...props, medium: HandGeneratedBackupMediumDice}} />
 ));
 export const SticKeyCopyingView = observer( (props: Omit<FaceCopyingViewProps, "medium">) => (
-  <FaceCopyingView {...{...props, medium: PhysicalMedium.stickers}} />
+  <FaceCopyingView {...{...props, medium: HandGeneratedBackupMediumStickers}} />
 ));
 
 export const Preview_FaceCopyingView = ({indexOfLastFacePlaced=23}: {indexOfLastFacePlaced?: number}) => (

@@ -39,6 +39,11 @@ const ImposeStandardSideMargins = css`
   margin-left: ${cssCalcTyped(StandardSideMargin)};
   margin-right: ${cssCalcTyped(StandardSideMargin)};
   width: ${cssCalcTyped(StandardWidthBetweenSideMargins)};
+  @media print {
+    width: 100%;
+    margin: 0;
+	}
+
 `
 
 export const WindowRegionBelowTopNavigationBarWithSideMargins = styled(WindowRegionBelowTopNavigationBar)`
@@ -87,6 +92,9 @@ export const NavigationBar = styled.div`
   text-align: center;
   font-size: calc(${TopLevelNavigationBarFontSize});
   overflow: hidden;
+  @media print {
+		display: none;
+	}
 `;
 
 export const TopNavigationBar = styled(NavigationBar)`

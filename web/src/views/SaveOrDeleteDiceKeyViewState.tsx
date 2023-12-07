@@ -1,4 +1,4 @@
-import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
+import { DiceKey } from "../dicekeys/DiceKey";
 import { ViewState } from "../state/core/ViewState";
 import { NavigationPathState } from "../state/core/NavigationPathState";
 
@@ -14,8 +14,8 @@ export class SaveOrDeleteDiceKeyViewState<SAVE_OR_DELETE extends SaveOrDeleteDic
   constructor(
     public readonly viewName: SAVE_OR_DELETE,
     parentNavState: NavigationPathState,
-    public readonly diceKey: DiceKeyWithKeyId,
-    localPath: string | (() => string) = `${viewName}/${diceKey.centerLetterAndDigit}`
+    public readonly getDiceKey: () => DiceKey | undefined,
+    localPath: string | (() => string) = `${viewName}/${ getDiceKey()?.centerLetterAndDigit}`
   ) {
     this.navState = new NavigationPathState(parentNavState, localPath);
   }

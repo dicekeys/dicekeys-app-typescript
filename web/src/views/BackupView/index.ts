@@ -1,2 +1,2 @@
-export * from "./BackupView";
+export * from "./BackupDiceKeyView";
 export * from "../../dicekeys/PhysicalMedium";

@@ -4,9 +4,10 @@ import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { addressBarState } from "../../state/core/AddressBarState";
 import {
   TopNavigationBar,
-  TopNavLeftSide, TopNavCenter, TopNavRightSide} from "../Navigation/NavigationLayout";
+  TopNavLeftSide, TopNavCenter, TopNavRightSide
+} from "../Navigation/NavigationLayout";
 import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
-import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { DiceKey } from "../../dicekeys/DiceKey";
 import { DiceKeyMemoryStore, PlatformSupportsSavingToDevice } from "../../state";
 import { DiceKeysNavHamburgerMenu, ExpandableMenuProps, HamburgerMenuButton, MenuItem } from "../../views/Navigation/Menu";
 import { BooleanState } from "../../state/reusable";
@@ -15,10 +16,10 @@ const SelectedDiceKeyExpandableHamburgerMenu = observer( ( {
   state,
   booleanStateTrueIfMenuExpanded
 }: SelectedDiceKeyViewProps & ExpandableMenuProps) => {
-  const {diceKey} = state;
-  if (diceKey == null) return null;
+  const diceKeyId = state.getDiceKey()?.keyId;
+  if (diceKeyId == null) return null;
 
-  const isSaved = DiceKeyMemoryStore.hasKeyInEncryptedStore(diceKey.keyId);
+  const isSaved = DiceKeyMemoryStore.hasKeyInEncryptedStore(diceKeyId);
   const menuAction = ( actionFn: () => void) => () => {
     booleanStateTrueIfMenuExpanded.set(false);
     actionFn();
@@ -41,14 +42,10 @@ export const SelectedDiceKeyNavigationBar = observer( ( {
   state,
   goBack
 }: SelectedDiceKeyViewProps) => {
-  const {diceKey} = state;
+  const diceKeyNickName = state.getDiceKey()?.nickname;
   // Make the top left nav bar a button iff we're running in electron,
   // otherwise we're in the browser and this should be a no-op (undefined onClick handler)
   // as the web-based app relies on the back button within the browser.
-  // const {saveAndDeleteUIState, foregroundDiceKeyState} = state;
-  // const diceKey = foregroundDiceKeyState.diceKey;
-  // if (diceKey == null) return null;
-
   const booleanStateTrueIfMenuExpanded = new BooleanState();
 
   return (<>
@@ -65,7 +62,7 @@ export const SelectedDiceKeyNavigationBar = observer( ( {
           // Don't show a back button for the web app, as the browser back button will work.
           (<></>)
         }</TopNavLeftSide>
-      <TopNavCenter>{diceKey?.nickname ?? ""}</TopNavCenter>
+      <TopNavCenter>{diceKeyNickName ?? ""}</TopNavCenter>
       <TopNavRightSide >{
         RUNNING_IN_ELECTRON ? (<HamburgerMenuButton {...{booleanStateTrueIfMenuExpanded}}></HamburgerMenuButton>) : null 
       }</TopNavRightSide>
@@ -76,7 +73,7 @@ export const SelectedDiceKeyNavigationBar = observer( ( {
 export const NavigationBarForDiceKey = observer( ( {
   diceKey,
   goBack
-}: {diceKey: DiceKeyWithKeyId, goBack: () => void}) => {
+}: {diceKey: DiceKey, goBack: () => void}) => {
   return (
     <TopNavigationBar>
       <TopNavLeftSide onClick={ goBack } >{

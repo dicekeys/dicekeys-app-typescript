@@ -6,7 +6,7 @@ import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "./
 import { CountdownTimer } from "../utilities/CountdownTimer";
 import { LoadDiceKeyViewState } from "../views/LoadingDiceKeys/LoadDiceKeyViewState";
 import { AssemblyInstructionsState, AssemblyInstructionsStep } from "../views/AssemblyInstructionsState";
-import { SelectedDiceKeyViewState } from "../views/WithSelectedDiceKey/SelectedDiceKeyViewState";
+import { DiceKeyState, SelectedDiceKeyViewState } from "../views/WithSelectedDiceKey/SelectedDiceKeyViewState";
 import { SeedHardwareKeyViewState } from "../views/Recipes/SeedHardwareKeyViewState";
 import { PathStrings } from "../views/Navigation/PathStrings";
 import { NavigationPathState } from "./core/NavigationPathState";
@@ -52,36 +52,41 @@ export class WindowTopLevelNavigationState {
   navigateDownTo = (subViewState: TopLevelSubViewStates) => this.subView.navigateToPushState(subViewState);
 
   navigateToAssemblyInstructions = () => {
-    const assemblyInstructionsState = new AssemblyInstructionsState(this.navState, () => {this.subView.rawSetSubView(assemblyInstructionsState)});
+    const assemblyInstructionsState = new AssemblyInstructionsState(this.navState, () => {this.subView.rawSetSubView(assemblyInstructionsState)}, {...this.selectedDiceKeyState.getSetDiceKey});
     this.navigateDownTo(assemblyInstructionsState);
   }
   navigateToLoadDiceKey = () => this.navigateDownTo(new LoadDiceKeyViewState(this.navState, "camera"));
-  navigateToSeedFidoKey = () => this.navigateDownTo(new SeedHardwareKeyViewState(this.navState));
+  navigateToSeedFidoKey = () => this.navigateDownTo(new SeedHardwareKeyViewState(this.navState, {
+    getDiceKey: this.selectedDiceKeyState.getDiceKey, setDiceKey: this.selectedDiceKeyState.setDiceKey
+  }));
 
   navigateToSaveOrDeleteFromDevice = (saveOrDelete: SaveOrDeleteDiceKeyStateName) => async (descriptor: PublicDiceKeyDescriptorWithSavedOnDevice) => {
     const diceKey = await DiceKeyMemoryStore.load(descriptor);
     if (diceKey) {
-      this.navigateDownTo(new SaveOrDeleteDiceKeyViewState(saveOrDelete, this.navState, diceKey));
+      this.navigateDownTo(new SaveOrDeleteDiceKeyViewState(saveOrDelete, this.navState,
+        () => DiceKeyMemoryStore.diceKeyForKeyId(descriptor.keyId)
+      ));
     }
   }
   navigateToDeleteFromDevice = this.navigateToSaveOrDeleteFromDevice(DeleteDiceKeyViewStateName);
   navigateToSaveToDevice = this.navigateToSaveOrDeleteFromDevice(SaveDiceKeyViewStateName);
 
   navigateToSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
-    this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKey));
+    this.selectedDiceKeyState.setDiceKey(diceKey);
+    this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, this.selectedDiceKeyState));
   });
 
   onReturnFromActionThatMayLoadDiceKey = (diceKey?: DiceKeyWithKeyId) => {
     if (diceKey) {    
-      const diceKeyWithCenterFaceUpright = DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
-      if (addressBarState.historyIndex > 0) {
+      this.selectedDiceKeyState.setDiceKey(DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey));
+      if (addressBarState.historyIndex <= 0) {
         // We're at least one deep into the history stack, which means AssemblyInstructions was launched from the main screen
         // and should be replaced with the SelectedDiceKey screen
-        this.subView.navigateToReplaceState(new SelectedDiceKeyViewState(this.navState, diceKeyWithCenterFaceUpright));
+        this.subView.navigateToReplaceState(new SelectedDiceKeyViewState(this.navState, this.selectedDiceKeyState));
       } else {
         // Navigate to the top screen, then down to the selected DiceKey view
         this.subView.navigateToReplaceState();
-        this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, diceKeyWithCenterFaceUpright));
+        this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, this.selectedDiceKeyState));
       }
     } else {
       addressBarState.back();
@@ -124,6 +129,7 @@ export class WindowTopLevelNavigationState {
   readonly navState: NavigationPathState = new NavigationPathState("", "", () => {
     return this.subView.subViewState?.navState.fromHereToEndOfPathInclusive ?? "";
   });
+  selectedDiceKeyState = new DiceKeyState();
   subView: SubViewState<TopLevelSubViewStates>;
 
   constructor(defaultSubView?: TopLevelSubViewStates) {
@@ -155,7 +161,7 @@ export class WindowTopLevelNavigationState {
         const maxStep = AssemblyInstructionsStep.ScanFirstTime;
         const step = isNaN(stepNumber) ? AssemblyInstructionsStep.START_INCLUSIVE :
           Math.min(Math.max(stepNumber, AssemblyInstructionsStep.START_INCLUSIVE), maxStep);
-        windowTopLevelNavigationState.subView.navigateToPushState(new AssemblyInstructionsState(windowTopLevelNavigationState.navState, () => {}, step));
+        windowTopLevelNavigationState.subView.navigateToPushState(new AssemblyInstructionsState(windowTopLevelNavigationState.navState, () => {}, {step, ...windowTopLevelNavigationState.selectedDiceKeyState.getSetDiceKey}));
         return windowTopLevelNavigationState;
       // Only web uses paths, and /seed should not exist in web-only since we can't seed from browser
       // case PathStrings.SeedFidoKey:
@@ -167,7 +173,8 @@ export class WindowTopLevelNavigationState {
     if (diceKey != null) {
       // The first element in the path identifies a DiceKey, and so the rest of the path
       // is for that selected DiceKey
-      windowTopLevelNavigationState.subView.navigateToPushState(SelectedDiceKeyViewState.fromPath(windowTopLevelNavigationState.navState, diceKey, pathElements.slice(2)));
+      windowTopLevelNavigationState.selectedDiceKeyState.setDiceKey(diceKey);
+      windowTopLevelNavigationState.subView.navigateToPushState(SelectedDiceKeyViewState.fromPath(windowTopLevelNavigationState.navState, windowTopLevelNavigationState.selectedDiceKeyState, pathElements.slice(2)));
     } else {
       // The state in the address bar is bogus and needs to be replaced.
       if (path !== "" && path !== "/") {

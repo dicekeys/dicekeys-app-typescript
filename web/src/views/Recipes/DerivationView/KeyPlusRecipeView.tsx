@@ -112,10 +112,14 @@ const ElementInRecipeColumn = styled(RowElement)`
   width: ${cssCalcTyped(RecipeColumnWidthFormula)};
 `;
 
-export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
-  diceKey: DiceKey,
+export const KeyPlusRecipeView = observer ( ({
+  getDiceKey, recipeBuilderState
+}: {
+  getDiceKey: () => DiceKey | undefined,
   recipeBuilderState: RecipeBuilderState
 }) => {
+  const diceKey = getDiceKey();
+  if (diceKey == null) return null;
   const editButtonsHoverState = new HoverState<RecipeRibbonButtons>();
   return (
   <KeyPlusRecipeColumn>
