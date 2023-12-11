@@ -2,7 +2,7 @@ import {
   FaceRead,
 } from "@dicekeys/read-dicekey-js";
 import { action, makeAutoObservable } from "mobx";
-import { DiceKeyFaces, DiceKeyWithKeyId, FaceOrientationLetterTrbl, OrientedFace, TupleOf25Items } from "../../dicekeys/DiceKey";
+import { DiceKeyFaces, DiceKeyWithoutKeyId, OrientedFace, TupleOf25Items } from "../../dicekeys/DiceKey";
 import {
   FaceReadWithImageIfErrorFound,
   allDiceErrorTypes, allFacesReadHaveMajorityValues
@@ -13,6 +13,7 @@ import type {
 import {
   renderFacesRead
 } from "./renderFacesRead";
+import { DiceKeyMemoryStore } from "../../state";
 
 
 
@@ -53,11 +54,11 @@ export class DiceKeyFrameProcessorState {
   private framesSinceErrorsNarrowedToJustBitErrors: number | undefined;
 
   public onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => void
-  public onDiceKeyRead?: (diceKey: DiceKeyWithKeyId, centerOrientationAsScannedTrbl: FaceOrientationLetterTrbl) => void
+  public onDiceKeyRead?: (diceKey: DiceKeyWithoutKeyId) => void
 
   constructor({onFacesRead, onDiceKeyRead}: {
     onFacesRead?: (facesRead: TupleOf25Items<FaceRead>) => void
-    onDiceKeyRead?: (diceKey: DiceKeyWithKeyId, centerOrientationAsScannedTrbl: FaceOrientationLetterTrbl) => void
+    onDiceKeyRead?: (diceKey: DiceKeyWithoutKeyId) => void
   }) {
     this.onDiceKeyRead = onDiceKeyRead;
     this.onFacesRead = onFacesRead;
@@ -74,15 +75,13 @@ export class DiceKeyFrameProcessorState {
       this.onFacesRead = undefined;
     }
     if (this.bestFacesRead && this.onDiceKeyRead) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const centeredOrientationAsScannedTrbl = this.bestFacesRead[12]!.orientationAsLowercaseLetterTrbl;
       const onDiceKeyReadCallback = this.onDiceKeyRead;
       this.onDiceKeyRead = undefined;
       try {
         // If the DiceKey validates, call the onDiceKeyRead callback we just removed
-        DiceKeyWithKeyId.create(DiceKeyFaces(this.bestFacesRead.map( faceRead => validateFaceRead(faceRead) ))).then( 
-          diceKeyWithKeyId => onDiceKeyReadCallback(diceKeyWithKeyId, centeredOrientationAsScannedTrbl)
-        )
+        const diceKey = new DiceKeyWithoutKeyId(DiceKeyFaces(this.bestFacesRead.map( faceRead => validateFaceRead(faceRead) )));
+        DiceKeyMemoryStore.addCenterFaceOrientationWhenScanned(diceKey);
+        onDiceKeyReadCallback(diceKey.rotateToTurnCenterFaceUpright());
       } catch {}
     }
     return true;

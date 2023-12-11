@@ -8,7 +8,7 @@ export class FrameGrabberUsingImageCapture {
    */
   private readonly captureCanvas: HTMLCanvasElement = document.createElement("canvas");
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  private captureCanvasCtx: CanvasRenderingContext2D = this.captureCanvas.getContext("2d")!;
+  private captureCanvasCtx: CanvasRenderingContext2D = this.captureCanvas.getContext("2d", {willReadFrequently: true})!;
 
   imageCapture: ImageCapture;
 

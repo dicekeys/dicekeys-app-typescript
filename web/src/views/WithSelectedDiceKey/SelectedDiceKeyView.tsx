@@ -14,7 +14,8 @@ import {
 import { SelectedDiceKeyContentRegionWithSideMargins } from "./SelectedDiceKeyLayout";
 import { SelectedDiceKeyNavigationBar } from "./SelectedDiceKeyNavigationBar";
 import { TopLevelNavigationBarFontSize } from "../../views/Navigation/NavigationLayout";
-import { DiceKeyState, DisplayDiceKeyViewState } from "./SelectedDiceKeyViewState";
+import { DisplayDiceKeyViewState } from "./SelectedDiceKeyViewState";
+import { DiceKeyInMemoryStoreState } from "./DiceKeyInMemoryStoreState";
 import { SeedHardwareKeyViewState } from "../../views/Recipes/SeedHardwareKeyViewState";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
 import styled from "styled-components";
@@ -112,14 +113,14 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
 addPreview("SelectedDiceKey", () => (
   <SelectedDiceKeyView
     goBack={() => alert("Back off man, I'm a scientist!")}
-    state={new Navigation.SelectedDiceKeyViewState(NavigationPathState.root, new DiceKeyState(DiceKeyWithKeyId.testExample)).navigateToDisplayDiceKey()}
+    state={new Navigation.SelectedDiceKeyViewState(NavigationPathState.root, new DiceKeyInMemoryStoreState(DiceKeyWithKeyId.testExample)).navigateToDisplayDiceKey()}
 />));
 
 addPreview("Recipes", () => (<SelectedDiceKeyView
     goBack={() => alert("Back off man, I'm a scientist!")}
-    state={new Navigation.SelectedDiceKeyViewState(NavigationPathState.root, new DiceKeyState(DiceKeyWithKeyId.testExample)).navigateToDeriveSecrets()}
+    state={new Navigation.SelectedDiceKeyViewState(NavigationPathState.root, new DiceKeyInMemoryStoreState(DiceKeyWithKeyId.testExample)).navigateToDeriveSecrets()}
 />));
 
 addPreview("SeedHardwareKey", () => (<SelectedDiceKeyView
-  state={new Navigation.SelectedDiceKeyViewState(NavigationPathState.root, new DiceKeyState(DiceKeyWithKeyId.testExample)).navigateToSeedHardwareKey()}
+  state={new Navigation.SelectedDiceKeyViewState(NavigationPathState.root, new DiceKeyInMemoryStoreState(DiceKeyWithKeyId.testExample)).navigateToSeedHardwareKey()}
 />));

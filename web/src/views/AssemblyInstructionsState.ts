@@ -4,7 +4,7 @@ import { BackupDiceKeyState } from "./BackupView/BackupDiceKeyState";
 import { ViewState } from "../state/core/ViewState";
 import { NavigationPathState } from "../state/core/NavigationPathState";
 import { addressBarState } from "../state/core/AddressBarState";
-import { GetSetDiceKey } from "./WithSelectedDiceKey/SelectedDiceKeyViewState";
+import { GetSetDiceKey } from "./WithSelectedDiceKey/GetSetDiceKey";
 import { BackupStatus, BackupStatusCompletedAndValidated, BackupStatusCompletedWithoutValidation } from "./BackupView/BackupStatus";
 
 export enum AssemblyInstructionsStep {

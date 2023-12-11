@@ -8,8 +8,8 @@ import { LoadDiceKeyContentPaneView } from "../LoadingDiceKeys/LoadDiceKeyView";
 import { DiceKeyView } from "../SVG/DiceKeyView";
 import { addPreview } from "../basics/Previews";
 import { SimpleSecretSharingState, SimpleSecretSharingSteps } from "./SimpleSecretSharingState";
-import { BottomInstructionRow, RowViewHeightDiceKey, ShareLetter, TopInstructionRow, maxViewWidth } from "./layout";
-import { AndClause, Instruction, Instruction2, InstructionTextHeight } from "../basics";
+import { BottomInstructionRow, ChoiceSelect, ChoiceText, RowViewHeightDiceKey, SecretSharingViewContainer, ShareLetter, TopInstructionRow } from "./layout";
+import { AndClause, Instruction, Instruction2 } from "../basics";
 import { LoadDiceKeyViewState } from "../LoadingDiceKeys/LoadDiceKeyViewState";
 import { PrintDiceKeyShareView, PrintDiceKeyShareViewPropsWrapper, disregardedPrintWarningViewThisSession } from "./PrintDiceKeyView";
 import { CopyToPhysicalMediumWizardView, HandGeneratedBackupMediumDice, HandGeneratedBackupMediumStickers, MachineGeneratedBackupMediumPrintout } from "../BackupView";
@@ -26,31 +26,6 @@ export interface SimpleSecretSharingProps {
 	simplesSecretSharingState: SimpleSecretSharingState;
 }
 
-const SimpleSecretSharingViewContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-self: stretch;
-  justify-content: flex-start;
-  align-items: center;
-  flex-grow: 1;
-	gap: 2vh;
-	max-width: ${maxViewWidth}vw;
-	margin-left: ${50-maxViewWidth/2}vw;
-	margin-right: ${50-maxViewWidth/2}vw;
-`;
-
-
-const ChoiceText = styled.div`
-	font-size: ${InstructionTextHeight};
-	font-family: sans-serif;
-	text-align: center;
-	margin-left: auto;
-	margin-right: auto;
-`;
-
-const ChoiceSelect = styled.select`
-	font-size: ${InstructionTextHeight};
-`
 
 const DiceKeyBeingSharedRowView = observer(({
 	simplesSecretSharingState,
@@ -349,17 +324,17 @@ export const SimpleSecretSharingView = observer(({
 		return (<PrintDiceKeyShareView {...simplesSecretSharingState.subView.props}/>);
 	} else if (simplesSecretSharingState.subView instanceof CopyToPhysicalMediumWizardState) {
 		return (
-			<SimpleSecretSharingViewContainer>
+			<SecretSharingViewContainer>
 				<CopyToPhysicalMediumWizardView
 					state={simplesSecretSharingState.subView }
 					onComplete={onCopyToPhysicalMediumComplete(simplesSecretSharingState as SimpleSecretSharingState & {subView: CopyToPhysicalMediumWizardState})}
 				/>
-			</SimpleSecretSharingViewContainer>);
+			</SecretSharingViewContainer>);
 	} else if (simplesSecretSharingState.subView instanceof LoadDiceKeyViewState) {
 		return <LoadDiceKeyShareView simplesSecretSharingState={simplesSecretSharingState as SimpleSecretSharingState & {subView: LoadDiceKeyViewState}} />;
 	} else {
 		return (
-			<SimpleSecretSharingViewContainer>
+			<SecretSharingViewContainer>
 				<SimpleSecretSharingStepsView {...{simplesSecretSharingState}} />
 				<StepFooterView 
 					prev={simplesSecretSharingState.stepPrev ?? onBackFromStart}
@@ -368,7 +343,7 @@ export const SimpleSecretSharingView = observer(({
 						simplesSecretSharingState.stepNext}
 					nextIsDone={simplesSecretSharingState.step === SimpleSecretSharingSteps.END_INCLUSIVE}
 				></StepFooterView>
-			</SimpleSecretSharingViewContainer>	
+			</SecretSharingViewContainer>	
 		);
 	}
 });

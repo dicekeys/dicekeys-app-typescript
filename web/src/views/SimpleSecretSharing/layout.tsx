@@ -31,7 +31,31 @@ export const SecretSharingSharesRow = styled(SecretSharingHelperRow)`
 	height: ${RowViewHeightDiceKeys}vh;
 `;
 
-
 export const ShareLetter = styled.span`
 	font-weight: bold;
 `;
+
+export const SecretSharingViewContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  justify-content: flex-start;
+  align-items: center;
+  flex-grow: 1;
+	gap: 2vh;
+	max-width: ${maxViewWidth}vw;
+	margin-left: ${50-maxViewWidth/2}vw;
+	margin-right: ${50-maxViewWidth/2}vw;
+`;
+
+export const ChoiceText = styled.div`
+	font-size: ${InstructionTextHeight};
+	font-family: sans-serif;
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+`;
+
+export const ChoiceSelect = styled.select`
+	font-size: ${InstructionTextHeight};
+`

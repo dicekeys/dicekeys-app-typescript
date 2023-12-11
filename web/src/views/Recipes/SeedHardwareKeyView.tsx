@@ -317,7 +317,7 @@ export const SeedHardwareKeyContentView = observer( ( {seedHardwareKeyViewState}
   if (loadDiceKeyState != null) {
     return (
       <LoadDiceKeyContentPaneView
-        onDiceKeyReadOrCancelled={ seedHardwareKeyViewState.onDiceKeyReadOrCancelled }
+        onDiceKeyReadOrCancelled={ r => seedHardwareKeyViewState.onDiceKeyReadOrCancelled(r?.diceKey) }
         state={ loadDiceKeyState }
       />
     );

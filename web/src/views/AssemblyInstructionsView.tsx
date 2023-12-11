@@ -1,4 +1,4 @@
-import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithoutKeyId } from "../dicekeys/DiceKey";
 import { observer } from "mobx-react";
 import React from "react";
 import { SimpleTopNavBar } from "./Navigation/SimpleTopNavBar";
@@ -21,7 +21,7 @@ import { WindowRegionBelowTopNavigationBarWithSideMargins, calcHeightBelowTopNav
 import { cssCalcTyped, cssExprWithoutCalc } from "../utilities";
 import { NavigationPathState } from "../state/core/NavigationPathState";
 import { addressBarState } from "../state/core/AddressBarState";
-import { DiceKeyState } from "./WithSelectedDiceKey/SelectedDiceKeyViewState";
+import { DiceKeyWithoutIdState } from "./WithSelectedDiceKey/DiceKeyWithoutIdState";
 
 
 const WarningFooterDivHeight = `1.5rem`;
@@ -85,7 +85,7 @@ const StepScanFirstTime = observer ( ({state}: {state: AssemblyInstructionsState
   const [scanning, setScanning] = React.useState<boolean>(false);
   const startScanning = () => setScanning(true);
   const stopScanning = () => setScanning(false);
-  const onDiceKeyRead = (diceKey: DiceKeyWithKeyId) => {
+  const onDiceKeyRead = (diceKey?: DiceKeyWithoutKeyId) => {
     state.getSetDiceKey.setDiceKey(diceKey);
     stopScanning();
   }
@@ -171,7 +171,7 @@ const AssemblyInstructionsStepSwitchView = observer ( (props: {state: AssemblyIn
 
 interface AssemblyInstructionsViewProps {
   state: AssemblyInstructionsState;
-  onComplete: () => void;
+  onComplete: (diceKey?: DiceKey) => void;
 }
 
 const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  AssemblyInstructionsViewProps) => {
@@ -179,7 +179,7 @@ const AssemblyInstructionsStepFooterView = observer ( ({state, onComplete}:  Ass
     <StepFooterView               
     nextIsDone={state.step === (AssemblyInstructionsStep.END_EXCLUSIVE - 1)}
     prev={state.goToPrevStep}
-    next={state.step < (AssemblyInstructionsStep.END_EXCLUSIVE-1) ? state.goToNextStep : onComplete}
+    next={state.step < (AssemblyInstructionsStep.END_EXCLUSIVE-1) ? state.goToNextStep : () => onComplete(state.getSetDiceKey.getDiceKey()) }
   >{
     (state.step === AssemblyInstructionsStep.ScanFirstTime && !state.userChoseToSkipScanningStep && state.diceKey == null) ? (
       <StepButton $invisible={state.userChoseToSkipScanningStep == null}
@@ -232,6 +232,6 @@ export const AssemblyInstructionsView = observer ( (props: AssemblyInstructionsV
 });
 
 addPreview("AssemblyInstructions", () => ( 
-  <AssemblyInstructionsView state={new AssemblyInstructionsState(NavigationPathState.root, () => {}, {step: AssemblyInstructionsStep.ScanFirstTime, ...new DiceKeyState().getSetDiceKey})} onComplete={ () => {alert("Called goBack()")} } />
+  <AssemblyInstructionsView state={new AssemblyInstructionsState(NavigationPathState.root, () => {}, {step: AssemblyInstructionsStep.ScanFirstTime, ...new DiceKeyWithoutIdState().getSetDiceKey})} onComplete={ () => {alert("Called goBack()")} } />
 ));
 

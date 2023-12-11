@@ -1,6 +1,6 @@
 import { ObservableMap, action, autorun, makeAutoObservable, runInAction } from "mobx";
 import type { DiceKeyMemoryStoreStorageFormat } from "../../../../common/IElectronBridge";
-import type { DiceKey, FaceOrientationLetterTrbl } from "../../dicekeys/DiceKey";
+import type { DiceKey, FaceLetterAndDigit, FaceOrientationLetterTrbl } from "../../dicekeys/DiceKey";
 import {
   DiceKeyInHumanReadableForm,
   DiceKeyWithKeyId, DiceKeyWithoutKeyId, PublicDiceKeyDescriptor,
@@ -53,10 +53,10 @@ class DiceKeyMemoryStoreClass {
   // Reconstituted across processes from keyIdToDiceKeyInHumanReadableForm
   private centerLetterAndDigitToKeyId = new ObservableMap<string, string>();
   // Not saved across processes
-  private keyIdToCenterFaceOrientationWhenScanned = new ObservableMap<string, FaceOrientationLetterTrbl>();
+  private centerLetterAndDigitToOrientationWhenScanned = new ObservableMap<FaceLetterAndDigit, FaceOrientationLetterTrbl>();
 
-  getRotationParametersForKeyId = (keyId: string): ReturnType<typeof getRotationParameters> | undefined => {
-    const centerFaceOrientationWhenScanned = this.keyIdToCenterFaceOrientationWhenScanned.get(keyId);
+  getRotationParametersForCenterLetterAndDigit = (centerLetterAndDigit: FaceLetterAndDigit): ReturnType<typeof getRotationParameters> | undefined => {
+    const centerFaceOrientationWhenScanned = this.centerLetterAndDigitToOrientationWhenScanned.get(centerLetterAndDigit);
     if (centerFaceOrientationWhenScanned != null && centerFaceOrientationWhenScanned != "t") {
       return getRotationParameters(centerFaceOrientationWhenScanned);
     }
@@ -108,17 +108,17 @@ class DiceKeyMemoryStoreClass {
     ));
   });
 
-  addDiceKeyWithKeyIdWithoutUpdatingSharedStorage = action ( (diceKey: DiceKeyWithKeyId, centerFaceOrientationWhenScanned?: FaceOrientationLetterTrbl): DiceKeyWithKeyId => {
+  addCenterFaceOrientationWhenScanned = async (diceKey: DiceKey, centerFaceOrientationWhenScannedTrbl: FaceOrientationLetterTrbl = diceKey.centerFace.orientationAsLowercaseLetterTrbl) => {
+    this.centerLetterAndDigitToOrientationWhenScanned.set(diceKey.centerLetterAndDigit, centerFaceOrientationWhenScannedTrbl);
+    setTimeout(action(() => {
+      this.centerLetterAndDigitToOrientationWhenScanned.delete(diceKey.centerLetterAndDigit);
+    }), msTotalForRotation);  
+  }
+
+  addDiceKeyWithKeyIdWithoutUpdatingSharedStorage = action ( (diceKey: DiceKeyWithKeyId): DiceKeyWithKeyId => {
     const diceKeyWithCenterFaceUpright = diceKey.rotateToTurnCenterFaceUpright();
-    if (this.diceKeyForKeyId(diceKeyWithCenterFaceUpright.keyId) == null) {
+    if (this.diceKeyForKeyId(diceKey.keyId) == null) {
       this.keyIdToDiceKeyInHumanReadableForm.set(diceKeyWithCenterFaceUpright.keyId, diceKeyWithCenterFaceUpright.inHumanReadableForm);
-      if (centerFaceOrientationWhenScanned != null) {
-        this.keyIdToCenterFaceOrientationWhenScanned.set(diceKeyWithCenterFaceUpright.keyId, centerFaceOrientationWhenScanned);
-        setTimeout(action(() => {
-          this.keyIdToCenterFaceOrientationWhenScanned.delete(diceKeyWithCenterFaceUpright.keyId);
-        }), msTotalForRotation);  
-      }
-      // Append the letter/digit to the end of the array (or start a new array)
       if (!(diceKeyWithCenterFaceUpright.centerLetterAndDigit in this.centerLetterAndDigitToKeyId)) {
         this.centerLetterAndDigitToKeyId.set(diceKeyWithCenterFaceUpright.centerLetterAndDigit, diceKeyWithCenterFaceUpright.keyId);
       }
@@ -130,8 +130,8 @@ class DiceKeyMemoryStoreClass {
    * Adds a DiceKey to the memory store, ensuring that it is rotated so that the middle face is upright.
    * It returns the DiceKey with the middle face upright.
    */
-  addDiceKeyWithKeyId = (diceKeyWithKeyId: DiceKeyWithKeyId, centerFaceOrientationWhenScanned?: FaceOrientationLetterTrbl): DiceKeyWithKeyId => {
-    const diceKeyWithCenterFaceUpright = this.addDiceKeyWithKeyIdWithoutUpdatingSharedStorage(diceKeyWithKeyId, centerFaceOrientationWhenScanned);
+  addDiceKeyWithKeyId = (diceKeyWithKeyId: DiceKeyWithKeyId): DiceKeyWithKeyId => {
+    const diceKeyWithCenterFaceUpright = this.addDiceKeyWithKeyIdWithoutUpdatingSharedStorage(diceKeyWithKeyId);
     this.updateStorage();
     return diceKeyWithCenterFaceUpright;
   };
@@ -167,8 +167,8 @@ class DiceKeyMemoryStoreClass {
     return;
   }
 
-  addDiceKeyAsync = async (diceKey: DiceKeyWithoutKeyId, centerFaceOrientationWhenScanned: FaceOrientationLetterTrbl = diceKey.faces[12].orientationAsLowercaseLetterTrbl): Promise<DiceKeyWithKeyId> => {
-    return this.addDiceKeyWithKeyId(await diceKey.withKeyId, centerFaceOrientationWhenScanned);
+  addDiceKeyAsync = async (diceKey: DiceKeyWithoutKeyId): Promise<DiceKeyWithKeyId> => {
+    return this.addDiceKeyWithKeyId(await diceKey.withKeyId);
   }
 
   saveToDeviceStorage = async (diceKey: DiceKey) => {
@@ -197,7 +197,7 @@ class DiceKeyMemoryStoreClass {
     // console.log(`Remove all`);
     this.keyIdToDiceKeyInHumanReadableForm.clear();
     this.centerLetterAndDigitToKeyId.clear();
-    this.keyIdToCenterFaceOrientationWhenScanned.clear();
+    this.centerLetterAndDigitToOrientationWhenScanned.clear();
     this.updateStorage();
   });
 

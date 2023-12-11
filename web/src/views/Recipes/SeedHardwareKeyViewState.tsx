@@ -9,9 +9,8 @@ import { RUNNING_IN_BROWSER, RUNNING_IN_ELECTRON } from "../../utilities/is-elec
 import { electronBridge } from "../../state/core/ElectronBridge";
 import { ViewState } from "../../state/core/ViewState";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
-import { DiceKey, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { DiceKey } from "../../dicekeys/DiceKey";
 import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyViewState";
-import { DiceKeyMemoryStore } from "../../state";
 
 const seedSecurityKeyPurpose = "seedSecurityKey";
 
@@ -54,10 +53,9 @@ export class SeedHardwareKeyViewState implements ViewState {
   startLoadDiceKey = action( () => {
     this.loadDiceKeyState = new LoadDiceKeyViewState(this.navState, "camera")
   })
-  onDiceKeyReadOrCancelled = action ((diceKey: DiceKeyWithKeyId | undefined) => {
+  onDiceKeyReadOrCancelled = action ((diceKey: DiceKey | undefined) => {
     this.loadDiceKeyState = undefined;
     if (diceKey) {
-      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
       this.setDiceKey?.(diceKey);
     }
   });

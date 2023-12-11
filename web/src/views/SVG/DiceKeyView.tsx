@@ -225,7 +225,7 @@ export const DiceKeyView = observer ( ({
 }: {$size?: string, diceKey?: DiceKey} & DiceKeyRenderOptions & DiceKeyAnimationRotationProps & React.SVGAttributes<SVGElement>) => {
   const sizeModel = (showLidTab || leaveSpaceForTab) ? sizeModelWithTab : sizeModelWithoutTab;
   const rotationParameters = (diceKey == null || !("keyId" in diceKey) || typeof diceKey.keyId !== "string") ?  undefined :
-    DiceKeyMemoryStore.getRotationParametersForKeyId(diceKey.keyId);
+    DiceKeyMemoryStore.getRotationParametersForCenterLetterAndDigit(diceKey.centerLetterAndDigit);
   if (rotationParameters != null) {
     obscureAllButCenterDie = false;
     onFaceClicked = undefined;

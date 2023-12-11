@@ -1,5 +1,5 @@
 import React from "react";
-import { DiceKeyWithKeyId, PartialDiceKey } from "../../dicekeys/DiceKey";
+import { DiceKeyWithoutKeyId, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { observer } from "mobx-react";
 import { ScanDiceKeyView } from "../LoadingDiceKeys/ScanDiceKeyView";
 import { DiceKeyView } from "../SVG/DiceKeyView";
@@ -41,10 +41,10 @@ export const ValidateBackupView = observer ( ({
   viewState: ValidateBackupViewState
 }) => {
   const {originalDiceKey, diceKeyScanned} = viewState;
-  const onDiceKeyRead = (diceKey: DiceKeyWithKeyId) => {
-    if (viewState.scanning === "backup") {
+  const onDiceKeyRead = (diceKey?: DiceKeyWithoutKeyId) => {
+    if (diceKey != null && viewState.scanning === "backup") {
       viewState.setDiceKeyScannedForValidation(diceKey);
-    } else if (viewState.scanning === "original" && "setDiceKey" in viewState && viewState.setDiceKey != null) {
+    } else if (diceKey != null && viewState.scanning === "original" && "setDiceKey" in viewState && viewState.setDiceKey != null) {
       viewState.setDiceKey(diceKey);
     }
     viewState.stopScanning();

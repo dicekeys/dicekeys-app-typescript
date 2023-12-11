@@ -1,12 +1,12 @@
 import { action, makeAutoObservable } from "mobx";
 import { addressBarState } from "./core/AddressBarState";
-import { DiceKeyWithKeyId } from "../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithKeyId } from "../dicekeys/DiceKey";
 import { SubViewState } from "./core/HasSubViews";
 import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "./stores/DiceKeyMemoryStore";
 import { CountdownTimer } from "../utilities/CountdownTimer";
 import { LoadDiceKeyViewState } from "../views/LoadingDiceKeys/LoadDiceKeyViewState";
 import { AssemblyInstructionsState, AssemblyInstructionsStep } from "../views/AssemblyInstructionsState";
-import { DiceKeyState, SelectedDiceKeyViewState } from "../views/WithSelectedDiceKey/SelectedDiceKeyViewState";
+import { SelectedDiceKeyViewState } from "../views/WithSelectedDiceKey/SelectedDiceKeyViewState";
 import { SeedHardwareKeyViewState } from "../views/Recipes/SeedHardwareKeyViewState";
 import { PathStrings } from "../views/Navigation/PathStrings";
 import { NavigationPathState } from "./core/NavigationPathState";
@@ -14,6 +14,8 @@ import { DeleteDiceKeyViewStateName, SaveDiceKeyViewStateName, SaveOrDeleteDiceK
 import { SaveOrDeleteDiceKeyViewState } from "../views/SaveOrDeleteDiceKeyViewState";
 import { RUNNING_IN_ELECTRON } from "../utilities/is-electron";
 import { ObservableLocalStorageBoolean } from "../utilities/ObservableLocalStorage";
+import { SecretSharingRecoveryState } from "../views/SimpleSecretSharing/SecretSharingRecoveryState";
+import { DiceKeyInMemoryStoreState } from "../views/WithSelectedDiceKey/DiceKeyInMemoryStoreState";
 
 export type TopLevelSubViewStates =
   LoadDiceKeyViewState |
@@ -21,7 +23,8 @@ export type TopLevelSubViewStates =
   SelectedDiceKeyViewState |
   SeedHardwareKeyViewState |
   SaveDiceKeyViewState |
-  DeleteDiceKeyViewState;
+  DeleteDiceKeyViewState | 
+  SecretSharingRecoveryState;
 
 const diceKeyFromPathRoot = (pathRoot: string | undefined): DiceKeyWithKeyId | undefined => {
   if (!pathRoot) return;
@@ -60,6 +63,8 @@ export class WindowTopLevelNavigationState {
     getDiceKey: this.selectedDiceKeyState.getDiceKey, setDiceKey: this.selectedDiceKeyState.setDiceKey
   }));
 
+  navigateToRecoverFromShares = () => this.navigateDownTo(new SecretSharingRecoveryState(this.navState, {}));
+
   navigateToSaveOrDeleteFromDevice = (saveOrDelete: SaveOrDeleteDiceKeyStateName) => async (descriptor: PublicDiceKeyDescriptorWithSavedOnDevice) => {
     const diceKey = await DiceKeyMemoryStore.load(descriptor);
     if (diceKey) {
@@ -76,9 +81,14 @@ export class WindowTopLevelNavigationState {
     this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, this.selectedDiceKeyState));
   });
 
-  onReturnFromActionThatMayLoadDiceKey = (diceKey?: DiceKeyWithKeyId) => {
-    if (diceKey) {    
-      this.selectedDiceKeyState.setDiceKey(DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey));
+  navigateToReplaceSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
+    this.selectedDiceKeyState.setDiceKey(diceKey);
+    this.subView.navigateToReplaceState(new SelectedDiceKeyViewState(this.navState, this.selectedDiceKeyState));
+  });
+
+  onReturnFromActionThatMayLoadDiceKey = async (diceKey: DiceKey | undefined) => {
+    if (diceKey != null) {
+      this.selectedDiceKeyState.setDiceKey(diceKey);
       if (addressBarState.historyIndex <= 0) {
         // We're at least one deep into the history stack, which means AssemblyInstructions was launched from the main screen
         // and should be replaced with the SelectedDiceKey screen
@@ -129,7 +139,7 @@ export class WindowTopLevelNavigationState {
   readonly navState: NavigationPathState = new NavigationPathState("", "", () => {
     return this.subView.subViewState?.navState.fromHereToEndOfPathInclusive ?? "";
   });
-  selectedDiceKeyState = new DiceKeyState();
+  selectedDiceKeyState = new DiceKeyInMemoryStoreState();
   subView: SubViewState<TopLevelSubViewStates>;
 
   constructor(defaultSubView?: TopLevelSubViewStates) {

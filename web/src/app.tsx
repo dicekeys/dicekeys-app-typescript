@@ -87,10 +87,14 @@ if (RUNNING_IN_ELECTRON) {
     windowTopLevelNavigationState?.onReturnFromActionThatMayLoadDiceKey(diceKey);
   }
 
+  const loadFromShares = async() => {
+    windowTopLevelNavigationState?.navigateToRecoverFromShares();
+  }
+
   electronBridge.implementMainToPrimaryRendererAsyncApi({
     "getRecipesToExport": async () => RecipeStore.getStoredRecipesJson(),
     "importRecipes": async (recipesToImport) => RecipeStore.importStoredRecipeAsJsonArray(recipesToImport),
-    "loadFromShares": async () => {/*FIXME*/},
+    loadFromShares,
     loadRandomDiceKey,
   });
 

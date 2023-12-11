@@ -19,14 +19,17 @@ class SecretSharingForDiceKeys extends ShamirSecretSharing<bigint> {
   }
 
   recoverDiceKeyInFiniteFieldPointFormat = (
-    centerFaceLetterOfSecret: FaceLetter,
+    centerFaceLetterOfSecret: FaceLetter | bigint,
     fromShares: DiceKeyInFiniteFieldPointFormat[],
     minimumNumberOfSharesToRecover?: number
-  ) => {
-    this.recoverSecret(
+  ): DiceKeyInFiniteFieldPointFormat => {
+    const x = typeof centerFaceLetterOfSecret === "string" ? BigInt(faceLetterToNumber0to24(centerFaceLetterOfSecret)) : centerFaceLetterOfSecret;
+    const y = this.recoverSecret(
       fromShares,
-      BigInt(faceLetterToNumber0to24(centerFaceLetterOfSecret)),
-      minimumNumberOfSharesToRecover);
+      x,
+      minimumNumberOfSharesToRecover
+    );
+    return {x, y};
   };
 
   generateSharesForLetters = (

@@ -2,10 +2,9 @@ import { BackupDiceKeyState, BackupDiceKeyStateName } from "../BackupView/Backup
 import { SubViewState } from "../../state/core";
 import { ViewState } from "../../state/core/ViewState";
 import { NavigationPathState } from "../../state/core/NavigationPathState";
-import { DiceKey, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { DiceKey } from "../../dicekeys/DiceKey";
 import { SeedHardwareKeyViewState, SeedHardwareKeyViewStateName } from "../Recipes/SeedHardwareKeyViewState";
 import { SecretDerivationViewState, SecretDerivationViewStateName } from "../../views/Recipes/DerivationView";
-import { DiceKeyMemoryStore } from "../../state";
 import { addressBarState } from "../../state/core/AddressBarState";
 import {
   SaveDiceKeyViewState, SaveDiceKeyViewStateName,
@@ -14,6 +13,7 @@ import {
 import { SaveOrDeleteDiceKeyViewState } from "../../views/SaveOrDeleteDiceKeyViewState";
 import { action, makeAutoObservable } from "mobx";
 import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyViewState";
+import { DiceKeyInMemoryStoreState } from "./DiceKeyInMemoryStoreState";
 
 export const DisplayDiceKeyViewStateName = "";
 export type DisplayDiceKeyViewStateName = typeof DisplayDiceKeyViewStateName;
@@ -26,51 +26,9 @@ export class DisplayDiceKeyViewState implements ViewState {
   // toPath = () => ``;
 }
 
-export interface GetSetDiceKey {
-  getDiceKey: () => DiceKey | undefined;
-  setDiceKey: (diceKey: DiceKey | undefined) => void;
-}
-
 export interface GetOptionalSetDiceKey {
   getDiceKey: () => DiceKey | undefined;
   setDiceKey?: (diceKey: DiceKey | undefined) => void;
-}
-
-export class DiceKeyState implements GetSetDiceKey {
-
-  private _keyId: string | undefined;
-  get keyId() { return this._keyId != null && DiceKeyMemoryStore.hasKeyIdInMemory(this._keyId) ? this._keyId : undefined }
-  readonly getDiceKey = () => this.keyId != null ? DiceKeyMemoryStore.diceKeyForKeyId(this.keyId) : undefined;
-
-//  get diceKey() { return this.getDiceKey(); }
-  
-  readonly setKeyId = action ((keyId: string | undefined) => {
-    this._keyId = keyId;
-  });
-  
-  readonly setDiceKey = async (diceKey: DiceKey | undefined) => {
-    if (diceKey == null) {
-      this.setKeyId(undefined)
-    } else {
-      const diceKeyWithKeyId = diceKey instanceof DiceKeyWithKeyId ? diceKey : await diceKey.withKeyId;
-      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKeyWithKeyId);
-      this.setKeyId(diceKeyWithKeyId.keyId);
-    }
-  };
-
-  get getSetDiceKey(): GetSetDiceKey { return{
-    getDiceKey: this.getDiceKey,
-    setDiceKey: this.setDiceKey,
-  }}
-
-  constructor(keyIdOrDiceKey?: string | DiceKey | undefined) {
-    if (typeof keyIdOrDiceKey === "string") {
-      this._keyId = keyIdOrDiceKey;
-    } else if (keyIdOrDiceKey != null) {
-      this.setDiceKey(keyIdOrDiceKey);
-    }
-    makeAutoObservable(this);
-  }
 }
 
 export type SelectedDiceKeySubViewStates =
@@ -116,19 +74,16 @@ export class SelectedDiceKeyViewState implements ViewState {
     this.setLoadDiceKeyViewState(new LoadDiceKeyViewState());
   }
 
-  onDiceKeyReadOrCancelled = (diceKeyWithKeyId: DiceKeyWithKeyId | undefined ) => {
+  onDiceKeyReadOrCancelled = (result: {diceKey: DiceKey} | undefined ) => {
     this.setLoadDiceKeyViewState(undefined);
-    if (diceKeyWithKeyId != null) {
-      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKeyWithKeyId);
-      this.setDiceKey(diceKeyWithKeyId);
-    }
+    this.setDiceKey(result?.diceKey);
   }
 
   get subViewState() { return this.subView.subViewState ?? this.displayDiceKeyViewState }
 
   constructor(
     public readonly parentNavState: NavigationPathState,
-    public readonly selectedDiceKeyState: DiceKeyState,
+    public readonly selectedDiceKeyState: DiceKeyInMemoryStoreState,
   ) {
     this.navState = new NavigationPathState(parentNavState, () => selectedDiceKeyState.getDiceKey()?.centerLetterAndDigit ?? "", () => this.subViewState.navState.fromHereToEndOfPathInclusive );
     this.subView = new SubViewState<SelectedDiceKeySubViewStates>(this.viewName, this.navState, this.displayDiceKeyViewState);
@@ -151,7 +106,7 @@ export class SelectedDiceKeyViewState implements ViewState {
    * letter and digit used to identify the DiceKey removed, such that
    * the path `/M1/a/b` would result in the `subPathElements` array of `["a", "b"]`.
    */
-  static fromPath = (parentNavState: NavigationPathState, selectedDiceKeyState: DiceKeyState, subPathElements: string[] = []): SelectedDiceKeyViewState => {
+  static fromPath = (parentNavState: NavigationPathState, selectedDiceKeyState: DiceKeyInMemoryStoreState, subPathElements: string[] = []): SelectedDiceKeyViewState => {
     const instance = new SelectedDiceKeyViewState(parentNavState, selectedDiceKeyState);
     if (subPathElements.length > 0) {
       const subViewName = subPathElements[0];

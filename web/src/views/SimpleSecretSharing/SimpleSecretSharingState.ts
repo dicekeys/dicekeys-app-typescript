@@ -268,7 +268,8 @@ export class SimpleSecretSharingState implements ViewState {
 	});
 
 
-	onShareAsDiceKeyLoadCompletedOrCancelled = (diceKey: DiceKey | undefined) => {
+	onShareAsDiceKeyLoadCompletedOrCancelled = (result: {diceKey: DiceKey} | undefined) => {
+		const diceKey = result?.diceKey;
 		this.clearSubView();
 		if (diceKey == null) return;
 		if (diceKey.centerFace.letter === this.userSpecifiedDiceKeyToBeShared?.centerFace.letter) {
