@@ -190,8 +190,8 @@ export const CopyToPhysicalMediumWizardFooterView = observer ( ({
     nextIsDone={state.step === (CopyToPhysicalMediumStep.END_EXCLUSIVE - 1) && nextStepAfterEnd == null}
     next={
       // If at the end, allow a parent to set a next step (for embedding backup into assembly instructions)
+      (state.step === CopyToPhysicalMediumStep.Validate && !state.userChoseToSkipValidationStep && !state.backupValidated) ? undefined :
       (state.step === CopyToPhysicalMediumStep.END_INCLUSIVE) ? (
-        (state.validationStepViewState.backupScannedSuccessfully && !state.userChoseToSkipValidationStep) ? undefined :
         (nextStepAfterEnd != null ?
           () => nextStepAfterEnd(state.validationStepViewState.backupScannedSuccessfully ? BackupStatusCompletedAndValidated : BackupStatusCompletedWithoutValidation) :
           state.setStepTo(state.stepPlus1)

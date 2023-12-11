@@ -14,7 +14,13 @@ export class CopyToPhysicalMediumWizardState implements ViewState {
   navState: NavigationPathState;
 
   getDiceKey: () => DiceKey | undefined;
-  // get diceKey() { return this.getDiceKey(); }
+
+  userChoseToSkipValidationStep: boolean = false;
+  validationStepViewState: ValidateBackupViewState;
+
+  setUserChoseToSkipValidationStep = action(() => this.userChoseToSkipValidationStep = true);
+
+  get backupValidated() { return this.validationStepViewState.backupScannedSuccessfully; }
 
   constructor(
     parentNavState: NavigationPathState,
@@ -59,14 +65,8 @@ export class CopyToPhysicalMediumWizardState implements ViewState {
     return;
   };
 
-  validationStepViewState: ValidateBackupViewState;
-
-
   setStep = action((step: CopyToPhysicalMediumStep) => {
     if (step === CopyToPhysicalMediumStep.Validate) {
-      // If moving to the validation step, and if we had tried scanning a key to validate before,
-      // clear what we scanned
-      //      this.diceKeyScannedFromBackup.clear();
       this.validationStepViewState.clear();
     }
     this.step = step;
@@ -76,11 +76,6 @@ export class CopyToPhysicalMediumWizardState implements ViewState {
     return this.validStepOrUndefined(this.step + 1);
   }
   get stepMinus1() { return this.validStepOrUndefined(this.step - 1); }
-
-  userChoseToSkipValidationStep: boolean = false;
-  setUserChoseToSkipValidationStep = action(() => this.userChoseToSkipValidationStep = true);
-
-  get backupValidated() { return this.validationStepViewState.backupScannedSuccessfully; }
 
   clear = action(() => {
     this.step = CopyToPhysicalMediumStep.START_INCLUSIVE;
