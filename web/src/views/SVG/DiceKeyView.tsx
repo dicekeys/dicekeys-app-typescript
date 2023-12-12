@@ -182,6 +182,14 @@ export interface DiceKeyAnimationRotationProps {
   $centerFaceOrientationToRotateFrom?: CenterFaceOrientationToRotateFromRbl;
 }
 
+const DiceKeyContainerToClipRotations = styled.div<{$size?: string}>`
+  overflow: clip;
+  ${ ({$size: size}) => size == null ? `` : css`
+    width: ${cssCalcTyped(size)};
+    height: ${cssCalcTyped(size)};
+  `}
+`;
+
 const DiceKeySvgElement = styled.svg<DiceKeyAnimationRotationProps & {$size?: string}>`
   display: flex;
   align-self: center;
@@ -214,6 +222,7 @@ export const DiceKeyView = observer ( ({
   // DiceKeyRenderOptions
   diceKey,
   faces = diceKey?.faces,
+  neverRotate = false,
   highlightFaceAtIndex,
   obscureAllButCenterDie,
   diceBoxColor,
@@ -222,24 +231,26 @@ export const DiceKeyView = observer ( ({
   onFaceClicked,
   // Props to pass down to svg element.
   ...svgProps
-}: {$size?: string, diceKey?: DiceKey} & DiceKeyRenderOptions & DiceKeyAnimationRotationProps & React.SVGAttributes<SVGElement>) => {
+}: {$size?: string, diceKey?: DiceKey; neverRotate?: boolean} & DiceKeyRenderOptions & DiceKeyAnimationRotationProps & React.SVGAttributes<SVGElement>) => {
   const sizeModel = (showLidTab || leaveSpaceForTab) ? sizeModelWithTab : sizeModelWithoutTab;
-  const rotationParameters = (diceKey == null || !("keyId" in diceKey) || typeof diceKey.keyId !== "string") ?  undefined :
+  const rotationParameters = (diceKey == null || !("keyId" in diceKey) || typeof diceKey.keyId !== "string" || neverRotate) ?  undefined :
     DiceKeyMemoryStore.getRotationParametersForCenterLetterAndDigit(diceKey.centerLetterAndDigit);
   if (rotationParameters != null) {
     obscureAllButCenterDie = false;
     onFaceClicked = undefined;
   }
   return (
-    <DiceKeySvgElement
-      {...svgProps}
-      {...rotationParameters}
-      viewBox={viewBox((sizeModel.bounds))}
-      preserveAspectRatio="xMidYMid meet"
-    >
-      <DiceKeySvgGroup {
-        ...{faces,sizeModel,highlightFaceAtIndex,obscureAllButCenterDie,diceBoxColor,showLidTab,leaveSpaceForTab,onFaceClicked
-        }} />
-    </DiceKeySvgElement>
+    <DiceKeyContainerToClipRotations $size={svgProps.$size}>
+      <DiceKeySvgElement
+        {...svgProps}
+        {...rotationParameters}
+        viewBox={viewBox((sizeModel.bounds))}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <DiceKeySvgGroup {
+          ...{faces,sizeModel,highlightFaceAtIndex,obscureAllButCenterDie,diceBoxColor,showLidTab,leaveSpaceForTab,onFaceClicked
+          }} />
+      </DiceKeySvgElement>
+    </DiceKeyContainerToClipRotations>
   );
 });

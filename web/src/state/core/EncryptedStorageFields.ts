@@ -62,13 +62,40 @@ export const decryptJsonStorageField = async (packagedSealedMessageJson: string)
   );
 
 export const readStringFromEncryptedLocalStorageField = async (fieldName: string) => {
-  const encryptedValue = localStorage.getItem(fieldName);
-  if (encryptedValue != null)
-    return await decryptJsonStorageField(encryptedValue);
-  else
+  const encryptedValue = localStorage.getItem(fieldName) ?? recoverStorageItemFromRefresh(fieldName);
+  if (encryptedValue != null) {
+    const decryptedJson = await decryptJsonStorageField(encryptedValue);
+    return decryptedJson;
+  } else 
     return undefined;
 }
 
 export const writeStringToEncryptedLocalStorageField = async (fieldName: string, json: string) => {
-  localStorage.setItem(fieldName, await encryptJsonStorageField(json));
+  const encryptedJson = await encryptJsonStorageField(json);
+  localStorage.setItem(fieldName, encryptedJson);
+}
+
+/**
+ * When the last browser tab storing app information closes, we will want to remove data from memory.
+ * BUT, we don't want to lose the data if tab is closing because the user is refreshing the page.
+ * So, move the data into session storage, which is ONLY preserved on refresh.
+ * 
+ * https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage
+ * @param fieldName 
+ */
+export const eraseFromLocalStorageAndMoveToSessionStorageForRefresh = (fieldName: string) => {
+  const item = localStorage.getItem(fieldName);
+  if (item != null) {
+    sessionStorage.setItem(fieldName, item);
+  }
+  localStorage.removeItem(fieldName);
+}
+
+export const recoverStorageItemFromRefresh = (fieldName: string) => {
+  const item = sessionStorage.getItem(fieldName);
+  if (item != null) {
+    localStorage.setItem(fieldName, item);
+    sessionStorage.removeItem(fieldName);
+  }
+  return item;
 }

@@ -76,28 +76,30 @@ export class WindowTopLevelNavigationState {
   navigateToDeleteFromDevice = this.navigateToSaveOrDeleteFromDevice(DeleteDiceKeyViewStateName);
   navigateToSaveToDevice = this.navigateToSaveOrDeleteFromDevice(SaveDiceKeyViewStateName);
 
-  navigateToSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
+  navigateToSelectedDiceKeyView = action ( (diceKey: DiceKey) => {
     this.selectedDiceKeyState.setDiceKey(diceKey);
     this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, this.selectedDiceKeyState));
   });
 
-  navigateToReplaceSelectedDiceKeyView = action ( (diceKey: DiceKeyWithKeyId) => {
-    this.selectedDiceKeyState.setDiceKey(diceKey);
+  navigateToReplaceSelectedDiceKeyView = async (diceKey: DiceKey) => {
+    await this.selectedDiceKeyState.setDiceKey(diceKey);
     this.subView.navigateToReplaceState(new SelectedDiceKeyViewState(this.navState, this.selectedDiceKeyState));
-  });
+  };
 
   onReturnFromActionThatMayLoadDiceKey = async (diceKey: DiceKey | undefined) => {
     if (diceKey != null) {
-      this.selectedDiceKeyState.setDiceKey(diceKey);
-      if (addressBarState.historyIndex <= 0) {
-        // We're at least one deep into the history stack, which means AssemblyInstructions was launched from the main screen
-        // and should be replaced with the SelectedDiceKey screen
-        this.subView.navigateToReplaceState(new SelectedDiceKeyViewState(this.navState, this.selectedDiceKeyState));
-      } else {
-        // Navigate to the top screen, then down to the selected DiceKey view
-        this.subView.navigateToReplaceState();
-        this.subView.navigateToPushState(new SelectedDiceKeyViewState(this.navState, this.selectedDiceKeyState));
-      }
+      this.navigateToReplaceSelectedDiceKeyView(diceKey);
+
+      // this.selectedDiceKeyState.setDiceKey(diceKey);
+      // if (addressBarState.historyIndex <= 0) {
+      //   // We're at least one deep into the history stack, which means AssemblyInstructions was launched from the main screen
+      //   // and should be replaced with the SelectedDiceKey screen
+      //   this.subView.navigateToReplaceState(new SelectedDiceKeyViewState(this.navState, this.selectedDiceKeyState));
+      // } else {
+      //   // Navigate to the top screen, then down to the selected DiceKey view
+      //   this.subView.navigateToReplaceState(undefined);
+      //   this.navigateToReplaceSelectedDiceKeyView(diceKey);
+      // }
     } else {
       addressBarState.back();
     }

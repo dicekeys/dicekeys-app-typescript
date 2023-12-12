@@ -65,6 +65,7 @@ export const ValidateBackupView = observer ( ({
         <ComparisonBox>
           <DiceKeyView
             diceKey={originalDiceKey}
+            neverRotate={true}
             $size={`min(25vw,40vh)`}
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />
@@ -81,8 +82,8 @@ export const ValidateBackupView = observer ( ({
             />
           ) : (
             <DiceKeyView
-              faces={diceKeyScanned?.faces ?? [] as unknown as PartialDiceKey }
               $size={`min(25vw,40vh)`}
+              faces={diceKeyScanned?.faces ?? [] as unknown as PartialDiceKey }
               highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />
           )

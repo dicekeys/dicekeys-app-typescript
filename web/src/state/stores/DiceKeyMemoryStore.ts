@@ -10,7 +10,7 @@ import { CustomEvent } from "../../utilities/event";
 import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { jsonStringifyWithSortedFieldOrder } from "../../utilities/json";
 import { AllAppWindowsAndTabsAreClosingEvent } from "../core/AllAppWindowsAndTabsAreClosingEvent";
-import { readStringFromEncryptedLocalStorageField, writeStringToEncryptedLocalStorageField } from "../core/EncryptedStorageFields";
+import { eraseFromLocalStorageAndMoveToSessionStorageForRefresh, readStringFromEncryptedLocalStorageField, writeStringToEncryptedLocalStorageField } from "../core/EncryptedStorageFields";
 import { EncryptedDiceKeyStore, sortPublicDiceKeyDescriptors } from "./EncryptedDiceKeyStore";
 import { SynchronizedString } from "./SynchronizedStringStore";
 
@@ -304,7 +304,7 @@ class DiceKeyMemoryStoreClass {
     
     AllAppWindowsAndTabsAreClosingEvent.on( () => {
       // Empty the store if all app windows are closing.
-      this.removeAll();
+      eraseFromLocalStorageAndMoveToSessionStorageForRefresh(DiceKeyMemoryStoreClass.StorageFieldName);
     })
   }
 }
