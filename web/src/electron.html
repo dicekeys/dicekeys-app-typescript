@@ -5,7 +5,7 @@
     <!-- ONLY FOR ELECTRON, which uses relative paths within a filesystem -->
     <base href="./">
     <!-- 
-      The 'unsave-eval' below, which causes warnings in Electron, is because
+      The 'unsafe-eval' below, which causes warnings in Electron, is because
       WebAssembly uses raw javascript eval() to communicate between the javascript
       code and assembly code.
      -->
@@ -13,5 +13,5 @@
     <title>DiceKeys</title>
     <script type="module" src="./app.tsx"></script>
   </head>
-  <body style="margin: 0px; padding: 0px; overflow: hidden"><div id="app_container" className="AppContainer"></div></body>
+  <body style="margin: 0px; padding: 0px; overflow: hidden; @media print { overflow:visible };"><div id="app_container" className="AppContainer"></div></body>
 </html>

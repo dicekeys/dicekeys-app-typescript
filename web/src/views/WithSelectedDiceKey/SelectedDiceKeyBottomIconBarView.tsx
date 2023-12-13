@@ -15,9 +15,11 @@ import { BackupDiceKeyState } from "../BackupView/BackupDiceKeyState";
 import { StandardBottomBarHeight } from "../../views/Navigation/NavigationLayout";
 
 export const BottomIconNavigationBar = styled(NavigationBar)`
-	height: ${StandardBottomBarHeight};
-	background-color: ${props=>props.theme.colors.bottomButtonBarBackground};
-	align-items: baseline;
+	@media screen {
+		height: ${StandardBottomBarHeight};
+		background-color: ${props=>props.theme.colors.bottomButtonBarBackground};
+		align-items: baseline;
+	}
 `;
 
 export const FooterButtonDiv = styled.div<{selected: boolean}>`

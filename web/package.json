@@ -22,7 +22,7 @@
     "upload-production": "gsutil -m cp -r ../dist/web/* gs://dicekeys.app/ && gsutil setmeta -h cache-control:no-store gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/assets/*.js",
     "update-production": "npm run build-web & npm run upload-production",
     "delete-staging": "gsutil rm -r gs://staging.dicekeys.app/assets",
-    "upload-staging": "gsutil -m cp -r ../dist/web/* gs://staging.dicekeys.app/ && gsutil setmeta -h cache-control:no-store gs://staging.dicekeys.app/index.html && gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://staging.dicekeys.app/assets/*.js",
+    "upload-staging": "gcloud storage cp -r ../dist/web/* gs://staging.dicekeys.app/  &&  gcloud storage objects update gs://staging.dicekeys.app/index.html --cache-control no-store && gcloud storage objects update gs://staging.dicekeys.app/assets/*.js --content-type application/javascript",
     "update-staging": "npm run build-web && npm run upload-staging",
     "upload-android-site-association-only": "gsutil cp .well-known/assetlinks.json gs://dicekeys.app/.well-known/",
     "upload-site-association": "gsutil -o \"GSUtil:parallel_process_count=1\" -m cp .well-known/* gs://dicekeys.app/.well-known/ && gsutil -o \"GSUtil:parallel_process_count=1\" -m setmeta -h \"content-type: application/json\" gs://dicekeys.app/.well-known/apple-app-site-association"

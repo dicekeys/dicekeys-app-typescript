@@ -11,7 +11,7 @@ import { SimpleSecretSharingState, SimpleSecretSharingSteps } from "./SimpleSecr
 import { BottomInstructionRow, ChoiceSelect, ChoiceText, RowViewHeightDiceKey, SecretSharingViewContainer, ShareLetter, TopInstructionRow } from "./layout";
 import { AndClause, Instruction, Instruction2 } from "../basics";
 import { LoadDiceKeyViewState } from "../LoadingDiceKeys/LoadDiceKeyViewState";
-import { PrintDiceKeyShareView, PrintDiceKeyShareViewPropsWrapper, disregardedPrintWarningViewThisSession } from "./PrintDiceKeyView";
+import { PrintAllDiceKeySharesView, PrintAllDiceKeySharesViewPropsWrapper, PrintButtonWithWarning, PrintDiceKeyShareView, PrintDiceKeyShareViewPropsWrapper, disregardedPrintWarningViewThisSession } from "./PrintDiceKeyView";
 import { CopyToPhysicalMediumWizardView, HandGeneratedBackupMediumDice, HandGeneratedBackupMediumStickers, MachineGeneratedBackupMediumPrintout } from "../BackupView";
 import { ShareEntry, RowOfSharesDiv } from "./SubViews/RowOfShares";
 import { Die3dView } from "./Die3dView";
@@ -19,6 +19,7 @@ import { FaceSvg } from "../SVG/FaceView";
 import { CopyToPhysicalMediumWizardState } from "../../views/BackupView/CopyToPhysicalMediumWizardState";
 import { StepFooterView } from "../Navigation/StepFooterView";
 import { BackupStatus, BackupStatusCompletedAndValidated } from "../BackupView/BackupStatus";
+import { ButtonRowSpaced } from "../../css/Button";
 
 
 
@@ -162,7 +163,7 @@ const StepCopyToPhysicalMediumView = observer(({
 							<ToPhysicalMediumColumnView
 								title={`Print ${ disregardedPrintWarningViewThisSession.value ? '' : '⚠️ (not recommended)' }`}
 								checked={physicalMediaCreated[MachineGeneratedBackupMediumPrintout] != null }
-								onClick={simplesSecretSharingState.initiatePrintViewHandler(diceKey)}
+								onClick={simplesSecretSharingState.initiatePrintOneShareViewHandler(diceKey)}
 							>
 								🖨
 							</ToPhysicalMediumColumnView>
@@ -176,22 +177,11 @@ const StepCopyToPhysicalMediumView = observer(({
 				Create physical copies of Share{sharesToBackupByLetter.length > 1 ? 's' : ''} <AndClause items={sharesToBackupByLetter} />,
 				using dice, stickers, or a printer (not recommended).
 			</Instruction2>
-			{/* <ButtonRowSpaced>
-				<PushButtonContentsColumn style={{}} onClick={() => {}}>
-					<Die3dView letter={letter} $size={4} $units={`rem`} dieColor="white" />
-					Use dice
-				</PushButtonContentsColumn>
-				<PushButtonContentsColumn style={{alignSelf: 'center'}} onClick={() => {}}>
-						<FaceSvg size={`4rem`}
-							face={{letter, digit: `${digit}`, orientationAsLowercaseLetterTrbl: 't'}}
-						/>
-						Use stickers
-				</PushButtonContentsColumn>
-				<PushButtonContentsColumn style={{alignSelf: 'center'}} onClick={simplesSecretSharingState.initiatePrintViewHandler(sharesToBackup[0]?.diceKey)}>
-					<span style={{fontSize: '3rem'}}>🖨</span>
-					Print { disregardedPrintWarningViewThisSession.value ? '' : '⚠️' }
-				</PushButtonContentsColumn>
-			</ButtonRowSpaced> */}
+			<ButtonRowSpaced>
+				<PrintButtonWithWarning onClick={simplesSecretSharingState.initiatePrintAllSharesViewHandler()}>
+					Print all
+				</PrintButtonWithWarning>
+			</ButtonRowSpaced>
 		</BottomInstructionRow>
 	</>);
 });
@@ -200,9 +190,15 @@ const StepReplaceWithRandomView = observer(({
 	simplesSecretSharingState,
 }: SimpleSecretSharingProps
 ) => {
+	const randomShareLetters = simplesSecretSharingState.sharesAsDiceKeysWithSource.filter( p => p.source === "pseudorandom" || p.source == "scanned")
+		.map( p => p.diceKey.centerFace.letter );
+		const calculatedShareLetters = simplesSecretSharingState.sharesAsDiceKeysWithSource.filter( p => p.source === "calculated")
+		.map( p => p.diceKey.centerFace.letter );
+	const randomSharesPlural = randomShareLetters.length > 1;
 	const sharesToRandomize = simplesSecretSharingState.sharesAsDiceKeysWithSource.filter( p => p.source === "pseudorandom");
 	const sharesToRandomizeByLetter = sharesToRandomize.map( s => s.diceKey.centerFace.letter );
-	const [currentShareLetterToRandomize] = sharesToRandomizeByLetter
+	const toRandomizePlural = sharesToRandomizeByLetter.length > 1;
+	const [currentShareLetterToRandomize] = sharesToRandomizeByLetter;
 //	const numSharesMayBeRandom = simplesSecretSharingState.minSharesToDecode - 1;
 	return (<>
 		<TopInstructionRow>
@@ -213,11 +209,11 @@ const StepReplaceWithRandomView = observer(({
 		/>
 		<BottomInstructionRow>
 			<Instruction2>
-				You can use any randomly-generated DiceKey for Share{sharesToRandomizeByLetter.length > 1 ? 's' : ''} <AndClause items={sharesToRandomizeByLetter} />,
-				since the remaining shares are (re-)calculated from {sharesToRandomizeByLetter.length > 1 ? 'them' : 'it'}.
-			</Instruction2><Instruction2>
-				The current Share {currentShareLetterToRandomize} was pseudo-randomly generated.
-				Replacing it with a hand-randomized DiceKey will save you the work of copying it.
+				Share{randomSharesPlural ? 's' : ''} <AndClause items={randomShareLetters}/> {randomSharesPlural ? 'are' : 'is'} random,
+				whereas Share{calculatedShareLetters.length > 1 ? 's' : ''} <AndClause items={calculatedShareLetters} />
+				{calculatedShareLetters.length > 1 ? ' are' : ' is'} calculate from {randomSharesPlural ? 'them' : 'it'}. 
+				Rather than copy Share{toRandomizePlural ? 's' : ''} <AndClause items={sharesToRandomizeByLetter} />,
+				it is faster to replace {toRandomizePlural ? 'them with new DiceKeys' : 'it with a new DiceKey'} you create generate by rolling dice.				
 			</Instruction2><Instruction2>
 				To replace Share {currentShareLetterToRandomize}, create a hand-randomized DiceKey,
 				swap the die with letter {currentShareLetterToRandomize} to be the center die,
@@ -322,6 +318,8 @@ export const SimpleSecretSharingView = observer(({
 ) => {
 	if (simplesSecretSharingState.subView instanceof PrintDiceKeyShareViewPropsWrapper) {
 		return (<PrintDiceKeyShareView {...simplesSecretSharingState.subView.props}/>);
+	} else if (simplesSecretSharingState.subView instanceof PrintAllDiceKeySharesViewPropsWrapper) {
+		return (<PrintAllDiceKeySharesView {...simplesSecretSharingState.subView.props}/>);
 	} else if (simplesSecretSharingState.subView instanceof CopyToPhysicalMediumWizardState) {
 		return (
 			<SecretSharingViewContainer>

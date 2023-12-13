@@ -10,6 +10,7 @@ const ConjunctionClauseView = (conjunction: string) => ({items}: {items: (JSX.El
       <span key={index}>{
         index == 0 ? "" :
         index < items.length - 1 ? ", " :
+        items.length > 2 ? `, ${conjunction} ` :
         ` ${conjunction} `
       }{item}</span>
     ))}</>

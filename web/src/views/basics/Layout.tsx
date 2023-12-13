@@ -51,7 +51,7 @@ export const ContentBox  = styled.div`
   display: flex;
   flex-direction: column;
   align-content: stretch;
-  overflow: hide;
+  overflow: hidden;
   flex-grow: 1;
   align-self: stretch;
   justify-content: space-around;
@@ -62,7 +62,7 @@ export const CompressedContentBox  = styled.div`
   flex-direction: column;
   justify-content: center;
   align-content: stretch;
-  overflow: hide;
+  overflow: hidden;
   flex-grow: 1;
   align-self: stretch;
 `;
@@ -72,7 +72,7 @@ export const ContentRow  = styled.div`
   align-self: stretch;
   flex-direction: column;
   align-content: stretch;
-  overflow: hide;
+  overflow: hidden;
   justify-content: center;
   flex-direction: row;
   align-items: center;

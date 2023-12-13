@@ -12,13 +12,40 @@ import { BooleanState } from "../../state/reusable";
 import { BackupStatus, BackupStatusCompletedWithoutValidation } from "../BackupView/BackupStatus";
 
 export const PrintContainer = styled.div`
+	/* position: fixed; */
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: white;
 	display: flex;
-	width: 100%;
-	height: 100%;
 	flex-direction: column;
+	align-items: center;
+	@media screen {
+		overflow-y: scroll;
+		width: 100vw;
+		height: 100vh;
+	}
+	@media print {
+		height: fit-content;
+		@page {margin: 0;}
+	}
+`;
+
+const PrintedPage = styled.div`
+	display: flex;
 	justify-content: center;
 	align-items: center;
-`;
+	flex-direction: column;
+	@media print {
+		break-after: page;
+		padding-left: 10vw;
+		padding-right: 10vw;
+		height: 100vh;
+		flex-grow: 1;
+		background-color: green;
+	}
+`
 
 export const TitleRegion = styled.div`
 	display: block;
@@ -129,6 +156,57 @@ export const ScreenOnlyRegion = styled.div`
 
 export const disregardedPrintWarningViewThisSession = new BooleanState(false);
 
+export const printWindowAsync = () => new Promise<Event>( (resolve) => {
+	const afterPrint = (event: Event) => {
+		window.removeEventListener("afterprint", afterPrint);
+		resolve(event);
+	};
+	const startPrinting = () => {
+		window.addEventListener("afterprint", afterPrint);
+		window.print();
+	}
+	// Give 500ms for page to render before printing
+	setTimeout(startPrinting, 500);
+});
+export const printWindow = (callbackOnCompleted: () => void) =>
+	printWindowAsync().finally( callbackOnCompleted );
+
+export const WarnBeforePrinting = observer( ({
+	children,
+	onUserCancel,
+	onPrintComplete,
+}: React.PropsWithChildren<{
+	onUserCancel: () => void;
+	onPrintComplete: () => void;
+}>) => {
+	if (HidePrintWarningForever.value === false && disregardedPrintWarningViewThisSession.value === false) {
+		return (<PrintWarningView cancel={onUserCancel} disregard={() => disregardedPrintWarningViewThisSession.set(true)} />);
+	} else {
+		printWindow(onPrintComplete);
+		return <PrintContainer>{children}</PrintContainer>;
+	}
+});
+
+export const PrintDiceKeyContentView = observer( ({
+	title,
+	diceKey,
+	children,
+} : React.PropsWithChildren<{
+	title?: string | JSX.Element;
+	diceKey: DiceKey;
+}>) => (
+	<>
+		{ title == null ? null : (<TitleRegion>{title}</TitleRegion>) }
+			<DiceKeyView
+				diceKey={diceKey}
+				$size={`min(100vw, 60vh)`}
+				obscureAllButCenterDie={false}
+				diceBoxColor="black"
+			/>
+			{ children == null ? null : (<DetailedTextRegion>{children}</DetailedTextRegion>) }
+	</>
+));
+
 export const PrintDiceKeyView = observer( ({
 	title,
 	diceKey,
@@ -138,32 +216,33 @@ export const PrintDiceKeyView = observer( ({
 	title?: string | JSX.Element;
 	diceKey: DiceKey;
 	onComplete: (status: BackupStatus) => void
-}>) => {
-	if (HidePrintWarningForever.value === false && disregardedPrintWarningViewThisSession.value === false) {
-		return <PrintWarningView cancel={() => onComplete("cancelled")} disregard={() => disregardedPrintWarningViewThisSession.set(true)} />;
-	}
-	const complete = (backupStatus: BackupStatus = BackupStatusCompletedWithoutValidation) => onComplete(backupStatus);
-	const print = () => {
-		const afterPrint = () => {
-			window.removeEventListener("afterprint", afterPrint);
-			complete();
-		};
-		window.addEventListener("afterprint", afterPrint);
-		window.print();
-	}
-	setTimeout(print, 500);
-	return (
-		<PrintContainer>
-			{ title == null ? null : (<TitleRegion>{title}</TitleRegion>) }
-			<DiceKeyView
-				diceKey={diceKey}
-				$size={`min(100vw, 70vh)`}
-				diceBoxColor="black"	
-			/>
-			{ children == null ? null : (<DetailedTextRegion>{children}</DetailedTextRegion>) }
-		</PrintContainer>
-	);
-});
+}>) => (
+	<WarnBeforePrinting onUserCancel={() => onComplete("cancelled")} onPrintComplete={() => onComplete(BackupStatusCompletedWithoutValidation)}>
+		<PrintedPage>
+			<PrintDiceKeyContentView title={title} diceKey={diceKey}>{children}</PrintDiceKeyContentView>
+		</PrintedPage>
+	</WarnBeforePrinting>
+));
+
+export const PushButtonContentsColumn = styled(PushButton)`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+`
+
+export const PrintWarningSymbol = observer( () => 
+	( disregardedPrintWarningViewThisSession.value || HidePrintWarningForever.value ? '' : '⚠️' )
+);
+
+export const PrintButtonWithWarning = observer (({onClick, children}: React.PropsWithChildren<{onClick: () => void}>) => (
+		<PushButtonContentsColumn style={{alignSelf: 'center'}} onClick={onClick}>
+		<span style={{fontSize: '3rem'}}>🖨</span>
+		{ children ?? 'Print'} <PrintWarningSymbol/>
+	</PushButtonContentsColumn>
+	)
+);
+
 
 const TitleContainer = styled.div`
 	display: flex;
@@ -176,7 +255,7 @@ const TitleShareNote = styled.div`
 	font-size: 0.75rem;
 	font-family: sans-serif;
 	font-style: italic;
-`
+` 
 
 const TitleShareName = styled.div`
 	display: block;
@@ -184,39 +263,23 @@ const TitleShareName = styled.div`
 	font-family: sans-serif;
 `
 
-
-
-
-export interface PrintDiceKeyShareViewProps {
+export const PrintDiceKeyShareContentView = observer( ({
+	share,
+	minSharesToDecode,
+	otherShareLetters,
+	toRecoverDiceKeyWithCenterLetter,
+} : {
 	share: DiceKey;
 	otherShareLetters: FaceLetter[];
 	minSharesToDecode: number;
 	toRecoverDiceKeyWithCenterLetter: string;
-	onComplete: (status: BackupStatus) => void;
-}
-
-export class PropsWrapper<T> {
-	constructor(public readonly props: T) { Object.assign(this, props); }
-}
-
-export class PrintDiceKeyShareViewPropsWrapper extends PropsWrapper<PrintDiceKeyShareViewProps> {
-	 constructor(props: PrintDiceKeyShareViewProps) { super(props) }
-}
-
-export const PrintDiceKeyShareView = observer( ({
-	share,
-	minSharesToDecode,
-	onComplete,
-	otherShareLetters,
-	toRecoverDiceKeyWithCenterLetter,
-} : PrintDiceKeyShareViewProps) => {
+}) => {
 	return (
-		<PrintDiceKeyView diceKey={share} 
+		<PrintDiceKeyContentView diceKey={share} 
 			title={(<TitleContainer>
 				<TitleShareName>Share&nbsp;<ShareLetter>{share.centerFace.letter}</ShareLetter></TitleShareName>
 				<TitleShareNote>As identified by the letter {share.centerFace.letter} on the center die</TitleShareNote>
 			</TitleContainer>)}
-			onComplete={onComplete}
 		>
 		<p>
 			Combine with {zeroThrough24En[minSharesToDecode-1]} other
@@ -224,9 +287,60 @@ export const PrintDiceKeyShareView = observer( ({
 			}&nbsp;(from&nbsp;<AndClause items={otherShareLetters.map( letter => (<ShareLetter>{letter}</ShareLetter>))} />)
 			to recover the DiceKey with center letter&nbsp;<ShareLetter>{toRecoverDiceKeyWithCenterLetter}</ShareLetter>.
 		</p>
-	</PrintDiceKeyView>
+	</PrintDiceKeyContentView>
 	);
 });
+
+export const PrintDiceKeyShareView = observer( ({
+	share,
+	minSharesToDecode,
+	onComplete,
+	otherShareLetters,
+	toRecoverDiceKeyWithCenterLetter,
+} : React.ComponentPropsWithoutRef<typeof PrintDiceKeyShareContentView> & {
+	onComplete: (status: BackupStatus) => void;
+}) => (
+	<WarnBeforePrinting onUserCancel={() => onComplete("cancelled")} onPrintComplete={() => onComplete(BackupStatusCompletedWithoutValidation)}>
+		<PrintedPage>
+			<PrintDiceKeyShareContentView {...{share, minSharesToDecode, otherShareLetters, toRecoverDiceKeyWithCenterLetter}} />
+		</PrintedPage>
+	</WarnBeforePrinting>
+));
+
+export const PrintAllDiceKeySharesView = observer( ({
+	shares,
+	minSharesToDecode,
+	onComplete,
+	toRecoverDiceKeyWithCenterLetter,
+} : {
+	shares: DiceKey[];
+	minSharesToDecode: number;
+	toRecoverDiceKeyWithCenterLetter: string;
+	onComplete: (status: BackupStatus) => void;
+}) => (
+	<WarnBeforePrinting onUserCancel={() => onComplete("cancelled")} onPrintComplete={() => onComplete(BackupStatusCompletedWithoutValidation)}>{
+		shares.map( share => (
+		<PrintedPage key={share.centerLetterAndDigit}>
+			<PrintDiceKeyShareContentView {...{share, minSharesToDecode, toRecoverDiceKeyWithCenterLetter}} 
+				otherShareLetters={ shares.map( s => s.centerFace.letter).filter( l => l != share.centerFace.letter) }
+			/>
+		</PrintedPage>
+	))}
+	</WarnBeforePrinting>
+));
+
+
+export class PropsWrapper<T> {
+	constructor(public readonly props: T) { Object.assign(this, props); }
+}
+
+export class PrintDiceKeyShareViewPropsWrapper extends PropsWrapper<React.ComponentPropsWithRef<typeof PrintDiceKeyShareView>> {
+	 constructor(props: React.ComponentPropsWithRef<typeof PrintDiceKeyShareView>) { super(props) }
+}
+export class PrintAllDiceKeySharesViewPropsWrapper extends PropsWrapper<React.ComponentPropsWithRef<typeof PrintAllDiceKeySharesView>> {
+	constructor(props: React.ComponentPropsWithRef<typeof PrintAllDiceKeySharesView>) { super(props) }
+}
+
 
 addPreview("PrintDiceKeyShareView", () => ( 
   <PrintDiceKeyShareView

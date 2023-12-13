@@ -6,7 +6,6 @@ import { DiceKeyMemoryStore, Navigation } from "../../state";
 import { SeedHardwareKeyContentView } from "../Recipes/SeedHardwareKeyView";
 import { BackupDiceKeyView } from "../BackupView/BackupDiceKeyView";
 import { addPreview } from "../basics/Previews";
-import { PrimaryView } from "../../css/Page";
 import { SelectedDiceKeyViewProps } from "./SelectedDiceKeyViewProps";
 import {
   SelectedDiceKeyBottomIconBarView,
@@ -98,13 +97,13 @@ export const SelectedDiceKeyView = observer( ( props: SelectedDiceKeyViewProps) 
     );
   }
   return (
-    <PrimaryView>
+    <>
       <SelectedDiceKeyNavigationBar {...props} />
       <SelectedDiceKeyContentRegionWithSideMargins>
         <SelectedDiceKeySubViewSwitch {...{...props}} />
       </SelectedDiceKeyContentRegionWithSideMargins>
       <SelectedDiceKeyBottomIconBarView {...props} />
-    </PrimaryView>
+    </>
     );
 });
 

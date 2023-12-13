@@ -21,6 +21,7 @@ import {
 } from "./SaveOrDeleteDiceKeyViewState";
 import { SecretSharingRecoveryStateName } from "./SimpleSecretSharing/SecretSharingRecoveryState";
 import { SecretSharingRecoveryView } from "./SimpleSecretSharing/SecretSharingRecoveryView";
+
 export const WindowRoutingView = observer ( ({state}: {state: WindowTopLevelNavigationState}) => {
 
   const {foregroundApiRequest} = ApiRequestsReceivedState;

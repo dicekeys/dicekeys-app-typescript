@@ -19,28 +19,35 @@ export const CalcHeightBetweenTopNavigationBarAndStandardBottomBar = cssCalcType
 const ZIndexForModalOverlays = 128;
 
 export const WindowRegionColumnContainer= styled(DivSupportingInvisible)`
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  justify-content: space-around;
+  @media screen {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    overflow: hidden;    
+  }
 `;
 
 export const WindowRegionBelowTopNavigationBar = styled(WindowRegionColumnContainer)`
-  height: ${calcHeightBelowTopNavigationBar};
+  @media screen {
+    height: ${calcHeightBelowTopNavigationBar};
+  }
 `;
 
 export const WindowRegionBelowTopNavigationBarAndAboveStandardBottomBar = styled(WindowRegionColumnContainer)`
-  height: ${CalcHeightBetweenTopNavigationBarAndStandardBottomBar};
+  @media screen {
+    height: ${CalcHeightBetweenTopNavigationBarAndStandardBottomBar};    
+  }
 `;
 
 const ImposeStandardSideMargins = css`
-  margin-left: ${cssCalcTyped(StandardSideMargin)};
-  margin-right: ${cssCalcTyped(StandardSideMargin)};
-  width: ${cssCalcTyped(StandardWidthBetweenSideMargins)};
+  @media screen {
+    margin-left: ${cssCalcTyped(StandardSideMargin)};
+    margin-right: ${cssCalcTyped(StandardSideMargin)};
+    width: ${cssCalcTyped(StandardWidthBetweenSideMargins)};
+  }
   @media print {
-    width: 100%;
     margin: 0;
 	}
 
@@ -85,13 +92,15 @@ export const ModalOverlayForWarningDialog = styled(ModalOverlayForDialogOrMessag
 `;
 
 export const NavigationBar = styled.div`
-  width: 100vw;
-  display: flex;
-  flex-direction: row;
-  flex: 0 0 auto;
-  text-align: center;
-  font-size: calc(${TopLevelNavigationBarFontSize});
-  overflow: hidden;
+  @media screen {
+    overflow: hidden;    
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    flex: 0 0 auto;
+    text-align: center;
+    font-size: calc(${TopLevelNavigationBarFontSize});
+  }
   @media print {
 		display: none;
 	}
@@ -109,7 +118,12 @@ const TopNavRegion = styled.div`
   margin-bottom: 0.5rem;
   user-select: none;
   font-size: calc(${TopLevelNavigationBarFontSize});
-  overflow: hidden;
+  @media screen {
+    overflow: hidden;    
+  }
+  @media print {
+		display: none;
+	}
 `;
 
 const TopEdgeNavRegion = styled(TopNavRegion)`
@@ -152,6 +166,9 @@ export const Clickable = styled.span`
   cursor: grab;
   &:hover {
     color: ${ props => props.theme.colors.background};
+  }
+  @media print {
+    display: none;
   }
 `;
 

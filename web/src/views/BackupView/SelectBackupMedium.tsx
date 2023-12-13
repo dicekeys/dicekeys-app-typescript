@@ -8,6 +8,7 @@ import { DiceKey, DiceKeyWithoutKeyId, FaceLetters } from "../../dicekeys/DiceKe
 import styled from "styled-components";
 import { ShareEntry } from "../SimpleSecretSharing/SubViews/RowOfShares";
 import { BackupMedium, HandGeneratedBackupMedium, HandGeneratedBackupMediumDice, HandGeneratedBackupMediumStickers, MachineGeneratedBackupMediumPrintout, MetaBackupMediumShares } from "../../dicekeys/PhysicalMedium";
+import { PrintWarningSymbol } from "../SimpleSecretSharing/PrintDiceKeyView";
 
 export const FeatureCardButton = styled.button`
   align-self: center;
@@ -77,7 +78,7 @@ export const SelectBackupMediumView = observer(({
         onClick={ () => { onSelected(MachineGeneratedBackupMediumPrintout) } }
       >
         <span style={{fontSize: `3vh`}}>🖨</span>
-        <LabelBelowButtonImage>Print (not recommended)</LabelBelowButtonImage>
+        <LabelBelowButtonImage>Print <PrintWarningSymbol/></LabelBelowButtonImage>
       </FeatureCardButton>
   </>
 ));

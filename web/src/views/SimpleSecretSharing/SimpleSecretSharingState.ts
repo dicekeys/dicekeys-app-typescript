@@ -7,7 +7,7 @@ import { ViewState } from "../../state/core/ViewState";
 import { DiceKey, DiceKeyWithoutKeyId, FaceLetter, FaceLetters, Number0To24, faceLetterToNumber0to24, number0to24ToFaceLetter } from "../../dicekeys/DiceKey";
 import { PseudoRandom } from "../../utilities/pseudorandom";
 import { LoadDiceKeyViewState } from "../LoadingDiceKeys/LoadDiceKeyViewState";
-import { PrintDiceKeyShareViewPropsWrapper } from "./PrintDiceKeyView";
+import { PrintAllDiceKeySharesViewPropsWrapper, PrintDiceKeyShareViewPropsWrapper } from "./PrintDiceKeyView";
 import { HandGeneratedBackupMedium, MachineGeneratedBackupMediumPrintout, PhysicalBackupMedium, SourceOfDiceKeyShare } from "../../dicekeys/PhysicalMedium";
 import { CopyToPhysicalMediumWizardState } from "../../views/BackupView/CopyToPhysicalMediumWizardState";
 
@@ -32,7 +32,7 @@ const getRemainingCenterLetters = (usedLettersNowForbidden: Set<FaceLetter> | It
 }
 
 
-type SubView = LoadDiceKeyViewState | CopyToPhysicalMediumWizardState | PrintDiceKeyShareViewPropsWrapper | undefined;
+type SubView = LoadDiceKeyViewState | CopyToPhysicalMediumWizardState | PrintDiceKeyShareViewPropsWrapper | PrintAllDiceKeySharesViewPropsWrapper | undefined;
 
 const SimpleSecretSharingStateName = "SimpleSecretSharingState" as const;
 export class SimpleSecretSharingState implements ViewState {
@@ -225,6 +225,9 @@ export class SimpleSecretSharingState implements ViewState {
 			...this.derivedRedundantShares
 		];
 	}
+	get generatedSharesAsDiceKeys () {
+		return this.generatedShares.map( share => DiceKeyWithoutKeyId.fromFiniteFieldPointForShamirSharing(share) );
+	}
 
 	get sharesAsDiceKeysWithSource(): {
 		source: SourceOfDiceKeyShare,
@@ -284,7 +287,7 @@ export class SimpleSecretSharingState implements ViewState {
 	})
 
 
-	initiatePrintViewHandler = (
+	initiatePrintOneShareViewHandler = (
 		share: DiceKey | undefined = this.sharesAsDiceKeysWithSource.find( p => p.source !== "scanned")?.diceKey
 	) => () => {
 		if (share == null || this.diceKeyToSplitIntoShares == null) return;
@@ -296,6 +299,23 @@ export class SimpleSecretSharingState implements ViewState {
 				this.clearSubView();
 				if (status !== "cancelled") {
 					this.addPhysicalMediaCreatedByUserForShare(share.centerFace.letter, MachineGeneratedBackupMediumPrintout);
+				}
+			}
+		}));
+	}
+
+	initiatePrintAllSharesViewHandler = () => () => {
+		if (this.diceKeyToSplitIntoShares == null) return;
+		const toRecoverDiceKeyWithCenterLetter = this.diceKeyToSplitIntoShares.centerFace.letter;
+		const shares = this.generatedSharesAsDiceKeys;
+		this.setSubView(new PrintAllDiceKeySharesViewPropsWrapper({
+			shares, minSharesToDecode: this.minSharesToDecode, toRecoverDiceKeyWithCenterLetter,
+			onComplete: (status) => {
+				this.clearSubView();
+				if (status !== "cancelled") {
+					shares.forEach( share => {
+						this.addPhysicalMediaCreatedByUserForShare(share.centerFace.letter, MachineGeneratedBackupMediumPrintout);
+					});
 				}
 			}
 		}));

@@ -4,7 +4,7 @@ import { InstructionTextHeight } from "../basics";
 export const maxViewWidth = 90;
 
 // const RowViewHeightInfo = 15 as const;
-const RowViewHeightDiceKeys = 25 as const;
+const RowViewHeightDiceKeys = 20 as const;
 export const RowViewHeightTopInstruction  = 10 as const;
 export const RowViewHeightDiceKey = RowViewHeightDiceKeys;
 export const RowViewHeightShares = RowViewHeightDiceKeys;
