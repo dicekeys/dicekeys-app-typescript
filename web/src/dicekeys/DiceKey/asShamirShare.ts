@@ -55,7 +55,7 @@ export const facesToShamirShareFiniteFieldPoint = (faces: DiceKeyFaces): DiceKey
   const yLetters = lettersStartAt * uniqueFaceLettersToBigInt(remaining24Letters, new Set<FaceLetter>([centerFaceLetter]));
   const yDigits = digitsStartAt * faceDigitsToBigInt( all25Digits );
   const yOrientations = multiplyOrientationsBy * faceOrientationTrblToBigInt( remaining24Orientations );
-  const asBigInt: bigint = yLetters + yDigits + yOrientations + 1n;
+  const asBigInt: bigint = yLetters + yDigits + yOrientations;
   const y = asBigInt + 1n;
   return {x, y};
 }
