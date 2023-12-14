@@ -17,7 +17,7 @@ import { DiceKeyInHumanReadableForm, diceKeyFacesFromHumanReadableForm } from ".
 import { rotateToRotationIndependentForm, rotateDiceKey, rotateToTurnCenterFaceUpright } from "./Rotation";
 import { diceKeyFacesToKeyId } from "./KeyIds";
 import { factorialConstants0to25, digitEncodingSize, uniqueOrientationEncodingSize, facesFromNumericForm } from "./NumericForm";
-import { DiceKeyInFiniteFieldPointFormat, facesToShamirShareFiniteFieldPoint, shamirShareFiniteFieldPointToFaces } from "./asShamirShare";
+import { DiceKeyInFiniteFieldPointFormat, areFacesLettersUnique, facesToShamirShareFiniteFieldPoint, shamirShareFiniteFieldPointToFaces } from "./asShamirShare";
 import { rangeStartingAt0 } from "../../utilities/range";
 
 export * from "./Face";
@@ -147,7 +147,9 @@ abstract class DiceKeyBase {
         * uniqueOrientationEncodingSize ) + orientationsAsBigInt;
   }
 
-  get asShamirShareFiniteFieldPoint() { return facesToShamirShareFiniteFieldPoint( this.faces ) }
+  get hasUniqueFaceLetters(): boolean { return areFacesLettersUnique(this.faces) }
+
+  get asShamirShareFiniteFieldPoint() { return this.hasUniqueFaceLetters ? facesToShamirShareFiniteFieldPoint(this.faces ) : undefined }
 
   toSeedString: () => DiceKeyInHumanReadableForm = computeLazilyAtMostOnce( () => diceKeyFacesToSeedString(this.faces));
 

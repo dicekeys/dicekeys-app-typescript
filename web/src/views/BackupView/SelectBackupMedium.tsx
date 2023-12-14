@@ -62,7 +62,10 @@ export const SelectBackupMediumView = observer(({
         />
         <LabelBelowButtonImage>{label}</LabelBelowButtonImage>
       </FeatureCardButton>
-    ))}
+    ))}{
+      // Only show the option to split into shares if this is a DiceKey that has unique face letters and thus
+      // can be converted to finite field format.
+      !diceKey.hasUniqueFaceLetters ? null : (
       <FeatureCardButton key={"shares"}
         onClick={ () => { onSelected(MetaBackupMediumShares) } }
       >
@@ -74,7 +77,8 @@ export const SelectBackupMediumView = observer(({
         </RowOfSharesDiv>
         <LabelBelowButtonImage>Split into shares</LabelBelowButtonImage>
       </FeatureCardButton>
-      <FeatureCardButton key={"print"}
+    )}
+    <FeatureCardButton key={"print"}
         onClick={ () => { onSelected(MachineGeneratedBackupMediumPrintout) } }
       >
         <span style={{fontSize: `3vh`}}>🖨</span>

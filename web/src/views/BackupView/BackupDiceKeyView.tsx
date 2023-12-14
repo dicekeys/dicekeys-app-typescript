@@ -213,57 +213,6 @@ export const CopyToPhysicalMediumWizardFooterView = observer ( ({
   }</StepFooterView>
 ));
 
-// export const BackupStepFooterView = observer ( ({
-//     state,
-//     prevStepBeforeStart,
-//     nextStepAfterEnd,
-//     skipBackup
-//   }: BackupViewProps & {
-//     skipBackup?: () => void
-//   }) => {
-//   if (state.step === BackupStep.SelectBackupMedium && !prevStepBeforeStart) return (<div>&nbsp;</div> );
-//   return (
-//   <StepFooterView 
-//     aboveFooter = {
-//       (state.step === BackupStep.SelectBackupMedium && skipBackup) ? (
-//         <RowAboveFooter>
-//           <StepButton
-//             $invisible={state.userChoseToSkipValidationStep || state.validationStepViewState.backupScannedSuccessfully}
-//             onClick={skipBackup}
-//             style={{marginBottom: "0.5rem"}}  
-//           >Skip backing up my DiceKey
-//           </StepButton>
-//         </RowAboveFooter>
-//       ) : (state.step === BackupStep.Validate) ? (
-//         <RowAboveFooter>
-//           <StepButton
-//             $invisible={state.userChoseToSkipValidationStep || state.validationStepViewState.backupScannedSuccessfully}
-//             onClick={state.setUserChoseToSkipValidationStep}
-//             style={{marginBottom: "0.5rem"}}  
-//           >Let me skip this step
-//           </StepButton>
-//         </RowAboveFooter>
-//       ): undefined}
-//     pprev={state.step <= BackupStep.FirstFace ? undefined : state.setStepTo(BackupStep.FirstFace)}
-//     prev={
-//       // If at the start, allow a parent to set a previous step (for embedding backup into assembly instructions)
-//       state.step === BackupStep.START_INCLUSIVE ? prevStepBeforeStart :
-//       state.setStepTo(state.stepMinus1)
-//     }
-//     nextIsDone={state.step === (BackupStep.END_EXCLUSIVE - 1) && nextStepAfterEnd == null}
-//     next={
-//       // If at the end, allow a parent to set a next step (for embedding backup into assembly instructions)
-//       state.step === (BackupStep.Validate) ? (
-//         (state.validationStepViewState.backupScannedSuccessfully || state.userChoseToSkipValidationStep) ? (nextStepAfterEnd ?? state.setStepTo(state.stepPlus1)) : undefined
-//       ) :
-//       // Don't show next when selecting a backup medium
-//       state.step === BackupStep.SelectBackupMedium ?
-//         undefined :
-//         state.setStepTo(state.stepPlus1)}
-//     nnext={state.step >= BackupStep.FirstFace && state.step < BackupStep.LastFace - 1 ? state.setStepTo(BackupStep.Validate) : undefined}  
-//   />
-//       )});
-
 export const CopyToPhysicalMediumWizardView  = observer ( (props: CopyToPhysicalMediumWizardProps) => {
   const {state} = props;
   const diceKey = state.getDiceKey();

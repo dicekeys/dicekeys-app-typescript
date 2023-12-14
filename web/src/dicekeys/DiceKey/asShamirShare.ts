@@ -35,8 +35,13 @@ if (lettersEndAt != EncodingSpaceOfDiceKeyInFiniteFieldPointFormatYEncodingSpace
   throw new Error("Assertion failed for encoding DiceKeys");
 }
 
+export const areItemsUnique = <T>(items: T[]) => items.length === new Set(items).size;
+export const areFacesLettersUnique = (faces: DiceKeyFaces) => areItemsUnique(faces.map( f => f.letter ));
 
 export const facesToShamirShareFiniteFieldPoint = (faces: DiceKeyFaces): DiceKeyInFiniteFieldPointFormat => {
+  if (!areFacesLettersUnique(faces)) {
+    throw new RangeError(`DiceKey must have 25 unique letters to be converted to a shamir share`);
+  }
   const facesCenterUpright = rotateToTurnCenterFaceUpright(faces) as readonly OrientedFace[];
   const all25Digits = facesCenterUpright.map( f => f.digit );
   const centerFaceLetter = facesCenterUpright[12]?.letter;
@@ -50,18 +55,19 @@ export const facesToShamirShareFiniteFieldPoint = (faces: DiceKeyFaces): DiceKey
   const yLetters = lettersStartAt * uniqueFaceLettersToBigInt(remaining24Letters, new Set<FaceLetter>([centerFaceLetter]));
   const yDigits = digitsStartAt * faceDigitsToBigInt( all25Digits );
   const yOrientations = multiplyOrientationsBy * faceOrientationTrblToBigInt( remaining24Orientations );
-  const y: bigint = yLetters + yDigits +  yOrientations;
+  const asBigInt: bigint = yLetters + yDigits + yOrientations + 1n;
+  const y = asBigInt + 1n;
   return {x, y};
 }
 
 export const shamirShareFiniteFieldPointToFaces = (share: DiceKeyInFiniteFieldPointFormat) => {
-  const {x, y} = share;
-
+  const {x, y: asBigIntPlus1} = share;
+  const asBigInt = asBigIntPlus1 - 1n;
   const centerFaceLetter = number0to24ToFaceLetter(Number(x) % 25 as Number0To24);
 
-  const yLetters = (y % lettersEndAt) / lettersStartAt;
-  const yDigits = (y % digitsEndAt) / digitsStartAt;
-  const yOrientations = (y % orientationsEndAt) / multiplyOrientationsBy;
+  const yLetters = (asBigInt % lettersEndAt) / lettersStartAt;
+  const yDigits = (asBigInt % digitsEndAt) / digitsStartAt;
+  const yOrientations = (asBigInt % orientationsEndAt) / multiplyOrientationsBy;
   const letters24 = bigIntToUniqueFaceLetters(yLetters, new Set([centerFaceLetter]));
   const digits25 = bigIntForAllDigitsToFaceDigits(yDigits, 25);
   const digits24 = [...digits25.slice(0,12), ...digits25.slice(13)];

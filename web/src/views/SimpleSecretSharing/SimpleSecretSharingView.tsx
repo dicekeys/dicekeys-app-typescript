@@ -292,7 +292,7 @@ export const LoadDiceKeyShareView = observer(({simplesSecretSharingState}: {
 		<LoadDiceKeyContentPaneView
 			instruction={instruction}
 			state={simplesSecretSharingState.subView}
-			onDiceKeyReadOrCancelled={simplesSecretSharingState.onShareAsDiceKeyLoadCompletedOrCancelled}
+			onDiceKeyReadOrCancelled={simplesSecretSharingState.onDiceKeyLoadCompletedOrCancelled}
 		/>);
 });
 

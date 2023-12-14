@@ -199,8 +199,9 @@ export class SimpleSecretSharingState implements ViewState {
 	get derivedRedundantShares(): DiceKeyInFiniteFieldPointFormat[] {
 		const numRedundantSharesNeeded = this.numSharesToDisplay - (this.minSharesToDecode - (this.userSpecifiedDiceKeyToBeShared == null ? 0 : 1));
 		// These shares define the secret and are sufficient to decode it
+		const userSpecifiedDiceKeyToBeSharedAsFiniteFieldPoint = this.userSpecifiedDiceKeyToBeShared?.asShamirShareFiniteFieldPoint;
 		const userDefinedPoints = [
-			...(this.userSpecifiedDiceKeyToBeShared == null ? [] : [this.userSpecifiedDiceKeyToBeShared.asShamirShareFiniteFieldPoint]),
+			...(userSpecifiedDiceKeyToBeSharedAsFiniteFieldPoint == null ? [] : [userSpecifiedDiceKeyToBeSharedAsFiniteFieldPoint]),
 			...this.userScannedHandRandomizedSharesSorted,
 		];
 		const definingPoints = [
@@ -271,7 +272,7 @@ export class SimpleSecretSharingState implements ViewState {
 	});
 
 
-	onShareAsDiceKeyLoadCompletedOrCancelled = (result: {diceKey: DiceKey} | undefined) => {
+	onDiceKeyLoadCompletedOrCancelled = (result: {diceKey: DiceKey} | undefined) => {
 		const diceKey = result?.diceKey;
 		this.clearSubView();
 		if (diceKey == null) return;
@@ -279,7 +280,10 @@ export class SimpleSecretSharingState implements ViewState {
 			// FIXME -- show error message
 			return;
 		}
-		this.addUserScannedHandRandomizedShare(diceKey.asShamirShareFiniteFieldPoint);
+		const diceKeyAsFiniteFieldPoint = diceKey.asShamirShareFiniteFieldPoint;
+		if (diceKeyAsFiniteFieldPoint != null) {
+			this.addUserScannedHandRandomizedShare(diceKeyAsFiniteFieldPoint);
+		}
 	}
 
 	loadShareAsDiceKey = action( () => {

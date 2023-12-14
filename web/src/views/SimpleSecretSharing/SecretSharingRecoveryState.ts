@@ -55,6 +55,7 @@ export class SecretSharingRecoveryState implements ViewState {
 
 	addUserScannedShare = action( (diceKey: DiceKey) => {
 		const diceKeyAsFiniteFieldPoint = diceKey.asShamirShareFiniteFieldPoint;
+		if (diceKeyAsFiniteFieldPoint == null) return;
 		this.userScannedSharesUnfiltered = [
 			...this.userScannedSharesUnfiltered.filter( s => s.x !== diceKeyAsFiniteFieldPoint.x ),
 			diceKeyAsFiniteFieldPoint
