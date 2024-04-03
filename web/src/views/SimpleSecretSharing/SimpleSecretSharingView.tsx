@@ -232,8 +232,8 @@ const StepChooseMinAndTotalNumberOfSharesView = observer(({
 	return (<>
 		<TopInstructionRow>
 			<Instruction>
-				First, choose how many divide the DiceKey with center letter&nbsp;
-				<ShareLetter>{simplesSecretSharingState.diceKeyToSplitIntoShares?.centerFace.letter}</ShareLetter> into shares.
+				First, choose how many shares to divide the DiceKey with center letter&nbsp;
+				<ShareLetter>{simplesSecretSharingState.diceKeyToSplitIntoShares?.centerFace.letter}</ShareLetter> into.
 			</Instruction>
 		</TopInstructionRow>
 		<SimpleSecretSharingDiceKeyAndSharesView {...{simplesSecretSharingState}} />

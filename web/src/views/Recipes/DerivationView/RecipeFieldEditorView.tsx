@@ -106,7 +106,7 @@ export const SiteFieldView = observer( ({state}: {
       <BuilderFieldLabel htmlFor={field}>sites</BuilderFieldLabel>
       <HostNameInputField id={field}
         value={state.siteTextField ?? ""}
-        placeholder=""
+//        placeholder=""
         ref={ e => { if (e != null) { fieldFocusState.focus() } } }
         onPaste={ state.pasteIntoSiteTextField }
         onInput={ e => {state.setSiteTextField(e.currentTarget.value); fieldFocusState.focus(); }} 
@@ -127,7 +127,7 @@ export const PurposeFieldView = observer( ({state}: {
       <HostNameInputField id={field}
         size={40}
         value={state.purposeField ?? ""}
-        placeholder=""
+//        placeholder=""
         ref={ e => { if (e != null) { fieldFocusState.focus() } } }
         onInput={ e => {state.setPurposeField(e.currentTarget.value); fieldFocusState.focus(); }} 
         onFocus={ fieldFocusState.focus } />

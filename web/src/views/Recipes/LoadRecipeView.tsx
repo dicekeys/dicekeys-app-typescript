@@ -40,7 +40,7 @@ export const SelectRecipeToLoadView = observer( ({
   return (
     <SelectRecipe $nothingChosenYet={!state.recipeIdentifier}
       value=""
-      placeholder={"Placeholder"}
+//      placeholder={"Placeholder"}
       onChange={ (e) => {
         state.loadRecipe(getStoredRecipe(e.currentTarget.value));
         state.setFieldInFocus(undefined);
@@ -139,7 +139,7 @@ export const LoadSavedRecipeView = observer( ({state}: {
       <label>Load saved recipe:</label>
       <SelectRecipe $nothingChosenYet={!state.recipeIdentifier}
         title="Load saved recipe"
-        placeholder={"Placeholder"}
+//        placeholder={"Placeholder"}
         onChange={ (e) => {
           state.loadRecipe(getStoredRecipe(e.currentTarget.value));
         }}
