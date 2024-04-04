@@ -4,7 +4,7 @@ import {
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { SeededApiCommands } from "./SeededApiCommands";
 import { ApiRequestObject } from "@dicekeys/dicekeys-api-js/dist/api-calls";
-import { CenterLetterAndDigit } from "../dicekeys/DiceKey";
+import { FaceLetterAndDigit } from "../dicekeys/DiceKey";
 
 export interface ApiRequestContext {
   readonly host: string,
@@ -28,7 +28,7 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
   /**
    * Subclasses must implement this method to transmit the response back to the client.
    */
-  abstract transmitResponse: (response: ApiCalls.Response, options: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) => Promise<void> | void;
+  abstract transmitResponse: (response: ApiCalls.Response, options: {centerLetterAndDigit?: FaceLetterAndDigit, sequenceNumber?: number}) => Promise<void> | void;
 
   /**
    * Security check implemented as static so that it can be exposed to unit tests
@@ -129,10 +129,10 @@ export abstract class QueuedApiRequest implements ApiRequestContext {
    * otherwise.
    * @param seedString The seed to use for the cryptographic operations requested.
    */
-  respond = async (seedString: string, options: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) => {
+  respond = async (seedString: string, options: {centerLetterAndDigit?: FaceLetterAndDigit, sequenceNumber?: number}) => {
     try {
       const response = await this.getResponse(seedString);
-      console.log(`response.response=`, response);
+      // console.log(`response.response=`, response);
       this.transmitResponse({...response, requestId: this.request.requestId}, options);
     } catch(e) {
       this.sendError(e);

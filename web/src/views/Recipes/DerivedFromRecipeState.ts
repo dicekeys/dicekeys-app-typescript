@@ -1,10 +1,10 @@
 import { action, makeAutoObservable } from "mobx";
-import {DerivationRecipeType} from "../../dicekeys/StoredRecipe";
+import { DerivationRecipeType } from "../../dicekeys/StoredRecipe";
 import { CachedApiCalls } from "../../api-handler/CachedApiCalls";
 import { isValidJson } from "../../utilities/json";
 import { SeededCryptoModulePromise } from "@dicekeys/seeded-crypto-js";
 import { AsyncCalculation } from "../../utilities/AsyncCalculation";
-import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { DiceKey } from "../../dicekeys/DiceKey";
 import { defaultOnException } from "../../utilities/default-on-exception";
 
 const spaceJson = (spaces: number = 2) => (json: string | undefined): string | undefined => {
@@ -58,7 +58,10 @@ interface SecretTypeAndOutputType<SECRET_TYPE extends DerivationRecipeType = Der
 
 export class DerivedFromRecipeState {
   readonly recipeState: RecipeState;
-  readonly diceKey: DiceKeyWithKeyId | undefined;
+  private readonly getDiceKey: () => DiceKey | undefined;
+  get diceKey(): DiceKey | undefined {
+    return this.getDiceKey(); 
+  };
   SigningCalculations = new AsyncCalculation<string | undefined>();
 
   get api(): CachedApiCalls | undefined {
@@ -115,9 +118,9 @@ export class DerivedFromRecipeState {
     return {type, outputFormat};
   }
 
-  constructor({recipeState, diceKey}: {recipeState: RecipeState, diceKey: DiceKeyWithKeyId | undefined} ) {
+  constructor({recipeState, getDiceKey}: {recipeState: RecipeState, getDiceKey: () => DiceKey | undefined} ) {
     this.recipeState = recipeState;
-    this.diceKey = diceKey;
+    this.getDiceKey = getDiceKey;
 //    this.api = new CachedApiCalls(seedString);
 
     makeAutoObservable(this);

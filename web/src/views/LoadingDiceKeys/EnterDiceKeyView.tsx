@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { DiceKeyView } from "../SVG/DiceKeyView";
-import { Instruction, CenterColumn } from "../../views/basics";
+import { Instruction, CenterColumn, Instruction2 } from "../../views/basics";
 import styled from "styled-components";
 import { EnterDiceKeyState } from "./EnterDiceKeyState";
 
@@ -12,7 +12,7 @@ const KeyHints = styled(Instruction)`
 /**
  * This class implements the component that allows manual entry of DiceKeys.
  */
-export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.Component<React.PropsWithoutRef<{state: EnterDiceKeyState}>> {
+export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.Component<React.PropsWithoutRef<{state: EnterDiceKeyState, instruction?: JSX.Element | string}>> {
 
   keyboardListener = (keyboardEvent: KeyboardEvent) => this.props.state.keyDownListener(keyboardEvent)
 
@@ -29,12 +29,13 @@ export const EnterDiceKeyView = observer( class EnterDiceKeyView extends React.C
       <>
         <CenterColumn>
           <Instruction>Type in your DiceKey one face at a time.</Instruction>
+          { this.props.instruction == null ? null : (<Instruction2>{this.props.instruction}</Instruction2>) }
           <KeyHints>
             To rotate the current face, use either &lt; &gt;, - +, or CTRL arrow (right and left arrows).
           </KeyHints>
         </CenterColumn>
         <DiceKeyView
-          size="min(50vh,80vw)"
+          $size="min(50vh,80vw)"
           obscureAllButCenterDie={false}
           faces={this.props.state.partialDiceKey}
           highlightFaceAtIndex={this.props.state.currentFaceIndex}

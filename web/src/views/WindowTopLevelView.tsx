@@ -1,14 +1,14 @@
 import { observer } from "mobx-react";
 import React from "react";
-import {WindowTopLevelNavigationState } from "../state/Window";
+import { WindowTopLevelNavigationState } from "../state/Window";
 import { SelectedDiceKeyViewStateName } from "./WithSelectedDiceKey/SelectedDiceKeyViewState";
 import { SelectedDiceKeyView } from "./WithSelectedDiceKey/SelectedDiceKeyView";
 import { WindowHomeView } from "./WindowHomeView";
 import { LoadDiceKeyViewStateName } from "./LoadingDiceKeys/LoadDiceKeyViewState";
 import { LoadDiceKeyFullPageView } from "./LoadingDiceKeys/LoadDiceKeyView";
-import {AssemblyInstructionsView} from "./AssemblyInstructionsView"
+import { AssemblyInstructionsView } from "./AssemblyInstructionsView";
 import { AssemblyInstructionsStateName } from "./AssemblyInstructionsState";
-import {ApproveApiRequestView} from "./api-request-handling/ApproveApiRequestView";
+import { ApproveApiRequestView } from "./api-request-handling/ApproveApiRequestView";
 import { ApproveApiRequestState } from "./api-request-handling/ApproveApiRequestState";
 import { ApiRequestsReceivedState } from "../state/ApiRequestsReceivedState";
 import { PrimaryView } from "../css";
@@ -19,6 +19,9 @@ import {
   SaveDiceKeyViewStateName,
   DeleteDiceKeyViewStateName,
 } from "./SaveOrDeleteDiceKeyViewState";
+import { SecretSharingRecoveryStateName } from "./SimpleSecretSharing/SecretSharingRecoveryState";
+import { SecretSharingRecoveryView } from "./SimpleSecretSharing/SecretSharingRecoveryView";
+
 export const WindowRoutingView = observer ( ({state}: {state: WindowTopLevelNavigationState}) => {
 
   const {foregroundApiRequest} = ApiRequestsReceivedState;
@@ -38,13 +41,13 @@ export const WindowRoutingView = observer ( ({state}: {state: WindowTopLevelNavi
     case LoadDiceKeyViewStateName:
       return (
         <LoadDiceKeyFullPageView
-          onDiceKeyReadOrCancelled={ state.onReturnFromActionThatMayLoadDiceKey }
+          onDiceKeyReadOrCancelled={ (result) => state.onReturnFromActionThatMayLoadDiceKey(result?.diceKey) }
           state={ subViewState }
         />
       );
     case AssemblyInstructionsStateName:
       return (
-        <AssemblyInstructionsView onComplete={ state.onReturnFromActionThatMayLoadDiceKey } state={subViewState}
+        <AssemblyInstructionsView onComplete={ (diceKey) => state.onReturnFromActionThatMayLoadDiceKey(diceKey) } state={subViewState}
 //          new AssemblyInstructionsState(state.foregroundDiceKeyState)
          />
     )
@@ -54,6 +57,14 @@ export const WindowRoutingView = observer ( ({state}: {state: WindowTopLevelNavi
     case SelectedDiceKeyViewStateName: return (
       <SelectedDiceKeyView state={subViewState} />
     );
+    case SecretSharingRecoveryStateName: return (
+      <SecretSharingRecoveryView 
+        state={subViewState}
+        onComplete={ async (diceKey) => {
+          if (diceKey != null) {
+           state.navigateToReplaceSelectedDiceKeyView(await diceKey.withKeyId);
+        }}}
+      />);
     default: return (
       <WindowHomeView state={state} />
     );

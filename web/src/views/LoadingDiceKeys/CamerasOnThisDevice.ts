@@ -271,7 +271,6 @@ export class CamerasOnThisDevice {
       }
     } catch (e) {
       console.log("Exception identifying cameras on this device", e)
-      // FIXME?
     }
     if (
       !this._ready ||

@@ -1,22 +1,27 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { Face } from "../../dicekeys/DiceKey";
+import { OrientedFace } from "../../dicekeys/DiceKey";
 import { FaceGroupView } from "./FaceView";
-import { FaceDigit, FaceDigits, FaceIdentifiers, FaceLetter, FaceLetters } from "@dicekeys/read-dicekey-js";
-import { fitRectangleWithAspectRatioIntoABoundingBox, Bounds, viewBox } from "../../utilities/bounding-rects";
-import { OptionalMaxSizeCalcProps, WithBounds } from "../../utilities/WithBounds";
+import { FaceDigit, FaceDigits, FaceLetter, FaceLetters, Face } from "../../dicekeys/DiceKey";
+import { Bounds, viewBox } from "../../utilities/bounding-rects";
 
 
-const distanceBetweenFacesAsFractionOfLinearSizeOfFace = 1/4;
-const ratioOfPortraitSheetWidthToFaceSize = 5 + 6 * distanceBetweenFacesAsFractionOfLinearSizeOfFace;
+export const distanceBetweenFacesAsFractionOfLinearSizeOfFace = 1/4;
 export const portraitSheetWidthOverHeight = 130 / 155; // sheets are manufactured 155mm x 130mm
-const ratioOfPortraitSheetLengthToFaceSize =  ratioOfPortraitSheetWidthToFaceSize / portraitSheetWidthOverHeight;
 
-const fitPortraitSheetIntoBounds = fitRectangleWithAspectRatioIntoABoundingBox(portraitSheetWidthOverHeight);
+const stickerSheetPortraitWidthInUnitsOfFaceStickerSize = 5 + 6 * distanceBetweenFacesAsFractionOfLinearSizeOfFace;
+const stickerSheetPortraitHeightInUnitsOfFaceStickerSize =  stickerSheetPortraitWidthInUnitsOfFaceStickerSize / portraitSheetWidthOverHeight;
 
-export const StickerSheetSizeModel = (linearSizeOfFace: number) => {
-  const width = linearSizeOfFace * ratioOfPortraitSheetWidthToFaceSize;
-  const height = linearSizeOfFace * ratioOfPortraitSheetLengthToFaceSize;
+export const stickerSheetPortraitDimensionsInUnitsOfFaceSize = {
+  width: stickerSheetPortraitWidthInUnitsOfFaceStickerSize,
+  height: stickerSheetPortraitHeightInUnitsOfFaceStickerSize
+} as const;
+
+// const fitPortraitSheetIntoBounds = fitRectangleWithAspectRatioIntoABoundingBox(portraitSheetWidthOverHeight);
+
+const StickerSheetSizeModel = (linearSizeOfFace: number) => {
+  const width = linearSizeOfFace * stickerSheetPortraitWidthInUnitsOfFaceStickerSize;
+  const height = linearSizeOfFace * stickerSheetPortraitHeightInUnitsOfFaceStickerSize;
   const bounds = {width, height};
   const distanceBetweenDieCenters = linearSizeOfFace * (1 + distanceBetweenFacesAsFractionOfLinearSizeOfFace);
   const top = -height / 2;
@@ -27,34 +32,33 @@ export const StickerSheetSizeModel = (linearSizeOfFace: number) => {
 export type StickerSheetSizeModel = ReturnType<typeof StickerSheetSizeModel>;
 export type StickerSheetSizeModelOptions = {linearSizeOfFace: number} | Bounds | {sizeModel: StickerSheetSizeModel};
 
-export const StickerSheetSizeModelFromBounds = (bounds: Bounds) =>
- StickerSheetSizeModel(
-  fitPortraitSheetIntoBounds(bounds).width / ratioOfPortraitSheetWidthToFaceSize
-);
+export const StickerSheetSizeModelForFaceAsUnit = StickerSheetSizeModel(1);
+
+// export const StickerSheetSizeModelFromBounds = (bounds: Bounds) =>
+//  StickerSheetSizeModel(
+//   fitPortraitSheetIntoBounds(bounds).width / stickerSheetPortraitWidthInUnitsOfFaceStickerSize
+// );
 
 type StickerSheetViewProps = {
   showLetter?: FaceLetter;
   highlightFaceWithDigit?: FaceDigit;
-  hideFaces?: FaceIdentifiers[];
+  hideFaces?: Face[];
+  strokeColor?: string;
 }
 
 const lettersPerStickySheet = 5;
 
-export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & Bounds & React.SVGAttributes<SVGGElement>) => {
+export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & React.SVGAttributes<SVGGElement>) => {
     const {
       showLetter = "A",
       highlightFaceWithDigit,
       hideFaces,
-      // destructured into unused variable to isolate svgGroupProps
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      width: _boundsWidth,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      height: _boundsHeight,
+      strokeColor,
       ...svgGroupProps
     } = props;
     const {
       top, left, width, height, radius, linearSizeOfFace, distanceBetweenDieCenters
-    } = StickerSheetSizeModelFromBounds(props);
+    } = StickerSheetSizeModelForFaceAsUnit;
     const hideFacesSet = new Set<string>( (hideFaces ?? []).map( ({letter, digit}) => `${letter}${digit}`) );
     const hideFace = ({letter, digit}: {letter: string, digit: string}) =>
       hideFacesSet.has(`${letter}${digit}`);
@@ -78,12 +82,12 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & Bo
         {
           FaceDigits.map( (digit, digitIndex) => lettersOnPage.map( (letter, letterIndex) => {
             const key = letter + digit;
-            const face: Face = {letter, digit, orientationAsLowercaseLetterTrbl: 't'};
+            const face: OrientedFace = {letter, digit, orientationAsLowercaseLetterTrbl: 't'};
             return (hideFace(face) ? null : (
               <FaceGroupView
                 key={key} face={face}
                 linearSizeOfFace={linearSizeOfFace}
-                stroke={"rgba(128, 128, 128, 0.2)"}
+                strokeColor={strokeColor}
                 strokeWidth={linearSizeOfFace / 80}
                 center={{
                   x: distanceBetweenDieCenters * (-2 + letterIndex),
@@ -97,15 +101,12 @@ export const StickerSheetSvgGroup = observer( (props: StickerSheetViewProps & Bo
     );
 });
 
-export const StickerSheetView = observer( ({maxWidth, maxHeight, ...props}: StickerSheetViewProps & OptionalMaxSizeCalcProps) => (
-    <WithBounds aspectRatioWidthOverHeight={portraitSheetWidthOverHeight} {...{maxWidth, maxHeight}}>{ ({bounds}) => {
-    const sizeModel = StickerSheetSizeModelFromBounds(bounds);
-    return (
-      <svg width={`100%`} height={`100%`} viewBox={viewBox(bounds)}>
-      <StickerSheetSvgGroup {...{...props, ...sizeModel.bounds}} showLetter="A" />
-      </svg>
-    )}}
-    </WithBounds>
+export const StickerSheetView = observer( ({
+  showLetter, highlightFaceWithDigit, hideFaces, strokeColor,...svgProps
+}: StickerSheetViewProps & React.SVGAttributes<SVGGElement>) => (
+  <svg {...svgProps} viewBox={viewBox(StickerSheetSizeModelForFaceAsUnit.bounds)}>
+    <StickerSheetSvgGroup {...{showLetter, highlightFaceWithDigit, hideFaces, strokeColor}} />
+  </svg>
 ));
 
 

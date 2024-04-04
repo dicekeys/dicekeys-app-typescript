@@ -24,6 +24,9 @@ const WindowHomeMenu = observer ( ({state, ...props}: {state: WindowTopLevelNavi
       <MenuItem onClick={ downloadOrNavigateToAppStore }
       >Get DiceKeys for {OperatingSystemName}</MenuItem>
     ) : null}
+    <MenuItem onClick={() => {
+      state.navigateToRecoverFromShares();
+    }}>Recover DiceKey from shares</MenuItem>
     <MenuItem onClick={async () => {
       const diceKey = await DiceKeyWithKeyId.fromRandom();
       DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);

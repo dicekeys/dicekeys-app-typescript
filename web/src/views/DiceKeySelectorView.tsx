@@ -4,11 +4,12 @@ import React from "react";
 import styled, { css } from "styled-components";
 import { DiceKeyView } from "./SVG/DiceKeyView";
 import { cssCalcTyped, cssExprWithoutCalc } from "../utilities";
-import { DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId, facesFromPublicKeyDescriptor } from "../dicekeys/DiceKey";
+import { DiceKeyWithKeyId, DiceKeyWithoutKeyId, facesFromPublicKeyDescriptor } from "../dicekeys/DiceKey";
+import { DiceKeyInHumanReadableForm } from "../dicekeys/DiceKey";
 import { DiceKeyMemoryStore, PublicDiceKeyDescriptorWithSavedOnDevice } from "../state";
 import LoadDiceKeyImage from "../images/Scanning a DiceKey.svg";
-import { ToggleState } from "../state";
 import { DivSupportingInvisible } from "../css";
+import { HideRevealSecretsState } from "../state/stores/HideRevealSecretsState";
 
 
 
@@ -21,19 +22,19 @@ const HideInstruction = styled(DivSupportingInvisible)`
 `
 
 interface OptionalSpaceBetweenItems {
-  spaceBetweenItems?: string; // default: min(2vw, 2vh)`
+  $spaceBetweenItems?: string; // default: min(2vw, 2vh)`
 }
 const defaultSpaceBetweenItems = `min(2vw, 2vh)`;
 interface OptionalSelectedItemWidth {
-  selectedItemWidth?: string; // default: min(40vw, 50vh)
+  $selectedItemWidth?: string; // default: min(40vw, 50vh)
 }
 const defaultSelectedItemWidth = `min(40vw, 50vh)`;
 interface OptionalRatioOfSelectedItemWidthToSelectableItemWidth {
-  ratioOfSelectedItemWidthToSelectableItemWidth?: string; // default: 2
+  $ratioOfSelectedItemWidthToSelectableItemWidth?: string; // default: 2
 }
 const defaultRatioOfSelectedItemWidthToSelectableItemWidth = `2`;
 interface OptionalRowWidth {
-  rowWidth?: string; // default `90vw`
+  $rowWidth?: string; // default `90vw`
 }
 const defaultRowWidth = `90vw`;
 interface SelectorViewSizeModel extends
@@ -43,24 +44,24 @@ interface SelectorViewSizeModel extends
   OptionalRowWidth
   {}
 
-const itemPadding = ({spaceBetweenItems=defaultSpaceBetweenItems}: OptionalSpaceBetweenItems) => `( (${cssExprWithoutCalc(spaceBetweenItems)}) / 2 )` as const;
+const itemPadding = ({$spaceBetweenItems: spaceBetweenItems=defaultSpaceBetweenItems}: OptionalSpaceBetweenItems) => `( (${cssExprWithoutCalc(spaceBetweenItems)}) / 2 )` as const;
 // const keyRowWidth = `90vw` as const;
 
 
 const selectableItemWidth = ({
-  selectedItemWidth=defaultSelectedItemWidth,
-  ratioOfSelectedItemWidthToSelectableItemWidth=defaultRatioOfSelectedItemWidthToSelectableItemWidth,
+  $selectedItemWidth: selectedItemWidth=defaultSelectedItemWidth,
+  $ratioOfSelectedItemWidthToSelectableItemWidth: ratioOfSelectedItemWidthToSelectableItemWidth=defaultRatioOfSelectedItemWidthToSelectableItemWidth,
 }: OptionalSelectedItemWidth & OptionalRatioOfSelectedItemWidthToSelectableItemWidth) => 
   cssExprWithoutCalc(`${cssExprWithoutCalc(selectedItemWidth)} / ${cssExprWithoutCalc(ratioOfSelectedItemWidthToSelectableItemWidth)}`);
 
 // const selectedItemSize = `min(40vw, 50vh)` as const;
 // const selectableItemSize = `(${cssExprWithoutCalc(selectedItemSize)} / 3)` as const;
 const selectableItemSizeWithMargins = (sizeModel: SelectorViewSizeModel) =>
-  `(${selectableItemWidth(sizeModel)} + ${cssExprWithoutCalc(sizeModel.spaceBetweenItems ?? defaultSpaceBetweenItems)})` as const;
+  `(${selectableItemWidth(sizeModel)} + ${cssExprWithoutCalc(sizeModel.$spaceBetweenItems ?? defaultSpaceBetweenItems)})` as const;
 
 interface SpacingInformation {
-  indexSelected: number;
-  numberOfItems: number;
+  $indexSelected: number;
+  $numberOfItems: number;
 }
 
 const paddingRequiredToCenterOneEdge = ({
@@ -70,9 +71,9 @@ const paddingRequiredToCenterOneEdge = ({
   {numberOfElementsBetweenItemAndEdge: number} & SelectorViewSizeModel
 ) => {
   const {
-    spaceBetweenItems=defaultSpaceBetweenItems,
-    selectedItemWidth=defaultSelectedItemWidth,
-    rowWidth=defaultRowWidth,
+    $spaceBetweenItems: spaceBetweenItems=defaultSpaceBetweenItems,
+    $selectedItemWidth: selectedItemWidth=defaultSelectedItemWidth,
+    $rowWidth: rowWidth=defaultRowWidth,
   } = sizeModel;
   const paddingRequiredIfNoObjectsBetweenThisObjectAndEdge =
     `( (${rowWidth} - (${selectedItemWidth} + ${spaceBetweenItems}) ) / 2)` as const;
@@ -86,18 +87,18 @@ const paddingRequiredToCenterOneEdge = ({
 
 const RowWithSelectedItemScrolledToCenter = styled.div<SpacingInformation & SelectorViewSizeModel>`
   box-sizing: border-box;
-  ${ ({indexSelected, numberOfItems, ...sizeModel}) => (indexSelected < 0) ? css`` : 
+  ${ ({$indexSelected: indexSelected, $numberOfItems: numberOfItems, ...sizeModel}) => (indexSelected < 0) ? css`` : 
     css`
       padding-right: ${paddingRequiredToCenterOneEdge({numberOfElementsBetweenItemAndEdge: numberOfItems - (indexSelected + 1), ...sizeModel})};
       padding-left: ${paddingRequiredToCenterOneEdge({numberOfElementsBetweenItemAndEdge: indexSelected, ...sizeModel})};
   `}
-  width: ${ sizeModel => sizeModel.rowWidth ?? defaultRowWidth};
+  width: ${ sizeModel => sizeModel.$rowWidth ?? defaultRowWidth};
   min-height: ${ sizeModel => cssCalcTyped(
-    `${cssExprWithoutCalc(sizeModel.selectedItemWidth ?? defaultSelectedItemWidth)} + 1.25rem`
+    `${cssExprWithoutCalc(sizeModel.$selectedItemWidth ?? defaultSelectedItemWidth)} + 1.25rem`
   ) };
   display: flex;
   flex-direction: row;
-  justify-content: ${ ({indexSelected}) => indexSelected < 0 ? "center" : "flex-start"  };
+  justify-content: ${ ({$indexSelected: indexSelected}) => indexSelected < 0 ? "center" : "flex-start"  };
   align-items: center;
   overflow-x: auto;
 `;
@@ -126,7 +127,7 @@ const SelectableItemViewContainer = styled(RowWithSelectedItemScrolledToCenterIt
 `;
 
 const SelectedItemViewContainer = styled(RowWithSelectedItemScrolledToCenterItem)<SelectorViewSizeModel>`
-  width: calc(${ sizeModel => sizeModel.selectedItemWidth ?? defaultSelectedItemWidth });
+  width: calc(${ sizeModel => sizeModel.$selectedItemWidth ?? defaultSelectedItemWidth });
 `;
 
 const SelectableDiceKeyView = observer ( (props: {
@@ -141,7 +142,7 @@ const SelectableDiceKeyView = observer ( (props: {
     >
       <DiceKeyView
         onClick={onClick}
-        size={`${cssCalcTyped(selectableItemWidth(sizeModel))}`}
+        $size={`${cssCalcTyped(selectableItemWidth(sizeModel))}`}
         faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
         obscureAllButCenterDie={true}
         showLidTab={true}
@@ -162,17 +163,17 @@ const SelectedDiceKeyView = observer ( ({diceKey, ...sizeModel}: {diceKey?: Dice
        }}
     >
         <DiceKeyView
-          size={`${cssCalcTyped(sizeModel.selectedItemWidth ?? defaultSelectedItemWidth)}`}
-          diceKeyWithKeyId={diceKey}
+          $size={`${cssCalcTyped(sizeModel.$selectedItemWidth ?? defaultSelectedItemWidth)}`}
+          diceKey={diceKey}
           showLidTab={false}
         />
         <HideInstruction
-          invisible={ToggleState.ObscureDiceKey.value}
+          $invisible={diceKey && HideRevealSecretsState.shouldDiceKeyBeHidden(diceKey) }
           style={{
-            fontSize: cssCalcTyped(`${sizeModel.selectedItemWidth ?? defaultSelectedItemWidth} / 24`),
+            fontSize: cssCalcTyped(`${sizeModel.$selectedItemWidth ?? defaultSelectedItemWidth} / 24`),
             cursor: "grab",
           }}
-          onClick={ToggleState.ObscureDiceKey.toggle}
+          onClick={() => diceKey && HideRevealSecretsState.toggleHideRevealDiceKey(diceKey, false) }
         >
           press to hide all but center face
         </HideInstruction>
@@ -211,7 +212,7 @@ export const DiceKeySelectorView = observer ( ({
   // The row has one item for each DiceKey and one for the button to load more DiceKeys.
   const numberOfItems = storedDiceKeyDescriptors.length +  1;   
   return (
-    <RowWithSelectedItemScrolledToCenter {...{numberOfItems, indexSelected, ...sizeModel}}>
+    <RowWithSelectedItemScrolledToCenter {...{$numberOfItems: numberOfItems, $indexSelected: indexSelected, ...sizeModel}}>
       {// Iterate through all the DiceKeys to display
         storedDiceKeyDescriptors.map( (storedDiceKeyDescriptor) => {
           const isSelected = storedDiceKeyDescriptor.keyId === selectedDiceKeyId;
@@ -253,9 +254,9 @@ export const PREVIEW_DiceKeySelectorView = () => {
     selectedDiceKeyId={selectedDiceKeyId}
     setSelectedDiceKeyId={(keyId) => setSelectedDiceKeyId(keyId)}
     loadRequested={() => alert("Load DiceKey clicked")}
-    rowWidth={`90vw`}
-    selectedItemWidth={`min(70vh,50vw)`}
-    ratioOfSelectedItemWidthToSelectableItemWidth={`4`}
+    $rowWidth={`90vw`}
+    $selectedItemWidth={`min(70vh,50vw)`}
+    $ratioOfSelectedItemWidthToSelectableItemWidth={`4`}
   />
   );
 };

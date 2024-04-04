@@ -38,6 +38,10 @@ export const createMenu = (MainToPrimaryRendererAsyncApi: MainToPrimaryRendererA
 
   const FileMenuItems: Electron.MenuItemConstructorOptions[] = [
     {
+      label: 'Recover DiceKey from shares',
+      click: () => MainToPrimaryRendererAsyncApi.loadFromShares(),
+    },
+    {
       label: 'Load random DiceKey',
       click: () => MainToPrimaryRendererAsyncApi.loadRandomDiceKey(),
     },
@@ -129,6 +133,7 @@ export const createMenu = (MainToPrimaryRendererAsyncApi: MainToPrimaryRendererA
     {
       label: 'Learn More',
       click: async () => {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const { shell } = require('electron')
         await shell.openExternal('https://dicekeys.com')
       }

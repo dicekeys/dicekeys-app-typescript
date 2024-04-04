@@ -29,6 +29,7 @@
         "erline",
         "examplesuffixattack",
         "field",
+        "gcloud",
         "Googlebot",
         "gsutil",
         "icloud",
@@ -39,6 +40,7 @@
         "keytar",
         "lastpass",
         "Marshallers",
+        "Mersenne",
         "monospace",
         "monospace span",
         "nnext",
@@ -57,6 +59,7 @@
         "reloadable",
         "seedable",
         "setmeta",
+        "Shamir",
         "span",
         "src",
         "stic",
@@ -67,6 +70,7 @@
         "suffixattack",
         "Teoma",
         "tlds",
+        "togglefullscreen",
         "TRBL",
         "ts",
         "tsbuildinfo",
@@ -99,5 +103,6 @@
     ],
     "files.exclude": {
         "**/node_modules": true
-    }
+    },
+    "typescript.preferences.importModuleSpecifier": "relative"
 }

@@ -24,5 +24,12 @@ electron/electron-js/
 electron/electron-html/
 electron/out/
 
+
+electron-forge/electron-js/
+electron-forge/electron-html/
+
 # buildinfo files
 *.tsbuildinfo
+
+electron-forge/forge.config.js
+electron-forge/out

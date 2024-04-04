@@ -1,6 +1,6 @@
 import React from "react";
 import { RecipeBuilderState, RecipeEditingMode } from "./RecipeBuilderState";
-import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { DerivedFromRecipeView } from "./DerivedFromRecipeView";
 import { DerivedFromRecipeState } from "./DerivedFromRecipeState";
 import { RecipeWizardView } from "./DerivationView/RecipeWizardView";
@@ -34,15 +34,19 @@ export const RecipeWizardOrFieldsView = observer ( ({recipeBuilderState}: {
 
 export const SecretDerivationViewStateName = "secret";
 export type SecretDerivationViewStateName = typeof SecretDerivationViewStateName;
-export class SecretDerivationViewState implements ViewState<SecretDerivationViewStateName> {
+export class SecretDerivationViewState implements ViewState {
   readonly viewName = SecretDerivationViewStateName;
   navState: NavigationPathState;
   readonly recipeBuilderState: RecipeBuilderState;
-  readonly derivedFromRecipeState: DerivedFromRecipeState; 
-  constructor(parentNavState: NavigationPathState, public readonly diceKey: DiceKeyWithKeyId) {
+  readonly derivedFromRecipeState: DerivedFromRecipeState;
+  public readonly getDiceKey: () => DiceKey | undefined;
+  constructor(parentNavState: NavigationPathState, {getDiceKey} : {
+    getDiceKey: () => DiceKey | undefined
+  }) {
     this.navState = new NavigationPathState(parentNavState, SecretDerivationViewStateName);
+    this.getDiceKey = getDiceKey;
     this.recipeBuilderState = new RecipeBuilderState();
-    this.derivedFromRecipeState = new DerivedFromRecipeState({recipeState: this.recipeBuilderState, diceKey});
+    this.derivedFromRecipeState = new DerivedFromRecipeState({recipeState: this.recipeBuilderState, getDiceKey});
   }
 }
 
@@ -50,7 +54,7 @@ export const SecretDerivationView = observer ( ({state}: {state: SecretDerivatio
   <DerivationViewContainer>
     <RawJsonWarning state={state.recipeBuilderState} />
     <RecipeWizardOrFieldsView recipeBuilderState={state.recipeBuilderState} />
-    <KeyPlusRecipeView diceKey={state.diceKey} recipeBuilderState={state.recipeBuilderState} />
+    <KeyPlusRecipeView getDiceKey={state.getDiceKey} recipeBuilderState={state.recipeBuilderState} />
     <DerivedContentContainer>
       <DerivedFromRecipeView allowUserToChangeOutputType={true} state={state.derivedFromRecipeState} />
     </DerivedContentContainer>
@@ -58,5 +62,5 @@ export const SecretDerivationView = observer ( ({state}: {state: SecretDerivatio
 ));
 
 export const Preview_DerivationView = () => (
-  <SecretDerivationView state={new SecretDerivationViewState(NavigationPathState.root, DiceKeyWithKeyId.testExample)} />
+  <SecretDerivationView state={new SecretDerivationViewState(NavigationPathState.root, {getDiceKey: () => DiceKeyWithKeyId.testExample})} />
 )

@@ -10,7 +10,7 @@ import { typedArrayFilter} from "../../utilities/typing";
 
 // Name of the old recipe store, which was a JSON encoded array
 // of JSON encoded strings (unnecessary double JSON encoding)
-const DepractedRecipeStoreName = "RecipeStore";
+const DeprecatedRecipeStoreName = "RecipeStore";
 
 // Name of the current recipe store which is a JSON encoded array
 // of StoredRecipe objects.
@@ -29,7 +29,7 @@ const filterArrayOfStoredRecipes = typedArrayFilter(isStoredRecipe);
 
 // Format was JSON for `{recipeJsonArray: [string]}` where each string was a JSON encoded StoredRecipe
 const readDeprecatedRecipeFormat = (): StoredRecipe[] => {
-  const storageObject = defaultOnException( () => JSON.parse(window.localStorage.getItem(DepractedRecipeStoreName) || "{}"));
+  const storageObject = defaultOnException( () => JSON.parse(window.localStorage.getItem(DeprecatedRecipeStoreName) || "{}"));
   if (typeof storageObject !== "object" || !("recipeJsonArray" in storageObject)) return [];
   const recipeJsonArray = storageObject.recipeJsonArray;
   if (!Array.isArray(recipeJsonArray)) { return []; }

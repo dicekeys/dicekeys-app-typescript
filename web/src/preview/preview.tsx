@@ -1,23 +1,35 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { ErrorHandler } from "./views/ErrorHandler";
-import { Preview_ScanDiceKeyView } from "./views/LoadingDiceKeys/ScanDiceKeyView";
-import { Preview_EnterDiceKeyView } from "./views/LoadingDiceKeys/EnterDiceKeyView";
-import { Preview_StickerSheetView } from "./views/SVG/StickerSheetView";
-import { Preview_StickerTargetSheetView } from "./views/SVG/StickerTargetSheetView";
-import { Preview_FaceCopyingView } from "./views/SVG/FaceCopyingView";
-import { PREVIEW_DiceKeySelectorView } from "./views/DiceKeySelectorView"
-import { getPreview, addPreviewWithMargins, addCenteredPreview, getPreviewNames } from "./views/basics/Previews";
+import { ErrorHandler } from "../views/ErrorHandler";
+
+import * as _ from "../views/SimpleSecretSharing/SimpleSecretSharingView";
+import * as SecretSharingRecoveryView from "../views/SimpleSecretSharing/SecretSharingRecoveryView";
+import {PrintDiceKeyView as _1} from "../views/SimpleSecretSharing/PrintDiceKeyView";
+import {Die3dView} from "../views/SimpleSecretSharing/Die3dView";
+if (_ == null || _1 == null || Die3dView == null || SecretSharingRecoveryView == null) {
+  throw "";
+}
+
+import { Preview_ScanDiceKeyView } from "../views/LoadingDiceKeys/ScanDiceKeyView";
+import { Preview_EnterDiceKeyView } from "../views/LoadingDiceKeys/EnterDiceKeyView";
+import { Preview_StickerSheetView } from "../views/SVG/StickerSheetView";
+import { Preview_StickerTargetSheetView } from "../views/SVG/StickerTargetSheetView";
+import { Preview_FaceCopyingView } from "../views/SVG/FaceCopyingView";
+import { PREVIEW_DiceKeySelectorView } from "../views/DiceKeySelectorView";
+import { getPreview, addPreviewWithMargins, addCenteredPreview, getPreviewNames } from "../views/basics/Previews";
 import { action, makeAutoObservable } from "mobx";
 import { observer } from "mobx-react";
-import {WindowRoutingView} from "./views/WindowTopLevelView";
-import { DiceKeyMemoryStore } from "./state";
-import { PushButton } from "./css/Button";
+import {WindowRoutingView} from "../views/WindowTopLevelView";
+import { DiceKeyMemoryStore } from "../state";
+import { PushButton } from "../css/Button";
 import styled from "styled-components";
 import { ThemeProvider } from "styled-components";
-import { lightTheme } from "./css/lightTheme";
-import { PrimaryView } from "./css";
-import { throwIfNull } from "./utilities/throwIfNull";
+import { lightTheme } from "../css/lightTheme";
+import { PrimaryView } from "../css";
+import { throwIfNull } from "../utilities/throwIfNull";
+
+
 
 // To make sure everything is loaded, load the view for the app even if we're not using it.
 if (!WindowRoutingView) {

@@ -1,15 +1,16 @@
 import React from "react";
 import { observer } from "mobx-react";
 import styled from "styled-components";
-import type {InferComponentProps} from "../../utilities/InferComponentProps";
+// import type {InferComponentProps} from "../../utilities/InferComponentProps";
 import { copyToClipboard } from "../../utilities/copyToClipboard";
+import { BooleanWithToggle } from "../../state/stores/HideRevealSecretsState";
 
-interface CharButtonExtraProps {invisible?: boolean}
+interface CharButtonExtraProps {$invisible?: boolean}
 
 export const CharButton = styled.button.attrs(() =>({
   tabIndex: -1 as number // Widening type from -1 to number is hack to fix typing issues in StyledComponents/InferComponentProps
 }))<CharButtonExtraProps>`
-  display: flex;
+  display: inline flex;
   justify-content: center;
   align-items: center;
   background: none;
@@ -26,7 +27,7 @@ export const CharButton = styled.button.attrs(() =>({
   &:active {
     background-color: rgba(0,0,0,.3);
   }
-  visibility: ${(p)=>p.invisible?"hidden":"visible"};
+  visibility: ${(p)=>p.$invisible?"hidden":"visible"};
 `;
 
 type CharButton = typeof CharButton;
@@ -50,25 +51,22 @@ export const CharButtonToolTip = styled.span`
 `;
 
 export const CopyButton = ({
-  valueToCopy, onClick, invisible, ...props
-}: InferComponentProps<typeof CharButton> & {valueToCopy?: string}) => (
-   <CharButton {...props} invisible={valueToCopy == null || invisible} onClick={(e)=>{copyToClipboard(valueToCopy); onClick?.(e);}}
+  valueToCopy, onClick, $invisible: invisible, ...props
+}: React.ComponentProps<typeof CharButton> & {valueToCopy?: string}) => (
+   <CharButton {...props} $invisible={valueToCopy == null || invisible} onClick={(e)=>{copyToClipboard(valueToCopy); onClick?.(e);}}
    >&#128203;<CharButtonToolTip>Copy</CharButtonToolTip></CharButton>
 );
 
-export interface ObscureButtonProps {
-  obscureValue: boolean;
-  toggleObscureValue: () => void;
-}
+export interface ObscureButtonProps extends BooleanWithToggle {}
 const hasObscureButtonProps = (props: Partial<ObscureButtonProps>): props is ObscureButtonProps =>
-  props.obscureValue !== undefined && !!props.toggleObscureValue
+  props.getValue !== undefined && !!props.toggle
 
 export const ObscureButton = observer ( (props: Partial<ObscureButtonProps>) => {
   if (!hasObscureButtonProps(props)) return null;
   return (
-    <CharButton style={ props.obscureValue ? {textDecoration: "line-through"} : {}}
-        onClick={props.toggleObscureValue}
-    >&#x1F441;<CharButtonToolTip>{ props.obscureValue ? "show" : "hide" }</CharButtonToolTip>
+    <CharButton style={ props.getValue() ? {textDecoration: "line-through"} : {}}
+        onClick={props.toggle}
+    >&#x1F441;<CharButtonToolTip>{ props.getValue() ? "show" : "hide" }</CharButtonToolTip>
     </CharButton>
   );
 });

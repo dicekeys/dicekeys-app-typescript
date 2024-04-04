@@ -5,7 +5,8 @@ import { observer } from "mobx-react";
 import { Spacer, Instruction2, CompressedContentBox, CenteredCompressedControls, RowCentered } from "../../views/basics";
 import { addPreview } from "../../views/basics/Previews";
 import { QueuedUrlApiRequest } from "../../api-handler";
-import { DiceKeyInHumanReadableForm, DiceKeyWithKeyId, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
+import { DiceKeyWithKeyId, DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
+import { DiceKeyInHumanReadableForm } from "../../dicekeys/DiceKey";
 import { PushButton } from "../../css/Button";
 
 import styled from "styled-components";
@@ -136,10 +137,10 @@ export const ApproveApiRequestView = observer( ({state}: ApproveApiRequestViewPr
       <DiceKeySelectorView
         loadRequested={state.startLoadDiceKey}
         selectedDiceKeyId={diceKey?.keyId}
-        ratioOfSelectedItemWidthToSelectableItemWidth={`3`}
-        selectedItemWidth={`min(40vw, 40vh)`}
+        $ratioOfSelectedItemWidthToSelectableItemWidth={`3`}
+        $selectedItemWidth={`min(40vw, 40vh)`}
         setSelectedDiceKeyId={state.setDiceKeyFromId}
-        rowWidth={`100vw`}
+        $rowWidth={`100vw`}
       />
       <Spacer/>
       { diceKey != null ? null : (
@@ -162,7 +163,7 @@ export const ApproveApiRequestView = observer( ({state}: ApproveApiRequestViewPr
       <CompressedContentBox>
         <CenteredCompressedControls>
           <PushButton onClick={state.respondByDeclining}>Cancel</PushButton>
-          <PushButton invisible={diceKey == null} onClick={state.respondSuccessfully}>{ "Send " + describeCommandResultType(command) }</PushButton>
+          <PushButton $invisible={diceKey == null} onClick={state.respondSuccessfully}>{ "Send " + describeCommandResultType(command) }</PushButton>
         </CenteredCompressedControls>
         <CenteredCompressedControls>
             <label style={{userSelect: "none"}} onClick={state.toggleRevealCenterLetterAndDigit}>Reveal

@@ -15,7 +15,6 @@ const CameraFound = styled(CameraOnThisDevice)``;
 const CameraUnreadable = styled(CameraOnThisDevice)``;
 const CameraToBeAdded = styled(CameraOnThisDevice)``;
 
-// FIXME, class names below are no-ops.
 export const CamerasBeingInspected = observer( ({camerasOnThisDevice}: {camerasOnThisDevice: CamerasOnThisDevice}) => (
   <CameraNameDiv>
     <div key="heading">Identifying device cameras...</div>

@@ -92,7 +92,6 @@ export const TextCompletionButtonStyled = styled.button.attrs(() =>({
   }
 `;
 
-// FIXME
 export const TextCompletionButton = ( {...attributes}: React.ButtonHTMLAttributes<HTMLButtonElement> = {}) => (
   <TextCompletionButtonStyled {...attributes}>&#9166;</TextCompletionButtonStyled>
 );

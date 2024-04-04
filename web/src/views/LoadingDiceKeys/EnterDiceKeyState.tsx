@@ -1,13 +1,16 @@
 import { action, makeAutoObservable } from "mobx";
 import {
-  Face,
   DiceKeyFaces,
-  validateDiceKey,
+  DiceKeyWithoutKeyId,
+  FaceDigit, FaceLetter, FaceOrientationLetterTrbl, FaceOrientationLetterTrblOrUnknown,
+  OrientedFace,
   PartialDiceKey,
-  DiceKeyWithoutKeyId
+  validateDiceKey
 } from "../../dicekeys/DiceKey";
-import { FaceDigit, FaceLetter, FaceOrientationLetterTrbl, FaceOrientationLetterTrblOrUnknown } from "@dicekeys/read-dicekey-js";
 
+type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
 
 export class EnterDiceKeyState {
   currentFaceIndex: number = 0;
@@ -20,18 +23,18 @@ export class EnterDiceKeyState {
     return validateDiceKey(this.partialDiceKey) ? new DiceKeyWithoutKeyId(this.partialDiceKey as DiceKeyFaces) : undefined;
   }
 
-  readonly partialDiceKey: PartialDiceKey = PartialDiceKey(Array.from({ length: 25 }, () => ({ orientationAsLowercaseLetterTrbl: 't' } as Partial<Face>)));
+  readonly partialDiceKey: PartialDiceKey = PartialDiceKey(Array.from({ length: 25 }, () => ({ orientationAsLowercaseLetterTrbl: 't' } as Partial<OrientedFace>)));
 
   constructor() {
     makeAutoObservable(this);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  private get currentFace(): Partial<Face> { return this.partialDiceKey[this.currentFaceIndex]!; }
+  private get currentFace(): Partial<Mutable<OrientedFace>> { return this.partialDiceKey[this.currentFaceIndex]!; }
   private get previousFaceIndex(): number { return (this.currentFaceIndex + 24) % 25; }
   private get nextFaceIndex(): number { return (this.currentFaceIndex + 1) % 25; }
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  private get nextFace(): Partial<Face> { return this.partialDiceKey[this.nextFaceIndex]!; }
+  private get nextFace(): Partial<OrientedFace> { return this.partialDiceKey[this.nextFaceIndex]!; }
 
   setCurrentFaceIndex = action((index: number) => {
     this.currentFaceIndex = index;

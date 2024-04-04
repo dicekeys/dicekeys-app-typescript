@@ -1,7 +1,6 @@
 import React from "react";
 import { observer  } from "mobx-react";
 import { CharButton, CharButtonToolTip, OptionallyObscuredTextView, SecretFieldsCommonObscureButton } from "../basics";
-import { ToggleState } from "../../state";
 import { DerivedFromRecipeState, OutputFormats, OutputFormat } from "./DerivedFromRecipeState";
 import { describeRecipeType } from "./DescribeRecipeType";
 import * as Dimensions from "./DerivationView/DerivationViewLayout";
@@ -13,6 +12,7 @@ import { defaultOnException } from "../../utilities/default-on-exception";
 import { Recipe } from "@dicekeys/dicekeys-api-js";
 import { QrCodeOverlayState, QrCodeOverlayView } from "./QrCodeOverlay";
 import QrCodeSvg from "../../images/QrCode.svg";
+import { HideRevealSecretsState } from "../../state/stores/HideRevealSecretsState";
 
 const Bip39Field = styled.div`
   display: flex;
@@ -182,16 +182,16 @@ export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputT
         { type == null || derivedValue == null ? null : (
           <HeaderButtonBar>
             <CharButton
-                invisible={derivedValue == null || type == null}
+                $invisible={derivedValue == null || type == null}
                 onClick={() => copyToClipboard(derivedValue)}
               >&#128203;<CharButtonToolTip>Copy {(outputFormat ?? "").toLocaleLowerCase()} to clipboard</CharButtonToolTip>
             </CharButton>
             <CharButton
-                invisible={derivedValue == null || type == null}
+                $invisible={derivedValue == null || type == null}
                 onClick={state.setShowQrCodeOn}
               ><img src={QrCodeSvg} style={{height: `1rem`}}></img><CharButtonToolTip>Display {(outputFormat ?? "").toLocaleLowerCase()} as QR code</CharButtonToolTip>
             </CharButton>
-            <SecretFieldsCommonObscureButton />
+            <SecretFieldsCommonObscureButton diceKeyOrCenterLetterAndDigit={state.diceKey} />
             { (RUNNING_IN_ELECTRON && fileName != null) ? (
               <CharButton
                 onClick={() => derivedValue && electronBridge.saveUtf8File({
@@ -204,7 +204,7 @@ export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputT
         )}
       </DerivedValueHeaderDiv>
       { type === "Secret" && outputFormat === "BIP39" && derivedValue != null ?
-        (<Bip39OutputView bip39String={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />)
+        (<Bip39OutputView bip39String={derivedValue} obscureValue={ HideRevealSecretsState.shouldSecretsDerivedFromDiceKeyBeHidden(state.diceKey) === true } />)
         : (
         <DerivedValueContentDiv>
           { !recipeState.recipeIsValid ? (
@@ -212,7 +212,7 @@ export const DerivedFromRecipeView = observer( ({state, allowUserToChangeOutputT
               A {describeRecipeType(recipeState.type)} to be created by applying a recipe to your DiceKey
             </PlaceholderDerivedValueContainer>
           ) : (
-            <OptionallyObscuredTextView value={derivedValue} obscureValue={ ToggleState.ObscureSecretFields.value } />
+            <OptionallyObscuredTextView value={derivedValue} obscureValue={ HideRevealSecretsState.shouldSecretsDerivedFromDiceKeyBeHidden(state.diceKey) === true } />
           )}
         </DerivedValueContentDiv>
       )}

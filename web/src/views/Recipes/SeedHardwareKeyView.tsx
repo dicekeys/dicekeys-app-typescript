@@ -4,7 +4,6 @@ import { CenteredControls, Instruction2, Spacer, SecretFieldsCommonObscureButton
 import { RecipeFieldEditorView, SequenceNumberFormFieldValueView } from "./DerivationView/RecipeFieldEditorView";
 import styled, { css } from "styled-components";
 import { cssCalcTyped, cssExprWithoutCalc } from "../../utilities/cssCalc";
-import { ObscureSecretFields } from "../../state/ToggleState";
 import { DivSupportingInvisible } from "../../css";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { StandardWidthBetweenSideMargins, WindowRegionBelowTopNavigationBarWithSideMargins } from "../Navigation/NavigationLayout";
@@ -12,9 +11,11 @@ import { SeedHardwareKeyViewState, SeedSource, fidoAccessDeniedByPlatform, fidoA
 import { LoadDiceKeyContentPaneView } from "../../views/LoadingDiceKeys/LoadDiceKeyView";
 import { AnchorButton } from "../../views/basics/AnchorButton";
 import { ExternalLink } from "../../views/basics/ExternalLink";
+import { HideRevealSecretsState } from "../../state/stores/HideRevealSecretsState";
+import { rangeStartingAt0 } from "../../utilities/range";
 
-const FieldRow = styled.div<{invisible?: boolean}>`
-    ${ props => props.invisible ? css`visibility: hidden;` : ``}
+const FieldRow = styled.div<{$invisible?: boolean}>`
+    ${ props => props.$invisible ? css`visibility: hidden;` : ``}
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
@@ -25,8 +26,8 @@ const FieldRow = styled.div<{invisible?: boolean}>`
 const FieldLabelWidth = `4rem`;
 const FieldValueMargin = `0.5vw`;
 
-const ValueColumnOnly = styled.div<{invisible?: boolean}>`
-  ${ props => props.invisible ? css`visibility: hidden;` : ``}
+const ValueColumnOnly = styled.div<{$invisible?: boolean}>`
+  ${ props => props.$invisible ? css`visibility: hidden;` : ``}
   margin-left: ${cssCalcTyped(`${cssExprWithoutCalc(FieldLabelWidth)} + ${cssExprWithoutCalc(FieldValueMargin)}`)};
   margin-top: 2rem;
   display: flex;
@@ -209,7 +210,7 @@ const obscureByReplacingOtherCharactersWithThisCharacter = opaqueBlockCharacter;
 const obscureHex = (hexString: string, cursorPosition: number | undefined | null): string => {
   const length = hexString.length;
 //  const cursorPositionOrEnd: number = Math.min(cursorPosition ?? hexString.length, hexString.length);
-  const obscureString = [...Array(length).keys()].map( (_, index) => 
+  const obscureString = rangeStartingAt0(length).map( (_, index) => 
       ( cursorPosition == null || (index < (cursorPosition - 2)) || (index > (cursorPosition + 1)) ) ?
       obscureByReplacingOtherCharactersWithThisCharacter : " "
   ).join("");
@@ -248,6 +249,8 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
 }) => {
   const value = seedHardwareKeyViewState.seedInHexFormat;
   const diceKeyNickname = seedHardwareKeyViewState.diceKey?.nickname ?? "DiceKey";
+  const shouldHideSeed = HideRevealSecretsState.shouldSecretsDerivedFromDiceKeyBeHidden(seedHardwareKeyViewState.diceKey) === true;
+  console.log(`shouldHideSeed`, shouldHideSeed);
   return (<>
     <ValueColumnOnly>
       <FieldValueMeta>
@@ -273,7 +276,10 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
     <FieldRow>
       <FieldLabel>Seed</FieldLabel>
       <FieldValue>
-        { ObscureSecretFields.value ? (<ObscureTextInputFor64HexChars value={value} cursorPosition={seedHardwareKeyViewState.seedInEditableHexFormatFieldCursorPosition} />) : null }
+        { shouldHideSeed ?
+            (<ObscureTextInputFor64HexChars value={value} cursorPosition={seedHardwareKeyViewState.seedInEditableHexFormatFieldCursorPosition} />) :
+            null
+        }
         <TextInputFor64HexChars
           disabled={seedHardwareKeyViewState.seedSourceSelected!==SeedSource.EnteredManually}
           value={value}
@@ -292,7 +298,7 @@ const SeedFieldView = observer( ( {seedHardwareKeyViewState}: {
           onBlur={() => seedHardwareKeyViewState.setSeedInEditableHexFormatFieldCursorPosition(null)}
           onFocus={seedHardwareKeyViewState.updateCursorPositionForEvent}
         />
-        <SecretFieldsCommonObscureButton />
+        <SecretFieldsCommonObscureButton diceKeyOrCenterLetterAndDigit={seedHardwareKeyViewState.diceKey} />
         <CopyButton valueToCopy={seedHardwareKeyViewState.seedInHexFormat} />
       </FieldValue>
     </FieldRow>
@@ -311,7 +317,7 @@ export const SeedHardwareKeyContentView = observer( ( {seedHardwareKeyViewState}
   if (loadDiceKeyState != null) {
     return (
       <LoadDiceKeyContentPaneView
-        onDiceKeyReadOrCancelled={ seedHardwareKeyViewState.onDiceKeyReadOrCancelled }
+        onDiceKeyReadOrCancelled={ r => seedHardwareKeyViewState.onDiceKeyReadOrCancelled(r?.diceKey) }
         state={ loadDiceKeyState }
       />
     );
@@ -347,7 +353,7 @@ export const SeedHardwareKeyContentView = observer( ( {seedHardwareKeyViewState}
       <ValueColumnOnly>
         <div>
           <button disabled={!seedHardwareKeyViewState.readyToWrite} onClick={seedHardwareKeyViewState.write}>Write</button>
-          <SmallNote invisible={!seedHardwareKeyViewState.readyToWrite}>
+          <SmallNote $invisible={!seedHardwareKeyViewState.readyToWrite}>
             Note the location of the button on your USB Key.  Once you press <i>write</i>, you will have {SecondsToTripleClick.toString()} seconds to press the button on your key three times.
           </SmallNote>
           <SmallNote>Not all FIDO security keys support seeding. Seeding is currently only supported by&nbsp;

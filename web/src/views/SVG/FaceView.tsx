@@ -2,13 +2,13 @@ import React from "react";
 import { observer } from "mobx-react";
 import {
   letterIndexTimesSixPlusDigitIndexFaceWithUndoverlineCodes,
-  Face,
   FaceLetters, 
   faceRotationLetterToClockwiseAngle,
   Point,
   UndoverlineCodes, getUndoverlineCodes,
   FaceDimensionsFractional
 } from "@dicekeys/read-dicekey-js";
+import { OrientedFace } from "../../dicekeys/DiceKey";
 import {EventHandlerOverridesDefault} from "../../utilities/EventHandlerOverridesDefault"
 export const FontFamily = "Inconsolata";
 export const FontWeight = "700";
@@ -18,7 +18,7 @@ export enum UndoverlineType {
   overline = "overline",
 }
 
-export function addUndoverlineCodes<T extends Partial<Face>>(face: T): T & (UndoverlineCodes | object) {
+export function addUndoverlineCodes<T extends Partial<OrientedFace>>(face: T): T & (UndoverlineCodes | object) {
   if (face.letter == null || face.digit == null) {
     return face;
   }
@@ -46,7 +46,11 @@ const dieSurfaceColorHighlighted = "rgb(222, 244, 64)"
  Array.from(Array(11).keys()).filter( pos => ((code >> (10 - pos)) & 1) != 0 )
 
 
-const UndoverlineGroupView = ({lineType, code}: { lineType: "underline" | "overline", code: number | undefined }) => {
+const UndoverlineGroupView = ({
+  lineType, code,
+  strokeColor = textShade,
+  backgroundColor = dieSurfaceColor,
+}: { lineType: "underline" | "overline", code: number | undefined, strokeColor?: string, backgroundColor?: string }) => {
   if (typeof (code) === "undefined") {
     return null;
   }
@@ -70,7 +74,7 @@ const UndoverlineGroupView = ({lineType, code}: { lineType: "underline" | "overl
         y={lineTop}
         height={FaceDimensionsFractional.undoverlineThickness}
         width={FaceDimensionsFractional.undoverlineLength}
-        fill={textShade}
+        fill={strokeColor}
         stroke='none'
       />
       { positionsSetOf11BitCode(codeWithPositionSymbols).map( (pos) => (
@@ -80,7 +84,7 @@ const UndoverlineGroupView = ({lineType, code}: { lineType: "underline" | "overl
           y={dotTop}
           width={FaceDimensionsFractional.undoverlineDotWidth}
           height={FaceDimensionsFractional.undoverlineDotHeight}
-          fill={dieSurfaceColor}
+          fill={backgroundColor}
           stroke={'none'}
         />
       ))
@@ -89,11 +93,11 @@ const UndoverlineGroupView = ({lineType, code}: { lineType: "underline" | "overl
   );
 }
 
-const UnderlineGroupView = ({code}: { code: number | undefined }) => (
-  <UndoverlineGroupView lineType={"underline"} code={code} />
+const UnderlineGroupView = (props: Omit<React.ComponentProps<typeof UndoverlineGroupView>, "lineType"> ) => (
+  <UndoverlineGroupView lineType={"underline"} {...props} />
 )
-const OverlineGroupView = ({code}: { code: number | undefined }) => (
-  <UndoverlineGroupView lineType={"overline"} code={code} />
+const OverlineGroupView = (props: { code: number | undefined }) => (
+  <UndoverlineGroupView lineType={"overline"} {...props} />
 )
 
 
@@ -108,7 +112,17 @@ const OverlineGroupView = ({code}: { code: number | undefined }) => (
  * 
  * @param face 
  */
-const UnitFaceGroupView = observer ( ({face, ...svgGroupProps}: {face: Partial<Face>} & React.SVGAttributes<SVGGElement>,) => {
+const UnitFaceGroupView = observer ( ({
+  face,
+  strokeColor = textShade,
+  backgroundColor,
+  ...svgGroupProps}: {
+  face: Partial<OrientedFace>;
+  strokeColor?: string;
+  backgroundColor?: string;
+} &
+  React.SVGAttributes<SVGGElement>
+) => {
   const {letter, digit} = face;
   const {underlineCode, overlineCode} = letter && digit ?
     getUndoverlineCodes({letter, digit}) :
@@ -116,13 +130,13 @@ const UnitFaceGroupView = observer ( ({face, ...svgGroupProps}: {face: Partial<F
 
   return (
     <g {...svgGroupProps} >
-      <UnderlineGroupView code={underlineCode} />
-      <OverlineGroupView code={overlineCode} />
+      <UnderlineGroupView code={underlineCode} {...{strokeColor, backgroundColor}} />
+      <OverlineGroupView code={overlineCode} {...{strokeColor, backgroundColor}} />
       <text
           x={0}
           y={-FaceDimensionsFractional.undoverlineLength / 2 + FaceDimensionsFractional.textBaselineY}
           fontFamily={FontFamily}
-          fill={textShade}
+          fill={strokeColor}
           style={{userSelect: "none"}}
           fontSize={FaceDimensionsFractional.fontSize}
           fontWeight={FontWeight}
@@ -137,10 +151,10 @@ const UnitFaceGroupView = observer ( ({face, ...svgGroupProps}: {face: Partial<F
 
 
 interface FaceViewProps {
-  face: Partial<Face>;
+  face: Partial<OrientedFace>;
   highlightThisFace?: boolean;
   backgroundColor?: string;
-  stroke?: string;
+  strokeColor?: string;
   strokeWidth?: string | number;
   onFaceClicked?: () => void;
 }
@@ -149,6 +163,7 @@ interface FaceGroupViewProps extends FaceViewProps {
   center?: Point;
   linearSizeOfFace?: number;
   linearFractionOfCoverage?: number;
+  doNotDrawBackground?: boolean;
   transform?: string;
 }
 
@@ -166,10 +181,12 @@ export const FaceGroupView = observer( ({
     face,
     center = {x: 0, y: 0},
     highlightThisFace = false,
-    stroke, strokeWidth,
+    strokeColor = textShade,
+    strokeWidth = 0,
     transform,
-    backgroundColor,
+    backgroundColor = dieSurfaceColor,
     linearSizeOfFace = 1,
+    doNotDrawBackground = false,
     linearFractionOfCoverage = 5/8,
     onFaceClicked,
     ...svgGroupProps
@@ -183,26 +200,44 @@ export const FaceGroupView = observer( ({
         {...optionalOnClickHandler}
         style={!!onFaceClicked ? {cursor: "pointer"} : {}}
     >
+      { doNotDrawBackground ? null : (
       <rect 
         x={-linearSizeOfFace/2} y={-linearSizeOfFace/2}
         width={linearSizeOfFace} height={linearSizeOfFace}
         rx={radius} ry={radius}
-        fill={highlightThisFace ? dieSurfaceColorHighlighted : backgroundColor ?? dieSurfaceColor}
-        {...{stroke, strokeWidth}}
-      />
+        fill={highlightThisFace ? dieSurfaceColorHighlighted : backgroundColor}
+        stroke={strokeColor}
+        {...{strokeWidth}}
+      />) }
 
       <g transform={`scale(${linearSizeOfFace * linearFractionOfCoverage})${clockwiseAngle === 0 ? "" : ` rotate(${ clockwiseAngle }, 0, 0)`}`}>
-        <UnitFaceGroupView face={face} />
+        <UnitFaceGroupView {...{face, strokeColor, backgroundColor}} />
       </g>
     </g>
   )
 });
 
+export const FaceSvg = observer( ({title, size, ...props}: FaceGroupViewProps & {title?: string; size: string}) => {
+  const {
+    center = {x: 0, y: 0},
+    linearSizeOfFace = 1
+  } = props;
+  const left = center.x - linearSizeOfFace / 2;
+  const top = center.y - linearSizeOfFace / 2;
+  return (
+  <svg height={`${size}`} width={`${size}`} viewBox={`${left}, ${top}, ${linearSizeOfFace}, ${linearSizeOfFace}`} >
+    { title == null ? null : (<title>{title}</title>) }
+    <FaceGroupView {...props} />
+  </svg>
+  )
+});
+
+
 export const FaceView = ({
-    face, highlightThisFace, backgroundColor, stroke, strokeWidth, onFaceClicked,
+    face, highlightThisFace, backgroundColor, strokeColor, strokeWidth, onFaceClicked,
     ...svgProps
   }: FaceViewProps & React.SVGAttributes<SVGElement>) => (
   <svg width={`100%`} height={`100%`} {...svgProps}>
-    <FaceGroupView {...{face, highlightThisFace, backgroundColor, stroke, strokeWidth, onFaceClicked}} />
+    <FaceGroupView {...{face, highlightThisFace, backgroundColor, strokeColor, strokeWidth, onFaceClicked}} />
   </svg>
 );

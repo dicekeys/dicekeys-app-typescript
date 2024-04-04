@@ -1,0 +1,3 @@
+- Update [packaging](./packging)
+- Fix icons
+- Build web to electron-forge or rename

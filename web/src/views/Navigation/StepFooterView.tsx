@@ -4,18 +4,19 @@ import {observer} from "mobx-react";
 import { PushButton } from "../../css/Button";
 import styled from "styled-components";
 
-const StepFooter = styled.div`
+export const StepFooter = styled.div`
   display: flex;
-  justify-self: flex-end;
   flex-direction: column;
+  justify-self: flex-end;
   justify-content: center;
   align-content: center;
   margin-bottom: 1vh;
   width: 80vw;
   align-self: center;
+  margin-top: auto;
 `;
 
-const StepFooterRow = styled.div`
+export const StepFooterRow = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -32,22 +33,23 @@ interface StepFooterViewProps {
   next?: () => void;
   nnext?: () => void;
   nextIsDone?: boolean;
-  aboveFooter?: JSX.Element | undefined;
 }
 
-export const StepFooterView = observer ( (props: StepFooterViewProps) => (
+export const StepFooterView = observer ( ({
+  prev, pprev, next, nnext, nextIsDone, children
+}: React.PropsWithChildren<StepFooterViewProps>) => (
   <StepFooter>
-    { props.aboveFooter == null ? null : (
+    { children == null ? null : (
       <StepFooterRow>
-        {props.aboveFooter}
+        {children}
       </StepFooterRow>
     ) }
     <StepFooterRow>
-      <PushButton invisible={props.pprev == null} onClick={ props.pprev } >&lt;&lt;</PushButton>
-      <PushButton invisible={props.prev == null} onClick={ props.prev } >&lt; previous</PushButton>
+      <PushButton $invisible={pprev == null} onClick={ pprev } >&lt;&lt;</PushButton>
+      <PushButton $invisible={prev == null} onClick={ prev } >&lt; previous</PushButton>
       <SpaceBetweenLeftAndRightButtons></SpaceBetweenLeftAndRightButtons>
-      <PushButton invisible={props.next == null} onClick={ props.next } >{props.nextIsDone ? "done" : "next"} &gt;</PushButton>
-      <PushButton invisible={props.nnext == null} onClick={ props.nnext } >&gt;&gt;</PushButton>
+      <PushButton $invisible={next == null} onClick={ next } >{nextIsDone ? "done" : "next"} &gt;</PushButton>
+      <PushButton $invisible={nnext == null} onClick={ nnext } >&gt;&gt;</PushButton>
     </StepFooterRow>
   </StepFooter>
 ));

@@ -1,7 +1,7 @@
 import { ApiCalls } from "@dicekeys/dicekeys-api-js";
 import { QueuedApiRequest } from "../../api-handler/QueuedApiRequest";
-import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
-import { action, makeAutoObservable } from "mobx";
+import { DiceKey, DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { action, makeAutoObservable, runInAction } from "mobx";
 import { DiceKeyMemoryStore } from "../../state";
 import { LoadDiceKeyViewState } from "../../views/LoadingDiceKeys/LoadDiceKeyViewState";
 import { MobxObservedPromise } from "../../utilities/MobxObservedPromise";
@@ -9,17 +9,26 @@ import { NumericTextFieldState } from "../../views/basics/NumericTextFieldView";
 import { addSequenceNumberToRecipeJson } from "../../dicekeys/ConstructRecipe";
 import { RUNNING_IN_ELECTRON } from "../../utilities/is-electron";
 import { ApiRequestsReceivedState } from "../../state/ApiRequestsReceivedState";
+import { DiceKeyInMemoryStoreState } from "../WithSelectedDiceKey/DiceKeyInMemoryStoreState";
 
 export class ApproveApiRequestState {
   static lastKeyIdUsed: string | undefined;
 
-  private _diceKey: DiceKeyWithKeyId | undefined;
-  get diceKey() { return this._diceKey; }
+  diceKeyState: DiceKeyInMemoryStoreState;
 
-  setDiceKey = action((diceKey: DiceKeyWithKeyId) => {
-    ApproveApiRequestState.lastKeyIdUsed = diceKey.keyId;
-    this._diceKey = diceKey;
-  });
+  // private _diceKey: DiceKeyWithKeyId | undefined;
+  get diceKey() { return this.diceKeyState.getDiceKey(); }
+
+  setDiceKey = async (diceKey?: DiceKey) => {
+    const diceKeyWithKeyId = diceKey == null ? undefined : diceKey instanceof DiceKeyWithKeyId ? diceKey : await diceKey.withKeyId;
+    const keyId = diceKeyWithKeyId?.keyId;
+    runInAction( () => {
+      if (keyId != null) {
+        ApproveApiRequestState.lastKeyIdUsed = keyId;
+      }
+      this.diceKeyState.setDiceKey(diceKeyWithKeyId);  
+    })
+  };
 
   private _sendingResponse: boolean = false;
   get sendingResponse() { return this._sendingResponse; }
@@ -85,12 +94,9 @@ export class ApproveApiRequestState {
     this.setLoadDiceKeyViewState(new LoadDiceKeyViewState());
   };
 
-  onDiceKeyReadOrCancelled = (diceKeyWithKeyId: DiceKeyWithKeyId | undefined) => {
+  onDiceKeyReadOrCancelled = (result: {diceKey: DiceKey} | undefined) => {
     this.setLoadDiceKeyViewState(undefined);
-    if (diceKeyWithKeyId != null) {
-      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKeyWithKeyId);
-      this.setDiceKey(diceKeyWithKeyId);
-    }
+    this.setDiceKey(result?.diceKey);
   };
 
   private _revealCenterLetterAndDigit: boolean = true;
@@ -144,8 +150,8 @@ export class ApproveApiRequestState {
     public readonly queuedApiRequest: QueuedApiRequest,
     diceKey?: DiceKeyWithKeyId
   ) {
-    this._diceKey = diceKey;
-    if (diceKey == null) {
+    this.diceKeyState = new DiceKeyInMemoryStoreState(diceKey?.keyId ?? ApproveApiRequestState.lastKeyIdUsed)
+    if (diceKey == null && ApproveApiRequestState.lastKeyIdUsed == null) {
       DiceKeyMemoryStore.onReady(() => {
           this.setDiceKeyFromId(ApproveApiRequestState.lastKeyIdUsed ??= DiceKeyMemoryStore.keysInMemoryOrSavedToDevice[0]?.keyId);
       });

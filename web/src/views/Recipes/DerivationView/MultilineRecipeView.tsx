@@ -17,8 +17,6 @@ import {
   RecipeValueTypeUnknownSpan,
   SequenceNumberValueSpan
 } from "./RecipeStyles";
-import { EventHandlerOverridesDefault } from "../../../utilities/EventHandlerOverridesDefault";
-
 
 const RecipeJsonAllowEntryFieldView = ({field} : {field: ParsedJsonObjectField}) => {
   const {name, value} = field;
@@ -126,7 +124,9 @@ export const MultilineRecipeJsonView = observer( ({recipeJson}: {recipeJson?: st
     if (recipeObject != null && recipeObject.type === "object") {
       return (
         <MultiLineRecipeDiv
-          onCopy={EventHandlerOverridesDefault(e => {
+          // onCopy={(e) => { e.preventDefault() }}
+          
+          onCopy={ (e) => {
             // When we display the recipe on multiple lines and with indentation,
             // the browser may want include new line symbols (\n) to and white space
             // to represent the that formatting, and so the copied raw JSON string
@@ -134,8 +134,9 @@ export const MultilineRecipeJsonView = observer( ({recipeJson}: {recipeJson?: st
             // To prevent this, we override the copy operation to ensure that copies
             // always yield the raw, unmodified, plaintext of the raw JSON string without
             // any added newlines or white space.
+            e.preventDefault()
             e.clipboardData.setData('text/plain', recipeJson ?? "");
-          })}
+          } }
         >
           {/* Display the opening brace ("{") and any white space before it */}
           {recipeObject.leadingWhiteSpace}

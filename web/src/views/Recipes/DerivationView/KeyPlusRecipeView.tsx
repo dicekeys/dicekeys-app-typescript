@@ -3,7 +3,6 @@ import { observer } from "mobx-react";
 import { RecipeBuilderState } from "../RecipeBuilderState";
 import { DiceKey } from "../../../dicekeys/DiceKey";
 import { DiceKeyView } from "../../../views/SVG/DiceKeyView";
-import { ToggleState } from "../../../state";
 import { HoverState } from "../../../state/reusable/HoverState";
 import { visibility } from "../../../utilities/visibility";
 import { RecipeDescriptionContentView } from "../RecipeDescriptionView";
@@ -113,10 +112,14 @@ const ElementInRecipeColumn = styled(RowElement)`
   width: ${cssCalcTyped(RecipeColumnWidthFormula)};
 `;
 
-export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
-  diceKey: DiceKey,
+export const KeyPlusRecipeView = observer ( ({
+  getDiceKey, recipeBuilderState
+}: {
+  getDiceKey: () => DiceKey | undefined,
   recipeBuilderState: RecipeBuilderState
 }) => {
+  const diceKey = getDiceKey();
+  if (diceKey == null) return null;
   const editButtonsHoverState = new HoverState<RecipeRibbonButtons>();
   return (
   <KeyPlusRecipeColumn>
@@ -124,9 +127,7 @@ export const KeyPlusRecipeView = observer ( ( {diceKey, recipeBuilderState}: {
     <KeyPlusRecipeRow>
       {/* Key */}
       <ElementInDiceKeyColumn>
-        <DiceKeyView faces={diceKey.faces} size={`min(${Dimensions.DiceKeyBoxMaxHeight},${Dimensions.DiceKeyBoxMaxWidth})`}
-          obscureAllButCenterDie={ToggleState.ObscureDiceKey}
-        />
+        <DiceKeyView faces={diceKey.faces} $size={`min(${Dimensions.DiceKeyBoxMaxHeight},${Dimensions.DiceKeyBoxMaxWidth})`}  />
       </ElementInDiceKeyColumn>
       {/* Plus sign */}
       <ElementInPlusSignColumn>+</ElementInPlusSignColumn>

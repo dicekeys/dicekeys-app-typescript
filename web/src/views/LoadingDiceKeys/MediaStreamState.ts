@@ -67,7 +67,7 @@ export class MediaStreamState {
         }
         throw e;
     }})();
-    console.log("Camera selected", mediaStream.getTracks()[0]?.getSettings());
+    // console.log("Camera selected", mediaStream.getTracks()[0]?.getSettings());
     this.setDeviceIdAndMediaStream(deviceId, mediaStream, supportsFixedFocus);
   }
 

@@ -1,9 +1,10 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { ObscureButtonProps, CopyButton, ObscureButton } from "./CharButton";
-import { ToggleState } from "../../state";
+import { CopyButton, ObscureButton } from "./CharButton";
 import { RowCentered } from ".";
 import styled from "styled-components";
+import { HideRevealSecretsState } from "../../state/stores/HideRevealSecretsState";
+import { DiceKey, FaceLetterAndDigit } from "../../dicekeys/DiceKey";
 
 const obscuringCharacter = String.fromCharCode(0x25A0); // * ■▓▒░
 
@@ -44,62 +45,61 @@ export const OptionallyObscuredTextView = observer( (props: OptionallyObscuredTe
   <>{ OptionallyObscuredText(props) }</>
 ));
 
-export type GeneratedTextFieldViewProps = Partial<ObscureButtonProps> & OptionallyObscuredTextProps & {hideCopyButton?: boolean};
+
 
 const GeneratedTextValueDiv = styled.div`
   font-family: monospace;
 `
 
-export const GeneratedTextFieldView  = observer( (props: GeneratedTextFieldViewProps) => (
+export type GeneratedTextFieldViewProps = {diceKeyOrCenterLetterAndDigit: DiceKey | FaceLetterAndDigit} & OptionallyObscuredTextProps & {hideCopyButton?: boolean};
+export const GeneratedTextFieldView  = observer( ({diceKeyOrCenterLetterAndDigit, ...props}: GeneratedTextFieldViewProps) => (
     <RowCentered>
       <GeneratedTextValueDiv key={"value"}><OptionallyObscuredTextView {...props} />{
-        props.obscureValue ?
+        props.value ?
           (props.obscuringFunction ?? defaultObscuringFunction)(props.value ?? "") :
           props.value
       }</GeneratedTextValueDiv>
-      <ObscureButton {...props} />
-      <CopyButton {...props} invisible={!!props.hideCopyButton} valueToCopy={props.value} />
+      <ObscureButton {...HideRevealSecretsState.hideRevealSecretsDerivedFromDiceKeyBooleanWithToggle(diceKeyOrCenterLetterAndDigit, false)} />
+      <CopyButton {...props} $invisible={!!props.hideCopyButton} valueToCopy={props.value} />
     </RowCentered>
   ));
 
-export const SecretFieldsCommonObscureButton = observer ( () => (
-  <ObscureButton obscureValue={ToggleState.ObscureSecretFields.value} toggleObscureValue={ToggleState.ObscureSecretFields.toggle} />
+export const SecretFieldsCommonObscureButton = observer ( ({diceKeyOrCenterLetterAndDigit}: {diceKeyOrCenterLetterAndDigit: DiceKey | FaceLetterAndDigit | undefined}) => (
+  <ObscureButton {...HideRevealSecretsState.hideRevealSecretsDerivedFromDiceKeyBooleanWithToggle(diceKeyOrCenterLetterAndDigit, false)}  />
 ));
 export const SecretFieldWithCommonObscureState = observer ((props: GeneratedTextFieldViewProps) => (
-  <GeneratedTextFieldView {...props} obscureValue={ ToggleState.ObscureSecretFields.value } />
+  <GeneratedTextFieldView {...props} />
 ));
 
 
-const GeneratedTextFieldViewWithSharedToggleStatePreCurry = observer (
-  (({toggleState, ...props}: GeneratedTextFieldViewProps & {toggleState: ToggleState.ToggleState}) => (
-      <GeneratedTextFieldView {...props}
-        obscureValue={ toggleState.value }
-        toggleObscureValue={ toggleState.toggle }
-      /> 
-    )
-  ));
+// const GeneratedTextFieldViewWithSharedToggleStatePreCurry = observer (
+//   (({...props}: GeneratedTextFieldViewProps & {hideSecretsBooleanWithToggle: BooleanWithToggle}) => (
+//       <GeneratedTextFieldView {...props}
+//     /> 
+//     )
+//   ));
 
 
-export const GeneratedTextFieldViewWithSharedToggleState =
-  ({toggleState, ...defaultProps}: {toggleState: ToggleState.ToggleState} & Partial<GeneratedTextFieldViewProps>) =>
-    (props: GeneratedTextFieldViewProps) => (
-      <GeneratedTextFieldViewWithSharedToggleStatePreCurry {...{toggleState, ...defaultProps, ...props}} />
-    );
+// export const GeneratedTextFieldViewWithSharedToggleState =
+//   ({toggleState, ...defaultProps}: {toggleState: BooleanWithToggle} & Partial<GeneratedTextFieldViewProps>) =>
+//     (props: GeneratedTextFieldViewProps) => (
+//       <GeneratedTextFieldViewWithSharedToggleStatePreCurry {...{toggleState, ...defaultProps, ...props}} />
+//     );
 
-export const GeneratedPasswordView = GeneratedTextFieldViewWithSharedToggleState({toggleState: ToggleState.ObscureSecretFields});
-// export const GeneratedSecretView = GeneratedTextFieldViewWithSharedToggleState(new ToggleState("Secret", true));
-export const GeneratedDiceKeySeedFieldView = GeneratedTextFieldViewWithSharedToggleState({toggleState: ToggleState.ObscureDiceKey});
+// export const GeneratedPasswordView = GeneratedTextFieldViewWithSharedToggleState({toggleState: ToggleState.ObscureSecretFields});
+// // export const GeneratedSecretView = GeneratedTextFieldViewWithSharedToggleState(new ToggleState("Secret", true));
+// export const GeneratedDiceKeySeedFieldView = GeneratedTextFieldViewWithSharedToggleState({toggleState: ToggleState.ObscureDiceKey});
 
-const obscureDiceKeyInHumanReadableForm = (s: string) =>
-  // The 12 triples before the center face should be obscured
-  s.slice(0, 12*3).split("").map( () => obscuringCharacter).join("") +
-  // The first two characters (letter and digit) of the center face should not be obscured
-  s.slice(12*3, 12*3 + 2) +
-  // The orientation character of the center face and the last 12 faces should be obscured
-  s.slice(12*3 + 2).split("").map( () => obscuringCharacter).join("");
+// const obscureDiceKeyInHumanReadableForm = (s: string) =>
+//   // The 12 triples before the center face should be obscured
+//   s.slice(0, 12*3).split("").map( () => obscuringCharacter).join("") +
+//   // The first two characters (letter and digit) of the center face should not be obscured
+//   s.slice(12*3, 12*3 + 2) +
+//   // The orientation character of the center face and the last 12 faces should be obscured
+//   s.slice(12*3 + 2).split("").map( () => obscuringCharacter).join("");
 
-export const DiceKeyAsSeedView = GeneratedTextFieldViewWithSharedToggleState({
-  toggleState: ToggleState.ObscureDiceKey,
-  hideCopyButton: true,
-  obscuringFunction: obscureDiceKeyInHumanReadableForm
-});
+// export const DiceKeyAsSeedView = GeneratedTextFieldViewWithSharedToggleState({
+//   toggleState: ToggleState.ObscureDiceKey,
+//   hideCopyButton: true,
+//   obscuringFunction: obscureDiceKeyInHumanReadableForm
+// });

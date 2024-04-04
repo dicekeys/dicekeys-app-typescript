@@ -1,0 +1,41 @@
+{
+  "name": "dicekeys",
+  "productName": "DiceKeys",
+  "version": "1.0.0",
+  "description": "DiceKeys desktop application",
+  "main": "electron-js/electron.js",
+  "homepage": "https://dicekeys.com",
+  "scripts": {
+    "compile-forge-config": "tsc ./forge.config.ts --skipLibCheck --module commonjs",
+    "start": "npm run compile-forge-config && electron-forge start",
+    "package": "npm run compile-forge-config && electron-forge package",
+    "make": "npm run compile-forge-config && electron-forge make",
+    "make-universal": "npm run compile-forge-config && electron-forge make --arch=universal",
+    "publish": "npm run compile-forge-config && electron-forge publish",
+    "lint": "echo \"No linting configured\""
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.3.1",
+    "@electron-forge/maker-deb": "^7.3.1",
+    "@electron-forge/maker-dmg": "^7.3.1",
+    "@electron-forge/maker-rpm": "^7.3.1",
+    "@electron-forge/maker-squirrel": "^7.3.1",
+    "@electron-forge/maker-zip": "^7.3.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.3.1",
+    "@electron-forge/plugin-fuses": "^7.3.1",
+    "@electron-forge/publisher-github": "^7.3.1",
+    "@electron/fuses": "^1.8.0",
+    "electron": "29.1.6"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Stuart Schechter",
+    "email": "stuart@dicekeys.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@dicekeys/dicekeys-api-js": "^0.1.13",
+    "electron-squirrel-startup": "^1.0.0",
+    "keytar": "^7.9.0"
+  }
+}

@@ -3,35 +3,48 @@ import {
   ScanDiceKeyView
 } from "./ScanDiceKeyView";
 import {
-  EnterDiceKeyView} from "./EnterDiceKeyView"
+  EnterDiceKeyView
+} from "./EnterDiceKeyView";
 import { observer } from "mobx-react";
-import { CenteredControls, CenterColumn, Instruction, Spacer } from "../basics";
+import { CenteredControls, CenterColumn, Instruction, Spacer, Instruction2 } from "../basics";
 import { PushButton } from "../../css/Button";
 import { SimpleTopNavBar } from "../../views/Navigation/SimpleTopNavBar";
 import { WindowRegionBelowTopNavigationBarWithSideMargins } from "../Navigation/NavigationLayout";
 import { LoadDiceKeyViewState, Mode } from "./LoadDiceKeyViewState";
-import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
+import { DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
 
 type LoadDiceKeyProps = {
-  onDiceKeyReadOrCancelled: (diceKey: DiceKeyWithKeyId | undefined, howRead: Mode | "cancelled") => void,
-  state: LoadDiceKeyViewState
+  onDiceKeyReadOrCancelled: (resultIfRead?: {
+    diceKey: DiceKeyWithoutKeyId,
+    howRead: Mode
+  } | undefined) => void;
+  state: LoadDiceKeyViewState;
+  instruction?: JSX.Element | string;
+  scanViewHeight?: string;
 };
 
-const LoadDiceKeySubView = observer( (props: LoadDiceKeyProps ) => {
-  switch(props.state.mode) {
+const LoadDiceKeySubView = observer( ({
+  state,
+  onDiceKeyReadOrCancelled,
+  instruction,
+  scanViewHeight = `70vh`,
+}: LoadDiceKeyProps ) => {
+  switch(state.mode) {
     case "camera": return (
         <CenterColumn>
           <Instruction>Place your DiceKey into the camera's field of view.</Instruction>
+          { instruction == null ? null : (<Instruction2>{instruction}</Instruction2>) }
           <ScanDiceKeyView
-            height="70vh"
+            height={scanViewHeight}
             showBoxOverlay={true}
-            onDiceKeyRead={ (diceKey) => props.onDiceKeyReadOrCancelled( diceKey, "camera") }
-            editManually={ () => props.state.setMode("manual") }
+            onDiceKeyRead={ (diceKey) =>
+              onDiceKeyReadOrCancelled(diceKey == null ? diceKey : {diceKey, howRead: "camera"}) }
+            editManually={ () => state.setMode("manual") }
           />
         </CenterColumn>
     );
     case "manual": return (
-      <EnterDiceKeyView state={props.state.enterDiceKeyState} />
+      <EnterDiceKeyView state={state.enterDiceKeyState} instruction={instruction} />
     );
   }
 });
@@ -43,7 +56,7 @@ export const LoadDiceKeyContentPaneView = observer( (props: LoadDiceKeyProps) =>
   const onDonePressedWithinEnterDiceKey = () => {
     const diceKey = state.enterDiceKeyState.diceKey;
     if (state.mode === "manual" &&  diceKey) {
-      diceKey.withKeyId.then( diceKey => props.onDiceKeyReadOrCancelled(diceKey, "manual") );
+      props.onDiceKeyReadOrCancelled({diceKey, howRead: "manual"});
     }
   }
 
@@ -53,11 +66,11 @@ export const LoadDiceKeyContentPaneView = observer( (props: LoadDiceKeyProps) =>
       <LoadDiceKeySubView {...props} {...{state}} />
       <CenteredControls>
         { onDiceKeyReadOrCancelled ? (
-          <PushButton onClick={ () => onDiceKeyReadOrCancelled(undefined, "cancelled") } >Cancel</PushButton>          
+          <PushButton onClick={ () => onDiceKeyReadOrCancelled() } >Cancel</PushButton>          
         ) : null }
         <PushButton onClick={ () => state.setMode(state.mode === "camera" ? "manual" : "camera") } >{state.mode !== "camera" ? "Use Camera" : "Enter Manually"}</PushButton>        
         <PushButton
-          invisible={state.mode !== "manual" || !state.enterDiceKeyState.isValid}
+          $invisible={state.mode !== "manual" || !state.enterDiceKeyState.isValid}
           onClick={ onDonePressedWithinEnterDiceKey }
         >Done</PushButton>          
       </CenteredControls>

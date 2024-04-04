@@ -1,15 +1,15 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { DiceKey, DiceKeyWithoutKeyId, Face, PartialDiceKey } from "../../dicekeys/DiceKey";
+import { DiceKey, DiceKeyWithoutKeyId, OrientedFace, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { StickerTargetSheetSvgGroup } from "./StickerTargetSheetView";
-import { DiceKeySizeModelFromBoundsWithoutTab, DiceKeySvgGroup } from "./DiceKeyView";
-import { StickerSheetSvgGroup, portraitSheetWidthOverHeight, StickerSheetSizeModelFromBounds } from "./StickerSheetView";
-import { Bounds, fitRectangleWithAspectRatioIntoABoundingBox, viewBox } from "../../utilities/bounding-rects";
-import HandWithSticker from /*url:*/"../../images/Hand with Sticker.svg";
+import { DiceKeySizeModelForFaceAsUnit, DiceKeySvgGroup } from "./DiceKeyView";
+import { StickerSheetSvgGroup, StickerSheetSizeModelForFaceAsUnit } from "./StickerSheetView";
+import { viewBox } from "../../utilities/bounding-rects";
+import HandWithSticker from /*url:*/ "../../images/Hand with Sticker.svg";
 import { FaceGroupView } from "./FaceView";
 import { weightsToFractionalProportions, sum } from "../../utilities/weights";
-import { OptionalMaxSizeCalcProps, WithBounds } from "../../utilities/WithBounds";
-import { ToggleState } from "../../state/ToggleState";
+import { BooleanWithToggle } from "../../state/stores/HideRevealSecretsState";
+import { HandGeneratedBackupMedium, HandGeneratedBackupMediumDice, HandGeneratedBackupMediumStickers } from "../../dicekeys/PhysicalMedium";
 
 // Hand with sticker is 219wide x 187 high
 const handImageSVGHeight = 187;
@@ -22,7 +22,10 @@ const handImageOffsetToCenterOfDie = {
             height: (0.5 - 0.2845) * handImageSVGHeight,
 };
 
-
+/**
+ * Copying view is 2.4 key width (or sticker sheet) wide
+ * and 1 sticker sheet or key width high.
+ */
 const widthsInUnitsOf1KeyWidth = [
   1, // source sticker sheet
   0.4, // space between sticker sheets
@@ -31,84 +34,78 @@ const widthsInUnitsOf1KeyWidth = [
 const fractionalWidths = weightsToFractionalProportions<3>(...widthsInUnitsOf1KeyWidth);
 const totalWidthInUnitsOf1KeyWidth = sum(widthsInUnitsOf1KeyWidth);
 
-const sticKeyFaceCopyingImageWidthOverHeight = portraitSheetWidthOverHeight * totalWidthInUnitsOf1KeyWidth;
-const diceKeyFaceCopyingImageWidthOverHeight = 1 /* dice key with no lid width/height (a square) */ * totalWidthInUnitsOf1KeyWidth;
-const fitStiKeyFaceCopyingImageIntoBounds = fitRectangleWithAspectRatioIntoABoundingBox(sticKeyFaceCopyingImageWidthOverHeight);
-const fitDiceKeyFaceCopyingImageIntoBounds = fitRectangleWithAspectRatioIntoABoundingBox(diceKeyFaceCopyingImageWidthOverHeight);
-
+const FaceCopyingViewBounds = (medium: HandGeneratedBackupMedium): {width: number, height: number} =>
+  medium === HandGeneratedBackupMediumStickers ? {
+    width: StickerSheetSizeModelForFaceAsUnit.width * totalWidthInUnitsOf1KeyWidth,
+    height: StickerSheetSizeModelForFaceAsUnit.height
+  } : {
+    width: DiceKeySizeModelForFaceAsUnit.width * totalWidthInUnitsOf1KeyWidth,
+    height: DiceKeySizeModelForFaceAsUnit.height
+  }
 
 type FaceCopyingViewProps = {
   diceKey?: DiceKey,
-  medium: "SticKey" | "DiceKey",
-  matchSticKeyAspectRatio?: boolean,
+  medium: HandGeneratedBackupMedium,
   showArrow?: boolean,
   indexOfLastFacePlaced?: number,
-  obscureAllButCenterDie: boolean | ToggleState
-}; //  & React.SVGAttributes<SVGGElement>
-const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) => {
+  obscureAllButCenterDie: boolean | BooleanWithToggle
+};
+const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps) => {
   const {
-    diceKey, medium, matchSticKeyAspectRatio, indexOfLastFacePlaced, showArrow,
-    obscureAllButCenterDie
+    diceKey, medium, indexOfLastFacePlaced, showArrow, obscureAllButCenterDie // matchSticKeyAspectRatio, 
   } = props;
   const hideFaces = diceKey?.faces.slice(0, indexOfLastFacePlaced ?? -1);
-  const bounds = medium === "SticKey" ?
-    fitStiKeyFaceCopyingImageIntoBounds(props) :
-    fitDiceKeyFaceCopyingImageIntoBounds(props);
-  const {width, height} = bounds;
-  const face = diceKey?.faces[indexOfLastFacePlaced ?? -1] as Face | undefined;
-  const modelBounds = {width: width * fractionalWidths[0], height: height};
-  const stickerSheetSizeModel = StickerSheetSizeModelFromBounds(modelBounds);
-  const diceKeySizeModel = DiceKeySizeModelFromBoundsWithoutTab( matchSticKeyAspectRatio ?
-    // Adjust height from 6-face height to 5 face height
-    {width: modelBounds.width, height: modelBounds.height - stickerSheetSizeModel.linearSizeOfFace}:
-    modelBounds);
-  const sheetSizeModel = (medium === "SticKey") ? stickerSheetSizeModel : diceKeySizeModel;
-  const xoffsetImageCenterToLeftSheetCenter = -width * (fractionalWidths[0] + fractionalWidths[1])/2;
-  const xoffsetImageCenterToRightSheetCenter = width * (fractionalWidths[1] + fractionalWidths[2])/2;
-  const scaleOfHandImage = sheetSizeModel.linearSizeOfFace / handImageSVGWidthOfFace;
+  const targetSizeModel = medium === HandGeneratedBackupMediumStickers ?
+    StickerSheetSizeModelForFaceAsUnit :
+    DiceKeySizeModelForFaceAsUnit;
+  const imageWidth = FaceCopyingViewBounds(props.medium).width;
+  const face = diceKey?.faces[indexOfLastFacePlaced ?? -1] as OrientedFace | undefined;
+  const xoffsetImageCenterToLeftSheetCenter = -imageWidth * (fractionalWidths[0] + fractionalWidths[1])/2;
+  const xoffsetImageCenterToRightSheetCenter = imageWidth * (fractionalWidths[1] + fractionalWidths[2])/2;
+  const scaleOfHandImage = targetSizeModel.linearSizeOfFace / handImageSVGWidthOfFace;
   const faceIndexX = (indexOfLastFacePlaced ?? 0) % 5;
   const faceIndexY = Math.floor((indexOfLastFacePlaced ?? 0) / 5);
   const translateToDieCenter = `translate(${
-      xoffsetImageCenterToRightSheetCenter + (-2 + faceIndexX) * sheetSizeModel.distanceBetweenDieCenters
+      xoffsetImageCenterToRightSheetCenter + (-2 + faceIndexX) * targetSizeModel.distanceBetweenDieCenters
     }, ${
-      (-2 + faceIndexY) * sheetSizeModel.distanceBetweenDieCenters
+      (-2 + faceIndexY) * targetSizeModel.distanceBetweenDieCenters
     })`;
 
   return (
     <g>
-      { medium === "SticKey" ? (<>
-        <StickerSheetSvgGroup {...stickerSheetSizeModel.bounds} showLetter={face?.letter} hideFaces={hideFaces} highlightFaceWithDigit={face?.digit}
+      { medium === HandGeneratedBackupMediumStickers ? (<>
+        <StickerSheetSvgGroup {...targetSizeModel.bounds} showLetter={face?.letter} hideFaces={hideFaces} highlightFaceWithDigit={face?.digit}
           transform={`translate(${xoffsetImageCenterToLeftSheetCenter})`}
         />
         <StickerTargetSheetSvgGroup
-          {...stickerSheetSizeModel.bounds} diceKey={diceKey}
-            sizeModel={stickerSheetSizeModel}
+          {...targetSizeModel.bounds} diceKey={diceKey}
+            sizeModel={targetSizeModel}
             indexOfLastFacePlaced={indexOfLastFacePlaced}
             highlightThisFace={indexOfLastFacePlaced}
             transform={`translate(${xoffsetImageCenterToRightSheetCenter}, 0)`}
         />        
-      </>) : medium === "DiceKey" ? (<>
+      </>) : medium === HandGeneratedBackupMediumDice ? (<>
         <DiceKeySvgGroup
           faces={diceKey?.faces}
-          sizeModel={diceKeySizeModel}
-          {...diceKeySizeModel.bounds}
+          sizeModel={DiceKeySizeModelForFaceAsUnit}
+          {...targetSizeModel.bounds}
           highlightFaceAtIndex={indexOfLastFacePlaced}
           transform={`translate(${xoffsetImageCenterToLeftSheetCenter})`}
           obscureAllButCenterDie={obscureAllButCenterDie}
         />
         <DiceKeySvgGroup
-          sizeModel={diceKeySizeModel}
+          sizeModel={DiceKeySizeModelForFaceAsUnit}
           faces={diceKey?.faces.map( (face, index) =>
             index <= (indexOfLastFacePlaced ?? 24) ? face : {} ) as PartialDiceKey
           }
-          {...diceKeySizeModel.bounds}
+          {...targetSizeModel.bounds}
           highlightFaceAtIndex={indexOfLastFacePlaced}
           transform={`translate(${xoffsetImageCenterToRightSheetCenter}, 0)`}
           obscureAllButCenterDie={false}
         />              
       </>) : (<></>)}
       { showArrow !== true ? (<></>) : (
-        <text textAnchor={'middle'} fontSize={sheetSizeModel.linearSizeOfFace * 1.5} y={sheetSizeModel.linearSizeOfFace * .6} >
+        <text textAnchor={'middle'} fontSize={targetSizeModel.linearSizeOfFace * 1.5} y={targetSizeModel.linearSizeOfFace * .6} >
           <tspan>
             &#x21e8;
           </tspan>
@@ -127,11 +124,12 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
           />
           <FaceGroupView
             transform={translateToDieCenter + `rotate(-0.7)`}
-            backgroundColor="rgba(0,0,0,0)" // transparent
+            doNotDrawBackground={true}
+//            backgroundColor="rgba(0,0,0,0)" // transparent
             strokeWidth={0}
-            stroke={"rgba(0,0,0,0)"}
+            strokeColor={"rgba(0,108,0,1)"}
             face={face}
-            linearSizeOfFace={sheetSizeModel.linearSizeOfFace}
+            linearSizeOfFace={targetSizeModel.linearSizeOfFace}
           />
         </>
       )}
@@ -139,30 +137,24 @@ const FaceCopyingViewGroup = observer ( (props: FaceCopyingViewProps & Bounds) =
   );
 });
 
-const aspectRatioWidthOverHeight = portraitSheetWidthOverHeight * totalWidthInUnitsOf1KeyWidth;
-
 export const FaceCopyingView = observer( ({
-  maxHeight, maxWidth, ...props
-}: FaceCopyingViewProps & OptionalMaxSizeCalcProps) => {
-  return (
-    <WithBounds {...{aspectRatioWidthOverHeight, maxHeight, maxWidth}}>{ (({bounds}) => (
-      <svg  width={`100%`} height={`100%`} viewBox={viewBox(bounds)}>
-        <FaceCopyingViewGroup {...{...props, ...bounds}} />
-      </svg>
-    ))}</WithBounds>
-  )    
-});
+  diceKey, medium, indexOfLastFacePlaced, showArrow, obscureAllButCenterDie, ...svgProps
+}: FaceCopyingViewProps & React.SVGAttributes<SVGGElement>) => (
+  <svg {...svgProps} viewBox={viewBox(FaceCopyingViewBounds(medium))}>
+    <FaceCopyingViewGroup {...{diceKey, medium, indexOfLastFacePlaced, showArrow, obscureAllButCenterDie}} />
+  </svg>
+));
 
 export const DiceKeyCopyingView = observer( (props: Omit<FaceCopyingViewProps, "medium">) => (
-  <FaceCopyingView {...{...props, medium: "DiceKey"}} />
+  <FaceCopyingView {...{...props, medium: HandGeneratedBackupMediumDice}} />
 ));
 export const SticKeyCopyingView = observer( (props: Omit<FaceCopyingViewProps, "medium">) => (
-  <FaceCopyingView {...{...props, medium: "SticKey"}} />
+  <FaceCopyingView {...{...props, medium: HandGeneratedBackupMediumStickers}} />
 ));
 
 export const Preview_FaceCopyingView = ({indexOfLastFacePlaced=23}: {indexOfLastFacePlaced?: number}) => (
   <>
     <DiceKeyCopyingView obscureAllButCenterDie={false} diceKey={DiceKeyWithoutKeyId.testExample} indexOfLastFacePlaced={indexOfLastFacePlaced} />
-    <SticKeyCopyingView obscureAllButCenterDie={false} diceKey={DiceKeyWithoutKeyId.testExample} matchSticKeyAspectRatio={true} indexOfLastFacePlaced={indexOfLastFacePlaced} />
+    <SticKeyCopyingView obscureAllButCenterDie={false} diceKey={DiceKeyWithoutKeyId.testExample} indexOfLastFacePlaced={indexOfLastFacePlaced} />
   </>
 )

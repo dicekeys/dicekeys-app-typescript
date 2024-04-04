@@ -41,12 +41,12 @@ try {
   const url = new URL(window.location.href);
   if (url.searchParams.has(ApiCalls.RequestMetadataParameterNames.command)) {
     const request = new QueuedUrlApiRequest(new URL(window.location.href));
-    console.log(`Request received`, request);
+    //  console.log(`Request received`, request);
     // If we've reached this point, there is a valid API request that needs to be handled.
     // Add it to the queue.
     // Open DiceKeys app, or better create a new UI view.
     ApiRequestsReceivedState.enqueueApiRequestReceived(request);
-    console.log(`Request enqueued for handling by web app`);
+    //  console.log(`Request enqueued for handling by web app`);
     // if (RUNNING_IN_BROWSER) {
       // const schemeBasedApiRequest = "dicekeys:/" + url.search;
       // customProtocolCheck(schemeBasedApiRequest, () => {
@@ -87,9 +87,14 @@ if (RUNNING_IN_ELECTRON) {
     windowTopLevelNavigationState?.onReturnFromActionThatMayLoadDiceKey(diceKey);
   }
 
+  const loadFromShares = async() => {
+    windowTopLevelNavigationState?.navigateToRecoverFromShares();
+  }
+
   electronBridge.implementMainToPrimaryRendererAsyncApi({
     "getRecipesToExport": async () => RecipeStore.getStoredRecipesJson(),
     "importRecipes": async (recipesToImport) => RecipeStore.importStoredRecipeAsJsonArray(recipesToImport),
+    loadFromShares,
     loadRandomDiceKey,
   });
 

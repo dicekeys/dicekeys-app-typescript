@@ -1,5 +1,5 @@
 import React from "react";
-import { DiceKeyWithKeyId, PartialDiceKey } from "../../dicekeys/DiceKey";
+import { DiceKeyWithoutKeyId, PartialDiceKey } from "../../dicekeys/DiceKey";
 import { observer } from "mobx-react";
 import { ScanDiceKeyView } from "../LoadingDiceKeys/ScanDiceKeyView";
 import { DiceKeyView } from "../SVG/DiceKeyView";
@@ -40,14 +40,12 @@ export const ValidateBackupView = observer ( ({
 }: {
   viewState: ValidateBackupViewState
 }) => {
-  const {withDiceKey, originalDiceKey, diceKeyScanned} = viewState;
-  const onDiceKeyRead = (diceKey: DiceKeyWithKeyId) => {
-    if (viewState.scanning === "backup") {
+  const {originalDiceKey, diceKeyScanned} = viewState;
+  const onDiceKeyRead = (diceKey?: DiceKeyWithoutKeyId) => {
+    if (diceKey != null && viewState.scanning === "backup") {
       viewState.setDiceKeyScannedForValidation(diceKey);
-    } else if (viewState.scanning === "original" && "setDiceKey" in withDiceKey) {
-      withDiceKey.setDiceKey(diceKey);
-      // DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKey);
-      // viewState.setDiceKey(diceKey);
+    } else if (diceKey != null && viewState.scanning === "original" && "setDiceKey" in viewState && viewState.setDiceKey != null) {
+      viewState.setDiceKey(diceKey);
     }
     viewState.stopScanning();
   };
@@ -66,25 +64,26 @@ export const ValidateBackupView = observer ( ({
       <ContentRow>
         <ComparisonBox>
           <DiceKeyView
-            diceKeyWithKeyId={originalDiceKey}
-            size={`min(25vw,40vh)`}
+            diceKey={originalDiceKey}
+            neverRotate={true}
+            $size={`min(25vw,40vh)`}
             highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />
           <CenteredControls>
-            <PushButton invisible={!("setDiceKey" in viewState.withDiceKey)} onClick={viewState.startScanningOriginal}>Re-scan your original DiceKey</PushButton>
+            <PushButton $invisible={viewState.setDiceKey == null} onClick={viewState.startScanningOriginal}>Re-scan your original DiceKey</PushButton>
           </CenteredControls>
         </ComparisonBox>
         <ComparisonBox>
           {diceKeyScanned == null ? (
             <DiceKeyView
-              size={`min(25vw,40vh)`}
+              $size={`min(25vw,40vh)`}
               onFaceClicked={viewState.startScanningBackup}
               obscureAllButCenterDie={false}
             />
           ) : (
             <DiceKeyView
+              $size={`min(25vw,40vh)`}
               faces={diceKeyScanned?.faces ?? [] as unknown as PartialDiceKey }
-              size={`min(25vw,40vh)`}
               highlightFaceAtIndex={viewState.errorDescriptor?.faceIndex}
             />
           )
@@ -144,7 +143,7 @@ const ErrorStepView = observer ( ({viewState}: {viewState: ValidateBackupViewSta
   <ErrorStepViewBox>
     <MinWidthButtonContainer style={{ ...( (errorIndex) > 0 ? {} : {visibility: "hidden"})}}>
       <PushButton
-        invisible={errorIndex == 0 || errorIndex == null}
+        $invisible={errorIndex == 0 || errorIndex == null}
         onClick={() => viewState.setErrorIndex((errorIndex ?? 1) - 1)}
         >previous
       </PushButton>
@@ -154,7 +153,7 @@ const ErrorStepView = observer ( ({viewState}: {viewState: ValidateBackupViewSta
     </ErrorExplanation>
     <MinWidthButtonContainer style={visibility(errorIndex < numberOfFacesWithErrors-1)}>
       <PushButton
-        invisible={errorIndex >= numberOfFacesWithErrors - 1 }
+        $invisible={errorIndex >= numberOfFacesWithErrors - 1 }
         onClick={() => viewState.setErrorIndex((errorIndex ?? 0) + 1)}
       >next
       </PushButton>

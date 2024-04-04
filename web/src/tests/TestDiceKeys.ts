@@ -1,5 +1,5 @@
-import { DiceKeyInHumanReadableForm, DiceKeyWithoutKeyId } from "../dicekeys/DiceKey";
 import fs from "fs";
+import { DiceKeyInHumanReadableForm, DiceKeyWithoutKeyId } from "../dicekeys/DiceKey";
 import { testDiceKeysInHumanReadableForm } from "./TestDiceKeysInHumanReadableForm";
 
 export const createSetOfTestDiceKeys = (count: number) => {
@@ -11,7 +11,7 @@ export const createSetOfTestDiceKeys = (count: number) => {
     };` + "\n");
 }
 
-const isRunningInCI = false; // FIXME -- Need to fix this with a command-line option
+const isRunningInCI = false; // FUTURE -- Need to fix this with a command-line option
 export const TestDiceKeys = testDiceKeysInHumanReadableForm
   .slice(0, isRunningInCI ? undefined : 20 )
   .map(  (s) =>DiceKeyWithoutKeyId.fromHumanReadableForm(s as DiceKeyInHumanReadableForm) );

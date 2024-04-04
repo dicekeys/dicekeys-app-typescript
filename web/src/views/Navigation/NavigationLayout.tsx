@@ -19,26 +19,38 @@ export const CalcHeightBetweenTopNavigationBarAndStandardBottomBar = cssCalcType
 const ZIndexForModalOverlays = 128;
 
 export const WindowRegionColumnContainer= styled(DivSupportingInvisible)`
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  justify-content: space-around;
+  @media screen {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    overflow: hidden;    
+  }
 `;
 
 export const WindowRegionBelowTopNavigationBar = styled(WindowRegionColumnContainer)`
-  height: ${calcHeightBelowTopNavigationBar};
+  @media screen {
+    height: ${calcHeightBelowTopNavigationBar};
+  }
 `;
 
 export const WindowRegionBelowTopNavigationBarAndAboveStandardBottomBar = styled(WindowRegionColumnContainer)`
-  height: ${CalcHeightBetweenTopNavigationBarAndStandardBottomBar};
+  @media screen {
+    height: ${CalcHeightBetweenTopNavigationBarAndStandardBottomBar};    
+  }
 `;
 
 const ImposeStandardSideMargins = css`
-  margin-left: ${cssCalcTyped(StandardSideMargin)};
-  margin-right: ${cssCalcTyped(StandardSideMargin)};
-  width: ${cssCalcTyped(StandardWidthBetweenSideMargins)};
+  @media screen {
+    margin-left: ${cssCalcTyped(StandardSideMargin)};
+    margin-right: ${cssCalcTyped(StandardSideMargin)};
+    width: ${cssCalcTyped(StandardWidthBetweenSideMargins)};
+  }
+  @media print {
+    margin: 0;
+	}
+
 `
 
 export const WindowRegionBelowTopNavigationBarWithSideMargins = styled(WindowRegionBelowTopNavigationBar)`
@@ -80,13 +92,18 @@ export const ModalOverlayForWarningDialog = styled(ModalOverlayForDialogOrMessag
 `;
 
 export const NavigationBar = styled.div`
-  width: 100vw;
-  display: flex;
-  flex-direction: row;
-  flex: 0 0 auto;
-  text-align: center;
-  font-size: calc(${TopLevelNavigationBarFontSize});
-  overflow: hidden;
+  @media screen {
+    overflow: hidden;    
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    flex: 0 0 auto;
+    text-align: center;
+    font-size: calc(${TopLevelNavigationBarFontSize});
+  }
+  @media print {
+		display: none;
+	}
 `;
 
 export const TopNavigationBar = styled(NavigationBar)`
@@ -101,7 +118,12 @@ const TopNavRegion = styled.div`
   margin-bottom: 0.5rem;
   user-select: none;
   font-size: calc(${TopLevelNavigationBarFontSize});
-  overflow: hidden;
+  @media screen {
+    overflow: hidden;    
+  }
+  @media print {
+		display: none;
+	}
 `;
 
 const TopEdgeNavRegion = styled(TopNavRegion)`
@@ -126,7 +148,7 @@ export const TopNavRightSide = styled(TopEdgeNavRegion)`
   justify-content: end;
 `;
 
-export const TopNavPopUpMenu = styled.div<{isOpen: boolean}>`
+export const TopNavPopUpMenu = styled.div<{$isOpen: boolean}>`
   display: flex;
   position: absolute;
   top: ${TopNavigationBarHeight};
@@ -137,13 +159,16 @@ export const TopNavPopUpMenu = styled.div<{isOpen: boolean}>`
   /* padding-left: 1rem;
   padding-right: 1rem; */
   background-color: ${ props => props.theme.colors.navigationBar };
-  ${ ({isOpen}) => isOpen ? `` : `visibility: hidden` }
+  ${ ({$isOpen: isOpen}) => isOpen ? `` : `visibility: hidden` }
 `;
 
 export const Clickable = styled.span`
   cursor: grab;
-  :hover {
-    color: ${ props => props.theme.colors.background}
+  &:hover {
+    color: ${ props => props.theme.colors.background};
+  }
+  @media print {
+    display: none;
   }
 `;
 

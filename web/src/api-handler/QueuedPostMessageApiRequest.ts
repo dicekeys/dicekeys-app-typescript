@@ -13,7 +13,7 @@ import { Command } from "@dicekeys/dicekeys-api-js/dist/api-calls";
 import {
   extraRequestRecipeAndInstructions
 } from "./get-requests-recipe";
-import { CenterLetterAndDigit } from "../dicekeys/DiceKey";
+import { FaceLetterAndDigit } from "../dicekeys/DiceKey";
 
 
 export const doesHostMatchRequirement = (
@@ -109,7 +109,7 @@ export class QueuedPostMessageApiRequest extends QueuedApiRequest {
 
   throwIfClientNotPermitted: () => void = () => throwIfHostNotPermitted(this.host)(this.request);
 
-  transmitResponse = (response: ApiCalls.Response, {centerLetterAndDigit, sequenceNumber}: {centerLetterAndDigit?: CenterLetterAndDigit, sequenceNumber?: number}) =>  { (this.requestEvent.source?.postMessage as (m: unknown, t?: Transferable[]) => unknown)({
+  transmitResponse = (response: ApiCalls.Response, {centerLetterAndDigit, sequenceNumber}: {centerLetterAndDigit?: FaceLetterAndDigit, sequenceNumber?: number}) =>  { (this.requestEvent.source?.postMessage as (m: unknown, t?: Transferable[]) => unknown)({
     ...response,
     ...(centerLetterAndDigit == null ? {} : {centerLetterAndDigit}),
     ...(sequenceNumber == null ? {} : {"#": sequenceNumber}),

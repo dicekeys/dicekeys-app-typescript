@@ -75,7 +75,7 @@ const StoredDiceKeyButtonsView = observer ( ({storedDiceKeyDescriptor, state}: S
   const removeFromMemory = () => { DiceKeyMemoryStore.removeDiceKey(storedDiceKeyDescriptor) };
   if (!PlatformSupportsSavingToDevice) {
     // For platforms that don't support saving DiceKeys to long-term device storage,
-    // we can only allow the DiceKey currrently in memory to be removed.
+    // we can only allow the DiceKey currently in memory to be removed.
     return (
       <><DiceKeyActionButton onClick={removeFromMemory} >remove</DiceKeyActionButton></>
     )
@@ -109,7 +109,7 @@ const StoredDiceKeyView = observer ( (props: StoredDiceKeyProps) => {
         onClick={() => state.loadStoredDiceKey(storedDiceKeyDescriptor)}
       >
         <DiceKeyView
-          size={`${cssCalcTyped(storedKeySize)}`}
+          $size={`${cssCalcTyped(storedKeySize)}`}
           faces={ facesFromPublicKeyDescriptor(storedDiceKeyDescriptor) }
           obscureAllButCenterDie={true}
           showLidTab={true}
@@ -165,7 +165,7 @@ export const WindowHomeView = observer ( ({state}: TopLevelNavigationProps) => {
   return (
     <>
       <AppStoreInstallNudgeView/>
-      <VersionInformationBar>Release { BUILD_VERSION}, { BUILD_DATE })</VersionInformationBar>
+      <VersionInformationBar>Release { BUILD_VERSION}, { BUILD_DATE }</VersionInformationBar>
       <WindowHomeNavigationBar state={state} />
       <ColumnCentered>
         {/*

@@ -4,7 +4,6 @@ import { CameraCaptureWithOverlay } from "./CameraCaptureWithOverlay";
 import { DiceKeyFrameProcessorState } from "./DiceKeyFrameProcessorState";
 import { processDiceKeyImageFrame } from "./process-dicekey-image-frame";
 import { CamerasOnThisDevice } from "./CamerasOnThisDevice";
-import { DiceKeyWithKeyId } from "../../dicekeys/DiceKey";
 import { MediaStreamState } from "./MediaStreamState";
 import { CameraSelectionView } from "./CameraSelectionView";
 import { RUNNING_IN_BROWSER } from "../../utilities/is-electron";
@@ -17,8 +16,7 @@ import {
   FullScreenNotificationSecondaryText,
 } from "../../css/FullScreenNotification";
 import { DiceKeyAnimationRotationProps } from "../../views/SVG/DiceKeyView";
-import type { FaceOrientationLetterTrbl } from "@dicekeys/read-dicekey-js";
-import { DiceKeyMemoryStore } from "../../state";
+import type { DiceKeyWithoutKeyId } from "../../dicekeys/DiceKey";
 
 const minCameraWidth = 1024;
 const minCameraHeight = 720;
@@ -40,7 +38,7 @@ const defaultMediaTrackConstraints: MediaTrackConstraints = {
 };
 
 export interface OnDiceKeyRead {
-  onDiceKeyRead: (diceKey: DiceKeyWithKeyId, centerOrientationAsScannedTrbl: FaceOrientationLetterTrbl) => void
+  onDiceKeyRead: (diceKey?: DiceKeyWithoutKeyId) => void
 }
 
 //export interface ScanDiceKeyViewProps extends Omit<CameraCaptureWithOverlayProperties, "cameras" | "mediaStreamState">, DiceKeyAnimationRotationProps {
@@ -123,9 +121,8 @@ export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) => {
   const camerasOnThisDevice = CamerasOnThisDevice.instance(minCameraWidth, minCameraHeight);
 
 //  const [rotationState, setRotationState] = useState<RotationState|undefined>(undefined);
-  const onDiceKeyRead = (diceKeyWithKeyId: DiceKeyWithKeyId, centerFaceOrientationAsScannedTrbl: FaceOrientationLetterTrbl) => {
-      DiceKeyMemoryStore.addDiceKeyWithKeyId(diceKeyWithKeyId, centerFaceOrientationAsScannedTrbl);
-      props.onDiceKeyRead(diceKeyWithKeyId, centerFaceOrientationAsScannedTrbl);
+  const onDiceKeyRead = (diceKey?: DiceKeyWithoutKeyId) => {
+    props.onDiceKeyRead(diceKey);
   }
   const [
     componentHasBeenLoadedForLongEnoughToShowCameraPermissionRequiredWarning,
@@ -154,8 +151,8 @@ export const ScanDiceKeyView = observer ( (props: ScanDiceKeyViewProps) => {
 });
 
 export const Preview_ScanDiceKeyView = () => (
-  <ScanDiceKeyView onDiceKeyRead={ (diceKeyRead) => {
-    const hrf = diceKeyRead.inHumanReadableForm;
+  <ScanDiceKeyView onDiceKeyRead={ (diceKey) => {
+    const hrf = diceKey?.inHumanReadableForm;
     console.log(`Read ${hrf}`);
     alert(`Read ${hrf}`);
   }}

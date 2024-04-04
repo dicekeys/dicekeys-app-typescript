@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:20.04.4
 
 # Create dicekeys directory
 WORKDIR /dicekeys
