@@ -165,7 +165,7 @@ export const WindowHomeView = observer ( ({state}: TopLevelNavigationProps) => {
   return (
     <>
       <AppStoreInstallNudgeView/>
-      <VersionInformationBar>Release { BUILD_VERSION}, { BUILD_DATE })</VersionInformationBar>
+      <VersionInformationBar>Release { BUILD_VERSION}, { BUILD_DATE }</VersionInformationBar>
       <WindowHomeNavigationBar state={state} />
       <ColumnCentered>
         {/*

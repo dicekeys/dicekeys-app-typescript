@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dicekeys/dicekeys-webapp.git"
+    "url": "git+https://github.com/dicekeys/dicekeys-app-typescript.git"
   },
   "electron-html": "electron/app/electron.html",
   "scripts": {
