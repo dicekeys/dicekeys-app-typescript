@@ -1,5 +1,5 @@
-import { FusesPlugin } from '@electron-forge/plugin-fuses';
-import { FuseV1Options, FuseVersion } from '@electron/fuses';
+const { FusesPlugin } = require('@electron-forge/plugin-fuses');
+const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 import type { ForgeConfig } from '@electron-forge/shared-types';
 
@@ -83,4 +83,6 @@ const config: ForgeConfig = {
   ]
 };
 
-export default config;
+const {packagerConfig, rebuildConfig, makers, plugins} = config;
+
+export {packagerConfig, rebuildConfig, makers, plugins}

@@ -6,11 +6,12 @@
   "main": "electron-js/electron.js",
   "homepage": "https://dicekeys.com",
   "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "make-universal": "electron-forge make --arch=universal",
-    "publish": "electron-forge publish",
+    "compile-forge-config": "tsc ./forge.config.ts --skipLibCheck --module commonjs",
+    "start": "npm run compile-forge-config && electron-forge start",
+    "package": "npm run compile-forge-config && electron-forge package",
+    "make": "npm run compile-forge-config && electron-forge make",
+    "make-universal": "npm run compile-forge-config && electron-forge make --arch=universal",
+    "publish": "npm run compile-forge-config && electron-forge publish",
     "lint": "echo \"No linting configured\""
   },
   "devDependencies": {

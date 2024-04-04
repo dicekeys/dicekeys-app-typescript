@@ -30,3 +30,6 @@ electron-forge/electron-html/
 
 # buildinfo files
 *.tsbuildinfo
+
+electron-forge/forge.config.js
+electron-forge/out
