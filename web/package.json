@@ -18,6 +18,7 @@
     "build-web": "npm run clean-web && tsc --noEmit && vite build --config ./vite.config.ts",
     "build-electron-html": "npm run clean-electron && tsc --noEmit && vite build --emptyOutDir --config ./vite.config.electron.ts",
     "watch-electron-html": "npm run clean-electron && tsc --noEmit && vite build --emptyOutDir --watch --config ./vite.config.electron.ts",
+    "build-electron-forge-html": "npm run clean-electron && tsc --noEmit && vite build --emptyOutDir --config ./vite.config.electron-forge.ts",
     "build-all": "npm run build-web && npm run build-electron-html",
     "upload-production": "gsutil -m cp -r ../dist/web/* gs://dicekeys.app/ && gsutil setmeta -h cache-control:no-store gs://dicekeys.app/index.html & gsutil -m setmeta -h \"Content-Type: application/javascript\" gs://dicekeys.app/assets/*.js",
     "update-production": "npm run build-web & npm run upload-production",
